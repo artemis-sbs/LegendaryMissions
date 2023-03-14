@@ -1,5 +1,3 @@
-## A reusable client startup
-
 ========= client_main ==========
 event change_console:
     ->select_console
@@ -35,15 +33,21 @@ await gui
 
 ====== console_selected ====
 
+
 for player_ship in to_object_list(role("__PLAYER__")):
     if player_ship.name == ship:
         do sbs.assign_client_to_ship(client_id, player_ship.id)
     end_if
 next player_ship
 
-
 console console_select
 
+#
+#
+# Use a label replace to override: 
+#   ==== replace: console_bottom_choices ====
+#        You code
+#
+==== console_bottom_choices ====
 await gui
-
 
