@@ -1,0 +1,49 @@
+## A reusable client startup
+
+========= client_main ==========
+event change_console:
+    ->select_console
+end_event
+console = "helm"
+ship = "artemis"
+
+========== select_console ==========
+
+ship_list = ""
+for player_ship in to_object_list(role("__PLAYER__")):
+    if len(ship_list) >0:
+        ship_list = ship_list + ","
+    end_if
+    ship_list = ship_list + player_ship.name
+next player_ship
+
+
+section style="area: 60,50, 75,90;"
+vradio ship "{ship_list}"
+
+section style="area: 85,50, 99,90;"
+vradio console_select "helm,weapons, comms,science,engineering"
+blank
+row
+button "accept":
+    ->console_selected
+end_button
+
+await gui
+
+->END
+
+====== console_selected ====
+
+for player_ship in to_object_list(role("__PLAYER__")):
+    if player_ship.name == ship:
+        do sbs.assign_client_to_ship(client_id, player_ship.id)
+    end_if
+next player_ship
+
+
+console console_select
+
+await gui
+
+
