@@ -17,24 +17,75 @@ end_if
 ========== StartMenu ===============
 
 section style="area: 50, 10, 99, 90;"
-"""""
-Basic Siege written in Mast
-"""""
+"""""Basic Siege written in Mast"""""
+
 section style="area: 60, 75, 99, 89;"
 
 intslider enemy_count 1.0 50.0 5.0
 row
 """ Enemies: {int(enemy_count)} """
 
+
 await choice:
 + "Start Mission":
     simulation create
     simulation resume
-    -> CreateMap
+    -> start
 end_await
+-> StartMenu
+
+================= Won ===================
+simulation pause
+section style="area: 50, 10, 99, 90;"
+"""""""
+Mission is won!  All the enemies have been destroyed.
+""""""
+
+await choice:
+    + "Continue":
+    ->  StartMenu
+end_await
+->  StartMenu
+
+================= Lost ===================
+simulation pause
+section style="area: 50, 10, 99, 90;"
+"""
+Mission is lost!  All yer base are belong to us, dammit.
+"""
+
+await choice:
+    + "Continue":
+    ->  StartMenu
+end_await
+->  StartMenu
 
 
-============ WatchEndGame ======= 
+===== start ======
+# Build the world
+->> build_world
+
+log "comms"
+
+=> task_player_docking
+#### Handled different handled in station comms
+# => task_station_building
+# Start task to watch state
+=> task_end_game
+=> task_npc_targeting
+=> task_comms
+
+# This tasks ends
+->END
+
+
+========== task_player_docking ===============
+for player in to_object_list(role("__PLAYER__")):
+    do to_object(player).start_task("player_docking")
+next player
+->END
+
+============ task_end_game ======= 
 players = role('PlayerShip')
 if len(players)==0:
     ->Lost
@@ -46,33 +97,115 @@ if len(raiders)==0:
 end_if
 
 delay sim 4s
--> WatchEndGame
+-> task_end_game
 
-================= Won ===================
-simulation pause
-section style="area: 50, 10, 99, 90;"
-"""""""
-Mission is won!  All the enemies have been destroyed.
-""""""
+#############################################
+# Create task to player to raider comms and station comms
+#############################################
 
-await choice:
-    + "Continue":
-    -> Start
+=========== task_comms  ========
+# start the comms for the players and stations
+# Each ship will have its of thread for comms
+# this enables them to have a unique path
+for player in to_object_list(role('PlayerShip')):
+    for ds in to_object_list(role('Station')):
+        => station_comms {"self": ds, "player": player, "torpedo_build_type": "nothing"}
+    next ds
+    for raider in to_object_list(role("Raider")):
+        => npc_comms {"self": raider, "player": player}
+    next raider
+next player
+->END
+
+=============== station_comms ===============
+comms_id = player.comms_id
+
+
+await self comms player:
+    + "Hail":
+        homing = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.HOMING)
+        nuke = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.NUKE)
+        emp = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.EMP)
+        mine = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.MINE)
+        have self tell player """
+Hello, {comms_id}.  We stand ready to assist.
+You have full docking privileges.
+{homing} Homing ready
+{nuke} Nuke ready
+{emp} EMP ready
+{mine} Mine ready
+{torpedo_build_type} in production.
+"""
+    + "Now Docking":
+        have self tell player  """We read you, {comms_id}.  We're standing by for expedited docking.^"""
+
+    + "Hello, world":
+        have self tell player  """Hello, World"""
+
+    + "Build Homing": 
+        have self tell player  """We read you, {comms_id}.  We will focus on homing production.^"""
+        torpedo_build_type = sbs.TORPEDO.HOMING
+        cancel build_task
+        build_task => task_station_building
+
+    + "Build Nuke":
+        have self tell player  """We read you, {comms_id}.  We will focus on nuke production.^"""
+        torpedo_build_type= sbs.TORPEDO.NUKE
+        cancel build_task
+        build_task => task_station_building
+
+    + "Build Emp":
+        have self tell player  """We read you, {comms_id}.  We will focus on EMP production.^"""
+        torpedo_build_type= sbs.TORPEDO.EMP
+        cancel build_task
+        build_task => task_station_building
+    + "Build Mine":
+        have self tell player  """We read you, {comms_id}.  We will focus on MINE production.^"""
+        torpedo_build_type = sbs.TORPEDO.MINE
+        cancel build_task
+        build_task => task_station_building
 end_await
 
-================= Lost ===================
-simulation pause
-section style="area: 50, 10, 99, 90;"
-"""
-Mission is lost!  All yer base are belong to us, dammit.
-"""
+-> station_comms
 
-await choice:
-    + "Continue":
-    -> Start
+=== task_station_building ===
+delay sim 10s
+~~
+cur_count = self.get_engine_data(sim, "torpedo_count", torpedo_build_type)
+self.set_engine_data(sim, "torpedo_count", cur_count+1, torpedo_build_type)
+~~
+have self tell player  """{comms_id}. {torpedo_build_type} Production complete."""
+->task_station_building
+
+
+================ npc_comms ==================
+comms_id = player.comms_id #(sim)
+await self comms player:
+    + "Hail":
+        have self tell player "{comms_id}! We will destroy you, disgusting Terran scum!"
+    + "You're Ugly":
+        have self tell player  """You are a foolish Terran, {comms_id}.  We know that the taunt functionality is not currently implemented.^"""
+    + "Surrender now":
+        have self tell player """OK we give up, {comms_id}."""
 end_await
+-> npc_comms
 
-================= CreateMap ===================
+========== task_npc_targeting === 
+for raider in role('Raider'):
+    the_target = closest(raider, role("PlayerShip"), 2000)
+    if the_target is None:
+        the_target = closest(raider, role("Station"))
+    end_if
+    if the_target is not None:
+        do target(sim, raider, the_target, True)
+    end_if
+next raider
+
+
+delay sim 5s
+-> task_npc_targeting
+
+================= build_world ===================
 
 player_ships =  ~~[ (500,0,0, "Artemis", "tsn", "tsn_battle_cruiser"),
                 (200,0,0, "Hera", "tsn", "tsn_missile_cruiser"),
@@ -87,7 +220,7 @@ for player_args in player_ships:
         do assign_client_to_ship(0,player_ship)
         first = False
     end_if
-next player
+next player_args
 
 stations = [(0,0,0, "Alpha"),(2400,0,100, "Beta")]
 for station in stations:
@@ -112,14 +245,8 @@ for v in spawn_points:
     do set_face(raider.id, random_kralien())
     do add_role(raider.id, "Raider")
     enemy = enemy + 1
-    for player in to_object_list(role("__PLAYER__")):
-        do raider.start_task("NPC_Comms", {"player": player})
-    next player
 next v
 
-for player in to_object_list(role("__PLAYER__")):
-    do to_object(player).start_task("player_docking")
-next player
 
 # make a few random clusters of nebula
 spawn_points = scatter_sphere(random.randint(2,7), 0,0,0, 1000, 4000, ring=True)
@@ -156,111 +283,4 @@ for v in spawn_points:
         do terrain_spawn(v2.x, v2.y, v2.z,None, None, a_type, "behav_mine")
     next v2
 next v
-
-# start the comms for the players and stations
-# Each ship will have its of thread for comms
-# this enables them to have a unique path
-for ds in to_object_list(role('Station')):
-    for player in to_object_list(role('PlayerShip')):
-        => station_comms {"self": ds, "player": player}
-    next player
-next ds
-
-
-#############################################
-# Create task to watch for end game condition
-#############################################
-=>WatchEndGame
-##### Start raiders targeting ###
-=>NPC_Targeting
-# This tasks ends
-->END
-
-
-=============== station_comms ===============
-comms_id = player.comms_id # (sim)
-
-await self comms player:
-    + "Hail":
-        homing = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.HOMING)
-        nuke = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.NUKE)
-        emp = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.EMP)
-        mine = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.MINE)
-        have self tell player """
-Hello, {comms_id}.  We stand ready to assist.
-You have full docking privileges.
-{homing} Homing ready
-{nuke} Nuke ready
-{emp} EMP ready
-{mine} Mine ready
-{torpedo_build_type} in production.
-"""
-    + "Now Docking":
-        have self tell player  """We read you, {comms_id}.  We're standing by for expedited docking.^"""
-
-    + "Hello, world":
-        have self tell player  """Hello, World"""
-
-    + "Build Homing": 
-        have self tell player  """We read you, {comms_id}.  We will focus on homing production.^"""
-        torpedo_build_type = sbs.TORPEDO.HOMING
-        cancel build_task
-        build_task => build_torp
-
-    + "Build Nuke":
-        have self tell player  """We read you, {comms_id}.  We will focus on nuke production.^"""
-        torpedo_build_type= sbs.TORPEDO.NUKE
-        cancel build_task
-        build_task => build_torp
-
-    + "Build Emp":
-        have self tell player  """We read you, {comms_id}.  We will focus on EMP production.^"""
-        torpedo_build_type= sbs.TORPEDO.EMP
-        cancel build_task
-        build_task => build_torp
-    + "Build Mine":
-        have self tell player  """We read you, {comms_id}.  We will focus on MINE production.^"""
-        torpedo_build_type = sbs.TORPEDO.MINE
-        cancel build_task
-        build_task => build_torp
-end_await
-
--> station_comms
-
-=== build_torp ===
-delay sim 10s
-~~
-cur_count = self.get_engine_data(sim, "torpedo_count", torpedo_build_type)
-self.set_engine_data(sim, "torpedo_count", cur_count+1, torpedo_build_type)
-~~
-have self tell player  """{comms_id}. {torpedo_build_type} Production complete."""
-->END
-
-
-================ NPC_Comms ==================
-comms_id = player.comms_id #(sim)
-await self comms player:
-    + "Hail":
-        have self tell player "{comms_id}! We will destroy you, disgusting Terran scum!"
-    + "You're Ugly":
-        have self tell player  """You are a foolish Terran, {comms_id}.  We know that the taunt functionality is not currently implemented.^"""
-    + "Surrender now":
-        have self tell player """OK we give up, {comms_id}."""
-end_await
--> NPC_Comms
-
-========== NPC_Targeting === 
-for raider in role('Raider'):
-    the_target = closest(raider, role("PlayerShip"), 2000)
-    if the_target is None:
-        the_target = closest(raider, role("Station"))
-    end_if
-    if the_target is not None:
-        do target(sim, raider, the_target, True)
-    end_if
-next raider
-
-
-delay sim 5s
--> NPC_Targeting
-
+<<-
