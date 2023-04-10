@@ -6,7 +6,7 @@ if not object_exists(sim, self):
 end_if
 # log "Docking ship {self.id}"
 
-player_blob = get_engine_data_set(self, sim)
+player_blob = get_engine_data_set(sim, self)
 dock_state_string = get_data_set_value(player_blob,"dock_state", 0)
 
 if "undocked" == dock_state_string:
@@ -35,7 +35,7 @@ end_if
 
 
 if "docked" == dock_state_string:
-    dock_station_blob = get_engine_data_set(dock_station,sim)
+    dock_station_blob = get_engine_data_set(sim, dock_station)
     # refuel
     fuel_value = get_data_set_value(player_blob, "energy",0)
     fuel_value = fuel_value + 20

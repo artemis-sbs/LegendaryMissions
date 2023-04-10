@@ -5,23 +5,25 @@ import common_docking.mast
 
 logger
 
-enemy_count=20
+enemy_count=5
+start_text = "Mission: Basic Siege written in Mast"
 
 if IS_SERVER:
-->StartMenu 
+->start_server 
 else: 
 # client_main is in console_select
 -> client_main
 end_if
 
-========== StartMenu ===============
+========== start_server ===============
 
 section style="area: 50, 10, 99, 90;"
-"""""Basic Siege written in Mast"""""
+"""""{start_text}"""""
 
 section style="area: 60, 75, 99, 89;"
 
-intslider enemy_count 1.0 50.0 5.0
+intslider enemy_count 1.0 50.0 5.0 
+
 row
 """ Enemies: {int(enemy_count)} """
 
@@ -32,33 +34,7 @@ await choice:
     simulation resume
     -> start
 end_await
--> StartMenu
-
-================= Won ===================
-simulation pause
-section style="area: 50, 10, 99, 90;"
-"""""""
-Mission is won!  All the enemies have been destroyed.
-""""""
-
-await choice:
-    + "Continue":
-    ->  StartMenu
-end_await
-->  StartMenu
-
-================= Lost ===================
-simulation pause
-section style="area: 50, 10, 99, 90;"
-"""
-Mission is lost!  All yer base are belong to us, dammit.
-"""
-
-await choice:
-    + "Continue":
-    ->  StartMenu
-end_await
-->  StartMenu
+-> start_server
 
 
 ===== start ======
@@ -88,12 +64,14 @@ next player
 ============ task_end_game ======= 
 players = role('PlayerShip')
 if len(players)==0:
-    ->Lost
+    start_text = "Mission is lost!  All yer base are belong to us, dammit."
+    -> start_server
 end_if
 
 raiders = role('Raider')
 if len(raiders)==0:
-    -> Won
+    start_text = "Mission is won!  All the enemies have been destroyed."
+    -> start_server
 end_if
 
 delay sim 4s
