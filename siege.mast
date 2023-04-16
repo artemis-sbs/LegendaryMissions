@@ -43,13 +43,14 @@ end_await
 
 log "comms"
 
-=> task_player_docking
-#### Handled different handled in station comms
-# => task_station_building
+
 # Start task to watch state
 => task_end_game
 => task_npc_targeting
 => task_comms
+=> task_player_docking
+#### Handled different handled in station comms
+# => task_station_building
 
 # This tasks ends
 ->END
