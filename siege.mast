@@ -125,24 +125,24 @@ You have full docking privileges.
         have self tell player  """We read you, {comms_id}.  We will focus on homing production.^"""
         torpedo_build_type = sbs.TORPEDO.HOMING
         cancel build_task
-        build_task => task_station_building
+        var build_task =>  task_station_building
 
     + "Build Nuke":
         have self tell player  """We read you, {comms_id}.  We will focus on nuke production.^"""
         torpedo_build_type= sbs.TORPEDO.NUKE
         cancel build_task
-        build_task => task_station_building
+        var build_task => task_station_building
 
     + "Build Emp":
         have self tell player  """We read you, {comms_id}.  We will focus on EMP production.^"""
         torpedo_build_type= sbs.TORPEDO.EMP
         cancel build_task
-        build_task => task_station_building
+        var build_task => task_station_building
     + "Build Mine":
         have self tell player  """We read you, {comms_id}.  We will focus on MINE production.^"""
         torpedo_build_type = sbs.TORPEDO.MINE
         cancel build_task
-        build_task => task_station_building
+        var build_task => task_station_building
 end_await
 
 -> station_comms
