@@ -22,7 +22,7 @@ section style="area: 50, 10, 99, 90;"
 
 section style="area: 60, 75, 99, 89;"
 
-intslider enemy_count 1.0 50.0 5.0 
+intslider enemy_count "low: 1.0;high:50.0"
 
 row
 """ Enemies: {int(enemy_count)} """
