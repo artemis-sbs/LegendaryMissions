@@ -8,6 +8,11 @@ logger
 enemy_count=5
 start_text = "Mission: Basic Siege written in Mast"
 
+route spawn route_spawn
+route change console select_console
+route comms select route_comms
+
+
 if IS_SERVER:
 ->start_server 
 else: 
@@ -39,28 +44,16 @@ end_await
 
 ===== start ======
 # Build the world
+
 ->> build_world
-
-log "comms"
-
 
 # Start task to watch state
 => task_end_game
-=> task_npc_targeting
-=> task_comms
-=> task_player_docking
-#### Handled different handled in station comms
-# => task_station_building
 
 # This tasks ends
 ->END
 
 
-========== task_player_docking ===============
-for player in to_object_list(role("__PLAYER__")):
-    do to_object(player).start_task("player_docking")
-next player
-->END
 
 ============ task_end_game ======= 
 players = role('PlayerShip')
@@ -82,32 +75,30 @@ delay sim 4s
 # Create task to player to raider comms and station comms
 #############################################
 
-=========== task_comms  ========
+=========== route_comms  ========
 # start the comms for the players and stations
 # Each ship will have its of thread for comms
 # this enables them to have a unique path
-for player in to_object_list(role('PlayerShip')):
-    for ds in to_object_list(role('Station')):
-        => station_comms {"self": ds, "player": player, "torpedo_build_type": "nothing"}
-    next ds
-    for raider in to_object_list(role("Raider")):
-        => npc_comms {"self": raider, "player": player}
-    next raider
-next player
+if has_role(COMMS_SELECTED_ID, "Station"):
+    torpedo_build_type = sbs.TORPEDO.HOMING
+    jump station_comms
+elif has_role(COMMS_SELECTED_ID, "Raider"):
+    jump npc_comms
+end_if
+
 ->END
 
 =============== station_comms ===============
-comms_id = player.comms_id
+comms_id = to_object(COMMS_ORIGIN_ID).comms_id
+self = to_object(COMMS_SELECTED_ID)
 
-
-await self comms player:
+await comms:
     + "Hail":
         homing = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.HOMING)
         nuke = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.NUKE)
         emp = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.EMP)
         mine = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.MINE)
-        have self tell player """
-Hello, {comms_id}.  We stand ready to assist.
+        receive """Hello, {comms_id}.  We stand ready to assist.
 You have full docking privileges.
 {homing} Homing ready
 {nuke} Nuke ready
@@ -116,35 +107,34 @@ You have full docking privileges.
 {torpedo_build_type} in production.
 """
     + "Now Docking":
-        have self tell player  """We read you, {comms_id}.  We're standing by for expedited docking.^"""
+        receive  """We read you, {comms_id}.  We're standing by for expedited docking.^"""
 
     + "Hello, world":
-        have self tell player  """Hello, World"""
+        receive  """Hello, World"""
 
     + "Build Homing": 
-        have self tell player  """We read you, {comms_id}.  We will focus on homing production.^"""
+        receive  """We read you, {comms_id}.  We will focus on homing production.^"""
         torpedo_build_type = sbs.TORPEDO.HOMING
         cancel build_task
         var build_task =>  task_station_building
 
     + "Build Nuke":
-        have self tell player  """We read you, {comms_id}.  We will focus on nuke production.^"""
+        receive  """We read you, {comms_id}.  We will focus on nuke production.^"""
         torpedo_build_type= sbs.TORPEDO.NUKE
         cancel build_task
         var build_task => task_station_building
 
     + "Build Emp":
-        have self tell player  """We read you, {comms_id}.  We will focus on EMP production.^"""
+        receive  """We read you, {comms_id}.  We will focus on EMP production.^"""
         torpedo_build_type= sbs.TORPEDO.EMP
         cancel build_task
         var build_task => task_station_building
     + "Build Mine":
-        have self tell player  """We read you, {comms_id}.  We will focus on MINE production.^"""
+        receive  """We read you, {comms_id}.  We will focus on MINE production.^"""
         torpedo_build_type = sbs.TORPEDO.MINE
         cancel build_task
         var build_task => task_station_building
 end_await
-
 -> station_comms
 
 === task_station_building ===
@@ -153,36 +143,52 @@ delay sim 10s
 cur_count = self.get_engine_data(sim, "torpedo_count", torpedo_build_type)
 self.set_engine_data(sim, "torpedo_count", cur_count+1, torpedo_build_type)
 ~~
-have self tell player  """{comms_id}. {torpedo_build_type} Production complete."""
+receive  """{comms_id}. {torpedo_build_type} Production complete."""
 ->task_station_building
 
 
 ================ npc_comms ==================
-comms_id = player.comms_id #(sim)
-await self comms player:
+comms_id = to_object(COMMS_ORIGIN_ID).comms_id
+await comms:
     + "Hail":
-        have self tell player "{comms_id}! We will destroy you, disgusting Terran scum!"
+        receive "{comms_id}! We will destroy you, disgusting Terran scum!"
     + "You're Ugly":
-        have self tell player  """You are a foolish Terran, {comms_id}.  We know that the taunt functionality is not currently implemented.^"""
+        receive  """You are a foolish Terran, {comms_id}.  We know that the taunt functionality is not currently implemented.^"""
     + "Surrender now":
-        have self tell player """OK we give up, {comms_id}."""
+        receive """OK we give up, {comms_id}."""
 end_await
 -> npc_comms
 
+
+========== route_spawn =========
+
+# AI for the player is the docking logic
+if has_role(SPAWNED_ID, "__player__"):
+    jump player_docking
+elif has_role(SPAWNED_ID, "raider"):
+    jump task_npc_targeting
+end_if
+
+#### ELSE don't run a task
+->END
+
+
+
 ========== task_npc_targeting === 
-for raider in role('Raider'):
-    the_target = closest(raider, role("PlayerShip"), 2000)
-    if the_target is None:
-        the_target = closest(raider, role("Station"))
-    end_if
-    if the_target is not None:
-        do target(sim, raider, the_target, True)
-    end_if
-next raider
+
+the_target = closest(SPAWNED_ID, role("PlayerShip"), 2000)
+if the_target is None:
+    the_target = closest(SPAWNED_ID, role("Station"))
+end_if
+if the_target is not None:
+    do target(sim, SPAWNED_ID, the_target, True)
+end_if
 
 
 delay sim 5s
 -> task_npc_targeting
+
+
 
 ================= build_world ===================
 
@@ -230,7 +236,7 @@ next v
 # make a few random clusters of nebula
 spawn_points = scatter_sphere(random.randint(2,7), 0,0,0, 1000, 4000, ring=True)
 for v in spawn_points:
-    cluster_spawn_points = scatter_sphere(random.randint(10,20), v.x, 0,v.z, 100, 1000, ring=True)
+    cluster_spawn_points = scatter_sphere(random.randint(3,9), v.x, 0,v.z, 100, 1000, ring=True)
     for v2 in cluster_spawn_points:
         do terrain_spawn(v2.x, v2.y, v2.z,None, None, "nebula", "behav_nebula")
     next v2

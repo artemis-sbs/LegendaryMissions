@@ -1,4 +1,6 @@
 ======== player_docking  ===================
+self = to_object(SPAWNED_ID)
+
 
 if not object_exists(sim, self):
     log "Docking ship died"
