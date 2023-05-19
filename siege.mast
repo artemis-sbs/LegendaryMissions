@@ -2,23 +2,24 @@
 # Example shows reusable common client select
 import common_console_select.mast
 import common_docking.mast
+import science.mast
+import comms.mast
+import internal_damage.mast
+import basic_ai.mast
 
-logger
+#logger
 
 enemy_count=5
 start_text = "Mission: Basic Siege written in Mast"
 
-route spawn route_spawn
 route change console select_console
-route comms select route_comms
-route damage internal take_internal_damage
-
-
 
 if IS_SERVER:
+
 ->start_server 
 else: 
 # client_main is in console_select
+
 -> client_main
 end_if
 
@@ -48,13 +49,10 @@ end_await
 # Build the world
 
 ->> build_world
-
 # Start task to watch state
 => task_end_game
-
 # This tasks ends
 ->END
-
 
 
 ============ task_end_game ======= 
@@ -73,125 +71,6 @@ end_if
 delay sim 4s
 -> task_end_game
 
-#############################################
-# Create task to player to raider comms and station comms
-#############################################
-
-=========== route_comms  ========
-# start the comms for the players and stations
-# Each ship will have its of thread for comms
-# this enables them to have a unique path
-if has_role(COMMS_SELECTED_ID, "Station"):
-    torpedo_build_type = sbs.TORPEDO.HOMING
-    jump station_comms
-elif has_role(COMMS_SELECTED_ID, "Raider"):
-    jump npc_comms
-end_if
-
-->END
-
-=============== station_comms ===============
-comms_id = to_object(COMMS_ORIGIN_ID).comms_id
-self = to_object(COMMS_SELECTED_ID)
-
-await comms:
-    + "Hail":
-        homing = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.HOMING)
-        nuke = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.NUKE)
-        emp = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.EMP)
-        mine = self.get_engine_data(sim, "torpedo_count", sbs.TORPEDO.MINE)
-        receive """Hello, {comms_id}.  We stand ready to assist.
-You have full docking privileges.
-{homing} Homing ready
-{nuke} Nuke ready
-{emp} EMP ready
-{mine} Mine ready
-{torpedo_build_type} in production.
-"""
-    + "Now Docking":
-        receive  """We read you, {comms_id}.  We're standing by for expedited docking.^"""
-
-    + "Hello, world":
-        receive  """Hello, World"""
-
-    + "Build Homing": 
-        receive  """We read you, {comms_id}.  We will focus on homing production.^"""
-        torpedo_build_type = sbs.TORPEDO.HOMING
-        cancel build_task
-        var build_task =>  task_station_building
-
-    + "Build Nuke":
-        receive  """We read you, {comms_id}.  We will focus on nuke production.^"""
-        torpedo_build_type= sbs.TORPEDO.NUKE
-        cancel build_task
-        var build_task => task_station_building
-
-    + "Build Emp":
-        receive  """We read you, {comms_id}.  We will focus on EMP production.^"""
-        torpedo_build_type= sbs.TORPEDO.EMP
-        cancel build_task
-        var build_task => task_station_building
-    + "Build Mine":
-        receive  """We read you, {comms_id}.  We will focus on MINE production.^"""
-        torpedo_build_type = sbs.TORPEDO.MINE
-        cancel build_task
-        var build_task => task_station_building
-end_await
--> station_comms
-
-=== task_station_building ===
-delay sim 10s
-~~
-cur_count = self.get_engine_data(sim, "torpedo_count", torpedo_build_type)
-self.set_engine_data(sim, "torpedo_count", cur_count+1, torpedo_build_type)
-~~
-receive  """{comms_id}. {torpedo_build_type} Production complete."""
-->task_station_building
-
-
-================ npc_comms ==================
-comms_id = to_object(COMMS_ORIGIN_ID).comms_id
-await comms:
-    + "Hail":
-        receive "{comms_id}! We will destroy you, disgusting Terran scum!"
-    + "You're Ugly":
-        receive  """You are a foolish Terran, {comms_id}.  We know that the taunt functionality is not currently implemented.^"""
-    + "Surrender now":
-        receive """OK we give up, {comms_id}."""
-end_await
--> npc_comms
-
-
-========== route_spawn =========
-
-# AI for the player is the docking logic
-if has_role(SPAWNED_ID, "__player__"):
-    #TODO: Create Grid Objects
-
-    jump player_docking
-elif has_role(SPAWNED_ID, "raider"):
-    jump task_npc_targeting
-end_if
-
-#### ELSE don't run a task
-->END
-
-
-
-========== task_npc_targeting === 
-
-the_target = closest(SPAWNED_ID, role("PlayerShip"), 2000)
-if the_target is None:
-    the_target = closest(SPAWNED_ID, role("Station"))
-end_if
-if the_target is not None:
-    do target(sim, SPAWNED_ID, the_target, True)
-end_if
-
-
-delay sim 5s
--> task_npc_targeting
-
 
 
 ================= build_world ===================
@@ -202,6 +81,7 @@ player_ships =  ~~[ (500,0,0, "Artemis", "tsn", "tsn_battle_cruiser"),
 ]~~
 
 first = True
+colors  = ["yellow", "green", "blue"]
 for player_args in player_ships:
     player_ship = to_id(player_spawn(*player_args))
     do set_face(player_ship, random_terran())
@@ -209,6 +89,15 @@ for player_args in player_ships:
         do assign_client_to_ship(0,player_ship)
         first = False
     end_if
+    points = get_open_grid_points(sim,player_ship)
+    
+    for i in range(3):
+        if len(points)>0:
+            point = random.choice(points)
+            do points.remove(point)
+            do grid_spawn(player_ship, f"DC{i+1}", f"DC{i+1}", point[0],point[1], 80, colors[i], "damcons")
+        end_if
+    next i
 next player_args
 
 stations = [(0,0,0, "Alpha"),(2400,0,100, "Beta")]
@@ -252,8 +141,8 @@ next v
 spawn_points = scatter_sphere(random.randint(4,7), 0,0,0, 2000, 9000, ring=True)
 asteroid_types = names_plain_asteroid_keys()
 for v in spawn_points:
-    cluster_spawn_points = scatter_line(random.randint(20,50),  v.x, 0,v.z-800,   v.x, 0,v.z+800,   random=True)
-#    scatter_sphere(random.randint(10,20), v.x, 0,v.z, 100, 1000, ring=False)
+    cluster_spawn_points = scatter_line(random.randint(10,25),  v.x, 0,v.z-800,   v.x, 0,v.z+800,   random=True)
+#    scatter_sphere(random.randint(8,15), v.x, 0,v.z, 100, 1000, ring=False)
     for v2 in cluster_spawn_points:
         #keep value between -500 and 500??
         #v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
@@ -267,9 +156,11 @@ next v
 spawn_points = scatter_sphere(random.randint(5,12), 0,0,0, 1000, 4000, ring=True)
 for v in spawn_points:
     startAngle = random.randrange(0,359)
-    endAngle = startAngle + random.randrange(10,20)
+    angle = random.randrange(15,65)
+    endAngle = startAngle + angle
+
     depth = random.randrange(2,5)
-    width = random.randrange(10,20)
+    width = random.randrange(int(angle/6), int(angle/3))
     inner = random.randrange(2000,9000)
     cluster_spawn_points = scatter_ring(width, depth, 0, 0,0, inner + 500, inner, startAngle, endAngle)
     # Random type, but same for cluster
@@ -284,86 +175,3 @@ for v in spawn_points:
 next v
 <<-
 
-
-======== take_internal_damage  =======
-# This called when there is damage being taken internally
-#
-# The DAMAGE_ORIGIN_ID is the ship being damaged
-# EVENT has the event data sub_float has the amount, source_point has the point
-#
-
-# Make sure you don't take further damage
-if has_role(DAMAGE_ORIGIN_ID, "exploded"):
-    ->END
-end_if
-
-# pick a random system 
-system_hit = random.randint(0,3)
-blob = get_engine_data_set(sim, DAMAGE_ORIGIN_ID)
-
-damage_amount = EVENT.sub_float
-#
-# Deal damage evenly, but start at a random system
-#
-#do print(f"Applying internal damage {damage_amount}")
-for hit in range(int(damage_amount)):
-    max_dam = blob.get('system_max_damage', system_hit)
-    current = blob.get('system_damage', system_hit)
-    if current <= max_dam:
-        do blob.set('system_damage', current+0.1 ,  system_hit)
-    else:
-        do blob.set('system_damage', max ,  system_hit)
-    end_if
-
-#    do print(f"system_damage {system_hit} dam {current+1}")
-    system_hit += 1
-    system_hit %= 4
-next hit
-
-
-
-
-# Is this the end?
-should_explode = True
-
-for sys in range(4):
-    max = blob.get('system_max_damage', sys)
-    current = blob.get('system_damage', sys)
-    if current < max:
-        should_explode = False
-
-        # Break is broken????
-        #break
-    end_if
-next sys
-
-if should_explode:
-    #
-    # type, subtype, source_id, target_id, x, y, z, side
-    #
-    pos = get_pos(sim, EVENT.origin_id)
-    if pos:
-        do sbs.create_transient(1, 0, EVENT.origin_id, 0, pos.x, pos.y, pos.z, "")  
-    end_if
-
-    do add_role(EVENT.origin_id, "exploded")
-
-    so = to_object(EVENT.origin_id)
-    engine_obj = so.space_object(sim)
-    art_id = so.art_id
-    do so.set_art_id(sim,"invisible")
-
-    # Reset the systems to max
-    for sys in range(4):
-        max = blob.get('system_max_damage', sys)
-        do blob.set('system_damage', 0, sys)
-    next sys
-    
-    delay sim 5s
-
-    do sim.reposition_space_object(engine_obj, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
-    do so.set_art_id(sim,art_id)
-    do remove_role(EVENT.origin_id, "exploded")
-
-end_if
-->END

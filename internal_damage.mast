@@ -1,0 +1,96 @@
+route damage internal take_internal_damage
+
+
+======== take_internal_damage  =======
+# This called when there is damage being taken internally
+#
+# The DAMAGE_ORIGIN_ID is the ship being damaged
+# EVENT has the event data sub_float has the amount, source_point has the point
+#
+
+# Make sure you don't take further damage
+if has_role(DAMAGE_ORIGIN_ID, "exploded"):
+    ->END
+end_if
+
+# pick a random system 
+system_hit = random.randint(0,3)
+blob = get_engine_data_set(sim, DAMAGE_ORIGIN_ID)
+
+damage_amount = EVENT.sub_float
+#
+# Deal damage evenly, but start at a random system
+#
+# Get open hull points
+points = get_open_grid_points(sim,DAMAGE_ORIGIN_ID)
+icons = [40,59,33,27]
+colors = ["red", "red", "red", "red"]
+
+if len(points)>0:
+    point = random.choice(points)
+    do points.remove(point)
+    dam_go = grid_spawn(DAMAGE_ORIGIN_ID, f"damage", "", point[0],point[1], icons[system_hit], colors[system_hit], "")
+    do dam_go.blob.set("icon_scale", 0.75, 0)
+end_if
+
+#do print(f"Applying internal damage {damage_amount}")
+for hit in range(int(damage_amount)):
+    max_dam = blob.get('system_max_damage', system_hit)
+    current = blob.get('system_damage', system_hit)
+    if current <= max_dam:
+        do blob.set('system_damage', current+0.1 ,  system_hit)
+    else:
+        do blob.set('system_damage', max ,  system_hit)
+    end_if
+
+#    do print(f"system_damage {system_hit} dam {current+1}")
+    
+    system_hit += 1
+    system_hit %= 4
+next hit
+
+
+
+
+# Is this the end?
+should_explode = True
+
+for sys in range(4):
+    max = blob.get('system_max_damage', sys)
+    current = blob.get('system_damage', sys)
+    if current < max:
+        should_explode = False
+        break
+    end_if
+next sys
+
+if should_explode:
+    #
+    # type, subtype, source_id, target_id, x, y, z, side
+    #
+    pos = get_pos(sim, EVENT.origin_id)
+    if pos:
+        do sbs.create_transient(1, 0, EVENT.origin_id, 0, pos.x, pos.y, pos.z, "")  
+    end_if
+
+    do add_role(EVENT.origin_id, "exploded")
+
+    so = to_object(EVENT.origin_id)
+    engine_obj = so.space_object(sim)
+    art_id = so.art_id
+    do so.set_art_id(sim,"invisible")
+
+    # Reset the systems to max
+    for sys in range(4):
+        max = blob.get('system_max_damage', sys)
+        do blob.set('system_damage', 0, sys)
+    next sys
+    
+    delay sim 5s
+
+    do sim.reposition_space_object(engine_obj, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
+    do so.set_art_id(sim,art_id)
+    do remove_role(EVENT.origin_id, "exploded")
+
+end_if
+->END

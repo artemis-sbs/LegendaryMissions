@@ -1,0 +1,47 @@
+route science select handle_science
+
+====== handle_science =====
+if has_role(SCIENCE_SELECTED_ID, "Station"):
+    jump station_science
+elif has_role(SCIENCE_SELECTED_ID, "raider"):
+    jump raider_science
+end_if
+->END
+
+========= station_science =======
+
+await scan:
+    + "scan":
+        scan results "This is a friendly station"
+end_await
+
+======= station_science_detailed =======
+
+await scan:
+    + "scan":
+        scan results "This is a friendly station"
+    + "bio":
+        scan results "Just a bunch of people"
+    + "intl":
+        scan results "The people seem smart enough"
+end_await
+jump station_science_detailed
+
+====== raider_science  ===========
+
+await scan:
+    + "scan":
+        scan results "Looks like some bad dudes"
+end_await
+
+====== raider_science_detailed  ===========
+
+await scan:
+    + "scan":
+        scan results "Looks like some bad dudes"
+    + "bio":
+        scan results "Whew can smell travel through space?"
+    + "intl":
+        scan results "The have spaceships, but seem quite dumb"
+end_await
+jump station_science_detailed

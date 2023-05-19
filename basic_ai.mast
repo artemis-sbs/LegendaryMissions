@@ -1,0 +1,33 @@
+route spawn route_spawn
+
+========== route_spawn =========
+
+# AI for the player is the docking logic
+if has_role(SPAWNED_ID, "__player__"):
+    #TODO: Create Grid Objects
+
+    jump player_docking
+elif has_role(SPAWNED_ID, "raider"):
+    jump task_npc_targeting
+end_if
+
+#### ELSE don't run a task
+->END
+
+
+
+========== task_npc_targeting === 
+
+the_target = closest(SPAWNED_ID, role("PlayerShip"), 2000)
+if the_target is None:
+    the_target = closest(SPAWNED_ID, role("Station"))
+end_if
+if the_target is not None:
+    do target(sim, SPAWNED_ID, the_target, True)
+end_if
+
+
+delay sim 5s
+-> task_npc_targeting
+
+
