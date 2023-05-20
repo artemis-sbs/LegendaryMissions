@@ -29,7 +29,7 @@ colors = ["red", "red", "red", "red"]
 if len(points)>0:
     point = random.choice(points)
     do points.remove(point)
-    dam_go = grid_spawn(DAMAGE_ORIGIN_ID, f"damage", "", point[0],point[1], icons[system_hit], colors[system_hit], "")
+    dam_go = grid_spawn(DAMAGE_ORIGIN_ID, f"damage", "", point[0],point[1], icons[system_hit], colors[system_hit], "damage")
     do dam_go.blob.set("icon_scale", 0.75, 0)
 end_if
 
