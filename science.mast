@@ -44,4 +44,4 @@ await scan:
     + "intl":
         scan results "The have spaceships, but seem quite dumb"
 end_await
-jump station_science_detailed
+jump raider_science_detailed

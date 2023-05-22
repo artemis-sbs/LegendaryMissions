@@ -16,52 +16,88 @@ end_if
 
 ========== damcon_ai  ================= 
 
-
-
 this_blob = get_engine_data_set(sim, SPAWNED_ID)
-if this_blob:
-    length = this_blob.get("path_length", 0)
-    if length is None or length < 1:
-        # check for garbage and mop up
-        obj = to_object(SPAWNED_ID)
-        x = this_blob.get("curx", 0)
-        y = this_blob.get("cury", 0)
-        if obj:
-            hm = sim.get_hull_map(obj.host_id)
-            if hm is not None:
-                at_point = hm.get_objects_at_point(x,y)
-                for id in at_point:
-                    if has_role(id, "damage"):
-                        go = to_object(id)
-                        #->Return if go is None
-                        eo = go.get_engine_object(sim)
-                        do hm.delete_grid_object(eo)
-                        do go.destroyed()
-                    
-                        system_heal = random.randint(0,3)
-                        ship_blob = get_engine_data_set(sim, go.host_id)
-                    
-                        current = ship_blob.get('system_damage', system_heal)
-                        if current >0:
-                            do ship_blob.set('system_damage', current-0.1 , system_heal)
-                        else:
-                            do ship_blob.set('system_damage', 0 ,  system_heal)
-                        end_if
-                    end_if
-                next id
-            end_if
-        end_if
+
+# The damcons is no longer
+->END if this_blob is None
+
+length = this_blob.get("path_length", 0)
+if length is None or length < 1:
+    # check for garbage and mop up
+    obj = to_object(SPAWNED_ID)
+    x = this_blob.get("curx", 0)
+    y = this_blob.get("cury", 0)
     
-        # Then look for more work
-        the_target = grid_closest(SPAWNED_ID, sim, role("damage"))
-        if the_target is not None:
-            do grid_target(SPAWNED_ID, sim, the_target)
+    # Damcon is no more
+    ->END if obj is None
+
+    # Host is no more 
+    hm = sim.get_hull_map(obj.host_id)
+    ->END if hm is None
+
+    points = get_inventory_value(obj.host_id, "undamaged")
+    #
+    # I we haven't set it then get the valid grid points
+    #
+    if points is None:
+        points = get_open_grid_points(sim,obj.host_id)
+        #
+        # Maybe remove some?
+        #
+        do set_inventory_value(obj.host_id, "undamaged", points)
+    end_if
+
+    at_point = hm.get_objects_at_point(x,y)
+    
+    for id in at_point:
+        # Only deal with Damage
+        if not has_role(id, "damage"):
+            continue
         end_if
 
+        go = to_object(id)
+        if go is None:
+            continue
+        end_if
+
+        eo = go.get_engine_object(sim)
+        do hm.delete_grid_object(eo)
+        # Have to unlink this so it is no longer seen
+        do unlink(obj.host_id, "damage", id)
+        system_heal = get_inventory_value(go, "system")
+        do go.destroyed()
+        #
+        # Add point back into undamaged
+        #
+        do points.append((x,y))
+        do set_inventory_value(obj.host_id, "undamaged", points)
+    
+        if system_heal is None:
+            system_heal = random.randint(0,3)
+        end_if
+
+        ship_blob = get_engine_data_set(sim, go.host_id)
+    
+        current = ship_blob.get('system_damage', system_heal)
+        if current >0:
+            do ship_blob.set('system_damage', current-0.6 , system_heal)
+        else:
+            do ship_blob.set('system_damage', 0 ,  system_heal)
+        end_if
+    next id
+        
+    # Then look for more work
+    the_target = grid_closest(SPAWNED_ID, sim, linked_to(obj.host_id, "damage"))
+    if the_target is not None:
+        do grid_target(SPAWNED_ID, sim, the_target)
+    else:
+        do grid_target_pos(SPAWNED_ID, sim, obj.spawn_pos.x, obj.spawn_pos.y)
     end_if
 end_if
 
-
+#
+# Loop while this damcon lives
+#
 delay sim 5s
 -> damcon_ai
 

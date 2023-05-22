@@ -22,32 +22,52 @@ damage_amount = EVENT.sub_float
 # Deal damage evenly, but start at a random system
 #
 # Get open hull points
-points = get_open_grid_points(sim,DAMAGE_ORIGIN_ID)
+points = get_inventory_value(DAMAGE_ORIGIN_ID, "undamaged")
+#
+# I we haven't set it then get the valid grid points
+#
+if points is None:
+    points = get_open_grid_points(sim,DAMAGE_ORIGIN_ID)
+    #
+    # Maybe remove some?
+    #
+    do set_inventory_value(DAMAGE_ORIGIN_ID, "undamaged", points)
+end_if
+
 icons = [40,59,33,27]
 colors = ["red", "red", "red", "red"]
 
 if len(points)>0:
     point = random.choice(points)
+    do print(f"point {point}")
     do points.remove(point)
+    do set_inventory_value(DAMAGE_ORIGIN_ID, "undamaged", points)
+
     dam_go = grid_spawn(DAMAGE_ORIGIN_ID, f"damage", "", point[0],point[1], icons[system_hit], colors[system_hit], "damage")
+    #
+    # Keep track of the type of damage
+    #
+    do set_inventory_value(dam_go, "system", system_hit)
+    #
+    # The damage needs to be linked to the ship
+    #
+    do link(DAMAGE_ORIGIN_ID, "damage", to_id(dam_go)) 
     do dam_go.blob.set("icon_scale", 0.75, 0)
-end_if
+end_if    
 
+#
+# Apply damage even if you can't find a spot
+#
 #do print(f"Applying internal damage {damage_amount}")
-for hit in range(int(damage_amount)):
-    max_dam = blob.get('system_max_damage', system_hit)
-    current = blob.get('system_damage', system_hit)
-    if current <= max_dam:
-        do blob.set('system_damage', current+0.1 ,  system_hit)
-    else:
-        do blob.set('system_damage', max ,  system_hit)
-    end_if
 
+max_dam = blob.get('system_max_damage', system_hit)
+current = blob.get('system_damage', system_hit)
+if current <= max_dam:
+    do blob.set('system_damage', current+0.5 ,  system_hit)
+else:
+    do blob.set('system_damage', max_dam ,  system_hit)
+end_if
 #    do print(f"system_damage {system_hit} dam {current+1}")
-    
-    system_hit += 1
-    system_hit %= 4
-next hit
 
 
 
@@ -56,9 +76,9 @@ next hit
 should_explode = True
 
 for sys in range(4):
-    max = blob.get('system_max_damage', sys)
+    max_damage = blob.get('system_max_damage', sys)
     current = blob.get('system_damage', sys)
-    if current < max:
+    if current < max_damage:
         should_explode = False
         break
     end_if
@@ -82,11 +102,14 @@ if should_explode:
 
     # Reset the systems to max
     for sys in range(4):
-        max = blob.get('system_max_damage', sys)
         do blob.set('system_damage', 0, sys)
     next sys
     
     delay sim 5s
+    #
+    # Reuse the score update by spawning it ourselves
+    #
+    schedule update_score {"DESTROYED_ID": EVENT.origin_id}
 
     do sim.reposition_space_object(engine_obj, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
     do so.set_art_id(sim,art_id)
