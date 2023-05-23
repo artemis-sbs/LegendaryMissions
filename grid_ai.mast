@@ -3,7 +3,6 @@ route grid spawn route_grid_spawn
 
 
 ========== route_grid_spawn =========
-do print("treat")
 # AI for the player is the docking logic
 if has_role(SPAWNED_ID, "damcons"):
     jump damcon_ai

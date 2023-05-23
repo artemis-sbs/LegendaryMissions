@@ -6,7 +6,7 @@ from sbs_utils.mast.mast import Mast
 
 
 class MyStoryPage(StoryPage):
-    story_file = "siege.mast"
+    story_file = "story.mast"
 #
 # Uncomment this out to have Mast show the mast code in 
 # runtime errors
