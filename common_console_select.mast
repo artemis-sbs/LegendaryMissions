@@ -1,14 +1,24 @@
+route change console select_console
+#
+# Expects shared data 
+#    player_list that has the list of player ships
+#    player_count the number of expected player ships
+#    game_stared game state
+#
+
 ========= client_main ==========
-event change_console:
-    ->select_console
-end_event
 console = "helm"
 ship = "artemis"
 
 ========== select_console ==========
 
 ship_list = ""
-for player_ship in to_object_list(role("__PLAYER__")):
+i = 0
+for player_ship in player_list:
+    if i>=player_count:
+        break
+    end_if
+    i += 1
     if len(ship_list) >0:
         ship_list = ship_list + ","
     end_if
@@ -16,29 +26,48 @@ for player_ship in to_object_list(role("__PLAYER__")):
 next player_ship
 
 
-section style="area: 60,50, 75,90;"
+section style="area: 60,50, 75,90;row-height: 50px;"
 vradio ship "{ship_list}"
 
 section style="area: 85,50, 99,90;"
 vradio console_select "helm,weapons, comms,science,engineering"
 blank
 row
-button "accept":
-    ->console_selected
-end_button
+
+if not game_started:
+    checkbox console_ready "ready"
+else:
+    button "ready":
+        jump console_selected
+    end_button
+end_if
+
+#
+# Redraw if player count changes
+#
+on change player_count:
+    jump select_console
+end_on
 
 await gui
 
-->END
 
+# Multiple labels to call to get here
+
+====== game_started_console ====
 ====== console_selected ====
 
-
+has_ship= False
 for player_ship in to_object_list(role("__PLAYER__")):
     if player_ship.name == ship:
+        has_ship = True
         do sbs.assign_client_to_ship(client_id, player_ship.id)
     end_if
 next player_ship
+
+if not has_ship:
+    jump select_console
+end_if
 
 console console_select
 

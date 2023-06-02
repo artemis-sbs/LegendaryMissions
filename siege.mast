@@ -1,15 +1,22 @@
 ================= siege_build_world ===================
 
-player_ships =  ~~[ (500,0,0, "Artemis", "tsn", "tsn_battle_cruiser"),
-                (200,0,0, "Hera", "tsn", "tsn_missile_cruiser"),
-                ( 900,0,0, "Atlas", "tsn", "tsn_missile_cruiser")
-]~~
 
 first = True
 colors  = ["yellow", "green", "blue"]
-for player_args in player_ships:
-    player_ship = to_id(player_spawn(*player_args))
-    do set_face(player_ship, random_terran())
+c = 0
+do print(f"{player_count}")
+for player_ship_data in player_list:
+    if c>= player_count:
+        # make sure the id is cleared dry docked ships
+        player_ship_data.id = None
+        continue
+    end_if
+
+    player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, player_ship_data.ship))
+    c+=1
+    player_ship_data.id = player_ship
+
+    do set_face(player_ship, player_ship_data.face)
     if first:
         do assign_client_to_ship(0,player_ship)
         first = False

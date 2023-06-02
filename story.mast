@@ -12,9 +12,22 @@ import siege.mast
 #logger
 
 enemy_count=5
-start_text = "Mission: Basic Siege written in Mast"
+shared start_text = "Mission: Basic Siege written in Mast"
+shared game_started = False
 
-route change console select_console
+shared player_count = 1
+shared player_list = ~~[
+    MastDataObject({"name": "Artemis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (200,0,0) , "face": random_terran()}),
+    MastDataObject({"name": "Intrepid", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (300,0, -100), "face": random_terran()}),
+    MastDataObject({"name": "Aegis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser" , "spawn_point": (500,0, -200), "face": random_terran()}),
+    MastDataObject({"name": "Horatio", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser" , "spawn_point": (700,0, -300), "face": random_terran()}),
+    MastDataObject({"name": "Excalibur", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-200,0,0) , "face": random_terran()}),
+    MastDataObject({"name": "Hera", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point":  (-300,0,-100), "face": random_terran()}),
+    MastDataObject({"name": "Ceres", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-500,0, -200) , "face": random_terran()}),
+    MastDataObject({"name": "Diana", "id": None , "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-700,0, -300), "face": random_terran()}),
+]~~
+
+
 route destroy update_score
 
 if IS_SERVER:
@@ -47,7 +60,7 @@ end_if
 
 ->END
 
-========== results_server ===============
+========== show_game_results ===============
 
 simulation pause
 
@@ -119,7 +132,7 @@ end_await
 ========== start_server ===============
 
 start_text = "Mission: Basic Siege written in Mast"
-player_count = 1
+
 world_select = "siege"
 
 
@@ -133,15 +146,15 @@ shared game_stats = ~~{
     "start_time": sim.time_tick_counter
 }~~
 
+====== show_server_menu =====
 
 section style="area: 5, 10, 50, 90;"
 """""{start_text}"""""
 
-
 section style="area: 50, 10, 95,90;row-height:75px;padding:0px,10px"
-
-
 """ justify:right;text:Difficulty """
+
+
 intslider enemy_count "low: 1.0;high:11.0"
 row
 blank
@@ -173,6 +186,11 @@ dropdown terrain_select "text: Anomalies;list:None, Few,Some, lots, many":
 end_dropdown
 row
 
+on change enemy_count:
+   jump show_server_menu
+end_on
+
+
 
 await choice:
 + "Start Mission":
@@ -202,8 +220,16 @@ match world_select.lower():
         schedule siege_build_world
 end_match
 
-# Delay so the world is built
+#
+# Consoles are waiting to be started 
+#
+game_started = True
+reroute clients game_started_console
+#
+# Delay so the world is built, so we don't end game early
+#
 delay sim 4s
+
 #
 #vvvvvvvvvvvvvvvvvvvvvvvvvv
 
@@ -211,13 +237,17 @@ delay sim 4s
 players = role('PlayerShip')
 if len(players)==0:
     start_text = "Mission is lost!  All yer base are belong to us, dammit."
-    ->  results_server
+    game_started = False
+    reroute clients show_game_results
+    reroute server  show_game_results
 end_if
 
 raiders = role('Raider')
 if len(raiders)==0:
     start_text = "Mission is won!  All the enemies have been destroyed."
-    ->  results_server
+    game_started = False
+    reroute clients show_game_results
+    reroute server  show_game_results
 end_if
 
 delay sim 4s
