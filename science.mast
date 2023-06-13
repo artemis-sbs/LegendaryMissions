@@ -1,6 +1,7 @@
 route science select handle_science
 
 ====== handle_science =====
+
 if has_role(SCIENCE_SELECTED_ID, "Station"):
     jump station_science
 elif has_role(SCIENCE_SELECTED_ID, "raider"):

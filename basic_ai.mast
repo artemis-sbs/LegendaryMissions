@@ -20,8 +20,15 @@ end_if
 
 the_target = closest(SPAWNED_ID, role("PlayerShip"), 2000)
 if the_target is None:
-    the_target = closest(SPAWNED_ID, role("Station"))
+    the_target = closest(SPAWNED_ID, role("tsn, Station"))
+else:
+    #
+    # This is a 'sonar scan' that schedules science 
+    # Since this is close enough the player gets a free scan
+    #
+    follow route science select the_target SPAWNED_ID
 end_if
+
 if the_target is not None:
     do target(sim, SPAWNED_ID, the_target, True)
 end_if

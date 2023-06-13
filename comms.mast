@@ -1,10 +1,7 @@
-route comms select route_comms
+route comms select handle_comms
 
-#############################################
-# Create task to player to raider comms and station comms
-#############################################
 
-=========== route_comms  ========
+=========== handle_comms  ========
 # start the comms for the players and stations
 # Each ship will have its of thread for comms
 # this enables them to have a unique path

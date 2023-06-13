@@ -64,6 +64,7 @@ if length is None or length < 1:
         # Have to unlink this so it is no longer seen
         do unlink(obj.host_id, "damage", id)
         system_heal = get_inventory_value(go, "system")
+        do unlink(SPAWNED_ID, "assigned", id )
         do go.destroyed()
         #
         # Add point back into undamaged
@@ -86,9 +87,13 @@ if length is None or length < 1:
     next id
         
     # Then look for more work
-    the_target = grid_closest(SPAWNED_ID, sim, linked_to(obj.host_id, "damage"))
+    # Find damage that is not assigned to someone else
+    the_target = grid_closest(SPAWNED_ID, sim, linked_to(obj.host_id, "damage")-has_link("assigned_to"))
     if the_target is not None:
         do grid_target(SPAWNED_ID, sim, the_target)
+        # Remove from available assignments
+        do link(the_target, "assigned_to", SPAWNED_ID)
+        do link(SPAWNED_ID, "assigned", the_target )
     else:
         do grid_target_pos(SPAWNED_ID, sim, obj.spawn_pos.x, obj.spawn_pos.y)
     end_if

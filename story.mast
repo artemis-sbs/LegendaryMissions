@@ -26,6 +26,16 @@ shared player_list = ~~[
     MastDataObject({"name": "Ceres", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-500,0, -200) , "face": random_terran()}),
     MastDataObject({"name": "Diana", "id": None , "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-700,0, -300), "face": random_terran()}),
 ]~~
+shared game_stats = ~~{
+    "tsn_destroyed": 0,
+    "raider_destroyed": 0,
+    "kralien_ships_destroyed": 0,
+    "skaraan_ships_destroyed": 0,
+    "arvonian_ships_destroyed": 0,
+    "torgoth_ships_destroyed": 0,
+    "start_time": sim.time_tick_counter
+}~~
+
 
 
 route destroy update_score
@@ -134,17 +144,6 @@ end_await
 start_text = "Mission: Basic Siege written in Mast"
 
 world_select = "siege"
-
-
-shared game_stats = ~~{
-    "tsn_destroyed": 0,
-    "raider_destroyed": 0,
-    "kralien_ships_destroyed": 0,
-    "skaraan_ships_destroyed": 0,
-    "arvonian_ships_destroyed": 0,
-    "torgoth_ships_destroyed": 0,
-    "start_time": sim.time_tick_counter
-}~~
 
 ====== show_server_menu =====
 
