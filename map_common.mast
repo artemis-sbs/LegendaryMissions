@@ -1,0 +1,58 @@
+################
+## common code for different map type
+
+
+=========== spawn_friendly_npc ===========
+
+match friendly_select:
+    case "many":
+        max_hull_points=20
+    case "lots":
+        max_hull_points=15
+    case "some":
+        max_hull_points=10
+    case "few":
+        max_hull_points=5
+    case "none":
+        ->RETURN
+end_match
+
+total_hull_points = 0
+
+attempts = 0
+
+# grab the ship data for all ships on TSN side
+tsn_ship_data = names_filter_ship_data_by_side(None, "TSN", is_ship=True, ret_key_only=False)
+# pick a random tsn ship
+count = 0
+
+spawn_points = scatter_sphere(100, 0,0,0, 500, 5000, ring=True)
+for x while total_hull_points<max_hull_points:
+    #
+    ship = random.choice(tsn_ship_data)
+
+    hull_points = ship["hullpoints"]
+
+    if hull_points+total_hull_points > max_hull_points:
+        attempts += 1
+        # failed to find a small enough ship
+        if attempts > 20:
+            break
+        end_if
+        #
+        # try again
+        continue
+    end_if
+    # reset attempts
+    attempts = 0
+    # OK add this ship
+    spawn_point = next(spawn_points)
+    friend = to_id(npc_spawn(*spawn_point, f"tsn{count}", "tsn, friendly", ship["key"], "behav_npcship"))
+    count += 1
+    total_hull_points += hull_points
+    do set_face(friend, random_terran())
+next x
+    
+    
+    
+        

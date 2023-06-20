@@ -62,13 +62,18 @@ for player_ship in to_object_list(role("__PLAYER__")):
     if player_ship.name == ship:
         has_ship = True
         do sbs.assign_client_to_ship(client_id, player_ship.id)
+        do set_inventory_value(client_id, "assigned_ship", player_ship.id)
     end_if
 next player_ship
 
 if not has_ship:
     jump select_console
 end_if
-
+====== show_console_selected ====
+#
+# Make it so the console can be found if needed
+#
+do set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
 console console_select
 
 #

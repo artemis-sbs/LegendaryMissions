@@ -1,0 +1,115 @@
+route weapons select weapons_select_route
+
+==== friendly_give_orders ======
+#
+# Get the comms selected, the NPC ship 
+# dispaly the weapons screen of that ship to aid in 
+# select the orders
+#
+comms_selected = get_inventory_value(client_id, "COMMS_SELECTED_ID", 0)
+# Get the comms selected face
+station_face = get_face(comms_selected)
+#
+# We get and remember the player ship we are on
+# and its name
+#
+
+ship = get_inventory_value(client_id, "assigned_ship")
+player = to_object(ship)
+
+if player:
+    player_name = player.name
+else:
+    player_name = "Terran"
+end_if
+#
+# Switch to the friendly ship
+#
+do assign_client_to_ship(client_id,comms_selected)
+#
+# Make a limit weapons console
+#
+section style="area: 25, 4, 100, 80;"
+activate console weapons
+layout widget "2dview"
+#
+# Draw a face and interaction text
+#
+section style="area:0,4,25,80;"
+
+face station_face
+row
+"""
+text: Hello {player_name} tell us what to do
+"""
+
+#
+# The selection will be made in parallel
+# and set in inventory
+#
+message = ""
+await choice:
+   + "APPLY":
+        target_id = get_inventory_value(comms_selected, "WEAPONS_SELECTED_ID", None)
+        target_point = get_inventory_value(comms_selected, "WEAPONS_SELECTED_POINT", None)
+
+        if target_id:
+            
+            shoot = has_role(target_id, "raider")
+            target_obj = to_object(target_id)
+
+            if target_obj is None:
+            # target likely died
+                jump show_console_selected
+            end_if
+
+            do set_inventory_value(comms_selected, "TARGET_ID", target_id)
+            if shoot:
+                message = "OK {player_name} - going to attack {target_obj.name}"
+            else:
+                message = "OK {player_name} - going to rendezvous with {target_obj.name}"
+            end_if
+            
+            do target(sim, comms_selected, target_id, shoot)
+        else:
+            message = "Heading to designated waypoint"
+            do target_pos(sim, comms_selected, target_point.x, target_point.y, target_point.z )
+        end_if
+   + "CANCEL":
+        jump show_console_selected
+end_await
+
+#
+# Get back on the right ship
+#
+do assign_client_to_ship(client_id,ship)
+friend = to_object(comms_selected)
+have friend tell player "{message}"
+jump show_console_selected
+
+========== weapons_select_route ========
+#
+# Handles the 2dView selection for friendlies
+#
+->END if not has_role(WEAPONS_ORIGIN_ID, "friendly")
+
+nav = get_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_NAV", None)
+if nav:
+    do sim.delete_navpoint_by_reference(nav)
+    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_NAV", None)
+end_if
+# Handle initial clicks
+if EVENT.selected_id != 0:
+    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_POINT", None)
+    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_ID", EVENT.selected_id)
+else:
+    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_POINT", EVENT.source_point)
+    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_ID", None)
+    
+    nav = sim.add_navpoint(EVENT.source_point.x,EVENT.source_point.y, EVENT.source_point.z, "goto", "white")
+    do nav.visibleToShip =WEAPONS_ORIGIN_ID
+    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_NAV", nav)
+end_if
+#Done no point running more
+->END
+

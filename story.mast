@@ -8,6 +8,7 @@ import internal_damage.mast
 import basic_ai.mast
 import grid_ai.mast
 import siege.mast
+import extra_gui.mast
 
 #logger
 
@@ -18,7 +19,7 @@ shared game_started = False
 shared player_count = 1
 shared player_list = ~~[
     MastDataObject({"name": "Artemis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (200,0,0) , "face": random_terran()}),
-    MastDataObject({"name": "Intrepid", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (300,0, -100), "face": random_terran()}),
+    MastDataObject({"name": "Intrepid", "id": None, "side": "tsn", "ship": "tsn_dreadnaught", "spawn_point": (300,0, -100), "face": random_terran()}),
     MastDataObject({"name": "Aegis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser" , "spawn_point": (500,0, -200), "face": random_terran()}),
     MastDataObject({"name": "Horatio", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser" , "spawn_point": (700,0, -300), "face": random_terran()}),
     MastDataObject({"name": "Excalibur", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-200,0,0) , "face": random_terran()}),
@@ -141,9 +142,14 @@ end_await
 
 ========== start_server ===============
 
-start_text = "Mission: Basic Siege written in Mast"
+start_text = "Mission: Basic Siege written in MAST"
 
-world_select = "siege"
+shared world_select = "siege"
+shared terrain_select = "few"
+shared friendly_select = "few"
+shared anomaly_select = "none"
+
+
 
 ====== show_server_menu =====
 
@@ -171,17 +177,17 @@ end_dropdown
 row
 
 """justify:right;text:Terrain"""
-dropdown terrain_select "text: Terrain;list:None, Few,Some, lots, many":
+dropdown terrain_select "text: Terrain;list:none, few,some, lots, many":
 end_dropdown
 row
 
 """justify:right;text:Friendly Ships"""
-dropdown terrain_select "text: Friendly Ships;list:None, Few,Some, lots, many":
+dropdown friendly_select "text: Friendly Ships;list:none, few,some, lots, many":
 end_dropdown
 row
 
 """justify:right;text:Anomalies"""
-dropdown terrain_select "text: Anomalies;list:None, Few,Some, lots, many":
+dropdown anomaly_select_select "text: Anomalies;list:none, few,some, lots, many":
 end_dropdown
 row
 

@@ -7,6 +7,8 @@ if has_role(SPAWNED_ID, "__player__"):
     #TODO: Create Grid Objects
 
     jump player_docking
+elif has_roles(SPAWNED_ID, "tsn, friendly"):
+    jump ai_task_friendly
 elif has_role(SPAWNED_ID, "raider"):
     jump task_npc_targeting
 end_if
@@ -17,11 +19,27 @@ end_if
 
 
 ========== task_npc_targeting === 
+enraged = get_inventory_value(SPAWNED_ID, "enrage_value")
+surrendered = has_role(SPAWNED_ID, "surrendered")
+if surrendered:
+    so = to_object(SPAWNED_ID)
+    do target_pos(sim, SPAWNED_ID, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
+    # TODO: When it reaches spawn_pos tally and remove
+    ->END
+end_if
 
-the_target = closest(SPAWNED_ID, role("PlayerShip"), 2000)
+the_target = None
+if enraged is not None:
+    if enraged[0] > sim.time_tick_counter:
+        the_target = enraged[1]
+    end_if
+end_if
 if the_target is None:
-    the_target = closest(SPAWNED_ID, role("tsn, Station"))
-else:
+    the_target = closest(SPAWNED_ID, role("PlayerShip"), 2000)
+end_if
+if the_target is None:
+    the_target = closest(SPAWNED_ID, role("Station") & role("tsn"))
+    else:
     #
     # This is a 'sonar scan' that schedules science 
     # Since this is close enough the player gets a free scan
@@ -37,4 +55,16 @@ end_if
 delay sim 5s
 -> task_npc_targeting
 
+
+========== ai_task_friendly ===== 
+the_target = get_inventory_value(SPAWNED_ID, "TARGET_ID", None)
+            
+if the_target is not None:
+    shoot = has_role(the_target, "raider")
+    do target(sim, SPAWNED_ID, the_target, shoot)
+end_if
+
+
+delay sim 5s
+-> ai_task_friendly
 

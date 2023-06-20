@@ -1,3 +1,5 @@
+import map_common.mast
+
 ================= siege_build_world ===================
 
 
@@ -40,7 +42,13 @@ for station in stations:
 next station 
 
 
-enemyTypeNameList = ["kralien_dreadnaught","kralien_battleship","skaraan_defiler","arvonian_carrier","torgoth_behemoth"]
+enemyTypeNameList = []
+do enemyTypeNameList.extend(names_torgoth_ship_keys())
+do enemyTypeNameList.extend(names_kralien_ship_keys())
+do enemyTypeNameList.extend(names_skaraan_ship_keys())
+do enemyTypeNameList.extend(names_arvonian_ship_keys())
+do enemyTypeNameList.extend(names_ximni_ship_keys())
+
 enemy_prefix = "KLMNQ"
 
 
@@ -49,11 +57,30 @@ spawn_points = scatter_sphere(int(enemy_count), 0,0,0, 6000, 6000+250*enemy_coun
 
 for v in spawn_points:
     r_type = random.choice(enemyTypeNameList)
+    race = r_type.split("_")
+    race = race[0]
+    roles = "{race}, raider"
     r_name = f"{random.choice(enemy_prefix)}_{enemy}"
-    spawn_data = npc_spawn(v.x, v.y, v.z, r_name, "RAIDER", r_type, "behav_npcship")
+    spawn_data = npc_spawn(v.x, v.y, v.z, r_name, roles, r_type, "behav_npcship")
     raider = spawn_data.py_object
-    do set_face(raider.id, random_kralien())
-    do add_role(raider.id, "Raider")
+    # add a taunt trait
+    do set_inventory_value(raider.id, "taunt_trait", random.randint(0,2))
+    #
+    # Should add a commnon funtion to call to get the face based on race
+    #
+    match race:
+        case "kralien":
+            do set_face(raider.id, random_kralien())
+        case "arvonian":
+            do set_face(raider.id, random_arvonian())
+        case "skaraan":
+            do set_face(raider.id, random_skaraan())
+        case "torgoth":
+            do set_face(raider.id, random_torgoth())
+        case "ximni":
+            do set_face(raider.id, random_ximni())
+    end_match
+    
     enemy = enemy + 1
 next v
 
@@ -106,4 +133,5 @@ for v in spawn_points:
     next v2
 next v
 
+jump spawn_friendly_npc
 
