@@ -9,11 +9,19 @@ import basic_ai.mast
 import grid_ai.mast
 import siege.mast
 import extra_gui.mast
+import game_results.mast
 
 #logger
 
 enemy_count=5
-shared start_text = "Mission: Basic Siege written in Mast"
+shared start_text =~~"""
+Legendary Missions:
+
+Missions rich in the history of Artemis re-imagined for for the Cosmos.
+
+
+Written using MAST and is a great reference for those looking to write their own missions.
+"""~~
 shared game_started = False
 
 shared player_count = 1
@@ -27,19 +35,10 @@ shared player_list = ~~[
     MastDataObject({"name": "Ceres", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-500,0, -200) , "face": random_terran()}),
     MastDataObject({"name": "Diana", "id": None , "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-700,0, -300), "face": random_terran()}),
 ]~~
-shared game_stats = ~~{
-    "tsn_destroyed": 0,
-    "raider_destroyed": 0,
-    "kralien_ships_destroyed": 0,
-    "skaraan_ships_destroyed": 0,
-    "arvonian_ships_destroyed": 0,
-    "torgoth_ships_destroyed": 0,
-    "start_time": sim.time_tick_counter
-}~~
 
 
 
-route destroy update_score
+
 
 if IS_SERVER:
 
@@ -51,98 +50,10 @@ else:
 end_if
 
 
-====== update_score  ========
-obj = to_object(DESTROYED_ID)
-if obj is not None:
-    side = "{obj.side.lower()}_destroyed"
-    count = game_stats.get(side, 0)
-    do game_stats[side] = count + 1
-
-    race = obj.art_id
-    under = race.find("_")
-    if under>=0:
-        race = race[0:under]
-        race = "{race.lower()}_ships_destroyed"
-        count = game_stats.get(race, 0)
-        do game_stats[race] = count + 1
-    end_if        
-end_if
-
-
-->END
-
-========== show_game_results ===============
-
-simulation pause
-
-section style="area: 10, 10, 99, 90;"
-
-"""color:white;justify: center; font: gui-6;text:Game results"""
-row
-"""""color:cyan;justify:center;font:gui-5;text:{start_text}"""""
-row
-hole
-hole
-hole
-hole
-"""color:yellow; text:TSN Destroyed"""
-"""color:yellow;justify: right; text:{game_stats["tsn_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
-"""color:yellow; text:Raider Destroyed"""
-"""color:yellow;justify: right; text:{game_stats["raider_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
-"""color:yellow; text:arvonian ships destroyed"""
-"""color:yellow;justify: right; text:{game_stats["arvonian_ships_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
-"""color:yellow; text:kralien ships destroyed"""
-"""color:yellow;justify: right; text:{game_stats["kralien_ships_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
-"""color:yellow; text:skaraan ships destroyed"""
-"""color:yellow;justify: right; text:{game_stats["skaraan_ships_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
-"""color:yellow; text:torgoth ships destroyed"""
-"""color:yellow;justify: right; text:{game_stats["torgoth_ships_destroyed"]}"""
-row
-
-end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)
-hole
-hole
-hole
-hole
-"""color:yellow; right; text:Game Time"""
-"""color:yellow;justify: right; text:{end_time} minutes"""
-
-
-await choice:
-+ "Play again":
-end_await
-# fall thought to start server
 
 
 
 ========== start_server ===============
-
-start_text = "Mission: Basic Siege written in MAST"
 
 shared world_select = "siege"
 shared terrain_select = "few"

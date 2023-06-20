@@ -83,8 +83,7 @@ end_await
 # Get back on the right ship
 #
 do assign_client_to_ship(client_id,ship)
-friend = to_object(comms_selected)
-have friend tell player "{message}"
+have comms_selected tell ship "{message}"
 jump show_console_selected
 
 ========== weapons_select_route ========

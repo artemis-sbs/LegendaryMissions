@@ -68,18 +68,9 @@ for v in spawn_points:
     #
     # Should add a commnon funtion to call to get the face based on race
     #
-    match race:
-        case "kralien":
-            do set_face(raider.id, random_kralien())
-        case "arvonian":
-            do set_face(raider.id, random_arvonian())
-        case "skaraan":
-            do set_face(raider.id, random_skaraan())
-        case "torgoth":
-            do set_face(raider.id, random_torgoth())
-        case "ximni":
-            do set_face(raider.id, random_ximni())
-    end_match
+    do set_face(raider.id, random_face(race))
+    
+    
     
     enemy = enemy + 1
 next v
