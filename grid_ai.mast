@@ -1,7 +1,6 @@
 route grid spawn route_grid_spawn
 
 
-
 ========== route_grid_spawn =========
 # AI for the player is the docking logic
 if has_role(SPAWNED_ID, "damcons"):
@@ -19,6 +18,7 @@ this_blob = get_engine_data_set(sim, SPAWNED_ID)
 
 # The damcons is no longer
 ->END if this_blob is None
+
 
 length = this_blob.get("path_length", 0)
 if length is None or length < 1:

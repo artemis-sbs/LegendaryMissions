@@ -20,6 +20,7 @@ end_if
 
 ========== task_npc_targeting === 
 enraged = get_inventory_value(SPAWNED_ID, "enrage_value")
+scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 surrendered = has_role(SPAWNED_ID, "surrendered")
 if surrendered:
     so = to_object(SPAWNED_ID)
@@ -28,23 +29,29 @@ if surrendered:
     ->END
 end_if
 
+#
+# This is naive and assume players are on one side
+#
+if not scanned: 
+    should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
+    if should_scan is not None:
+        follow route science select should_scan SPAWNED_ID
+    end_if
+end_if
+
+
 the_target = None
 if enraged is not None:
     if enraged[0] > sim.time_tick_counter:
         the_target = enraged[1]
     end_if
 end_if
+
 if the_target is None:
     the_target = closest(SPAWNED_ID, role("PlayerShip"), 2000)
 end_if
 if the_target is None:
     the_target = closest(SPAWNED_ID, role("Station") & role("tsn"))
-    else:
-    #
-    # This is a 'sonar scan' that schedules science 
-    # Since this is close enough the player gets a free scan
-    #
-    follow route science select the_target SPAWNED_ID
 end_if
 
 if the_target is not None:
@@ -58,6 +65,18 @@ delay sim 5s
 
 ========== ai_task_friendly ===== 
 the_target = get_inventory_value(SPAWNED_ID, "TARGET_ID", None)
+
+scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
+#
+# This is naive and assume players are on one side
+#
+if not scanned: 
+    should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
+    if should_scan is not None:
+        follow route science select should_scan SPAWNED_ID
+    end_if
+end_if
+
             
 if the_target is not None:
     shoot = has_role(the_target, "raider")

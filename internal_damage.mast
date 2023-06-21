@@ -39,7 +39,7 @@ colors = ["red", "red", "red", "red"]
 
 if len(points)>0:
     point = random.choice(points)
-    do print(f"point {point}")
+    #do print(f"point {point}")
     do points.remove(point)
     do set_inventory_value(DAMAGE_ORIGIN_ID, "undamaged", points)
 

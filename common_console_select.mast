@@ -8,7 +8,7 @@ route change console select_console
 
 ========= client_main ==========
 console = "helm"
-ship = "artemis"
+client_select_ship = "artemis"
 
 ========== select_console ==========
 
@@ -25,9 +25,13 @@ for player_ship in player_list:
     ship_list = ship_list + player_ship.name
 next player_ship
 
+#section style="area: 10,50, 35,90;row-height: 50px;"
+# button "Debug Mast":
+#    jump debug_mast
+# end_button
 
 section style="area: 60,50, 75,90;row-height: 50px;"
-vradio ship "{ship_list}"
+vradio client_select_ship "{ship_list}"
 
 section style="area: 85,50, 99,90;"
 vradio console_select "helm,weapons, comms,science,engineering"
@@ -59,7 +63,7 @@ await gui
 
 has_ship= False
 for player_ship in to_object_list(role("__PLAYER__")):
-    if player_ship.name == ship:
+    if player_ship.name == client_select_ship:
         has_ship = True
         do sbs.assign_client_to_ship(client_id, player_ship.id)
         do set_inventory_value(client_id, "assigned_ship", player_ship.id)
@@ -85,3 +89,22 @@ console console_select
 ==== console_bottom_choices ====
 await gui
 
+
+
+
+=========== debug_mast =========
+
+task_count = 0
+for sch in mast.schedulers:
+    for tsk in sch.tasks:
+        task_count += 1
+    next tsk
+next sch
+
+section style="area: 0,50px, 100,100;"
+"""""
+Task count {task_count}
+""""""
+await gui timeout 4s
+
+jump debug_mast

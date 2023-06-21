@@ -47,43 +47,40 @@ text: Hello {player_name} tell us what to do
 # The selection will be made in parallel
 # and set in inventory
 #
-message = ""
+message = None
 await choice:
    + "APPLY":
         target_id = get_inventory_value(comms_selected, "WEAPONS_SELECTED_ID", None)
         target_point = get_inventory_value(comms_selected, "WEAPONS_SELECTED_POINT", None)
-
         if target_id:
-            
-            shoot = has_role(target_id, "raider")
             target_obj = to_object(target_id)
+            if target_obj is not None:
+                shoot = has_role(target_id, "raider")
 
-            if target_obj is None:
-            # target likely died
-                jump show_console_selected
+                do set_inventory_value(comms_selected, "TARGET_ID", target_id)
+                if shoot:
+                    message = "OK {player_name} - going to attack {target_obj.name}"
+                else:
+                    message = "OK {player_name} - going to rendezvous with {target_obj.name}"
+                end_if
+                
+                do target(sim, comms_selected, target_id, shoot)
             end_if
-
-            do set_inventory_value(comms_selected, "TARGET_ID", target_id)
-            if shoot:
-                message = "OK {player_name} - going to attack {target_obj.name}"
-            else:
-                message = "OK {player_name} - going to rendezvous with {target_obj.name}"
-            end_if
-            
-            do target(sim, comms_selected, target_id, shoot)
         else:
             message = "Heading to designated waypoint"
             do target_pos(sim, comms_selected, target_point.x, target_point.y, target_point.z )
         end_if
+        
    + "CANCEL":
-        jump show_console_selected
+        # pass
 end_await
-
 #
 # Get back on the right ship
 #
 do assign_client_to_ship(client_id,ship)
-have comms_selected tell ship "{message}"
+if message is not None:
+    have comms_selected tell ship "{message}"
+end_if
 jump show_console_selected
 
 ========== weapons_select_route ========
