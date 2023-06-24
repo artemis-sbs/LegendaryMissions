@@ -1,11 +1,25 @@
+#
+# route spawn will call the specify label when something is spawned
+# This allows the system to test what type of item it is
+# typically using roles or other attributes
+#
+# NOTE: More than one route spawn can exist
+#
 route spawn route_spawn
 
+#
+# The route_spawn label is the entry point 
+# it examines the SPAWNED_ID to either
+# jump to another label proper for that item
+# or END which stops running this task/flow 
+#
 ========== route_spawn =========
 
+#
 # AI for the player is the docking logic
+#
 if has_role(SPAWNED_ID, "__player__"):
-    #TODO: Create Grid Objects
-
+    #TODO: Create Grid Objects?
     jump player_docking
 elif has_roles(SPAWNED_ID, "tsn, friendly"):
     jump ai_task_friendly
@@ -17,7 +31,14 @@ end_if
 ->END
 
 
-
+#
+# This is for enemy AI
+# For now this is in priority
+#  - if surrendered go back to the spawn point
+#  - a player ship that comms enraged
+#  - a player that is withing 2000
+#  - or a stations
+#
 ========== task_npc_targeting === 
 enraged = get_inventory_value(SPAWNED_ID, "enrage_value")
 scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
@@ -39,31 +60,49 @@ if not scanned:
     end_if
 end_if
 
-
+#
+# Comms enraged this npc, But enraged is time limited
+#
 the_target = None
 if enraged is not None:
     if enraged[0] > sim.time_tick_counter:
         the_target = enraged[1]
     end_if
 end_if
-
+#
+# Look for a player near 
+#
 if the_target is None:
     the_target = closest(SPAWNED_ID, role("PlayerShip"), 2000)
 end_if
+#
+# Otherwise look for a tsn station
+#
 if the_target is None:
     the_target = closest(SPAWNED_ID, role("Station") & role("tsn"))
 end_if
-
+#
+# If any of these check resulted in a target
+#
 if the_target is not None:
     do target(sim, SPAWNED_ID, the_target, True)
 end_if
-
-
+#
+# Call this logic again in 5 seconds
+#
 delay sim 5s
 -> task_npc_targeting
 
 
+
+#
+# AI for friendly tsn ships (not citizen ships)
+#
 ========== ai_task_friendly ===== 
+
+#
+# Comms can give orders to attack a target (or approach another friendly) 
+#
 the_target = get_inventory_value(SPAWNED_ID, "TARGET_ID", None)
 
 scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
@@ -77,13 +116,17 @@ if not scanned:
     end_if
 end_if
 
-            
+#
+# Only shoot raiders
+#            
 if the_target is not None:
     shoot = has_role(the_target, "raider")
     do target(sim, SPAWNED_ID, the_target, shoot)
 end_if
 
-
+#
+# call this logic every 5 seconds
+#
 delay sim 5s
 -> ai_task_friendly
 

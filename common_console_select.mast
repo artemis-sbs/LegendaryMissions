@@ -7,10 +7,12 @@ route change console select_console
 #
 
 ========= client_main ==========
-console = "helm"
+console_select = "helm"
 client_select_ship = "artemis"
 
 ========== select_console ==========
+# default console_select = "helm"
+# default client_select_ship = "artemis"
 
 ship_list = ""
 i = 0
@@ -22,7 +24,7 @@ for player_ship in player_list:
     if len(ship_list) >0:
         ship_list = ship_list + ","
     end_if
-    ship_list = ship_list + player_ship.name
+    ship_list = ship_list + player_ship.name.lower()
 next player_ship
 
 #section style="area: 10,50, 35,90;row-height: 50px;"
@@ -46,12 +48,6 @@ else:
     end_button
 end_if
 
-#
-# Redraw if player count changes
-#
-on change player_count:
-    jump select_console
-end_on
 
 await gui
 
@@ -60,10 +56,13 @@ await gui
 
 ====== game_started_console ====
 ====== console_selected ====
+if console_select is None or client_select_ship is None:
+    jump select_console
+end_if
 
 has_ship= False
 for player_ship in to_object_list(role("__PLAYER__")):
-    if player_ship.name == client_select_ship:
+    if player_ship.name.lower() == client_select_ship:
         has_ship = True
         do sbs.assign_client_to_ship(client_id, player_ship.id)
         do set_inventory_value(client_id, "assigned_ship", player_ship.id)

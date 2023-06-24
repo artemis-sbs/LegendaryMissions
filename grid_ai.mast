@@ -88,14 +88,14 @@ if length is None or length < 1:
         
     # Then look for more work
     # Find damage that is not assigned to someone else
-    the_target = grid_closest(SPAWNED_ID, sim, linked_to(obj.host_id, "damage")-has_link("assigned_to"))
+    the_target = grid_closest(sim, SPAWNED_ID, linked_to(obj.host_id, "damage")-has_link("assigned_to"))
     if the_target is not None:
-        do grid_target(SPAWNED_ID, sim, the_target)
+        do grid_target(sim, SPAWNED_ID, the_target)
         # Remove from available assignments
         do link(the_target, "assigned_to", SPAWNED_ID)
         do link(SPAWNED_ID, "assigned", the_target )
     else:
-        do grid_target_pos(SPAWNED_ID, sim, obj.spawn_pos.x, obj.spawn_pos.y)
+        do grid_target_pos(sim, SPAWNED_ID, obj.spawn_pos.x, obj.spawn_pos.y)
     end_if
 end_if
 

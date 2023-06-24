@@ -52,7 +52,7 @@ await choice:
    + "APPLY":
         target_id = get_inventory_value(comms_selected, "WEAPONS_SELECTED_ID", None)
         target_point = get_inventory_value(comms_selected, "WEAPONS_SELECTED_POINT", None)
-        if target_id:
+        if target_id is not None:
             target_obj = to_object(target_id)
             if target_obj is not None:
                 shoot = has_role(target_id, "raider")
@@ -66,7 +66,7 @@ await choice:
                 
                 do target(sim, comms_selected, target_id, shoot)
             end_if
-        else:
+        elif target_point is not None:
             message = "Heading to designated waypoint"
             do target_pos(sim, comms_selected, target_point.x, target_point.y, target_point.z )
         end_if

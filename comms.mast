@@ -132,7 +132,7 @@ await comms:
                 receive """OK we give up, {comms_id}."""
                 do add_role(COMMS_SELECTED_ID, "surrendered")
                 do remove_role(COMMS_SELECTED_ID, "raider")
-                do set_engine_data(COMMS_SELECTED_ID, sim, "surrender_flag", 1)
+                do set_engine_data(sim, COMMS_SELECTED_ID, "surrender_flag", 1)
             else:
                 receive """We will fight to our last breath!"""
                 do add_role(COMMS_SELECTED_ID, "never_surrender")
@@ -142,7 +142,7 @@ await comms:
                 receive """OK we give up, {comms_id}."""
                 do add_role(COMMS_SELECTED_ID, "surrendered")
                 do remove_role(COMMS_SELECTED_ID, "raider")
-                do set_engine_data(COMMS_SELECTED_ID, sim, "surrender_flag", 1)
+                do set_engine_data(sim, COMMS_SELECTED_ID, "surrender_flag", 1)
             else:
                 receive """We can still defeat you, {comms_id}! Prepare to die!"""
             end_if
