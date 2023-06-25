@@ -6,7 +6,7 @@ import map_common.mast
 first = True
 colors  = ["yellow", "green", "blue"]
 c = 0
-do print(f"{player_count}")
+#do print(f"{player_count}")
 for player_ship_data in player_list:
     if c>= player_count:
         # make sure the id is cleared dry docked ships

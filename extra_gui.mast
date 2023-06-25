@@ -6,7 +6,7 @@ route weapons select weapons_select_route
 # dispaly the weapons screen of that ship to aid in 
 # select the orders
 #
-comms_selected = get_inventory_value(client_id, "COMMS_SELECTED_ID", 0)
+comms_selected = get_inventory_value(client_id, "COMMS_TARGET_UID", 0)
 # Get the comms selected face
 station_face = get_face(comms_selected)
 #
@@ -79,7 +79,7 @@ end_await
 #
 do assign_client_to_ship(client_id,ship)
 if message is not None:
-    have comms_selected tell ship "{message}"
+    receive ship comms_selected "{message}"
 end_if
 jump show_console_selected
 

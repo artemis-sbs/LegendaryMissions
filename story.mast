@@ -11,9 +11,21 @@ import siege.mast
 import extra_gui.mast
 import game_results.mast
 
+#
+# This directs the script 
+# to the client and server GUI
+# when the client is started
+#
+reroute server start_server 
+reroute clients client_main
+
+
+#
+# Uncomment to enable logging via the log command
+#
 #logger
 
-enemy_count=5
+
 shared start_text =~~"""
 Legendary Missions:
 
@@ -22,8 +34,12 @@ Missions rich in the history of Artemis re-imagined for for the Cosmos.
 
 Written using MAST and is a great reference for those looking to write their own missions.
 """~~
-shared game_started = False
 
+#
+# Game data
+#
+shared game_started = False
+shared enemy_count=5
 shared player_count = 1
 shared player_list = ~~[
     MastDataObject({"name": "Artemis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (200,0,0) , "face": random_terran()}),
@@ -37,22 +53,10 @@ shared player_list = ~~[
 ]~~
 
 
-
-
-
-if IS_SERVER:
-
-->start_server 
-else: 
-# client_main is in console_select
-
--> client_main
-end_if
-
-
-
-
-
+#
+# The Server GUI
+#   This label runs once, to initialize server data
+#
 ========== start_server ===============
 
 shared world_select = "siege"
@@ -60,9 +64,18 @@ shared terrain_select = "few"
 shared friendly_select = "few"
 shared anomaly_select = "none"
 
+watch_end_game_task = None
 
 
+#
+# The Server GUI
+#
 ====== show_server_menu =====
+
+if watch_end_game_task is not None:
+    cancel watch_end_game_task
+    watch_end_game_task = None
+end_if
 
 section style="area: 5, 10, 50, 90;"
 """""{start_text}"""""
@@ -106,21 +119,21 @@ on change enemy_count:
    jump show_server_menu
 end_on
 
-
-
 await choice:
 + "Start Mission":
     simulation create
     simulation resume
     -> start
 end_await
--> start_server
 
 
 ===== start ======
-# Build the world
 
-##vradio world_select "Siege,Single Front,Double Front,Deep Strike,Peacetime,Border war"
+#
+# Based on the game type call the right 
+# label to build the world
+#
+
 match world_select.lower():
     case "siege": 
         schedule siege_build_world
@@ -141,15 +154,26 @@ end_match
 #
 game_started = True
 reroute clients game_started_console
-#
-# Delay so the world is built, so we don't end game early
-#
-delay sim 4s
+var watch_end_game_task schedule task_end_game
 
-#
-#vvvvvvvvvvvvvvvvvvvvvvvvvv
+
+====  pause_screen ====
+
+section style="area: 5, 10, 50, 90;"
+"""""Simulation paused"""""
+
+await choice:
++ "Resume Mission":
+    simulation resume
+end_await
+jump pause_screen
+##############
+
 
 ============ task_end_game ======= 
+
+delay sim 4s
+
 players = role('PlayerShip')
 if len(players)==0:
     start_text = "Mission is lost!  All yer base are belong to us, dammit."
@@ -166,7 +190,7 @@ if len(raiders)==0:
     reroute server  show_game_results
 end_if
 
-delay sim 4s
+
 -> task_end_game
 
 

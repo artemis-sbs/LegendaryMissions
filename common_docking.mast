@@ -12,11 +12,11 @@ player_blob = get_engine_data_set(sim, self)
 dock_state_string = get_data_set_value(player_blob,"dock_state", 0)
 
 if "undocked" == dock_state_string:
-    ~~set_data_set_value(player_blob, "dock_base_id", 0)~~
+    do set_data_set_value(player_blob, "dock_base_id", 0)
     dock_rng = 600
     station = closest(self, role("Station"), 600)
     if station is not None:
-        ~~set_data_set_value(player_blob, "dock_base_id", to_id(station))~~
+        do set_data_set_value(player_blob, "dock_base_id", to_id(station))
     end_if
 end_if
 
@@ -30,7 +30,7 @@ if dock_station is not None:
         closeEnough = ~~dock_station.get_space_object(sim).exclusion_radius + self.get_space_object(sim).exclusion_radius~~
         closeEnough = closeEnough * 1.1
         if distanceValue <= closeEnough:
-            ~~set_data_set_value(player_blob, "dock_state", "docked")~~
+            do set_data_set_value(player_blob, "dock_state", "docked")
         end_if
     end_if
 end_if
@@ -44,26 +44,26 @@ if "docked" == dock_state_string:
     if fuel_value > 1000:
         fuel_value = 1000
     end_if
-    ~~set_data_set_value(player_blob, "energy", int(fuel_value))~~
+    do set_data_set_value(player_blob, "energy", int(fuel_value))
 
     # resupply torps
     for torps in range(sbs.TORPEDO.MINE):
-        tLeft = ~~ get_data_set_value(dock_station_blob,"torpedo_count", torps)~~
+        tLeft = get_data_set_value(dock_station_blob,"torpedo_count", torps)
         if tLeft > 0:
             torp_max = get_data_set_value(player_blob,"torpedo_max", torps)
             torp_now = get_data_set_value(player_blob,"torpedo_count", torps)
             if torp_now < torp_max:
                 torp_now = torp_now + 1
-                ~~set_data_set_value(player_blob,"torpedo_count", torp_now,torps)~~
-                ~~set_data_set_value(dock_station_blob,"torpedo_count", tLeft-1, torps)~~
+                do set_data_set_value(player_blob,"torpedo_count", torp_now,torps)
+                do set_data_set_value(dock_station_blob,"torpedo_count", tLeft-1, torps)
             end_if
         end_if
     next torps
 
 
     #repair shields (more than normal)
-    shieldCoeff = ~~get_data_set_value(player_blob,"repair_rate_shields",0)~~
-    systemCoeff = ~~get_data_set_value(player_blob,"repair_rate_systems",0)~~
+    shieldCoeff = get_data_set_value(player_blob,"repair_rate_shields",0)
+    systemCoeff = get_data_set_value(player_blob,"repair_rate_systems",0)
 
     sCount = get_data_set_value(player_blob,"shield_count",0)
     for shield in range(sCount-1):
@@ -72,7 +72,7 @@ if "docked" == dock_state_string:
         changed = (sVal < sValMax)
         sVal = max(0.0, min(sVal + shieldCoeff, sValMax)) # clamp the value
         if changed:
-            ~~set_data_set_value(player_blob,"shield_val", sVal, shield)~~
+            do set_data_set_value(player_blob,"shield_val", sVal, shield)
         end_if
     next shield
     #repair systems (more than normal)
@@ -82,7 +82,7 @@ if "docked" == dock_state_string:
         changed = (damage > 0.0)
         damage = max(0.0, min(damage - systemCoeff, maxDamage)) # clamp the value
         if changed:
-            ~~set_data_set_value(player_blob,"system_damage", damage, system)~~
+            do set_data_set_value(player_blob,"system_damage", damage, system)
         end_if
     next system
 end_if

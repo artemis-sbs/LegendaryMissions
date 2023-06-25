@@ -113,7 +113,5 @@ hole
 """color:yellow;justify: right; text:{end_time} minutes"""
 
 
-await choice:
-+ "Play again":
-end_await
-# fall thought to start server
+await gui
+# Kind of need to restart, which is good for now since cleanup is not guaranteed
