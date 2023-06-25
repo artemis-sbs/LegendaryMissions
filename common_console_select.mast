@@ -48,6 +48,9 @@ else:
     end_button
 end_if
 
+on change player_count:
+    jump select_console
+end_on
 
 await gui
 

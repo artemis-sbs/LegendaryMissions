@@ -115,9 +115,6 @@ dropdown anomaly_select_select "text: Anomalies;list:none, few,some, lots, many"
 end_dropdown
 row
 
-on change enemy_count:
-   jump show_server_menu
-end_on
 
 await choice:
 + "Start Mission":
