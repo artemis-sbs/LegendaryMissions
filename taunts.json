@@ -1,0 +1,125 @@
+{
+    "kralien": [
+        {
+            "button": "Taunt ship condition",
+            "transmit": "You call that a ship? Where I come from that’s a rusting bucket of table scraps!.",
+            "failure": "Your ship is rustier and also very stupid, {name}.",
+            "success": "Rust you say? Prepare to meet the gods, Terran infidel!",
+            "science": "The captain is very proud of their beautiful ship."
+        },
+        {
+            "button": "Taunt ugly captain",
+            "transmit": "Hey maser-mouth! The deadliest weapon on that pathetic excuse for a ship is your ugly face!",
+            "failure": "And your face is soft like a dung heap, {name}. You are being ignored.",
+            "success": "Your face will be shredded by these mighty weapons!",
+            "science": "The captain is vain and proud of their handsome face."
+        },
+        {
+            "button": "Taunt religion",
+            "transmit": "Hey wormface! I'm using your Holy Scrolls to wipe my stinky feet!",
+            "failure": "You can stick those superstitions up your excrement orifice, {name}.",
+            "success": "For your blasphemy you shall immediately die!",
+            "science": "The captain is spiritual a devout to the Kralien religion."
+        }
+    ],
+    "arvonian": [
+        {
+            "button": "Taunt ugly uniform",
+            "transmit": "Where did you get that awful uniform? You look like you mugged a homeless jellyfish.",
+            "failure": "You ignorant dimwit, {name}. Uniforms are merely clothing, and yours is repulsive.",
+            "success": "For insulting my uniform I shall destroy your hideous hide, {name}!",
+            "science": "The captain is fashion conscious and proud of their attractive uniform."
+        },
+        {
+            "button": "Taunt royal family",
+            "transmit": "Your Queen looks like a hideous pustule and smells like a flatulent Space Whale!",
+            "failure": "You're right, {name}. I despise that whole pompous family.",
+            "success": "I shall avenge your insult in the name of the Queen, {name}!",
+            "science": "The captain loves the Arvonian royal family."
+        },
+        {
+            "button": "Taunt Supreme Understander",
+            "transmit": "Your Supreme Understander is a tin-boxed wind-up toy!",
+            "failure": "Perhaps it is, {name}, but a tin-boxed wind-up toy is still smarter than you.",
+            "success": "Our Supreme Understander has decreed that you must die now, {name}!",
+            "science": "The captain has unfailing faith in the decisions of the Arvonian Supreme Understander."
+        }
+    ],
+    "torgoth": [
+        {
+            "button": "Taunt mother",
+            "transmit": "Hey Jumbo! Your mother is a Space Whale!",
+            "failure": "You are an idiot, {name}. My mother died years ago.",
+            "success": "You shall die for insulting my mother, {name}!",
+            "science": "The captain loves their mother and is proud that she is so beautiful."
+        },
+        {
+            "button": "Taunt spouse",
+            "transmit": "You are so ugly, your spouse will thank me for killing you.",
+            "failure": "I'm not married, excrement face.",
+            "success": "I shall crush your skull with my bare hands for insulting my spouse, {name}!",
+            "science": "The captain and their spouse have a very stable, loving relationship."
+        },
+        {
+            "button": "Taunt hygiene",
+            "transmit": "Take a bath, you fungus-infested pachyderm!",
+            "failure": "Then I am the last thing the Terrans will smell as I destroy all your ships and bases.",
+            "success": "How dare you insult my hygiene? Prepare to die, {name}!",
+            "science": "The captain is meticulous and proud of their impeccable hygiene."
+        }
+    ],
+    "skaraan": [
+        {
+            "button": "Taunt ship is slow",
+            "transmit": "Hey Skaraan! Your ship is so slow it leaves a slime trail!",
+            "failure": "So does your mother, {name}. Now watch my slow ship kill a bunch of worthless Terrans.",
+            "success": "I have the fastest ship in the galaxy, {name}. And it's about to blow you to smithereens!",
+            "science": "The captain is proud to command the fastest ship in the galaxy."
+        },
+        {
+            "button": "Taunt captain's finances",
+            "transmit": "You penniless pauper! Your portfolio sucks like a black hole!",
+            "failure": "I won't even dignify your worthless crew and squalid ship with a reaction, {name}.",
+            "success": "How dare you insult my finances, {name}? I shall enjoy earning the bonus for killing you!",
+            "science": "The captain is financially savvy and particularly proud of their investment portfolio."
+        },
+        {
+            "button": "Taunt captain's status",
+            "transmit": "You insignificant flunky! Go home to your mommy and send someone more important to fight me!",
+            "failure": "Whatever you say, {name}. Right now I'm enjoying the company of YOUR mommy.",
+            "success": "How dare you insult my status? I shall mount your lifeless head on my wall as a trophie, {name}!",
+            "science": "The captain is very status conscous and believe they are a very important person."
+        }
+    ],
+    "ximni": [
+        {
+            "button": "Taunt captain's father",
+            "transmit": "Your father is so stupid he thinks planets are tiny plans.",
+            "failure": "And you are stupid for believing I would react to that, {name}!",
+            "success": "My father is a genius, {name}! For insulting him you shall die!",
+            "science": "The captain is proud that his father is a famous scientific genius."
+        },
+        {
+            "button": "Taunt captain's xim",
+            "transmit": "You selfish simpleton! You don't know the meaning of the word xim!",
+            "failure": "I know only a ximless Terran stooge would use such a pointless insult, {name}.",
+            "success": "How dare you insult my xim? My vengence will be your death, {name}!",
+            "science": "The captain once failed the traditional test of xim and still feels bitter about it."
+        },
+        {
+            "button": "Taunt captain's courage",
+            "transmit": "You wouldn’t dare fight me, you cowering Lepusian mud mouse!",
+            "failure": "I'll get around to fighting you eventually, {name}. Right now I have other Terrans to defeat.",
+            "success": "I have ten times your courage, {name}! And I am coming to kill you!",
+            "science": "The captain is insecure about his own courage."
+        }
+    ],
+    "unknown": [{
+        "button": "",
+        "transmit": "",
+        "failure": "",
+        "success": "",
+        "science": "The captain cannot be taunted."
+    }]
+
+}

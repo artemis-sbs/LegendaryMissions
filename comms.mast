@@ -1,5 +1,10 @@
 route comms select route_comms
 
+#
+# Load data from a file
+#
+taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
+
 #############################################
 # Create task to player to raider comms and station comms
 #############################################
@@ -100,9 +105,9 @@ await comms:
     + "Hail":
         receive "{comms_id}! We will destroy you, disgusting Terran scum!"
     + "You're Ugly":
-        receive  """You are a foolish Terran, {comms_id}.  We know that the taunt functionality is not currently implemented.^"""
+        receive  """You are a foolish Terran, {comms_id}.  Taunting enemy stations is not currently implemented.^"""
     + "Surrender now":
-        receive """OK we give up, {comms_id}."""
+        receive """Eat my soiled undergarments, {comms_id}."""
 end_await
 
 -> comms_enemy_station
@@ -156,173 +161,51 @@ jump npc_comms
 
 
 ================ comms_taunts ==================
-enemy_side = to_object(COMMS_SELECTED_ID).side
 
-match enemy_side:
-    case "kralien":
-        jump kralien_comms_taunts
- case "arvonian":
-        jump arvonian_comms_taunts
-case "torgoth":
-        jump torgoth_comms_taunts
-case "skaraan":
-        jump skaraan_comms_taunts
+#
+# Skip if the loading of taunts failed
+#
+->END if taunt_data is None
 
-end_match
-# No Taunt for you
-jump npc_comms 
-
-================ kralien_comms_taunts ==================
+races = ["kralien", "arvonian", "torgoth", "skaraan", "ximni"]
+race = None
+for test in races:
+    if has_role(COMMS_SELECTED_ID, test):
+        race = test
+        break
+    end_if
+next test
+if race is None:
+    # No Taunt for you
+    jump npc_comms 
+end_if
+#
+# Present taunts
+#
 name = to_object(COMMS_ORIGIN_ID).name
 taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
 enrage_value=0
 await comms:
-    + "Your ship is a rusting bucket of table scraps.":
+    + "{data['button']}" for data in taunt_data[race]:
+        # Need to format the data
+       msg = data['transmit']
+       msg = "{msg}"
+       transmit "{msg}"
         # failure
         if taunt_trait!=0:
-        receive  """And your ship is stupid and ugly, {name}."""
+            msg = "{data['failure']}"
+            receive  "{msg}"
         # success
         else:
-        receive  """Rust you say? Prepare to meet the gods, Terran infidel!"""
-        enrage_value=sim.time_tick_counter+30*120
-        end_if
-    + "The deadliest weapon on that pathetic ship is your face!":
-        # failure
-        if taunt_trait!=1:
-        receive  """And your face is soft like a dung heap {name}."""
-        # success
-        else:
-        receive  """Your face will be shredded by these weapons!"""
-        enrage_value=sim.time_tick_counter+30*120
-        end_if
-    + "Hey wormface! I'm wiping my stinky feet your Holy Scrolls!":
-        # failure
-        if taunt_trait!=2:
-        receive  """Stick it up your asteroid, {name}. This war will be lost by you."""
-        # success
-        else:
-        receive  """You shall die immediately for your blasphemy!"""
-        enrage_value=sim.time_tick_counter+30*120
+            msg = "{data['success']}"
+            receive  "{msg}"
+            enrage_value=sim.time_tick_counter+30*120
         end_if
 end_await
 do set_inventory_value(COMMS_SELECTED_ID, "enrage_value",(enrage_value, COMMS_ORIGIN_ID))
 # Jump back to main comms menu
 -> npc_comms
 
-================ arvonian_comms_taunts ==================
-name = to_object(COMMS_ORIGIN_ID).name
-taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
-enrage_value=0
-name = to_object(COMMS_ORIGIN_ID).name
-await comms:
-    + "Your uniform is awful. You look like you mugged a jellyfish.":
-        # failure
-        if taunt_trait!=0:
-        receive  """That just shows you are a tasteless dimwit, {name}."""
-         # success
-         else:
-        receive  """I shall destroy your hideous hide, {name}!"""
-        enrage_value=sim.time_tick_counter+30*120
-        end_if
-    + "Your wart-faced King and Queen smell like beetle dung!":
-         # failure
-         if taunt_trait!=1:
-        receive  """And your ghastly Terran planet reeks of greasy food and cheap wine, {name}."""
-         # success
-         else:
-        receive  """I shall avenge your insult in the name of the Queen, {name}!"""
-        enrage_value=sim.time_tick_counter+30*120
-        end_if
-    + "Your Supreme Understander is a tin-boxed wind-up toy!":
-         # failure
-         if taunt_trait!=2:
-        receive  """Perhaps, {name}, but it's still smarter than you."""
-         # success
-         else:
-        receive  """Our Supreme Understander has decreed that you must die now, {name}!"""
-        enrage_value=sim.time_tick_counter+30*120
-        end_if
-end_await
-do set_inventory_value(COMMS_SELECTED_ID, "enrage_value",(enrage_value, COMMS_ORIGIN_ID))
-# Jump back to main comms menu
--> npc_comms
-
-================ torgoth_comms_taunts ==================
-name = to_object(COMMS_ORIGIN_ID).name
-taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
-enrage_value=0
-name = to_object(COMMS_ORIGIN_ID).name
-await comms:
-    + "Hey Jumbo! Your mother is a Space Whale!":
-        # failure
-        if taunt_trait!=0:
-        receive  """So is your father, {name}."""
-        # success
-        else:
-        receive  """You shall die for insulting my mother, {name}!"""
-        enrage_value=sim.time_tick_counter+30*120
-        end_if
-    + "You are so ugly your spouse will thank me for killing you.":
-        # failure
-        if taunt_trait!=1:
-        receive  """I'm not married, excrement face."""
-        # success
-        else:
-        receive  """I shall crush your skull with my bare hands for insulting my spouse, {name}!"""
-        enrage_value=sim.time_tick_counter+30*120
-        end_if
-    + "Take a bath, you fungus-infested pachyderm!":
-        # failure
-        if taunt_trait!=2:
-        receive  """Then I am the last thing the Terrans will smell as I destroy all your ships and bases."""
-        # success
-        else:
-        receive  """How dare you insult my hygiene? Prepare to die, {name}!"""
-        enrage_value=sim.time_tick_counter+30*120
-        end_if
-end_await
-do set_inventory_value(COMMS_SELECTED_ID, "enrage_value",(enrage_value, COMMS_ORIGIN_ID))
-# Jump back to main comms menu
--> npc_comms
-
-
-================ skaraan_comms_taunts ==================
-name = to_object(COMMS_ORIGIN_ID).name
-taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
-enrage_value=0
-name = to_object(COMMS_ORIGIN_ID).name
-await comms:
-    + "Hey Skaraan! Your ship is so slow it leaves a slime trail!":
-        # failure
-        if taunt_trait!=0:
-        receive  """So does your mother, {name}."""
-        # success
-        else:
-        receive  """I have the fastest ship in the galaxy, {name}. And it's about to blow you to smithereens!"""
-        enrage_value=sim.time_tick_counter+30*120
-        end_if
-    + "Penniless pauper! Your portfolio sucks like a black hole!":
-            # failure
-            if taunt_trait!=1:
-        receive  """I could buy and sell your worthless crew and squalid ship, {name}."""
-        # success
-        else:
-        receive  """How dare you insult my finances, {name}? I shall enjoy earning the bonus for killing you!"""
-        enrage_value=sim.time_tick_counter+30*120
-        end_if
-    + "Your mommy raised you to be a worthless flunkey!":
-        # failure
-        if taunt_trait!=2:
-        receive  """Whatever you say, {name}. Right now I'm enjoying the company of YOUR mommy."""
-        # success
-        else:
-        receive  """How dare you insult my status? I shall mount your lifeless head on my wall as a trophie, {name}!"""
-        enrage_value=sim.time_tick_counter+30*120
-        end_if
-end_await
-do set_inventory_value(COMMS_SELECTED_ID, "enrage_value",(enrage_value, COMMS_ORIGIN_ID))
-# Jump back to main comms menu
--> npc_comms
 
 ================ internal_comms ==================
 #

@@ -59,7 +59,10 @@ for v in spawn_points:
     r_type = random.choice(enemyTypeNameList)
     race = r_type.split("_")
     race = race[0]
-    roles = "{race}, raider"
+    if race=="xim":
+        race = "ximni"
+    end_if
+    roles = f"{race}, raider"
     r_name = f"{random.choice(enemy_prefix)}_{enemy}"
     spawn_data = npc_spawn(v.x, v.y, v.z, r_name, roles, r_type, "behav_npcship")
     raider = spawn_data.py_object

@@ -1,0 +1,80 @@
+route science select handle_science
+
+shared intel_list=~~[
+"The captain is very proud of their beautiful ship.",
+"The captain is vain and proud of their handsome face.",
+"The captain is spiritual a devout to the Kralien religion.",
+"The captain is fashion conscous and proud of their attractive uniform.",
+"The captain loves the Arvonian royal family.",
+"The captain has unfailing faith in the decisions of the Arvonian Supreme Understander.",
+"The captain loves their mother and is proud that she is so beautiful.",
+"The captain and their spouse have a very stable, loving relationship.",
+"The captain is meticulous and proud of their impeccable hygiene.",
+"The captain is proud to command the fastest ship in the galaxy.",
+"The captain is financially savvy and particularly proud of their investment portfolio.",
+"The captain is very status conscous and believe they are a very important person.",
+"The captain cannot be taunted.",
+]~~
+
+====== handle_science =====
+if has_roles(SCIENCE_SELECTED_ID, "tsn, Station"):
+    jump station_science
+elif has_roles(SCIENCE_SELECTED_ID, "tsn, friendly"):
+    jump friendly_science
+elif has_role(SCIENCE_SELECTED_ID, "raider"):
+    jump raider_science
+end_if
+->END
+
+========= station_science =======
+
+await scan:
+    + "scan":
+        scan results "This is a friendly station"
+    + "bio":
+        scan results "Just a bunch of people"
+    + "intl":
+        scan results "The people seem smart enough"
+end_await
+->END
+
+========= friendly_science =======
+
+await scan:
+    + "scan":
+        scan results "This is a friendly ship"
+    + "bio":
+        scan results "People looking to help"
+    + "intl":
+        scan results "The people seem eager for fight"
+end_await
+->END
+
+====== raider_science  ===========
+taunt_trait=get_inventory_value(SCIENCE_SELECTED_ID, "taunt_trait")
+if taunt_trait is None:
+    taunt_intel = intel_list[-1] 
+else:
+    side_index=0
+    if has_role(SCIENCE_SELECTED_ID, "kralien"):
+        side_index=0
+        elif has_role(SCIENCE_SELECTED_ID, "arvonian"):
+        side_index=1
+        elif has_role(SCIENCE_SELECTED_ID, "torgoth"):
+        side_index=2
+        elif has_role(SCIENCE_SELECTED_ID, "skaraan"):
+        side_index=3
+    end_if
+    taunt_index=side_index*3+taunt_trait
+    taunt_intel = intel_list[taunt_index]
+end_if
+
+await scan:
+    + "scan":
+        scan results "Looks like some bad dudes"
+    + "bio":
+        scan results "Whew can smell travel through space?"
+    + "intl":
+        scan results "{taunt_intel}"
+end_await
+->END
