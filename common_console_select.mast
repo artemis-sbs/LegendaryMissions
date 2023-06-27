@@ -9,7 +9,7 @@ route change console select_console
 ========= client_main ==========
 console_select = "helm"
 client_select_ship = "artemis"
-
+console_ready = False
 ========== select_console ==========
 # default console_select = "helm"
 # default client_select_ship = "artemis"
@@ -44,6 +44,7 @@ if not game_started:
     checkbox console_ready "ready"
 else:
     button "ready":
+        console_ready = True
         jump console_selected
     end_button
 end_if
@@ -58,6 +59,10 @@ await gui
 # Multiple labels to call to get here
 
 ====== game_started_console ====
+if not console_ready:
+    jump select_console
+end_if
+
 ====== console_selected ====
 if console_select is None or client_select_ship is None:
     jump select_console
