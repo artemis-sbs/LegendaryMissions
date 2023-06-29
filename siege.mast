@@ -115,7 +115,7 @@ for v in spawn_points:
     depth = random.randrange(2,5)
     width = random.randrange(int(angle/6), int(angle/3))
     inner = random.randrange(2000,9000)
-    cluster_spawn_points = scatter_ring(width, depth, 0, 0,0, inner + 500, inner, startAngle, endAngle)
+    cluster_spawn_points = scatter_ring(width, 1, 0, 0,0, inner + 500, inner, startAngle, endAngle)
     # Random type, but same for cluster
     a_type = f"danger_{1}{'a'}"
     for v2 in cluster_spawn_points:

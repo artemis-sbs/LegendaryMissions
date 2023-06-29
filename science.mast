@@ -36,9 +36,8 @@ end_await
 
 ====== raider_science  ===========
 taunt_trait=get_inventory_value(SCIENCE_SELECTED_ID, "taunt_trait")
-if taunt_trait is None or taunt_data is None:
-    taunt_intel = "The captain cannot be taunted."
-else:
+taunt_intel = "The captain cannot be taunted."
+if taunt_trait is not None and taunt_data is not None:
     bio_intel = "The bio scan has failed."
     races = ["kralien", "arvonian", "torgoth", "skaraan", "ximni"]
     race = None
@@ -49,9 +48,10 @@ else:
             break
         end_if
     next test
-
-    intel_list = taunt_data[race]
-    taunt_intel = intel_list[taunt_trait]['science']
+    if race is not None:
+        intel_list = taunt_data[race]
+        taunt_intel = intel_list[taunt_trait]['science']
+    end_if
 end_if
 
 await scan:
