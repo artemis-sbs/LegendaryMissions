@@ -43,7 +43,7 @@ shared enemy_count=5
 shared player_count = 1
 shared player_list = ~~[
     MastDataObject({"name": "Artemis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (200,0,0) , "face": random_terran()}),
-    MastDataObject({"name": "Intrepid", "id": None, "side": "tsn", "ship": "tsn_dreadnaught", "spawn_point": (300,0, -100), "face": random_terran()}),
+    MastDataObject({"name": "Intrepid", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (300,0, -100), "face": random_terran()}),
     MastDataObject({"name": "Aegis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser" , "spawn_point": (500,0, -200), "face": random_terran()}),
     MastDataObject({"name": "Horatio", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser" , "spawn_point": (700,0, -300), "face": random_terran()}),
     MastDataObject({"name": "Excalibur", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-200,0,0) , "face": random_terran()}),
