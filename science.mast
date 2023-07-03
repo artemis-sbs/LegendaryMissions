@@ -1,13 +1,11 @@
 route science select handle_science
 
 ====== handle_science =====
-if has_roles(SCIENCE_SELECTED_ID, "tsn, Station"):
-    jump station_science
-elif has_roles(SCIENCE_SELECTED_ID, "tsn, friendly"):
-    jump friendly_science
-elif has_role(SCIENCE_SELECTED_ID, "raider"):
-    jump raider_science
-end_if
+
+jump station_science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
+jump friendly_science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
+jump raider_science if has_role(SCIENCE_SELECTED_ID, "raider")
+
 ->END
 
 ========= station_science =======

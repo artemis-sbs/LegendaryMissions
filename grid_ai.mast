@@ -3,9 +3,7 @@ route grid spawn route_grid_spawn
 
 ========== route_grid_spawn =========
 # AI for the player is the docking logic
-if has_role(SPAWNED_ID, "damcons"):
-    jump damcon_ai
-end_if
+jump damcon_ai if has_role(SPAWNED_ID, "damcons")
 
 #### ELSE don't run a task
 ->END

@@ -203,6 +203,8 @@ await comms:
             receive  "{msg}"
             enrage_value=sim.time_tick_counter+30*120
         end_if
+    + "Back":
+        -> npc_comms    
 end_await
 do set_inventory_value(COMMS_SELECTED_ID, "enrage_value",(enrage_value, COMMS_ORIGIN_ID))
 # Jump back to main comms menu

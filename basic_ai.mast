@@ -18,14 +18,10 @@ route spawn route_spawn
 #
 # AI for the player is the docking logic
 #
-if has_role(SPAWNED_ID, "__player__"):
-    #TODO: Create Grid Objects?
-    jump player_docking
-elif has_roles(SPAWNED_ID, "tsn, friendly"):
-    jump ai_task_friendly
-elif has_role(SPAWNED_ID, "raider"):
-    jump task_npc_targeting
-end_if
+jump player_docking if has_role(SPAWNED_ID, "__player__")
+jump ai_task_friendly if has_roles(SPAWNED_ID, "tsn, friendly")
+jump spawn_task_station if has_roles(SPAWNED_ID, "tsn, station")
+jump task_npc_targeting if has_role(SPAWNED_ID, "raider")
 
 #### ELSE don't run a task
 ->END
@@ -65,15 +61,34 @@ end_if
 #
 the_target = None
 if enraged is not None:
+    # if still enraged, use its target
+    clear = True
     if enraged[0] > sim.time_tick_counter:
         the_target = enraged[1]
+        if object_exists(sim, the_target):
+            clear = False           
+        else:
+            clear = True
+            the_target = None
+        end_if
     end_if
+    if clear:
+        # clear the enraged value
+        do set_inventory_value(SPAWNED_ID, "enrage_value", None)
+    end_if
+end_if
+
+#
+# Look for a station near 
+#
+if the_target is None:
+    the_target = closest(SPAWNED_ID, role("Station") & role("tsn"), 3000)
 end_if
 #
 # Look for a player near 
 #
 if the_target is None:
-    the_target = closest(SPAWNED_ID, role("PlayerShip"), 2000)
+    the_target = closest(SPAWNED_ID, role("PlayerShip"), 3000)
 end_if
 #
 # Otherwise look for a tsn station
@@ -85,7 +100,14 @@ end_if
 # If any of these check resulted in a target
 #
 if the_target is not None:
-    do target(sim, SPAWNED_ID, the_target, True)
+
+    distance = sbs.distance_id(SPAWNED_ID, to_id(the_target))
+    throt = 1
+    if distance < 500:
+    throt = 0
+    end_if
+
+    do target(sim, SPAWNED_ID, the_target, True, throt)
 end_if
 #
 # Call this logic again in 5 seconds
@@ -121,7 +143,15 @@ end_if
 #            
 if the_target is not None:
     shoot = has_role(the_target, "raider")
-    do target(sim, SPAWNED_ID, the_target, shoot)
+
+    distance = sbs.distance_id(SPAWNED_ID,to_id(the_target))
+    throt = 1
+    if distance < 500:
+    throt = 0
+    end_if
+
+    do target(sim, SPAWNED_ID, the_target, shoot, throt)
+
 end_if
 
 #
@@ -130,3 +160,18 @@ end_if
 delay sim 5s
 -> ai_task_friendly
 
+================ spawn_task_station ================= 
+
+
+my_players = role("__player__") & role("tsn")
+for player in my_players:
+    blob = get_engine_data_set(sim, player)
+    num_ids = blob.get("num_extra_scan_sources",0)
+    do blob.set("extra_scan_source", SPAWNED_ID, num_ids)
+    num_ids += 1
+    do blob.set("num_extra_scan_sources",num_ids,0)
+
+    follow route science select player SPAWNED_ID
+
+next player
+-> END

@@ -8,6 +8,7 @@ route damage internal take_internal_damage
 # EVENT has the event data sub_float has the amount, source_point has the point
 #
 
+
 # Make sure you don't take further damage
 if has_role(DAMAGE_ORIGIN_ID, "exploded"):
     ->END

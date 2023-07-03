@@ -17,6 +17,7 @@ for player_ship_data in player_list:
     end_if
 
     player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, player_ship_data.ship))
+    # player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, "tsn_light_cruiser"))
     c+=1
     player_ship_data.id = player_ship
 
@@ -34,7 +35,7 @@ for player_ship_data in player_list:
             do grid_spawn(player_ship, f"DC{i+1}", f"DC{i+1}", point[0],point[1], 80, colors[i], "damcons")
         end_if
     next i
-next player_args
+next player_ship_data
 
 num_mines = 0
 if "few" == terrain_select:

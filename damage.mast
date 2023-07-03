@@ -1,0 +1,73 @@
+route damage object take_damage
+
+
+============= take_damage =========
+
+
+jump npc_damage_target if has_role(DAMAGE_TARGET_ID, "raider")
+jump friendly_station_damage_target if has_roles(DAMAGE_TARGET_ID, "tsn, station")
+jump friendly_support_damage_target if has_roles(DAMAGE_TARGET_ID, "tsn, friendly")
+
+->END
+
+
+========= npc_damage_target ==============
+enrage_value=get_inventory_value(DAMAGE_TARGET_ID, "enrage_value")
+# Skip if already enraged
+->END if enrage_value is not None
+
+
+enrage_value=sim.time_tick_counter+30*120
+if DAMAGE_PARENT_ID==0:
+    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_value",(enrage_value, DAMAGE_SOURCE_ID))
+else:
+    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_value",(enrage_value, DAMAGE_PARENT_ID))
+end_if
+
+->END
+
+==========friendly_station_damage_target =====
+
+jump friendly_common
+
+->END
+
+==========friendly_support_damage_target =====
+
+jump friendly_common
+
+->END
+
+
+========== friendly_common =====
+
+# Only ask every 5 seconds
+help_timer = get_inventory_value(DAMAGE_TARGET_ID, "request_help_timer")
+
+if help_timer is not None and help_timer < sim.time_tick_counter:
+    do set_inventory_value(DAMAGE_TARGET_ID, "request_help_timer",None)
+elif help_timer is not None:
+    # Timer not finished
+    ->END
+end_if
+
+source = "the enemy"
+if DAMAGE_PARENT_ID==0 and DAMAGE_SOURCE_ID != 0:
+    npc_obj = to_object(DAMAGE_ORIGIN_ID)
+    source = npc_obj.comms_id
+elif DAMAGE_PARENT_ID!=0:
+    npc_obj = to_object(DAMAGE_PARENT_ID)
+    source = npc_obj.comms_id
+else:
+    # Parent and origin = 0, Mine?
+    ->END
+end_if
+
+do set_inventory_value(DAMAGE_TARGET_ID, "request_help_timer",sim.time_tick_counter+30*10) # ten seconds repeat
+fr = to_object(DAMAGE_TARGET_ID)
+for player in role(fr.side) & role("__player__"):
+    player_obj = to_object(player)
+    receive player DAMAGE_TARGET_ID "Help. {player_obj.comms_id} we are under attack from {source}"
+next player
+
+->END

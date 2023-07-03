@@ -10,6 +10,7 @@ import grid_ai.mast
 import siege.mast
 import extra_gui.mast
 import game_results.mast
+import damage.mast
 
 #
 # This directs the script 
@@ -130,6 +131,10 @@ end_await
 # Based on the game type call the right 
 # label to build the world
 #
+
+#------------------------------------------------------------------------------------------------------------
+do sbs.set_beam_damages(0, 7.0, enemy_count)
+
 
 match world_select.lower():
     case "siege": 

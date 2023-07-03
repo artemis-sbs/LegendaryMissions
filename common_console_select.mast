@@ -85,6 +85,9 @@ end_if
 # Make it so the console can be found if needed
 #
 do set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
+#------------------------------------------------------------------------------------------------------------
+do sbs.set_beam_damages(client_id, 7.0, enemy_count)
+#------------------------------------------------------------------------------------------------------------
 console console_select
 
 #
