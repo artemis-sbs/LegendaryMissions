@@ -184,6 +184,8 @@ end_if
 #
 name = to_object(COMMS_ORIGIN_ID).name
 taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
+
+right_button = taunt_data[race][taunt_trait]['button']
 enrage_value=0
 await comms:
     + "{data['button']}" for data in taunt_data[race]:
@@ -192,7 +194,7 @@ await comms:
        msg = "{msg}"
        transmit "{msg}"
         # failure
-        if taunt_trait!=0:
+        if right_button != data['button']:
             msg = "{data['failure']}"
             receive  "{msg}"
         # success

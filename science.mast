@@ -12,7 +12,7 @@ end_if
 
 ========= station_science =======
 
-await scan:
+await scan fog 0:
     + "scan":
         scan results "This is a friendly station."
     + "bio":
