@@ -36,7 +36,7 @@ if dock_station is not None:
 end_if
 
 
-if "docked" == dock_state_string:
+if dock_station is not None and "docked" == dock_state_string:
     dock_station_blob = get_engine_data_set(sim, dock_station)
     # refuel
     fuel_value = get_data_set_value(player_blob, "energy",0)

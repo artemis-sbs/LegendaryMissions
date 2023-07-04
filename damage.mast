@@ -2,7 +2,7 @@ route damage object take_damage
 
 
 ============= take_damage =========
-
+#do print(f"O: {0xFFFFFF &DAMAGE_ORIGIN_ID} P: {0xFFFFFF &DAMAGE_PARENT_ID} S: {0xFFFFFF &DAMAGE_SOURCE_ID} T: {0xFFFFFFF & DAMAGE_TARGET_ID}")
 
 jump npc_damage_target if has_role(DAMAGE_TARGET_ID, "raider")
 jump friendly_station_damage_target if has_roles(DAMAGE_TARGET_ID, "tsn, station")
@@ -16,11 +16,12 @@ enrage_value=get_inventory_value(DAMAGE_TARGET_ID, "enrage_value")
 # Skip if already enraged
 ->END if enrage_value is not None
 
-
 enrage_value=sim.time_tick_counter+30*120
-if DAMAGE_PARENT_ID==0:
+if DAMAGE_SOURCE_ID== DAMAGE_TARGET_ID:
+    -> END
+elif DAMAGE_PARENT_ID==0 and DAMAGE_ORIGIN_ID != 0:
     do set_inventory_value(DAMAGE_TARGET_ID, "enrage_value",(enrage_value, DAMAGE_SOURCE_ID))
-else:
+elif DAMAGE_PARENT_ID != 0:
     do set_inventory_value(DAMAGE_TARGET_ID, "enrage_value",(enrage_value, DAMAGE_PARENT_ID))
 end_if
 
