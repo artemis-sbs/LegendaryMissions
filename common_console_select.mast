@@ -3,16 +3,21 @@ route change console select_console
 # Expects shared data 
 #    player_list that has the list of player ships
 #    player_count the number of expected player ships
-#    game_stared game state
+#    game_started game state
 #
 
 ========= client_main ==========
 console_select = "helm"
 client_select_ship = "artemis"
 console_ready = False
+ship_name = "artemis"
+ship_type = player_list[0].ship 
+ship_type_def = player_list[0].ship
+client_selected_index = -1
 ========== select_console ==========
 # default console_select = "helm"
 # default client_select_ship = "artemis"
+
 
 ship_list = ""
 i = 0
@@ -20,12 +25,41 @@ for player_ship in player_list:
     if i>=player_count:
         break
     end_if
+    if client_select_ship.lower() == player_ship.name.lower():
+        client_selected_index = i
+    end_if
     i += 1
     if len(ship_list) >0:
         ship_list = ship_list + ","
     end_if
     ship_list = ship_list + player_ship.name.lower()
 next player_ship
+
+if client_selected_index != -1 and client_selected_index<player_count:
+    ship_type_def = player_list[client_selected_index].ship
+end_if
+
+if console_select == "helm" and not game_started:
+  section style="area: 1,60px, 50,50;row-height: 50px;"
+  row style="row-height: 30px;"
+  input ship_name "title:Ship Name"
+  row style="row-height: 300px;"
+  
+  gui control ship_type ship_picker_control("Your Ship", ship_type_def)
+  row style="row-height: 50px;"
+  button "Apply changes":
+    if client_selected_index != -1 and client_selected_index<player_count:
+        player_list[client_selected_index].name = ship_name
+        client_select_ship = ship_name
+        player_list[client_selected_index].ship = ship_type.value
+        #do print(ship_type.value)
+    end_if
+    jump select_console
+
+    
+  end_button
+end_if
+
 
 #section style="area: 10,50, 35,90;row-height: 50px;"
 # button "Debug Mast":
@@ -50,6 +84,15 @@ else:
 end_if
 
 on change player_count:
+    jump select_console
+end_on
+
+on change client_select_ship:
+    ship_name = client_select_ship
+    jump select_console
+end_on
+
+on change console_select:
     jump select_console
 end_on
 
