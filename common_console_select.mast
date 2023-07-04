@@ -40,17 +40,21 @@ if client_selected_index != -1 and client_selected_index<player_count:
 end_if
 
 if console_select == "helm" and not game_started:
-  section style="area: 1,60px, 50,50;row-height: 50px;"
-  row style="row-height: 30px;"
-  input ship_name "title:Ship Name"
+  section style="area: 1,60px, 40,50;row-height: 50px;"
+  row # style="row-height: 50px;"
+  input ship_name "desc:Ship Name"
   row style="row-height: 300px;"
   
   gui control ship_type ship_picker_control("Your Ship", ship_type_def)
   row style="row-height: 50px;"
+  blank
+  row style="row-height: 50px;"
   button "Apply changes":
     if client_selected_index != -1 and client_selected_index<player_count:
-        player_list[client_selected_index].name = ship_name
-        client_select_ship = ship_name
+        if len(ship_name)>0:
+            player_list[client_selected_index].name = ship_name
+            client_select_ship = ship_name
+        end_if
         player_list[client_selected_index].ship = ship_type.value
         #do print(ship_type.value)
     end_if
@@ -66,10 +70,10 @@ end_if
 #    jump debug_mast
 # end_button
 
-section style="area: 60,50, 75,90;row-height: 50px;"
+section style="area: 50,60px,75,90;row-height: 50px;"
 vradio client_select_ship "{ship_list}"
 
-section style="area: 85,50, 99,90;"
+section style="area: 80,60px, 99,90;row-height: 50px;"
 vradio console_select "helm,weapons, comms,science,engineering"
 blank
 row
