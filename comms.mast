@@ -28,6 +28,9 @@ elif has_role(COMMS_SELECTED_ID, "Raider"):
     jump npc_comms
 end_if
 
+# Default clear comms Present static
+comms_info "static"
+
 ->END
 
 ===== friendly_comms =======
