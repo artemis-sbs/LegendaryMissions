@@ -91,7 +91,7 @@ if should_explode:
     #
     pos = get_pos(sim, EVENT.origin_id)
     if pos:
-        do sbs.create_transient(1, 0, EVENT.origin_id, 0, pos.x, pos.y, pos.z, "")  
+        do sbs.create_transient(1, 0, EVENT.origin_id, 0, EVENT.parent_id, pos.x, pos.y, pos.z, "")  
     end_if
 
     do add_role(EVENT.origin_id, "exploded")

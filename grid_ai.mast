@@ -57,8 +57,8 @@ if length is None or length < 1:
             continue
         end_if
 
-        eo = go.get_engine_object(sim)
-        do hm.delete_grid_object(eo)
+        
+        do sbs.delete_grid_object(go.host_id, id)
         # Have to unlink this so it is no longer seen
         do unlink(obj.host_id, "damage", id)
         system_heal = get_inventory_value(go, "system")
