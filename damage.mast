@@ -41,6 +41,8 @@ jump friendly_common
 
 
 ========== friendly_common =====
+fr = to_object(DAMAGE_TARGET_ID)
+->END if fr is None
 
 # Only ask every 5 seconds
 help_timer = get_inventory_value(DAMAGE_TARGET_ID, "request_help_timer")
@@ -65,7 +67,7 @@ else:
 end_if
 
 do set_inventory_value(DAMAGE_TARGET_ID, "request_help_timer",sim.time_tick_counter+30*10) # ten seconds repeat
-fr = to_object(DAMAGE_TARGET_ID)
+
 for player in role(fr.side) & role("__player__"):
     player_obj = to_object(player)
     receive player DAMAGE_TARGET_ID "Help. {player_obj.comms_id} we are under attack from {source}"

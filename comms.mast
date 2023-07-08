@@ -94,10 +94,15 @@ end_await
 
 === task_station_building ===
 delay sim 10s
-~~
-cur_count = self.get_engine_data(sim, "torpedo_count", torpedo_build_type)
-self.set_engine_data(sim, "torpedo_count", cur_count+1, torpedo_build_type)
-~~
+self = to_object(COMMS_SELECTED_ID)
+#
+# If the station was destroyed  END
+#
+->END if self is None
+
+cur_count = get_engine_data(sim, COMMS_SELECTED_ID, "torpedo_count", torpedo_build_type)
+do set_engine_data(sim, COMMS_SELECTED_ID, "torpedo_count", cur_count+1, torpedo_build_type)
+
 receive  """{comms_id}. {torpedo_build_type} Production complete."""
 ->task_station_building
 
