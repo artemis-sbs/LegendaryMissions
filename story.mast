@@ -178,8 +178,8 @@ jump pause_screen
 
 delay sim 4s
 
-players = role('PlayerShip')
-if len(players)==0:
+stations = role('tsn') & role('station')
+if len(stations)==0:
     start_text = "Mission is lost!  All yer base are belong to us, dammit."
     game_started = False
 
