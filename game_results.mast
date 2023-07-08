@@ -7,12 +7,12 @@ route destroy update_score
 
 shared game_stats = ~~{
     "tsn_destroyed": 0,
-    "raider_destroyed": 0,
     "kralien_ships_destroyed": 0,
     "skaraan_ships_destroyed": 0,
     "arvonian_ships_destroyed": 0,
     "torgoth_ships_destroyed": 0,
     "ximni_ships_destroyed": 0,
+    "ships_surrender": 0,
     "start_time": sim.time_tick_counter
 }~~
 
@@ -65,13 +65,6 @@ hole
 hole
 hole
 hole
-"""color:yellow; text:Raider Destroyed"""
-"""color:yellow;justify: right; text:{game_stats["raider_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
 """color:yellow; text:arvonian ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["arvonian_ships_destroyed"]}"""
 row
@@ -102,6 +95,13 @@ hole
 hole
 """color:yellow; text:torgoth ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["torgoth_ships_destroyed"]}"""
+row
+hole
+hole
+hole
+hole
+"""color:yellow; text:ships surrendered"""
+"""color:yellow;justify: right; text:{game_stats["ships_surrender"]}"""
 row
 
 end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)

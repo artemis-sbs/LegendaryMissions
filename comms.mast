@@ -139,7 +139,9 @@ await comms:
             if random.randint(1,6)<3:
                 receive """OK we give up, {comms_id}."""
                 do add_role(COMMS_SELECTED_ID, "surrendered")
+                do game_stats["ships_surrender"] += 1
                 do remove_role(COMMS_SELECTED_ID, "raider")
+
                 do set_engine_data(sim, COMMS_SELECTED_ID, "surrender_flag", 1)
             else:
                 receive """We will fight to our last breath!"""
