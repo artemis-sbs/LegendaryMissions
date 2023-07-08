@@ -164,6 +164,8 @@ var watch_end_game_task schedule task_end_game
 section style="area: 5, 10, 50, 90;"
 """""Simulation paused"""""
 
+
+
 await choice:
 + "Resume Mission":
     simulation resume
@@ -180,6 +182,9 @@ players = role('PlayerShip')
 if len(players)==0:
     start_text = "Mission is lost!  All yer base are belong to us, dammit."
     game_started = False
+
+    do sbs.play_music_file(0, "music/default/failure")
+
     reroute clients show_game_results
     reroute server  show_game_results
 end_if
@@ -188,6 +193,7 @@ raiders = role('Raider')
 if len(raiders)==0:
     start_text = "Mission is won!  All the enemies have been destroyed."
     game_started = False
+    do sbs.play_music_file(0, "music/default/victory")
     reroute clients show_game_results
     reroute server  show_game_results
 end_if
