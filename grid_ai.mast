@@ -29,7 +29,7 @@ if length is None or length < 1:
     ->END if obj is None
 
     # Host is no more 
-    hm = sim.get_hull_map(obj.host_id)
+    hm = sbs.get_hull_map(obj.host_id)
     ->END if hm is None
 
     points = get_inventory_value(obj.host_id, "undamaged")
