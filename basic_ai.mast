@@ -7,6 +7,7 @@
 #
 route spawn route_spawn
 
+
 #
 # The route_spawn label is the entry point 
 # it examines the SPAWNED_ID to either
@@ -18,12 +19,27 @@ route spawn route_spawn
 #
 # AI for the player is the docking logic
 #
-jump player_docking if has_role(SPAWNED_ID, "__player__")
+jump ai_player if has_role(SPAWNED_ID, "__player__")
 jump ai_task_friendly if has_roles(SPAWNED_ID, "tsn, friendly")
 jump spawn_task_station if has_roles(SPAWNED_ID, "tsn, station")
 jump task_npc_targeting if has_role(SPAWNED_ID, "raider")
 
 #### ELSE don't run a task
+->END
+
+=====  ai_player =====
+
+#
+# Create the interior for the ship, defined in grid_ai
+#
+schedule spawn_grid_objects
+#
+# The remaining AI for the player is docking
+#
+schedule player_docking
+#
+# With other tasks started end this one
+#
 ->END
 
 

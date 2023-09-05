@@ -14,33 +14,61 @@ if has_role(DAMAGE_ORIGIN_ID, "exploded"):
     ->END
 end_if
 
+loc_x = 0
+loc_y = 0
+loc = sbs.find_valid_grid_point_for_vector3(DAMAGE_ORIGIN_ID, EVENT.source_point)
+
+if len(loc)>0:
+    loc_x = loc[0]
+    loc_y = loc[1]
+    go_set_at_loc = grid_objects_at(DAMAGE_ORIGIN_ID, loc_x, loc_y)
+    for go_id in go_set_at_loc:
+        go = to_object(go_id)
+        blob = to_blob(sim, go_id)
+        do blob.set("icon_color", "red", 0)
+        do link(DAMAGE_ORIGIN_ID, "damage", go_id) 
+    next go 
+end_if
+    
+#
 # pick a random system 
+# this can get overridden by finding a grid object in the hit location
+#
 system_hit = random.randint(0,3)
 blob = get_engine_data_set(sim, DAMAGE_ORIGIN_ID)
-
 damage_amount = EVENT.sub_float
-#
-# Deal damage evenly, but start at a random system
-#
-# Get open hull points
-points = get_inventory_value(DAMAGE_ORIGIN_ID, "undamaged")
-#
-# I we haven't set it then get the valid grid points
-#
-if points is None:
-    points = get_open_grid_points(sim,DAMAGE_ORIGIN_ID)
-    #
-    # Maybe remove some?
-    #
-    do set_inventory_value(DAMAGE_ORIGIN_ID, "undamaged", points)
-end_if
+
+->END
+
+===== dead_code_but_need_parts ===
+        #
+        # Deal damage evenly, but start at a random system
+        #
+        # Get open hull points
+        points = get_inventory_value(DAMAGE_ORIGIN_ID, "undamaged")
+        #
+        # I we haven't set it then get the valid grid points
+        #
+    #    if points is None:
+    #        points = get_open_grid_points(sim,DAMAGE_ORIGIN_ID)
+    #       #
+            # Maybe remove some?
+            #
+    #        do set_inventory_value(DAMAGE_ORIGIN_ID, "undamaged", points)
+    #    end_if
 
 icons = [40,59,33,27]
 colors = ["red", "red", "red", "red"]
 
 if len(points)>0:
-    point = random.choice(points)
-    #do print(f"point {point}")
+    point = None
+
+    if loc_x > 0 and loc_y > 0:
+    else:
+        point = random.choice(points)
+        #do print(f"point {point}")
+    end_if
+
     do points.remove(point)
     do set_inventory_value(DAMAGE_ORIGIN_ID, "undamaged", points)
 
