@@ -41,6 +41,7 @@ for g in internal_items:
     #       linked_to(player_id, "grid_objects") & role("engine")
     #
     do link(so, "grid_objects",go)
+    do add_role(go, "__undamaged__")
     i+=1
 
     #
@@ -56,7 +57,7 @@ for g in internal_items:
     if "shield" in roles:
         shields += 1
     end_if
-    if "tactical" in roles:
+    if "weapon" in roles:
         weapons += 1
     end_if
 next g

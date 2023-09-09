@@ -14,22 +14,16 @@ if has_role(DAMAGE_ORIGIN_ID, "exploded"):
     ->END
 end_if
 
+# Host is no more 
+hm = sbs.get_hull_map(DAMAGE_ORIGIN_ID)
+->END if hm is None
+
 loc_x = 0
 loc_y = 0
-loc = sbs.find_valid_grid_point_for_vector3(DAMAGE_ORIGIN_ID, EVENT.source_point)
+damage_radius = int(((hm.w+hm.h) / 2 / 2) + 2) # Average halved + 2
 
-if len(loc)>0:
-    loc_x = loc[0]
-    loc_y = loc[1]
-    go_set_at_loc = grid_objects_at(DAMAGE_ORIGIN_ID, loc_x, loc_y)
-    for go_id in go_set_at_loc:
-        go = to_object(go_id)
-        blob = to_blob(sim, go_id)
-        do blob.set("icon_color", "red", 0)
-        do link(DAMAGE_ORIGIN_ID, "damage", go_id) 
-    next go 
-end_if
-    
+loc = sbs.find_valid_grid_point_for_vector3(DAMAGE_ORIGIN_ID, EVENT.source_point, damage_radius)
+
 #
 # pick a random system 
 # this can get overridden by finding a grid object in the hit location
@@ -37,6 +31,75 @@ end_if
 system_hit = random.randint(0,3)
 blob = get_engine_data_set(sim, DAMAGE_ORIGIN_ID)
 damage_amount = EVENT.sub_float
+icons = [40,59,33,27]
+colors = ["red", "red", "red", "red"]
+
+if len(loc)>0:
+    loc_x = loc[0]
+    loc_y = loc[1]
+    # do print(f"{loc_x} {loc_y} {EVENT.source_point.x} {EVENT.source_point.y} {EVENT.source_point.z}")
+    go_set_at_loc = grid_objects_at(DAMAGE_ORIGIN_ID, loc_x, loc_y)
+    #
+    # If empty hallway hit, Drop damage down 
+    #
+    if len(go_set_at_loc) == 0:
+        dam_go = grid_spawn(DAMAGE_ORIGIN_ID, f"damage", "", loc_x,loc_y, icons[system_hit], colors[system_hit], "__damaged__") 
+        do link(DAMAGE_ORIGIN_ID, "damage", to_id(dam_go))
+        do dam_go.blob.set("icon_scale", 0.75, 0)
+   else:
+   #    do print("got some")
+        #
+        # there are things here
+        #
+        #
+        # Try several times to apply damage
+        # if damage is applied just do it once
+        #
+        num_retry = 3
+        for retry in range(num_retry):
+            already_damaged = False
+            for go_id in go_set_at_loc:
+                if has_role(go_id, "__damaged__"):
+                    already_damaged = True
+                    continue
+                end_if
+                go = to_object(go_id)
+                blob = to_blob(sim, go_id)
+                do blob.set("icon_color", "red", 0)
+                do link(DAMAGE_ORIGIN_ID, "damage", go_id) 
+                do add_role(go_id, "__damaged__")
+                do remove_role(go_id, "__undamaged__")
+            next go 
+            #
+            # I all damage was new, we are done
+            #
+            if not already_damaged:
+                break
+            end_if
+            #
+            # otherwise
+            # find closest undamaged thing, not hallways
+            # Using it's x,y as the new place to try
+            #
+            a_go = next(iter(go_set_at_loc))
+            undam = grid_closest(sim, a_go, role("__undamaged__") & linked_to(DAMAGE_ORIGIN_ID, "grid_objects"))
+            #
+            # Just need one item to get x,y
+            #
+            if undam is not None:
+                go_blob = to_blob(sim, undam)
+                loc_x = int(go_blob.get("curx", 0))
+                loc_y = int(go_blob.get("cury", 0))
+
+                do print("{loc_x} {loc_y}")
+                go_set_at_loc = grid_objects_at(DAMAGE_ORIGIN_ID, loc_x, loc_y)
+            end_if
+        next retry
+    end_if
+else:
+    do print(f"NO SOUP {EVENT.source_point.x} {EVENT.source_point.y} {EVENT.source_point.z}")
+end_if
+    
 
 ->END
 
@@ -57,8 +120,7 @@ damage_amount = EVENT.sub_float
     #        do set_inventory_value(DAMAGE_ORIGIN_ID, "undamaged", points)
     #    end_if
 
-icons = [40,59,33,27]
-colors = ["red", "red", "red", "red"]
+
 
 if len(points)>0:
     point = None
