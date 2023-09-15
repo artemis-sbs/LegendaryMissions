@@ -11,6 +11,7 @@ import siege.mast
 import extra_gui.mast
 import game_results.mast
 import damage.mast
+import grid_comms.mast
 
 #
 # This directs the script 

@@ -1,7 +1,12 @@
 route grid spawn route_grid_spawn
+
+
 shared grid_data = load_json_data(get_mission_dir_filename("grid_data.json"))
 
 ======== spawn_grid_objects ========
+#
+# Called by basic_ai, so we know this is a player ship already
+#
 jump rebuild_grid_items 
 ->END
 
@@ -14,6 +19,16 @@ ship_grid  = grid_data.get(so.art_id)
 internal_items = ship_grid.get("grid_objects")
 ->END if internal_items is None
 
+#
+# This gets the starting color of damcons
+# Replace this later to create the damcons
+#
+dcs = to_object_list(grid_objects(sim, SPAWNED_ID) & role("damcons"))
+for dc in dcs:
+    blob = to_blob(sim, dc)
+    color = blob.get("icon_color", 0)    
+    do set_inventory_value(dc, "color", color)
+next dc
 
 
 # Delete all grid objects
@@ -33,8 +48,15 @@ engines = 0
 weapons = 0
 shields = 0
 for g in internal_items:
-    go =  grid_spawn(SPAWNED_ID,  g["name"], f"gol:{i}", g["x"], g["y"], g["icon"], g["color"], g["roles"])
+    loc_x = int(g["x"])
+    loc_y = int(g["y"])
+    coords = f"{loc_x},{loc_y}"
+    name_tag = f"{g['name']}:{coords}"
+
+    go =  grid_spawn(SPAWNED_ID,  name_tag, name_tag, loc_x, loc_y, g["icon"], g["color"], g["roles"])
     do go.blob.set("icon_scale", g["scale"], 0)
+    # save color so it cn be restored
+    do set_inventory_value(go.id, "color", g["color"])
     #
     # Add link so query can find this relationship
     #       e.g. query to find engine grid objects on a ship
@@ -48,7 +70,7 @@ for g in internal_items:
     # Update max damage counts
     #
     roles = g["roles"].lower()
-    if "sensor" in roles:
+    if "sensors" in roles:
         sensors += 1
     end_if
     if "engine" in roles:
@@ -66,6 +88,10 @@ do  blob.set('system_max_damage', weapons, sbs.SHPSYS.WEAPONS)
 do  blob.set('system_max_damage', engines, sbs.SHPSYS.ENGINES)
 do  blob.set('system_max_damage', sensors, sbs.SHPSYS.SENSORS)
 do  blob.set('system_max_damage', shields, sbs.SHPSYS.SHIELDS)
+do  blob.set('system_damage', 0, sbs.SHPSYS.WEAPONS)
+do  blob.set('system_damage', 0, sbs.SHPSYS.ENGINES)
+do  blob.set('system_damage', 0, sbs.SHPSYS.SENSORS)
+do  blob.set('system_damage', 0, sbs.SHPSYS.SHIELDS)
 
 
 ->END
@@ -103,23 +129,17 @@ if length is None or length < 1:
     hm = sbs.get_hull_map(obj.host_id)
     ->END if hm is None
 
-    points = get_inventory_value(obj.host_id, "undamaged")
     #
-    # I we haven't set it then get the valid grid points
+    # Get the points at this location
     #
-    if points is None:
-        points = get_open_grid_points(sim,obj.host_id)
-        #
-        # Maybe remove some?
-        #
-        do set_inventory_value(obj.host_id, "undamaged", points)
-    end_if
-
     at_point = hm.get_objects_at_point(x,y)
     
     for id in at_point:
         # Only deal with Damage
-        if not has_role(id, "damage"):
+        if not has_role(id, "__damaged__"):
+            continue
+        end_if
+        if has_role(id, "damcons"):
             continue
         end_if
 
@@ -128,36 +148,63 @@ if length is None or length < 1:
             continue
         end_if
 
-        
-        do sbs.delete_grid_object(go.host_id, id)
+
         # Have to unlink this so it is no longer seen
         do unlink(obj.host_id, "damage", id)
-        system_heal = get_inventory_value(go, "system")
         do unlink(SPAWNED_ID, "assigned", id )
-        do go.destroyed()
-        #
-        # Add point back into undamaged
-        #
-        do points.append((x,y))
-        do set_inventory_value(obj.host_id, "undamaged", points)
-    
-        if system_heal is None:
-            system_heal = random.randint(0,3)
-        end_if
+        # Remove work order
+        do unlink(SPAWNED_ID, "work-order", id)
 
-        ship_blob = get_engine_data_set(sim, go.host_id)
-    
-        current = ship_blob.get('system_damage', system_heal)
-        if current >0:
-            do ship_blob.set('system_damage', current-0.6 , system_heal)
+
+        # If hallway damage delete
+        # else restore color and repair system
+        system_heal = None # get_inventory_value(go, "system")
+        if has_role(id, "hallway"):
+            do sbs.delete_grid_object(go.host_id, id)
+            do go.destroyed()
+        #
+        # This is a room, fix
+        #
         else:
-            do ship_blob.set('system_damage', 0 ,  system_heal)
+            blob = to_blob(sim, id)
+            color = get_inventory_value(id, "color")
+            if color is None:
+                color = "purple"
+            end_if
+            do blob.set("icon_color", color, 0)
+            if has_role(id, "sensors"):
+                system_heal = sbs.SHPSYS.SENSORS
+            elif has_role(id, "weapon"):
+                system_heal = sbs.SHPSYS.WEAPONS
+            elif has_role(id, "engine"):
+                system_heal = sbs.SHPSYS.ENGINES
+            elif has_role(id, "shield"):
+                system_heal = sbs.SHPSYS.SHIELDS
+            end_if
+        end_if
+        #
+        # 
+        #
+        if system_heal is not None:
+            ship_blob = get_engine_data_set(sim, go.host_id)
+        
+            current = ship_blob.get('system_damage', system_heal)
+            if current >0:
+                do ship_blob.set('system_damage', current-1 , system_heal)
+            else:
+                do ship_blob.set('system_damage', 0 ,  system_heal)
+            end_if
         end_if
     next id
         
     # Then look for more work
     # Find damage that is not assigned to someone else
-    the_target = grid_closest(sim, SPAWNED_ID, linked_to(obj.host_id, "damage")-has_link("assigned_to"))
+
+    # the_target = grid_closest(sim, SPAWNED_ID, linked_to(obj.host_id, "damage")-has_link("assigned_to"))
+    #
+    # The damage needs to be a work order for a damcon
+    #
+    the_target =  grid_closest(sim, SPAWNED_ID, linked_to(SPAWNED_ID, "work-order"))
     if the_target is not None:
         do grid_target(sim, SPAWNED_ID, the_target)
         # Remove from available assignments

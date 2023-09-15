@@ -1,5 +1,47 @@
 route damage internal take_internal_damage
+route damage heat take_heat_damage
 
+
+======== take_heat_damage  =======
+# This called when there is damage being taken from heat
+#
+# The DAMAGE_ORIGIN_ID is the ship being damaged
+# EVENT has the event data sub_float has the system
+#
+
+# Make sure you don't take further damage
+->END if has_role(DAMAGE_ORIGIN_ID, "exploded")
+
+
+#   WEAPONS : 0, ENGINES : 1, SENSORS : 2, SHIELDS : 3
+system_damage = [0,0,0,0]
+the_roles =  ["weapon", "engine", "sensors", "shield"]
+the_role = the_roles[int(EVENT.sub_float)]
+#
+# Find undamaged system, apply damage to it
+#
+# from grid objects on this ship that are undamaged and match the system
+#
+hittable = grid_objects(sim, DAMAGE_ORIGIN_ID) & role("__undamaged__") & role(the_role)
+#
+# If no more of that system left just exit
+#
+->END if len(hittable) == 0
+
+do system_damage[int(event.sub_float)]  += 1
+#
+# Pick one of the valid items
+# and damage it
+#
+go_id = random.choice(hittable)
+
+blob = to_blob(sim, go_id)
+do blob.set("icon_color", "red", 0)
+do link(DAMAGE_ORIGIN_ID, "damage", go_id) 
+do add_role(go_id, "__damaged__")
+do remove_role(go_id, "__undamaged__")
+
+jump apply_system_damage
 
 ======== take_internal_damage  =======
 # This called when there is damage being taken internally
@@ -10,9 +52,7 @@ route damage internal take_internal_damage
 
 
 # Make sure you don't take further damage
-if has_role(DAMAGE_ORIGIN_ID, "exploded"):
-    ->END
-end_if
+->END if has_role(DAMAGE_ORIGIN_ID, "exploded")
 
 # Host is no more 
 hm = sbs.get_hull_map(DAMAGE_ORIGIN_ID)
@@ -28,140 +68,120 @@ loc = sbs.find_valid_grid_point_for_vector3(DAMAGE_ORIGIN_ID, EVENT.source_point
 # pick a random system 
 # this can get overridden by finding a grid object in the hit location
 #
-system_hit = random.randint(0,3)
+system_hit = int(EVENT.sub_float)
 blob = get_engine_data_set(sim, DAMAGE_ORIGIN_ID)
 damage_amount = EVENT.sub_float
-icons = [40,59,33,27]
-colors = ["red", "red", "red", "red"]
 
-if len(loc)>0:
-    loc_x = loc[0]
-    loc_y = loc[1]
-    # do print(f"{loc_x} {loc_y} {EVENT.source_point.x} {EVENT.source_point.y} {EVENT.source_point.z}")
-    go_set_at_loc = grid_objects_at(DAMAGE_ORIGIN_ID, loc_x, loc_y)
-    #
-    # If empty hallway hit, Drop damage down 
-    #
-    if len(go_set_at_loc) == 0:
-        dam_go = grid_spawn(DAMAGE_ORIGIN_ID, f"damage", "", loc_x,loc_y, icons[system_hit], colors[system_hit], "__damaged__") 
-        do link(DAMAGE_ORIGIN_ID, "damage", to_id(dam_go))
-        do dam_go.blob.set("icon_scale", 0.75, 0)
-   else:
-   #    do print("got some")
-        #
-        # there are things here
-        #
-        #
-        # Try several times to apply damage
-        # if damage is applied just do it once
-        #
-        num_retry = 3
-        for retry in range(num_retry):
-            already_damaged = False
-            for go_id in go_set_at_loc:
-                if has_role(go_id, "__damaged__"):
-                    already_damaged = True
-                    continue
-                end_if
-                go = to_object(go_id)
-                blob = to_blob(sim, go_id)
-                do blob.set("icon_color", "red", 0)
-                do link(DAMAGE_ORIGIN_ID, "damage", go_id) 
-                do add_role(go_id, "__damaged__")
-                do remove_role(go_id, "__undamaged__")
-            next go 
-            #
-            # I all damage was new, we are done
-            #
-            if not already_damaged:
-                break
-            end_if
-            #
-            # otherwise
-            # find closest undamaged thing, not hallways
-            # Using it's x,y as the new place to try
-            #
-            a_go = next(iter(go_set_at_loc))
-            undam = grid_closest(sim, a_go, role("__undamaged__") & linked_to(DAMAGE_ORIGIN_ID, "grid_objects"))
-            #
-            # Just need one item to get x,y
-            #
-            if undam is not None:
-                go_blob = to_blob(sim, undam)
-                loc_x = int(go_blob.get("curx", 0))
-                loc_y = int(go_blob.get("cury", 0))
+#   WEAPONS : 0, ENGINES : 1, SENSORS : 2, SHIELDS : 3
+system_damage = [0,0,0,0]
 
-                do print("{loc_x} {loc_y}")
-                go_set_at_loc = grid_objects_at(DAMAGE_ORIGIN_ID, loc_x, loc_y)
-            end_if
-        next retry
-    end_if
-else:
-    do print(f"NO SOUP {EVENT.source_point.x} {EVENT.source_point.y} {EVENT.source_point.z}")
-end_if
-    
+# Nothing to do END
+->END if len(loc)== 0
 
-->END
-
-===== dead_code_but_need_parts ===
-        #
-        # Deal damage evenly, but start at a random system
-        #
-        # Get open hull points
-        points = get_inventory_value(DAMAGE_ORIGIN_ID, "undamaged")
-        #
-        # I we haven't set it then get the valid grid points
-        #
-    #    if points is None:
-    #        points = get_open_grid_points(sim,DAMAGE_ORIGIN_ID)
-    #       #
-            # Maybe remove some?
-            #
-    #        do set_inventory_value(DAMAGE_ORIGIN_ID, "undamaged", points)
-    #    end_if
-
-
-
-if len(points)>0:
-    point = None
-
-    if loc_x > 0 and loc_y > 0:
-    else:
-        point = random.choice(points)
-        #do print(f"point {point}")
-    end_if
-
-    do points.remove(point)
-    do set_inventory_value(DAMAGE_ORIGIN_ID, "undamaged", points)
-
-    dam_go = grid_spawn(DAMAGE_ORIGIN_ID, f"damage", "", point[0],point[1], icons[system_hit], colors[system_hit], "damage")
-    #
-    # Keep track of the type of damage
-    #
-    do set_inventory_value(dam_go, "system", system_hit)
-    #
-    # The damage needs to be linked to the ship
-    #
-    do link(DAMAGE_ORIGIN_ID, "damage", to_id(dam_go)) 
-    do dam_go.blob.set("icon_scale", 0.75, 0)
-end_if    
+loc_x = loc[0]
+loc_y = loc[1]
+# do print(f"{loc_x} {loc_y} {EVENT.source_point.x} {EVENT.source_point.y} {EVENT.source_point.z}")
+go_set_at_loc = grid_objects_at(DAMAGE_ORIGIN_ID, loc_x, loc_y)
 
 #
-# Apply damage even if you can't find a spot
+# If empty hallway hit, Drop damage down 
 #
-#do print(f"Applying internal damage {damage_amount}")
+jump damage_hallway if len(go_set_at_loc) == 0
+   
 
-max_dam = blob.get('system_max_damage', system_hit)
-current = blob.get('system_damage', system_hit)
-if current <= max_dam:
-    do blob.set('system_damage', current+0.5 ,  system_hit)
-else:
-    do blob.set('system_damage', max_dam ,  system_hit)
-end_if
-#    do print(f"system_damage {system_hit} dam {current+1}")
+#
+# there are things here
+#
+#
+# Try several times to apply damage
+# if damage is applied just do it once
+#
+num_retry = 3
+for retry in range(num_retry):
+    already_damaged = False
+    for go_id in go_set_at_loc:
+        if has_role(go_id, "__damaged__"):
+            already_damaged = True
+            continue
+        end_if
+        go = to_object(go_id)
+        blob = to_blob(sim, go_id)
+        do blob.set("icon_color", "red", 0)
+        do link(DAMAGE_ORIGIN_ID, "damage", go_id) 
+        do add_role(go_id, "__damaged__")
+        do remove_role(go_id, "__undamaged__")
+        if has_role(go_id, "weapon"):
+            do system_damage[sbs.SHPSYS.WEAPONS]  += 1
+        end_if
+        if has_role(go_id, "sensors"):
+            do system_damage[sbs.SHPSYS.SENSORS]  += 1
+        end_if
+        if has_role(go_id, "shield"):
+            do system_damage[sbs.SHPSYS.SHIELDS]  += 1
+        end_if
+        if has_role(go_id, "engine"):
+            do system_damage[sbs.SHPSYS.ENGINES]  += 1
+        end_if
+    next go 
+    #
+    # I all damage was new, we are done
+    #
+    if not already_damaged:
+        break
+    end_if
+    #
+    # otherwise
+    # find closest undamaged thing, not hallways
+    # Using it's x,y as the new place to try
+    #
+    a_go = next(iter(go_set_at_loc))
+    undam = grid_closest(sim, a_go, role("__undamaged__") & linked_to(DAMAGE_ORIGIN_ID, "grid_objects"))
+    #
+    # Just need one item to get x,y
+    #
+    if undam is not None:
+        go_blob = to_blob(sim, undam)
+        loc_x = int(go_blob.get("curx", 0))
+        loc_y = int(go_blob.get("cury", 0))
+
+        #do print(f"{loc_x} {loc_y}")
+        go_set_at_loc = grid_objects_at(DAMAGE_ORIGIN_ID, loc_x, loc_y)
+    end_if
+next retry
+jump apply_system_damage
+
+====== damage_hallway ==============
+#
+# Expects loc_x and loc_y 
+#  These are define in 
+#
+icon = 45 #fire   # 113 - Door
+
+name_tag = "hallway:{loc_x},{loc_y}"
+dam_go = grid_spawn(DAMAGE_ORIGIN_ID, name_tag, name_tag, loc_x,loc_y, icon, "red", "hallway, __damaged__") 
+
+do link(DAMAGE_ORIGIN_ID, "damage", to_id(dam_go))
+# do dam_go.blob.set("icon_scale", 0.75, 0)
+
+jump apply_system_damage
+
+======== apply_system_damage ======== 
+#
+# called by heat and internal damage handler
+#
+# Expects values: system_damage = a list of 4 values
+#
 
 
-
+##
+## Update the systems damage
+##    
+blob = to_blob(sim, DAMAGE_ORIGIN_ID)
+for x in range(sbs.SHPSYS.MAX):
+    cur =  blob.get('system_damage', sbs.SHPSYS.WEAPONS)
+    cur += system_damage[x]
+    do blob.set('system_damage',cur, x)
+next x
 
 # Is this the end?
 should_explode = True
@@ -205,6 +225,7 @@ if should_explode:
     do sim.reposition_space_object(engine_obj, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
     do so.set_art_id(sim,art_id)
     do remove_role(EVENT.origin_id, "exploded")
-
 end_if
+
 ->END
+

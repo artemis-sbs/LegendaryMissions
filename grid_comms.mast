@@ -1,0 +1,127 @@
+route grid point grid_point_select
+route grid select grid_comms
+
+
+======= grid_comms ======
+#
+# The grid item is selected
+#
+
+jump comms_damcons if has_role(COMMS_SELECTED_ID, "damcons")
+jump comms_damaged if has_role(COMMS_SELECTED_ID, "__damaged__")
+jump comms_undamaged if has_role(COMMS_SELECTED_ID, "__undamaged__")
+comms_info "static"
+->END
+
+
+==== comms_damcons ====== 
+
+await comms:
+ + "goto sickbay":
+ + "do work order now":
+    jump damcons_work_order
+
+ + "cancel work order":
+    jump damcons_cancel
+
+end_await
+
+jump comms_damcons
+
+==== damcons_work_order ====== 
+
+orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
+if orders is None:
+    orders = []
+end_if
+await comms:
+ + "back":
+    jump comms_damcons
+
+ + "Fix now {d.name}" for d in orders:
+    jump comms_damcons
+
+end_await
+
+jump comms_damcons
+
+==== damcons_cancel ====== 
+
+orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
+if orders is None:
+    orders = []
+end_if
+await comms:
+ + "back":
+    jump comms_damcons
+
+ + "Cancel {d.name}" for d in orders:
+    do unlink(COMMS_SELECTED_ID, "work-order", d.id)
+
+end_await
+
+jump comms_damcons
+
+
+==== comms_damaged ====== 
+
+all_dcs = to_object_list(grid_objects(sim, COMMS_ORIGIN_ID) & role("damcons"))
+dcs = []
+workers = []
+for dc in all_dcs:
+    if has_link_to(dc.id, "work-order", COMMS_SELECTED_ID):
+        do workers.append(dc)
+    else:
+        do dcs.append(dc)
+    end_if
+next dc
+
+
+#color: get_inventory_value(d.id, 'color');
+await comms:
+ + "assign {d.name}" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
+    # Add this to the 
+    do link(d.id, "work-order", COMMS_SELECTED_ID)
+ + "cancel {d.name}"  color "{get_inventory_value(d.id, 'color')}" for d in workers:
+    do unlink(d.id, "work-order", COMMS_SELECTED_ID)
+#
+# This watches for state changes tht should change
+# the comms e.g. this grid object gets fixed
+#
+change has_role(COMMS_SELECTED_ID, "__damaged__") == True:
+    jump comms_undamaged
+# deselect:
+end_await
+
+jump comms_damaged
+
+
+==== comms_undamaged ====== 
+
+dcs = to_object_list(grid_objects(sim, COMMS_ORIGIN_ID) & role("damcons"))
+#color: get_inventory_value(d.id, 'color');
+await comms:
+    + "status":
+        #pass
+    #
+    # This watches for state changes tht should change
+    # the comms e.g. this grid object gets damaged
+    #
+    change has_role(COMMS_SELECTED_ID, "__damaged__") == False:
+        jump comms_damaged
+end_await
+
+jump comms_undamaged
+
+
+
+
+
+===== grid_point_select ====
+
+
+#jump watch_sel if GRID_SELECTED_ID is None
+#item = items.get(GRID_SELECTED_ID)
+#jump watch_sel if item is None
+do print("grid point")
+->END
