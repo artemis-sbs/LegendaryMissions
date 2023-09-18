@@ -1,6 +1,7 @@
 route grid point grid_point_select
 route grid select grid_comms
 
+marker_gos = {} #key by ship
 
 ======= grid_comms ======
 #
@@ -16,9 +17,26 @@ comms_info "static"
 
 ==== comms_damcons ====== 
 
+#
+# Create marker if it doesn't exist
+# 
+marker_go_id = marker_gos.get(COMMS_ORIGIN_ID)
+
+pos_to_target = get_inventory_value(COMMS_SELECTED_ID, "target_pos")
 await comms:
- + "goto sickbay":
- + "do work order now":
+ + "goto and wait at marker" if marker_go_id is not None:
+    m_blob = to_blob(sim, marker_go_id)
+    loc_x = m_blob.get("curx", 0)
+    loc_y = m_blob.get("cury", 0)
+    do set_inventory_value(COMMS_SELECTED_ID, "target_pos", (loc_x, loc_y) )
+    do set_inventory_value(COMMS_SELECTED_ID, "idle_pos", None )
+
+ + "return to work" if pos_to_target is not None:
+    do set_inventory_value(COMMS_SELECTED_ID, "target_pos", None )
+    do set_inventory_value(COMMS_SELECTED_ID, "idle_pos", None )
+    do set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
+
+  + "do work order now":
     jump damcons_work_order
 
  + "cancel work order":
@@ -119,9 +137,39 @@ jump comms_undamaged
 
 ===== grid_point_select ====
 
+#
+# Move Marker
+# 
+marker_go_id = marker_gos.get(GRID_PARENT_ID)
+if marker_go_id is None:
+    ship = GRID_PARENT_ID & 0xFFFFFFFF
+    marker_tag = "marker:{ship}"
+    marker_go = grid_spawn(GRID_PARENT_ID, "marker", marker_tag, int(EVENT.source_point.x),int(EVENT.source_point.y), 121, "yellow", "#") 
+    marker_go_id =  to_id(marker_go)
+    marker_gos[GRID_PARENT_ID] = marker_go_id
+end_if
 
-#jump watch_sel if GRID_SELECTED_ID is None
-#item = items.get(GRID_SELECTED_ID)
-#jump watch_sel if item is None
-do print("grid point")
+marker_blob = to_blob(sim, marker_go_id)
+->END if marker_blob is None
+#
+# Set main selection to first item found at location
+#
+go_set_at_loc = to_list(grid_objects_at(GRID_PARENT_ID, int(EVENT.source_point.x), int(EVENT.source_point.y)))
+ship_blob = to_blob(sim, GRID_PARENT_ID)
+->END if ship_blob is None
+if len(go_set_at_loc) > 0:
+    do ship_blob.set("grid_selected_UID", go_set_at_loc[0], 0)
+    #
+    # Set the single bar select to nothing/marker
+    #
+    do ship_blob.set("grid_selected_ship_UID", marker_go_id, 0)
+end_if
+
+#
+# Move marker to location
+#
+do marker_blob.set("curx", EVENT.source_point.x)
+do marker_blob.set("cury", EVENT.source_point.y)
+
+
 ->END

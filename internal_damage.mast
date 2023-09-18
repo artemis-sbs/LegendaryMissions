@@ -16,19 +16,20 @@ route damage heat take_heat_damage
 #   WEAPONS : 0, ENGINES : 1, SENSORS : 2, SHIELDS : 3
 system_damage = [0,0,0,0]
 the_roles =  ["weapon", "engine", "sensors", "shield"]
-the_role = the_roles[int(EVENT.sub_float)]
+hit_system = int(EVENT.sub_tag)
+the_role = the_roles[hit_system]
 #
 # Find undamaged system, apply damage to it
 #
 # from grid objects on this ship that are undamaged and match the system
 #
-hittable = grid_objects(sim, DAMAGE_ORIGIN_ID) & role("__undamaged__") & role(the_role)
+hittable = to_list(grid_objects(sim, DAMAGE_ORIGIN_ID) & role("__undamaged__") & role(the_role))
 #
 # If no more of that system left just exit
 #
 ->END if len(hittable) == 0
 
-do system_damage[int(event.sub_float)]  += 1
+do system_damage[hit_system]  += 1
 #
 # Pick one of the valid items
 # and damage it
@@ -97,9 +98,24 @@ jump damage_hallway if len(go_set_at_loc) == 0
 # if damage is applied just do it once
 #
 num_retry = 3
+
+injured_dc = set()
 for retry in range(num_retry):
     already_damaged = False
+    
     for go_id in go_set_at_loc:
+        #
+        # track hit damcons
+        #
+        if has_role(go_id, "damcons"):
+            do injured_dc.add(go_id)
+            # don't mark damcons as damaged
+            continue
+        end_if
+        if has_role(go_id, "marker"):
+            # don't mark marker as damaged
+            continue
+        end_if
         if has_role(go_id, "__damaged__"):
             already_damaged = True
             continue
@@ -148,6 +164,28 @@ for retry in range(num_retry):
         go_set_at_loc = grid_objects_at(DAMAGE_ORIGIN_ID, loc_x, loc_y)
     end_if
 next retry
+
+for d in injured_dc:
+    hp =  get_inventory_value(d, "HP", 0)
+    hp -= 1
+    do  set_inventory_value(d, "HP", hp)
+    go = to_object(d)
+    ship = go.host_id 
+    blob = to_blob(sim, d)
+    do blob.set("icon_color", "red", 0)
+    if hp <= 0:
+        do sbs.delete_grid_object(go.host_id, d)
+        have ship broadcast "{go.name} has perished" color "red"
+        if go is not None:
+            do go.destroyed()
+        end_if
+        ->END
+    else:
+        have ship broadcast "{go.name} has been hurt hp={hp}" color "yellow"
+    end_if
+next d
+
+
 jump apply_system_damage
 
 ====== damage_hallway ==============
@@ -178,7 +216,7 @@ jump apply_system_damage
 ##    
 blob = to_blob(sim, DAMAGE_ORIGIN_ID)
 for x in range(sbs.SHPSYS.MAX):
-    cur =  blob.get('system_damage', sbs.SHPSYS.WEAPONS)
+    cur =  blob.get('system_damage', x)
     cur += system_damage[x]
     do blob.set('system_damage',cur, x)
 next x
@@ -214,6 +252,7 @@ if should_explode:
     # Reset the systems to max
     for sys in range(4):
         do blob.set('system_damage', 0, sys)
+
     next sys
     
     delay sim 5s
@@ -225,6 +264,8 @@ if should_explode:
     do sim.reposition_space_object(engine_obj, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
     do so.set_art_id(sim,art_id)
     do remove_role(EVENT.origin_id, "exploded")
+    SPAWNED_ID = EVENT.origin_id
+    jump rebuild_grid_items
 end_if
 
 ->END
