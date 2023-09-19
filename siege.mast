@@ -1,41 +1,7 @@
 import map_common.mast
 
 ================= siege_build_world ===================
-
-
-first = True
-colors  = ["yellow", "green", "blue"]
-c = 0
-do print(f"{player_count}")
-
-#------------------------------------------------------------------------------------------------------------
-for player_ship_data in player_list:
-    if c>= player_count:
-        # make sure the id is cleared dry docked ships
-        player_ship_data.id = None
-        continue
-    end_if
-
-    player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, player_ship_data.ship))
-    # player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, "tsn_light_cruiser"))
-    c+=1
-    player_ship_data.id = player_ship
-
-    do set_face(player_ship, player_ship_data.face)
-    if first:
-        do assign_client_to_ship(0,player_ship)
-        first = False
-    end_if
-    points = get_open_grid_points(sim,player_ship)
-    
-    for i in range(3):
-        if len(points)>0:
-            point = random.choice(points)
-            do points.remove(point)
-            do grid_spawn(player_ship, f"DC{i+1}", f"DC{i+1}", point[0],point[1], 80, colors[i], "damcons")
-        end_if
-    next i
-next player_ship_data
+schedule spawn_players
 
 num_mines = 0
 if "few" == terrain_select:

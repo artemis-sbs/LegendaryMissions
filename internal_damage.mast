@@ -25,9 +25,9 @@ the_role = the_roles[hit_system]
 #
 hittable = to_list(grid_objects(sim, DAMAGE_ORIGIN_ID) & role("__undamaged__") & role(the_role))
 #
-# If no more of that system left just exit
+# If no more of that system left just, apply damage just in cas we should explode
 #
-->END if len(hittable) == 0
+jump apply_system_damage if len(hittable) == 0
 
 do system_damage[hit_system]  += 1
 #
@@ -105,17 +105,15 @@ for retry in range(num_retry):
     
     for go_id in go_set_at_loc:
         #
-        # track hit damcons
+        # track hit lifeforms
         #
-        if has_role(go_id, "damcons"):
+        continue if has_role(go_id, "marker")
+        if has_role(go_id, "lifeform"):
             do injured_dc.add(go_id)
-            # don't mark damcons as damaged
+            # don't mark lifeforms as damaged
             continue
         end_if
-        if has_role(go_id, "marker"):
-            # don't mark marker as damaged
-            continue
-        end_if
+
         if has_role(go_id, "__damaged__"):
             already_damaged = True
             continue
@@ -142,9 +140,8 @@ for retry in range(num_retry):
     #
     # I all damage was new, we are done
     #
-    if not already_damaged:
-        break
-    end_if
+    break if not already_damaged
+    
     #
     # otherwise
     # find closest undamaged thing, not hallways
@@ -232,6 +229,16 @@ for sys in range(4):
         break
     end_if
 next sys
+
+if not should_explode:
+    #
+    # look for any undamaged systems, just in case math got wonky
+    #
+    hittable = to_list(grid_objects(sim, DAMAGE_ORIGIN_ID) & role("__undamaged__") & (role("weapon") | role("sensors") | role("shield") | role("engine")) )
+    if len(hittable)==0:
+        should_explode = True
+    end_if
+end_if
 
 if should_explode:
     #

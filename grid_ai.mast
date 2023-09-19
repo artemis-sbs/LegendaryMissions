@@ -5,6 +5,8 @@ route grid spawn route_grid_spawn
 
 
 shared grid_data = load_json_data(get_mission_dir_filename("grid_data.json"))
+
+
 MAX_HP = 6
 HEAL_TIME = 30*120
 
@@ -25,41 +27,15 @@ ship_grid  = grid_data.get(so.art_id)
 internal_items = ship_grid.get("grid_objects")
 ->END if internal_items is None
 
-#
-# This gets the starting color of damcons
-# Replace this later to create the damcons
-#
-dcs = to_object_list(grid_objects(sim, SPAWNED_ID) & role("damcons"))
-for dc in dcs:
-    blob = to_blob(sim, dc)
-    color = blob.get("icon_color", 0)    
-    do set_inventory_value(dc, "color", color)
-next dc
 
 
 
 # Delete all grid objects
-items = linked_to(SPAWNED_ID, "grid_objects")
+items =grid_objects(sim, SPAWNED_ID)
 for k in items:
     # delete by id
     do sbs.delete_grid_object(SPAWNED_ID, k)
 next k
-
-
-#
-# Create marker
-#
-v = sbs.vec3(0.5,0,0.5)
-loc = sbs.find_valid_grid_point_for_vector3(SPAWNED_ID, v, 5)
-loc_x = loc[0]
-loc_y = loc[1]
-ship = SPAWNED_ID & 0xFFFFFFFF
-marker_tag = "marker:{ship}"
-marker_go = grid_spawn(SPAWNED_ID , "marker", marker_tag, int(loc_x),int(loc_y), 121, "black", "#") 
-marker_go_id =  to_id(marker_go)
-marker_gos[SPAWNED_ID] = marker_go_id
-
-
 
 
 #
@@ -117,6 +93,34 @@ do  blob.set('system_damage', 0, sbs.SHPSYS.WEAPONS)
 do  blob.set('system_damage', 0, sbs.SHPSYS.ENGINES)
 do  blob.set('system_damage', 0, sbs.SHPSYS.SENSORS)
 do  blob.set('system_damage', 0, sbs.SHPSYS.SHIELDS)
+
+
+#
+# Create damcons/lifeforms
+#
+colors  = ["yellow", "green", "blue"]
+for i in range(3):
+    v = sbs.vec3(0.5,0,0.5)
+    point = sbs.find_valid_unoccupied_grid_point_for_vector3(SPAWNED_ID, v, 5)
+    dc = grid_spawn(SPAWNED_ID, f"DC{i+1}", f"DC{i+1}", point[0],point[1], 80, colors[i], "damcons, lifeform")
+    do set_inventory_value(dc.id, "color", colors[i])
+next i
+
+#
+# Create marker
+#
+v = sbs.vec3(0.5,0,0.5)
+loc = sbs.find_valid_grid_point_for_vector3(SPAWNED_ID, v, 5)
+loc_x = loc[0]
+loc_y = loc[1]
+ship = SPAWNED_ID & 0xFFFFFFFF
+marker_tag = "marker:{ship}"
+marker_go = grid_spawn(SPAWNED_ID , "marker", marker_tag, int(loc_x),int(loc_y), 121, "black", "#,marker") 
+marker_go_id =  to_id(marker_go)
+marker_gos[SPAWNED_ID] = marker_go_id
+
+
+
 
 
 ->END
@@ -195,17 +199,11 @@ at_point = hm.get_objects_at_point(x,y)
 
 for id in at_point:
     # Only deal with Damage
-    if not has_role(id, "__damaged__"):
-        continue
-    end_if
-    if has_role(id, "damcons"):
-        continue
-    end_if
-
+    continue if not has_role(id, "__damaged__")
+    continue if has_role(id, "damcons")
+        
     go = to_object(id)
-    if go is None:
-        continue
-    end_if
+    continue if go is None
 
 
     # Have to unlink this so it is no longer seen
@@ -229,7 +227,6 @@ for id in at_point:
     else:
         blob = to_blob(sim, id)
         color = get_inventory_value(id, "color")
-        
 
         if color is None:
             color = "purple"
@@ -345,6 +342,6 @@ else:
 end_if
 
 
-<<-
+pop
 
 

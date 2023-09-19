@@ -2,6 +2,22 @@
 ## common code for different map type
 
 
+#
+#
+# Example embedded python this may not be supported long term
+# This is limited only to the things mast can see
+# i.e. you cannot import other modules
+#
+#~~~~
+#@export
+#def test_func(x,y,z, art_id):
+#    pu = terrain_spawn(0,0,0, None, None, art_id, "behav_pickup")
+#    blob = pu.blob
+#    if blob is not None:
+#        print(f"Blobby {x}")
+#~~~~
+
+
 =========== spawn_friendly_npc ===========
 
 match friendly_select:
@@ -52,7 +68,35 @@ for x while total_hull_points<max_hull_points:
     total_hull_points += hull_points
     do set_face(friend, random_terran())
 next x
-    
+->END
+
+====== spawn_players =======
+c=0
+first = True
+
+#do test_func(3)
+
+#------------------------------------------------------------------------------------------------------------
+for player_ship_data in player_list:
+    if c>= player_count:
+        # make sure the id is cleared dry docked ships
+        player_ship_data.id = None
+        continue
+    end_if
+
+    player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, player_ship_data.ship))
+    # player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, "tsn_light_cruiser"))
+    c+=1
+    player_ship_data.id = player_ship
+
+    do set_face(player_ship, player_ship_data.face)
+    if first:
+        do assign_client_to_ship(0,player_ship)
+        first = False
+    end_if
+    points = get_open_grid_points(sim,player_ship)
+next player_ship_data
+->END
     
     
         

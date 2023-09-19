@@ -157,19 +157,36 @@ marker_blob = to_blob(sim, marker_go_id)
 go_set_at_loc = to_list(grid_objects_at(GRID_PARENT_ID, int(EVENT.source_point.x), int(EVENT.source_point.y)))
 ship_blob = to_blob(sim, GRID_PARENT_ID)
 ->END if ship_blob is None
-if len(go_set_at_loc) > 0:
-    do ship_blob.set("grid_selected_UID", go_set_at_loc[0], 0)
-    #
-    # Set the single bar select to nothing/marker
-    #
-    do ship_blob.set("grid_selected_ship_UID", marker_go_id, 0)
-end_if
+do ship_blob.set("grid_selected_UID", 0, 0)
+do ship_blob.set("grid_selected_ship_UID", 0, 0)
 
 #
 # Move marker to location
 #
 do marker_blob.set("curx", EVENT.source_point.x)
 do marker_blob.set("cury", EVENT.source_point.y)
+
+#
+# find a room, or damcons if both use room
+#
+found_id = None
+for gid in go_set_at_loc:
+    continue if has_role(gid, "marker")
+    continue if has_role(gid, "damcons") and found_id is not None
+
+    found_id = gid
+next gid
+
+if found_id is not None:
+    do ship_blob.set("grid_selected_UID", found_id , 0)
+    do ship_blob.set("grid_selected_ship_UID", found_id , 0)
+    follow route grid select GRID_PARENT_ID found_id
+else:
+    COMMS_ORIGIN_ID = GRID_PARENT_ID
+    COMMS_SELECTED_ID = marker_go_id
+    comms_info "hallway"
+end_if
+
 
 
 ->END
