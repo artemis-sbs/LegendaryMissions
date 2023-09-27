@@ -119,7 +119,6 @@ on change client_select_ship:
 end_on
 
 on change console_select:
-    do print("I'm triggered cs")
     jump select_console
 end_on
 

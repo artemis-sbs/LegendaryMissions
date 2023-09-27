@@ -31,7 +31,7 @@ internal_items = ship_grid.get("grid_objects")
 
 
 # Delete all grid objects
-items =grid_objects(sim, SPAWNED_ID)
+items =grid_objects(SPAWNED_ID)
 for k in items:
     # delete by id
     do sbs.delete_grid_object(SPAWNED_ID, k)
@@ -82,7 +82,7 @@ for g in internal_items:
         weapons += 1
     end_if
 next g
-blob = to_blob(sim, so)
+blob = to_blob(so)
 #do print(f"E:{engines} W:{weapons} SN:{sensors}, SH: {shields}")
 
 do  blob.set('system_max_damage', weapons, sbs.SHPSYS.WEAPONS)
@@ -145,7 +145,7 @@ do set_inventory_value(SPAWNED_ID, "HP", MAX_HP )
 
 ========== damcon_ai  ================= 
 
-this_blob = get_engine_data_set(sim, SPAWNED_ID)
+this_blob = to_blob(SPAWNED_ID)
 
 # The damcons is no longer
 ->END if this_blob is None
@@ -158,7 +158,7 @@ speed = get_inventory_value(SPAWNED_ID, "speed", 0.01)
 if pos_to_target is not None:
     loc_x = pos_to_target[0]
     loc_y = pos_to_target[1]
-    do grid_target_pos(sim, SPAWNED_ID, loc_x, loc_y, speed)
+    do grid_target_pos(SPAWNED_ID, loc_x, loc_y, speed)
     do set_inventory_value(SPAWNED_ID, "target_pos", None )
     do set_inventory_value(SPAWNED_ID, "idle_pos", pos_to_target )
 end_if
@@ -170,7 +170,7 @@ end_if
 length = this_blob.get("path_length", 0)
 jump loop_damcons_ai if length is not None and length > 0.1
 
-this_blob = get_engine_data_set(sim, SPAWNED_ID)
+this_blob = to_blob(SPAWNED_ID)
 
 # The damcons is no longer
 ->END if this_blob is None
@@ -225,7 +225,7 @@ for id in at_point:
     # This is a room, fix
     #
     else:
-        blob = to_blob(sim, id)
+        blob = to_blob(id)
         color = get_inventory_value(id, "color")
 
         if color is None:
@@ -246,7 +246,7 @@ for id in at_point:
     # 
     #
     if system_heal is not None:
-        ship_blob = get_engine_data_set(sim, go.host_id)
+        ship_blob = to_blob(go.host_id)
     
         current = ship_blob.get('system_damage', system_heal)
         if current >0:
@@ -260,18 +260,18 @@ next id
 # Then look for more work
 # Find damage that is not assigned to someone else
 
-# the_target = grid_closest(sim, SPAWNED_ID, linked_to(obj.host_id, "damage")-has_link("assigned_to"))
+# the_target = grid_closest(SPAWNED_ID, linked_to(obj.host_id, "damage")-has_link("assigned_to"))
 #
 # The damage needs to be a work order for a damcon
 #
-the_target =  grid_closest(sim, SPAWNED_ID, linked_to(SPAWNED_ID, "work-order"))
+the_target =  grid_closest(SPAWNED_ID, linked_to(SPAWNED_ID, "work-order"))
 if the_target is not None:
-    do grid_target(sim, SPAWNED_ID, the_target, speed)
+    do grid_target(SPAWNED_ID, the_target, speed)
     # Remove from available assignments
     do unlink(the_target, "assigned_to", SPAWNED_ID)
     do unlink(SPAWNED_ID, "assigned", the_target )
 else:
-    do grid_target_pos(sim, SPAWNED_ID, obj.spawn_pos.x, obj.spawn_pos.y, speed)
+    do grid_target_pos(SPAWNED_ID, obj.spawn_pos.x, obj.spawn_pos.y, speed)
 end_if
 
 ===== loop_damcons_ai ====
@@ -334,7 +334,7 @@ if hp < MAX_HP:
 else:
     do set_inventory_value(SPAWNED_ID, "next_hp_time", 0)
     color = get_inventory_value(SPAWNED_ID, "color", "purple")
-    go_blob = to_blob(sim, SPAWNED_ID)
+    go_blob = to_blob(SPAWNED_ID)
     if go_blob is not None:
         do go_blob.set("icon_color", color)
     end_if

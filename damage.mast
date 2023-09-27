@@ -12,17 +12,22 @@ jump friendly_support_damage_target if has_roles(DAMAGE_TARGET_ID, "tsn, friendl
 
 
 ========= npc_damage_target ==============
-enrage_value=get_inventory_value(DAMAGE_TARGET_ID, "enrage_value")
+#
+# If an NPC is shot they will get angry at the shooter for two minutes
+# New shooter won't change this
+#
+enrage_value=get_inventory_value(DAMAGE_TARGET_ID, "enrage_target")
 # Skip if already enraged
 ->END if enrage_value is not None
 
-enrage_value=sim.time_tick_counter+30*120
 if DAMAGE_SOURCE_ID== DAMAGE_TARGET_ID:
     -> END
 elif DAMAGE_PARENT_ID==0 and DAMAGE_ORIGIN_ID != 0:
-    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_value",(enrage_value, DAMAGE_SOURCE_ID))
+    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_target",DAMAGE_ORIGIN_ID)
+    do set_timer(DAMAGE_TARGET_ID, "enrage_timer", minutes=2)
 elif DAMAGE_PARENT_ID != 0:
-    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_value",(enrage_value, DAMAGE_PARENT_ID))
+    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_target",DAMAGE_PARENT_ID)
+    do set_timer(DAMAGE_TARGET_ID, "enrage_timer", minutes=2)
 end_if
 
 ->END

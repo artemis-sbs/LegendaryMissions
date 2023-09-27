@@ -94,7 +94,7 @@ for player_ship_data in player_list:
         do assign_client_to_ship(0,player_ship)
         first = False
     end_if
-    points = get_open_grid_points(sim,player_ship)
+    points = get_open_grid_points(player_ship)
 next player_ship_data
 ->END
     

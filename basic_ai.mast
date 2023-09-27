@@ -52,12 +52,12 @@ schedule player_docking
 #  - or a stations
 #
 ========== task_npc_targeting === 
-enraged = get_inventory_value(SPAWNED_ID, "enrage_value")
+enraged = get_inventory_value(SPAWNED_ID, "enrage_target")
 scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 surrendered = has_role(SPAWNED_ID, "surrendered")
 if surrendered:
     so = to_object(SPAWNED_ID)
-    do target_pos(sim, SPAWNED_ID, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
+    do target_pos(SPAWNED_ID, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
     # TODO: When it reaches spawn_pos tally and remove
     ->END
 end_if
@@ -79,9 +79,9 @@ the_target = None
 if enraged is not None:
     # if still enraged, use its target
     clear = True
-    if enraged[0] > sim.time_tick_counter:
-        the_target = enraged[1]
-        if object_exists(sim, the_target):
+    if not is_timer_finished(SPAWNED_ID, "enrage_timer"):
+        the_target = enraged
+        if object_exists(enraged):
             clear = False           
         else:
             clear = True
@@ -90,7 +90,8 @@ if enraged is not None:
     end_if
     if clear:
         # clear the enraged value
-        do set_inventory_value(SPAWNED_ID, "enrage_value", None)
+        do set_inventory_value(SPAWNED_ID, "enrage_target", None)
+        do clear_timer(SPAWNED_ID, "enrage_timer")
     end_if
 end_if
 
@@ -123,7 +124,7 @@ if the_target is not None:
     throt = 0
     end_if
 
-    do target(sim, SPAWNED_ID, the_target, True, throt)
+    do target(SPAWNED_ID, the_target, True, throt)
 end_if
 #
 # Call this logic again in 5 seconds
@@ -166,7 +167,7 @@ if the_target is not None:
     throt = 0
     end_if
 
-    do target(sim, SPAWNED_ID, the_target, shoot, throt)
+    do target(SPAWNED_ID, the_target, shoot, throt)
 
 end_if
 
@@ -181,7 +182,7 @@ delay sim 5s
 
 my_players = role("__player__") & role("tsn")
 for player in my_players:
-    blob = get_engine_data_set(sim, player)
+    blob = to_blob(player)
     num_ids = blob.get("num_extra_scan_sources",0)
     do blob.set("extra_scan_source", SPAWNED_ID, num_ids)
     num_ids += 1

@@ -25,7 +25,7 @@ marker_go_id = marker_gos.get(COMMS_ORIGIN_ID)
 pos_to_target = get_inventory_value(COMMS_SELECTED_ID, "target_pos")
 await comms:
  + "goto and wait at marker" if marker_go_id is not None:
-    m_blob = to_blob(sim, marker_go_id)
+    m_blob = to_blob(marker_go_id)
     loc_x = m_blob.get("curx", 0)
     loc_y = m_blob.get("cury", 0)
     do set_inventory_value(COMMS_SELECTED_ID, "target_pos", (loc_x, loc_y) )
@@ -83,7 +83,7 @@ jump comms_damcons
 
 ==== comms_damaged ====== 
 
-all_dcs = to_object_list(grid_objects(sim, COMMS_ORIGIN_ID) & role("damcons"))
+all_dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
 dcs = []
 workers = []
 for dc in all_dcs:
@@ -116,7 +116,7 @@ jump comms_damaged
 
 ==== comms_undamaged ====== 
 
-dcs = to_object_list(grid_objects(sim, COMMS_ORIGIN_ID) & role("damcons"))
+dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
 #color: get_inventory_value(d.id, 'color');
 await comms:
     + "status":
@@ -149,13 +149,13 @@ if marker_go_id is None:
     marker_gos[GRID_PARENT_ID] = marker_go_id
 end_if
 
-marker_blob = to_blob(sim, marker_go_id)
+marker_blob = to_blob(marker_go_id)
 ->END if marker_blob is None
 #
 # Set main selection to first item found at location
 #
 go_set_at_loc = to_list(grid_objects_at(GRID_PARENT_ID, int(EVENT.source_point.x), int(EVENT.source_point.y)))
-ship_blob = to_blob(sim, GRID_PARENT_ID)
+ship_blob = to_blob(GRID_PARENT_ID)
 ->END if ship_blob is None
 do ship_blob.set("grid_selected_UID", 0, 0)
 do ship_blob.set("grid_selected_ship_UID", 0, 0)

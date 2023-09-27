@@ -2,13 +2,13 @@
 self = to_object(SPAWNED_ID)
 
 
-if not object_exists(sim, self):
+if not object_exists(self):
     log "Docking ship died"
     ->END
 end_if
 # log "Docking ship {self.id}"
 
-player_blob = get_engine_data_set(sim, self)
+player_blob = to_blob(self)
 dock_state_string = get_data_set_value(player_blob,"dock_state", 0)
 
 if "undocked" == dock_state_string:
@@ -37,7 +37,7 @@ end_if
 
 
 if dock_station is not None and "docked" == dock_state_string:
-    dock_station_blob = get_engine_data_set(sim, dock_station)
+    dock_station_blob = to_blob(dock_station)
     # refuel
     fuel_value = get_data_set_value(player_blob, "energy",0)
     fuel_value = fuel_value + 20
