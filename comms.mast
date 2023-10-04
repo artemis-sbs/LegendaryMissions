@@ -167,34 +167,23 @@ jump npc_comms
 
 
 ================ comms_taunts ==================
-
-#
-# Skip if the loading of taunts failed
-#
-->END if taunt_data is None
-
-races = ["kralien", "arvonian", "torgoth", "skaraan", "ximni"]
-race = None
-for test in races:
-    if has_role(COMMS_SELECTED_ID, test):
-        race = test
-        break
-    end_if
-next test
-if race is None:
-    # No Taunt for you
-    jump npc_comms 
-end_if
 #
 # Present taunts
 #
 name = to_object(COMMS_ORIGIN_ID).name
+
+this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
+#
+# Skip if the loading of taunts failed
+#
+jump npc_comms if this_taunt_data is None
+
 taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
 
-right_button = taunt_data[race][taunt_trait]['button']
+right_button = this_taunt_data[taunt_trait]['button']
 
 await comms:
-    + "{data['button']}" for data in taunt_data[race]:
+    + "{data['button']}" for data in this_taunt_data:
         # Need to format the data
        msg = data['transmit']
        msg = "{msg}"

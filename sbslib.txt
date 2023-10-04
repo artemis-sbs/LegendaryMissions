@@ -1,1 +1,1 @@
-artemis-sbs sbs_utils vEA2.8.6
+artemis-sbs sbs_utils vEA2.8.6b

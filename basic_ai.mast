@@ -22,7 +22,7 @@ route spawn route_spawn
 jump ai_player if has_role(SPAWNED_ID, "__player__")
 jump ai_task_friendly if has_roles(SPAWNED_ID, "tsn, friendly")
 jump spawn_task_station if has_roles(SPAWNED_ID, "tsn, station")
-jump task_npc_targeting if has_role(SPAWNED_ID, "raider")
+jump raider_start if has_role(SPAWNED_ID, "raider")
 
 #### ELSE don't run a task
 ->END
@@ -42,6 +42,23 @@ schedule player_docking
 #
 ->END
 
+
+
+====== raider_start ======
+# add a taunt trait
+
+#
+# Select 3 taunts
+#
+race = get_race(SPAWNED_ID)
+jump task_npc_targeting if race is None
+
+
+this_taunt_data = random.sample(taunt_data[race], 3)
+do set_inventory_value(SPAWNED_ID, "taunt_data", this_taunt_data)
+do set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
+
+## falls through # jump task_npc_targeting
 
 #
 # This is for enemy AI
