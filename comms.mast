@@ -89,7 +89,7 @@ end_await
 -> station_comms
 
 === task_station_building ===
-delay sim 10s
+delay sim 1m 30s
 self = to_object(COMMS_SELECTED_ID)
 #
 # If the station was destroyed  END
