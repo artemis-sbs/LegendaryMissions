@@ -21,20 +21,27 @@ comms_info "static"
 # Create marker if it doesn't exist
 # 
 marker_go_id = marker_gos.get(COMMS_ORIGIN_ID)
-
-pos_to_target = get_inventory_value(COMMS_SELECTED_ID, "target_pos")
+m_blob = to_blob(marker_go_id)
+is_idle = get_inventory_value(COMMS_SELECTED_ID, "idle")
 await comms:
- + "goto and wait at marker" if marker_go_id is not None:
-    m_blob = to_blob(marker_go_id)
+ + "go idle" if not is_idle:
     loc_x = m_blob.get("curx", 0)
     loc_y = m_blob.get("cury", 0)
-    do set_inventory_value(COMMS_SELECTED_ID, "target_pos", (loc_x, loc_y) )
-    do set_inventory_value(COMMS_SELECTED_ID, "idle_pos", None )
+    do set_inventory_value(COMMS_SELECTED_ID, "idle", True )
+    do set_inventory_value(COMMS_SELECTED_ID, "idle_state", "start" )
 
- + "return to work" if pos_to_target is not None:
-    do set_inventory_value(COMMS_SELECTED_ID, "target_pos", None )
-    do set_inventory_value(COMMS_SELECTED_ID, "idle_pos", None )
+ + "Go to work" if is_idle:
+    do set_inventory_value(COMMS_SELECTED_ID, "idle", False )
+    do set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
     do set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
+
++ "Set idle location" if marker_go_id:
+    loc_x = m_blob.get("curx", 0)
+    loc_y = m_blob.get("cury", 0)
+    do set_inventory_value(COMMS_SELECTED_ID, "idle_pos", (loc_x, loc_y) )
+    if is_idle:
+        do set_inventory_value(COMMS_SELECTED_ID, "idle_state", "start" )
+    end_if
 
   + "do work order now":
     jump damcons_work_order
@@ -57,6 +64,7 @@ await comms:
     jump comms_damcons
 
  + "Fix now {d.name}" for d in orders:
+    do set_inventory_value(COMMS_SELECTED_ID, "target_room", d.id)
     jump comms_damcons
 
 end_await

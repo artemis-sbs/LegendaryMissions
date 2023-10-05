@@ -169,7 +169,10 @@ for d in injured_dc:
     go = to_object(d)
     ship = go.host_id 
     blob = to_blob(d)
-    do blob.set("icon_color", "red", 0)
+    damage_color = get_inventory_value(d, "damage_color")
+    damage_color = damage_color if damage_color else "red"
+
+    do blob.set("icon_color", damage_color, 0)
     if hp <= 0:
         do sbs.delete_grid_object(go.host_id, d)
         have ship broadcast "{go.name} has perished" color "red"
@@ -207,10 +210,8 @@ jump apply_system_damage
 # Expects values: system_damage = a list of 4 values
 #
 
+############# update_system_damage ##############
 
-##
-## Update the systems damage
-##    
 blob = to_blob(DAMAGE_ORIGIN_ID)
 for x in range(sbs.SHPSYS.MAX):
     cur =  blob.get('system_damage', x)
@@ -218,9 +219,16 @@ for x in range(sbs.SHPSYS.MAX):
     do blob.set('system_damage',cur, x)
 next x
 
+push set_damage_coefficients
+
+
+
+########### check_for_explode ######
 # Is this the end?
 should_explode = True
-
+#
+# Check to see if all systems are damaged
+#
 for sys in range(4):
     max_damage = blob.get('system_max_damage', sys)
     current = blob.get('system_damage', sys)
@@ -252,9 +260,9 @@ if should_explode:
     do add_role(EVENT.origin_id, "exploded")
 
     so = to_object(EVENT.origin_id)
-    engine_obj = so.space_object(sim)
+    engine_obj = so.space_object()
     art_id = so.art_id
-    do so.set_art_id(sim,"invisible")
+    do so.set_art_id("invisible")
 
     # Reset the systems to max
     for sys in range(4):
@@ -269,11 +277,49 @@ if should_explode:
     schedule update_score {"DESTROYED_ID": EVENT.origin_id}
 
     do sim.reposition_space_object(engine_obj, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
-    do so.set_art_id(sim,art_id)
+    do so.set_art_id(art_id)
     do remove_role(EVENT.origin_id, "exploded")
+    
     SPAWNED_ID = EVENT.origin_id
     jump rebuild_grid_items
 end_if
 
 ->END
 
+========== set_damage_coefficients ===========
+# Get sets
+
+blob = to_blob(DAMAGE_ORIGIN_ID)
+->END if blob is None
+
+ship_gos = grid_objects(DAMAGE_ORIGIN_ID)
+# This ship's undamaged
+undamaged = ship_gos & role("__undamaged__")
+# This ships damaged
+damaged = ship_gos & role("__damaged__")
+#
+# get all eight systems damaged and undamaged
+#
+# arrays, Beam, Tube, Shield
+systems = ~~[
+    ("beam", "all_beam_damage_coeff",0), ("torpedo", "all_tube_damage_coeff",0), 
+    ("impulse", "impulse_damage_coeff",0), ("warp", "warp_damage_coeff",0), ("maneuver", "turn_rate_damage_coeff",0),
+    ("sensors", "sensor_damage_coeff",0),
+    ("shield,fwd", "shield_damage_coeff",0), ("shield,aft", "shield_damage_coeff",1)
+    ]~~
+
+
+for system in systems:
+    sys_role = system[0]
+    _blob_name = system[1]
+    _idx = system[2]
+
+    _undam = undamaged & all_roles(sys_role)
+    _dam = damaged & all_roles(sys_role)
+    _total = max(1, len(_dam)+len(_undam))
+    _coef = len(_undam) / _total
+    # do print(f"damage {_coef} {_blob_name}")
+    do blob.set(_blob_name, _coef, _idx)
+next system
+
+pop
