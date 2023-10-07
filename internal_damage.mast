@@ -37,7 +37,8 @@ do system_damage[hit_system]  += 1
 go_id = random.choice(hittable)
 
 blob = to_blob(go_id)
-do blob.set("icon_color", "red", 0)
+damage_color = themes[theme]["damage"]
+do blob.set("icon_color", damage_color, 0)
 do link(DAMAGE_ORIGIN_ID, "damage", go_id) 
 do add_role(go_id, "__damaged__")
 do remove_role(go_id, "__undamaged__")
@@ -98,7 +99,7 @@ jump damage_hallway if len(go_set_at_loc) == 0
 # if damage is applied just do it once
 #
 num_retry = 3
-
+damage_color = themes[theme]["damage"]
 injured_dc = set()
 for retry in range(num_retry):
     already_damaged = False
@@ -120,7 +121,7 @@ for retry in range(num_retry):
         end_if
         go = to_object(go_id)
         blob = to_blob(go_id)
-        do blob.set("icon_color", "red", 0)
+        do blob.set("icon_color", damage_color, 0)
         do link(DAMAGE_ORIGIN_ID, "damage", go_id) 
         do add_role(go_id, "__damaged__")
         do remove_role(go_id, "__undamaged__")
@@ -169,13 +170,13 @@ for d in injured_dc:
     go = to_object(d)
     ship = go.host_id 
     blob = to_blob(d)
-    damage_color = get_inventory_value(d, "damage_color")
-    damage_color = damage_color if damage_color else "red"
+    dc_damage_color = get_inventory_value(d, "damage_color")
+    dc_damage_color = damage_color if damage_color else damage_color
 
-    do blob.set("icon_color", damage_color, 0)
+    do blob.set("icon_color", dc_damage_color, 0)
     if hp <= 0:
         do sbs.delete_grid_object(go.host_id, d)
-        have ship broadcast "{go.name} has perished" color "red"
+        have ship broadcast "{go.name} has perished" color "{dc_damage_color}"
         if go is not None:
             do go.destroyed()
         end_if
@@ -196,7 +197,8 @@ jump apply_system_damage
 icon = 45 #fire   # 113 - Door
 
 name_tag = "hallway:{loc_x},{loc_y}"
-dam_go = grid_spawn(DAMAGE_ORIGIN_ID, name_tag, name_tag, loc_x,loc_y, icon, "red", "hallway, __damaged__") 
+damage_color = themes[theme]["damage"]
+dam_go = grid_spawn(DAMAGE_ORIGIN_ID, name_tag, name_tag, loc_x,loc_y, icon, damage_color, "hallway, __damaged__") 
 
 do link(DAMAGE_ORIGIN_ID, "damage", to_id(dam_go))
 # do dam_go.blob.set("icon_scale", 0.75, 0)
