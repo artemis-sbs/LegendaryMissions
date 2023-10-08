@@ -11,6 +11,8 @@ marker_gos = {} #key by ship
 jump comms_damcons if has_role(COMMS_SELECTED_ID, "damcons")
 jump comms_damaged if has_role(COMMS_SELECTED_ID, "__damaged__")
 jump comms_undamaged if has_role(COMMS_SELECTED_ID, "__undamaged__")
+jump marker_comms if has_role(COMMS_SELECTED_ID, "marker")
+
 comms_info "static"
 ->END
 
@@ -34,14 +36,6 @@ await comms:
     do set_inventory_value(COMMS_SELECTED_ID, "idle", False )
     do set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
     do set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
-
-+ "Set idle location" if marker_go_id:
-    loc_x = m_blob.get("curx", 0)
-    loc_y = m_blob.get("cury", 0)
-    do set_inventory_value(COMMS_SELECTED_ID, "idle_pos", (loc_x, loc_y) )
-    if is_idle:
-        do set_inventory_value(COMMS_SELECTED_ID, "idle_state", "start" )
-    end_if
 
   + "do work order now":
     jump damcons_work_order
@@ -124,11 +118,9 @@ jump comms_damaged
 
 ==== comms_undamaged ====== 
 
-dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
-#color: get_inventory_value(d.id, 'color');
 await comms:
-    + "status":
-        #pass
+    + "set as idle loc":
+        jump room_set_idle_loc
     #
     # This watches for state changes tht should change
     # the comms e.g. this grid object gets damaged
@@ -138,6 +130,48 @@ await comms:
 end_await
 
 jump comms_undamaged
+
+
+==== room_set_idle_loc ====== 
+
+dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
+await comms:
+ + "back":
+    jump grid_comms
+ + "set idle for {d.name}" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
+    # Add this to the 
+    _blob = to_blob(COMMS_SELECTED_ID)
+    _loc_x = _blob.get("curx", 0)
+    _loc_y = _blob.get("cury", 0)
+    do set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
+    is_idle = get_inventory_value(d.id, "idle")
+    if is_idle:
+        do set_inventory_value(d.id, "idle_state", "start" )
+    end_if
+
+end_await
+
+jump room_set_idle_loc
+
+
+==== marker_comms ====== 
+
+dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
+await comms:
+ + "set idle for {d.name}" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
+    # Add this to the 
+    _blob = to_blob(COMMS_SELECTED_ID)
+    _loc_x = _blob.get("curx", 0)
+    _loc_y = _blob.get("cury", 0)
+    do set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
+    is_idle = get_inventory_value(d.id, "idle")
+    if is_idle:
+        do set_inventory_value(d.id, "idle_state", "start" )
+    end_if
+
+end_await
+
+jump marker_comms
 
 
 
@@ -155,6 +189,8 @@ if marker_go_id is None:
     marker_go = grid_spawn(GRID_PARENT_ID, "marker", marker_tag, int(EVENT.source_point.x),int(EVENT.source_point.y), 121, "yellow", "#") 
     marker_go_id =  to_id(marker_go)
     marker_gos[GRID_PARENT_ID] = marker_go_id
+else:
+    marker_go = to_object(marker_go_id)
 end_if
 
 marker_blob = to_blob(marker_go_id)
@@ -188,11 +224,12 @@ next gid
 if found_id is not None:
     do ship_blob.set("grid_selected_UID", found_id , 0)
     do ship_blob.set("grid_selected_ship_UID", found_id , 0)
+    marker_go.comms_id = "marker"
     follow route grid select GRID_PARENT_ID found_id
 else:
-    COMMS_ORIGIN_ID = GRID_PARENT_ID
-    COMMS_SELECTED_ID = marker_go_id
-    comms_info "hallway"
+    # Set the name of the marker to hallway
+    marker_go.comms_id = f"hallway:{int(EVENT.source_point.x)},{int(EVENT.source_point.y)}"
+    follow route grid select GRID_PARENT_ID marker_go_id
 end_if
 
 

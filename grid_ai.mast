@@ -131,6 +131,7 @@ loc_x = loc[0]
 loc_y = loc[1]
 ship = SPAWNED_ID & 0xFFFFFFFF
 marker_tag = "marker:{ship}"
+# marker is named hallway
 marker_go = grid_spawn(SPAWNED_ID , "marker", marker_tag, int(loc_x),int(loc_y), 121, "black", "#,marker") 
 marker_go_id =  to_id(marker_go)
 marker_gos[SPAWNED_ID] = marker_go_id
@@ -165,6 +166,7 @@ for i in range(3):
         _id = to_id(dc)
         do set_inventory_value(_id, "color", colors[i])
         do set_inventory_value(_id, "damage_color", damage_colors[i])
+        do set_inventory_value(_id, "idle_pos", (point[0], point[1]) )
     end_if
     # Hit points == MAX_HP
     do set_inventory_value(_id, "HP", MAX_HP )
@@ -400,7 +402,8 @@ jump handle_damcons_idling if _state == "idling"
 # State should have been moving
 #
 do set_inventory_value(SPAWNED_ID, "idle_state", "idling")
-
+_pos = get_inventory_value(SPAWNED_ID, "idle_pos")
+jump loop_damcons_ai if _pos is None
 status = f"Idling at {_pos[0]},{_pos[1]}"
 # Set tooltip
 do this_blob.set("tool_tip_cur_text", status, 0)
