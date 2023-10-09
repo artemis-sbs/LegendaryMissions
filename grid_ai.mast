@@ -197,12 +197,6 @@ this_blob = to_blob(SPAWNED_ID)# check for garbage and mop up
 obj = to_object(SPAWNED_ID)
 # The damcons is no longer
 ->END if this_blob is None or obj is None
-#
-# Turn off speech bubble
-#
-if is_timer_finished(SPAWNED_ID, "speech_bubble"):
-    do this_blob.set("speech_bubble_text", "", 0)
-end_if
 
 
 speed = get_inventory_value(SPAWNED_ID, "speed", 0.01)
@@ -345,17 +339,11 @@ jump loop_damcons_ai if the_target == get_inventory_value(SPAWNED_ID, "target_ro
 do grid_target(SPAWNED_ID, the_target, speed)
 t_obj = to_object(the_target)
 target_name = t_obj.name
-status = f"Heading to {target_name}"
-
 # Set tooltip
-do this_blob.set("tool_tip_cur_text", status, 0)
-# set speech bubble
-do this_blob.set("speech_bubble_text", status, 0)
-do this_blob.set("speech_bubble_text_color", "orange", 0)
+do grid_short_status(SPAWNED_ID, f"Heading to {target_name}", "orange", 3)
 
 # Set as current target
 do set_inventory_value(SPAWNED_ID, "target_room", the_target )
-do set_timer(SPAWNED_ID, "speech_bubble", seconds=3)
 do set_inventory_value(SPAWNED_ID, "work_needed", None) 
 
 
@@ -367,14 +355,9 @@ delay sim 3s
 -> damcon_ai
 
 ===== damcons_go_home ====
-status = f"Heading to my home {obj.spawn_pos.x},{obj.spawn_pos.y}"
 
-# Set tooltip
-do this_blob.set("tool_tip_cur_text", status, 0)
-# set speech bubble
-do this_blob.set("speech_bubble_text", status, 0)
-do this_blob.set("speech_bubble_text_color", "blue", 0)
-do set_timer(SPAWNED_ID, "speech_bubble", seconds=3)
+# Set tooltip and speech bubble
+do grid_short_status(SPAWNED_ID, f"Heading to my home {obj.spawn_pos.x},{obj.spawn_pos.y}", "blue", 3)
 
 do grid_target_pos(SPAWNED_ID, obj.spawn_pos.x, obj.spawn_pos.y, speed)
 do set_inventory_value(SPAWNED_ID, "target_room", 0 )
@@ -385,14 +368,10 @@ jump loop_damcons_ai
 
 ======== start_working =====
 do set_inventory_value(SPAWNED_ID, "work_needed", 4) # 4 times 3 sec = 12 seconds
-status = f"Getting to work"
 
-# Set tooltip
-do this_blob.set("tool_tip_cur_text", status, 0)
-# set speech bubble
-do this_blob.set("speech_bubble_text", status, 0)
-do this_blob.set("speech_bubble_text_color", "blue", 0)
-do set_timer(SPAWNED_ID, "speech_bubble", seconds=3)
+
+# Set tooltip and speech bubble
+do grid_short_status(SPAWNED_ID, f"Getting to work", "blue", 3)
 
 jump loop_damcons_ai
 
@@ -404,17 +383,11 @@ jump loop_damcons_ai if _state != "start"
 speed = get_inventory_value(SPAWNED_ID, "speed", 0.01)
 _pos = get_inventory_value(SPAWNED_ID, "idle_pos")
 jump loop_damcons_ai if _pos is None
-do print(f"Moving Idle {_pos[0]} {_pos[1]}")
+# do print(f"Moving Idle {_pos[0]} {_pos[1]}")
 do grid_target_pos(SPAWNED_ID, _pos[0], _pos[1], speed)
 do set_inventory_value(SPAWNED_ID, "idle_state", "moving" )
 
-status = f"Heading to idle {_pos[0]},{_pos[1]}"
-# Set tooltip
-do this_blob.set("tool_tip_cur_text", status, 0)
-# set speech bubble
-do this_blob.set("speech_bubble_text", status, 0)
-do this_blob.set("speech_bubble_text_color", "blue", 0)
-do set_timer(SPAWNED_ID, "speech_bubble", seconds=3)
+do grid_short_status(SPAWNED_ID, f"Heading to idle {_pos[0]},{_pos[1]}", "blue", 3)
 
 jump loop_damcons_ai
 
@@ -432,13 +405,9 @@ jump handle_damcons_idling if _state == "idling"
 do set_inventory_value(SPAWNED_ID, "idle_state", "idling")
 _pos = get_inventory_value(SPAWNED_ID, "idle_pos")
 jump loop_damcons_ai if _pos is None
-status = f"Idling at {_pos[0]},{_pos[1]}"
-# Set tooltip
-do this_blob.set("tool_tip_cur_text", status, 0)
-# set speech bubble
-do this_blob.set("speech_bubble_text", status, 0)
-do this_blob.set("speech_bubble_text_color", "blue", 0)
-do set_timer(SPAWNED_ID, "speech_bubble", seconds=3)
+
+# Set tooltip and speech bubble
+do grid_short_status(SPAWNED_ID, f"Idling at {_pos[0]},{_pos[1]}", "blue", 3)
 
 # VVVVVVV Fall through VVVVVVVVVV
 #
