@@ -31,11 +31,13 @@ await comms:
     loc_y = m_blob.get("cury", 0)
     do set_inventory_value(COMMS_SELECTED_ID, "idle", True )
     do set_inventory_value(COMMS_SELECTED_ID, "idle_state", "start" )
+    do set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
 
  + "Go to work" if is_idle:
     do set_inventory_value(COMMS_SELECTED_ID, "idle", False )
     do set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
     do set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
+    do set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
 
   + "do work order now":
     jump damcons_work_order

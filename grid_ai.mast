@@ -236,6 +236,16 @@ length = this_blob.get("path_length", 0)
 #
 jump damcons_look_for_work if length is not None and length > 0.01
 
+work_count = get_inventory_value(SPAWNED_ID, "work_needed", None)
+jump start_working if work_count is None
+work_count -= 1
+do set_inventory_value(SPAWNED_ID, "work_needed", work_count)
+jump loop_damcons_ai if work_count > 0
+#
+# Done
+#
+do set_inventory_value(SPAWNED_ID, "work_needed", None)
+
 
 
 # Host is no more 
@@ -248,18 +258,20 @@ hm = sbs.get_hull_map(obj.host_id)
 at_point = hm.get_objects_at_point(x,y)
 something_healed = False
 for id in at_point:
+    #
+    # Remove work order, even if no longer damaged
+    # 
+    do unlink(SPAWNED_ID, "work-order", id)
+
     # Only deal with Damage
     continue if not has_role(id, "__damaged__")
     continue if has_role(id, "damcons")
-        
     go = to_object(id)
     continue if go is None
 
 
     # Have to unlink this so it is no longer seen
     do unlink(obj.host_id, "damage", id)
-    # Remove work order
-    do unlink(SPAWNED_ID, "work-order", id)
     do remove_role(id, "__damaged__")
     do add_role(id, "__undamaged__")
 
@@ -344,6 +356,7 @@ do this_blob.set("speech_bubble_text_color", "orange", 0)
 # Set as current target
 do set_inventory_value(SPAWNED_ID, "target_room", the_target )
 do set_timer(SPAWNED_ID, "speech_bubble", seconds=3)
+do set_inventory_value(SPAWNED_ID, "work_needed", None) 
 
 
 ===== loop_damcons_ai ====
@@ -365,9 +378,24 @@ do set_timer(SPAWNED_ID, "speech_bubble", seconds=3)
 
 do grid_target_pos(SPAWNED_ID, obj.spawn_pos.x, obj.spawn_pos.y, speed)
 do set_inventory_value(SPAWNED_ID, "target_room", 0 )
+do set_inventory_value(SPAWNED_ID, "work_needed", None)
 
 
 jump loop_damcons_ai
+
+======== start_working =====
+do set_inventory_value(SPAWNED_ID, "work_needed", 4) # 4 times 3 sec = 12 seconds
+status = f"Getting to work"
+
+# Set tooltip
+do this_blob.set("tool_tip_cur_text", status, 0)
+# set speech bubble
+do this_blob.set("speech_bubble_text", status, 0)
+do this_blob.set("speech_bubble_text_color", "blue", 0)
+do set_timer(SPAWNED_ID, "speech_bubble", seconds=3)
+
+jump loop_damcons_ai
+
 
 ===== move_idle_damcons_ai ====== 
 _state = get_inventory_value(SPAWNED_ID, "idle_state")
