@@ -75,7 +75,7 @@ for g in internal_items:
     go =  grid_spawn(SPAWNED_ID,  name_tag, name_tag, loc_x, loc_y, g["icon"], color, g["roles"])
     do go.blob.set("icon_scale", g["scale"], 0)
     # save color so it cn be restored
-    do set_inventory_value(go.id, "color", g["color"])
+    do set_inventory_value(go.id, "color", color)
     #
     # Add link so query can find this relationship
     #       e.g. query to find engine grid objects on a ship
@@ -367,7 +367,9 @@ do set_inventory_value(SPAWNED_ID, "work_needed", None)
 jump loop_damcons_ai
 
 ======== start_working =====
-do set_inventory_value(SPAWNED_ID, "work_needed", 4) # 4 times 3 sec = 12 seconds
+hp = get_inventory_value(SPAWNED_ID, "HP")
+jump loop_damcons_ai if hp==0
+do set_inventory_value(SPAWNED_ID, "work_needed", 20/hp) # 4 times 3 sec = 12 seconds
 
 
 # Set tooltip and speech bubble

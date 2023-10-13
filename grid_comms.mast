@@ -106,6 +106,9 @@ await comms:
     do link(d.id, "work-order", COMMS_SELECTED_ID)
  + "cancel {d.name}"  color "{get_inventory_value(d.id, 'color')}" for d in workers:
     do unlink(d.id, "work-order", COMMS_SELECTED_ID)
++ "set as idle loc":
+    jump room_set_idle_loc
+
 #
 # This watches for state changes tht should change
 # the comms e.g. this grid object gets fixed
@@ -152,11 +155,18 @@ await comms:
     end_if
 
 end_await
+jump grid_comms
 
-jump room_set_idle_loc
+===== marker_comms  =====
 
+await comms:
+    + "set as idle loc":
+        jump marker_set_idle_loc
+end_await
 
-==== marker_comms ====== 
+jump marker_comms
+
+==== marker_set_idle_loc ====== 
 
 dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
 await comms:
