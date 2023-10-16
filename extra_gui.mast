@@ -64,11 +64,11 @@ await choice:
                     message = "OK {player_name} - going to rendezvous with {target_obj.name}"
                 end_if
                 
-                do target(sim, comms_selected, target_id, shoot)
+                do target(comms_selected, target_id, shoot)
             end_if
         elif target_point is not None:
             message = "Heading to designated waypoint"
-            do target_pos(sim, comms_selected, target_point.x, target_point.y, target_point.z )
+            do target_pos(comms_selected, target_point.x, target_point.y, target_point.z )
         end_if
         
    + "CANCEL":

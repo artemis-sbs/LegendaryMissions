@@ -1,106 +1,332 @@
 route grid spawn route_grid_spawn
 
+# Not using this route, changing target ia AI loop
+#route grid object route_grid_arrive
+
+
+shared grid_data = grid_get_grid_data()
+# shared theme = 0
+
+
+HEAL_TIME = 30*120
+
+
+======== spawn_grid_objects ========
+#
+# Called by basic_ai, so we know this is a player ship already
+#
+do grid_rebuild_grid_objects(SPAWNED_ID, grid_data)
+->END
+
+
+====== restore_damcons =====
+do grid_restore_damcons(SPAWNED_ID)
+<<-
+
 
 ========== route_grid_spawn =========
 # AI for the player is the docking logic
-jump damcon_ai if has_role(SPAWNED_ID, "damcons")
+jump damcon_ai_start if has_role(SPAWNED_ID, "damcons")
 
 #### ELSE don't run a task
 ->END
 
 
+========== damcon_ai_start  ================= 
+#
+# Run once code
+#
+# Hit points == MAX_HP 
+do set_inventory_value(SPAWNED_ID, "HP", grid_get_max_hp() )
+
 
 ========== damcon_ai  ================= 
 
-this_blob = get_engine_data_set(sim, SPAWNED_ID)
-
+this_blob = to_blob(SPAWNED_ID)# check for garbage and mop up
+obj = to_object(SPAWNED_ID)
 # The damcons is no longer
-->END if this_blob is None
+->END if this_blob is None or obj is None
 
 
+speed = get_inventory_value(SPAWNED_ID, "speed", 0.01)
+x = this_blob.get("curx", 0)
+y = this_blob.get("cury", 0)
+
+#
+# if we are at the assigned idle pos handle idle resting behavior
+#
+is_idle = get_inventory_value(SPAWNED_ID, "idle")
+idle_pos =  get_inventory_value(SPAWNED_ID, "idle_pos")
+jump handle_damcons_idle if is_idle and x == idle_pos[0] and y == idle_pos[1]
+#
+# Idling but not there yet
+#
+jump move_idle_damcons_ai if is_idle and (x != idle_pos[0] or y != idle_pos[1])
+
+
+jump damcons_look_for_work if get_inventory_value(SPAWNED_ID, "target_room") is None
+# Current going home
+jump damcons_look_for_work if get_inventory_value(SPAWNED_ID, "target_room")==0
+
+
+#
+# This is testing to see if we've arrived
+# Rather than using the grid object event
+#
 length = this_blob.get("path_length", 0)
-if length is None or length < 1:
-    # check for garbage and mop up
-    obj = to_object(SPAWNED_ID)
-    x = this_blob.get("curx", 0)
-    y = this_blob.get("cury", 0)
-    
-    # Damcon is no more
-    ->END if obj is None
+#
+# look for work, just in case priority has changed
+#
+jump damcons_look_for_work if length is not None and length > 0.01
 
-    # Host is no more 
-    hm = sim.get_hull_map(obj.host_id)
-    ->END if hm is None
+work_count = get_inventory_value(SPAWNED_ID, "work_needed", None)
+jump start_working if work_count is None
+work_count -= 1
+do set_inventory_value(SPAWNED_ID, "work_needed", work_count)
+jump loop_damcons_ai if work_count > 0
+#
+# Done
+#
+do set_inventory_value(SPAWNED_ID, "work_needed", None)
 
-    points = get_inventory_value(obj.host_id, "undamaged")
+
+
+# Host is no more 
+hm = sbs.get_hull_map(obj.host_id)
+->END if hm is None
+
+#
+# Get the points at this location
+#
+at_point = hm.get_objects_at_point(x,y)
+something_healed = False
+for id in at_point:
     #
-    # I we haven't set it then get the valid grid points
-    #
-    if points is None:
-        points = get_open_grid_points(sim,obj.host_id)
-        #
-        # Maybe remove some?
-        #
-        do set_inventory_value(obj.host_id, "undamaged", points)
-    end_if
+    # Remove work order, even if no longer damaged
+    # 
+    do unlink(SPAWNED_ID, "work-order", id)
 
-    at_point = hm.get_objects_at_point(x,y)
-    
-    for id in at_point:
-        # Only deal with Damage
-        if not has_role(id, "damage"):
-            continue
-        end_if
+    # Only deal with Damage
+    continue if not has_role(id, "__damaged__")
+    continue if has_role(id, "damcons")
+    go = to_object(id)
+    continue if go is None
 
-        go = to_object(id)
-        if go is None:
-            continue
-        end_if
 
-        
+    # Have to unlink this so it is no longer seen
+    do unlink(obj.host_id, "damage", id)
+    do remove_role(id, "__damaged__")
+    do add_role(id, "__undamaged__")
+
+
+    # If hallway damage delete
+    # else restore color and repair system
+    system_heal = None
+    if has_role(id, "hallway"):
         do sbs.delete_grid_object(go.host_id, id)
-        # Have to unlink this so it is no longer seen
-        do unlink(obj.host_id, "damage", id)
-        system_heal = get_inventory_value(go, "system")
-        do unlink(SPAWNED_ID, "assigned", id )
         do go.destroyed()
-        #
-        # Add point back into undamaged
-        #
-        do points.append((x,y))
-        do set_inventory_value(obj.host_id, "undamaged", points)
-    
-        if system_heal is None:
-            system_heal = random.randint(0,3)
-        end_if
+    #
+    # This is a room, fix
+    #
+    else:
+        blob = to_blob(id)
+        color = get_inventory_value(id, "color")
 
-        ship_blob = get_engine_data_set(sim, go.host_id)
+        if color is None:
+            color = "purple"
+        end_if
+        do blob.set("icon_color", color, 0)
+        if has_role(id, "sensors"):
+            system_heal = sbs.SHPSYS.SENSORS
+        elif has_role(id, "weapon"):
+            system_heal = sbs.SHPSYS.WEAPONS
+        elif has_role(id, "engine"):
+            system_heal = sbs.SHPSYS.ENGINES
+        elif has_role(id, "shield"):
+            system_heal = sbs.SHPSYS.SHIELDS
+        end_if
+    end_if
+    #
+    # 
+    #
+    if system_heal is not None:
+        ship_blob = to_blob(go.host_id)
+        something_healed = True
     
         current = ship_blob.get('system_damage', system_heal)
         if current >0:
-            do ship_blob.set('system_damage', current-0.6 , system_heal)
+            do ship_blob.set('system_damage', current-1 , system_heal)
         else:
             do ship_blob.set('system_damage', 0 ,  system_heal)
         end_if
-    next id
-        
-    # Then look for more work
-    # Find damage that is not assigned to someone else
-    the_target = grid_closest(sim, SPAWNED_ID, linked_to(obj.host_id, "damage")-has_link("assigned_to"))
-    if the_target is not None:
-        do grid_target(sim, SPAWNED_ID, the_target)
-        # Remove from available assignments
-        do link(the_target, "assigned_to", SPAWNED_ID)
-        do link(SPAWNED_ID, "assigned", the_target )
-    else:
-        do grid_target_pos(sim, SPAWNED_ID, obj.spawn_pos.x, obj.spawn_pos.y)
     end_if
+next id
+
+#
+# Update the damage coefficients if a system was healed
+# Label is in internal_damage, Expects DAMAGE_ORIGIN_ID
+#
+DAMAGE_ORIGIN_ID = obj.host_id
+if something_healed:
+    do set_damage_coefficients(obj.host_id)
 end_if
 
+# I'm done with this guy
+do set_inventory_value(SPAWNED_ID, "target_room", None )
+
+# Then look for more work
+# Find damage that is not assigned to someone else
+===== damcons_look_for_work =====
+
+#
+# The damage needs to be a work order for a damcon
+#
+the_target =  to_id(grid_closest(SPAWNED_ID, linked_to(SPAWNED_ID, "work-order")))
+jump loop_damcons_ai if get_inventory_value(SPAWNED_ID, "target_room")==0 and the_target is None
+jump damcons_go_home if the_target is None
+# Home if room 0
+jump loop_damcons_ai if the_target == get_inventory_value(SPAWNED_ID, "target_room")
+
+do grid_target(SPAWNED_ID, the_target, speed)
+t_obj = to_object(the_target)
+target_name = t_obj.name
+# Set tooltip
+do grid_short_status(SPAWNED_ID, f"Heading to {target_name}", "orange", 3)
+
+# Set as current target
+do set_inventory_value(SPAWNED_ID, "target_room", the_target )
+do set_inventory_value(SPAWNED_ID, "work_needed", None) 
+
+
+===== loop_damcons_ai ====
 #
 # Loop while this damcon lives
 #
-delay sim 5s
+delay sim 3s
 -> damcon_ai
 
+===== damcons_go_home ====
 
+# Set tooltip and speech bubble
+do grid_short_status(SPAWNED_ID, f"Heading to my home {obj.spawn_pos.x},{obj.spawn_pos.y}", "blue", 3)
+
+do grid_target_pos(SPAWNED_ID, obj.spawn_pos.x, obj.spawn_pos.y, speed)
+do set_inventory_value(SPAWNED_ID, "target_room", 0 )
+do set_inventory_value(SPAWNED_ID, "work_needed", None)
+
+
+jump loop_damcons_ai
+
+======== start_working =====
+hp = get_inventory_value(SPAWNED_ID, "HP")
+jump loop_damcons_ai if hp==0
+do set_inventory_value(SPAWNED_ID, "work_needed", 20/hp) # 4 times 3 sec = 12 seconds
+
+
+# Set tooltip and speech bubble
+do grid_short_status(SPAWNED_ID, f"Getting to work", "blue", 3)
+
+jump loop_damcons_ai
+
+
+===== move_idle_damcons_ai ====== 
+_state = get_inventory_value(SPAWNED_ID, "idle_state")
+jump loop_damcons_ai if _state != "start"
+
+speed = get_inventory_value(SPAWNED_ID, "speed", 0.01)
+_pos = get_inventory_value(SPAWNED_ID, "idle_pos")
+jump loop_damcons_ai if _pos is None
+# do print(f"Moving Idle {_pos[0]} {_pos[1]}")
+do grid_target_pos(SPAWNED_ID, _pos[0], _pos[1], speed)
+do set_inventory_value(SPAWNED_ID, "idle_state", "moving" )
+
+do grid_short_status(SPAWNED_ID, f"Heading to idle {_pos[0]},{_pos[1]}", "blue", 3)
+
+jump loop_damcons_ai
+
+
+===== handle_damcons_idle =======
+#
+# When a damcon is camped on a spot 
+# it may add benefits
+#
+_state = get_inventory_value(SPAWNED_ID, "idle_state")
+jump handle_damcons_idling if _state == "idling"
+#
+# State should have been moving
+#
+do set_inventory_value(SPAWNED_ID, "idle_state", "idling")
+_pos = get_inventory_value(SPAWNED_ID, "idle_pos")
+jump loop_damcons_ai if _pos is None
+
+# Set tooltip and speech bubble
+do grid_short_status(SPAWNED_ID, f"Idling at {_pos[0]},{_pos[1]}", "blue", 3)
+
+# VVVVVVV Fall through VVVVVVVVVV
+#
+===== handle_damcons_idling =======
+
+obj = to_object(SPAWNED_ID)
+->END if obj is None
+
+# Host is no more 
+hm = sbs.get_hull_map(obj.host_id)
+->END if hm is None
+
+#
+# Get the points at this location
+#
+at_point = hm.get_objects_at_point(x,y)
+
+for id in at_point:
+    push handle_damcon_heal if has_role(id, "medical")
+next id
+
+jump loop_damcons_ai
+
+
+
+===== handle_damcon_heal ======
+#
+# Need to camp for 2 minutes to add health
+#
+heal_delay = get_inventory_value(SPAWNED_ID, "next_hp_time", None)
+hp = get_inventory_value(SPAWNED_ID, "HP", 0)
+
+pop if hp >= get_get_max_hp()
+pop if heal_delay == 0 # fully healed
+
+if heal_delay is None:
+    do set_inventory_value(SPAWNED_ID, "next_hp_time", sim.time_tick_counter+ HEAL_TIME)
+    <<-
+end_if
+
+pop if sim.time_tick_counter < heal_delay
+
+hp += 1
+ship = obj.host_id # obj defined in previous labels
+hp %= (get_get_max_hp()+1)
+do set_inventory_value(SPAWNED_ID, "HP", hp)
+if hp < get_get_max_hp():
+    have ship broadcast "{obj.name} recovering {hp}" color "blue"
+    do set_inventory_value(SPAWNED_ID, "next_hp_time", sim.time_tick_counter+ HEAL_TIME)
+else:
+    do set_inventory_value(SPAWNED_ID, "next_hp_time", 0)
+    color = get_inventory_value(SPAWNED_ID, "color", "purple")
+    go_blob = to_blob(SPAWNED_ID)
+    if go_blob is not None:
+        do go_blob.set("icon_color", color)
+    end_if
+    have ship broadcast "{obj.name} fully recovered" color "green"
+end_if
+
+
+pop
+
+
+#
+# Speech bubble colors
+#
+#  info - white on blue
+#  danger - Read
+#

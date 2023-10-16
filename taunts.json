@@ -19,7 +19,14 @@
             "transmit": "Hey wormface! I'm using your Holy Scrolls to wipe my stinky feet!",
             "failure": "You can stick those superstitions up your excrement orifice, {name}.",
             "success": "For your blasphemy you shall immediately die!",
-            "science": "The captain is spiritual a devout to the Kralien religion."
+            "science": "The captain is zealously devout to the Kralien religion."
+        },
+        {
+            "button": "Taunt rent collection",
+            "transmit": "Hey excrement head! You are a pathetic failure at rent collection!",
+            "failure": "You know nothing, {name}. No further messages will be received.",
+            "success": "Rent collection is not to be insulted! Prepare to die, {name}!",
+            "science": "The captain believes they are the best rent collectors in the fleet."
         }
     ],
     "arvonian": [
@@ -43,6 +50,13 @@
             "failure": "Perhaps it is, {name}, but a tin-boxed wind-up toy is still smarter than you.",
             "success": "Our Supreme Understander has decreed that you must die now, {name}!",
             "science": "The captain has unfailing faith in the decisions of the Arvonian Supreme Understander."
+        },
+        {
+            "button": "Taunt Space Whales",
+            "transmit": "I shoot harmless space whales just to listen to them scream!",
+            "failure": "You are mentally ill, {name}, but I'm not going to do anything about it.",
+            "success": "You are horrible, {name}! I shall kill you to avenge those noble creatures!",
+            "science": "The captain is particularly fond of space whales."
         }
     ],
     "torgoth": [
@@ -66,6 +80,13 @@
             "failure": "Then I am the last thing the Terrans will smell as I destroy all your ships and bases.",
             "success": "How dare you insult my hygiene? Prepare to die, {name}!",
             "science": "The captain is meticulous and proud of their impeccable hygiene."
+        },
+        {
+            "button": "Taunt warmongering",
+            "transmit": "Hey Torgie! Let's lay down our weapons and sing Kumbaya!",
+            "failure": "You have the voice of a dying space whale, {name}. I'm closing this channel so I won't hear you sing.",
+            "success": "How insulting! We're coming to kill you now, {name}!",
+            "science": "The captain is a warmonger who finds the idea of peace offensive."
         }
     ],
     "skaraan": [
@@ -87,8 +108,15 @@
             "button": "Taunt captain's status",
             "transmit": "You insignificant flunky! Go home to your mommy and send someone more important to fight me!",
             "failure": "Whatever you say, {name}. Right now I'm enjoying the company of YOUR mommy.",
-            "success": "How dare you insult my status? I shall mount your lifeless head on my wall as a trophie, {name}!",
-            "science": "The captain is very status conscous and believe they are a very important person."
+            "success": "How dare you insult my status? I shall mount your lifeless heads on my wall as trophies, {name}!",
+            "science": "The captain is very status conscious and believe they are a very important person."
+        },
+        {
+            "button": "Taunt captain's dead children",
+            "transmit": "If you weren't such a pathetic failure your children would be alive today!",
+            "failure": "You're the pathetic ones, {name}. I have never had any children.",
+            "success": "You just crossed a line, {name}! For that I'm coming to kill you!",
+            "science": "The captain's children got sick and died when he was between jobs and briefly lost his health insurance."
         }
     ],
     "ximni": [
@@ -112,6 +140,13 @@
             "failure": "I'll get around to fighting you eventually, {name}. Right now I have other Terrans to defeat.",
             "success": "I have ten times your courage, {name}! And I am coming to kill you!",
             "science": "The captain is insecure about his own courage."
+        },
+        {
+            "button": "Taunt captain's carousing",
+            "transmit": "You are an insipid humdrum who no one wants at their parties!",
+            "failure": "You're such a dreary milquetoast, {name}. I'm blocking you.",
+            "success": "This party will be your last! Arm weapons! Destroy {name}!",
+            "science": "The captain is proud of their wild reputation for drinking and carousing."
         }
     ],
     "unknown": [{

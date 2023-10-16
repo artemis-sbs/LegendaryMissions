@@ -4,6 +4,8 @@ from sbs_utils.gui import Gui
 from sbs_utils.mast.maststoryscheduler import StoryPage
 from sbs_utils.mast.mast import Mast
 
+#import damage
+#Mast.import_python_module('damage')
 
 class MyStoryPage(StoryPage):
     story_file = "story.mast"

@@ -1,0 +1,249 @@
+route grid point grid_point_select
+route grid select grid_comms
+
+marker_gos = {} #key by ship
+
+======= grid_comms ======
+#
+# The grid item is selected
+#
+
+jump comms_damcons if has_role(COMMS_SELECTED_ID, "damcons")
+jump comms_damaged if has_role(COMMS_SELECTED_ID, "__damaged__")
+jump comms_undamaged if has_role(COMMS_SELECTED_ID, "__undamaged__")
+jump marker_comms if has_role(COMMS_SELECTED_ID, "marker")
+
+comms_info "static"
+->END
+
+
+==== comms_damcons ====== 
+
+#
+# Create marker if it doesn't exist
+# 
+marker_go_id = marker_gos.get(COMMS_ORIGIN_ID)
+m_blob = to_blob(marker_go_id)
+is_idle = get_inventory_value(COMMS_SELECTED_ID, "idle")
+await comms:
+ + "go idle" if not is_idle:
+    loc_x = m_blob.get("curx", 0)
+    loc_y = m_blob.get("cury", 0)
+    do set_inventory_value(COMMS_SELECTED_ID, "idle", True )
+    do set_inventory_value(COMMS_SELECTED_ID, "idle_state", "start" )
+    do set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
+
+ + "Go to work" if is_idle:
+    do set_inventory_value(COMMS_SELECTED_ID, "idle", False )
+    do set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
+    do set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
+    do set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
+
+  + "do work order now":
+    jump damcons_work_order
+
+ + "cancel work order":
+    jump damcons_cancel
+
+end_await
+
+jump comms_damcons
+
+==== damcons_work_order ====== 
+
+orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
+if orders is None:
+    orders = []
+end_if
+await comms:
+ + "back":
+    jump comms_damcons
+
+ + "Fix now {d.name}" for d in orders:
+    do set_inventory_value(COMMS_SELECTED_ID, "target_room", d.id)
+    jump comms_damcons
+
+end_await
+
+jump comms_damcons
+
+==== damcons_cancel ====== 
+
+orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
+if orders is None:
+    orders = []
+end_if
+await comms:
+ + "back":
+    jump comms_damcons
+
+ + "Cancel {d.name}" for d in orders:
+    do unlink(COMMS_SELECTED_ID, "work-order", d.id)
+
+end_await
+
+jump comms_damcons
+
+
+==== comms_damaged ====== 
+
+all_dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
+dcs = []
+workers = []
+for dc in all_dcs:
+    if has_link_to(dc.id, "work-order", COMMS_SELECTED_ID):
+        do workers.append(dc)
+    else:
+        do dcs.append(dc)
+    end_if
+next dc
+
+
+#color: get_inventory_value(d.id, 'color');
+await comms:
+ + "assign {d.name}" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
+    # Add this to the 
+    do link(d.id, "work-order", COMMS_SELECTED_ID)
+ + "cancel {d.name}"  color "{get_inventory_value(d.id, 'color')}" for d in workers:
+    do unlink(d.id, "work-order", COMMS_SELECTED_ID)
++ "set as idle loc":
+    jump room_set_idle_loc
+
+#
+# This watches for state changes tht should change
+# the comms e.g. this grid object gets fixed
+#
+change has_role(COMMS_SELECTED_ID, "__damaged__") == True:
+    jump comms_undamaged
+# deselect:
+end_await
+
+jump comms_damaged
+
+
+==== comms_undamaged ====== 
+
+await comms:
+    + "set as idle loc":
+        jump room_set_idle_loc
+    #
+    # This watches for state changes tht should change
+    # the comms e.g. this grid object gets damaged
+    #
+    change has_role(COMMS_SELECTED_ID, "__damaged__") == False:
+        jump comms_damaged
+end_await
+
+jump comms_undamaged
+
+
+==== room_set_idle_loc ====== 
+
+dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
+await comms:
+ + "back":
+    jump grid_comms
+ + "set idle for {d.name}" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
+    # Add this to the 
+    _blob = to_blob(COMMS_SELECTED_ID)
+    _loc_x = _blob.get("curx", 0)
+    _loc_y = _blob.get("cury", 0)
+    do set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
+    is_idle = get_inventory_value(d.id, "idle")
+    if is_idle:
+        do set_inventory_value(d.id, "idle_state", "start" )
+    end_if
+
+end_await
+jump grid_comms
+
+===== marker_comms  =====
+
+await comms:
+    + "set as idle loc":
+        jump marker_set_idle_loc
+end_await
+
+jump marker_comms
+
+==== marker_set_idle_loc ====== 
+
+dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
+await comms:
+ + "set idle for {d.name}" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
+    # Add this to the 
+    _blob = to_blob(COMMS_SELECTED_ID)
+    _loc_x = _blob.get("curx", 0)
+    _loc_y = _blob.get("cury", 0)
+    do set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
+    is_idle = get_inventory_value(d.id, "idle")
+    if is_idle:
+        do set_inventory_value(d.id, "idle_state", "start" )
+    end_if
+
+end_await
+
+jump marker_comms
+
+
+
+
+
+===== grid_point_select ====
+
+#
+# Move Marker
+# 
+marker_go_id = marker_gos.get(GRID_PARENT_ID)
+if marker_go_id is None:
+    ship = GRID_PARENT_ID & 0xFFFFFFFF
+    marker_tag = "marker:{ship}"
+    marker_go = grid_spawn(GRID_PARENT_ID, "marker", marker_tag, int(EVENT.source_point.x),int(EVENT.source_point.y), 121, "yellow", "#") 
+    marker_go_id =  to_id(marker_go)
+    marker_gos[GRID_PARENT_ID] = marker_go_id
+else:
+    marker_go = to_object(marker_go_id)
+end_if
+
+marker_blob = to_blob(marker_go_id)
+->END if marker_blob is None
+#
+# Set main selection to first item found at location
+#
+go_set_at_loc = to_list(grid_objects_at(GRID_PARENT_ID, int(EVENT.source_point.x), int(EVENT.source_point.y)))
+ship_blob = to_blob(GRID_PARENT_ID)
+->END if ship_blob is None
+do ship_blob.set("grid_selected_UID", 0, 0)
+do ship_blob.set("grid_selected_ship_UID", 0, 0)
+
+#
+# Move marker to location
+#
+do marker_blob.set("curx", EVENT.source_point.x)
+do marker_blob.set("cury", EVENT.source_point.y)
+
+#
+# find a room, or damcons if both use room
+#
+found_id = None
+for gid in go_set_at_loc:
+    continue if has_role(gid, "marker")
+    continue if has_role(gid, "damcons") and found_id is not None
+
+    found_id = gid
+next gid
+
+if found_id is not None:
+    do ship_blob.set("grid_selected_UID", found_id , 0)
+    do ship_blob.set("grid_selected_ship_UID", found_id , 0)
+    marker_go.comms_id = "marker"
+    follow route grid select GRID_PARENT_ID found_id
+else:
+    # Set the name of the marker to hallway
+    marker_go.comms_id = f"hallway:{int(EVENT.source_point.x)},{int(EVENT.source_point.y)}"
+    follow route grid select GRID_PARENT_ID marker_go_id
+end_if
+
+
+
+->END

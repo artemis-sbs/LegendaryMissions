@@ -12,17 +12,22 @@ jump friendly_support_damage_target if has_roles(DAMAGE_TARGET_ID, "tsn, friendl
 
 
 ========= npc_damage_target ==============
-enrage_value=get_inventory_value(DAMAGE_TARGET_ID, "enrage_value")
+#
+# If an NPC is shot they will get angry at the shooter for two minutes
+# New shooter won't change this
+#
+enrage_value=get_inventory_value(DAMAGE_TARGET_ID, "enrage_target")
 # Skip if already enraged
 ->END if enrage_value is not None
 
-enrage_value=sim.time_tick_counter+30*120
 if DAMAGE_SOURCE_ID== DAMAGE_TARGET_ID:
     -> END
 elif DAMAGE_PARENT_ID==0 and DAMAGE_ORIGIN_ID != 0:
-    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_value",(enrage_value, DAMAGE_SOURCE_ID))
+    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_target",DAMAGE_ORIGIN_ID)
+    do set_timer(DAMAGE_TARGET_ID, "enrage_timer", minutes=2)
 elif DAMAGE_PARENT_ID != 0:
-    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_value",(enrage_value, DAMAGE_PARENT_ID))
+    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_target",DAMAGE_PARENT_ID)
+    do set_timer(DAMAGE_TARGET_ID, "enrage_timer", minutes=2)
 end_if
 
 ->END
@@ -43,16 +48,7 @@ jump friendly_common
 ========== friendly_common =====
 fr = to_object(DAMAGE_TARGET_ID)
 ->END if fr is None
-
-# Only ask every 5 seconds
-help_timer = get_inventory_value(DAMAGE_TARGET_ID, "request_help_timer")
-
-if help_timer is not None and help_timer < sim.time_tick_counter:
-    do set_inventory_value(DAMAGE_TARGET_ID, "request_help_timer",None)
-elif help_timer is not None:
-    # Timer not finished
-    ->END
-end_if
+->END if not is_timer_finished(DAMAGE_TARGET_ID, "request_help_timer")
 
 source = "the enemy"
 if DAMAGE_PARENT_ID==0 and DAMAGE_SOURCE_ID != 0:
@@ -66,11 +62,13 @@ else:
     ->END
 end_if
 
-do set_inventory_value(DAMAGE_TARGET_ID, "request_help_timer",sim.time_tick_counter+30*10) # ten seconds repeat
-
 for player in role(fr.side) & role("__player__"):
     player_obj = to_object(player)
     receive player DAMAGE_TARGET_ID "Help. {player_obj.comms_id} we are under attack from {source}"
 next player
+#
+# Only request help if you haven't for two minutes
+#
+do set_timer(DAMAGE_TARGET_ID, "request_help_timer", minutes=2)
 
 ->END

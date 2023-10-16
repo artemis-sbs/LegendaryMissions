@@ -1,4 +1,16 @@
+import internal_damage.py
 route damage internal take_internal_damage
+route damage heat take_heat_damage
+
+
+======== take_heat_damage  =======
+# This called when there is damage being taken from heat
+#
+# The DAMAGE_ORIGIN_ID is the ship being damaged
+# EVENT has the event data sub_float has the system
+#
+do grid_damage_system(DAMAGE_ORIGIN_ID, int(EVENT.sub_tag))
+->END
 
 
 ======== take_internal_damage  =======
@@ -7,114 +19,13 @@ route damage internal take_internal_damage
 # The DAMAGE_ORIGIN_ID is the ship being damaged
 # EVENT has the event data sub_float has the amount, source_point has the point
 #
-
-
-# Make sure you don't take further damage
-if has_role(DAMAGE_ORIGIN_ID, "exploded"):
-    ->END
-end_if
-
-# pick a random system 
-system_hit = random.randint(0,3)
-blob = get_engine_data_set(sim, DAMAGE_ORIGIN_ID)
-
+system_hit = int(EVENT.sub_float)
+source_point = EVENT.source_point
 damage_amount = EVENT.sub_float
-#
-# Deal damage evenly, but start at a random system
-#
-# Get open hull points
-points = get_inventory_value(DAMAGE_ORIGIN_ID, "undamaged")
-#
-# I we haven't set it then get the valid grid points
-#
-if points is None:
-    points = get_open_grid_points(sim,DAMAGE_ORIGIN_ID)
-    #
-    # Maybe remove some?
-    #
-    do set_inventory_value(DAMAGE_ORIGIN_ID, "undamaged", points)
-end_if
 
-icons = [40,59,33,27]
-colors = ["red", "red", "red", "red"]
+do grid_take_internal_damage_at(DAMAGE_ORIGIN_ID, source_point, system_hit, damage_amount)
 
-if len(points)>0:
-    point = random.choice(points)
-    #do print(f"point {point}")
-    do points.remove(point)
-    do set_inventory_value(DAMAGE_ORIGIN_ID, "undamaged", points)
-
-    dam_go = grid_spawn(DAMAGE_ORIGIN_ID, f"damage", "", point[0],point[1], icons[system_hit], colors[system_hit], "damage")
-    #
-    # Keep track of the type of damage
-    #
-    do set_inventory_value(dam_go, "system", system_hit)
-    #
-    # The damage needs to be linked to the ship
-    #
-    do link(DAMAGE_ORIGIN_ID, "damage", to_id(dam_go)) 
-    do dam_go.blob.set("icon_scale", 0.75, 0)
-end_if    
-
-#
-# Apply damage even if you can't find a spot
-#
-#do print(f"Applying internal damage {damage_amount}")
-
-max_dam = blob.get('system_max_damage', system_hit)
-current = blob.get('system_damage', system_hit)
-if current <= max_dam:
-    do blob.set('system_damage', current+0.5 ,  system_hit)
-else:
-    do blob.set('system_damage', max_dam ,  system_hit)
-end_if
-#    do print(f"system_damage {system_hit} dam {current+1}")
-
-
-
-
-# Is this the end?
-should_explode = True
-
-for sys in range(4):
-    max_damage = blob.get('system_max_damage', sys)
-    current = blob.get('system_damage', sys)
-    if current < max_damage:
-        should_explode = False
-        break
-    end_if
-next sys
-
-if should_explode:
-    #
-    # type, subtype, source_id, target_id, x, y, z, side
-    #
-    pos = get_pos(sim, EVENT.origin_id)
-    if pos:
-        do sbs.create_transient(1, 0, EVENT.origin_id, 0, EVENT.parent_id, pos.x, pos.y, pos.z, "")  
-    end_if
-
-    do add_role(EVENT.origin_id, "exploded")
-
-    so = to_object(EVENT.origin_id)
-    engine_obj = so.space_object(sim)
-    art_id = so.art_id
-    do so.set_art_id(sim,"invisible")
-
-    # Reset the systems to max
-    for sys in range(4):
-        do blob.set('system_damage', 0, sys)
-    next sys
-    
-    delay sim 5s
-    #
-    # Reuse the score update by spawning it ourselves
-    #
-    schedule update_score {"DESTROYED_ID": EVENT.origin_id}
-
-    do sim.reposition_space_object(engine_obj, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
-    do so.set_art_id(sim,art_id)
-    do remove_role(EVENT.origin_id, "exploded")
-
-end_if
 ->END
+
+
+

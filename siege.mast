@@ -1,54 +1,92 @@
 import map_common.mast
 
 ================= siege_build_world ===================
+schedule spawn_players
 
-
-first = True
-colors  = ["yellow", "green", "blue"]
-c = 0
-do print(f"{player_count}")
-
-#------------------------------------------------------------------------------------------------------------
-for player_ship_data in player_list:
-    if c>= player_count:
-        # make sure the id is cleared dry docked ships
-        player_ship_data.id = None
-        continue
-    end_if
-
-    player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, player_ship_data.ship))
-    # player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, "tsn_light_cruiser"))
-    c+=1
-    player_ship_data.id = player_ship
-
-    do set_face(player_ship, player_ship_data.face)
-    if first:
-        do assign_client_to_ship(0,player_ship)
-        first = False
-    end_if
-    points = get_open_grid_points(sim,player_ship)
-    
-    for i in range(3):
-        if len(points)>0:
-            point = random.choice(points)
-            do points.remove(point)
-            do grid_spawn(player_ship, f"DC{i+1}", f"DC{i+1}", point[0],point[1], 80, colors[i], "damcons")
-        end_if
-    next i
-next player_ship_data
-
-num_mines = 0
+terrain_value = 0
 if "few" == terrain_select:
-    num_mines = 1
+    terrain_value = 1
     end_if
 if "some" == terrain_select:
-    num_mines = 2
+    terrain_value = 2
     end_if
 if "lots" == terrain_select:
-    num_mines = 3
+    terrain_value = 3
     end_if
 if "many" == terrain_select:
-    num_mines = 4
+    terrain_value = 4
+    end_if
+
+lethal_value = 0
+if "few" == lethal_select:
+    lethal_value = 1
+    end_if
+if "some" == lethal_select:
+    lethal_value = 2
+    end_if
+if "lots" == lethal_select:
+    lethal_value = 3
+    end_if
+if "many" == lethal_select:
+    lethal_value = 4
+    end_if
+
+friendly_value = 0
+if "few" == friendly_select:
+    friendly_value = 1
+    end_if
+if "some" == friendly_select:
+    friendly_value = 2
+    end_if
+if "lots" == friendly_select:
+    friendly_value = 3
+    end_if
+if "many" == friendly_select:
+    friendly_value = 4
+    end_if
+
+monster_value = 0
+if "few" == monster_select:
+    monster_value = 1
+    end_if
+if "some" == monster_select:
+    monster_value = 2
+    end_if
+if "lots" == monster_select:
+    monster_value = 3
+    end_if
+if "many" == monster_select:
+    monster_value = 4
+    end_if
+
+anomaly_value = 0
+num_anomaly = 0
+if "few" == anomaly_select:
+    anomaly_value = 1
+    num_anomaly = random.randint(1,3)
+    end_if
+if "some" == anomaly_select:
+    anomaly_value = 2
+    num_anomaly = random.randint(3,5)
+        end_if
+if "lots" == anomaly_select:
+    anomaly_value = 3
+    num_anomaly = random.randint(5,10)
+    end_if
+if "many" == anomaly_select:
+    anomaly_value = 4
+    num_anomaly = random.randint(10,15)
+    end_if
+
+
+
+if seed_value != 0:
+    do random.seed(seed_value)
+    do print(f"Seed Value: {seed_value}")
+else:
+    seed_value = random.randint(1,99999)
+    do random.seed(seed_value)
+    do print(f"Random Seed Value: {seed_value}")
     end_if
 
 #------------------------------------------------------------------------------------------------------------
@@ -63,24 +101,24 @@ for station in stations:
         do set_face(ds, random_terran(civilian=True))
 
         #wrap a minefield around the station
-        if num_mines > 0:
+        if lethal_value > 0:
             startAngle = random.randrange(0,359)
             angle = random.randrange(90,170)
             endAngle = startAngle + angle
 
             depth = 1#random.randrange(2,3)
     #        width = random.randrange(int(angle/6), int(angle/3))
-            width = int(5 * num_mines)
+            width = int(5 * lethal_value)
             widthArray = [int(angle / 5.0)]
             inner = random.randrange(1200,1500)
             cluster_spawn_points = scatter_ring(width, depth, apos.x,apos.y,apos.z, inner, inner, startAngle, endAngle)
     #        cluster_spawn_points = scatter_ring_density(widthArray, apos.x,apos.y,apos.z, inner, 0, startAngle, endAngle)
             # Random type, but same for cluster
-            a_type = f"danger_{1}{'a'}"
+            # a_type = f"danger_{1}{'a'}"
             for v2 in cluster_spawn_points:
                 #keep value between -500 and 500??
         #                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
-                do terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, a_type, "behav_mine")
+                do terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_3a", "behav_mine")
             next v2
         end_if
         num -= 1
@@ -120,8 +158,6 @@ for v in spawn_points:
     r_name = f"{random.choice(enemy_prefix)}_{enemy_name_number}"
     spawn_data = npc_spawn(v.x, v.y, v.z, r_name, roles, r_type, "behav_npcship")
     raider = spawn_data.py_object
-    # add a taunt trait
-    do set_inventory_value(raider.id, "taunt_trait", random.randint(0,2))
     #
     # Should add a commnon funtion to call to get the face based on race
     #
@@ -163,24 +199,62 @@ next v
 
 #------------------------------------------------------------------------------------------------------------
 # I want candy
-spawn_points = scatter_sphere(random.randint(5,12), 0,0,0, 1000, 4000, ring=True)
-for v in spawn_points:
-    startAngle = random.randrange(0,359)
-    angle = random.randrange(15,65)
-    endAngle = startAngle + angle
 
-    depth = random.randrange(2,5)
-    width = random.randrange(int(angle/6), int(angle/3))
-    inner = random.randrange(2000,9000)
-    cluster_spawn_points = scatter_ring(width, depth, 0, 0,0, inner + 500, inner, startAngle, endAngle)
-    # Random type, but same for cluster
-    a_type = f"danger_{1}{'a'}"
-    for v2 in cluster_spawn_points:
-        #keep value between -500 and 500??
-#                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
-#        do terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, a_type, "behav_mine")
-    next v2
+do print(f"Number of Anomalies: {num_anomaly}")
+
+spawn_points = scatter.box(num_anomaly, 0,0,0, 50000, 1000, 50000, centered=True)
+for v in spawn_points:
+    anom = random.randint(1,9)
+    if anom == 1:
+        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, carapaction_coil", "alien_2a", "behav_pickup")
+        do print(f"Carapaction Coil spawned {v.x},{v.y},{v.z}")
+    end_if
+    if anom == 2:
+        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, infusion_pcoils", "danger_4a", "behav_pickup")
+        do print(f"Infusion P-Coil spawned {v.x},{v.y},{v.z}")
+    end_if
+    if anom == 3:
+        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, tauron_focuser", "alien_4a", "behav_pickup")
+        do print(f"Tauron Focuser spawned {v.x},{v.y},{v.z}")
+    end_if
+    if anom == 4:
+        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, secret_codecase", "container_1a", "behav_pickup")
+        do print(f"Secret Codecase spawned {v.x},{v.y},{v.z}")
+    end_if
+    if anom == 5:
+        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, hidens_powercell", "container_2a", "behav_pickup")
+        do print(f"HiDens Powercell spawned {v.x},{v.y},{v.z}")
+    end_if
+    if anom == 6:
+        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, vigoranium_nodule", "container_4a", "behav_pickup")
+        do print(f"Vigoranium Nodule spawned {v.x},{v.y},{v.z}")
+    end_if
+    if anom == 7:
+        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, cetrocite_crystal", "container_small_6a", "behav_pickup")
+        do print(f"Cetrocite Crystal spawned {v.x},{v.y},{v.z}")
+    end_if
+    if anom == 8:
+        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, lateral_array", "danger_1a", "behav_pickup")
+        do print(f"Lateral Array spawned {v.x},{v.y},{v.z}")
+    end_if
+    if anom == 9:
+        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, haplix_overcharger", "alien_5a", "behav_pickup")
+        do print(f"Haplix Overcharger spawned {v.x},{v.y},{v.z}")
+    end_if
+    #anom+=1    
 next v
+
+# For testing anomalies, load some candy up front
+
+do terrain_spawn(125, 0, 250, None, "anomaly, carapaction_coil", "alien_2a", "behav_pickup")
+do terrain_spawn(200, 0, 250, None, "anomaly, infusion_pcoils", "danger_4a", "behav_pickup")
+do terrain_spawn(275, 0, 250, None, "anomaly, tauron_focuser", "alien_4a", "behav_pickup")
+do terrain_spawn(125, 0, 325, None, "anomaly, secret_codecase", "container_1a", "behav_pickup")
+do terrain_spawn(200, 0, 325, None, "anomaly, hidens_powercell", "container_2a", "behav_pickup")
+do terrain_spawn(275, 0, 325, None, "anomaly, vigoranium_nodule", "container_4a", "behav_pickup")
+do terrain_spawn(125, 0, 400, None, "anomaly, cetrocite_crystal", "container_small_6a", "behav_pickup")
+do terrain_spawn(200, 0, 400, None, "anomaly, lateral_array", "danger_1a", "behav_pickup")
+do terrain_spawn(275, 0, 400, None, "anomaly, haplix_overcharger", "alien_5a", "behav_pickup")
 
 jump spawn_friendly_npc
 #------------------------------------------------------------------------------------------------------------

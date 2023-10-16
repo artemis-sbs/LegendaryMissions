@@ -11,6 +11,9 @@ import siege.mast
 import extra_gui.mast
 import game_results.mast
 import damage.mast
+import grid_comms.mast
+import anom_common.mast
+import upgrade.mast
 
 #
 # This directs the script 
@@ -30,7 +33,7 @@ reroute clients client_main
 shared start_text =~~"""
 Legendary Missions:
 
-Missions rich in the history of Artemis re-imagined for for the Cosmos.
+Missions rich in the history of Artemis re-imagined for Cosmos.
 
 
 Written using MAST and is a great reference for those looking to write their own missions.
@@ -62,8 +65,11 @@ shared player_list = ~~[
 
 shared world_select = "siege"
 shared terrain_select = "few"
+shared lethal_select = "none"
 shared friendly_select = "few"
-shared anomaly_select = "none"
+shared monster_select = "none"
+shared anomaly_select = "many"
+shared seed_value = 0
 
 watch_end_game_task = None
 
@@ -81,19 +87,18 @@ end_if
 section style="area: 5, 10, 50, 90;"
 """""{start_text}"""""
 
-section style="area: 50, 10, 95,90;row-height:75px;padding:0px,10px"
-""" justify:right;text:Difficulty """
+# For using a seed value when randomly generating terrain, not currently implemented
+#row style="row-height:65px;"
+#"""justify:right;text:Seed (Optional)"""
+#input seed_value """desc: Integer"""
 
 
-intslider enemy_count "low: 1.0;high:11.0"
-row
-blank
-row
-
+section style="area: 50, 10, 95,90;row-height:65px;padding:0px,10px"
 """ justify:right;text:Player ships """
 intslider player_count "low: 1.0;high:8.0"
 row
-blank
+""" justify:right;text:Difficulty """
+intslider enemy_count "low: 1.0;high:11.0"
 row
 
 """ justify:right;text:Mission Type"""
@@ -101,21 +106,36 @@ dropdown world_select "text: Mission type;list:siege,single front,double front,d
 end_dropdown
 row
 
+blank
+row
+
 """justify:right;text:Terrain"""
-dropdown terrain_select "text: Terrain;list:none, few,some, lots, many":
+dropdown terrain_select "text: Terrain;list: none, few, some, lots, many":
+end_dropdown
+row
+
+"""justify:right;text:Lethal Terrain"""
+dropdown lethal_select "text: Lethal Terrain;list: none, few, some, lots, many":
 end_dropdown
 row
 
 """justify:right;text:Friendly Ships"""
-dropdown friendly_select "text: Friendly Ships;list:none, few,some, lots, many":
+dropdown friendly_select "text: Friendly Ships;list: none, few, some, lots, many":
+end_dropdown
+row
+
+"""justify:right;text:Monsters"""
+dropdown monster_select "text: Monsters;list: none, few, some, lots, many":
 end_dropdown
 row
 
 """justify:right;text:Anomalies"""
 dropdown anomaly_select_select "text: Anomalies;list:none, few,some, lots, many":
 end_dropdown
-row
+#row
 
+#blank
+#row
 
 await choice:
 + "Start Mission":
