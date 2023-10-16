@@ -1,0 +1,564 @@
+==== replace: console_bottom_choices ====
+
+# Determines where the "Upgrade" button appears, to avoid overlapping with default widgets.
+# If Comms or Engineering, puts button in the upper right corner, otherwise puts it centered at the top of the screen. 
+
+if console_select == "comms" or console_select == "engineering":
+    section style="area:80,0,100,35px;"
+    button "Upgrade":
+        jump upgrade_screen
+    end_button
+else:
+    section style="area:45,0,65,35px;"
+    button "Upgrade":
+        jump upgrade_screen
+    end_button
+end_if
+
+await gui
+
+==== upgrade_screen ====
+
+# Get inventory values for upgrade counts and timers.
+
+ship_id = get_inventory_value(client_id, "assigned_ship")
+ctype = get_inventory_value(client_id, "CONSOLE_TYPE")
+cc_count = get_inventory_value(ship_id, "carapaction_coil", 0)
+ip_count = get_inventory_value(ship_id, "infusion_pcoils", 0)
+tf_count = get_inventory_value(ship_id, "tauron_focuser", 0)
+sc_count = get_inventory_value(ship_id, "secret_codecase", 0)
+vn_count = get_inventory_value(ship_id, "vigoranium_nodule", 0)
+cl_count = get_inventory_value(ship_id, "cetrocite_crystal", 0)
+la_count = get_inventory_value(ship_id, "lateral_array", 0)
+ho_count = get_inventory_value(ship_id, "haplix_overcharger", 0)
+cc_timer = get_inventory_value(ship_id, "cc_timer", 0)
+ip_timer = get_inventory_value(ship_id, "ip_timer", 0)
+tf_timer = get_inventory_value(ship_id, "tf_timer", 0)
+sc_timer = get_inventory_value(ship_id, "sc_timer", 0)
+vn_timer = get_inventory_value(ship_id, "vn_timer", 0)
+cl_timer = get_inventory_value(ship_id, "cl_timer", 0)
+la_timer = get_inventory_value(ship_id, "la_timer", 0)
+ho_timer = get_inventory_value(ship_id, "ho_timer", 0)
+
+# Puts the "Done" button in the upper right corner.
+
+section style="area:90,0,100,5;row-height:35px;"
+button "Done":
+    jump console_selected 
+end_button
+
+# First column, shows the count of upgrades currently on the ship.
+
+section style="area:5,15,10,100;row-height:35px;"
+
+blank
+row
+blank
+row
+if cc_timer > 0:
+    """color:#0f0; text: {cc_count};""" style="tag:sh-cc-count;"
+else:
+    """text: {cc_count};""" style="tag:sh-cc-count;"
+end_if
+row
+if ip_timer > 0:
+    """color:#0f0; text: {ip_count};""" style="tag:sh-ip-count;"
+else:
+    """text: {ip_count};""" style="tag:sh-ip-count;"
+end_if
+row
+if tf_timer > 0:
+    """color:#0f0; text: {tf_count};""" style="tag:sh-tf-count;"
+else:
+    """text: {tf_count};""" style="tag:sh-tf-count;"
+end_if
+row
+if sc_timer > 0:
+    """color:#0f0; text: {sc_count};""" style="tag:sh-sc-count;"
+else:
+    """text: {sc_count};""" style="tag:sh-sc-count;"
+end_if
+row
+    """text: {vn_count};""" style="tag:sh-vn-count;"
+row
+if cl_timer > 0:
+    """color:#0f0; text: {cl_count};""" style="tag:sh-cl-count;"
+else:
+    """text: {cl_count};""" style="tag:sh-cl-count;"
+end_if
+row
+if la_timer > 0:
+    """color:#0f0; text: {la_count};""" style="tag:sh-la-count;"
+else:
+    """text: {la_count};""" style="tag:sh-la-count;"
+end_if
+row
+    """text: {ho_count};""" style="tag:sh-ho-count;"
+
+
+# Second Column, show the name of the upgrade, or show a button to activate it.
+# Buttons will check which console is in use, and whether that upgrade is already active.
+# If the button is pressed, for most upgrades, timers start and upgrade text turns green while timer counts down.
+# For Vigoranium Nodule and Haplix Overcharger, if the upgrade can't be used (damcons already full, or shields 
+# already overcharged) the description/timer text shows a yellow message for 5 seconds
+
+section style="area:10,15,35,100;row-height:35px;"
+
+"""justify:center;text:SOOPER SEKRET UPGRADE SCREEN!"""
+row
+blank
+row
+if cc_count > 0 and (ctype == "weapons" or ctype == "engineering") and not cc_timer > 0:
+    button "Carapaction Coil":
+        cc_count -= 1
+        do set_inventory_value(ship_id, "carapaction_coil", cc_count)
+        do set_inventory_value(ship_id, "cc_timer", 300)
+        cc_timer = get_inventory_value(ship_id, "cc_timer" )
+        schedule cc_countdown
+        update shared tag "sh-cc-count" "color:#0f0; text: {cc_count};"
+        update shared tag "sh-cc-txt" "color:#0f0; text: Carapaction Coil;"
+        update shared tag "sh-cc-timer" "color:#0f0; text: {cc_timer} seconds remaining.;"
+        jump upgrade_screen
+    end_button
+else:
+    if cc_timer > 0:
+        """color:#0f0; text: Carapaction Coil;""" style="tag:sh-cc-txt;"
+    else:
+        """text: Carapaction Coil;""" style="tag:sh-cc-txt;"
+    end_if
+end_if
+row
+if ip_count > 0 and ctype == "helm" and not ip_timer > 0:
+    button "Infusion P-Coils":
+        ip_count -= 1
+        do set_inventory_value(ship_id, "infusion_pcoils", ip_count)
+        do set_inventory_value(ship_id, "ip_timer", 300)
+        ip_timer = get_inventory_value(ship_id, "ip_timer" )
+        schedule ip_countdown
+        update shared tag "sh-ip-count" "color:#0f0; text: {ip_count};"
+        update shared tag "sh-ip-txt" "color:#0f0; text: Infusion P-Coils;"
+        update shared tag "sh-ip-timer" "color:#0f0; text: {ip_timer} seconds remaining.;"
+        jump upgrade_screen
+    end_button
+else:
+    if ip_timer > 0:
+        """color:#0f0; text: Infusion P-Coils;""" style="tag:sh-ip-txt;"
+    else:
+        """text: Infusion P-Coils;""" style="tag:sh-ip-txt;"
+    end_if
+end_if
+row
+if tf_count > 0 and ctype == "weapons" and not tf_timer > 0:
+    button "Tauron Focuser":
+        tf_count -= 1
+        tf_timer = 300
+        do set_inventory_value(ship_id, "tauron_focuser", tf_count)
+        do set_inventory_value(ship_id, "tf_timer", 300)
+        tf_timer = get_inventory_value(ship_id, "tf_timer" )
+        schedule tf_countdown
+        update shared tag "sh-tf-count" "color:#0f0; text: {tf_count};"
+        update shared tag "sh-tf-txt" "color:#0f0; text: Tauron Focuser;"
+        update shared tag "sh-tf-timer" "color:#0f0; text: {tf_timer} seconds remaining.;"
+        jump upgrade_screen
+    end_button
+else:
+    if tf_timer > 0:
+        """color:#0f0; text: Tauron Focuser;""" style="tag:sh-tf-txt;"
+    else:
+        """text: Tauron Focuser;""" style="tag:sh-tf-txt;"
+    end_if
+end_if
+row
+if sc_count > 0 and ctype == "comms" and not sc_timer > 0:
+    button "Secret Codecase":
+        sc_count -= 1
+        do set_inventory_value(ship_id, "secret_codecase", sc_count)
+        do set_inventory_value(ship_id, "sc_timer", 300)
+        sc_timer = get_inventory_value(ship_id, "sc_timer" )
+        schedule sc_countdown
+        update shared tag "sh-sc-count" "color:#0f0; text: {sc_count};"
+        update shared tag "sh-sc-txt" "color:#0f0; text: Secret Codecase;"
+        update shared tag "sh-sc-timer" "color:#0f0; text: {sc_timer} seconds remaining.;"
+        jump upgrade_screen
+    end_button
+else:
+    if sc_timer > 0:
+        """color:#0f0; text: Secret Codecase;""" style="tag:sh-sc-txt;"
+    else:
+        """text: Secret Codecase;""" style="tag:sh-sc-txt;"
+    end_if    
+end_if
+row
+if vn_count > 0 and ctype == "engineering":
+    button "Vigoranium Nodule":
+        all_dcs = grid_objects(ship_id) & role("damcons") # Get DamCon grid objects, count up HP
+        total_hp = 0
+        for dc in all_dcs:
+            hp = get_inventory_value(dc, "HP",0)
+            total_hp += hp
+        next dc
+        do print(f"DamCon Total HPs: {total_hp}")
+        if total_hp == 18: # Show warning message if DamCons already at full strength
+            do set_inventory_value(ship_id, "vn_timer", 5)
+            vn_timer = get_inventory_value(ship_id, "vn_timer" )
+            schedule vn_countdown
+            update shared tag "sh-vn-timer" "color:#ff0; text: Damage Control Teams already at full strength;"
+        else: 
+            SPAWNED_ID = ship_id
+            push restore_damcons
+            vn_count -= 1
+            do set_inventory_value(ship_id, "vigoranium_nodule", vn_count)
+        end_if
+        jump upgrade_screen
+    end_button
+else:
+    """text: Vigoranium Nodule;""" style="tag:sh-vn-txt;"
+end_if
+row
+if cl_count > 0 and ctype == "engineering" and not cl_timer > 0:
+    button "Cetrocite Crystal":
+        cl_count -= 1
+        do set_inventory_value(ship_id, "cetrocite_crystal", cl_count)
+        do set_inventory_value(ship_id, "cl_timer", 300)
+        cl_timer = get_inventory_value(ship_id, "cl_timer" )
+        schedule cl_countdown
+        update shared tag "sh-cl-count" "color:#0f0; text: {cl_count};"
+        update shared tag "sh-cl-txt" "color:#0f0; text: Cetrocite Crystal;"
+        update shared tag "sh-cl-timer" "color:#0f0; text: {cl_timer} seconds remaining.;"
+        jump upgrade_screen
+    end_button
+else:
+    if cl_timer > 0:
+        """color:#0f0; text: Cetrocite Crystal;""" style="tag:sh-cl-txt;"
+    else:
+        """text: Cetrocite Crystal;""" style="tag:sh-cl-txt;"
+    end_if
+end_if
+row
+if la_count > 0 and ctype == "science" and not la_timer > 0:
+    button "Lateral Array":
+        la_count -= 1
+        do set_inventory_value(ship_id, "lateral_array", la_count)
+        do set_inventory_value(ship_id, "la_timer", 300)
+        la_timer = get_inventory_value(ship_id, "la_timer" )
+        schedule la_countdown
+        update shared tag "sh-la-count" "color:#0f0; text: {la_count};"
+        update shared tag "sh-la-txt" "color:#0f0; text: Lateral Array;"
+        update shared tag "sh-la-timer" "color:#0f0; text: {la_timer} seconds remaining.;"
+        jump upgrade_screen   
+    end_button
+else:
+    if la_timer > 0:
+        """color:#0f0; text: Lateral Array;""" style="tag:sh-la-txt;"
+    else:
+        """text: Lateral Array;""" style="tag:sh-la-txt;"
+    end_if
+end_if
+row
+    if ho_count > 0 and (ctype == "engineering" or ctype == "weapons"):
+        button "Haplix Overcharger":
+            player_blob = to_blob(ship_id) # Get shield values from ship
+            fshield = get_data_set_value(player_blob,"shield_val", 0)
+            rshield = get_data_set_value(player_blob,"shield_val", 1)
+            fshieldmax = get_data_set_value(player_blob,"shield_max_val", 0)
+            rshieldmax = get_data_set_value(player_blob,"shield_max_val", 1)
+            do print (f"Front Shield: Max = {fshieldmax} Cur = {fshield} Rear Shield: Max = {rshieldmax} Cur= {rshield}")
+            if fshield > fshieldmax or rshield > rshieldmax: # Show warning message if one/both shields are already over the max
+                do set_inventory_value(ship_id, "ho_timer", 5)
+                ho_timer = get_inventory_value(ship_id, "ho_timer" )
+                schedule ho_countdown
+                update shared tag "sh-ho-timer" "color:#ff0; text: Shields already overcharged;"
+            else: 
+                fshield += 300.0
+                rshield += 300.0
+                do print (f"Front Shield: {fshield} Rear Shield: {rshield}")
+                do set_data_set_value(player_blob, "shield_val", fshield, 0)
+                do set_data_set_value(player_blob, "shield_val", rshield, 1)
+                ho_count -= 1
+                do set_inventory_value(ship_id, "haplix_overcharger", ho_count)
+                dmgcheck = 95
+                # Damage loop, activating Haplix Overcharger may damage up to four shield nodes. 
+                # First node is 95%, second is 70%, third is 45%, fourth is 20%.
+                for dmg in range(4):
+                    dmgrand = random.randrange(1,100)
+                    if dmgrand <= dmgcheck:
+                        system_damage = [0, 0, 0, 0]        # This code is borrowed from take_heat_damage label in internal_damage.mast
+                        hittable = to_list(grid_objects(ship_id) & role("__undamaged__") & role("shield"))
+                        if len(hittable) > 0:
+                            go_id = random.choice(hittable)
+                            blob = to_blob(go_id)           
+                            damage_color = themes[theme]["damage"]
+                            do blob.set("icon_color", damage_color, 0)
+                            do link(ship_id, "damage", go_id) 
+                            do add_role(go_id, "__damaged__")
+                            do remove_role(go_id, "__undamaged__")
+                            do system_damage[sbs.SHPSYS.SHIELDS]  += 1
+                            blob = to_blob(ship_id)             # Borrowed from apply_system_damage label in internal_damage.mast
+                            for x in range(sbs.SHPSYS.MAX):     
+                                cur =  blob.get('system_damage', x)
+                                cur += system_damage[x]
+                                do blob.set('system_damage',cur, x)
+                            next x
+                            push set_damage_coefficients {"DAMAGE_ORIGIN_ID": ship_id} # Note: does not check for should_explode
+                            do print(f"Haplix Shield Damage dmgcheck = {dmgcheck} dmgrand = {dmgrand}")
+                        else:
+                            do print(f"Haplix All Shields Damaged")
+                        end_if
+                    else:
+                        do print(f"Haplix NO Shield Damage dmgcheck = {dmgcheck} dmgrand = {dmgrand}")
+                    end_if
+                    dmgcheck -= 25
+                next dmg
+            end_if
+            jump upgrade_screen
+        end_button
+    else:
+        """text: Haplix Overcharger;""" style="tag:sh-ho-txt;"
+    end_if
+
+# Third Column, displays short description if inactive, or timer countdown (in green) if active.
+# For Vigoranium Nodule or Haplix Overcharger, will also display yellow warning if button is pressed 
+# but upgrade can't be used (DamCons full, or shields already overcharged)
+
+section style="area:38,15,100,100;row-height:35px;"
+
+blank
+row
+blank
+row
+if cc_timer > 0:
+    """color:#0f0; text: {cc_timer} seconds remaining.""" style="tag:sh-cc-timer;"
+else:
+    """text: 5 Minute 300% Shield Recharge Boost""" style="tag:sh-cc-timer;"
+end_if
+row
+if ip_timer > 0:
+    """color:#0f0; text: {ip_timer} seconds remaining.""" style="tag:sh-ip-timer;"
+else:
+    """text: 5 Minute 300% Impulse and Maneuver Speed Boost""" style="tag:sh-ip-timer;"
+end_if
+row
+if tf_timer > 0:
+    """color:#0f0; text: {tf_timer} seconds remaining.""" style="tag:sh-tf-timer;"
+else:
+    """text: 5 Minute 100% Beam and Reload Speed Boost""" style="tag:sh-tf-timer;"
+end_if
+row
+if sc_timer > 0:
+    """color:#0f0; text: {sc_timer} seconds remaining.""" style="tag:sh-sc-timer;"
+else:
+    """text: Force one enemy ship to auto-surrender""" style="tag:sh-sc-timer;"
+end_if
+row
+if vn_timer > 0:
+    """color:#ff0; text: Damage Control Teams already at full strength""" style="tag:sh-vn-timer;"
+else:
+    """text: Restore Damage Control Teams.""" style="tag:sh-vn-timer;"
+end_if
+row
+if cl_timer > 0:
+    """color:#0f0; text: {cl_timer} seconds remaining.""" style="tag:sh-cl-timer;"
+else:
+    """text: 5 Minute 100% Faster Heat Reduction""" style="tag:sh-cl-timer;"
+end_if
+row
+if la_timer > 0:
+    """color:#0f0; text: {la_timer} seconds remaining.""" style="tag:sh-la-timer;"
+else:
+    """text: 5 Minute Target Scan Triple Speed""" style="tag:sh-la-timer;"
+end_if
+row
+if ho_timer > 0:
+    """color:#ff0; text: Shields already overcharged""" style="tag:sh-ho-timer;"
+else:
+    """text: +300 to shields but may damage shield generators""" style="tag:sh-ho-timer;"
+end_if
+
+
+await gui
+
+# Countdown timers adjust the upgrade coefficients from the ship blob, 
+# starts the timer, then sets the upgrade coefficients back to normal. 
+# For Vigoranium Nodule and Haplix Overcharger, displays warning for 5 seconds
+# if they can't be used (DamCons already full, or shields already overcharged)
+
+===== cc_countdown ===== 
+player_blob = to_blob(ship_id)
+shieldrate = get_data_set_value(player_blob,"all_shield_upgrade_coeff", 0)
+do print(f"Current Shield Repair Rate: {shieldrate}")
+shieldrate *= 3.0
+do set_data_set_value(player_blob, "all_shield_ugprade_coeff", shieldrate)
+do print(f"New Shield Repair Rate: {shieldrate}")
+for x in range(300):
+    cc_timer = get_inventory_value(ship_id, "cc_timer" )
+    update shared tag "sh-cc-timer" "color:#0f0; text: {cc_timer} seconds remaining.;"
+    cc_timer -= 1
+    do set_inventory_value(ship_id, "cc_timer", cc_timer )
+    delay gui 1s
+next x
+shieldrate /= 3.0
+do print(f"Reset Shield Repair Rate: {shieldrate}")
+do set_data_set_value(player_blob, "all_shield_upgrade_coeff", shieldrate)
+update shared tag "sh-cc-count" "text: {cc_count};"
+update shared tag "sh-cc-txt" "text: Carapaction Coil;"
+update shared tag "sh-cc-timer" "text: 5 Minute 300% Shield Recharge Boost;"
+->END
+
+===== ip_countdown ===== 
+player_blob = to_blob(ship_id)
+impfaster = get_data_set_value(player_blob,"impulse_upgrade_coeff", 0)
+turnfaster = get_data_set_value(player_blob,"turn_upgrade_coeff", 0)
+#warpfaster = get_data_set_value(player_blob,"warp_upgrade_coeff", 0)
+do print(f"Current Impulse Coefficent: {impfaster}")
+do print(f"Current Turn Coefficent: {turnfaster}")
+#do print(f"Current Warp Coefficent: {warpfaster}")
+impfaster *= 3.0
+turnfaster *= 3.0
+#warpfaster *= 3.0
+do set_data_set_value(player_blob, "impuls_upgrade_coeff", impfaster)
+do set_data_set_value(player_blob, "turn_upgrade_coeff", turnfaster)
+#do set_data_set_value(player_blob, "warp_upgrade_coeff", warpfaster)
+do print(f"New Impulse Coefficient: {impfaster}")
+do print(f"New Turn Coefficient: {turnfaster}")
+#do print(f"New Warp Coefficient: {warpfaster}")
+for x in range(300):
+    ip_timer = get_inventory_value(ship_id, "ip_timer" )
+    update shared tag "sh-ip-timer" "color:#0f0; text: {ip_timer} seconds remaining.;"
+    ip_timer -= 1
+    do set_inventory_value(ship_id, "ip_timer", ip_timer )
+    delay gui 1s
+next x
+impfaster /= 3.0
+turnfaster /= 3.0
+#warpfaster /= 3.0
+do print(f"Reset Impulse Coefficient: {impfaster}")
+do print(f"Reset Turn Coefficient: {turnfaster}")
+#do print(f"Reset Warp Coefficient: {warpfaster}")
+do set_data_set_value(player_blob, "impulse_upgrade_oeff", impfaster)
+do set_data_set_value(player_blob, "turn_upgrade_coeff", turnfaster)
+#do set_data_set_value(player_blob, "warp_upgrade_coeff", warpfaster)
+update shared tag "sh-ip-count" "text: {ip_count};"
+update shared tag "sh-ip-txt" "text: Infusion P-Coils;"
+update shared tag "sh-ip-timer" "text: 5 Minute 300% Impulse and Maneuver Speed Boost;"
+->END
+
+===== tf_countdown ===== 
+player_blob = to_blob(ship_id)
+beamfaster = get_data_set_value(player_blob,"all_beam_upgrade_coeff", 0)
+tubefaster = get_data_set_value(player_blob,"all_tube_upgrade_coeff", 0)
+do print(f"Current Beam Speed Coefficent: {beamfaster}")
+do print(f"Current Torpedo Tube Coefficent: {tubefaster}")
+beamfaster *= 2.0
+tubefaster *= 2.0
+do set_data_set_value(player_blob, "all_beam_upgrade_coeff", beamfaster)
+do set_data_set_value(player_blob, "all_tube_upgrade_coeff", tubefaster)
+do print(f"New Beam Speed Coefficient: {beamfaster}")
+do print(f"New Torpedo Tube Coefficient: {tubefaster}")
+for x in range(300):
+    tf_timer = get_inventory_value(ship_id, "tf_timer" )
+    update shared tag "sh-tf-timer" "color:#0f0; text: {tf_timer} seconds remaining.;"
+    tf_timer -= 1
+    do set_inventory_value(ship_id, "tf_timer", tf_timer )
+    delay gui 1s
+next x
+beamfaster /= 2.0
+tubefaster /= 2.0
+do print(f"Reset Beam Damage Coefficient: {beamfaster}")
+do print(f"Reset Torpedo Tube Coefficient: {tubefaster}")
+do set_data_set_value(player_blob, "all_beam_upgrade_coeff", beamfaster)
+do set_data_set_value(player_blob, "all_tube_upgrade_coeff", tubefaster)
+update shared tag "sh-tf-count" "text: {tf_count};"
+update shared tag "sh-tf-txt" "text: Tauron Focuser;"
+update shared tag "sh-tf-timer" "text: 5 Minute 100% Beam and Reload Speed Boost;"
+->END
+
+===== sc_countdown ===== # Code for using Secred Codecase in comms.mast
+for x in range(300):
+    sc_timer = get_inventory_value(ship_id, "sc_timer" )
+    update shared tag "sh-sc-timer" "color:#0f0; text: {sc_timer} seconds remaining.;"
+    break if sc_timer == 0
+    sc_timer -= 1
+    do set_inventory_value(ship_id, "sc_timer", sc_timer )
+    delay gui 1s
+next x
+update shared tag "sh-sc-count" "text: {sc_count};"
+update shared tag "sh-sc-txt" "text: Secret Codecase;"
+update shared tag "sh-sc-timer" "text: Force one enemy ship to auto-surrender;"
+->END
+
+===== vn_countdown ===== 
+for x in range(5):
+    vn_timer = get_inventory_value(ship_id, "vn_timer" )
+    update shared tag "sh-vn-timer" "color:#ff0; text: Damage Control Teams already at full strength;"
+    vn_timer -= 1
+    do set_inventory_value(ship_id, "vn_timer", vn_timer )
+    do print(f"VN Timer: {vn_timer}")
+    delay gui 1s
+next x
+update shared tag "sh-vn-timer" "text: Restore Damage Control Teams;"
+->END
+
+===== cl_countdown ===== 
+player_blob = to_blob(ship_id)
+stayfrosty = get_data_set_value(player_blob,"coolant_upgrade_coeff", 0)
+do print(f"Current Coolant Coefficient: {stayfrosty}")
+if stayfrosty == None:
+    stayfrosty = 2.0
+else:
+    stayfrosty *= 2.0
+end_if
+do set_data_set_value(player_blob, "coolant_upgrade_coeff", stayfrosty)
+do print(f"New Coolant Coefficient: {stayfrosty}")
+for x in range(300):
+    cl_timer = get_inventory_value(ship_id, "cl_timer" )
+    update shared tag "sh-cl-timer" "color:#0f0; text: {cl_timer} seconds remaining.;"
+    cl_timer -= 1
+    do set_inventory_value(ship_id, "cl_timer", cl_timer )
+    delay gui 1s
+next x
+stayfrosty /= 2.0
+do print(f"Reset Coolant Coefficient: {scanrate}")
+do set_data_set_value(player_blob, "coolant_upgrade_coeff", stayfrosty)
+update shared tag "sh-cl-count" "text: {cl_count};"
+update shared tag "sh-cl-txt" "text: Cetrocite Crystal;"
+update shared tag "sh-cl-timer" "text: 5 Minute 100% Faster Heat Reduction;"
+->END
+
+===== la_countdown ===== 
+player_blob = to_blob(ship_id)
+scanrate = get_data_set_value(player_blob,"sensor_upgrade_coeff", 0)
+do print(f"Current Scan Speed: {scanrate}")
+if scanrate == None:
+    scanrate = 3.0
+else:
+    scanrate *= 3.0
+end_if
+do set_data_set_value(player_blob, "sensor_upgrade_coeff", scanrate)
+do print(f"New Scan Speed: {scanrate}")
+for x in range(300):
+    la_timer = get_inventory_value(ship_id, "la_timer" )
+    update shared tag "sh-la-timer" "color:#0f0; text: {la_timer} seconds remaining.;"
+    la_timer -= 1
+    do set_inventory_value(ship_id, "la_timer", la_timer )
+    delay gui 1s
+next x
+scanrate /= 3.0
+do print(f"Reset Scan Speed: {scanrate}")
+do set_data_set_value(player_blob, "sensor_upgrade_coeff", scanrate)
+update shared tag "sh-la-count" "text: {la_count};"
+update shared tag "sh-la-txt" "text: Lateral Array;"
+update shared tag "sh-la-timer" "text: 5 Minute Target Scan Triple Speed;"
+->END
+
+===== ho_countdown ===== 
+for x in range(5):
+    ho_timer = get_inventory_value(ship_id, "ho_timer" )
+    update shared tag "sh-ho-timer" "color:#ff0; text: Shields already overcharged;"
+    ho_timer -= 1
+    do set_inventory_value(ship_id, "ho_timer", ho_timer )
+    do print(f"HO Timer: {ho_timer}")
+    delay gui 1s
+next x
+update shared tag "sh-ho-timer" "text: +300 to shields but may damage shield generators"
+->END
+
