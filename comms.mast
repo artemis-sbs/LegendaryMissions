@@ -130,14 +130,20 @@ end_await
 ================ npc_comms ==================
 comms_id = to_object(COMMS_ORIGIN_ID).comms_id
 enrage_value=get_inventory_value(COMMS_SELECTED_ID, "enrage_target")
-hide_butt = has_role(COMMS_SELECTED_ID, "never_surrender") or has_role(COMMS_SELECTED_ID, "surrendered")
+
+# Get the Secret Codecase timer, set hide_taunt and hide_surr to hide taunts if ship is surrendered, 
+# but show Surrender button if sc_timer is active
+sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
+hide_taunt = has_role(COMMS_SELECTED_ID, "surrendered")
+hide_surr = (has_role(COMMS_SELECTED_ID, "never_surrender") and not sc_timer > 0) or has_role(COMMS_SELECTED_ID, "surrendered")
+
 await comms:
     + "Hail":
-        receive "{comms_id}! Make your time!"
-    + "Taunt" if enrage_value is None and not hide_butt:
+        receive "Go away, {comms_id}! You talk too much!"
+    + "Taunt" if enrage_value is None and not hide_taunt:
         # Navigate to sub Menu
         jump comms_taunts
-    + "Surrender now" if not hide_butt:
+    + "Surrender now" if not hide_surr:
         blob = to_blob(COMMS_SELECTED_ID)
         shield_count = blob.get("shield_count", 0)
         s_ratio = 100
@@ -146,7 +152,16 @@ await comms:
             s_cur = blob.get("shield_val", s )
             s_ratio = min(s_cur/s_max, s_ratio)
         next s
-        if s_ratio < 0.09:
+# Secret Codecase, force surrender if active, otherwise check shield ratio
+	if sc_timer > 0:
+	    receive """OK we give up, {comms_id}."""
+            do add_role(COMMS_SELECTED_ID, "surrendered")
+            do game_stats["ships_surrender"] += 1
+            do remove_role(COMMS_SELECTED_ID, "raider")
+		    sc_timer = 0
+		    do set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
+		    do set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
+        elif s_ratio < 0.09:
             if random.randint(1,6)<3:
                 receive """OK we give up, {comms_id}."""
                 do add_role(COMMS_SELECTED_ID, "surrendered")
