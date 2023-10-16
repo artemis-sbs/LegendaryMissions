@@ -4,18 +4,10 @@ route grid spawn route_grid_spawn
 #route grid object route_grid_arrive
 
 
-shared grid_data = load_json_data(get_mission_dir_filename("grid_data.json"))
-shared themes = ~~[
-{"silhouette": "#0F1F1F", "lines": "#2F4F4F", "nodes": "#778899", "silver": "LightYellow", "lime":"springgreen", "dc": ["slateblue", "CadetBlue", "royalblue"], "dc_damage": ["LightCoral", "LightSalmon", "Salmon"], "damage": "Crimson"},
-{"silhouette": "Gainsboro", "lines": "DarkKhaki", "nodes": "Khaki", "silver": "#003", "lime":"#060", "dc": ["slateblue", "CadetBlue", "royalblue"], "dc_damage": ["LightCoral", "LightSalmon", "Salmon"], "damage": "Crimson" },
-{"silhouette": "#0000bb66", "lines": "gray", "nodes": "darkgray", "silver": "#00a0a0", "lime":"#0ee", "dc": ["PaleGreen", "Cornsilk", "Lavender"], "dc_damage": ["LightCoral", "LightSalmon", "Salmon"], "damage": "#FE00FE"}
-    
-]~~
-shared theme = 0
+shared grid_data = grid_get_grid_data()
+# shared theme = 0
 
 
-
-MAX_HP = 6
 HEAL_TIME = 30*120
 
 
@@ -23,155 +15,12 @@ HEAL_TIME = 30*120
 #
 # Called by basic_ai, so we know this is a player ship already
 #
-jump rebuild_grid_items 
-->END
-
-====== rebuild_grid_items =====
-->END if grid_data is None
-so = to_object(SPAWNED_ID)
-->END if so is None
-blob = to_blob(so)
-->END if blob is None
-
-ship_grid  = grid_data.get(so.art_id)
-->END if ship_grid is None
-internal_items = ship_grid.get("grid_objects")
-->END if internal_items is None
-
-
-#
-# Setup theme
-#
-do blob.set("internal_color_ship_sillouette", themes[theme]["silhouette"],0)
-do blob.set("internal_color_ship_lines", themes[theme]["lines"],0)
-do blob.set("internal_color_ship_nodes", themes[theme]["nodes"],0)
-
-
-
-# Delete all grid objects
-items =grid_objects(SPAWNED_ID)
-for k in items:
-    # delete by id
-    do sbs.delete_grid_object(SPAWNED_ID, k)
-next k
-
-
-#
-# Got data build grid objects
-#
-i=0 # used to create unique tag
-sensors = 0 # used to calculate max damage
-engines = 0
-weapons = 0
-shields = 0
-for g in internal_items:
-    loc_x = int(g["x"])
-    loc_y = int(g["y"])
-    coords = f"{loc_x},{loc_y}"
-    name_tag = f"{g['name']}:{coords}"
-    color = g["color"]
-    color = themes[theme][color]
-
-    go =  grid_spawn(SPAWNED_ID,  name_tag, name_tag, loc_x, loc_y, g["icon"], color, g["roles"])
-    do go.blob.set("icon_scale", g["scale"], 0)
-    # save color so it cn be restored
-    do set_inventory_value(go.id, "color", color)
-    #
-    # Add link so query can find this relationship
-    #       e.g. query to find engine grid objects on a ship
-    #       linked_to(player_id, "grid_objects") & role("engine")
-    #
-    do link(so, "grid_objects",go)
-    do add_role(go, "__undamaged__")
-    i+=1
-
-    #
-    # Update max damage counts
-    #
-    roles = g["roles"].lower()
-    if "sensors" in roles:
-        sensors += 1
-    end_if
-    if "engine" in roles:
-        engines += 1
-    end_if
-    if "shield" in roles:
-        shields += 1
-    end_if
-    if "weapon" in roles:
-        weapons += 1
-    end_if
-next g
-
-#do print(f"E:{engines} W:{weapons} SN:{sensors}, SH: {shields}")
-
-do  blob.set('system_max_damage', weapons, sbs.SHPSYS.WEAPONS)
-do  blob.set('system_max_damage', engines, sbs.SHPSYS.ENGINES)
-do  blob.set('system_max_damage', sensors, sbs.SHPSYS.SENSORS)
-do  blob.set('system_max_damage', shields, sbs.SHPSYS.SHIELDS)
-do  blob.set('system_damage', 0, sbs.SHPSYS.WEAPONS)
-do  blob.set('system_damage', 0, sbs.SHPSYS.ENGINES)
-do  blob.set('system_damage', 0, sbs.SHPSYS.SENSORS)
-do  blob.set('system_damage', 0, sbs.SHPSYS.SHIELDS)
-
-DAMAGE_ORIGIN_ID = SPAWNED_ID
-#
-# This is needed to reset the coefficients after an explosion
-# set_damage_coefficients is in internal_damage
-#
-push set_damage_coefficients
-push restore_damcons {"SPAWNED_ID": SPAWNED_ID}
-
-#
-# Create marker
-#
-v = sbs.vec3(0.5,0,0.5)
-loc = sbs.find_valid_grid_point_for_vector3(SPAWNED_ID, v, 5)
-loc_x = loc[0]
-loc_y = loc[1]
-ship = SPAWNED_ID & 0xFFFFFFFF
-marker_tag = "marker:{ship}"
-# marker is named hallway
-marker_go = grid_spawn(SPAWNED_ID , "marker", marker_tag, int(loc_x),int(loc_y), 121, "black", "#,marker") 
-marker_go_id =  to_id(marker_go)
-marker_gos[SPAWNED_ID] = marker_go_id
-
+do grid_rebuild_grid_objects(SPAWNED_ID, grid_data)
 ->END
 
 
 ====== restore_damcons =====
-hm = sbs.get_hull_map(SPAWNED_ID)
-pop if hm is None
-
-#
-# Get Colors from theme
-# 
-colors  = themes[theme]["dc"]
-damage_colors  = themes[theme]["dc_damage"]
-
-#
-# Create damcons/lifeforms
-#
-for i in range(3):
-    # See if damcon exists
-    _name = f"DC{i+1}"
-    _test_go = hm.get_grid_object_by_name(_name)
-    if _test_go is not None:
-        _id = _test_go.unique_ID # _test_go is an object from the engine
-    else:
-
-        v = sbs.vec3(0.5,0,0.5)
-        point = sbs.find_valid_unoccupied_grid_point_for_vector3(SPAWNED_ID, v, 5)
-        dc = grid_spawn(SPAWNED_ID, _name, _name, point[0],point[1],80, colors[i], "damcons, lifeform")
-        _id = to_id(dc)
-        do set_inventory_value(_id, "color", colors[i])
-        do set_inventory_value(_id, "damage_color", damage_colors[i])
-        do set_inventory_value(_id, "idle_pos", (point[0], point[1]) )
-    end_if
-    # Hit points == MAX_HP
-    do set_inventory_value(_id, "HP", MAX_HP )
-next i
-
+do grid_restore_damcons(SPAWNED_ID)
 <<-
 
 
@@ -188,7 +37,7 @@ jump damcon_ai_start if has_role(SPAWNED_ID, "damcons")
 # Run once code
 #
 # Hit points == MAX_HP 
-do set_inventory_value(SPAWNED_ID, "HP", MAX_HP )
+do set_inventory_value(SPAWNED_ID, "HP", grid_get_max_hp() )
 
 
 ========== damcon_ai  ================= 
@@ -318,7 +167,9 @@ next id
 # Label is in internal_damage, Expects DAMAGE_ORIGIN_ID
 #
 DAMAGE_ORIGIN_ID = obj.host_id
-push set_damage_coefficients if something_healed
+if something_healed:
+    do set_damage_coefficients(obj.host_id)
+end_if
 
 # I'm done with this guy
 do set_inventory_value(SPAWNED_ID, "target_room", None )
@@ -442,7 +293,7 @@ jump loop_damcons_ai
 heal_delay = get_inventory_value(SPAWNED_ID, "next_hp_time", None)
 hp = get_inventory_value(SPAWNED_ID, "HP", 0)
 
-pop if hp >= MAX_HP
+pop if hp >= get_get_max_hp()
 pop if heal_delay == 0 # fully healed
 
 if heal_delay is None:
@@ -454,9 +305,9 @@ pop if sim.time_tick_counter < heal_delay
 
 hp += 1
 ship = obj.host_id # obj defined in previous labels
-hp %= (MAX_HP+1)
+hp %= (get_get_max_hp()+1)
 do set_inventory_value(SPAWNED_ID, "HP", hp)
-if hp < MAX_HP:
+if hp < get_get_max_hp():
     have ship broadcast "{obj.name} recovering {hp}" color "blue"
     do set_inventory_value(SPAWNED_ID, "next_hp_time", sim.time_tick_counter+ HEAL_TIME)
 else:

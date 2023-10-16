@@ -282,24 +282,8 @@ row
                 for dmg in range(4):
                     dmgrand = random.randrange(1,100)
                     if dmgrand <= dmgcheck:
-                        system_damage = [0, 0, 0, 0]        # This code is borrowed from take_heat_damage label in internal_damage.mast
-                        hittable = to_list(grid_objects(ship_id) & role("__undamaged__") & role("shield"))
-                        if len(hittable) > 0:
-                            go_id = random.choice(hittable)
-                            blob = to_blob(go_id)           
-                            damage_color = themes[theme]["damage"]
-                            do blob.set("icon_color", damage_color, 0)
-                            do link(ship_id, "damage", go_id) 
-                            do add_role(go_id, "__damaged__")
-                            do remove_role(go_id, "__undamaged__")
-                            do system_damage[sbs.SHPSYS.SHIELDS]  += 1
-                            blob = to_blob(ship_id)             # Borrowed from apply_system_damage label in internal_damage.mast
-                            for x in range(sbs.SHPSYS.MAX):     
-                                cur =  blob.get('system_damage', x)
-                                cur += system_damage[x]
-                                do blob.set('system_damage',cur, x)
-                            next x
-                            push set_damage_coefficients {"DAMAGE_ORIGIN_ID": ship_id} # Note: does not check for should_explode
+                        was_damaged = grid_damage_system(ship_id, "shield")
+                        if was_damaged:
                             do print(f"Haplix Shield Damage dmgcheck = {dmgcheck} dmgrand = {dmgrand}")
                         else:
                             do print(f"Haplix All Shields Damaged")

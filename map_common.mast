@@ -22,14 +22,15 @@
 
 match friendly_select:
     case "many":
-        max_hull_points=20
-    case "lots":
-        max_hull_points=15
-    case "some":
         max_hull_points=10
-    case "few":
+    case "lots":
+        max_hull_points=8
+    case "some":
         max_hull_points=5
+    case "few":
+        max_hull_points=3
     case "none":
+        # no civilian or friendly npcs
         ->RETURN
 end_match
 
@@ -38,9 +39,9 @@ total_hull_points = 0
 attempts = 0
 
 # grab the ship data for all ships on TSN side
-tsn_ship_data = names_filter_ship_data_by_side(None, "TSN", "ship", ret_key_only=False)
+tsn_ship_data = names_filter_ship_data_by_side(None, "TSN", "support", ret_key_only=False)
 # pick a random tsn ship
-count = 0
+count = 1
 
 spawn_points = scatter_sphere(100, 0,0,0, 500, 5000, ring=True)
 for x while total_hull_points<max_hull_points:
@@ -68,6 +69,33 @@ for x while total_hull_points<max_hull_points:
     total_hull_points += hull_points
     do set_face(friend, random_terran())
 next x
+
+civilian_count = 0
+match friendly_select:
+    case "many":
+        civilian_count = 4
+    case "lots":
+        civilian_count = 3
+    case "some":
+        civilian_count = 2
+    case "few":
+        civilian_count = 1
+    case "none":
+        ->RETURN
+end_match
+
+# grab the ship data for all ships on TSN side
+civilian_data = names_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
+->END if len(civilian_data)==0
+count = 1
+for pos in scatter_sphere(civilian_count, 0,0,0, 500, 5000, ring=True):
+    #
+    ship = random.choice(civilian_data)
+
+    friend = to_id(npc_spawn(*pos, f"civ {count}", "tsn, friendly", ship["key"], "behav_npcship"))
+    do set_face(friend, random_terran(civilian=True))
+    count += 1
+next x
 ->END
 
 ====== spawn_players =======
@@ -90,6 +118,7 @@ for player_ship_data in player_list:
     player_ship_data.id = player_ship
 
     do set_face(player_ship, player_ship_data.face)
+    do set_inventory_value(player_ship, "respawn_time", 5)
     if first:
         do assign_client_to_ship(0,player_ship)
         first = False
