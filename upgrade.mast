@@ -1,21 +1,11 @@
-==== replace: console_bottom_choices ====
+do gui_add_console_tab(SHARED, "helm", "upgrade", "upgrade_screen")
+do gui_add_console_tab(SHARED, "comms", "upgrade", "upgrade_screen")
+do gui_add_console_tab(SHARED, "engineering", "upgrade", "upgrade_screen")
+do gui_add_console_tab(SHARED, "science", "upgrade", "upgrade_screen")
+do gui_add_console_tab(SHARED, "weapons", "upgrade", "upgrade_screen")
+do gui_add_console_tab(SHARED, "upgrade", "__back_tab__", "console_selected")
 
-# Determines where the "Upgrade" button appears, to avoid overlapping with default widgets.
-# If Comms or Engineering, puts button in the upper right corner, otherwise puts it centered at the top of the screen. 
 
-if console_select == "comms" or console_select == "engineering":
-    section style="area:80,0,100,35px;"
-    button "Upgrade":
-        jump upgrade_screen
-    end_button
-else:
-    section style="area:45,0,65,35px;"
-    button "Upgrade":
-        jump upgrade_screen
-    end_button
-end_if
-
-await gui
 
 ==== upgrade_screen ====
 
@@ -40,12 +30,8 @@ cl_timer = get_inventory_value(ship_id, "cl_timer", 0)
 la_timer = get_inventory_value(ship_id, "la_timer", 0)
 ho_timer = get_inventory_value(ship_id, "ho_timer", 0)
 
-# Puts the "Done" button in the upper right corner.
-
-section style="area:90,0,100,5;row-height:35px;"
-button "Done":
-    jump console_selected 
-end_button
+# Identify the console for tabs
+activate console upgrade
 
 # First column, shows the count of upgrades currently on the ship.
 
