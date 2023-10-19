@@ -149,9 +149,9 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
     ship = ship_id & 0xFFFFFFFF
     marker_tag = "marker:{ship}"
     # marker is named hallway
-    marker_go = grid_spawn(ship_id, "marker", marker_tag, int(loc_x),int(loc_y), 121, "black", "#,marker") 
-    # marker_go_id =  to_id(marker_go)
-    # marker_gos[SPAWNED_ID] = marker_go_id
+    marker_go = grid_spawn(ship_id, "marker", marker_tag, int(loc_x),int(loc_y), 121, "yellow", "#,marker") 
+    marker_go_id =  to_id(marker_go)
+    set_inventory_value(ship_id, "marker_id", marker_go_id)
 
 
 def grid_restore_damcons(id_or_obj):
@@ -175,14 +175,25 @@ def grid_restore_damcons(id_or_obj):
         if _test_go is not None:
             _id = _test_go.unique_ID # _test_go is an object from the engine
         else:
-
             v = sbs.vec3(0.5,0,0.5)
             point = sbs.find_valid_unoccupied_grid_point_for_vector3(ship_id, v, 5)
             dc = grid_spawn(ship_id, _name, _name, point[0],point[1],80, colors[i], "damcons, lifeform")
             _id = to_id(dc)
+            _go = to_object(dc)
             set_inventory_value(_id, "color", colors[i])
             set_inventory_value(_id, "damage_color", damage_colors[i])
             set_inventory_value(_id, "idle_pos", (point[0], point[1]) )
+            #
+            # Create idle/rally point
+            #
+            dc_color = get_inventory_value(_id, "color", "white")
+            marker_tag = f"{_go.name} rally point"
+            idle_marker = grid_spawn(ship_id, marker_tag, marker_tag, point[0],point[1], 23, dc_color, "#") 
+            _blob = to_blob(idle_marker)
+            _blob.set("icon_scale", 1.2, 0)
+            set_inventory_value(_id, "idle_marker", to_id(idle_marker))
+    else:
+
         # Hit points == MAX_HP
         set_inventory_value(_id, "HP", grid_get_max_hp() )
 
@@ -282,7 +293,7 @@ def set_damage_coefficients(id_or_obj):
         ("torpedo", "all_tube_damage_coeff",0), 
         ("impulse", "impulse_damage_coeff",0), 
         ("warp", "warp_damage_coeff",0), 
-        ("maneuver", "turn_rate_damage_coeff",0),
+        ("maneuver", "turn_damage_coeff",0),
         ("sensors", "sensor_damage_coeff",0),
         ("shield,fwd", "shield_damage_coeff",0), 
         ("shield,aft", "shield_damage_coeff",1)

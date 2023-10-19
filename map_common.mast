@@ -64,7 +64,7 @@ for x while total_hull_points<max_hull_points:
     attempts = 0
     # OK add this ship
     spawn_point = next(spawn_points)
-    friend = to_id(npc_spawn(*spawn_point, f"tsn {count}", "tsn, friendly", ship["key"], "behav_npcship"))
+    friend = to_id(npc_spawn(*spawn_point, f"tsn {str(count).zfill(2)}", "tsn, friendly", ship["key"], "behav_npcship"))
     count += 1
     total_hull_points += hull_points
     do set_face(friend, random_terran())
@@ -92,7 +92,7 @@ for pos in scatter_sphere(civilian_count, 0,0,0, 500, 5000, ring=True):
     #
     ship = random.choice(civilian_data)
 
-    friend = to_id(npc_spawn(*pos, f"civ {count}", "tsn, friendly", ship["key"], "behav_npcship"))
+    friend = to_id(npc_spawn(*pos, f"civ {str(count).zfill(2)}", "tsn, friendly", ship["key"], "behav_npcship"))
     do set_face(friend, random_terran(civilian=True))
     count += 1
 next x

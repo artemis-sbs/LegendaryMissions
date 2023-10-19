@@ -137,8 +137,6 @@ enemy_prefix = "KLMNQ"
 
 
 #------------------------------------------------------------------------------------------------------------
-enemy_name_number = 0
-
 spawn_north = scatter_line(int(enemy_count), 0,0,9000, 20000,0,6000, True)
 spawn_south = scatter_line(int(enemy_count), 0,0,-9000, 20000,0,-6000, True)
 spawn_points = []
@@ -147,6 +145,11 @@ do spawn_points.extend(spawn_south)
 #spawn_points = scatter_sphere(int(enemy_count), 0,0,0, 6000, 6000+250*enemy_count, ring=True)
 
 #------------------------------------------------------------------------------------------------------------
+call_signs = []
+enemy_name_number = 0
+do call_signs.extend(range(1,100))
+do random.shuffle(call_signs)
+
 for v in spawn_points:
     r_type = random.choice(enemyTypeNameList)
     race = r_type.split("_")
@@ -155,7 +158,7 @@ for v in spawn_points:
         race = "ximni"
     end_if
     roles = "{race}, raider"
-    r_name = f"{random.choice(enemy_prefix)}_{enemy_name_number}"
+    r_name = f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
     spawn_data = npc_spawn(v.x, v.y, v.z, r_name, roles, r_type, "behav_npcship")
     raider = spawn_data.py_object
     #
@@ -166,6 +169,7 @@ for v in spawn_points:
     
     
     enemy_name_number = enemy_name_number + 1
+    enemy_count %= 100
 next v
 
 

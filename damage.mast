@@ -64,7 +64,7 @@ end_if
 
 for player in role(fr.side) & role("__player__"):
     player_obj = to_object(player)
-    receive player DAMAGE_TARGET_ID "Help. {player_obj.comms_id} we are under attack from {source}"
+    receive player DAMAGE_TARGET_ID "Help. {player_obj.name} we are under attack from {source}"
 next player
 #
 # Only request help if you haven't for two minutes

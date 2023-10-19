@@ -1,3 +1,6 @@
+import grid_ai.py
+
+
 route grid spawn route_grid_spawn
 
 # Not using this route, changing target ia AI loop
@@ -5,7 +8,6 @@ route grid spawn route_grid_spawn
 
 
 shared grid_data = grid_get_grid_data()
-# shared theme = 0
 
 
 HEAL_TIME = 30*120
@@ -191,7 +193,7 @@ do grid_target(SPAWNED_ID, the_target, speed)
 t_obj = to_object(the_target)
 target_name = t_obj.name
 # Set tooltip
-do grid_short_status(SPAWNED_ID, f"Heading to {target_name}", "orange", 3)
+do grid_damcons_detailed_status(SPAWNED_ID, f"Heading to {target_name}", "orange", 3)
 
 # Set as current target
 do set_inventory_value(SPAWNED_ID, "target_room", the_target )
@@ -208,7 +210,7 @@ delay sim 3s
 ===== damcons_go_home ====
 
 # Set tooltip and speech bubble
-do grid_short_status(SPAWNED_ID, f"Heading to my home {obj.spawn_pos.x},{obj.spawn_pos.y}", "blue", 3)
+do grid_damcons_detailed_status(SPAWNED_ID, f"Heading to my home {obj.spawn_pos.x},{obj.spawn_pos.y}", "blue", 3)
 
 do grid_target_pos(SPAWNED_ID, obj.spawn_pos.x, obj.spawn_pos.y, speed)
 do set_inventory_value(SPAWNED_ID, "target_room", 0 )
@@ -224,7 +226,7 @@ do set_inventory_value(SPAWNED_ID, "work_needed", 20/hp) # 4 times 3 sec = 12 se
 
 
 # Set tooltip and speech bubble
-do grid_short_status(SPAWNED_ID, f"Getting to work", "blue", 3)
+do grid_damcons_detailed_status(SPAWNED_ID, f"Getting to work", "blue", 3)
 
 jump loop_damcons_ai
 
@@ -240,7 +242,7 @@ jump loop_damcons_ai if _pos is None
 do grid_target_pos(SPAWNED_ID, _pos[0], _pos[1], speed)
 do set_inventory_value(SPAWNED_ID, "idle_state", "moving" )
 
-do grid_short_status(SPAWNED_ID, f"Heading to idle {_pos[0]},{_pos[1]}", "blue", 3)
+do grid_damcons_detailed_status(SPAWNED_ID, f"Heading to idle {_pos[0]},{_pos[1]}", "blue", 3)
 
 jump loop_damcons_ai
 
@@ -260,7 +262,8 @@ _pos = get_inventory_value(SPAWNED_ID, "idle_pos")
 jump loop_damcons_ai if _pos is None
 
 # Set tooltip and speech bubble
-do grid_short_status(SPAWNED_ID, f"Idling at {_pos[0]},{_pos[1]}", "blue", 3)
+do grid_damcons_detailed_status(SPAWNED_ID, f"Idling at {_pos[0]},{_pos[1]}", "blue", 3)
+
 
 # VVVVVVV Fall through VVVVVVVVVV
 #

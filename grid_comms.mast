@@ -1,7 +1,6 @@
 route grid point grid_point_select
 route grid select grid_comms
 
-marker_gos = {} #key by ship
 
 ======= grid_comms ======
 #
@@ -22,11 +21,11 @@ comms_info "static"
 #
 # Create marker if it doesn't exist
 # 
-marker_go_id = marker_gos.get(COMMS_ORIGIN_ID)
+marker_go_id = get_inventory_value(COMMS_ORIGIN_ID, "marker_id")
 m_blob = to_blob(marker_go_id)
 is_idle = get_inventory_value(COMMS_SELECTED_ID, "idle")
 await comms:
- + "go idle" if not is_idle:
+ + "go to rally point" if not is_idle:
     loc_x = m_blob.get("curx", 0)
     loc_y = m_blob.get("cury", 0)
     do set_inventory_value(COMMS_SELECTED_ID, "idle", True )
@@ -106,7 +105,7 @@ await comms:
     do link(d.id, "work-order", COMMS_SELECTED_ID)
  + "cancel {d.name}"  color "{get_inventory_value(d.id, 'color')}" for d in workers:
     do unlink(d.id, "work-order", COMMS_SELECTED_ID)
-+ "set as idle loc":
++ "set rally point":
     jump room_set_idle_loc
 
 #
@@ -124,7 +123,7 @@ jump comms_damaged
 ==== comms_undamaged ====== 
 
 await comms:
-    + "set as idle loc":
+    + "set rally point":
         jump room_set_idle_loc
     #
     # This watches for state changes tht should change
@@ -143,12 +142,20 @@ dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
 await comms:
  + "back":
     jump grid_comms
- + "set idle for {d.name}" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
+ + "set {d.name} rally point" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
     # Add this to the 
     _blob = to_blob(COMMS_SELECTED_ID)
     _loc_x = _blob.get("curx", 0)
     _loc_y = _blob.get("cury", 0)
     do set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
+    idle_marker = get_inventory_value(d.id, "idle_marker", None)
+
+    if idle_marker is not None:
+        _blob = to_blob(idle_marker)
+        do _blob.set("curx",_loc_x, 0)
+        do _blob.set("cury",_loc_y, 0)
+    end_if
+
     is_idle = get_inventory_value(d.id, "idle")
     if is_idle:
         do set_inventory_value(d.id, "idle_state", "start" )
@@ -160,7 +167,7 @@ jump grid_comms
 ===== marker_comms  =====
 
 await comms:
-    + "set as idle loc":
+    + "set rally point":
         jump marker_set_idle_loc
 end_await
 
@@ -170,7 +177,7 @@ jump marker_comms
 
 dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
 await comms:
- + "set idle for {d.name}" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
+ + "set {d.name} rally point" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
     # Add this to the 
     _blob = to_blob(COMMS_SELECTED_ID)
     _loc_x = _blob.get("curx", 0)
@@ -180,6 +187,14 @@ await comms:
     if is_idle:
         do set_inventory_value(d.id, "idle_state", "start" )
     end_if
+    idle_marker = get_inventory_value(d.id, "idle_marker", None)
+
+    if idle_marker is not None:
+        _blob = to_blob(idle_marker)
+        do _blob.set("curx",_loc_x, 0)
+        do _blob.set("cury",_loc_y, 0)
+    end_if
+
 
 end_await
 
@@ -194,23 +209,14 @@ jump marker_comms
 #
 # Move Marker
 # 
-marker_go_id = marker_gos.get(GRID_PARENT_ID)
-if marker_go_id is None:
-    ship = GRID_PARENT_ID & 0xFFFFFFFF
-    marker_tag = "marker:{ship}"
-    marker_go = grid_spawn(GRID_PARENT_ID, "marker", marker_tag, int(EVENT.source_point.x),int(EVENT.source_point.y), 121, "yellow", "#") 
-    marker_go_id =  to_id(marker_go)
-    marker_gos[GRID_PARENT_ID] = marker_go_id
-else:
-    marker_go = to_object(marker_go_id)
-end_if
-
+marker_go_id = get_inventory_value(GRID_PARENT_ID, "marker_id")
+marker_go = to_object(marker_go_id)
 marker_blob = to_blob(marker_go_id)
 ->END if marker_blob is None
 #
 # Set main selection to first item found at location
 #
-go_set_at_loc = to_list(grid_objects_at(GRID_PARENT_ID, int(EVENT.source_point.x), int(EVENT.source_point.y)))
+go_set_at_loc = grid_objects_at(GRID_PARENT_ID, int(EVENT.source_point.x), int(EVENT.source_point.y))
 ship_blob = to_blob(GRID_PARENT_ID)
 ->END if ship_blob is None
 do ship_blob.set("grid_selected_UID", 0, 0)
@@ -226,12 +232,17 @@ do marker_blob.set("cury", EVENT.source_point.y)
 # find a room, or damcons if both use room
 #
 found_id = None
-for gid in go_set_at_loc:
-    continue if has_role(gid, "marker")
-    continue if has_role(gid, "damcons") and found_id is not None
 
-    found_id = gid
-next gid
+damcons = go_set_at_loc & role("damcons")
+rooms = go_set_at_loc & role("room")
+#
+# Pick damcons over rooms
+#
+if len(damcons)!=0:
+    found_id = next(iter(damcons))
+elif len(rooms)!=0:
+    found_id = next(iter(rooms))
+end_if
 
 if found_id is not None:
     do ship_blob.set("grid_selected_UID", found_id , 0)
