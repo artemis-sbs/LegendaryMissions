@@ -149,6 +149,9 @@ await comms:
     _loc_y = _blob.get("cury", 0)
     do set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
     idle_marker = get_inventory_value(d.id, "idle_marker", None)
+    #
+    #
+    do clear_timer(d.id, "boost_timer")
 
     if idle_marker is not None:
         _blob = to_blob(idle_marker)
@@ -188,6 +191,9 @@ await comms:
         do set_inventory_value(d.id, "idle_state", "start" )
     end_if
     idle_marker = get_inventory_value(d.id, "idle_marker", None)
+    #
+    #
+    do clear_timer(d.id, "boost_timer")
 
     if idle_marker is not None:
         _blob = to_blob(idle_marker)

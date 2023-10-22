@@ -4,7 +4,7 @@ from sbs_utils.procedural.links import link,unlink
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.grid import grid_objects, grid_objects_at, grid_closest
 from sbs_utils.procedural.spawn import grid_spawn
-from sbs_utils.procedural.commands import cmd_broadcast
+from sbs_utils.procedural.comms import comms_broadcast
 from sbs_utils.procedural.space_objects import get_pos
 from sbs_utils.helpers import FrameContext
 from sbs_utils.fs import load_json_data, get_mission_dir_filename
@@ -364,6 +364,7 @@ def grid_damage_system(id_or_obj, the_system):
     go_id = random.choice(hittable)
     damage_color = grid_get_theme()["damage"]
     grid_damage_grid_object(ship_id, go_id, damage_color)
+    add_role(go_id, "__damaged__")
     grid_apply_system_damage(ship_id)
     return True
 
@@ -483,11 +484,11 @@ def grid_take_internal_damage_at(id_or_obj, source_point, system_hit, damage_amo
         blob.set("icon_color", dc_damage_color, 0)
         if hp <= 0:
             sbs.delete_grid_object(go.host_id, d)
-            cmd_broadcast(ship_id, f"{go.name} has perished", dc_damage_color)
+            comms_broadcast(ship_id, f"{go.name} has perished", dc_damage_color)
             if go is not None:
                 go.destroyed()
         else:
-            cmd_broadcast(ship_id, f"{go.name} has been hurt hp={hp}","yellow")
+            comms_broadcast(ship_id, f"{go.name} has been hurt hp={hp}","yellow")
 
 
     return grid_apply_system_damage(ship_id)

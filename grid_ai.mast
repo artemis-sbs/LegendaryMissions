@@ -2,6 +2,8 @@ import grid_ai.py
 
 
 route grid spawn route_grid_spawn
+route spawn grid_send_comms_messages
+
 
 # Not using this route, changing target ia AI loop
 #route grid object route_grid_arrive
@@ -10,7 +12,7 @@ route grid spawn route_grid_spawn
 shared grid_data = grid_get_grid_data()
 
 
-HEAL_TIME = 30*120
+BOOST_TIME = 30*120
 
 
 ======== spawn_grid_objects ========
@@ -19,11 +21,6 @@ HEAL_TIME = 30*120
 #
 do grid_rebuild_grid_objects(SPAWNED_ID, grid_data)
 ->END
-
-
-====== restore_damcons =====
-do grid_restore_damcons(SPAWNED_ID)
-<<-
 
 
 ========== route_grid_spawn =========
@@ -39,7 +36,7 @@ jump damcon_ai_start if has_role(SPAWNED_ID, "damcons")
 # Run once code
 #
 # Hit points == MAX_HP 
-do set_inventory_value(SPAWNED_ID, "HP", grid_get_max_hp() )
+do set_inventory_value(SPAWNED_ID, "HP", grid_get_max_hp()-2 )
 
 
 ========== damcon_ai  ================= 
@@ -50,7 +47,7 @@ obj = to_object(SPAWNED_ID)
 ->END if this_blob is None or obj is None
 
 
-speed = get_inventory_value(SPAWNED_ID, "speed", 0.01)
+
 x = this_blob.get("curx", 0)
 y = this_blob.get("cury", 0)
 
@@ -59,17 +56,23 @@ y = this_blob.get("cury", 0)
 #
 is_idle = get_inventory_value(SPAWNED_ID, "idle")
 idle_pos =  get_inventory_value(SPAWNED_ID, "idle_pos")
+idle_marker =  get_inventory_value(SPAWNED_ID, "idle_marker")
+#
+# At Idle location
+#
 jump handle_damcons_idle if is_idle and x == idle_pos[0] and y == idle_pos[1]
 #
 # Idling but not there yet
 #
 jump move_idle_damcons_ai if is_idle and (x != idle_pos[0] or y != idle_pos[1])
 
-
-jump damcons_look_for_work if get_inventory_value(SPAWNED_ID, "target_room") is None
-# Current going home
-jump damcons_look_for_work if get_inventory_value(SPAWNED_ID, "target_room")==0
-
+target_room = get_inventory_value(SPAWNED_ID, "target_room")
+# If heading to rally point while working
+jump damcons_look_for_work if target_room == idle_marker
+# If already fixed move on
+jump damcons_look_for_work if target_room is None
+# If already fixed move on
+jump damcons_look_for_work if not has_role(target_room, "__damaged__")
 
 #
 # This is testing to see if we've arrived
@@ -81,17 +84,20 @@ length = this_blob.get("path_length", 0)
 #
 jump damcons_look_for_work if length is not None and length > 0.01
 
+
 work_count = get_inventory_value(SPAWNED_ID, "work_needed", None)
 jump start_working if work_count is None
+#
+# Already started working keep working
+#
 work_count -= 1
 do set_inventory_value(SPAWNED_ID, "work_needed", work_count)
+
 jump loop_damcons_ai if work_count > 0
 #
-# Done
+# Done, Working
 #
 do set_inventory_value(SPAWNED_ID, "work_needed", None)
-
-
 
 # Host is no more 
 hm = sbs.get_hull_map(obj.host_id)
@@ -168,7 +174,7 @@ next id
 # Update the damage coefficients if a system was healed
 # Label is in internal_damage, Expects DAMAGE_ORIGIN_ID
 #
-DAMAGE_ORIGIN_ID = obj.host_id
+
 if something_healed:
     do set_damage_coefficients(obj.host_id)
 end_if
@@ -178,46 +184,102 @@ do set_inventory_value(SPAWNED_ID, "target_room", None )
 
 # Then look for more work
 # Find damage that is not assigned to someone else
+
 ===== damcons_look_for_work =====
+
+jump loop_damcons_ai if not is_timer_finished(SPAWNED_ID, "delay_target")
+
+idle_marker = get_inventory_value(SPAWNED_ID, "idle_marker")
+cur_target = get_inventory_value(SPAWNED_ID, "target_room")
+
+if cur_target is not None and cur_target != idle_marker:
+    # Job already done
+    if not has_role(cur_target, "__damaged__"):
+        do unlink(SPAWNED_ID, "work-order", cur_target)
+    end_if
+end_if
+
 
 #
 # The damage needs to be a work order for a damcon
 #
 the_target =  to_id(grid_closest(SPAWNED_ID, linked_to(SPAWNED_ID, "work-order")))
-jump loop_damcons_ai if get_inventory_value(SPAWNED_ID, "target_room")==0 and the_target is None
-jump damcons_go_home if the_target is None
-# Home if room 0
+#
+# If there is no assigned work, find work
+#
+if the_target == None:
+    obj = to_object(SPAWNED_ID)
+    the_target =  to_id(grid_closest(SPAWNED_ID,grid_objects(obj.host_id) & role("__damaged__") ))
+    do set_inventory_value(SPAWNED_ID, "work_speed_coeff", 1.0)
+else:
+    do set_inventory_value(SPAWNED_ID, "work_speed_coeff", 1.25)
+end_if
+#
+# Got ot rally point
+#
+if the_target == None:
+    the_target = idle_marker
+end_if
+
+# If this is the target already move on
+#
+# todo: set speed?
+#
+_speed = grid_calc_speed(SPAWNED_ID)
+do this_blob.set("move_speed", _speed, 0)
 jump loop_damcons_ai if the_target == get_inventory_value(SPAWNED_ID, "target_room")
 
-do grid_target(SPAWNED_ID, the_target, speed)
+this_blob = to_blob(SPAWNED_ID)
+target_blob = to_blob(the_target)
+curx= this_blob.get("curx", 0)
+cury= this_blob.get("cury",  0)
+
+x = target_blob.get("curx", 0)
+y = target_blob.get("cury", 0)
+
+#
+# Already here
+#
+if x==curx and y == cury:
+    do this_blob.set("move_speed", 0, 0)
+    jump loop_damcons_ai
+end_if
+       
+
+do grid_target(SPAWNED_ID, the_target, _speed)
 t_obj = to_object(the_target)
 target_name = t_obj.name
 # Set tooltip
 do grid_damcons_detailed_status(SPAWNED_ID, f"Heading to {target_name}", "orange", 3)
-
 # Set as current target
 do set_inventory_value(SPAWNED_ID, "target_room", the_target )
 do set_inventory_value(SPAWNED_ID, "work_needed", None) 
+#
+# Delay 10 To avoid bouncing between closest
+#
+do set_timer(SPAWNED_ID, "delay_target", seconds=10)
 
 
 ===== loop_damcons_ai ====
 #
 # Loop while this damcon lives
 #
+
+#
+# Clear any expired boosts
+#
+coeffs = ["fed_speed_coeff", "ripped_speed_coeff", "rested_speed_coeff"]
+for coeff in coeffs:
+    if is_timer_set_and_finished(SPAWNED_ID, coeff):
+        do set_inventory_value(SPAWNED_ID, coeff, 1.0)
+        do clear_timer(SPAWNED_ID, coeff)
+    end_if
+next coeff
+
+
 delay sim 3s
 -> damcon_ai
 
-===== damcons_go_home ====
-
-# Set tooltip and speech bubble
-do grid_damcons_detailed_status(SPAWNED_ID, f"Heading to my home {obj.spawn_pos.x},{obj.spawn_pos.y}", "blue", 3)
-
-do grid_target_pos(SPAWNED_ID, obj.spawn_pos.x, obj.spawn_pos.y, speed)
-do set_inventory_value(SPAWNED_ID, "target_room", 0 )
-do set_inventory_value(SPAWNED_ID, "work_needed", None)
-
-
-jump loop_damcons_ai
 
 ======== start_working =====
 hp = get_inventory_value(SPAWNED_ID, "HP")
@@ -235,7 +297,7 @@ jump loop_damcons_ai
 _state = get_inventory_value(SPAWNED_ID, "idle_state")
 jump loop_damcons_ai if _state != "start"
 
-speed = get_inventory_value(SPAWNED_ID, "speed", 0.01)
+speed = grid_calc_speed(SPAWNED_ID)
 _pos = get_inventory_value(SPAWNED_ID, "idle_pos")
 jump loop_damcons_ai if _pos is None
 # do print(f"Moving Idle {_pos[0]} {_pos[1]}")
@@ -282,50 +344,78 @@ hm = sbs.get_hull_map(obj.host_id)
 at_point = hm.get_objects_at_point(x,y)
 
 for id in at_point:
-    push handle_damcon_heal if has_role(id, "medical")
+    do grid_damcons_handle_idling_boost(SPAWNED_ID, id)
 next id
 
 jump loop_damcons_ai
 
 
 
-===== handle_damcon_heal ======
+======= grid_send_comms_messages =====
+
 #
-# Need to camp for 2 minutes to add health
+# Route when a ships is spawned
+# this will send out messages when all damcons could get boosted
 #
-heal_delay = get_inventory_value(SPAWNED_ID, "next_hp_time", None)
-hp = get_inventory_value(SPAWNED_ID, "HP", 0)
+->END if not has_role(SPAWNED_ID, "__player__")
+#
+# Wait for first messages
+#
 
-pop if hp >= get_get_max_hp()
-pop if heal_delay == 0 # fully healed
-
-if heal_delay is None:
-    do set_inventory_value(SPAWNED_ID, "next_hp_time", sim.time_tick_counter+ HEAL_TIME)
-    <<-
-end_if
-
-pop if sim.time_tick_counter < heal_delay
-
-hp += 1
-ship = obj.host_id # obj defined in previous labels
-hp %= (get_get_max_hp()+1)
-do set_inventory_value(SPAWNED_ID, "HP", hp)
-if hp < get_get_max_hp():
-    have ship broadcast "{obj.name} recovering {hp}" color "blue"
-    do set_inventory_value(SPAWNED_ID, "next_hp_time", sim.time_tick_counter+ HEAL_TIME)
-else:
-    do set_inventory_value(SPAWNED_ID, "next_hp_time", 0)
-    color = get_inventory_value(SPAWNED_ID, "color", "purple")
-    go_blob = to_blob(SPAWNED_ID)
-    if go_blob is not None:
-        do go_blob.set("icon_color", color)
-    end_if
-    have ship broadcast "{obj.name} fully recovered" color "green"
-end_if
+do set_inventory_value(SPAWNED_ID, "face_sickbay", random_terran())
+do set_inventory_value(SPAWNED_ID, "face_biologist", random_terran())
+do set_inventory_value(SPAWNED_ID, "face_counselor", random_terran())
 
 
-pop
+coeffs = ["fed_speed_coeff", "ripped_speed_coeff", "rested_speed_coeff"]
+for coeff in coeffs:
+    timer = "comms_{coeff}"
+    do set_timer(SPAWNED_ID, timer, minutes=random.randrange(2,4))
+next coeff
+    
 
+
+
+====== loop_grid_send_comms_messages =======
+#
+# This will send comms messages when 
+#
+
+
+
+coeffs = ["fed_speed_coeff", "ripped_speed_coeff", "rested_speed_coeff"]
+whos = ["sickbay", "biologist", "counselor"]
+msgs = ["It is a good idea to make sure the crew is well fed.", "A physically fit crew is more efficient", "some of the crew seem sleepy"]
+
+i = -1
+for coeff in coeffs:
+    i += 1
+    #Skip while timer active
+    timer = "comms_{coeff}"
+    continue if not is_timer_finished(SPAWNED_ID, timer)
+
+    #
+    # Skip if any damcons are boosted
+    #
+    damcons = grid_objects(SPAWNED_ID) & role("damcons")
+    _total = 0
+    for dc in damcons:
+        _total += get_inventory_value(dc, coeff, 1.0)
+    next dc
+    # do print(f"{coeff} {_total} {i}" )
+    continue if _total > 3.0
+
+    #
+    # Send a comms message can reset timer
+    #
+    who = whos[i]
+    msg = msgs[i]
+    do comms_receive_internal(msg, SPAWNED_ID, who)
+    do set_timer(SPAWNED_ID, timer, minutes=random.randrange(4,10))
+    
+next coeff
+
+jump loop_grid_send_comms_messages
 
 #
 # Speech bubble colors

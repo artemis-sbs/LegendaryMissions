@@ -190,8 +190,7 @@ if vn_count > 0 and ctype == "engineering":
             schedule vn_countdown
             update shared tag "sh-vn-timer" "color:#ff0; text: Damage Control Teams already at full strength;"
         else: 
-            SPAWNED_ID = ship_id
-            push restore_damcons
+            do grid_restore_damcons(ship_id)
             vn_count -= 1
             do set_inventory_value(ship_id, "vigoranium_nodule", vn_count)
         end_if

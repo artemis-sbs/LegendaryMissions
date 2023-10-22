@@ -45,11 +45,11 @@ jump player_docking_loop_fast
 dock_station_blob = to_blob(dock_station)
 # refuel
 fuel_value = get_data_set_value(player_blob, "energy",0)
-fuel_value = fuel_value + 20
-if fuel_value > 1000:
-    fuel_value = 1000
+if fuel_value < 1000:
+    fuel_value = fuel_value + 20
+    do set_data_set_value(player_blob, "energy", int(fuel_value))
 end_if
-do set_data_set_value(player_blob, "energy", int(fuel_value))
+
 
 # resupply torps
 for torps in range(sbs.TORPEDO.MINE):

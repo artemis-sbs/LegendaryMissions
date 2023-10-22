@@ -93,7 +93,7 @@ else:
 #stations = [(0,0,0, "DS 1"),(2500,0,0, "DS 2"),(5000,0,0, "DS 3"),(7500,0,0, "DS 4"),(10000,0,0, "DS 5"),(12500,0,0, "DS 6"),(15000,0,0, "DS 7")]
 
 spawn_points = scatter.box(random.randint(2,7), 0,0,0, 50000, 1000, 50000, centered=True)
-num = 0
+num = 1
 for station in spawn_points:
     name = "DS {num}"
     station_object = npc_spawn(*station, name, "tsn, station", "starbase_command", "behav_station")
@@ -123,7 +123,7 @@ for station in spawn_points:
             do terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_3a", "behav_mine")
         next v2
     end_if
-    num -= 1
+    num += 1
 next station 
 
 #------------------------------------------------------------------------------------------------------------
