@@ -6,7 +6,7 @@ from sbs_utils.procedural.roles import has_role, any_role
 from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished, clear_timer
 from sbs_utils.procedural.comms import comms_broadcast
 from internal_damage import grid_get_max_hp
-
+import random
 
 def grid_calc_speed(id_or_obj):
     _go_id = to_id(id_or_obj)
@@ -95,12 +95,12 @@ def grid_damcons_handle_idling_boost(id_or_obj, room_id):
     elif has_role(room_id, "gym"):
         set_inventory_value(_go_id, "ripped_speed_coeff", 1.25)
         grid_short_status(_go_id, "Whoo good workout.", "blue", seconds=3)
-        set_timer(_go_id, "fed_speed_coeff", minutes=5)
+        set_timer(_go_id, "fed_speed_coeff", minutes=random.randint(3,6))
     elif has_role(room_id, "quarters"):
         grid_short_status(_go_id, "I feel rested.", "blue", seconds=3)
         set_inventory_value(_go_id, "rested_speed_coeff", 1.25)
-        set_timer(_go_id, "rested_speed_coeff", minutes=5)
+        set_timer(_go_id, "rested_speed_coeff", minutes=random.randint(3,6))
     elif has_role(room_id, "mess"):
         grid_short_status(_go_id, "I ate good.", "blue", seconds=3)
         set_inventory_value(_go_id, "fed_speed_coeff", 1.25)
-        set_timer(_go_id, "fed_speed_coeff", minutes=5)
+        set_timer(_go_id, "fed_speed_coeff", minutes=random.randint(3,6))
