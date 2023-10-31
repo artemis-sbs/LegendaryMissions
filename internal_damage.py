@@ -149,7 +149,8 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
     ship = ship_id & 0xFFFFFFFF
     marker_tag = f"marker:{ship}"
     # marker is named hallway
-    marker_go = grid_spawn(ship_id, "marker", marker_tag, int(loc_x),int(loc_y), 121, "yellow", "#,marker") 
+    marker_go = grid_spawn(ship_id, "marker", marker_tag, int(loc_x),int(loc_y), 101, "#FF07", "#,marker") 
+    marker_go.blob.set("icon_scale",1.3,0)
     marker_go_id =  to_id(marker_go)
     set_inventory_value(ship_id, "marker_id", marker_go_id)
 

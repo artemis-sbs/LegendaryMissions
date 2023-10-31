@@ -43,18 +43,26 @@ await gui
 # For testing anomalies, load some candy up front
 _ship_id = get_inventory_value(client_id, "assigned_ship")
 jump debug_screen if _ship_id is None
-_pos = get_pos(_ship_id)
+
+eo = to_engine_object(_ship_id)
+_pos_eo = eo.pos
+_forward = eo.forward_vector()
+#_vpos = Vec3(_pos_eo.x, _pos_eo.y, _pos_eo.z)
+#_vforward = Vec3(_forward.x, _forward.y, _forward.z)
+_pos = _pos_eo + (_forward * 200)
+do _pos.x -= 200
 
 
-do terrain_spawn(125+_pos.x, _pos.y, 250+_pos.z, None, "anomaly, carapaction_coil", "alien_2a", "behav_pickup")
-do terrain_spawn(200+_pos.x, _pos.y, 250+_pos.z, None, "anomaly, infusion_pcoils", "danger_4a", "behav_pickup")
-do terrain_spawn(275+_pos.x, _pos.y, 250+_pos.z, None, "anomaly, tauron_focuser", "alien_4a", "behav_pickup")
-do terrain_spawn(125+_pos.x, _pos.y, 325+_pos.z, None, "anomaly, secret_codecase", "container_1a", "behav_pickup")
-do terrain_spawn(200+_pos.x, _pos.y, 325+_pos.z, None, "anomaly, hidens_powercell", "container_2a", "behav_pickup")
-do terrain_spawn(275+_pos.x, _pos.y, 325+_pos.z, None, "anomaly, vigoranium_nodule", "container_4a", "behav_pickup")
-do terrain_spawn(125+_pos.x, _pos.y, 400+_pos.z, None, "anomaly, cetrocite_crystal", "container_small_6a", "behav_pickup")
-do terrain_spawn(200+_pos.x, _pos.y, 400+_pos.z, None, "anomaly, lateral_array", "danger_1a", "behav_pickup")
-do terrain_spawn(275+_pos.x, _pos.y, 400+_pos.z, None, "anomaly, haplix_overcharger", "alien_5a", "behav_pickup")
+
+do pickup_spawn(125+_pos.x, _pos.y, _pos.z+250, "carapaction_coil")
+do pickup_spawn(200+_pos.x, _pos.y, _pos.z+250, "infusion_pcoils")
+do pickup_spawn(275+_pos.x, _pos.y, _pos.z+250, "tauron_focuser")
+do pickup_spawn(125+_pos.x, _pos.y, _pos.z+325, "secret_codecase")
+do pickup_spawn(200+_pos.x, _pos.y, _pos.z+325, "hidens_powercell")
+do pickup_spawn(275+_pos.x, _pos.y, _pos.z+325, "vigoranium_nodule")
+do pickup_spawn(125+_pos.x, _pos.y, _pos.z+400, "cetrocite_crystal")
+do pickup_spawn(200+_pos.x, _pos.y, _pos.z+400, "lateral_array")
+do pickup_spawn(275+_pos.x, _pos.y, _pos.z+400, "haplix_overcharger")
 
 jump debug_screen
 

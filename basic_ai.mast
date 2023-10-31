@@ -199,27 +199,18 @@ delay sim 5s
 ================ spawn_task_station ================= 
 
 #
-# All stations start building homing
+# All stations start building homing, just us any player
+# Build task needs a player to talk to
 #
-
-
 my_players = role("__player__") & role("tsn")
-for player in my_players:
-    blob = to_blob(player)
-    num_ids = blob.get("num_extra_scan_sources",0)
-    do blob.set("extra_scan_source", SPAWNED_ID, num_ids)
-    num_ids += 1
-    do blob.set("num_extra_scan_sources",num_ids,0)
+->END if len(my_players)==0
+ship_id = next(iter(my_players))
+station_id = SPAWNED_ID
 
-    follow route science select player SPAWNED_ID
-
-    station_id = SPAWNED_ID
-    ship_id = player
-    torpedo_build_type = sbs.TORPEDO.HOMING
-    build_time = 3*60
-    cancel build_task
-    var build_task =>  task_station_building
+torpedo_build_type = sbs.TORPEDO.HOMING
+build_time = 3*60
+cancel build_task
+var build_task =>  task_station_building
 
 
-next player
 -> END

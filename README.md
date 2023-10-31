@@ -5,14 +5,21 @@ A Basic Siege written in the Mast (Multi-agent story telling) language
 
 DONE: Docking - add damcons regen.
 DONE: Mines won't load when ship docks.
+DONE: No info on how long to produce homing/nuke/mine/etc.
+
 ADDED: Repair Damaged rooms when Docked 
-ADDED: Mainscreen console option
+ADDED: Main screen console option
 ADDED: random skybox
 ADDED: is_dev_build() to fs. 
 ADDED: Debug screen tab if is_dev_build
+ADDED: pickup_spawn function (upgrade.py)
+ADDED: add friendly to "eyes"
 
-add firendly to "eyes"
+INPROG: Currently a bug/feature: can fire while docked.
+INPROG: Currently a bug/feature: can still dock if enemies are nearby.
 
+
+Munitions production takes too long
 
 
 
@@ -32,17 +39,6 @@ should be more common with certain races)
  - Skaraan: Any (equal %)
  - Torgoth: Carapaction Coil, Haplix Overcharger, Cetrocite Crystal
  - Ximni: Tauron Focuser, Infusion P-Coil, HiDens
-
-
-
-Stations:
-
-Currently a bug/feature: can fire while docked.
-Currently a bug/feature: can still dock if enemies are nearby.
-
-No info on how long to produce homing/nuke/mine/etc.
-Munitions production takes too long
-
 
 
 Science:

@@ -92,11 +92,33 @@ for pos in scatter_sphere(civilian_count, 0,0,0, 500, 5000, ring=True):
     #
     ship = random.choice(civilian_data)
 
-    friend = to_id(npc_spawn(*pos, f"civ {str(count).zfill(2)}", "tsn, friendly", ship["key"], "behav_npcship"))
+    friend = to_id(npc_spawn(*pos, f"civ {str(count).zfill(2)}", "tsn, friendly, civilian", ship["key"], "behav_npcship"))
     do set_face(friend, random_terran(civilian=True))
     count += 1
 next x
+
+#### vvvvvvv  ###
+
+========= add_eye_to_players =====
+
+my_players = role("__player__") & role("tsn")
+for player in my_players:
+    ship_id = player
+    blob = to_blob(player)
+    num_ids = blob.get("num_extra_scan_sources",0)
+
+    for friend in any_role("friendly, station"):
+        do blob.set("extra_scan_source", friend, num_ids)
+        num_ids += 1
+        follow route science select player friend
+    next friend
+
+    do blob.set("num_extra_scan_sources",num_ids,0)
+next player
+
 ->END
+
+
 
 ====== spawn_players =======
 c=0

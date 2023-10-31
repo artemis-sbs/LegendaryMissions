@@ -204,14 +204,19 @@ spawn_points = scatter.box(random.randint(20,30), 0,0,0, 50000, 1000, 50000, cen
 asteroid_types = names_plain_asteroid_keys()
 for v in spawn_points:
     # cluster_spawn_points = scatter_line(random.randint(10,25),  v.x, 0,v.z-800,   v.x, 0,v.z+800,   random=True)
-    cluster_spawn_points = scatter_box(random.randint(10,25),  v.x, 0,v.z,   200, 100,1000, centered=True )
-#    scatter_sphere(random.randint(8,15), v.x, 0,v.z, 100, 1000, ring=False)
+    amount = random.randint(15,30)
+    # the more you have give a bit more space
+    cluster_spawn_points = scatter_box(random.randint(10,25),  v.x, 0,v.z, amount*10, amount/2500,1000, centered=True )
+#   scatter_sphere(amount, v.x, 0,v.z, 100, 1000, ring=False)
     for v2 in cluster_spawn_points:
         #keep value between -500 and 500??
         #v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
         a_type = random.choice(asteroid_types)
         #a_type = "asteroid_crystal_blue"
-        do terrain_spawn(v2.x, v2.y, v2.z,None, None, a_type, "behav_asteroid")
+        asteroid = terrain_spawn(v2.x, v2.y, v2.z,None, None, a_type, "behav_asteroid")
+        asteroid.engine_object.steer_yaw = random.uniform(0.0001, 0.003)
+		asteroid.engine_object.steer_pitch = -random.uniform(0.0001, 0.003)
+		asteroid.engine_object.steer_roll = random.uniform(0.0001, 0.003)
     next v2
 next v
 
@@ -224,39 +229,39 @@ spawn_points = scatter.box(num_anomaly, 0,0,0, 50000, 1000, 50000, centered=True
 for v in spawn_points:
     anom = random.randint(1,9)
     if anom == 1:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, carapaction_coil", "alien_2a", "behav_pickup")
+        do pickup_spawn(v.x, v.y, v.z, "carapaction_coil")
         do print(f"Carapaction Coil spawned {v.x},{v.y},{v.z}")
     end_if
     if anom == 2:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, infusion_pcoils", "danger_4a", "behav_pickup")
+        do pickup_spawn(v.x, v.y, v.z,  "infusion_pcoils")
         do print(f"Infusion P-Coil spawned {v.x},{v.y},{v.z}")
     end_if
     if anom == 3:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, tauron_focuser", "alien_4a", "behav_pickup")
+        do pickup_spawn(v.x, v.y, v.z, "tauron_focuser")
         do print(f"Tauron Focuser spawned {v.x},{v.y},{v.z}")
     end_if
     if anom == 4:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, secret_codecase", "container_1a", "behav_pickup")
+        do pickup_spawn(v.x, v.y, v.z, "secret_codecase")
         do print(f"Secret Codecase spawned {v.x},{v.y},{v.z}")
     end_if
     if anom == 5:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, hidens_powercell", "container_2a", "behav_pickup")
+        do pickup_spawn(v.x, v.y, v.z, "hidens_powercell")
         do print(f"HiDens Powercell spawned {v.x},{v.y},{v.z}")
     end_if
     if anom == 6:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, vigoranium_nodule", "container_4a", "behav_pickup")
+        do pickup_spawn(v.x, v.y, v.z, "vigoranium_nodule")
         do print(f"Vigoranium Nodule spawned {v.x},{v.y},{v.z}")
     end_if
     if anom == 7:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, cetrocite_crystal", "container_small_6a", "behav_pickup")
+        do pickup_spawn(v.x, v.y, v.z, "cetrocite_crystal")
         do print(f"Cetrocite Crystal spawned {v.x},{v.y},{v.z}")
     end_if
     if anom == 8:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, lateral_array", "danger_1a", "behav_pickup")
+        do pickup_spawn(v.x, v.y, v.z, "lateral_array")
         do print(f"Lateral Array spawned {v.x},{v.y},{v.z}")
     end_if
     if anom == 9:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, haplix_overcharger", "alien_5a", "behav_pickup")
+        do pickup_spawn(v.x, v.y, v.z, "haplix_overcharger")
         do print(f"Haplix Overcharger spawned {v.x},{v.y},{v.z}")
     end_if
     #anom+=1    

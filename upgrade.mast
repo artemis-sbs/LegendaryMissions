@@ -1,3 +1,5 @@
+import upgrade.py
+
 do gui_add_console_tab(SHARED, "helm", "upgrade", "upgrade_screen")
 do gui_add_console_tab(SHARED, "comms", "upgrade", "upgrade_screen")
 do gui_add_console_tab(SHARED, "engineering", "upgrade", "upgrade_screen")
