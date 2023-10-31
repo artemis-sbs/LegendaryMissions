@@ -1,7 +1,7 @@
 ## 
 # Example shows reusable common client select
+import debug.mast #want debug left of upgrade
 import common_console_select.mast
-import common_docking.mast
 import science.mast
 import comms.mast
 import internal_damage.mast
@@ -13,15 +13,12 @@ import game_results.mast
 import damage.mast
 import grid_comms.mast
 import anom_common.mast
-import upgrade.mast
 
-#
-# This directs the script 
-# to the client and server GUI
-# when the client is started
-#
-reroute server start_server 
-reroute clients client_main
+
+
+import upgrade.mast
+import story.py
+
 
 
 #
@@ -29,8 +26,7 @@ reroute clients client_main
 #
 #logger
 
-
-shared start_text =~~"""
+shared start_text = ~~"""
 Legendary Missions:
 
 Missions rich in the history of Artemis re-imagined for Cosmos.
@@ -39,10 +35,13 @@ Missions rich in the history of Artemis re-imagined for Cosmos.
 Written using MAST and is a great reference for those looking to write their own missions.
 """~~
 
+
+
 #
 # Game data
 #
 shared game_started = False
+
 shared enemy_count=5
 shared player_count = 1
 shared player_list = ~~[
@@ -55,6 +54,16 @@ shared player_list = ~~[
     MastDataObject({"name": "Ceres", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-500,0, -200) , "face": random_terran()}),
     MastDataObject({"name": "Diana", "id": None , "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-700,0, -300), "face": random_terran()}),
 ]~~
+
+
+#
+# This directs the script 
+# to the client and server GUI
+# when the client is started
+#
+reroute server start_server 
+reroute clients client_main
+
 
 
 #
@@ -72,7 +81,9 @@ shared anomaly_select = "many"
 shared seed_value = 0
 
 watch_end_game_task = None
+shared skybox = skybox_get_random()
 
+do sbs.set_sky_box_all(skybox)
 
 #
 # The Server GUI

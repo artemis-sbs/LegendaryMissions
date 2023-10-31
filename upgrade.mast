@@ -3,6 +3,7 @@ do gui_add_console_tab(SHARED, "comms", "upgrade", "upgrade_screen")
 do gui_add_console_tab(SHARED, "engineering", "upgrade", "upgrade_screen")
 do gui_add_console_tab(SHARED, "science", "upgrade", "upgrade_screen")
 do gui_add_console_tab(SHARED, "weapons", "upgrade", "upgrade_screen")
+do gui_add_console_tab(SHARED, "upgrade", "upgrade", None)
 do gui_add_console_tab(SHARED, "upgrade", "__back_tab__", "console_selected")
 
 

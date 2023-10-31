@@ -142,10 +142,10 @@ box_count = int(enemy_count/2)
 #spawn_north = scatter_line(int(enemy_count), 0,0, 9000, 20000,0, 6000, True)
 #spawn_south = scatter_line(int(enemy_count), 0,0,-9000, 20000,0,-6000, True)
 
-spawn_north = scatter_box(box_count, 0,0, 35000, 100000, 5000, 15000, centered=True)
-spawn_south = scatter_box(box_count, 0,0, -35000, 100000, 5000, 15000, centered=True)
-spawn_east = scatter_box(box_count, 35000,0, 0, 15000, 5000, 100000, centered=True)
-spawn_west = scatter_box(box_count, -35000,0, 0, 15000, 5000, 100000, centered=True)
+spawn_north = scatter_box(box_count, 0,0, 35000, 100000, 2000, 15000, centered=True)
+spawn_south = scatter_box(box_count, 0,0, -35000, 100000, 2000, 15000, centered=True)
+spawn_east = scatter_box(box_count, 35000,0, 0, 15000, 2000, 100000, centered=True)
+spawn_west = scatter_box(box_count, -35000,0, 0, 15000, 2000, 100000, centered=True)
 
 spawn_points = []
 do spawn_points.extend(spawn_north)
@@ -262,17 +262,6 @@ for v in spawn_points:
     #anom+=1    
 next v
 
-# For testing anomalies, load some candy up front
-
-do terrain_spawn(125, 0, 250, None, "anomaly, carapaction_coil", "alien_2a", "behav_pickup")
-do terrain_spawn(200, 0, 250, None, "anomaly, infusion_pcoils", "danger_4a", "behav_pickup")
-do terrain_spawn(275, 0, 250, None, "anomaly, tauron_focuser", "alien_4a", "behav_pickup")
-do terrain_spawn(125, 0, 325, None, "anomaly, secret_codecase", "container_1a", "behav_pickup")
-do terrain_spawn(200, 0, 325, None, "anomaly, hidens_powercell", "container_2a", "behav_pickup")
-do terrain_spawn(275, 0, 325, None, "anomaly, vigoranium_nodule", "container_4a", "behav_pickup")
-do terrain_spawn(125, 0, 400, None, "anomaly, cetrocite_crystal", "container_small_6a", "behav_pickup")
-do terrain_spawn(200, 0, 400, None, "anomaly, lateral_array", "danger_1a", "behav_pickup")
-do terrain_spawn(275, 0, 400, None, "anomaly, haplix_overcharger", "alien_5a", "behav_pickup")
 
 jump spawn_friendly_npc
 #------------------------------------------------------------------------------------------------------------

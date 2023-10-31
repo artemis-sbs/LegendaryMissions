@@ -1,4 +1,4 @@
-from sbs_utils.procedural.query import to_id, to_blob, to_object, to_list
+from sbs_utils.procedural.query import to_id, to_blob, to_object, to_list, to_set
 from sbs_utils.procedural.roles import role, add_role, remove_role, all_roles,has_role
 from sbs_utils.procedural.links import link,unlink
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
@@ -114,7 +114,7 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
         # Update max damage counts
         #
         roles = g["roles"].lower()
-        if "sensors" in roles:
+        if "sensor" in roles:
             sensors += 1
         if "engine" in roles:
             engines += 1
@@ -147,7 +147,7 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
     loc_x = loc[0]
     loc_y = loc[1]
     ship = ship_id & 0xFFFFFFFF
-    marker_tag = "marker:{ship}"
+    marker_tag = f"marker:{ship}"
     # marker is named hallway
     marker_go = grid_spawn(ship_id, "marker", marker_tag, int(loc_x),int(loc_y), 121, "yellow", "#,marker") 
     marker_go_id =  to_id(marker_go)
@@ -174,6 +174,10 @@ def grid_restore_damcons(id_or_obj):
         _test_go = hm.get_grid_object_by_name(_name)
         if _test_go is not None:
             _id = _test_go.unique_ID # _test_go is an object from the engine
+            _blob = to_blob(_test_go.unique_ID)
+            _blob.set("icon_color", colors[i], 0)
+            # Hit points == MAX_HP
+            set_inventory_value(_id, "HP", grid_get_max_hp() )
         else:
             v = sbs.vec3(0.5,0,0.5)
             point = sbs.find_valid_unoccupied_grid_point_for_vector3(ship_id, v, 5)
@@ -183,19 +187,17 @@ def grid_restore_damcons(id_or_obj):
             set_inventory_value(_id, "color", colors[i])
             set_inventory_value(_id, "damage_color", damage_colors[i])
             set_inventory_value(_id, "idle_pos", (point[0], point[1]) )
+            # Hit points == MAX_HP
+            set_inventory_value(_id, "HP", grid_get_max_hp() )
             #
             # Create idle/rally point
             #
             dc_color = get_inventory_value(_id, "color", "white")
             marker_tag = f"{_go.name} rally point"
-            idle_marker = grid_spawn(ship_id, marker_tag, marker_tag, point[0],point[1], 23, dc_color, "#") 
+            idle_marker = grid_spawn(ship_id, marker_tag, marker_tag, point[0],point[1], 23, dc_color, "#,rally_point") 
             _blob = to_blob(idle_marker)
             _blob.set("icon_scale", 1.2, 0)
             set_inventory_value(_id, "idle_marker", to_id(idle_marker))
-    else:
-
-        # Hit points == MAX_HP
-        set_inventory_value(_id, "HP", grid_get_max_hp() )
 
 
 def grid_apply_system_damage(id_or_obj):
@@ -206,7 +208,7 @@ def grid_apply_system_damage(id_or_obj):
 
     undamaged_grid_objects = grid_objects(ship_id) & role("__undamaged__")
     damaged_grid_objects = grid_objects(ship_id) & role("__damaged__")
-    the_roles =  ["weapon", "engine", "sensors", "shield"]
+    the_roles =  ["weapon", "engine", "sensor", "shield"]
 
 
     for x in range(sbs.SHPSYS.MAX):
@@ -217,7 +219,7 @@ def grid_apply_system_damage(id_or_obj):
 
     #should explode if len(undamaged_grid_objects)==0
 
-    undamaged = undamaged_grid_objects & (role("weapon") | role("sensors") | role("shield") | role("engine")) 
+    undamaged = undamaged_grid_objects & (role("weapon") | role("sensor") | role("shield") | role("engine")) 
     should_explode = len(undamaged) == 0
     set_damage_coefficients(ship_id)
 
@@ -319,12 +321,14 @@ def grid_damage_grid_object(ship_id, grid_id, damage_color):
     add_role(grid_id, "__damaged__")
     remove_role(grid_id, "__undamaged__")
 
-def grid_repair_grid_object(ship_id, grid_id, repair_color):
-    blob = to_blob(grid_id)
-    blob.set("icon_color", repair_color, 0)
-    unlink(ship_id, "damage", grid_id) 
-    remove_role(grid_id, "__damaged__")
-    add_role(grid_id, "__undamaged__")
+# def grid_mark_repaired_grid_object(ship_id, grid_id, repair_color):
+#     blob = to_blob(grid_id)
+#     blob.set("icon_color", repair_color, 0)
+#     unlink(ship_id, "damage", grid_id) 
+#     remove_role(grid_id, "__damaged__")
+#     add_role(grid_id, "__undamaged__")
+
+    
 
 
 def convert_system_to_string(the_system):
@@ -333,7 +337,7 @@ def convert_system_to_string(the_system):
     elif isinstance(the_system, sbs.SHPSYS):
         the_system = the_system.value
     
-    the_roles =  ["weapon", "engine", "sensors", "shield"]
+    the_roles =  ["weapon", "engine", "sensor", "shield"]
     hit_system = int(the_system)
     return the_roles[hit_system]
 
@@ -433,6 +437,7 @@ def grid_take_internal_damage_at(id_or_obj, source_point, system_hit, damage_amo
             # track hit lifeforms
             #
             if has_role(go_id, "marker"): continue
+            if has_role(go_id, "rally_point"): continue
             if has_role(go_id, "lifeform"):
                 injured_dc.add(go_id)
                 # don't mark lifeforms as damaged
@@ -493,3 +498,92 @@ def grid_take_internal_damage_at(id_or_obj, source_point, system_hit, damage_amo
 
     return grid_apply_system_damage(ship_id)
 
+
+def grid_repair_system_damage(id_or_obj, the_system=None):
+    ship_id = to_id(id_or_obj)
+    
+    if the_system is None:
+        the_system = convert_system_to_string(random.randrange(4))
+
+    the_system = convert_system_to_string(the_system)
+    fixable = to_list(grid_objects(ship_id) & role("__damaged__") & role(the_system))
+    if len(fixable) == 0:
+        return False
+    go_id = random.choice(fixable)
+    grid_repair_grid_objects(ship_id, go_id)
+    grid_apply_system_damage(ship_id)
+    return True
+
+
+
+def grid_repair_grid_objects(player_ship, id_or_set, who_repaired=None):
+    at_point = to_set(id_or_set)
+    damcon_repairer = to_id(who_repaired)
+    player_ship_id = to_id(player_ship)
+
+    something_healed = False
+    for id in at_point:
+        #
+        # Remove work order, even if no longer damaged
+        # 
+        if damcon_repairer is not None:
+            unlink(damcon_repairer, "work-order", id)
+
+        # Only deal with Damage
+        if not has_role(id, "__damaged__"): continue 
+        if has_role(id, "damcons"): continue
+        go = to_object(id)
+        if go is None: continue
+
+
+        # Have to unlink this so it is no longer seen
+        unlink(go.host_id, "damage", id)
+        remove_role(id, "__damaged__")
+        add_role(id, "__undamaged__")
+
+
+        # If hallway damage delete
+        # else restore color and repair system
+        system_heal = None
+        if has_role(id, "hallway"):
+            sbs.delete_grid_object(go.host_id, id)
+            go.destroyed()
+        #
+        # This is a room, fix
+        #
+        else:
+            blob = to_blob(id)
+            color = get_inventory_value(id, "color")
+
+            if color is None:
+                color = "purple"
+            blob.set("icon_color", color, 0)
+            if has_role(id, "sensor"):
+                system_heal = sbs.SHPSYS.SENSORS
+            elif has_role(id, "weapon"):
+                system_heal = sbs.SHPSYS.WEAPONS
+            elif has_role(id, "engine"):
+                system_heal = sbs.SHPSYS.ENGINES
+            elif has_role(id, "shield"):
+                system_heal = sbs.SHPSYS.SHIELDS
+        #
+        # 
+        #
+        if system_heal is not None:
+            ship_blob = to_blob(player_ship_id)
+            something_healed = True
+        
+            current = ship_blob.get('system_damage', system_heal)
+            if current >0:
+                ship_blob.set('system_damage', current-1 , system_heal)
+            else:
+                ship_blob.set('system_damage', 0 ,  system_heal)
+
+    #
+    # Update the damage coefficients if a system was healed
+    # Label is in internal_damage, Expects DAMAGE_ORIGIN_ID
+    #
+
+    if something_healed:
+        set_damage_coefficients(player_ship_id )
+    
