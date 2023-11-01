@@ -5,23 +5,28 @@ from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_va
 from sbs_utils.procedural.space_objects import closest
 from sbs_utils.procedural.grid import grid_objects
 from sbs_utils.tickdispatcher import TickDispatcher
-from internal_damage import grid_repair_system_damage, grid_restore_damcons, grid_repair_grid_objects
+from internal_damage import grid_restore_damcons, grid_repair_grid_objects
 
 
-def schedule_player_docking(player_id_or_obj):
+
+
+def schedule_player_docking(player_id_or_obj, difficulty):
     #
     # Schedule a simple tick task 
     # Pass the player ID to the task
     #
     t = TickDispatcher.do_interval(player_docking_task, 5)
     t.set_inventory_value("player_id", to_id(player_id_or_obj))
+    t.set_inventory_value("difficulty", difficulty)
+    
 
 RATE_SLOW = 5
 RATE_FAST = 0
 
 def player_docking_task(t):
     player_id = t.get_inventory_value("player_id")
-    rate = player_docking(player_id)
+    difficulty = t.get_inventory_value("difficulty")
+    rate = player_docking(player_id, difficulty)
     if rate is None:
         t.stop()
     else:
@@ -29,7 +34,7 @@ def player_docking_task(t):
 
 
 
-def player_docking(player_id_or_obj, docking_range=600, docked_cb=None, docking_cb=None, dock_start_cb=None):
+def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=None, docking_cb=None, dock_start_cb=None):
     if not object_exists(player_id_or_obj):
         # Ship is destroyed
         return None
@@ -41,14 +46,18 @@ def player_docking(player_id_or_obj, docking_range=600, docked_cb=None, docking_
     dock_state_string = player_blob.get("dock_state", 0)
     prev_dock_state_string = get_inventory_value(player_id, "dock_state")
     
+    
     if "undocked" == dock_state_string:
         if prev_dock_state_string =="docked":
             dec_disable_weapons_selection(player_id)
-
+        
         player_blob.set("dock_base_id", 0)
-        station = closest(player_id_or_obj, role("Station"), docking_range)
-        if station is not None:
-            player_blob.set("dock_base_id", to_id(station))
+        _too_close = 300+(difficulty+1)*200
+        raider = closest(player_id_or_obj, role("raider"), _too_close)
+        if raider is None:
+            station = closest(player_id_or_obj, role("Station"), docking_range)
+            if station is not None:
+                player_blob.set("dock_base_id", to_id(station))
     #
     # 
     #

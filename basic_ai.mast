@@ -38,7 +38,7 @@ schedule spawn_grid_objects
 # The remaining AI for the player is docking
 #
 
-do schedule_player_docking(SPAWNED_ID)
+do schedule_player_docking(SPAWNED_ID, enemy_count)
 #
 # With other tasks started end this one
 #

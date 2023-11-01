@@ -73,7 +73,7 @@ reroute clients client_main
 ========== start_server ===============
 
 shared world_select = "siege"
-shared terrain_select = "few"
+shared terrain_select = "some"
 shared lethal_select = "none"
 shared friendly_select = "few"
 shared monster_select = "none"

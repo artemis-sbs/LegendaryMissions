@@ -6,6 +6,9 @@ A Basic Siege written in the Mast (Multi-agent story telling) language
 DONE: Docking - add damcons regen.
 DONE: Mines won't load when ship docks.
 DONE: No info on how long to produce homing/nuke/mine/etc.
+DONE: Needs bigger/more obvious selection box on grid map. (now alpha blended yellow square)
+DONE: Munitions production takes too long
+DONE: Currently a bug/feature: can still dock if enemies are nearby.
 
 ADDED: Repair Damaged rooms when Docked 
 ADDED: Main screen console option
@@ -14,22 +17,21 @@ ADDED: is_dev_build() to fs.
 ADDED: Debug screen tab if is_dev_build
 ADDED: pickup_spawn function (upgrade.py)
 ADDED: add friendly to "eyes"
+ADDED: More terrain and Terrain uses the None, Few, Some, Lots, Many
+ADDED: Spawn variants of station, uses a weighting system to spawn balanced
+ADDED: Spread out station and terrain to fill space better
+
 
 INPROG: Currently a bug/feature: can fire while docked.
-INPROG: Currently a bug/feature: can still dock if enemies are nearby.
-
-
-Munitions production takes too long
 
 
 
-General/Upgrades:
+
+
+
 
 Upgrade button supposed to change to console name, sometimes doesn't
 change "upgrade"
-
-After ship is destroyed, sometimes beams and shields are "stuck" on
-regenerated ship.
 
 Destroyed ships should sometimes drop upgrades (certain upgrades
 
@@ -49,7 +51,7 @@ Proximity autoscan - is this coded? (Is the distance hard coded?)
 
 
 Engineering:
-Needs bigger/more obvious selection box on grid map.
+
 "Crew is hungry" messages were distracting during combat, turn off for
 Red Alert?
 
