@@ -59,23 +59,23 @@ if "many" == monster_select:
     monster_value = 4
     end_if
 
-anomaly_value = 0
-num_anomaly = 0
-if "few" == anomaly_select:
-    anomaly_value = 1
-    num_anomaly = random.randint(1,3)
+upgrade_value = 0
+num_upgrade = 0
+if "few" == upgrade_select:
+    upgrade_value = 1
+    num_upgrade = random.randint(1,3)
     end_if
-if "some" == anomaly_select:
-    anomaly_value = 2
-    num_anomaly = random.randint(3,5)
+if "some" == upgrade_select:
+    upgrade_value = 2
+    num_upgrade = random.randint(3,5)
         end_if
-if "lots" == anomaly_select:
-    anomaly_value = 3
-    num_anomaly = random.randint(5,10)
+if "lots" == upgrade_select:
+    upgrade_value = 3
+    num_upgrade = random.randint(5,10)
     end_if
-if "many" == anomaly_select:
-    anomaly_value = 4
-    num_anomaly = random.randint(10,15)
+if "many" == upgrade_select:
+    upgrade_value = 4
+    num_upgrade = random.randint(10,15)
     end_if
 
 
@@ -173,7 +173,7 @@ for station in spawn_points:
         for v2 in cluster_spawn_points:
             #keep value between -500 and 500??
     #                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
-            do terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_3a", "behav_mine")
+            do terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
         next v2
     end_if
     num += 1
@@ -285,48 +285,48 @@ next v
 #------------------------------------------------------------------------------------------------------------
 # I want candy
 
-do print(f"Number of Anomalies: {num_anomaly}")
+do print(f"Number of Upgrades: {num_upgrade}")
 
-spawn_points = scatter.box(num_anomaly, 0,0,0, 75000, 1000, 75000, centered=True)
+spawn_points = scatter.box(num_upgrade, 0,0,0, 75000, 1000, 75000, centered=True)
 for v in spawn_points:
-    anom = random.randint(1,9)
-    if anom == 1:
+    upg = random.randint(1,9)
+    if upg == 1:
         do pickup_spawn(v.x, v.y, v.z, "carapaction_coil")
         do print(f"Carapaction Coil spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 2:
+    if upg == 2:
         do pickup_spawn(v.x, v.y, v.z,  "infusion_pcoils")
         do print(f"Infusion P-Coil spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 3:
+    if upg == 3:
         do pickup_spawn(v.x, v.y, v.z, "tauron_focuser")
         do print(f"Tauron Focuser spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 4:
+    if upg == 4:
         do pickup_spawn(v.x, v.y, v.z, "secret_codecase")
         do print(f"Secret Codecase spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 5:
+    if upg == 5:
         do pickup_spawn(v.x, v.y, v.z, "hidens_powercell")
         do print(f"HiDens Powercell spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 6:
+    if upg == 6:
         do pickup_spawn(v.x, v.y, v.z, "vigoranium_nodule")
         do print(f"Vigoranium Nodule spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 7:
+    if upg == 7:
         do pickup_spawn(v.x, v.y, v.z, "cetrocite_crystal")
         do print(f"Cetrocite Crystal spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 8:
+    if upg == 8:
         do pickup_spawn(v.x, v.y, v.z, "lateral_array")
         do print(f"Lateral Array spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 9:
+    if upg == 9:
         do pickup_spawn(v.x, v.y, v.z, "haplix_overcharger")
         do print(f"Haplix Overcharger spawned {v.x},{v.y},{v.z}")
     end_if
-    #anom+=1    
+    #upg+=1    
 next v
 
 

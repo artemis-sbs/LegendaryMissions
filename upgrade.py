@@ -9,7 +9,7 @@ anom_data = {
     "hidens_powercell": {"art_id":"container_2a"},
     "vigoranium_nodule": {"art_id":"container_4a"},
     "cetrocite_crystal": {"art_id":"container_small_6a"},
-    "lateral_array": {"art_id":"danger_1a"},
+    "lateral_array": {"art_id":"danger_5a"},
     "haplix_overcharger": {"art_id":"alien_5a"},
 }
 
@@ -20,7 +20,7 @@ def pickup_spawn(x, y, z, roles, blink=None, yaw=None, name=None, art_id=None,):
     if yaw is None:
         yaw=random.uniform(0.03,0.08)
     if not roles.startswith("anom"):
-        roles = "anomaly,"+roles
+        roles = "upgrade,"+roles
     if art_id is None:
         art_id = "unknown"
         for anom in anom_data:

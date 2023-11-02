@@ -489,7 +489,7 @@ for x in range(300):
     delay gui 1s
 next x
 stayfrosty /= 2.0
-do print(f"Reset Coolant Coefficient: {scanrate}")
+do print(f"Reset Coolant Coefficient: {stayfrosty}")
 do set_data_set_value(player_blob, "coolant_upgrade_coeff", stayfrosty)
 update shared tag "sh-cl-count" "text: {cl_count};"
 update shared tag "sh-cl-txt" "text: Cetrocite Crystal;"
