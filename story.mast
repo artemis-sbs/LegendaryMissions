@@ -1,6 +1,7 @@
 ## 
 # Example shows reusable common client select
 import debug.mast #want debug left of upgrade
+import debug.mast #want debug left of upgrade
 import common_console_select.mast
 import science.mast
 import comms.mast
@@ -16,6 +17,8 @@ import pickup_common.mast
 import upgrade.mast
 import story.py
 
+import story.py
+
 
 
 #
@@ -23,6 +26,7 @@ import story.py
 #
 #logger
 
+shared start_text = ~~"""
 shared start_text = ~~"""
 Legendary Missions:
 
@@ -34,10 +38,13 @@ Written using MAST and is a great reference for those looking to write their own
 
 
 
+
+
 #
 # Game data
 #
 shared game_started = False
+
 
 shared enemy_count=5
 shared player_count = 1
@@ -51,6 +58,16 @@ shared player_list = ~~[
     MastDataObject({"name": "Ceres", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-500,0, -200) , "face": random_terran()}),
     MastDataObject({"name": "Diana", "id": None , "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-700,0, -300), "face": random_terran()}),
 ]~~
+
+
+#
+# This directs the script 
+# to the client and server GUI
+# when the client is started
+#
+reroute server start_server 
+reroute clients client_main
+
 
 
 #

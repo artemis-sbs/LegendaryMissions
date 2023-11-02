@@ -329,17 +329,6 @@ for v in spawn_points:
     #upg+=1    
 next v
 
-# For testing upgrades
-
-do pickup_spawn(125, 0, 250, "carapaction_coil")
-do pickup_spawn(200, 0, 250,  "infusion_pcoils")
-do pickup_spawn(275, 0, 250, "tauron_focuser")
-do pickup_spawn(125, 0, 325, "secret_codecase")
-do pickup_spawn(200, 0, 325, "hidens_powercell")
-do pickup_spawn(275, 0, 325, "vigoranium_nodule")
-do pickup_spawn(125, 0, 400, "cetrocite_crystal")
-do pickup_spawn(200, 0, 400, "lateral_array")
-do pickup_spawn(275, 0, 400, "haplix_overcharger")
 
 jump spawn_friendly_npc
 #------------------------------------------------------------------------------------------------------------
