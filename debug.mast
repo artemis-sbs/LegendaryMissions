@@ -1,0 +1,78 @@
+
+shared allow_debug = True
+if allow_debug==is_dev_build():
+    do gui_add_console_tab(SHARED, "helm", "debug", "debug_screen")
+    do gui_add_console_tab(SHARED, "comms", "debug", "debug_screen")
+    do gui_add_console_tab(SHARED, "engineering", "debug", "debug_screen")
+    do gui_add_console_tab(SHARED, "science", "debug", "debug_screen")
+    do gui_add_console_tab(SHARED, "weapons", "debug", "debug_screen")
+    do gui_add_console_tab(SHARED, "debug", "mast", "mast_debug_screen")
+    do gui_add_console_tab(SHARED, "debug", "debug", None)
+    do gui_add_console_tab(SHARED, "debug", "__back_tab__", "console_selected")
+    do gui_add_console_tab(SHARED, "mast", "mast", None)    
+    do gui_add_console_tab(SHARED, "mast", "debug", "debug_screen")
+    do gui_add_console_tab(SHARED, "mast", "__back_tab__", "console_selected")
+end_if
+
+
+
+
+===== debug_screen ======
+
+section style="area: 10,10,90,90;"
+
+"""
+Under construction
+"""
+
+section style="area:10,15,35,100;row-height:35px;"
+row
+button "Test anomalies":
+    jump spawn_test_anom
+end_button
+
+
+activate console debug
+
+await gui
+
+
+
+
+===== spawn_test_anom === 
+# For testing anomalies, load some candy up front
+_ship_id = get_inventory_value(client_id, "assigned_ship")
+jump debug_screen if _ship_id is None
+
+eo = to_engine_object(_ship_id)
+_pos_eo = eo.pos
+_forward = eo.forward_vector()
+#_vpos = Vec3(_pos_eo.x, _pos_eo.y, _pos_eo.z)
+#_vforward = Vec3(_forward.x, _forward.y, _forward.z)
+_pos = _pos_eo + (_forward * 200)
+
+
+do pickup_spawn(_pos.x, _pos.y, _pos.z, "carapaction_coil")
+# do pickup_spawn(200+_pos.x, _pos.y, _pos.z+250, "infusion_pcoils")
+# do pickup_spawn(275+_pos.x, _pos.y, _pos.z+250, "tauron_focuser")
+# do pickup_spawn(125+_pos.x, _pos.y, _pos.z+325, "secret_codecase")
+# do pickup_spawn(200+_pos.x, _pos.y, _pos.z+325, "hidens_powercell")
+# do pickup_spawn(275+_pos.x, _pos.y, _pos.z+325, "vigoranium_nodule")
+# do pickup_spawn(125+_pos.x, _pos.y, _pos.z+400, "cetrocite_crystal")
+# do pickup_spawn(200+_pos.x, _pos.y, _pos.z+400, "lateral_array")
+# do pickup_spawn(275+_pos.x, _pos.y, _pos.z+400, "haplix_overcharger")
+
+jump debug_screen
+
+
+===== mast_debug_screen ======
+
+section style="area: 10,10,90,90;"
+
+"""
+Under construction
+"""
+
+activate console mast
+
+await gui

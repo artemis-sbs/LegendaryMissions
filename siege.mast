@@ -59,23 +59,23 @@ if "many" == monster_select:
     monster_value = 4
     end_if
 
-anomaly_value = 0
-num_anomaly = 0
-if "few" == anomaly_select:
-    anomaly_value = 1
-    num_anomaly = random.randint(1,3)
+upgrade_value = 0
+num_upgrade = 0
+if "few" == upgrade_select:
+    upgrade_value = 1
+    num_upgrade = random.randint(1,3)
     end_if
-if "some" == anomaly_select:
-    anomaly_value = 2
-    num_anomaly = random.randint(3,5)
+if "some" == upgrade_select:
+    upgrade_value = 2
+    num_upgrade = random.randint(3,5)
         end_if
-if "lots" == anomaly_select:
-    anomaly_value = 3
-    num_anomaly = random.randint(5,10)
+if "lots" == upgrade_select:
+    upgrade_value = 3
+    num_upgrade = random.randint(5,10)
     end_if
-if "many" == anomaly_select:
-    anomaly_value = 4
-    num_anomaly = random.randint(10,15)
+if "many" == upgrade_select:
+    upgrade_value = 4
+    num_upgrade = random.randint(10,15)
     end_if
 
 
@@ -90,39 +90,93 @@ else:
     end_if
 
 #------------------------------------------------------------------------------------------------------------
-stations = [(0,0,0, "DS 1"),(2500,0,0, "DS 2"),(5000,0,0, "DS 3"),(7500,0,0, "DS 4"),(10000,0,0, "DS 5"),(12500,0,0, "DS 6"),(15000,0,0, "DS 7")]
-num = random.randint(2,7)
-for station in stations:
-    if (num >= 0):
-        station_object = npc_spawn(*station, "tsn, station", "starbase_command", "behav_station")
-        ds = to_id(station_object)
-        station_object.engine_object.pos.z = random.randrange(-3000,3000)
-        apos = station_object.engine_object.pos
-        do set_face(ds, random_terran(civilian=True))
 
-        #wrap a minefield around the station
-        if lethal_value > 0:
-            startAngle = random.randrange(0,359)
-            angle = random.randrange(90,170)
-            endAngle = startAngle + angle
 
-            depth = 1#random.randrange(2,3)
-    #        width = random.randrange(int(angle/6), int(angle/3))
-            width = int(5 * lethal_value)
-            widthArray = [int(angle / 5.0)]
-            inner = random.randrange(1200,1500)
-            cluster_spawn_points = scatter_ring(width, depth, apos.x,apos.y,apos.z, inner, inner, startAngle, endAngle)
-    #        cluster_spawn_points = scatter_ring_density(widthArray, apos.x,apos.y,apos.z, inner, 0, startAngle, endAngle)
-            # Random type, but same for cluster
-            # a_type = f"danger_{1}{'a'}"
-            for v2 in cluster_spawn_points:
-                #keep value between -500 and 500??
-        #                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
-                do terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_3a", "behav_mine")
-            next v2
-        end_if
-        num -= 1
+ _station_weights  = {"starbase_command": 3,"starbase_civil": 1,"starbase_industry": 5,"starbase_science": 1}
+
+
+spawn_points = scatter.box(10000, 0,0,0, 65000, 1000, 65000, centered=True)
+num = 1
+total_weight = (12-enemy_count) *2
+_spawned_pos = []
+
+for station in spawn_points:
+    #
+    # Pick a type of station
+    #
+    break if total_weight <= 0
+
+    station_type = random.choice(list(_station_weights.keys()))
+    station_weight = _station_weights[station_type]
+    #
+    #
+    continue if total_weight < station_weight
+
+    # Force big stations first
+    continue if total_weight > 8 and station_weight==1
+
+    total_weight -= station_weight
+
+    name = "DS {num}"
+    #
+    # Space stations
+    #
+    _pos = station
+    dist = 15000 * 15000
+    move = True
+    for x while move:
+        move = False
+        for _prev in _spawned_pos:
+            distv = _pos - _prev
+            _dist_test = distv.dot(distv)
+            if _dist_test < dist:
+                move = True
+                do print("Move Station")
+                _pos = next(spawn_points)
+                break
+            end_if
+        next _prev
+    next x
+    do _spawned_pos.append(_pos)
+
+    station_object = npc_spawn(*_pos, name, "tsn, station", station_type, "behav_station")
+    #
+    #
+    
+    
+    ds = to_id(station_object)
+    #
+    #
+    #
+    apos = station_object.engine_object.pos
+    #
+    # Make sure not too close
+    #
+
+    do set_face(ds, random_terran(civilian=True))
+
+    #wrap a minefield around the station
+    if lethal_value > 0:
+        startAngle = random.randrange(0,359)
+        angle = random.randrange(90,170)
+        endAngle = startAngle + angle
+
+        depth = 1#random.randrange(2,3)
+#        width = random.randrange(int(angle/6), int(angle/3))
+        width = int(5 * lethal_value)
+        widthArray = [int(angle / 5.0)]
+        inner = random.randrange(1200,1500)
+        cluster_spawn_points = scatter_ring(width, depth, apos.x,apos.y,apos.z, inner, inner, startAngle, endAngle)
+#        cluster_spawn_points = scatter_ring_density(widthArray, apos.x,apos.y,apos.z, inner, 0, startAngle, endAngle)
+        # Random type, but same for cluster
+        # a_type = f"danger_{1}{'a'}"
+        for v2 in cluster_spawn_points:
+            #keep value between -500 and 500??
+    #                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
+            do terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
+        next v2
     end_if
+    num += 1
 next station 
 
 #------------------------------------------------------------------------------------------------------------
@@ -137,16 +191,29 @@ enemy_prefix = "KLMNQ"
 
 
 #------------------------------------------------------------------------------------------------------------
-enemy_name_number = 0
+box_count = int(enemy_count/2)
+#spawn_north = scatter_line(int(enemy_count), 0,0, 9000, 20000,0, 6000, True)
+#spawn_south = scatter_line(int(enemy_count), 0,0,-9000, 20000,0,-6000, True)
 
-spawn_north = scatter_line(int(enemy_count), 0,0,9000, 20000,0,6000, True)
-spawn_south = scatter_line(int(enemy_count), 0,0,-9000, 20000,0,-6000, True)
+spawn_north = scatter_box(box_count, 0,0, 35000, 100000, 2000, 15000, centered=True)
+spawn_south = scatter_box(box_count, 0,0, -35000, 100000, 2000, 15000, centered=True)
+spawn_east = scatter_box(box_count, 35000,0, 0, 15000, 2000, 100000, centered=True)
+spawn_west = scatter_box(box_count, -35000,0, 0, 15000, 2000, 100000, centered=True)
+
 spawn_points = []
 do spawn_points.extend(spawn_north)
 do spawn_points.extend(spawn_south)
-#spawn_points = scatter_sphere(int(enemy_count), 0,0,0, 6000, 6000+250*enemy_count, ring=True)
+do spawn_points.extend(spawn_east)
+do spawn_points.extend(spawn_west)
+do random.shuffle(spawn_points)
+
 
 #------------------------------------------------------------------------------------------------------------
+call_signs = []
+enemy_name_number = 0
+do call_signs.extend(range(1,100))
+do random.shuffle(call_signs)
+
 for v in spawn_points:
     r_type = random.choice(enemyTypeNameList)
     race = r_type.split("_")
@@ -155,7 +222,7 @@ for v in spawn_points:
         race = "ximni"
     end_if
     roles = "{race}, raider"
-    r_name = f"{random.choice(enemy_prefix)}_{enemy_name_number}"
+    r_name = f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
     spawn_data = npc_spawn(v.x, v.y, v.z, r_name, roles, r_type, "behav_npcship")
     raider = spawn_data.py_object
     #
@@ -166,15 +233,21 @@ for v in spawn_points:
     
     
     enemy_name_number = enemy_name_number + 1
+    enemy_count %= 100
 next v
 
 
 #------------------------------------------------------------------------------------------------------------
+#
 ## make a few random clusters of nebula
-spawn_points = scatter_sphere(random.randint(2,7), 0,0,0, 5000, 20000, ring=True)
+#
+t_min = terrain_value * 6
+t_max = t_min * 2
+spawn_points = scatter.box(random.randint(t_min,t_max), 0,0,0, 100000, 1000, 100000, centered=True)
 for v in spawn_points:
-    cluster_spawn_points = scatter_sphere(random.randint(3,6), v.x, 0,v.z, 100, 2000, ring=True)
+    cluster_spawn_points = scatter_sphere(random.randint(terrain_value,terrain_value*2), v.x, 0,v.z, 1000, 10000, ring=False)
     for v2 in cluster_spawn_points:
+        v2.y = v2.y % 500.0
         do terrain_spawn(v2.x, v2.y, v2.z,None, None, "nebula", "behav_nebula")
     next v2
 next v
@@ -183,78 +256,90 @@ next v
 
 #------------------------------------------------------------------------------------------------------------
 # make a few random clusters of Asteroids
-spawn_points = scatter_sphere(random.randint(4,7), 0,0,0, 2000, 9000, ring=True)
+
+t_min = terrain_value * 7
+t_max = t_min * 3
+spawn_points = scatter.box(random.randint(t_min,t_max), 0,0,0, 100000, 1000, 100000, centered=True)
+
 asteroid_types = names_plain_asteroid_keys()
 for v in spawn_points:
-    cluster_spawn_points = scatter_line(random.randint(10,25),  v.x, 0,v.z-800,   v.x, 0,v.z+800,   random=True)
-#    scatter_sphere(random.randint(8,15), v.x, 0,v.z, 100, 1000, ring=False)
+    
+    amount = random.randint(t_min+10,t_max+10)
+    # the more you have give a bit more space
+    ax = random.randint(-20,20)
+    ay = random.randint(-150,150)
+    az = random.randint(-20,20)
+    #cluster_spawn_points = scatter_box(amount, v.x, 0,v.z, amount*50, amount*20,amount*200, centered=True, ax, ay, az )
+    cluster_spawn_points = scatter_box(amount,  v.x, 0,v.z, amount*50, amount*5,amount*200, True, 0, ay, 0 )
+
     for v2 in cluster_spawn_points:
-        #keep value between -500 and 500??
-        #v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
         a_type = random.choice(asteroid_types)
-        #a_type = "asteroid_crystal_blue"
-        do terrain_spawn(v2.x, v2.y, v2.z,None, None, a_type, "behav_asteroid")
+
+        asteroid = terrain_spawn(v2.x, v2.y, v2.z,None, None, a_type, "behav_asteroid")
+        asteroid.engine_object.steer_yaw = random.uniform(0.0001, 0.003)
+		asteroid.engine_object.steer_pitch = -random.uniform(0.0001, 0.003)
+		asteroid.engine_object.steer_roll = random.uniform(0.0001, 0.003)
     next v2
 next v
 
 #------------------------------------------------------------------------------------------------------------
 # I want candy
 
-do print(f"Number of Anomalies: {num_anomaly}")
+do print(f"Number of Upgrades: {num_upgrade}")
 
-spawn_points = scatter.box(num_anomaly, 0,0,0, 50000, 1000, 50000, centered=True)
+spawn_points = scatter.box(num_upgrade, 0,0,0, 75000, 1000, 75000, centered=True)
 for v in spawn_points:
-    anom = random.randint(1,9)
-    if anom == 1:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, carapaction_coil", "alien_2a", "behav_pickup")
+    upg = random.randint(1,9)
+    if upg == 1:
+        do pickup_spawn(v.x, v.y, v.z, "carapaction_coil")
         do print(f"Carapaction Coil spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 2:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, infusion_pcoils", "danger_4a", "behav_pickup")
+    if upg == 2:
+        do pickup_spawn(v.x, v.y, v.z,  "infusion_pcoils")
         do print(f"Infusion P-Coil spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 3:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, tauron_focuser", "alien_4a", "behav_pickup")
+    if upg == 3:
+        do pickup_spawn(v.x, v.y, v.z, "tauron_focuser")
         do print(f"Tauron Focuser spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 4:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, secret_codecase", "container_1a", "behav_pickup")
+    if upg == 4:
+        do pickup_spawn(v.x, v.y, v.z, "secret_codecase")
         do print(f"Secret Codecase spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 5:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, hidens_powercell", "container_2a", "behav_pickup")
+    if upg == 5:
+        do pickup_spawn(v.x, v.y, v.z, "hidens_powercell")
         do print(f"HiDens Powercell spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 6:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, vigoranium_nodule", "container_4a", "behav_pickup")
+    if upg == 6:
+        do pickup_spawn(v.x, v.y, v.z, "vigoranium_nodule")
         do print(f"Vigoranium Nodule spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 7:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, cetrocite_crystal", "container_small_6a", "behav_pickup")
+    if upg == 7:
+        do pickup_spawn(v.x, v.y, v.z, "cetrocite_crystal")
         do print(f"Cetrocite Crystal spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 8:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, lateral_array", "danger_1a", "behav_pickup")
+    if upg == 8:
+        do pickup_spawn(v.x, v.y, v.z, "lateral_array")
         do print(f"Lateral Array spawned {v.x},{v.y},{v.z}")
     end_if
-    if anom == 9:
-        do terrain_spawn(v.x, v.y, v.z, None, "anomaly, haplix_overcharger", "alien_5a", "behav_pickup")
+    if upg == 9:
+        do pickup_spawn(v.x, v.y, v.z, "haplix_overcharger")
         do print(f"Haplix Overcharger spawned {v.x},{v.y},{v.z}")
     end_if
-    #anom+=1    
+    #upg+=1    
 next v
 
-# For testing anomalies, load some candy up front
+# For testing upgrades
 
-do terrain_spawn(125, 0, 250, None, "anomaly, carapaction_coil", "alien_2a", "behav_pickup")
-do terrain_spawn(200, 0, 250, None, "anomaly, infusion_pcoils", "danger_4a", "behav_pickup")
-do terrain_spawn(275, 0, 250, None, "anomaly, tauron_focuser", "alien_4a", "behav_pickup")
-do terrain_spawn(125, 0, 325, None, "anomaly, secret_codecase", "container_1a", "behav_pickup")
-do terrain_spawn(200, 0, 325, None, "anomaly, hidens_powercell", "container_2a", "behav_pickup")
-do terrain_spawn(275, 0, 325, None, "anomaly, vigoranium_nodule", "container_4a", "behav_pickup")
-do terrain_spawn(125, 0, 400, None, "anomaly, cetrocite_crystal", "container_small_6a", "behav_pickup")
-do terrain_spawn(200, 0, 400, None, "anomaly, lateral_array", "danger_1a", "behav_pickup")
-do terrain_spawn(275, 0, 400, None, "anomaly, haplix_overcharger", "alien_5a", "behav_pickup")
+do pickup_spawn(125, 0, 250, "carapaction_coil")
+do pickup_spawn(200, 0, 250,  "infusion_pcoils")
+do pickup_spawn(275, 0, 250, "tauron_focuser")
+do pickup_spawn(125, 0, 325, "secret_codecase")
+do pickup_spawn(200, 0, 325, "hidens_powercell")
+do pickup_spawn(275, 0, 325, "vigoranium_nodule")
+do pickup_spawn(125, 0, 400, "cetrocite_crystal")
+do pickup_spawn(200, 0, 400, "lateral_array")
+do pickup_spawn(275, 0, 400, "haplix_overcharger")
 
 jump spawn_friendly_npc
 #------------------------------------------------------------------------------------------------------------

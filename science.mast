@@ -5,6 +5,7 @@ route science select handle_science
 jump station_science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
 jump friendly_science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 jump raider_science if has_role(SCIENCE_SELECTED_ID, "raider")
+jump upgrade_science if has_role(SCIENCE_SELECTED_ID, "upgrade")
 
 ->END
 
@@ -54,5 +55,35 @@ await scan:
         scan results "{bio_intel}"
     + "intl":
         scan results "{taunt_intel}"
+end_await
+->END
+
+
+===== upgrade_science ======
+
+if has_roles(SCIENCE_SELECTED_ID, "upgrade, carapaction_coil"):
+    upg_desc = "Carapaction Coil. 5 min 300% shield recharge boost."
+elif has_roles(SCIENCE_SELECTED_ID, "upgrade, infusion_pcoils"):
+    upg_desc = "Infusion P-Coils. 5 Minute 300% Impulse and Maneuver Speed Boost."
+elif has_roles(SCIENCE_SELECTED_ID, "upgrade, tauron_focuser"):
+    upg_desc = "Tauron Focuser. 5 Minute 100% Beam and Reload Speed Boost."
+elif has_roles(SCIENCE_SELECTED_ID, "upgrade, secret_codecase"):
+    upg_desc = "Secret Codecase. Force one enemy ship to auto-surrender"
+elif has_roles(SCIENCE_SELECTED_ID, "upgrade, hidens_powercell"):
+    upg_desc = "HiDens Powercell. Increase energy by 500-600."
+elif has_roles(SCIENCE_SELECTED_ID, "upgrade, vigoranium_nodule"):
+    upg_desc = "Vigoranium Nodule. Restore Damage Control Teams."
+elif has_roles(SCIENCE_SELECTED_ID, "upgrade, cetrocite_crystal"):
+    upg_desc = "Cetrocite Crystal. 5 Minute 100% Faster Heat Reduction."
+elif has_roles(SCIENCE_SELECTED_ID, "upgrade, lateral_array"):
+    upg_desc = "Lateral Array. 5 Minute Target Scan Triple Speed."
+elif has_roles(SCIENCE_SELECTED_ID, "upgrade, haplix_overcharger"):
+    upg_desc = "Haplix Overcharger. +300 to shields but may damage shield generators."
+end_if
+
+
+await scan:
+    + "scan":
+        scan results "{upg_desc}"
 end_await
 ->END

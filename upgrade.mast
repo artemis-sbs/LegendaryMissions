@@ -1,21 +1,14 @@
-==== replace: console_bottom_choices ====
+import upgrade.py
 
-# Determines where the "Upgrade" button appears, to avoid overlapping with default widgets.
-# If Comms or Engineering, puts button in the upper right corner, otherwise puts it centered at the top of the screen. 
+do gui_add_console_tab(SHARED, "helm", "upgrade", "upgrade_screen")
+do gui_add_console_tab(SHARED, "comms", "upgrade", "upgrade_screen")
+do gui_add_console_tab(SHARED, "engineering", "upgrade", "upgrade_screen")
+do gui_add_console_tab(SHARED, "science", "upgrade", "upgrade_screen")
+do gui_add_console_tab(SHARED, "weapons", "upgrade", "upgrade_screen")
+do gui_add_console_tab(SHARED, "upgrade", "upgrade", None)
+do gui_add_console_tab(SHARED, "upgrade", "__back_tab__", "console_selected")
 
-if console_select == "comms" or console_select == "engineering":
-    section style="area:80,0,100,35px;"
-    button "Upgrade":
-        jump upgrade_screen
-    end_button
-else:
-    section style="area:45,0,65,35px;"
-    button "Upgrade":
-        jump upgrade_screen
-    end_button
-end_if
 
-await gui
 
 ==== upgrade_screen ====
 
@@ -40,12 +33,8 @@ cl_timer = get_inventory_value(ship_id, "cl_timer", 0)
 la_timer = get_inventory_value(ship_id, "la_timer", 0)
 ho_timer = get_inventory_value(ship_id, "ho_timer", 0)
 
-# Puts the "Done" button in the upper right corner.
-
-section style="area:90,0,100,5;row-height:35px;"
-button "Done":
-    jump console_selected 
-end_button
+# Identify the console for tabs
+activate console upgrade
 
 # First column, shows the count of upgrades currently on the ship.
 
@@ -204,8 +193,7 @@ if vn_count > 0 and ctype == "engineering":
             schedule vn_countdown
             update shared tag "sh-vn-timer" "color:#ff0; text: Damage Control Teams already at full strength;"
         else: 
-            SPAWNED_ID = ship_id
-            push restore_damcons
+            do grid_restore_damcons(ship_id)
             vn_count -= 1
             do set_inventory_value(ship_id, "vigoranium_nodule", vn_count)
         end_if
@@ -282,24 +270,8 @@ row
                 for dmg in range(4):
                     dmgrand = random.randrange(1,100)
                     if dmgrand <= dmgcheck:
-                        system_damage = [0, 0, 0, 0]        # This code is borrowed from take_heat_damage label in internal_damage.mast
-                        hittable = to_list(grid_objects(ship_id) & role("__undamaged__") & role("shield"))
-                        if len(hittable) > 0:
-                            go_id = random.choice(hittable)
-                            blob = to_blob(go_id)           
-                            damage_color = themes[theme]["damage"]
-                            do blob.set("icon_color", damage_color, 0)
-                            do link(ship_id, "damage", go_id) 
-                            do add_role(go_id, "__damaged__")
-                            do remove_role(go_id, "__undamaged__")
-                            do system_damage[sbs.SHPSYS.SHIELDS]  += 1
-                            blob = to_blob(ship_id)             # Borrowed from apply_system_damage label in internal_damage.mast
-                            for x in range(sbs.SHPSYS.MAX):     
-                                cur =  blob.get('system_damage', x)
-                                cur += system_damage[x]
-                                do blob.set('system_damage',cur, x)
-                            next x
-                            push set_damage_coefficients {"DAMAGE_ORIGIN_ID": ship_id} # Note: does not check for should_explode
+                        was_damaged = grid_damage_system(ship_id, "shield")
+                        if was_damaged:
                             do print(f"Haplix Shield Damage dmgcheck = {dmgcheck} dmgrand = {dmgrand}")
                         else:
                             do print(f"Haplix All Shields Damaged")
@@ -517,7 +489,7 @@ for x in range(300):
     delay gui 1s
 next x
 stayfrosty /= 2.0
-do print(f"Reset Coolant Coefficient: {scanrate}")
+do print(f"Reset Coolant Coefficient: {stayfrosty}")
 do set_data_set_value(player_blob, "coolant_upgrade_coeff", stayfrosty)
 update shared tag "sh-cl-count" "text: {cl_count};"
 update shared tag "sh-cl-txt" "text: Cetrocite Crystal;"

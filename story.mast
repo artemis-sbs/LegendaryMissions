@@ -1,7 +1,7 @@
 ## 
 # Example shows reusable common client select
+import debug.mast #want debug left of upgrade
 import common_console_select.mast
-import common_docking.mast
 import science.mast
 import comms.mast
 import internal_damage.mast
@@ -12,16 +12,10 @@ import extra_gui.mast
 import game_results.mast
 import damage.mast
 import grid_comms.mast
-import anom_common.mast
+import pickup_common.mast
 import upgrade.mast
+import story.py
 
-#
-# This directs the script 
-# to the client and server GUI
-# when the client is started
-#
-reroute server start_server 
-reroute clients client_main
 
 
 #
@@ -29,8 +23,7 @@ reroute clients client_main
 #
 #logger
 
-
-shared start_text =~~"""
+shared start_text = ~~"""
 Legendary Missions:
 
 Missions rich in the history of Artemis re-imagined for Cosmos.
@@ -39,10 +32,13 @@ Missions rich in the history of Artemis re-imagined for Cosmos.
 Written using MAST and is a great reference for those looking to write their own missions.
 """~~
 
+
+
 #
 # Game data
 #
 shared game_started = False
+
 shared enemy_count=5
 shared player_count = 1
 shared player_list = ~~[
@@ -58,21 +54,33 @@ shared player_list = ~~[
 
 
 #
+# This directs the script 
+# to the client and server GUI
+# when the client is started
+#
+reroute server start_server 
+reroute clients client_main
+
+
+
+#
 # The Server GUI
 #   This label runs once, to initialize server data
 #
 ========== start_server ===============
 
 shared world_select = "siege"
-shared terrain_select = "few"
+shared terrain_select = "some"
 shared lethal_select = "none"
 shared friendly_select = "few"
 shared monster_select = "none"
-shared anomaly_select = "many"
+shared upgrade_select = "many"
 shared seed_value = 0
 
 watch_end_game_task = None
+shared skybox = skybox_get_random()
 
+do sbs.set_sky_box_all(skybox)
 
 #
 # The Server GUI
@@ -129,8 +137,8 @@ dropdown monster_select "text: Monsters;list: none, few, some, lots, many":
 end_dropdown
 row
 
-"""justify:right;text:Anomalies"""
-dropdown anomaly_select_select "text: Anomalies;list:none, few,some, lots, many":
+"""justify:right;text:Upgrades"""
+dropdown upgrade_select "text: Upgrades;list:none, few,some, lots, many":
 end_dropdown
 #row
 

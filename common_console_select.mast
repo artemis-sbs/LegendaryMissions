@@ -83,7 +83,7 @@ section style="area: 50,60px,75,90;row-height: 50px;"
 vradio client_select_ship "{ship_list}" style="x-tag:ship_list;"
 
 section style="area: 80,60px, 99,90;row-height: 50px;"
-vradio console_select "helm,weapons, comms,science,engineering"
+vradio console_select "helm,weapons, comms,science,engineering,mainscreen"
 blank
 row
 
@@ -137,18 +137,26 @@ if console_select is None or client_select_ship is None:
     jump select_console
 end_if
 
-has_ship= False
+_ship_id= None
 for player_ship in to_object_list(role("__PLAYER__")):
     if player_ship.name.lower() == client_select_ship:
-        has_ship = True
+        _ship_id = player_ship.id
         do sbs.assign_client_to_ship(client_id, player_ship.id)
         do set_inventory_value(client_id, "assigned_ship", player_ship.id)
     end_if
 next player_ship
 
-if not has_ship:
-    jump select_console
-end_if
+jump select_console if _ship_id is None
+#
+# This should get a skybox with client overriding, shp, overriding shared
+#
+sky_box = get_inventory_value(SHARED, "skybox", "sky1")
+sky_box = get_inventory_value(_ship_id, "skybox", sky_box)
+sky_box = get_inventory_value(client_id, "skybox", sky_box)
+do sbs.set_sky_box(client_id, sky_box)
+
+
+
 ====== show_console_selected ====
 #
 # Make it so the console can be found if needed
@@ -157,7 +165,9 @@ do set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
 #------------------------------------------------------------------------------------------------------------
 do sbs.set_beam_damages(client_id, 7.0, enemy_count)
 #------------------------------------------------------------------------------------------------------------
+do gui_add_console_tab(_ship_id, console_select, console_select, None)
 console console_select
+
 
 #
 #
