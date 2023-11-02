@@ -63,6 +63,9 @@ def grid_damcons_detailed_status(id_or_obj, short_status=None, short_color=None,
 
     if hp < 6:
         hp = f"{hp} HP visit sickbay"
+    else:
+        hp = f"{hp} HP"
+        
     health_status = f"{hp}^{rested}^{food}^{fit}"
     work_item_status = f"{work_count} assign work"
 

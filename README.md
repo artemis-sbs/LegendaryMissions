@@ -23,8 +23,9 @@ ADDED: Spread out station and terrain to fill space better
 
 
 INPROG: Currently a bug/feature: can fire while docked.
+    Just make sure the weapons lock is off
 
-
+Proximity autoscan - is this coded? (Is the distance hard coded?)
 
 
 
@@ -46,6 +47,7 @@ should be more common with certain races)
 Science:
 Upgrades - Add science scanning, and change icon to "unknown/generic"
 when unscanned.
+
 Proximity autoscan - is this coded? (Is the distance hard coded?)
 
 

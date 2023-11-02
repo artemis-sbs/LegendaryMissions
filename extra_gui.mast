@@ -79,7 +79,8 @@ end_await
 #
 do assign_client_to_ship(client_id,ship)
 if message is not None:
-    receive ship comms_selected "{message}"
+    do comms_message(message, comms_selected, ship, title_color="cyan")
+    #receive ship comms_selected "{message}"
 end_if
 jump show_console_selected
 

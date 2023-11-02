@@ -25,7 +25,6 @@ import story.py
 #logger
 
 shared start_text = ~~"""
-shared start_text = ~~"""
 Legendary Missions:
 
 Missions rich in the history of Artemis re-imagined for Cosmos.

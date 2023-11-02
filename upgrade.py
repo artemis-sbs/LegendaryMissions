@@ -19,8 +19,10 @@ def pickup_spawn(x, y, z, roles, blink=None, yaw=None, name=None, art_id=None,):
         blink=random.randint(1,2)
     if yaw is None:
         yaw=random.uniform(0.03,0.08)
-    if not roles.startswith("anom"):
+    if not roles.startswith("upgrade"):
         roles = "upgrade,"+roles
+    # Surpress
+    roles = "#,"+roles
     if art_id is None:
         art_id = "unknown"
         for anom in anom_data:

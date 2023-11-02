@@ -302,11 +302,15 @@ next coeff
 #
 # This will send comms messages when 
 #
+delay sim 5s
 
+any_damage = grid_objects(SPAWNED_ID) & role("__damaged__")
+jump loop_grid_send_comms_messages if len(any_damage)
 
 
 coeffs = ["fed_speed_coeff", "ripped_speed_coeff", "rested_speed_coeff"]
 whos = ["sickbay", "biologist", "counselor"]
+who_color = ["blue", "green", "purple"]
 msgs = ["It is a good idea to make sure the crew is well fed.", "A physically fit crew is more efficient", "some of the crew seem sleepy"]
 
 i = -1
@@ -332,7 +336,8 @@ for coeff in coeffs:
     #
     who = whos[i]
     msg = msgs[i]
-    do comms_receive_internal(msg, SPAWNED_ID, who)
+    color = who_color[i]
+    do comms_receive_internal(msg, SPAWNED_ID, who, title_color=color)
     do set_timer(SPAWNED_ID, timer, minutes=random.randrange(4,10))
     
 next coeff
