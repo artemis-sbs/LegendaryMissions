@@ -51,6 +51,7 @@ jump  friendly_comms
 station_id = COMMS_SELECTED_ID
 ship_id = COMMS_ORIGIN_ID
 station_obj = to_object(COMMS_SELECTED_ID)
+->END if station_obj is None
 
 comms_id = to_object(COMMS_ORIGIN_ID).name
 
@@ -171,7 +172,7 @@ end_await
 
 
 ================ npc_comms ==================
-comms_id = to_object(COMMS_ORIGIN_ID).comms_id
+name = to_object(COMMS_ORIGIN_ID).name
 station_id = COMMS_SELECTED_ID
 ship_id = COMMS_ORIGIN_ID
 enrage_value=get_inventory_value(COMMS_SELECTED_ID, "enrage_target")
@@ -196,7 +197,7 @@ hide_surr = hide_surr or (sc_timer > 0)
 
 await comms:
     + "Hail":
-        do comms_receive(f"Go away, {comms_id}! You talk too much!", title_color=raider_color)
+        do comms_receive(f"Go away, {name}! You talk too much!", title_color=raider_color)
     + "Taunt" if enrage_value is None and not hide_taunt:
         # Navigate to sub Menu
         jump comms_taunts
@@ -212,7 +213,7 @@ await comms:
         next s
 # Secret Codecase, force surrender if active, otherwise check shield ratio
 	if sc_timer > 0:
-	    do comms_receive(f"""OK we give up, {comms_id}.""", title_color=surrender_color)
+	    do comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
             do add_role(COMMS_SELECTED_ID, "surrendered")
             do game_stats["ships_surrender"] += 1
             do remove_role(COMMS_SELECTED_ID, "raider")
@@ -221,7 +222,7 @@ await comms:
 		    do set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
         elif s_ratio < 0.09:
             if random.randint(1,6)<3:
-                do comms_receive(f"""OK we give up, {comms_id}.""", title_color=surrender_color)
+                do comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
                 do add_role(COMMS_SELECTED_ID, "surrendered")
                 do game_stats["ships_surrender"] += 1
                 do remove_role(COMMS_SELECTED_ID, "raider")
@@ -233,15 +234,15 @@ await comms:
             end_if
         elif s_ratio < 0.5:
             if random.randint(0,6)<=2:
-                do comms_receive(f"""OK we give up, {comms_id}.""", title_color=surrender_color)
+                do comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
                 do add_role(COMMS_SELECTED_ID, "surrendered")
                 do remove_role(COMMS_SELECTED_ID, "raider")
                 do set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
             else:
-                do comms_receive(f"""We can still defeat you, {comms_id}! Prepare to die!""", title_color=raider_color)
+                do comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title_color=raider_color)
             end_if
         else:
-            do comms_receive(f"""Go climb a tree, {comms_id}!""", title_color=raider_color)
+            do comms_receive(f"""Go climb a tree, {name}!""", title_color=raider_color)
         end_if
         
 end_await

@@ -9,6 +9,8 @@ DONE: No info on how long to produce homing/nuke/mine/etc.
 DONE: Needs bigger/more obvious selection box on grid map. (now alpha blended yellow square)
 DONE: Munitions production takes too long
 DONE: Currently a bug/feature: can still dock if enemies are nearby.
+DONE: "Crew is hungry" messages were distracting during combat, 
+    INPROG: turn off forRed Alert?
 
 ADDED: Repair Damaged rooms when Docked 
 ADDED: Main screen console option
@@ -23,7 +25,8 @@ ADDED: Spread out station and terrain to fill space better
 
 
 INPROG: Currently a bug/feature: can fire while docked.
-    Just make sure the weapons lock is off
+  Still true, but without lock so waste torps
+
 
 Proximity autoscan - is this coded? (Is the distance hard coded?)
 
@@ -54,8 +57,6 @@ Proximity autoscan - is this coded? (Is the distance hard coded?)
 
 Engineering:
 
-"Crew is hungry" messages were distracting during combat, turn off for
-Red Alert?
 
 Comms:
 Needs a "hostile" or "enemy ship" grouping.

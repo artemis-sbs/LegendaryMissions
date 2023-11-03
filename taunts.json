@@ -32,41 +32,41 @@
             "button": "Taunt reputation",
             "transmit": "Hey wide-mouth! It's easy to puff up your reputation when you always run from a real fight!",
             "failure": "You are not worth the effort, {name}. Go annoy someone else.",
-            "success": "We will be happy to add your pathetic ship to our kill-count, {name}!",
-            "science": "The captain was recently overheard bragging about his spotless repuation in a space-bar."
+            "success": "Your pathetic ship will be obliterated, {name}!",
+            "science": "The captain was recently overheard bragging about his spotless reputation in a space-bar."
         },
         {
             "button": "Taunt bravery",
             "transmit": "Hey rodent-face! If you skitter away like a frightened hatchling, do you have to give that shiny medal back?",
-            "failure": "I did not get this medal by listening to fools, {name}. Cease all communication.",
+            "failure": "Fools will not be heard, {name}. Cease all communication.",
             "success": "Insolence will not be tolerated, {name}. Prepare for death!",
             "science": "The captain was recently awarded a commendation for bravery by the High Priest Council."
 	},
         {
             "button": "Taunt hygiene",
             "transmit": "Hey stink-bug! I can smell your rancid body odor from the other side of this sector!",
-            "failure": "Your bad-words bounce off our chitin, {name}. Do not bother us again.",
-            "success": "We will bathe in your blood, insolent primates! Prepare to die!",
+            "failure": "Your bad-words bounce off Kralien chitin, {name}. Do not bother Kraliens again.",
+            "success": "Kraliens will bathe in your blood, insolent primates! Prepare to die!",
             "science": "The captain has not molted recently and may be sensitive about his personal hygiene."
         },
         {
             "button": "Taunt intelligence",
             "transmit": "Hey bug-brain! You're so stupid, one of these asteroids could out-think you!",
-            "failure": "I am smart enough to ignore this obvious taunt, {name}. Go annoy someone else.",
-            "success": "After I crush your pathetic ship, we shall see whose brain most resembles a rock, {name}!",
+            "failure": "This obvious taunt weill be ignored, {name}. Go annoy someone else.",
+            "success": "Your pathetic ship will be crushed {name}. Your brain most resembles a rock!",
             "science": "The captain was criticized by his classmates at the Academy for sub-standard grades."
         },
         {
             "button": "Taunt captain's height",
             "transmit": "Hey pipsqueek! Are you ready to fight with the big people, or should you run back home to your hive-mommy?",
-            "failure": "My hive-mother taught me to ignore useless fools, {name}. Cease communication.",
-            "success": "You will not consider me so small when I blast your ship into tiny pieces of scrap metal!",
+            "failure": "My hive-mother taught said to ignore useless fools, {name}. Cease communication.",
+            "success": "You will learn respect when your ship is blasted into tiny pieces of scrap metal!",
             "science": "The captain was the smallest hatchling in his egg cluth, and is sensitive about his stature."
         },
         {
             "button": "Taunt captain's age",
             "transmit": "Are the High Priests giving such big toys to hatchlings now? Bring it over hear, and it might get broken!",
-            "failure": "I am old enough to ignore tricks like this, {name}. Go play games with someone else.",
+            "failure": "Wise Kraliens ignore tricks like this, {name}. Go play games with someone else.",
             "success": "Worthless Terrans! The wages of your insolence will be paid only with agony and death!",
             "science": "The captain is young and inexperienced. They may be over-eager to prove themselves in battle."
         }        
