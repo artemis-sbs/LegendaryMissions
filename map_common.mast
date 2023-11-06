@@ -31,7 +31,8 @@ match friendly_select:
         max_hull_points=3
     case "none":
         # no civilian or friendly npcs
-        ->RETURN
+        # But added eyes
+        jump add_eye_to_players
 end_match
 
 total_hull_points = 0

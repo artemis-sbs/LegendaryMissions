@@ -245,10 +245,13 @@ t_min = terrain_value * 6
 t_max = t_min * 2
 spawn_points = scatter.box(random.randint(t_min,t_max), 0,0,0, 100000, 1000, 100000, centered=True)
 for v in spawn_points:
-    cluster_spawn_points = scatter_sphere(random.randint(terrain_value,terrain_value*2), v.x, 0,v.z, 1000, 10000, ring=False)
+    cluster_spawn_points = scatter_sphere(random.randint(terrain_value*2,terrain_value*4), v.x, 0,v.z, 1000, 10000, ring=False)
     for v2 in cluster_spawn_points:
         v2.y = v2.y % 500.0
-        do terrain_spawn(v2.x, v2.y, v2.z,None, None, "nebula", "behav_nebula")
+        nebula = terrain_spawn(v2.x, v2.y, v2.z,None, None, "nebula", "behav_nebula")
+        do nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
+        do nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
+        do nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
     next v2
 next v
 
@@ -279,6 +282,20 @@ for v in spawn_points:
         asteroid.engine_object.steer_yaw = random.uniform(0.0001, 0.003)
 		asteroid.engine_object.steer_pitch = -random.uniform(0.0001, 0.003)
 		asteroid.engine_object.steer_roll = random.uniform(0.0001, 0.003)
+
+        sx = random.uniform(0.8, 3.5)
+        sy = random.uniform(0.8, 3.5)
+        sz = random.uniform(0.8, 3.5)
+        sm = max(sx, sy)
+        sm = max(sm, sz)
+        #er = asteroid.blob.get("exclusionradius",0)
+        #er *= sm
+
+        do asteroid.blob.set("local_scale_x_coeff", sx)
+        do asteroid.blob.set("local_scale_y_coeff", sy)
+        do asteroid.blob.set("local_scale_z_coeff", sz)
+        #do asteroid.blob.set("exclusionradius", er)
+        
     next v2
 next v
 

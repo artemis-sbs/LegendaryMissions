@@ -193,7 +193,7 @@ hide_surr = surrender_count >= 3 or hide_surr
 #
 # Secret code case
 #
-hide_surr = hide_surr or (sc_timer > 0)
+hide_surr = hide_surr or (sc_timer <= 0)
 
 await comms:
     + "Hail":
