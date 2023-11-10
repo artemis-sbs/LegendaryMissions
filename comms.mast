@@ -193,15 +193,22 @@ hide_surr = surrender_count >= 3 or hide_surr
 #
 # Secret code case
 #
-hide_surr = hide_surr or (sc_timer <= 0)
+show_surr = not hide_surr or (sc_timer > 0)
 
 await comms:
     + "Hail":
         do comms_receive(f"Go away, {name}! You talk too much!", title_color=raider_color)
-    + "Taunt" if enrage_value is None and not hide_taunt:
-        # Navigate to sub Menu
-        jump comms_taunts
-    + "Surrender now" if not hide_surr:
+    + "Taunt":    # if enrage_value is None and not hide_taunt:
+        if enrage_value:
+            do comms_receive(f"""I'm too angry to deal with you right now, {name}.""", title_color=raider_color)
+        elif hide_taunt==True:
+            do comms_receive(f"""Your taunts are worthless to us, {name}.""", title_color=raider_color)
+        else:
+            # Navigate to sub Menu
+            jump comms_taunts
+    
+        end_if
+    + "Surrender now" if show_surr:
         blob = to_blob(COMMS_SELECTED_ID)
         do set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
         shield_count = blob.get("shield_count", 0)
