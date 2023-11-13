@@ -34,54 +34,54 @@ la_timer = get_inventory_value(ship_id, "la_timer", 0)
 ho_timer = get_inventory_value(ship_id, "ho_timer", 0)
 
 # Identify the console for tabs
-activate console upgrade
+do gui_activate_console("upgrade")
 
 # First column, shows the count of upgrades currently on the ship.
 
-section style="area:5,15,10,100;row-height:35px;"
+do gui_section( style="area:5,15,10,100;row-height:35px;")
 
-blank
-row
-blank
-row
+do gui_blank()
+do gui_row()
+do gui_blank()
+do gui_row()
 if cc_timer > 0:
     """color:#0f0; text: {cc_count};""" style="tag:sh-cc-count;"
 else:
     """text: {cc_count};""" style="tag:sh-cc-count;"
 end_if
-row
+do gui_row()
 if ip_timer > 0:
     """color:#0f0; text: {ip_count};""" style="tag:sh-ip-count;"
 else:
     """text: {ip_count};""" style="tag:sh-ip-count;"
 end_if
-row
+do gui_row()
 if tf_timer > 0:
     """color:#0f0; text: {tf_count};""" style="tag:sh-tf-count;"
 else:
     """text: {tf_count};""" style="tag:sh-tf-count;"
 end_if
-row
+do gui_row()
 if sc_timer > 0:
     """color:#0f0; text: {sc_count};""" style="tag:sh-sc-count;"
 else:
     """text: {sc_count};""" style="tag:sh-sc-count;"
 end_if
-row
+do gui_row()
     """text: {vn_count};""" style="tag:sh-vn-count;"
-row
+do gui_row()
 if cl_timer > 0:
     """color:#0f0; text: {cl_count};""" style="tag:sh-cl-count;"
 else:
     """text: {cl_count};""" style="tag:sh-cl-count;"
 end_if
-row
+do gui_row()
 if la_timer > 0:
     """color:#0f0; text: {la_count};""" style="tag:sh-la-count;"
 else:
     """text: {la_count};""" style="tag:sh-la-count;"
 end_if
-row
+do gui_row()
     """text: {ho_count};""" style="tag:sh-ho-count;"
 
 
@@ -91,12 +91,12 @@ row
 # For Vigoranium Nodule and Haplix Overcharger, if the upgrade can't be used (damcons already full, or shields 
 # already overcharged) the description/timer text shows a yellow message for 5 seconds
 
-section style="area:10,15,35,100;row-height:35px;"
+do gui_section( style="area:10,15,35,100;row-height:35px;")
 
 """justify:center;text:SOOPER SEKRET UPGRADE SCREEN!"""
-row
-blank
-row
+do gui_row()
+do gui_blank()
+do gui_row()
 if cc_count > 0 and (ctype == "weapons" or ctype == "engineering") and not cc_timer > 0:
     button "Carapaction Coil":
         cc_count -= 1
@@ -116,7 +116,7 @@ else:
         """text: Carapaction Coil;""" style="tag:sh-cc-txt;"
     end_if
 end_if
-row
+do gui_row()
 if ip_count > 0 and ctype == "helm" and not ip_timer > 0:
     button "Infusion P-Coils":
         ip_count -= 1
@@ -136,7 +136,7 @@ else:
         """text: Infusion P-Coils;""" style="tag:sh-ip-txt;"
     end_if
 end_if
-row
+do gui_row()
 if tf_count > 0 and ctype == "weapons" and not tf_timer > 0:
     button "Tauron Focuser":
         tf_count -= 1
@@ -157,7 +157,7 @@ else:
         """text: Tauron Focuser;""" style="tag:sh-tf-txt;"
     end_if
 end_if
-row
+do gui_row()
 if sc_count > 0 and ctype == "comms" and not sc_timer > 0:
     button "Secret Codecase":
         sc_count -= 1
@@ -177,7 +177,7 @@ else:
         """text: Secret Codecase;""" style="tag:sh-sc-txt;"
     end_if    
 end_if
-row
+do gui_row()
 if vn_count > 0 and ctype == "engineering":
     button "Vigoranium Nodule":
         all_dcs = grid_objects(ship_id) & role("damcons") # Get DamCon grid objects, count up HP
@@ -202,7 +202,7 @@ if vn_count > 0 and ctype == "engineering":
 else:
     """text: Vigoranium Nodule;""" style="tag:sh-vn-txt;"
 end_if
-row
+do gui_row()
 if cl_count > 0 and ctype == "engineering" and not cl_timer > 0:
     button "Cetrocite Crystal":
         cl_count -= 1
@@ -222,7 +222,7 @@ else:
         """text: Cetrocite Crystal;""" style="tag:sh-cl-txt;"
     end_if
 end_if
-row
+do gui_row()
 if la_count > 0 and ctype == "science" and not la_timer > 0:
     button "Lateral Array":
         la_count -= 1
@@ -242,7 +242,7 @@ else:
         """text: Lateral Array;""" style="tag:sh-la-txt;"
     end_if
 end_if
-row
+do gui_row()
     if ho_count > 0 and (ctype == "engineering" or ctype == "weapons"):
         button "Haplix Overcharger":
             player_blob = to_blob(ship_id) # Get shield values from ship
@@ -292,54 +292,54 @@ row
 # For Vigoranium Nodule or Haplix Overcharger, will also display yellow warning if button is pressed 
 # but upgrade can't be used (DamCons full, or shields already overcharged)
 
-section style="area:38,15,100,100;row-height:35px;"
+do gui_section( style="area:38,15,100,100;row-height:35px;")
 
-blank
-row
-blank
-row
+do gui_blank()
+do gui_row()
+do gui_blank()
+do gui_row()
 if cc_timer > 0:
     """color:#0f0; text: {cc_timer} seconds remaining.""" style="tag:sh-cc-timer;"
 else:
     """text: 5 Minute 300% Shield Recharge Boost""" style="tag:sh-cc-timer;"
 end_if
-row
+do gui_row()
 if ip_timer > 0:
     """color:#0f0; text: {ip_timer} seconds remaining.""" style="tag:sh-ip-timer;"
 else:
     """text: 5 Minute 300% Impulse and Maneuver Speed Boost""" style="tag:sh-ip-timer;"
 end_if
-row
+do gui_row()
 if tf_timer > 0:
     """color:#0f0; text: {tf_timer} seconds remaining.""" style="tag:sh-tf-timer;"
 else:
     """text: 5 Minute 100% Beam and Reload Speed Boost""" style="tag:sh-tf-timer;"
 end_if
-row
+do gui_row()
 if sc_timer > 0:
     """color:#0f0; text: {sc_timer} seconds remaining.""" style="tag:sh-sc-timer;"
 else:
     """text: Force one enemy ship to auto-surrender""" style="tag:sh-sc-timer;"
 end_if
-row
+do gui_row()
 if vn_timer > 0:
     """color:#ff0; text: Damage Control Teams already at full strength""" style="tag:sh-vn-timer;"
 else:
     """text: Restore Damage Control Teams.""" style="tag:sh-vn-timer;"
 end_if
-row
+do gui_row()
 if cl_timer > 0:
     """color:#0f0; text: {cl_timer} seconds remaining.""" style="tag:sh-cl-timer;"
 else:
     """text: 5 Minute 100% Faster Heat Reduction""" style="tag:sh-cl-timer;"
 end_if
-row
+do gui_row()
 if la_timer > 0:
     """color:#0f0; text: {la_timer} seconds remaining.""" style="tag:sh-la-timer;"
 else:
     """text: 5 Minute Target Scan Triple Speed""" style="tag:sh-la-timer;"
 end_if
-row
+do gui_row()
 if ho_timer > 0:
     """color:#ff0; text: Shields already overcharged""" style="tag:sh-ho-timer;"
 else:

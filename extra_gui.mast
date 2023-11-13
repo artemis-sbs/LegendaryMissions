@@ -29,16 +29,16 @@ do assign_client_to_ship(client_id,comms_selected)
 #
 # Make a limit weapons console
 #
-section style="area: 25, 4, 100, 80;"
-activate console weapons
-layout widget "2dview"
+do gui_section(style="area: 25, 4, 100, 80;")
+do gui_activate_console("weapons")
+do gui_layout_widget("2dview")
 #
 # Draw a face and interaction text
 #
-section style="area:0,4,25,80;"
+do gui_section(style="area:0,4,25,80;")
 
-face station_face
-row
+do gui_face(station_face)
+do gui_row()
 """
 text: Hello {player_name} tell us what to do
 """

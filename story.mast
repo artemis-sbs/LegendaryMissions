@@ -106,7 +106,7 @@ if watch_end_game_task is not None:
     watch_end_game_task = None
 end_if
 
-section style="area: 5, 10, 50, 90;"
+do gui_section( style="area: 5, 10, 50, 90;")
 """""{start_text}"""""
 
 # For using a seed value when randomly generating terrain, not currently implemented
@@ -115,49 +115,49 @@ section style="area: 5, 10, 50, 90;"
 #input seed_value """desc: Integer"""
 
 
-section style="area: 50, 10, 95,90;row-height:65px;padding:0px,10px"
+do gui_section(  style="area: 50, 10, 95,90;row-height:65px;padding:0px,10px")
 """ justify:right;text:Player ships """
 intslider player_count "low: 1.0;high:8.0"
-row
+do gui_row()
 """ justify:right;text:Difficulty """
 intslider enemy_count "low: 1.0;high:11.0"
-row
+do gui_row()
 
 """ justify:right;text:Mission Type"""
 dropdown world_select "text: Mission type;list:siege,single front,double front,deep strike,peacetime,border war,infestation":
 end_dropdown
-row
+do gui_row()
 
-blank
-row
+do gui_blank()
+do gui_row()
 
 """justify:right;text:Terrain"""
 dropdown terrain_select "text: Terrain;list: none, few, some, lots, many":
 end_dropdown
-row
+do gui_row()
 
 """justify:right;text:Lethal Terrain"""
 dropdown lethal_select "text: Lethal Terrain;list: none, few, some, lots, many":
 end_dropdown
-row
+do gui_row()
 
 """justify:right;text:Friendly Ships"""
 dropdown friendly_select "text: Friendly Ships;list: none, few, some, lots, many":
 end_dropdown
-row
+do gui_row()
 
 """justify:right;text:Monsters"""
 dropdown monster_select "text: Monsters;list: none, few, some, lots, many":
 end_dropdown
-row
+do gui_row()
 
 """justify:right;text:Upgrades"""
 dropdown upgrade_select "text: Upgrades;list:none, few,some, lots, many":
 end_dropdown
-#row
+#do gui_row()
 
 #blank
-#row
+#do gui_row()
 
 await choice:
 + "Start Mission":
@@ -203,7 +203,7 @@ var watch_end_game_task schedule task_end_game
 
 ====  pause_screen ====
 
-section style="area: 5, 10, 50, 90;"
+do gui_section( style="area: 5, 10, 50, 90;")
 """""Simulation paused"""""
 
 

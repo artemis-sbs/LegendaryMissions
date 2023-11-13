@@ -19,20 +19,20 @@ end_if
 
 ===== debug_screen ======
 
-section style="area: 10,10,90,90;"
+do gui_section( style="area: 10,10,90,90;")
 
 """
 Under construction
 """
 
-section style="area:10,15,35,100;row-height:35px;"
-row
+do gui_section(style="area:10,15,35,100;row-height:35px;")
+do gui_row()
 button "Test anomalies":
     jump spawn_test_anom
 end_button
 
 
-activate console debug
+do gui_activate_console("debug")
 
 await gui
 
@@ -67,12 +67,12 @@ jump debug_screen
 
 ===== mast_debug_screen ======
 
-section style="area: 10,10,90,90;"
+do gui_section(style="area: 10,10,90,90;")
 
 """
 Under construction
 """
 
-activate console mast
+do gui_activate_console("mast")
 
 await gui

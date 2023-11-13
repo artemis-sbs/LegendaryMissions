@@ -48,18 +48,18 @@ client_select_ship =player_list[client_selected_index].name.lower()
 ship_name = client_select_ship
 
 if console_select == "helm" and not game_started:
-  section style="area: 1,60px, 40,50;row-height: 50px;"
-  row # style="row-height: 50px;"
+  do gui_section(style="area: 1,60px, 40,50;row-height: 50px;")
+  do gui_row() # style="row-height: 50px;"
   input ship_name "desc:Ship Name"
-  row style="row-height: 300px;"
+  do gui_row( style="row-height: 300px;")
   
   #
   # Specify only ships with defined engineering grid
   #
   gui control ship_type ship_picker_control("Your Ship", ship_type_def, ship_keys=valid_interiors)
-  row style="row-height: 50px;"
-  blank
-  row style="row-height: 50px;"
+  do gui_row( style="row-height: 50px;")
+  do gui_blank()
+  do gui_row(style="row-height: 50px;")
   button "Apply changes":
     if client_selected_index != -1 and client_selected_index<player_count:
         if len(ship_name)>0:
@@ -74,18 +74,14 @@ if console_select == "helm" and not game_started:
 end_if
 
 
-#section style="area: 10,50, 35,90;row-height: 50px;"
-# button "Debug Mast":
-#    jump debug_mast
-# end_button
 
-section style="area: 50,60px,75,90;row-height: 50px;"
+do gui_section( style="area: 50,60px,75,90;row-height: 50px;")
 vradio client_select_ship "{ship_list}" style="x-tag:ship_list;"
 
-section style="area: 80,60px, 99,90;row-height: 50px;"
+do gui_section( style="area: 80,60px, 99,90;row-height: 50px;")
 vradio console_select "helm,weapons, comms,science,engineering,mainscreen"
-blank
-row
+do gui_blank()
+do gui_row()
 
 if not game_started:
     checkbox console_ready "ready"
@@ -166,7 +162,7 @@ do set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
 do sbs.set_beam_damages(client_id, 7.0, enemy_count)
 #------------------------------------------------------------------------------------------------------------
 do gui_add_console_tab(_ship_id, console_select, console_select, None)
-console console_select
+do gui_console(console_select)
 
 
 #
@@ -190,7 +186,7 @@ for sch in mast.schedulers:
     next tsk
 next sch
 
-section style="area: 0,50px, 100,100;"
+do gui_section( style="area: 0,50px, 100,100;")
 """""
 Task count {task_count}
 """"""

@@ -48,67 +48,67 @@ end_if
 
 simulation pause
 
-section style="area: 10, 10, 99, 90;"
+do gui_section(style="area: 10, 10, 99, 90;")
 
 """color:white;justify: center; font: gui-6;text:Game results"""
-row
+do gui_row()
 """""color:cyan;justify:center;font:gui-5;text:{start_text}"""""
-row
-hole
-hole
-hole
-hole
+do gui_row()
+do gui_hole()
+do gui_hole()
+do gui_hole()
+do gui_hole()
 """color:yellow; text:TSN Destroyed"""
 """color:yellow;justify: right; text:{game_stats["tsn_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
+do gui_row()
+do gui_hole()
+do gui_hole()
+do gui_hole()
+do gui_hole()
 """color:yellow; text:arvonian ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["arvonian_ships_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
+do gui_row()
+do gui_hole()
+do gui_hole()
+do gui_hole()
+do gui_hole()
 """color:yellow; text:kralien ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["kralien_ships_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
+do gui_row()
+do gui_hole()
+do gui_hole()
+do gui_hole()
+do gui_hole()
 """color:yellow; text:skaraan ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["skaraan_ships_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
+do gui_row()
+do gui_hole()
+do gui_hole()
+do gui_hole()
+do gui_hole()
 """color:yellow; text:ximni ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["ximni_ships_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
+do gui_row()
+do gui_hole()
+do gui_hole()
+do gui_hole()
+do gui_hole()
 """color:yellow; text:torgoth ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["torgoth_ships_destroyed"]}"""
-row
-hole
-hole
-hole
-hole
+do gui_row()
+do gui_hole()
+do gui_hole()
+do gui_hole()
+do gui_hole()
 """color:yellow; text:ships surrendered"""
 """color:yellow;justify: right; text:{game_stats["ships_surrender"]}"""
-row
+do gui_row()
 
 end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)
-hole
-hole
-hole
-hole
+do gui_hole()
+do gui_hole()
+do gui_hole()
+do gui_hole()
 """color:yellow; right; text:Game Time"""
 """color:yellow;justify: right; text:{end_time} minutes"""
 
