@@ -27,9 +27,9 @@ Under construction
 
 do gui_section(style="area:10,15,35,100;row-height:35px;")
 do gui_row()
-button "Test anomalies":
+on message gui_button("Test anomalies"):
     jump spawn_test_anom
-end_button
+end_on
 
 
 do gui_activate_console("debug")

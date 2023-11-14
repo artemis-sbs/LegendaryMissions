@@ -60,7 +60,7 @@ if console_select == "helm" and not game_started:
   do gui_row( style="row-height: 50px;")
   do gui_blank()
   do gui_row(style="row-height: 50px;")
-  button "Apply changes":
+  on message gui_button("Apply changes"):
     if client_selected_index != -1 and client_selected_index<player_count:
         if len(ship_name)>0:
             player_list[client_selected_index].name = ship_name
@@ -70,7 +70,7 @@ if console_select == "helm" and not game_started:
         player_list[client_selected_index].ship = ship_type.value
     end_if
     jump select_console
-  end_button
+  end_on
 end_if
 
 
@@ -86,10 +86,10 @@ do gui_row()
 if not game_started:
     checkbox console_ready "ready"
 else:
-    button "ready":
+    on message gui_button("ready"):
         console_ready = True
         jump console_selected
-    end_button
+    end_on
 end_if
 
 on change player_count:
