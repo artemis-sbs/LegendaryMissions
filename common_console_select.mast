@@ -50,7 +50,7 @@ ship_name = client_select_ship
 if console_select == "helm" and not game_started:
   do gui_section(style="area: 1,60px, 40,50;row-height: 50px;")
   do gui_row() # style="row-height: 50px;"
-  input ship_name "desc:Ship Name"
+  do gui_input("desc:Ship Name", var="ship_name")
   do gui_row( style="row-height: 300px;")
   
   #
@@ -76,15 +76,14 @@ end_if
 
 
 do gui_section( style="area: 50,60px,75,90;row-height: 50px;")
-vradio client_select_ship "{ship_list}" style="x-tag:ship_list;"
+do gui_vradio("{ship_list}", style="x-tag:ship_list;", var="client_select_ship")
 
 do gui_section( style="area: 80,60px, 99,90;row-height: 50px;")
-vradio console_select "helm,weapons, comms,science,engineering,mainscreen"
-do gui_blank()
+do gui_vradio("helm,weapons, comms,science,engineering,mainscreen", var="console_select")
 do gui_row()
 
 if not game_started:
-    checkbox console_ready "ready"
+    do gui_checkbox("ready", var="console_ready")
 else:
     on message gui_button("ready"):
         console_ready = True

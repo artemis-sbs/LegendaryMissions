@@ -112,15 +112,15 @@ do gui_section( style="area: 5, 10, 50, 90;")
 # For using a seed value when randomly generating terrain, not currently implemented
 #row style="row-height:65px;"
 #"""justify:right;text:Seed (Optional)"""
-#input seed_value """desc: Integer"""
+#do gui_input("""desc: Integer""", var="seed_value")
 
 
 do gui_section(  style="area: 50, 10, 95,90;row-height:65px;padding:0px,10px")
 """ justify:right;text:Player ships """
-intslider player_count "low: 1.0;high:8.0"
+do gui_slider("low: 1.0;high:8.0", var="player_count")
 do gui_row()
 """ justify:right;text:Difficulty """
-intslider enemy_count "low: 1.0;high:11.0"
+do gui_slider("low: 1.0;high:11.0", var="enemy_count")
 do gui_row()
 
 """ justify:right;text:Mission Type"""
