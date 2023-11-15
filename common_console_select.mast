@@ -56,7 +56,7 @@ if console_select == "helm" and not game_started:
   #
   # Specify only ships with defined engineering grid
   #
-  gui control ship_type ship_picker_control("Your Ship", ship_type_def, ship_keys=valid_interiors)
+  do gui_content(ship_picker_control("Your Ship", ship_type_def, ship_keys=valid_interiors), var="ship_type")
   do gui_row( style="row-height: 50px;")
   do gui_blank()
   do gui_row(style="row-height: 50px;")
@@ -75,12 +75,12 @@ end_if
 
 
 
-do gui_section( style="area: 50,60px,75,90;row-height: 50px;")
-do gui_vradio("{ship_list}", style="x-tag:ship_list;", var="client_select_ship")
+do gui_section( style="area: 50,60px,75,90;")
+do gui_vradio(f"{ship_list}", style="row-height: 50px;", var="client_select_ship")
 
-do gui_section( style="area: 80,60px, 99,90;row-height: 50px;")
-do gui_vradio("helm,weapons, comms,science,engineering,mainscreen", var="console_select")
-do gui_row()
+do gui_section( style="area: 80,60px, 99,90;")
+do gui_vradio("helm,weapons, comms,science,engineering,mainscreen", style="row-height: 50px;", var="console_select")
+do gui_row(style="row-height: 50px;")
 
 if not game_started:
     do gui_checkbox("ready", var="console_ready")
