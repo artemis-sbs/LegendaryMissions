@@ -1,17 +1,18 @@
 
 shared allow_debug = True
+
 if allow_debug==is_dev_build():
-    do gui_add_console_tab(SHARED, "helm", "debug", "debug_screen")
-    do gui_add_console_tab(SHARED, "comms", "debug", "debug_screen")
-    do gui_add_console_tab(SHARED, "engineering", "debug", "debug_screen")
-    do gui_add_console_tab(SHARED, "science", "debug", "debug_screen")
-    do gui_add_console_tab(SHARED, "weapons", "debug", "debug_screen")
-    do gui_add_console_tab(SHARED, "debug", "mast", "mast_debug_screen")
-    do gui_add_console_tab(SHARED, "debug", "debug", None)
-    do gui_add_console_tab(SHARED, "debug", "__back_tab__", "console_selected")
-    do gui_add_console_tab(SHARED, "mast", "mast", None)    
-    do gui_add_console_tab(SHARED, "mast", "debug", "debug_screen")
-    do gui_add_console_tab(SHARED, "mast", "__back_tab__", "console_selected")
+    gui_add_console_tab(SHARED, "helm", "debug", "debug_screen")
+    gui_add_console_tab(SHARED, "comms", "debug", "debug_screen")
+    gui_add_console_tab(SHARED, "engineering", "debug", "debug_screen")
+    gui_add_console_tab(SHARED, "science", "debug", "debug_screen")
+    gui_add_console_tab(SHARED, "weapons", "debug", "debug_screen")
+    gui_add_console_tab(SHARED, "debug", "mast", "mast_debug_screen")
+    gui_add_console_tab(SHARED, "debug", "debug", None)
+    gui_add_console_tab(SHARED, "debug", "__back_tab__", "console_selected")
+    gui_add_console_tab(SHARED, "mast", "mast", None)    
+    gui_add_console_tab(SHARED, "mast", "debug", "debug_screen")
+    gui_add_console_tab(SHARED, "mast", "__back_tab__", "console_selected")
 end_if
 
 
@@ -19,20 +20,20 @@ end_if
 
 ===== debug_screen ======
 
-do gui_section( style="area: 10,10,90,90;")
+gui_section( style="area: 10,10,90,90;")
 
 """
 Under construction
 """
 
-do gui_section(style="area:10,15,35,100;row-height:35px;")
-do gui_row()
+gui_section(style="area:10,15,35,100;row-height:35px;")
+gui_row()
 on message gui_button("Test anomalies"):
     jump spawn_test_anom
 end_on
 
 
-do gui_activate_console("debug")
+gui_activate_console("debug")
 
 await gui
 
@@ -52,27 +53,27 @@ _forward = eo.forward_vector()
 _pos = _pos_eo + (_forward * 300)
 
 
-do pickup_spawn(_pos.x, _pos.y, _pos.z, "carapaction_coil")
-do pickup_spawn(200+_pos.x, _pos.y, _pos.z+250, "infusion_pcoils")
-do pickup_spawn(275+_pos.x, _pos.y, _pos.z+250, "tauron_focuser")
- do pickup_spawn(125+_pos.x, _pos.y, _pos.z+325, "secret_codecase")
- do pickup_spawn(200+_pos.x, _pos.y, _pos.z+325, "hidens_powercell")
- do pickup_spawn(275+_pos.x, _pos.y, _pos.z+325, "vigoranium_nodule")
- do pickup_spawn(125+_pos.x, _pos.y, _pos.z+400, "cetrocite_crystal")
- do pickup_spawn(200+_pos.x, _pos.y, _pos.z+400, "lateral_array")
- do pickup_spawn(275+_pos.x, _pos.y, _pos.z+400, "haplix_overcharger")
+pickup_spawn(_pos.x, _pos.y, _pos.z, "carapaction_coil")
+pickup_spawn(200+_pos.x, _pos.y, _pos.z+250, "infusion_pcoils")
+pickup_spawn(275+_pos.x, _pos.y, _pos.z+250, "tauron_focuser")
+ pickup_spawn(125+_pos.x, _pos.y, _pos.z+325, "secret_codecase")
+ pickup_spawn(200+_pos.x, _pos.y, _pos.z+325, "hidens_powercell")
+ pickup_spawn(275+_pos.x, _pos.y, _pos.z+325, "vigoranium_nodule")
+ pickup_spawn(125+_pos.x, _pos.y, _pos.z+400, "cetrocite_crystal")
+ pickup_spawn(200+_pos.x, _pos.y, _pos.z+400, "lateral_array")
+ pickup_spawn(275+_pos.x, _pos.y, _pos.z+400, "haplix_overcharger")
 
 jump debug_screen
 
 
 ===== mast_debug_screen ======
 
-do gui_section(style="area: 10,10,90,90;")
+gui_section(style="area: 10,10,90,90;")
 
 """
 Under construction
 """
 
-do gui_activate_console("mast")
+gui_activate_console("mast")
 
 await gui

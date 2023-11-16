@@ -1,7 +1,6 @@
 ## 
 # Example shows reusable common client select
-import debug.mast #want debug left of upgrade
-import debug.mast #want debug left of upgrade
+import debug.mast #want debug tabs left of upgrade
 import common_console_select.mast
 import science.mast
 import comms.mast
@@ -94,7 +93,7 @@ shared seed_value = 0
 watch_end_game_task = None
 shared skybox = skybox_get_random()
 
-do sbs.set_sky_box_all(skybox)
+sbs.set_sky_box_all(skybox)
 
 #
 # The Server GUI
@@ -106,52 +105,52 @@ if watch_end_game_task is not None:
     watch_end_game_task = None
 end_if
 
-do gui_section( style="area: 5, 10, 50, 90;")
+gui_section( style="area: 5, 10, 50, 90;")
 """""{start_text}"""""
 
 # For using a seed value when randomly generating terrain, not currently implemented
 #row style="row-height:65px;"
 #"""justify:right;text:Seed (Optional)"""
-#do gui_input("""desc: Integer""", var="seed_value")
+#gui_input("""desc: Integer""", var="seed_value")
 
 
-do gui_section(  style="area: 50, 10, 95,90;row-height:65px;padding:0px,10px")
+gui_section(  style="area: 50, 10, 95,90;row-height:65px;padding:0px,10px")
 """ justify:right;text:Player ships """
-do gui_slider("low: 1.0;high:8.0", var="player_count")
-do gui_row()
+gui_slider("low: 1.0;high:8.0", var="player_count")
+gui_row()
 """ justify:right;text:Difficulty """
-do gui_slider("low: 1.0;high:11.0", var="enemy_count")
-do gui_row()
+gui_slider("low: 1.0;high:11.0", var="enemy_count")
+gui_row()
 
 """ justify:right;text:Mission Type"""
-do gui_drop_down("text: Mission type;list:siege,single front,double front,deep strike,peacetime,border war,infestation", var="world_select")
-do gui_row()
-do gui_blank()
-do gui_row()
+gui_drop_down("text: Mission type;list:siege,single front,double front,deep strike,peacetime,border war,infestation", var="world_select")
+gui_row()
+gui_blank()
+gui_row()
 
 """justify:right;text:Terrain"""
-do gui_drop_down("text: Terrain;list: none, few, some, lots, many", var="terrain_select")
-do gui_row()
+gui_drop_down("text: Terrain;list: none, few, some, lots, many", var="terrain_select")
+gui_row()
 
 """justify:right;text:Lethal Terrain"""
-do gui_drop_down("text: Lethal Terrain;list: none, few, some, lots, many", var="lethal_select")
-do gui_row()
+gui_drop_down("text: Lethal Terrain;list: none, few, some, lots, many", var="lethal_select")
+gui_row()
 
 """justify:right;text:Friendly Ships"""
-do gui_drop_down("text: Friendly Ships;list: none, few, some, lots, many", var="friendly_select")
-do gui_row()
+gui_drop_down("text: Friendly Ships;list: none, few, some, lots, many", var="friendly_select")
+gui_row()
 
 """justify:right;text:Monsters"""
-do gui_drop_down("text: Monsters;list: none, few, some, lots, many", var="monster_select")
-do gui_row()
+gui_drop_down("text: Monsters;list: none, few, some, lots, many", var="monster_select")
+gui_row()
 
 """justify:right;text:Upgrades"""
-do gui_drop_down("text: Upgrades;list:none, few,some, lots, many", var="upgrade_select")
+gui_drop_down("text: Upgrades;list:none, few,some, lots, many", var="upgrade_select")
 
-#do gui_row()
+#gui_row()
 
 #blank
-#do gui_row()
+#gui_row()
 
 await choice:
 + "Start Mission":
@@ -169,7 +168,7 @@ end_await
 #
 
 #------------------------------------------------------------------------------------------------------------
-do sbs.set_beam_damages(0, 7.0, enemy_count)
+sbs.set_beam_damages(0, 7.0, enemy_count)
 
 
 match world_select.lower():
@@ -197,7 +196,7 @@ var watch_end_game_task schedule task_end_game
 
 ====  pause_screen ====
 
-do gui_section( style="area: 5, 10, 50, 90;")
+gui_section( style="area: 5, 10, 50, 90;")
 """""Simulation paused"""""
 
 
@@ -219,7 +218,7 @@ if len(stations)==0:
     start_text = "Mission is lost!  All yer base are belong to us, dammit."
     game_started = False
 
-    do sbs.play_music_file(0, "music/default/failure")
+    sbs.play_music_file(0, "music/default/failure")
 
     reroute clients show_game_results
     reroute server  show_game_results
@@ -229,7 +228,7 @@ raiders = role('Raider')
 if len(raiders)==0:
     start_text = "Mission is won!  All the enemies have been destroyed."
     game_started = False
-    do sbs.play_music_file(0, "music/default/victory")
+    sbs.play_music_file(0, "music/default/victory")
     reroute clients show_game_results
     reroute server  show_game_results
 end_if

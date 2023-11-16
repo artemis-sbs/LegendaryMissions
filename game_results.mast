@@ -25,7 +25,7 @@ obj = to_object(DESTROYED_ID)
 if obj is not None:
     side = "{obj.side.lower()}_destroyed"
     count = game_stats.get(side, 0)
-    do game_stats[side] = count + 1
+    ~~ game_stats[side] = count + 1~~
 
     race = obj.art_id
     under = race.find("_")
@@ -36,7 +36,7 @@ if obj is not None:
         end_if
         race = "{race.lower()}_ships_destroyed"
         count = game_stats.get(race, 0)
-        do game_stats[race] = count + 1
+        ~~ game_stats[race] = count + 1~~
     end_if        
 end_if
 
@@ -48,67 +48,67 @@ end_if
 
 simulation pause
 
-do gui_section(style="area: 10, 10, 99, 90;")
+gui_section(style="area: 10, 10, 99, 90;")
 
 """color:white;justify: center; font: gui-6;text:Game results"""
-do gui_row()
+gui_row()
 """""color:cyan;justify:center;font:gui-5;text:{start_text}"""""
-do gui_row()
-do gui_hole()
-do gui_hole()
-do gui_hole()
-do gui_hole()
+gui_row()
+gui_hole()
+gui_hole()
+gui_hole()
+gui_hole()
 """color:yellow; text:TSN Destroyed"""
 """color:yellow;justify: right; text:{game_stats["tsn_destroyed"]}"""
-do gui_row()
-do gui_hole()
-do gui_hole()
-do gui_hole()
-do gui_hole()
+gui_row()
+gui_hole()
+gui_hole()
+gui_hole()
+gui_hole()
 """color:yellow; text:arvonian ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["arvonian_ships_destroyed"]}"""
-do gui_row()
-do gui_hole()
-do gui_hole()
-do gui_hole()
-do gui_hole()
+gui_row()
+gui_hole()
+gui_hole()
+gui_hole()
+gui_hole()
 """color:yellow; text:kralien ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["kralien_ships_destroyed"]}"""
-do gui_row()
-do gui_hole()
-do gui_hole()
-do gui_hole()
-do gui_hole()
+gui_row()
+gui_hole()
+gui_hole()
+gui_hole()
+gui_hole()
 """color:yellow; text:skaraan ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["skaraan_ships_destroyed"]}"""
-do gui_row()
-do gui_hole()
-do gui_hole()
-do gui_hole()
-do gui_hole()
+gui_row()
+gui_hole()
+gui_hole()
+gui_hole()
+gui_hole()
 """color:yellow; text:ximni ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["ximni_ships_destroyed"]}"""
-do gui_row()
-do gui_hole()
-do gui_hole()
-do gui_hole()
-do gui_hole()
+gui_row()
+gui_hole()
+gui_hole()
+gui_hole()
+gui_hole()
 """color:yellow; text:torgoth ships destroyed"""
 """color:yellow;justify: right; text:{game_stats["torgoth_ships_destroyed"]}"""
-do gui_row()
-do gui_hole()
-do gui_hole()
-do gui_hole()
-do gui_hole()
+gui_row()
+gui_hole()
+gui_hole()
+gui_hole()
+gui_hole()
 """color:yellow; text:ships surrendered"""
 """color:yellow;justify: right; text:{game_stats["ships_surrender"]}"""
-do gui_row()
+gui_row()
 
 end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)
-do gui_hole()
-do gui_hole()
-do gui_hole()
-do gui_hole()
+gui_hole()
+gui_hole()
+gui_hole()
+gui_hole()
 """color:yellow; right; text:Game Time"""
 """color:yellow;justify: right; text:{end_time} minutes"""
 

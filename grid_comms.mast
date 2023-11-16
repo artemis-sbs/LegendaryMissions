@@ -28,15 +28,15 @@ await comms:
  + "go to rally point" if not is_idle:
     loc_x = m_blob.get("curx", 0)
     loc_y = m_blob.get("cury", 0)
-    do set_inventory_value(COMMS_SELECTED_ID, "idle", True )
-    do set_inventory_value(COMMS_SELECTED_ID, "idle_state", "start" )
-    do set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
+    set_inventory_value(COMMS_SELECTED_ID, "idle", True )
+    set_inventory_value(COMMS_SELECTED_ID, "idle_state", "start" )
+    set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
 
  + "Go to work" if is_idle:
-    do set_inventory_value(COMMS_SELECTED_ID, "idle", False )
-    do set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
-    do set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
-    do set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
+    set_inventory_value(COMMS_SELECTED_ID, "idle", False )
+    set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
+    set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
+    set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
 
   + "do work order now":
     jump damcons_work_order
@@ -59,7 +59,7 @@ await comms:
     jump comms_damcons
 
  + "Fix now {d.name}" for d in orders:
-    do set_inventory_value(COMMS_SELECTED_ID, "target_room", d.id)
+    set_inventory_value(COMMS_SELECTED_ID, "target_room", d.id)
     jump comms_damcons
 
 end_await
@@ -77,7 +77,7 @@ await comms:
     jump comms_damcons
 
  + "Cancel {d.name}" for d in orders:
-    do unlink(COMMS_SELECTED_ID, "work-order", d.id)
+    unlink(COMMS_SELECTED_ID, "work-order", d.id)
 
 end_await
 
@@ -91,9 +91,9 @@ dcs = []
 workers = []
 for dc in all_dcs:
     if has_link_to(dc.id, "work-order", COMMS_SELECTED_ID):
-        do workers.append(dc)
+        workers.append(dc)
     else:
-        do dcs.append(dc)
+        dcs.append(dc)
     end_if
 next dc
 
@@ -102,9 +102,9 @@ next dc
 await comms:
  + "assign {d.name}" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
     # Add this to the 
-    do link(d.id, "work-order", COMMS_SELECTED_ID)
+    link(d.id, "work-order", COMMS_SELECTED_ID)
  + "cancel {d.name}"  color "{get_inventory_value(d.id, 'color')}" for d in workers:
-    do unlink(d.id, "work-order", COMMS_SELECTED_ID)
+    unlink(d.id, "work-order", COMMS_SELECTED_ID)
 + "set rally point":
     jump room_set_idle_loc
 
@@ -147,21 +147,21 @@ await comms:
     _blob = to_blob(COMMS_SELECTED_ID)
     _loc_x = _blob.get("curx", 0)
     _loc_y = _blob.get("cury", 0)
-    do set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
+    set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
     idle_marker = get_inventory_value(d.id, "idle_marker", None)
     #
     #
-    do clear_timer(d.id, "boost_timer")
+    clear_timer(d.id, "boost_timer")
 
     if idle_marker is not None:
         _blob = to_blob(idle_marker)
-        do _blob.set("curx",_loc_x, 0)
-        do _blob.set("cury",_loc_y, 0)
+        _blob.set("curx",_loc_x, 0)
+        _blob.set("cury",_loc_y, 0)
     end_if
 
     is_idle = get_inventory_value(d.id, "idle")
     if is_idle:
-        do set_inventory_value(d.id, "idle_state", "start" )
+        set_inventory_value(d.id, "idle_state", "start" )
     end_if
 
 end_await
@@ -185,20 +185,20 @@ await comms:
     _blob = to_blob(COMMS_SELECTED_ID)
     _loc_x = _blob.get("curx", 0)
     _loc_y = _blob.get("cury", 0)
-    do set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
+    set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
     is_idle = get_inventory_value(d.id, "idle")
     if is_idle:
-        do set_inventory_value(d.id, "idle_state", "start" )
+        set_inventory_value(d.id, "idle_state", "start" )
     end_if
     idle_marker = get_inventory_value(d.id, "idle_marker", None)
     #
     #
-    do clear_timer(d.id, "boost_timer")
+    clear_timer(d.id, "boost_timer")
 
     if idle_marker is not None:
         _blob = to_blob(idle_marker)
-        do _blob.set("curx",_loc_x, 0)
-        do _blob.set("cury",_loc_y, 0)
+        _blob.set("curx",_loc_x, 0)
+        _blob.set("cury",_loc_y, 0)
     end_if
 
 
@@ -225,14 +225,14 @@ marker_blob = to_blob(marker_go_id)
 go_set_at_loc = grid_objects_at(GRID_PARENT_ID, int(EVENT.source_point.x), int(EVENT.source_point.y))
 ship_blob = to_blob(GRID_PARENT_ID)
 ->END if ship_blob is None
-do ship_blob.set("grid_selected_UID", 0, 0)
-do ship_blob.set("grid_selected_ship_UID", 0, 0)
+ship_blob.set("grid_selected_UID", 0, 0)
+ship_blob.set("grid_selected_ship_UID", 0, 0)
 
 #
 # Move marker to location
 #
-do marker_blob.set("curx", EVENT.source_point.x)
-do marker_blob.set("cury", EVENT.source_point.y)
+marker_blob.set("curx", EVENT.source_point.x)
+marker_blob.set("cury", EVENT.source_point.y)
 
 #
 # find a room, or damcons if both use room
@@ -251,8 +251,8 @@ elif len(rooms)!=0:
 end_if
 
 if found_id is not None:
-    do ship_blob.set("grid_selected_UID", found_id , 0)
-    do ship_blob.set("grid_selected_ship_UID", found_id , 0)
+    ship_blob.set("grid_selected_UID", found_id , 0)
+    ship_blob.set("grid_selected_ship_UID", found_id , 0)
     marker_go.comms_id = "marker"
     follow route grid select GRID_PARENT_ID found_id
 else:

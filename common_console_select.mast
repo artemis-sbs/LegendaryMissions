@@ -18,7 +18,7 @@ client_selected_index = 0
 shared valid_interiors = set()
 for key in grid_data:
     if len(grid_data[key]["grid_objects"])>0:
-        do valid_interiors.add(key)
+        valid_interiors.add(key)
     end_if
 next key
 
@@ -48,18 +48,18 @@ client_select_ship =player_list[client_selected_index].name.lower()
 ship_name = client_select_ship
 
 if console_select == "helm" and not game_started:
-  do gui_section(style="area: 1,60px, 40,50;row-height: 50px;")
-  do gui_row() # style="row-height: 50px;"
-  do gui_input("desc:Ship Name", var="ship_name")
-  do gui_row( style="row-height: 300px;")
+  gui_section(style="area: 1,60px, 40,50;row-height: 50px;")
+  gui_row() # style="row-height: 50px;"
+  gui_input("desc:Ship Name", var="ship_name")
+  gui_row( style="row-height: 300px;")
   
   #
   # Specify only ships with defined engineering grid
   #
-  do gui_content(ship_picker_control("Your Ship", ship_type_def, ship_keys=valid_interiors), var="ship_type")
-  do gui_row( style="row-height: 50px;")
-  do gui_blank()
-  do gui_row(style="row-height: 50px;")
+  gui_content(ship_picker_control("Your Ship", ship_type_def, ship_keys=valid_interiors), var="ship_type")
+  gui_row( style="row-height: 50px;")
+  gui_blank()
+  gui_row(style="row-height: 50px;")
   on message gui_button("Apply changes"):
     if client_selected_index != -1 and client_selected_index<player_count:
         if len(ship_name)>0:
@@ -75,15 +75,15 @@ end_if
 
 
 
-do gui_section( style="area: 50,60px,75,90;")
-do gui_vradio(f"{ship_list}", style="row-height: 50px;", var="client_select_ship")
+gui_section( style="area: 50,60px,75,90;")
+gui_vradio(f"{ship_list}", style="row-height: 50px;", var="client_select_ship")
 
-do gui_section( style="area: 80,60px, 99,90;")
-do gui_vradio("helm,weapons, comms,science,engineering,mainscreen", style="row-height: 50px;", var="console_select")
-do gui_row(style="row-height: 50px;")
+gui_section( style="area: 80,60px, 99,90;")
+gui_vradio("helm,weapons, comms,science,engineering,mainscreen", style="row-height: 50px;", var="console_select")
+gui_row(style="row-height: 50px;")
 
 if not game_started:
-    do gui_checkbox("ready", var="console_ready")
+    gui_checkbox("ready", var="console_ready")
 else:
     on message gui_button("ready"):
         console_ready = True
@@ -105,7 +105,7 @@ end_on
 
 
 on change client_select_ship:
-    #do print(f"I'm triggered css {client_select_ship}")
+    #print(f"I'm triggered css {client_select_ship}")
     for i in range(player_count):
         client_selected_index = i
         break if player_list[i].name.strip().lower() == client_select_ship
@@ -136,8 +136,8 @@ _ship_id= None
 for player_ship in to_object_list(role("__PLAYER__")):
     if player_ship.name.lower() == client_select_ship:
         _ship_id = player_ship.id
-        do sbs.assign_client_to_ship(client_id, player_ship.id)
-        do set_inventory_value(client_id, "assigned_ship", player_ship.id)
+        sbs.assign_client_to_ship(client_id, player_ship.id)
+        set_inventory_value(client_id, "assigned_ship", player_ship.id)
     end_if
 next player_ship
 
@@ -148,7 +148,7 @@ jump select_console if _ship_id is None
 sky_box = get_inventory_value(SHARED, "skybox", "sky1")
 sky_box = get_inventory_value(_ship_id, "skybox", sky_box)
 sky_box = get_inventory_value(client_id, "skybox", sky_box)
-do sbs.set_sky_box(client_id, sky_box)
+sbs.set_sky_box(client_id, sky_box)
 
 
 
@@ -156,12 +156,12 @@ do sbs.set_sky_box(client_id, sky_box)
 #
 # Make it so the console can be found if needed
 #
-do set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
+set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
 #------------------------------------------------------------------------------------------------------------
-do sbs.set_beam_damages(client_id, 7.0, enemy_count)
+sbs.set_beam_damages(client_id, 7.0, enemy_count)
 #------------------------------------------------------------------------------------------------------------
-do gui_add_console_tab(_ship_id, console_select, console_select, None)
-do gui_console(console_select)
+gui_add_console_tab(_ship_id, console_select, console_select, None)
+gui_console(console_select)
 
 
 #
@@ -185,7 +185,7 @@ for sch in mast.schedulers:
     next tsk
 next sch
 
-do gui_section( style="area: 0,50px, 100,100;")
+gui_section( style="area: 0,50px, 100,100;")
 """""
 Task count {task_count}
 """"""

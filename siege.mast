@@ -81,12 +81,12 @@ if "many" == upgrade_select:
 
 
 if seed_value != 0:
-    do random.seed(seed_value)
-    do print(f"Seed Value: {seed_value}")
+    random.seed(seed_value)
+    print(f"Seed Value: {seed_value}")
 else:
     seed_value = random.randint(1,99999)
-    do random.seed(seed_value)
-    do print(f"Random Seed Value: {seed_value}")
+    random.seed(seed_value)
+    print(f"Random Seed Value: {seed_value}")
     end_if
 
 #------------------------------------------------------------------------------------------------------------
@@ -131,13 +131,13 @@ for station in spawn_points:
             _dist_test = distv.dot(distv)
             if _dist_test < dist:
                 move = True
-                do print("Move Station")
+                print("Move Station")
                 _pos = next(spawn_points)
                 break
             end_if
         next _prev
     next x
-    do _spawned_pos.append(_pos)
+    _spawned_pos.append(_pos)
 
     station_object = npc_spawn(*_pos, name, "tsn, station", station_type, "behav_station")
     #
@@ -153,7 +153,7 @@ for station in spawn_points:
     # Make sure not too close
     #
 
-    do set_face(ds, random_terran(civilian=True))
+    set_face(ds, random_terran(civilian=True))
 
     #wrap a minefield around the station
     if lethal_value > 0:
@@ -173,7 +173,7 @@ for station in spawn_points:
         for v2 in cluster_spawn_points:
             #keep value between -500 and 500??
     #                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
-            do terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
+            terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
         next v2
     end_if
     num += 1
@@ -181,11 +181,11 @@ next station
 
 #------------------------------------------------------------------------------------------------------------
 enemyTypeNameList = []
-do enemyTypeNameList.extend(names_torgoth_ship_keys())
-do enemyTypeNameList.extend(names_kralien_ship_keys())
-do enemyTypeNameList.extend(names_skaraan_ship_keys())
-do enemyTypeNameList.extend(names_arvonian_ship_keys())
-do enemyTypeNameList.extend(names_ximni_ship_keys())
+enemyTypeNameList.extend(names_torgoth_ship_keys())
+enemyTypeNameList.extend(names_kralien_ship_keys())
+enemyTypeNameList.extend(names_skaraan_ship_keys())
+enemyTypeNameList.extend(names_arvonian_ship_keys())
+enemyTypeNameList.extend(names_ximni_ship_keys())
 
 enemy_prefix = "KLMNQ"
 
@@ -201,18 +201,18 @@ spawn_east = scatter_box(box_count, 35000,0, 0, 15000, 2000, 100000, centered=Tr
 spawn_west = scatter_box(box_count, -35000,0, 0, 15000, 2000, 100000, centered=True)
 
 spawn_points = []
-do spawn_points.extend(spawn_north)
-do spawn_points.extend(spawn_south)
-do spawn_points.extend(spawn_east)
-do spawn_points.extend(spawn_west)
-do random.shuffle(spawn_points)
+spawn_points.extend(spawn_north)
+spawn_points.extend(spawn_south)
+spawn_points.extend(spawn_east)
+spawn_points.extend(spawn_west)
+random.shuffle(spawn_points)
 
 
 #------------------------------------------------------------------------------------------------------------
 call_signs = []
 enemy_name_number = 0
-do call_signs.extend(range(1,100))
-do random.shuffle(call_signs)
+call_signs.extend(range(1,100))
+random.shuffle(call_signs)
 
 for v in spawn_points:
     r_type = random.choice(enemyTypeNameList)
@@ -228,7 +228,7 @@ for v in spawn_points:
     #
     # Should add a commnon funtion to call to get the face based on race
     #
-    do set_face(raider.id, random_face(race))
+    set_face(raider.id, random_face(race))
     
     
     
@@ -249,9 +249,9 @@ for v in spawn_points:
     for v2 in cluster_spawn_points:
         v2.y = v2.y % 500.0
         nebula = terrain_spawn(v2.x, v2.y, v2.z,None, None, "nebula", "behav_nebula")
-        do nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
-        do nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
-        do nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
+        nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
+        nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
+        nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
     next v2
 next v
 
@@ -291,10 +291,10 @@ for v in spawn_points:
         #er = asteroid.blob.get("exclusionradius",0)
         #er *= sm
 
-        do asteroid.blob.set("local_scale_x_coeff", sx)
-        do asteroid.blob.set("local_scale_y_coeff", sy)
-        do asteroid.blob.set("local_scale_z_coeff", sz)
-        #do asteroid.blob.set("exclusionradius", er)
+        asteroid.blob.set("local_scale_x_coeff", sx)
+        asteroid.blob.set("local_scale_y_coeff", sy)
+        asteroid.blob.set("local_scale_z_coeff", sz)
+        #asteroid.blob.set("exclusionradius", er)
         
     next v2
 next v
@@ -302,46 +302,46 @@ next v
 #------------------------------------------------------------------------------------------------------------
 # I want candy
 
-do print(f"Number of Upgrades: {num_upgrade}")
+print(f"Number of Upgrades: {num_upgrade}")
 
 spawn_points = scatter.box(num_upgrade, 0,0,0, 75000, 1000, 75000, centered=True)
 for v in spawn_points:
     upg = random.randint(1,9)
     if upg == 1:
-        do pickup_spawn(v.x, v.y, v.z, "carapaction_coil")
-        do print(f"Carapaction Coil spawned {v.x},{v.y},{v.z}")
+        pickup_spawn(v.x, v.y, v.z, "carapaction_coil")
+        print("Carapaction Coil spawned {v.x},{v.y},{v.z}")
     end_if
     if upg == 2:
-        do pickup_spawn(v.x, v.y, v.z,  "infusion_pcoils")
-        do print(f"Infusion P-Coil spawned {v.x},{v.y},{v.z}")
+        pickup_spawn(v.x, v.y, v.z,  "infusion_pcoils")
+        print("Infusion P-Coil spawned {v.x},{v.y},{v.z}")
     end_if
     if upg == 3:
-        do pickup_spawn(v.x, v.y, v.z, "tauron_focuser")
-        do print(f"Tauron Focuser spawned {v.x},{v.y},{v.z}")
+        pickup_spawn(v.x, v.y, v.z, "tauron_focuser")
+        print("Tauron Focuser spawned {v.x},{v.y},{v.z}")
     end_if
     if upg == 4:
-        do pickup_spawn(v.x, v.y, v.z, "secret_codecase")
-        do print(f"Secret Codecase spawned {v.x},{v.y},{v.z}")
+        pickup_spawn(v.x, v.y, v.z, "secret_codecase")
+        print("Secret Codecase spawned {v.x},{v.y},{v.z}")
     end_if
     if upg == 5:
-        do pickup_spawn(v.x, v.y, v.z, "hidens_powercell")
-        do print(f"HiDens Powercell spawned {v.x},{v.y},{v.z}")
+        pickup_spawn(v.x, v.y, v.z, "hidens_powercell")
+        print("HiDens Powercell spawned {v.x},{v.y},{v.z}")
     end_if
     if upg == 6:
-        do pickup_spawn(v.x, v.y, v.z, "vigoranium_nodule")
-        do print(f"Vigoranium Nodule spawned {v.x},{v.y},{v.z}")
+        pickup_spawn(v.x, v.y, v.z, "vigoranium_nodule")
+        print("Vigoranium Nodule spawned {v.x},{v.y},{v.z}")
     end_if
     if upg == 7:
-        do pickup_spawn(v.x, v.y, v.z, "cetrocite_crystal")
-        do print(f"Cetrocite Crystal spawned {v.x},{v.y},{v.z}")
+        pickup_spawn(v.x, v.y, v.z, "cetrocite_crystal")
+        print("Cetrocite Crystal spawned {v.x},{v.y},{v.z}")
     end_if
     if upg == 8:
-        do pickup_spawn(v.x, v.y, v.z, "lateral_array")
-        do print(f"Lateral Array spawned {v.x},{v.y},{v.z}")
+        pickup_spawn(v.x, v.y, v.z, "lateral_array")
+        print("Lateral Array spawned {v.x},{v.y},{v.z}")
     end_if
     if upg == 9:
-        do pickup_spawn(v.x, v.y, v.z, "haplix_overcharger")
-        do print(f"Haplix Overcharger spawned {v.x},{v.y},{v.z}")
+        pickup_spawn(v.x, v.y, v.z, "haplix_overcharger")
+        print("Haplix Overcharger spawned {v.x},{v.y},{v.z}")
     end_if
     #upg+=1    
 next v

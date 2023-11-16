@@ -2,7 +2,7 @@ route damage object take_damage
 
 
 ============= take_damage =========
-#do print(f"O: {0xFFFFFF &DAMAGE_ORIGIN_ID} P: {0xFFFFFF &DAMAGE_PARENT_ID} S: {0xFFFFFF &DAMAGE_SOURCE_ID} T: {0xFFFFFFF & DAMAGE_TARGET_ID}")
+#print(f"O: {0xFFFFFF &DAMAGE_ORIGIN_ID} P: {0xFFFFFF &DAMAGE_PARENT_ID} S: {0xFFFFFF &DAMAGE_SOURCE_ID} T: {0xFFFFFFF & DAMAGE_TARGET_ID}")
 
 jump npc_damage_target if has_role(DAMAGE_TARGET_ID, "raider")
 jump friendly_station_damage_target if has_roles(DAMAGE_TARGET_ID, "tsn, station")
@@ -23,11 +23,11 @@ enrage_value=get_inventory_value(DAMAGE_TARGET_ID, "enrage_target")
 if DAMAGE_SOURCE_ID== DAMAGE_TARGET_ID:
     -> END
 elif DAMAGE_PARENT_ID==0 and DAMAGE_ORIGIN_ID != 0:
-    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_target",DAMAGE_ORIGIN_ID)
-    do set_timer(DAMAGE_TARGET_ID, "enrage_timer", minutes=2)
+    set_inventory_value(DAMAGE_TARGET_ID, "enrage_target",DAMAGE_ORIGIN_ID)
+    set_timer(DAMAGE_TARGET_ID, "enrage_timer", minutes=2)
 elif DAMAGE_PARENT_ID != 0:
-    do set_inventory_value(DAMAGE_TARGET_ID, "enrage_target",DAMAGE_PARENT_ID)
-    do set_timer(DAMAGE_TARGET_ID, "enrage_timer", minutes=2)
+    set_inventory_value(DAMAGE_TARGET_ID, "enrage_target",DAMAGE_PARENT_ID)
+    set_timer(DAMAGE_TARGET_ID, "enrage_timer", minutes=2)
 end_if
 
 ->END
@@ -64,11 +64,11 @@ end_if
 
 for player in role(fr.side) & role("__player__"):
     player_obj = to_object(player)
-    do comms_message(f"Help. {player_obj.name} we are under attack from {source}", DAMAGE_TARGET_ID, player, title_color="green")
+    comms_message(f"Help. {player_obj.name} we are under attack from {source}", DAMAGE_TARGET_ID, player, title_color="green")
 next player
 #
 # Only request help if you haven't for two minutes
 #
-do set_timer(DAMAGE_TARGET_ID, "request_help_timer", minutes=2)
+set_timer(DAMAGE_TARGET_ID, "request_help_timer", minutes=2)
 
 ->END
