@@ -9,7 +9,7 @@ route damage heat take_heat_damage
 # The DAMAGE_ORIGIN_ID is the ship being damaged
 # EVENT has the event data sub_float has the system
 #
-do grid_damage_system(DAMAGE_ORIGIN_ID, int(EVENT.sub_tag))
+grid_damage_system(DAMAGE_ORIGIN_ID, int(EVENT.sub_tag))
 ->END
 
 
@@ -23,7 +23,7 @@ system_hit = int(EVENT.sub_float)
 source_point = EVENT.source_point
 damage_amount = EVENT.sub_float
 
-do grid_take_internal_damage_at(DAMAGE_ORIGIN_ID, source_point, system_hit, damage_amount)
+grid_take_internal_damage_at(DAMAGE_ORIGIN_ID, source_point, system_hit, damage_amount)
 
 ->END
 

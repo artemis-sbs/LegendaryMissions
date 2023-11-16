@@ -16,7 +16,7 @@ shared grid_data = grid_get_grid_data()
 #
 # Called by basic_ai, so we know this is a player ship already
 #
-do grid_rebuild_grid_objects(SPAWNED_ID, grid_data)
+grid_rebuild_grid_objects(SPAWNED_ID, grid_data)
 ->END
 
 
@@ -38,7 +38,7 @@ obj = to_object(SPAWNED_ID)
 ->END if this_blob is None or obj is None
 
 # Update status so times are accurate
-do grid_damcons_detailed_status(SPAWNED_ID)
+grid_damcons_detailed_status(SPAWNED_ID)
 
 x = this_blob.get("curx", 0)
 y = this_blob.get("cury", 0)
@@ -83,13 +83,13 @@ jump start_working if work_count is None
 # Already started working keep working
 #
 work_count -= 1
-do set_inventory_value(SPAWNED_ID, "work_needed", work_count)
+set_inventory_value(SPAWNED_ID, "work_needed", work_count)
 
 jump loop_damcons_ai if work_count > 0
 #
 # Done, Working
 #
-do set_inventory_value(SPAWNED_ID, "work_needed", None)
+set_inventory_value(SPAWNED_ID, "work_needed", None)
 
 # Host is no more 
 hm = sbs.get_hull_map(obj.host_id)
@@ -99,10 +99,10 @@ hm = sbs.get_hull_map(obj.host_id)
 # Repair the points at this location
 #
 at_point = hm.get_objects_at_point(x,y)
-do grid_repair_grid_objects(obj.host_id, at_point, SPAWNED_ID)
+grid_repair_grid_objects(obj.host_id, at_point, SPAWNED_ID)
 
 # I'm done with this guy
-do set_inventory_value(SPAWNED_ID, "target_room", None )
+set_inventory_value(SPAWNED_ID, "target_room", None )
 
 # Then look for more work
 # Find damage that is not assigned to someone else
@@ -117,7 +117,7 @@ cur_target = get_inventory_value(SPAWNED_ID, "target_room")
 if cur_target is not None and cur_target != idle_marker:
     # Job already done
     if not has_role(cur_target, "__damaged__"):
-        do unlink(SPAWNED_ID, "work-order", cur_target)
+        unlink(SPAWNED_ID, "work-order", cur_target)
     end_if
 end_if
 
@@ -132,9 +132,9 @@ the_target =  to_id(grid_closest(SPAWNED_ID, linked_to(SPAWNED_ID, "work-order")
 if the_target == None:
     obj = to_object(SPAWNED_ID)
     the_target =  to_id(grid_closest(SPAWNED_ID,grid_objects(obj.host_id) & role("__damaged__") ))
-    do set_inventory_value(SPAWNED_ID, "work_speed_coeff", 1.0)
+    set_inventory_value(SPAWNED_ID, "work_speed_coeff", 1.0)
 else:
-    do set_inventory_value(SPAWNED_ID, "work_speed_coeff", 1.25)
+    set_inventory_value(SPAWNED_ID, "work_speed_coeff", 1.25)
 end_if
 #
 # Got ot rally point
@@ -148,7 +148,7 @@ end_if
 # todo: set speed?
 #
 _speed = grid_calc_speed(SPAWNED_ID)
-do this_blob.set("move_speed", _speed, 0)
+this_blob.set("move_speed", _speed, 0)
 jump loop_damcons_ai if the_target == get_inventory_value(SPAWNED_ID, "target_room")
 
 this_blob = to_blob(SPAWNED_ID)
@@ -163,23 +163,23 @@ y = target_blob.get("cury", 0)
 # Already here
 #
 if x==curx and y == cury:
-    do this_blob.set("move_speed", 0, 0)
+    this_blob.set("move_speed", 0, 0)
     jump loop_damcons_ai
 end_if
        
 
-do grid_target(SPAWNED_ID, the_target, _speed)
+grid_target(SPAWNED_ID, the_target, _speed)
 t_obj = to_object(the_target)
 target_name = t_obj.name
 # Set tooltip
-do grid_damcons_detailed_status(SPAWNED_ID, f"Heading to {target_name}", "orange", 3)
+grid_damcons_detailed_status(SPAWNED_ID, f"Heading to {target_name}", "orange", 3)
 # Set as current target
-do set_inventory_value(SPAWNED_ID, "target_room", the_target )
-do set_inventory_value(SPAWNED_ID, "work_needed", None) 
+set_inventory_value(SPAWNED_ID, "target_room", the_target )
+set_inventory_value(SPAWNED_ID, "work_needed", None) 
 #
 # Delay 10 To avoid bouncing between closest
 #
-do set_timer(SPAWNED_ID, "delay_target", seconds=10)
+set_timer(SPAWNED_ID, "delay_target", seconds=10)
 
 
 ===== loop_damcons_ai ====
@@ -193,8 +193,8 @@ do set_timer(SPAWNED_ID, "delay_target", seconds=10)
 coeffs = ["fed_speed_coeff", "ripped_speed_coeff", "rested_speed_coeff"]
 for coeff in coeffs:
     if is_timer_set_and_finished(SPAWNED_ID, coeff):
-        do set_inventory_value(SPAWNED_ID, coeff, 1.0)
-        do clear_timer(SPAWNED_ID, coeff)
+        set_inventory_value(SPAWNED_ID, coeff, 1.0)
+        clear_timer(SPAWNED_ID, coeff)
     end_if
 next coeff
 
@@ -206,11 +206,11 @@ delay sim 3s
 ======== start_working =====
 hp = get_inventory_value(SPAWNED_ID, "HP")
 jump loop_damcons_ai if hp==0
-do set_inventory_value(SPAWNED_ID, "work_needed", 20/hp) # 4 times 3 sec = 12 seconds
+set_inventory_value(SPAWNED_ID, "work_needed", 20/hp) # 4 times 3 sec = 12 seconds
 
 
 # Set tooltip and speech bubble
-do grid_damcons_detailed_status(SPAWNED_ID, f"Getting to work", "blue", 3)
+grid_damcons_detailed_status(SPAWNED_ID, f"Getting to work", "blue", 3)
 
 jump loop_damcons_ai
 
@@ -222,11 +222,11 @@ jump loop_damcons_ai if _state != "start"
 speed = grid_calc_speed(SPAWNED_ID)
 _pos = get_inventory_value(SPAWNED_ID, "idle_pos")
 jump loop_damcons_ai if _pos is None
-# do print(f"Moving Idle {_pos[0]} {_pos[1]}")
-do grid_target_pos(SPAWNED_ID, _pos[0], _pos[1], speed)
-do set_inventory_value(SPAWNED_ID, "idle_state", "moving" )
+# print(f"Moving Idle {_pos[0]} {_pos[1]}")
+grid_target_pos(SPAWNED_ID, _pos[0], _pos[1], speed)
+set_inventory_value(SPAWNED_ID, "idle_state", "moving" )
 
-do grid_damcons_detailed_status(SPAWNED_ID, f"Heading to idle {_pos[0]},{_pos[1]}", "blue", 3)
+grid_damcons_detailed_status(SPAWNED_ID, f"Heading to idle {_pos[0]},{_pos[1]}", "blue", 3)
 
 jump loop_damcons_ai
 
@@ -241,12 +241,12 @@ jump handle_damcons_idling if _state == "idling"
 #
 # State should have been moving
 #
-do set_inventory_value(SPAWNED_ID, "idle_state", "idling")
+set_inventory_value(SPAWNED_ID, "idle_state", "idling")
 _pos = get_inventory_value(SPAWNED_ID, "idle_pos")
 jump loop_damcons_ai if _pos is None
 
 # Set tooltip and speech bubble
-do grid_damcons_detailed_status(SPAWNED_ID, f"Idling at {_pos[0]},{_pos[1]}", "blue", 3)
+grid_damcons_detailed_status(SPAWNED_ID, f"Idling at {_pos[0]},{_pos[1]}", "blue", 3)
 
 
 # VVVVVVV Fall through VVVVVVVVVV
@@ -266,7 +266,7 @@ hm = sbs.get_hull_map(obj.host_id)
 at_point = hm.get_objects_at_point(x,y)
 
 for id in at_point:
-    do grid_damcons_handle_idling_boost(SPAWNED_ID, id)
+    grid_damcons_handle_idling_boost(SPAWNED_ID, id)
 next id
 
 jump loop_damcons_ai
@@ -284,15 +284,15 @@ jump loop_damcons_ai
 # Wait for first messages
 #
 
-do set_inventory_value(SPAWNED_ID, "face_sickbay", random_terran())
-do set_inventory_value(SPAWNED_ID, "face_biologist", random_terran())
-do set_inventory_value(SPAWNED_ID, "face_counselor", random_terran())
+set_inventory_value(SPAWNED_ID, "face_sickbay", random_terran())
+set_inventory_value(SPAWNED_ID, "face_biologist", random_terran())
+set_inventory_value(SPAWNED_ID, "face_counselor", random_terran())
 
 
 coeffs = ["fed_speed_coeff", "ripped_speed_coeff", "rested_speed_coeff"]
 for coeff in coeffs:
     timer = "comms_{coeff}"
-    do set_timer(SPAWNED_ID, timer, minutes=random.randrange(2,4))
+    set_timer(SPAWNED_ID, timer, minutes=random.randrange(2,4))
 next coeff
     
 
@@ -328,7 +328,7 @@ for coeff in coeffs:
     for dc in damcons:
         _total += get_inventory_value(dc, coeff, 1.0)
     next dc
-    # do print(f"{coeff} {_total} {i}" )
+    # print(f"{coeff} {_total} {i}" )
     continue if _total > 3.0
 
     #
@@ -337,8 +337,8 @@ for coeff in coeffs:
     who = whos[i]
     msg = msgs[i]
     color = who_color[i]
-    do comms_receive_internal(msg, SPAWNED_ID, who, title_color=color)
-    do set_timer(SPAWNED_ID, timer, minutes=random.randrange(4,10))
+    comms_receive_internal(msg, SPAWNED_ID, who, title_color=color)
+    set_timer(SPAWNED_ID, timer, minutes=random.randrange(4,10))
     
 next coeff
 

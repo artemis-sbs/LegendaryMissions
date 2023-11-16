@@ -98,30 +98,30 @@ You have full docking privileges.
 
 """, title_color=station_color)~~
     + "Now Docking":
-        do comms_receive(f"""We read you, {comms_id}.  We're standing by for expedited docking.^""", title_color=station_color)
+        comms_receive(f"""We read you, {comms_id}.  We're standing by for expedited docking.^""", title_color=station_color)
 
     + "Build Homing": 
-        do comms_receive(f"""We read you, {comms_id}.  We will focus on homing production.^""", title_color=station_color)
+        comms_receive(f"""We read you, {comms_id}.  We will focus on homing production.^""", title_color=station_color)
         torpedo_build_type = sbs.TORPEDO.HOMING
         build_time = 3*60
         cancel build_task
         var build_task =>  task_station_building
 
     + "Build Nuke":
-        do comms_receive(f"""We read you, {comms_id}.  We will focus on nuke production.^""", title_color=station_color)
+        comms_receive(f"""We read you, {comms_id}.  We will focus on nuke production.^""", title_color=station_color)
         torpedo_build_type= sbs.TORPEDO.NUKE
         build_time = 10*60
         cancel build_task
         var build_task => task_station_building
 
     + "Build Emp":
-        do comms_receive(f"""We read you, {comms_id}.  We will focus on EMP production.^""", title_color=station_color)
+        comms_receive(f"""We read you, {comms_id}.  We will focus on EMP production.^""", title_color=station_color)
         torpedo_build_type= sbs.TORPEDO.EMP
         build_time = 5*60
         cancel build_task
         var build_task => task_station_building
     + "Build Mine":
-        do comms_receive(f"""We read you, {comms_id}.  We will focus on MINE production.^""", title_color=station_color)
+        comms_receive(f"""We read you, {comms_id}.  We will focus on MINE production.^""", title_color=station_color)
         torpedo_build_type = sbs.TORPEDO.MINE
         build_time = 4*60
         cancel build_task
@@ -134,13 +134,13 @@ COMMS_ORIGIN_ID = ship_id
 COMMS_SELECTED_ID = station_id
 
 comms_id = to_object(ship_id).name
-do set_timer(station_id, "build_time", seconds = build_time)
-# do print(f"build time = {build_time}")
+set_timer(station_id, "build_time", seconds = build_time)
+# print(f"build time = {build_time}")
 
 await until is_timer_finished(station_id, "build_time"):
 #pass
 end_await 
-do clear_timer(station_id, "build_time")
+clear_timer(station_id, "build_time")
 self = to_object(station_id)
 
 #
@@ -149,11 +149,11 @@ self = to_object(station_id)
 ->END if self is None
 
 cur_count = get_engine_data(station_id, "torpedo_count", torpedo_build_type)
-do set_engine_data(station_id, "torpedo_count", cur_count+1, torpedo_build_type)
+set_engine_data(station_id, "torpedo_count", cur_count+1, torpedo_build_type)
 
 
 
-do comms_receive(f"""{comms_id}. {torpedo_build_type} Production complete.""", title_color=station_color)
+comms_receive(f"""{comms_id}. {torpedo_build_type} Production complete.""", title_color=station_color)
 ->task_station_building
 
 
@@ -161,11 +161,11 @@ do comms_receive(f"""{comms_id}. {torpedo_build_type} Production complete.""", t
 comms_id = to_object(COMMS_ORIGIN_ID).comms_id
 await comms:
     + "Hail":
-        do comms_receive(f"{comms_id}! We will destroy you, disgusting Terran scum!", title_color=raider_color)
+        comms_receive(f"{comms_id}! We will destroy you, disgusting Terran scum!", title_color=raider_color)
     + "You're Ugly":
-        do comms_receive(f"""You are a foolish Terran, {comms_id}.  Taunting enemy stations is not currently implemented.^""", title_color=raider_color)
+        comms_receive(f"""You are a foolish Terran, {comms_id}.  Taunting enemy stations is not currently implemented.^""", title_color=raider_color)
     + "Surrender now":
-        do comms_receive(f"""Eat my soiled undergarments, {comms_id}.""", title_color=raider_color)
+        comms_receive(f"""Eat my soiled undergarments, {comms_id}.""", title_color=raider_color)
 end_await
 
 -> comms_enemy_station
@@ -197,12 +197,12 @@ show_surr = not hide_surr or (sc_timer > 0)
 
 await comms:
     + "Hail":
-        do comms_receive(f"Go away, {name}! You talk too much!", title_color=raider_color)
+        comms_receive(f"Go away, {name}! You talk too much!", title_color=raider_color)
     + "Taunt":    # if enrage_value is None and not hide_taunt:
         if enrage_value:
-            do comms_receive(f"""I'm too angry to deal with you right now, {name}.""", title_color=raider_color)
+            comms_receive(f"""I'm too angry to deal with you right now, {name}.""", title_color=raider_color)
         elif hide_taunt==True:
-            do comms_receive(f"""Your taunts are worthless to us, {name}.""", title_color=raider_color)
+            comms_receive(f"""Your taunts are worthless to us, {name}.""", title_color=raider_color)
         else:
             # Navigate to sub Menu
             jump comms_taunts
@@ -210,7 +210,7 @@ await comms:
         end_if
     + "Surrender now" if show_surr:
         blob = to_blob(COMMS_SELECTED_ID)
-        do set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
+        set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
         shield_count = blob.get("shield_count", 0)
         s_ratio = 100
         for s in range(shield_count):
@@ -220,36 +220,36 @@ await comms:
         next s
 # Secret Codecase, force surrender if active, otherwise check shield ratio
 	if sc_timer > 0:
-	    do comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
-            do add_role(COMMS_SELECTED_ID, "surrendered")
-            do game_stats["ships_surrender"] += 1
-            do remove_role(COMMS_SELECTED_ID, "raider")
+	    comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
+            add_role(COMMS_SELECTED_ID, "surrendered")
+            ~~ game_stats["ships_surrender"] += 1~~
+            remove_role(COMMS_SELECTED_ID, "raider")
 		    sc_timer = 0
-		    do set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
-		    do set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
+		    set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
+		    set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
         elif s_ratio < 0.09:
             if random.randint(1,6)<3:
-                do comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
-                do add_role(COMMS_SELECTED_ID, "surrendered")
-                do game_stats["ships_surrender"] += 1
-                do remove_role(COMMS_SELECTED_ID, "raider")
+                comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
+                add_role(COMMS_SELECTED_ID, "surrendered")
+                ~~ game_stats["ships_surrender"] += 1~~
+                remove_role(COMMS_SELECTED_ID, "raider")
 
-                do set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
+                set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
             else:
-                do comms_receive(f"""We will fight to our last breath!""", title_color=raider_color)
-                do add_role(COMMS_SELECTED_ID, "never_surrender")
+                comms_receive(f"""We will fight to our last breath!""", title_color=raider_color)
+                add_role(COMMS_SELECTED_ID, "never_surrender")
             end_if
         elif s_ratio < 0.5:
             if random.randint(0,6)<=2:
-                do comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
-                do add_role(COMMS_SELECTED_ID, "surrendered")
-                do remove_role(COMMS_SELECTED_ID, "raider")
-                do set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
+                comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
+                add_role(COMMS_SELECTED_ID, "surrendered")
+                remove_role(COMMS_SELECTED_ID, "raider")
+                set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
             else:
-                do comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title_color=raider_color)
+                comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title_color=raider_color)
             end_if
         else:
-            do comms_receive(f"""Go climb a tree, {name}!""", title_color=raider_color)
+            comms_receive(f"""Go climb a tree, {name}!""", title_color=raider_color)
         end_if
         
 end_await
@@ -278,26 +278,26 @@ await comms:
         # Need to format the data
        msg = data['transmit']
        msg = mast_format_string(msg)
-        do comms_transmit(f"{msg}", title_color="green")
+        comms_transmit(f"{msg}", title_color="green")
         # failure
         if right_button != data['button']:
             msg = "{data['failure']}"
             msg = mast_format_string(msg)
-            do comms_receive(f"{msg}", title_color=raider_color)
-            do set_inventory_value(COMMS_SELECTED_ID, "enrage_target", None)
-            do clear_timer(COMMS_SELECTED_ID, "enrage_timer")
+            comms_receive(f"{msg}", title_color=raider_color)
+            set_inventory_value(COMMS_SELECTED_ID, "enrage_target", None)
+            clear_timer(COMMS_SELECTED_ID, "enrage_timer")
         # success
         else:
             msg = "{data['success']}"
             msg = mast_format_string(msg)
-            do comms_receive(f"{msg}", title_color=raider_color)
-            do set_inventory_value(COMMS_SELECTED_ID, "enrage_target",COMMS_ORIGIN_ID)
-            do set_timer(COMMS_SELECTED_ID, "enrage_timer", minutes=2)
+            comms_receive(f"{msg}", title_color=raider_color)
+            set_inventory_value(COMMS_SELECTED_ID, "enrage_target",COMMS_ORIGIN_ID)
+            set_timer(COMMS_SELECTED_ID, "enrage_timer", minutes=2)
         end_if
         #
         # Clear the taunt data, only can taunt once
         #
-        do set_inventory_value(COMMS_SELECTED_ID, "taunt_data", None)
+        set_inventory_value(COMMS_SELECTED_ID, "taunt_data", None)
     + "Back":
         -> npc_comms    
 end_await
@@ -311,10 +311,10 @@ end_await
 #
 # Setup faces for the departments
 #
-do set_inventory_value(COMMS_ORIGIN_ID, "face_sickbay", random_terran())
-do set_inventory_value(COMMS_ORIGIN_ID, "face_exobiology", random_terran())
-do set_inventory_value(COMMS_ORIGIN_ID, "face_counselor", random_terran())
-do set_inventory_value(COMMS_ORIGIN_ID, "face_security",  random_terran())
+set_inventory_value(COMMS_ORIGIN_ID, "face_sickbay", random_terran())
+set_inventory_value(COMMS_ORIGIN_ID, "face_exobiology", random_terran())
+set_inventory_value(COMMS_ORIGIN_ID, "face_counselor", random_terran())
+set_inventory_value(COMMS_ORIGIN_ID, "face_security",  random_terran())
 
 
 
@@ -324,20 +324,20 @@ do set_inventory_value(COMMS_ORIGIN_ID, "face_security",  random_terran())
 #
 await comms:
     + "Sickbay" color "blue":
-        do comms_receive_internal("The crew health is great!", from_name="sickbay", title_color="blue")
+        comms_receive_internal("The crew health is great!", from_name="sickbay", title_color="blue")
     + "Security" color "red":
-        do comms_receive_internal("All secure", from_name="security",   title_color="red")
+        comms_receive_internal("All secure", from_name="security",   title_color="red")
     + "Exobiology" color "green":
-        do comms_receive_internal("Testing running, one moment", from_name="exobiology", title_color="green")
+        comms_receive_internal("Testing running, one moment", from_name="exobiology", title_color="green")
         # It is best to schedule delayed responses so the comms buttons are not stalled
         schedule test_finished
     + "counselor" color "purple":
-        do comms_receive_internal("Something is disturbing the crew", from_name="counselor", title_color="purple")
+        comms_receive_internal("Something is disturbing the crew", from_name="counselor", title_color="purple")
         #
         # but you can delay comms, There will be no buttons during this delay
         #
         delay sim 3s
-        do comms_receive_internal("Things feel like they are getting worse", from_name="counselor", title_color="purple")
+        comms_receive_internal("Things feel like they are getting worse", from_name="counselor", title_color="purple")
 end_await
 -> internal_comms_loop
 
@@ -346,7 +346,7 @@ end_await
 # COMMS variables should migrate to this task
 
 delay sim 2s
-do comms_receive_internal( "test results finished. Tell the captain we have a pathogen. This could be bad.", from_name="exobiology", title_color= "green")
+comms_receive_internal( "test results finished. Tell the captain we have a pathogen. This could be bad.", from_name="exobiology", title_color= "green")
 ->END
 
 

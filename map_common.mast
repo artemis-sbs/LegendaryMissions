@@ -68,7 +68,7 @@ for x while total_hull_points<max_hull_points:
     friend = to_id(npc_spawn(*spawn_point, f"tsn {str(count).zfill(2)}", "tsn, friendly", ship["key"], "behav_npcship"))
     count += 1
     total_hull_points += hull_points
-    do set_face(friend, random_terran())
+    set_face(friend, random_terran())
 next x
 
 civilian_count = 0
@@ -94,7 +94,7 @@ for pos in scatter_sphere(civilian_count, 0,0,0, 500, 5000, ring=True):
     ship = random.choice(civilian_data)
 
     friend = to_id(npc_spawn(*pos, f"civ {str(count).zfill(2)}", "tsn, friendly, civilian", ship["key"], "behav_npcship"))
-    do set_face(friend, random_terran(civilian=True))
+    set_face(friend, random_terran(civilian=True))
     count += 1
 next x
 
@@ -109,12 +109,12 @@ for player in my_players:
     num_ids = blob.get("num_extra_scan_sources",0)
 
     for friend in any_role("friendly, station"):
-        do blob.set("extra_scan_source", friend, num_ids)
+        blob.set("extra_scan_source", friend, num_ids)
         num_ids += 1
         follow route science select player friend
     next friend
 
-    do blob.set("num_extra_scan_sources",num_ids,0)
+    blob.set("num_extra_scan_sources",num_ids,0)
 next player
 
 ->END
@@ -125,7 +125,7 @@ next player
 c=0
 first = True
 
-#do test_func(3)
+#test_func(3)
 
 #------------------------------------------------------------------------------------------------------------
 for player_ship_data in player_list:
@@ -140,10 +140,10 @@ for player_ship_data in player_list:
     c+=1
     player_ship_data.id = player_ship
 
-    do set_face(player_ship, player_ship_data.face)
-    do set_inventory_value(player_ship, "respawn_time", 5)
+    set_face(player_ship, player_ship_data.face)
+    set_inventory_value(player_ship, "respawn_time", 5)
     if first:
-        do assign_client_to_ship(0,player_ship)
+        assign_client_to_ship(0,player_ship)
         first = False
     end_if
     points = get_open_grid_points(player_ship)

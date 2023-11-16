@@ -25,20 +25,20 @@ end_if
 #
 # Switch to the friendly ship
 #
-do assign_client_to_ship(client_id,comms_selected)
+assign_client_to_ship(client_id,comms_selected)
 #
 # Make a limit weapons console
 #
-section style="area: 25, 4, 100, 80;"
-activate console weapons
-layout widget "2dview"
+gui_section(style="area: 25, 4, 100, 80;")
+gui_activate_console("weapons")
+gui_layout_widget("2dview")
 #
 # Draw a face and interaction text
 #
-section style="area:0,4,25,80;"
+gui_section(style="area:0,4,25,80;")
 
-face station_face
-row
+gui_face(station_face)
+gui_row()
 """
 text: Hello {player_name} tell us what to do
 """
@@ -57,18 +57,18 @@ await choice:
             if target_obj is not None:
                 shoot = has_role(target_id, "raider")
 
-                do set_inventory_value(comms_selected, "TARGET_ID", target_id)
+                set_inventory_value(comms_selected, "TARGET_ID", target_id)
                 if shoot:
                     message = "OK {player_name} - going to attack {target_obj.name}"
                 else:
                     message = "OK {player_name} - going to rendezvous with {target_obj.name}"
                 end_if
                 
-                do target(comms_selected, target_id, shoot)
+                target(comms_selected, target_id, shoot)
             end_if
         elif target_point is not None:
             message = "Heading to designated waypoint"
-            do target_pos(comms_selected, target_point.x, target_point.y, target_point.z )
+            target_pos(comms_selected, target_point.x, target_point.y, target_point.z )
         end_if
         
    + "CANCEL":
@@ -77,9 +77,9 @@ end_await
 #
 # Get back on the right ship
 #
-do assign_client_to_ship(client_id,ship)
+assign_client_to_ship(client_id,ship)
 if message is not None:
-    do comms_message(message, comms_selected, ship, title_color="cyan")
+    comms_message(message, comms_selected, ship, title_color="cyan")
     #receive ship comms_selected "{message}"
 end_if
 jump show_console_selected
@@ -92,20 +92,20 @@ jump show_console_selected
 
 nav = get_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_NAV", None)
 if nav:
-    do sim.delete_navpoint_by_reference(nav)
-    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_NAV", None)
+    sim.delete_navpoint_by_reference(nav)
+    set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_NAV", None)
 end_if
 # Handle initial clicks
 if EVENT.selected_id != 0:
-    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_POINT", None)
-    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_ID", EVENT.selected_id)
+    set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_POINT", None)
+    set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_ID", EVENT.selected_id)
 else:
-    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_POINT", EVENT.source_point)
-    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_ID", None)
+    set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_POINT", EVENT.source_point)
+    set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_ID", None)
     
     nav = sim.add_navpoint(EVENT.source_point.x,EVENT.source_point.y, EVENT.source_point.z, "goto", "white")
-    do nav.visibleToShip =WEAPONS_ORIGIN_ID
-    do set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_NAV", nav)
+    ~~ nav.visibleToShip =WEAPONS_ORIGIN_ID~~
+    set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_NAV", nav)
 end_if
 #Done no point running more
 ->END
