@@ -1,3 +1,7 @@
+# This code is for Communications Console to select
+# and communicate with space objects, grid objects,
+# or any other objects.
+
 route comms select route_comms
 
 #
@@ -9,7 +13,7 @@ raider_color = "red"
 surrender_color = "yellow"
 
 #############################################
-# Create task to player to raider comms and station comms
+# Create task for player comms to raider comms and station comms
 #############################################
 
 =========== route_comms  ========

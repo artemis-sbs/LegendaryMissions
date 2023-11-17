@@ -1,3 +1,6 @@
+# This code is for Engineering Console to select
+# and communicate with objects in grid object list.
+
 route grid point grid_point_select
 route grid select grid_comms
 
