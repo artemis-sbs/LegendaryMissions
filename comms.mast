@@ -5,26 +5,35 @@
 route comms select route_comms
 
 #
-# Load data from a file
+# Load taunt data from the json file which contains the current taunts.
 #
 taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
+
+# Set title colors for incoming messages from stations, raiders, and surrendered raiders.
+
 station_color = "green"
 raider_color = "red"
 surrender_color = "yellow"
 
 #############################################
-# Create task for player comms to raider comms and station comms
+# Handle logic to present buttons for player Comms to an agent
+# e.g. raider, friendly ship, station, asteroid, etc..
+# This code will run the first time the Comms player selects each
+# specific agent that Comms might communicate with.
 #############################################
 
 =========== route_comms  ========
-# start the comms for the players and stations
-# Each ship will have its of thread for comms
-# this enables them to have a unique path
+# Start new dialog thread for a player ship with agent.
+# Each player ship will have its own thread for comms.
+# This enables each ship to have a unique dialog path
+# of conversation with each agent.
 
 if COMMS_SELECTED_ID == COMMS_ORIGIN_ID:
     # This is the same ship
     jump internal_comms
 elif has_roles(COMMS_SELECTED_ID, "tsn, Station"):
+# The station is already building something. This line is is needed so
+# the Comms task has a value initialized for the conversation. 
     torpedo_build_type = sbs.TORPEDO.HOMING
     jump station_comms
 elif has_roles(COMMS_SELECTED_ID, "tsn, friendly"):
