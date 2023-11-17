@@ -6,6 +6,8 @@ jump station_science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
 jump friendly_science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 jump raider_science if has_role(SCIENCE_SELECTED_ID, "raider")
 jump upgrade_science if has_role(SCIENCE_SELECTED_ID, "upgrade")
+jump wreck_science if has_role(SCIENCE_SELECTED_ID, "wreck")
+
 
 ->END
 
@@ -85,5 +87,20 @@ end_if
 await scan:
     + "scan":
         scan results "{upg_desc}"
+end_await
+->END
+
+===== wreck_science =====
+wr_desc = "Gutted and battle-scarred wreckage, the mangled remains of a fierce battle."
+bio_intel = "No signs of life detected."
+mat_intel = "Material scan: no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging."
+
+await scan:
+    + "scan":
+        scan results "{wr_desc}"
+    + "bio":
+        scan results "{bio_intel}"
+    + "mat":
+        scan results "{mat_intel}"
 end_await
 ->END
