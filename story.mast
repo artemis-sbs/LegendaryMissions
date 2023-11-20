@@ -154,8 +154,8 @@ gui_drop_down("text: Upgrades;list:none, few,some, lots, many", var="upgrade_sel
 
 await choice:
 + "Start Mission":
-    simulation create
-    simulation resume
+    sim_create()
+    sim_resume()
     -> start
 end_await
 
@@ -203,7 +203,7 @@ gui_section( style="area: 5, 10, 50, 90;")
 
 await choice:
 + "Resume Mission":
-    simulation resume
+    sim_resume()
 end_await
 jump pause_screen
 ##############

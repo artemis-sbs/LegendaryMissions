@@ -1,4 +1,4 @@
-route science select handle_science
+route_science_select("handle_science")
 
 ====== handle_science =====
 

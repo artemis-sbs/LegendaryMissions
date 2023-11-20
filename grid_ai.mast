@@ -1,8 +1,8 @@
 import grid_ai.py
 
 
-route grid spawn route_grid_spawn
-route spawn grid_send_comms_messages
+route_grid_spawn("route_grid_spawn")
+route_spawn("grid_send_comms_messages")
 
 
 # Not using this route, changing target ia AI loop

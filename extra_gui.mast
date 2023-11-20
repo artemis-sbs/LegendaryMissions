@@ -1,4 +1,4 @@
-route weapons select weapons_select_route
+route_weapons_select("weapons_select_route")
 
 ==== friendly_give_orders ======
 #

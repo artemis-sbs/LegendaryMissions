@@ -2,7 +2,7 @@
 # and communicate with space objects, grid objects,
 # or any other objects.
 
-route comms select route_comms
+route_comms_select("route_comms")
 
 #
 # Load taunt data from the json file which contains the current taunts.

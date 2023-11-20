@@ -6,7 +6,8 @@ import common_docking.py
 #
 # NOTE: More than one route spawn can exist
 #
-route spawn route_spawn
+route_spawn("route_spawn")
+
 
 
 #

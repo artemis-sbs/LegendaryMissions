@@ -1,6 +1,6 @@
 import internal_damage.py
-route damage internal take_internal_damage
-route damage heat take_heat_damage
+route_damage_internal("take_internal_damage")
+route_damage_heat("take_heat_damage")
 
 
 ======== take_heat_damage  =======
