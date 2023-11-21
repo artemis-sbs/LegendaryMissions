@@ -21,7 +21,7 @@ jump comms_damaged if has_role(COMMS_SELECTED_ID, "__damaged__")
 jump comms_undamaged if has_role(COMMS_SELECTED_ID, "__undamaged__")
 jump marker_comms if has_role(COMMS_SELECTED_ID, "marker")
 
-comms_info "static"
+comms_info("static")
 ->END
 
 
@@ -269,11 +269,11 @@ if found_id is not None:
     ship_blob.set("grid_selected_ship_UID", found_id , 0)
 
     marker_go.comms_id = "marker"
-    follow route grid select GRID_PARENT_ID found_id
+    follow_route_grid_select(GRID_PARENT_ID, found_id)
 else:
     # Set the name of the marker to hallway
     marker_go.comms_id = f"hallway:{int(EVENT.source_point.x)},{int(EVENT.source_point.y)}"
-    follow route grid select GRID_PARENT_ID marker_go_id
+    follow_route_grid_select(GRID_PARENT_ID, marker_go_id)
 end_if
 
 

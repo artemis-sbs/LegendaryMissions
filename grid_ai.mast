@@ -1,7 +1,7 @@
 import grid_ai.py
 
 
-route_grid_spawn("route_grid_spawn")
+route_grid_spawn(handle_route_grid_spawn)
 route_spawn("grid_send_comms_messages")
 
 
@@ -20,7 +20,7 @@ grid_rebuild_grid_objects(SPAWNED_ID, grid_data)
 ->END
 
 
-========== route_grid_spawn =========
+========== handle_route_grid_spawn =========
 # AI for the player is the docking logic
 jump damcon_ai if has_role(SPAWNED_ID, "damcons")
 

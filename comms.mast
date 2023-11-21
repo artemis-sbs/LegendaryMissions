@@ -45,7 +45,7 @@ elif has_role(COMMS_SELECTED_ID, "Raider"):
 end_if
 
 # Default clear comms Present static
-comms_info "static"
+comms_info("static")
 
 ->END
 

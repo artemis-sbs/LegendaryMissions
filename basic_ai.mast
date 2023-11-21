@@ -6,7 +6,7 @@ import common_docking.py
 #
 # NOTE: More than one route spawn can exist
 #
-route_spawn("route_spawn")
+route_spawn(handle_route_spawn)
 
 
 
@@ -16,7 +16,7 @@ route_spawn("route_spawn")
 # jump to another label proper for that item
 # or END which stops running this task/flow 
 #
-========== route_spawn =========
+========== handle_route_spawn =========
 
 #
 # AI for the player is the docking logic
@@ -88,7 +88,7 @@ end_if
 if not scanned: 
     should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
     if should_scan is not None:
-        follow route science select should_scan SPAWNED_ID
+        follow_route_science_select(should_scan, SPAWNED_ID)
     end_if
 end_if
 
@@ -171,7 +171,7 @@ scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 if not scanned: 
     should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
     if should_scan is not None:
-        follow route science select should_scan SPAWNED_ID
+        follow_route_science_select(should_scan, SPAWNED_ID)
     end_if
 end_if
 
