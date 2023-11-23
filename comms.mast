@@ -54,7 +54,7 @@ comms_info("static")
 await comms:
     + "Give Orders":
         comms_client_id = EVENT.client_id
-        reroute client comms_client_id friendly_give_orders
+        gui_reroute_client(comms_client_id, friendly_give_orders)
 end_await
 jump  friendly_comms
 
