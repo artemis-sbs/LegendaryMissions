@@ -1,7 +1,7 @@
 import map_common.mast
 
 ================= siege_build_world ===================
-schedule spawn_players
+task_schedule(spawn_players)
 
 terrain_value = 0
 if "few" == terrain_select:

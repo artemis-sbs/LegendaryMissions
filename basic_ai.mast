@@ -7,9 +7,7 @@ import common_docking.py
 # NOTE: More than one route spawn can exist
 #
 route_spawn(handle_route_spawn)
-
-
-
+build_task = None
 #
 # The route_spawn label is the entry point 
 # it examines the SPAWNED_ID to either
@@ -34,7 +32,7 @@ jump raider_start if has_role(SPAWNED_ID, "raider")
 #
 # Create the interior for the ship, defined in grid_ai
 #
-schedule spawn_grid_objects
+task_schedule(spawn_grid_objects)
 #
 # The remaining AI for the player is docking
 #
@@ -149,7 +147,7 @@ end_if
 #
 # Call this logic again in 5 seconds
 #
-delay sim 5s
+await delay_sim(seconds=5)
 -> task_npc_targeting
 
 
@@ -194,7 +192,7 @@ end_if
 #
 # call this logic every 5 seconds
 #
-delay sim 5s
+await delay_sim(seconds=5)
 -> ai_task_friendly
 
 ================ spawn_task_station ================= 
@@ -210,8 +208,8 @@ station_id = SPAWNED_ID
 
 torpedo_build_type = sbs.TORPEDO.HOMING
 build_time = 3*60
-cancel build_task
-var build_task =>  task_station_building
+task_cancel(build_task) 
+build_task = task_schedule(task_station_building)
 
 
 -> END

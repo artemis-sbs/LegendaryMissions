@@ -199,7 +199,7 @@ for coeff in coeffs:
 next coeff
 
 
-delay sim 3s
+await delay_sim(3)
 -> damcon_ai
 
 
@@ -302,7 +302,7 @@ next coeff
 #
 # This will send comms messages when 
 #
-delay sim 5s
+await delay_sim(5)
 
 any_damage = grid_objects(SPAWNED_ID) & role("__damaged__")
 jump loop_grid_send_comms_messages if len(any_damage)

@@ -117,28 +117,30 @@ You have full docking privileges.
         comms_receive(f"""We read you, {comms_id}.  We will focus on homing production.^""", title_color=station_color)
         torpedo_build_type = sbs.TORPEDO.HOMING
         build_time = 3*60
-        cancel build_task
-        var build_task =>  task_station_building
+        task_cancel(build_task)
+        build_task = task_schedule(task_station_building)
 
     + "Build Nuke":
         comms_receive(f"""We read you, {comms_id}.  We will focus on nuke production.^""", title_color=station_color)
         torpedo_build_type= sbs.TORPEDO.NUKE
         build_time = 10*60
-        cancel build_task
-        var build_task => task_station_building
+        task_cancel(build_task)
+        build_task = task_schedule(task_station_building)
 
     + "Build Emp":
         comms_receive(f"""We read you, {comms_id}.  We will focus on EMP production.^""", title_color=station_color)
         torpedo_build_type= sbs.TORPEDO.EMP
         build_time = 5*60
-        cancel build_task
-        var build_task => task_station_building
+        task_cancel(build_task)
+        build_task = task_schedule(task_station_building)
+
     + "Build Mine":
         comms_receive(f"""We read you, {comms_id}.  We will focus on MINE production.^""", title_color=station_color)
         torpedo_build_type = sbs.TORPEDO.MINE
         build_time = 4*60
-        cancel build_task
-        var build_task => task_station_building
+        task_cancel(build_task)
+        build_task = task_schedule(task_station_building)
+        
 end_await
 -> station_comms
 
@@ -343,13 +345,13 @@ await comms:
     + "Exobiology" color "green":
         comms_receive_internal("Testing running, one moment", from_name="exobiology", title_color="green")
         # It is best to schedule delayed responses so the comms buttons are not stalled
-        schedule test_finished
+        task_schedule(test_finished)
     + "counselor" color "purple":
         comms_receive_internal("Something is disturbing the crew", from_name="counselor", title_color="purple")
         #
         # but you can delay comms, There will be no buttons during this delay
         #
-        delay sim 3s
+        await delay_sim(seconds=3)
         comms_receive_internal("Things feel like they are getting worse", from_name="counselor", title_color="purple")
 end_await
 -> internal_comms_loop
@@ -358,7 +360,7 @@ end_await
 # This is a new task to delay the response of the test results
 # COMMS variables should migrate to this task
 
-delay sim 2s
+await delay_sim(seconds=2)
 comms_receive_internal( "test results finished. Tell the captain we have a pathogen. This could be bad.", from_name="exobiology", title_color= "green")
 ->END
 
