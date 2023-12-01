@@ -14,7 +14,7 @@ DONE: "Crew is hungry" messages were distracting during combat,
 
 ADDED: Repair Damaged rooms when Docked 
 ADDED: Main screen console option
-ADDED: random skybox
+ADDED: randomize skybox
 ADDED: is_dev_build() to fs. 
 ADDED: Debug screen tab if is_dev_build
 ADDED: pickup_spawn function (upgrade.py)
