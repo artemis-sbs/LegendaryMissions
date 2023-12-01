@@ -97,10 +97,10 @@ mat_intel = "Material scan: no salvage value. Scrap metal and traces of heavier 
 
 await scan:
     + "scan":
-        scan results "{wr_desc}"
+        scan_results("{wr_desc}")
     + "bio":
-        scan results "{bio_intel}"
+        scan_results("{bio_intel}")
     + "mat":
-        scan results "{mat_intel}"
+        scan_results("{mat_intel}")
 end_await
 ->END

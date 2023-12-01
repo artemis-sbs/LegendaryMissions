@@ -1,4 +1,4 @@
-route destroy destroy_object
+route_destroy(destroy_object)
 
 ===== destroy_object ======
 
@@ -55,13 +55,5 @@ wr_hp = get_inventory_value(wr.id, "hp", 0)
 wr_side = get_inventory_value(wr.id, "hull_side", 0)
 wr_hull = get_inventory_value(wr.id, "hull_type", 0)
 print(f"Wreck created {dest_posx},{dest_posy},{dest_posz} HP: {wr_hp} Side: {wr_side} Name: {wr_hull}")
-
-->END
-
-===== destroy_wreck =====
-
-# This code doesn't work. Not sure why yet.
-
-print(f"Wreck Destroyed.")
 
 ->END
