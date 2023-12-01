@@ -1,4 +1,4 @@
-route change console select_console
+route_change_console("select_console")
 #
 # Expects shared data 
 #    player_list that has the list of player ships

@@ -1,18 +1,27 @@
-route grid point grid_point_select
-route grid select grid_comms
+# This code is for Engineering Console to select
+# and communicate with objects in grid object list.
+
+#route grid point grid_point_select
+#route grid select grid_comms
+#route grid point grid_point_select
+
+route_grid_point("grid_point_select")
+route_grid_select("grid_comms")
+route_grid_focus("grid_focus")
 
 
 ======= grid_comms ======
 #
 # The grid item is selected
 #
+print("{COMMS_SELECTED_ID&0xffff}")
 
 jump comms_damcons if has_role(COMMS_SELECTED_ID, "damcons")
 jump comms_damaged if has_role(COMMS_SELECTED_ID, "__damaged__")
 jump comms_undamaged if has_role(COMMS_SELECTED_ID, "__undamaged__")
 jump marker_comms if has_role(COMMS_SELECTED_ID, "marker")
 
-comms_info "static"
+comms_info("static")
 ->END
 
 
@@ -61,7 +70,6 @@ await comms:
  + "Fix now {d.name}" for d in orders:
     set_inventory_value(COMMS_SELECTED_ID, "target_room", d.id)
     jump comms_damcons
-
 end_await
 
 jump comms_damcons
@@ -114,7 +122,8 @@ await comms:
 #
 change has_role(COMMS_SELECTED_ID, "__damaged__") == True:
     jump comms_undamaged
-# deselect:
+focus:
+    print("focus D")
 end_await
 
 jump comms_damaged
@@ -131,6 +140,8 @@ await comms:
     #
     change has_role(COMMS_SELECTED_ID, "__damaged__") == False:
         jump comms_damaged
+    focus:
+        print("focus D")
 end_await
 
 jump comms_undamaged
@@ -225,6 +236,9 @@ marker_blob = to_blob(marker_go_id)
 go_set_at_loc = grid_objects_at(GRID_PARENT_ID, int(EVENT.source_point.x), int(EVENT.source_point.y))
 ship_blob = to_blob(GRID_PARENT_ID)
 ->END if ship_blob is None
+#
+
+
 ship_blob.set("grid_selected_UID", 0, 0)
 ship_blob.set("grid_selected_ship_UID", 0, 0)
 
@@ -253,14 +267,34 @@ end_if
 if found_id is not None:
     ship_blob.set("grid_selected_UID", found_id , 0)
     ship_blob.set("grid_selected_ship_UID", found_id , 0)
+
     marker_go.comms_id = "marker"
-    follow route grid select GRID_PARENT_ID found_id
+    follow_route_grid_select(GRID_PARENT_ID, found_id)
 else:
     # Set the name of the marker to hallway
     marker_go.comms_id = f"hallway:{int(EVENT.source_point.x)},{int(EVENT.source_point.y)}"
-    follow route grid select GRID_PARENT_ID marker_go_id
+    follow_route_grid_select(GRID_PARENT_ID, marker_go_id)
 end_if
 
 
+
+->END
+
+
+===== grid_focus =====
+
+cur_select = get_inventory_value(GRID_ORIGIN_ID, "click_select", 0)
+if cur_select is not None and cur_select > 0:
+    cur_blob = to_blob(cur_select)
+    cur_scale = cur_blob.get("icon_scale", 0) 
+    cur_blob.set("icon_scale", cur_scale/2,0) 
+end_if
+#
+# Scale current selection
+#
+set_inventory_value(GRID_ORIGIN_ID, "click_select", GRID_SELECTED_ID)
+cur_blob = to_blob(GRID_SELECTED_ID)
+cur_scale = cur_blob.get("icon_scale", 0) 
+cur_blob.set("icon_scale", cur_scale*2,0) 
 
 ->END

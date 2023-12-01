@@ -62,18 +62,8 @@ shared player_list = ~~[
 # to the client and server GUI
 # when the client is started
 #
-reroute server start_server 
-reroute clients client_main
-
-
-
-#
-# This directs the script 
-# to the client and server GUI
-# when the client is started
-#
-reroute server start_server 
-reroute clients client_main
+gui_reroute_server("start_server")
+gui_reroute_clients("client_main")
 
 
 
@@ -102,7 +92,7 @@ sbs.set_sky_box_all(skybox)
 ====== show_server_menu =====
 
 if watch_end_game_task is not None:
-    cancel watch_end_game_task
+    task_cancel(watch_end_game_task)
     watch_end_game_task = None
 end_if
 
@@ -155,8 +145,8 @@ gui_drop_down("text: Upgrades;list:none, few,some, lots, many", var="upgrade_sel
 
 await choice:
 + "Start Mission":
-    simulation create
-    simulation resume
+    sim_create()
+    sim_resume()
     -> start
 end_await
 
@@ -174,25 +164,25 @@ sbs.set_beam_damages(0, 7.0, difficulty)
 
 match world_select.lower():
     case "siege": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
     case "single front": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
     case "double front": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
     case "deep strike": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
     case "peacetime": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
     case "border war": 
-        schedule siege_build_world
+        task_schedule(siege_build_world)
 end_match
 
 #
 # Consoles are waiting to be started 
 #
 game_started = True
-reroute clients game_started_console
-var watch_end_game_task schedule task_end_game
+gui_reroute_clients(game_started_console)
+watch_end_game_task = task_schedule(task_end_game)
 
 
 ====  pause_screen ====
@@ -204,7 +194,7 @@ gui_section( style="area: 5, 10, 50, 90;")
 
 await choice:
 + "Resume Mission":
-    simulation resume
+    sim_resume()
 end_await
 jump pause_screen
 ##############
@@ -212,7 +202,7 @@ jump pause_screen
 
 ============ task_end_game ======= 
 
-delay sim 4s
+await delay_sim(4)
 
 stations = role('tsn') & role('station')
 if len(stations)==0:
@@ -221,8 +211,8 @@ if len(stations)==0:
 
     sbs.play_music_file(0, "music/default/failure")
 
-    reroute clients show_game_results
-    reroute server  show_game_results
+    gui_reroute_clients(show_game_results)
+    gui_reroute_server(  show_game_results)
 end_if
 
 raiders = role('Raider')
@@ -230,8 +220,8 @@ if len(raiders)==0:
     start_text = "Mission is won!  All the enemies have been destroyed."
     game_started = False
     sbs.play_music_file(0, "music/default/victory")
-    reroute clients show_game_results
-    reroute server  show_game_results
+    gui_reroute_clients(show_game_results)
+    gui_reroute_server(  show_game_results)
 end_if
 
 

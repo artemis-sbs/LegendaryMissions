@@ -111,7 +111,7 @@ for player in my_players:
     for friend in any_role("friendly, station"):
         blob.set("extra_scan_source", friend, num_ids)
         num_ids += 1
-        follow route science select player friend
+        follow_route_science_select(player, friend)
     next friend
 
     blob.set("num_extra_scan_sources",num_ids,0)

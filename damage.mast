@@ -1,4 +1,4 @@
-route damage object take_damage
+route_damage_object("take_damage")
 
 
 ============= take_damage =========
