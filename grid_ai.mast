@@ -1,8 +1,8 @@
 import grid_ai.py
 
 
-route grid spawn route_grid_spawn
-route spawn grid_send_comms_messages
+route_grid_spawn(handle_route_grid_spawn)
+route_spawn("grid_send_comms_messages")
 
 
 # Not using this route, changing target ia AI loop
@@ -20,7 +20,7 @@ grid_rebuild_grid_objects(SPAWNED_ID, grid_data)
 ->END
 
 
-========== route_grid_spawn =========
+========== handle_route_grid_spawn =========
 # AI for the player is the docking logic
 jump damcon_ai if has_role(SPAWNED_ID, "damcons")
 
@@ -199,7 +199,7 @@ for coeff in coeffs:
 next coeff
 
 
-delay sim 3s
+await delay_sim(3)
 -> damcon_ai
 
 
@@ -302,7 +302,7 @@ next coeff
 #
 # This will send comms messages when 
 #
-delay sim 5s
+await delay_sim(5)
 
 any_damage = grid_objects(SPAWNED_ID) & role("__damaged__")
 jump loop_grid_send_comms_messages if len(any_damage)

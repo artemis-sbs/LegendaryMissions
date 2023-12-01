@@ -98,7 +98,7 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
         color = theme[color]
 
         go =  grid_spawn(ship_id,  name_tag, name_tag, loc_x, loc_y, g["icon"], color, g["roles"])
-        go.blob.set("icon_scale", g["scale"], 0)
+        go.blob.set("icon_scale", g["scale"]/2, 0)
         # save color so it cn be restored
         set_inventory_value(go.id, "color", color)
         #
@@ -149,7 +149,8 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
     ship = ship_id & 0xFFFFFFFF
     marker_tag = f"marker:{ship}"
     # marker is named hallway
-    marker_go = grid_spawn(ship_id, "marker", marker_tag, int(loc_x),int(loc_y), 23, "#FF0", "#,marker") 
+    # 23 flag, 101-filled square, 111
+    marker_go = grid_spawn(ship_id, "marker", marker_tag, int(loc_x),int(loc_y), 101, "#9994", "#,marker") 
     marker_go.blob.set("icon_scale",1.5,0)
     marker_go_id =  to_id(marker_go)
     set_inventory_value(ship_id, "marker_id", marker_go_id)
@@ -183,6 +184,7 @@ def grid_restore_damcons(id_or_obj):
             v = sbs.vec3(0.5,0,0.5)
             point = sbs.find_valid_unoccupied_grid_point_for_vector3(ship_id, v, 5)
             dc = grid_spawn(ship_id, _name, _name, point[0],point[1],80, colors[i], "damcons, lifeform")
+            dc.blob.set("icon_scale", 0.75,0 )
             _id = to_id(dc)
             _go = to_object(dc)
             set_inventory_value(_id, "color", colors[i])

@@ -6,16 +6,15 @@ import common_docking.py
 #
 # NOTE: More than one route spawn can exist
 #
-route spawn route_spawn
-
-
+route_spawn(handle_route_spawn)
+build_task = None
 #
 # The route_spawn label is the entry point 
 # it examines the SPAWNED_ID to either
 # jump to another label proper for that item
 # or END which stops running this task/flow 
 #
-========== route_spawn =========
+========== handle_route_spawn =========
 
 #
 # AI for the player is the docking logic
@@ -33,7 +32,7 @@ jump raider_start if has_role(SPAWNED_ID, "raider")
 #
 # Create the interior for the ship, defined in grid_ai
 #
-schedule spawn_grid_objects
+task_schedule(spawn_grid_objects)
 #
 # The remaining AI for the player is docking
 #
@@ -87,7 +86,7 @@ end_if
 if not scanned: 
     should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
     if should_scan is not None:
-        follow route science select should_scan SPAWNED_ID
+        follow_route_science_select(should_scan, SPAWNED_ID)
     end_if
 end_if
 
@@ -148,7 +147,7 @@ end_if
 #
 # Call this logic again in 5 seconds
 #
-delay sim 5s
+await delay_sim(seconds=5)
 -> task_npc_targeting
 
 
@@ -170,7 +169,7 @@ scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 if not scanned: 
     should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
     if should_scan is not None:
-        follow route science select should_scan SPAWNED_ID
+        follow_route_science_select(should_scan, SPAWNED_ID)
     end_if
 end_if
 
@@ -193,7 +192,7 @@ end_if
 #
 # call this logic every 5 seconds
 #
-delay sim 5s
+await delay_sim(seconds=5)
 -> ai_task_friendly
 
 ================ spawn_task_station ================= 
@@ -209,8 +208,8 @@ station_id = SPAWNED_ID
 
 torpedo_build_type = sbs.TORPEDO.HOMING
 build_time = 3*60
-cancel build_task
-var build_task =>  task_station_building
+task_cancel(build_task) 
+build_task = task_schedule(task_station_building)
 
 
 -> END

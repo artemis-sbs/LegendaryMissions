@@ -1,4 +1,4 @@
-route science select handle_science
+route_science_select("handle_science")
 
 ====== handle_science =====
 
@@ -15,11 +15,11 @@ jump wreck_science if has_role(SCIENCE_SELECTED_ID, "wreck")
 
 await scan fog 0:
     + "scan":
-        scan results "This is a friendly station."
+        scan_results("This is a friendly station.")
     + "bio":
-        scan results "The crew is mostly human, plus a few aliens, pets, and lab animals."
+        scan_results("The crew is mostly human, plus a few aliens, pets, and lab animals.")
     + "intl":
-        scan results "Built ten years ago, this station was in excellent condition before the battle."
+        scan_results("Built ten years ago, this station was in excellent condition before the battle.")
 end_await
 ->END
 
@@ -27,11 +27,11 @@ end_await
 
 await scan:
     + "scan":
-        scan results "This is a friendly ship."
+        scan_results("This is a friendly ship.")
     + "bio":
-        scan results "The crew is mostly human."
+        scan_results("The crew is mostly human.")
     + "intl":
-        scan results "The ship is ready for battle."
+        scan_results("The ship is ready for battle.")
 end_await
 ->END
 
@@ -52,11 +52,11 @@ end_if
 
 await scan:
     + "scan":
-        scan results "Enemy vessel. Exercise caution."
+        scan_results("Enemy vessel. Exercise caution.")
     + "bio":
-        scan results "{bio_intel}"
+        scan_results("{bio_intel}")
     + "intl":
-        scan results "{taunt_intel}"
+        scan_results("{taunt_intel}")
 end_await
 ->END
 
@@ -86,7 +86,7 @@ end_if
 
 await scan:
     + "scan":
-        scan results "{upg_desc}"
+        scan_results("{upg_desc}")
 end_await
 ->END
 

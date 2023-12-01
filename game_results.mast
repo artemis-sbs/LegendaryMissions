@@ -1,4 +1,4 @@
-route destroy update_score
+route_destroy("update_score")
 
 
 #
@@ -46,7 +46,7 @@ end_if
 
 ========== show_game_results ===============
 
-simulation pause
+sim_pause()
 
 gui_section(style="area: 10, 10, 99, 90;")
 

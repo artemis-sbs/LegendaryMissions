@@ -103,7 +103,7 @@ if cc_count > 0 and (ctype == "weapons" or ctype == "engineering") and not cc_ti
         set_inventory_value(ship_id, "carapaction_coil", cc_count)
         set_inventory_value(ship_id, "cc_timer", 300)
         cc_timer = get_inventory_value(ship_id, "cc_timer" )
-        schedule cc_countdown
+        task_schedule(cc_countdown)
         gui_update_shared("sh-cc-count", "color:#0f0; text: {cc_count};")
         gui_update_shared("sh-cc-txt", "color:#0f0; text: Carapaction Coil;")
         gui_update_shared("sh-cc-timer", "color:#0f0; text: {cc_timer} seconds remaining.;")
@@ -123,7 +123,7 @@ if ip_count > 0 and ctype == "helm" and not ip_timer > 0:
         set_inventory_value(ship_id, "infusion_pcoils", ip_count)
         set_inventory_value(ship_id, "ip_timer", 300)
         ip_timer = get_inventory_value(ship_id, "ip_timer" )
-        schedule ip_countdown
+        task_schedule(ip_countdown)
         gui_update_shared("sh-ip-count", "color:#0f0; text: {ip_count};")
         gui_update_shared("sh-ip-txt", "color:#0f0; text: Infusion P-Coils;")
         gui_update_shared("sh-ip-timer", "color:#0f0; text: {ip_timer} seconds remaining.;")
@@ -144,7 +144,7 @@ if tf_count > 0 and ctype == "weapons" and not tf_timer > 0:
         set_inventory_value(ship_id, "tauron_focuser", tf_count)
         set_inventory_value(ship_id, "tf_timer", 300)
         tf_timer = get_inventory_value(ship_id, "tf_timer" )
-        schedule tf_countdown
+        task_schedule(tf_countdown)
         gui_update_shared("sh-tf-count", "color:#0f0; text: {tf_count};")
         gui_update_shared("sh-tf-txt", "color:#0f0; text: Tauron Focuser;")
         gui_update_shared("sh-tf-timer", "color:#0f0; text: {tf_timer} seconds remaining.;")
@@ -164,7 +164,7 @@ if sc_count > 0 and ctype == "comms" and not sc_timer > 0:
         set_inventory_value(ship_id, "secret_codecase", sc_count)
         set_inventory_value(ship_id, "sc_timer", 300)
         sc_timer = get_inventory_value(ship_id, "sc_timer" )
-        schedule sc_countdown
+        task_schedule(sc_countdown)
         gui_update_shared("sh-sc-count", "color:#0f0; text: {sc_count};")
         gui_update_shared("sh-sc-txt", "color:#0f0; text: Secret Codecase;")
         gui_update_shared("sh-sc-timer", "color:#0f0; text: {sc_timer} seconds remaining.;")
@@ -190,7 +190,7 @@ if vn_count > 0 and ctype == "engineering":
         if total_hp == 18: # Show warning message if DamCons already at full strength
             set_inventory_value(ship_id, "vn_timer", 5)
             vn_timer = get_inventory_value(ship_id, "vn_timer" )
-            schedule vn_countdown
+            task_schedule(vn_countdown)
             gui_update_shared("sh-vn-timer", "color:#ff0; text: Damage Control Teams already at full strength;")
         else: 
             grid_restore_damcons(ship_id)
@@ -209,7 +209,7 @@ if cl_count > 0 and ctype == "engineering" and not cl_timer > 0:
         set_inventory_value(ship_id, "cetrocite_crystal", cl_count)
         set_inventory_value(ship_id, "cl_timer", 300)
         cl_timer = get_inventory_value(ship_id, "cl_timer" )
-        schedule cl_countdown
+        task_schedule(cl_countdown)
         gui_update_shared("sh-cl-count", "color:#0f0; text: {cl_count};")
         gui_update_shared("sh-cl-txt", "color:#0f0; text: Cetrocite Crystal;")
         gui_update_shared("sh-cl-timer", "color:#0f0; text: {cl_timer} seconds remaining.;")
@@ -229,7 +229,7 @@ if la_count > 0 and ctype == "science" and not la_timer > 0:
         set_inventory_value(ship_id, "lateral_array", la_count)
         set_inventory_value(ship_id, "la_timer", 300)
         la_timer = get_inventory_value(ship_id, "la_timer" )
-        schedule la_countdown
+        task_schedule(la_countdown)
         gui_update_shared("sh-la-count", "color:#0f0; text: {la_count};")
         gui_update_shared("sh-la-txt", "color:#0f0; text: Lateral Array;")
         gui_update_shared("sh-la-timer", "color:#0f0; text: {la_timer} seconds remaining.;")
@@ -254,7 +254,7 @@ gui_row()
             if fshield > fshieldmax or rshield > rshieldmax: # Show warning message if one/both shields are already over the max
                 set_inventory_value(ship_id, "ho_timer", 5)
                 ho_timer = get_inventory_value(ship_id, "ho_timer" )
-                schedule ho_countdown
+                task_schedule(ho_countdown)
                 gui_update_shared("sh-ho-timer", "color:#ff0; text: Shields already overcharged;")
             else: 
                 fshield += 300.0
@@ -366,7 +366,7 @@ for x in range(300):
     gui_update_shared("sh-cc-timer", "color:#0f0; text: {cc_timer} seconds remaining.;")
     cc_timer -= 1
     set_inventory_value(ship_id, "cc_timer", cc_timer )
-    delay gui 1s
+    await delay_app(1)
 next x
 shieldrate /= 3.0
 print(f"Reset Shield Repair Rate: {shieldrate}")
@@ -398,7 +398,7 @@ for x in range(300):
     gui_update_shared("sh-ip-timer", "color:#0f0; text: {ip_timer} seconds remaining.;")
     ip_timer -= 1
     set_inventory_value(ship_id, "ip_timer", ip_timer )
-    delay gui 1s
+    await delay_app(1)
 next x
 impfaster /= 3.0
 turnfaster /= 3.0
@@ -431,7 +431,7 @@ for x in range(300):
     gui_update_shared("sh-tf-timer", "color:#0f0; text: {tf_timer} seconds remaining.;")
     tf_timer -= 1
     set_inventory_value(ship_id, "tf_timer", tf_timer )
-    delay gui 1s
+    await delay_app(1)
 next x
 beamfaster /= 2.0
 tubefaster /= 2.0
@@ -451,7 +451,7 @@ for x in range(300):
     break if sc_timer == 0
     sc_timer -= 1
     set_inventory_value(ship_id, "sc_timer", sc_timer )
-    delay gui 1s
+    await delay_app(1)
 next x
 gui_update_shared("sh-sc-count", "text: {sc_count};")
 gui_update_shared("sh-sc-txt", "text: Secret Codecase;")
@@ -465,7 +465,7 @@ for x in range(5):
     vn_timer -= 1
     set_inventory_value(ship_id, "vn_timer", vn_timer )
     print(f"VN Timer: {vn_timer}")
-    delay gui 1s
+    await delay_app(1)
 next x
 gui_update_shared("sh-vn-timer", "text: Restore Damage Control Teams;")
 ->END
@@ -486,7 +486,7 @@ for x in range(300):
     gui_update_shared("sh-cl-timer", "color:#0f0; text: {cl_timer} seconds remaining.;")
     cl_timer -= 1
     set_inventory_value(ship_id, "cl_timer", cl_timer )
-    delay gui 1s
+    await delay_app(1)
 next x
 stayfrosty /= 2.0
 print(f"Reset Coolant Coefficient: {stayfrosty}")
@@ -512,7 +512,7 @@ for x in range(300):
     gui_update_shared("sh-la-timer", "color:#0f0; text: {la_timer} seconds remaining.;")
     la_timer -= 1
     set_inventory_value(ship_id, "la_timer", la_timer )
-    delay gui 1s
+    await delay_app(1)
 next x
 scanrate /= 3.0
 print(f"Reset Scan Speed: {scanrate}")
@@ -529,7 +529,7 @@ for x in range(5):
     ho_timer -= 1
     set_inventory_value(ship_id, "ho_timer", ho_timer )
     print(f"HO Timer: {ho_timer}")
-    delay gui 1s
+    await delay_app(1)
 next x
 gui_update_shared("sh-ho-timer", "text: +300 to shields but may damage shield generators")
 ->END

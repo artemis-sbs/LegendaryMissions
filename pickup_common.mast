@@ -1,4 +1,4 @@
-route collision object handle_collision
+route_collision_object("handle_collision")
 
 # Collision handler for anomalies/upgrades. 
 # Adds upgrade to ship inventory, deletes object, creates particle splash.
