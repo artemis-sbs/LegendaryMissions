@@ -11,6 +11,7 @@ import siege.mast
 import extra_gui.mast
 import game_results.mast
 import damage.mast
+import destroy.mast
 import grid_comms.mast
 import pickup_common.mast
 import upgrade.mast
@@ -42,7 +43,7 @@ Written using MAST and is a great reference for those looking to write their own
 shared game_started = False
 
 
-shared enemy_count=5
+shared difficulty=5
 shared player_count = 1
 shared player_list = ~~[
     MastDataObject({"name": "Artemis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (200,0,0) , "face": random_terran()}),
@@ -119,7 +120,7 @@ gui_section(  style="area: 50, 10, 95,90;row-height:65px;padding:0px,10px")
 gui_slider("low: 1.0;high:8.0", var="player_count")
 gui_row()
 """ justify:right;text:Difficulty """
-gui_slider("low: 1.0;high:11.0", var="enemy_count")
+gui_slider("low: 1.0;high:11.0", var="difficulty")
 gui_row()
 
 """ justify:right;text:Mission Type"""
@@ -168,7 +169,7 @@ end_await
 #
 
 #------------------------------------------------------------------------------------------------------------
-sbs.set_beam_damages(0, 7.0, enemy_count)
+sbs.set_beam_damages(0, 7.0, difficulty)
 
 
 match world_select.lower():
@@ -182,7 +183,7 @@ match world_select.lower():
         schedule siege_build_world
     case "peacetime": 
         schedule siege_build_world
-    case "broder war": 
+    case "border war": 
         schedule siege_build_world
 end_match
 
