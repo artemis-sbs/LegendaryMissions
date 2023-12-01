@@ -97,7 +97,7 @@ else:
 
 spawn_points = scatter.box(10000, 0,0,0, 65000, 1000, 65000, centered=True)
 num = 1
-total_weight = (12-enemy_count) *2
+total_weight = (12-difficulty) *2
 _spawned_pos = []
 
 for station in spawn_points:
@@ -191,9 +191,9 @@ enemy_prefix = "KLMNQ"
 
 
 #------------------------------------------------------------------------------------------------------------
-box_count = int(enemy_count/2)
-#spawn_north = scatter_line(int(enemy_count), 0,0, 9000, 20000,0, 6000, True)
-#spawn_south = scatter_line(int(enemy_count), 0,0,-9000, 20000,0,-6000, True)
+box_count = int(difficulty/2)
+#spawn_north = scatter_line(int(difficulty), 0,0, 9000, 20000,0, 6000, True)
+#spawn_south = scatter_line(int(difficulty), 0,0,-9000, 20000,0,-6000, True)
 
 spawn_north = scatter_box(box_count, 0,0, 35000, 100000, 2000, 15000, centered=True)
 spawn_south = scatter_box(box_count, 0,0, -35000, 100000, 2000, 15000, centered=True)
@@ -233,7 +233,7 @@ for v in spawn_points:
     
     
     enemy_name_number = enemy_name_number + 1
-    enemy_count %= 100
+    difficulty %= 100
 next v
 
 
@@ -346,6 +346,12 @@ for v in spawn_points:
     #upg+=1    
 next v
 
+#wr = terrain_spawn(200, 0, 600, "Wreck", "wreck", "wreck", "behav_asteroid")
+#temp_yaw = random.uniform(0.001, 0.003)
+#temp_pitch = random.uniform(0.002, 0.004)
+#wr.engine_object.steer_yaw = temp_yaw
+#wr.engine_object.steer_pitch = temp_pitch
+#wr.blob.set("radar_color_override", "#f0c")
 
 jump spawn_friendly_npc
 #------------------------------------------------------------------------------------------------------------

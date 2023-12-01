@@ -7,6 +7,7 @@ route_damage_object("take_damage")
 jump npc_damage_target if has_role(DAMAGE_TARGET_ID, "raider")
 jump friendly_station_damage_target if has_roles(DAMAGE_TARGET_ID, "tsn, station")
 jump friendly_support_damage_target if has_roles(DAMAGE_TARGET_ID, "tsn, friendly")
+jump wreck_damage if has_role(DAMAGE_TARGET_ID, "wreck")
 
 ->END
 
@@ -70,5 +71,135 @@ next player
 # Only request help if you haven't for two minutes
 #
 set_timer(DAMAGE_TARGET_ID, "request_help_timer", minutes=2)
+
+->END
+
+===== wreck_damage =====
+
+# To determine what happens when a wreck is destroyed. 
+
+print(f"Wreck Damaged ID: {DAMAGE_TARGET_ID}")
+
+# End task if the target no longer exists.
+
+wr = to_object(DAMAGE_TARGET_ID)
+->END if wr is None
+
+# Get the wreck's position and side value.
+
+wr_eobj = to_engine_object(DAMAGE_TARGET_ID)
+wr_posx = wr_eobj.pos.x
+wr_posy = wr_eobj.pos.y
+wr_posz = wr_eobj.pos.z
+wr_pos = wr_eobj.pos        # Need this vector for the particle effect
+wr_side = get_inventory_value(wr.id, "hull_side", 0)
+
+# Once we have the position and the side value, destroy the wreck, delete the engine object, and generate a particle effect. 
+
+wr.destroyed()
+sbs.delete_object(DAMAGE_TARGET_ID)
+sbs.particle_at(wr_pos, "color:#FA0,#F00; lifespan:60; image_cell:12; size:3; speed:1; count:100,1000")
+
+# From the Start Mission screen, upgrade_select determines how frequently upgrades are dropped. 
+
+upg_dropchance = 0
+if "few" == upgrade_select:
+    upg_dropchance = 2
+elif "some" == upgrade_select:
+    upg_dropchance = 4
+elif "lots" == upgrade_select:
+    upg_dropchance = 6
+elif "many" == upgrade_select:
+    upg_dropchance = 8
+end_if
+
+# Generate random number, end task if upg_rand is higher than the drop chance (determined by upgrade_select)
+
+upg_rand = random.randint(1,10)
+print(f"Wreck destroyed, drop random {upg_rand}, drop chance {upg_dropchance}")
+->END if upg_rand > upg_dropchance
+
+# If we are dropping an upgrade, reroll upg_rand and determine upgrade based on the side value/race.
+# For most races, they drop three different types of upgrades: Common (50%), Uncommon (30%), and Rare (20%)
+# The upgrades are based loosely on what sort of technology they prefer. Torgoths have the highest shields, so
+# their upgrades are usually shield-based. Ximni have the best beam weapons, so they carry tauron focusers. 
+# Skaraans carry a wide variety of exotic alien technology, so they have an equal chance for every upgrade.
+# If you're adding any new upgrades, make sure you add them to what the Skaraans might drop. 
+
+upg_rand = random.randint(1, 10)
+if wr_side == "kralien":
+    if upg_rand >= 6 and upg_rand <= 10:
+        # Lateral Array 50%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "lateral_array")
+    elif upg_rand >= 3 and upg_rand <= 5:
+        # HiDens Powercell 30%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "hidens_powercell")
+    elif upg_rand >= 1 and upg_rand <= 2:
+        # Carapaction Coil 20%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "carapaction_coil")
+    end_if
+end_if
+
+if wr_side == "arvonian":
+    if upg_rand >= 6 and upg_rand <= 10:
+        # Infusion P-Coils 50%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "infusion_pcoils")
+    elif upg_rand >= 3 and upg_rand <= 5:
+        # Lateral Array 30%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "lateral_array")
+    elif upg_rand >= 1 and upg_rand <= 2:
+        # HiDens Powercell 20%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "hidens_powercell")
+    end_if
+end_if
+
+if wr_side == "torgoth":
+    if upg_rand >= 6 and upg_rand <= 10:
+        # Carapaction Coil 50%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "carapaction_coil")
+    elif upg_rand >= 3 and upg_rand <= 5:
+        # Haplix Overcharger 30%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "haplix_overcharger")
+    elif upg_rand >= 1 and upg_rand <= 2:
+        # Cetrocite Crystal 20%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "cetrocite_crystal")
+    end_if
+end_if
+
+if wr_side == "ximni":
+    if upg_rand >= 6 and upg_rand <= 10:
+        # Tauron Focuser 50%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "tauron_focuser")
+    elif upg_rand >= 3 and upg_rand <= 5:
+        # Cetrocite Crystal 30%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "cetrocite_crystal")
+    elif upg_rand >= 1 and upg_rand <= 2:
+        # Infusion P-Coils 20%
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "infusion_pcoils")
+    end_if
+end_if
+
+if wr_side == "skaraan" or wr_side is None:
+    upg_rand = random.randint(1,9)          # For all upgrades, equal chance. The Skaraans can be expected to carry any type of exotic technology.
+    if upg_rand == 1:
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "carapaction_coil")
+    elif upg_rand == 2:
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "infusion_pcoils")
+    elif upg_rand == 3:
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "tauron_focuser")
+    elif upg_rand == 4:
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "secret_codecase")
+    elif upg_rand == 5:
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "hidens_powercell")
+    elif upg_rand == 6:
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "vigoranium_nodule")
+    elif upg_rand == 7:
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "cetrocite_crystal")
+    elif upg_rand == 8:
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "lateral_array")
+    elif upg_rand == 9:
+        pickup_spawn(wr_posx, wr_posy, wr_posz, "haplix_overcharger")
+    end_if
+end_if
 
 ->END

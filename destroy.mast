@@ -1,0 +1,59 @@
+route_destroy(destroy_object)
+
+===== destroy_object ======
+
+jump destroy_enemy if has_role(DESTROYED_ID, "raider")
+jump destroy_wreck if has_role(DESTROYED_ID, "wreck")
+
+->END
+
+===== destroy_enemy =====
+
+# When an enemy ship is destroyed, we want to replace it with a wreck. Before we delete the enemy, we need to 
+# grab a few things from it: the x/y/z position, and the side value, so we can determine later what type of 
+# upgrade it might drop. 
+
+dest_obj = to_object(DESTROYED_ID)
+dest_side = dest_obj.side
+dest_eobj = to_engine_object(DESTROYED_ID)
+dest_posx = int(dest_eobj.pos.x)
+dest_posy = int(dest_eobj.pos.y)
+dest_posz = int(dest_eobj.pos.z)
+dest_blob = to_blob(DESTROYED_ID) # Get the hull name from the shipData file
+dest_hull = get_data_set_value(dest_blob, "hull_name", 0)
+
+# Not all destroyed ships leave behind wrecks. So here's some code to determine if a wreck is left behind.
+# Smaller hulls should have a lower chance, while bigger ships are more likely to leave behind wrecks.
+# Basic chance, cruiser = 40%, battleship = 60%, carrier/dreadnought = 80%
+
+dest_rand = random.randint(1,10)
+dest_chance = 0
+if dest_hull == "cruiser" or dest_hull == "light cruiser" or dest_hull == "missile cruiser" or dest_hull == "barbarian" or dest_hull == "goliath" or dest_hull == "destroyer" or dest_hull == "defiler" or dest_hull == "strongbow":
+    dest_chance = 4
+elif dest_hull == "battleship" or dest_hull == "light carrier" or dest_hull == "leviathan" or dest_hull == "executor":
+    dest_chance = 6
+elif dest_hull == "dreadnought" or dest_hull == "carrier" or dest_hull == "behemoth" or dest_hull == "enforcer" or dest_hull == "brigantine":
+    dest_chance = 8
+end_if
+print(f"Enemy {dest_hull} destroyed, dest_rand: {dest_rand}, dest_chance: {dest_chance}")
+->END if dest_rand > dest_chance
+
+# If dest_rand is lower than dest_chance, a wreck is created at the same position as the destroyed ship. 
+# We give the wreck a random yaw/pitch (so it spins a bit), set the radar color, and assign some inventory values
+# to help determine later if it drops any particular upgrade. 
+
+wr = terrain_spawn(dest_posx, dest_posy, dest_posz, "Wreck", f"wreck, {dest_side}", "wreck", "behav_asteroid")
+temp_yaw = random.uniform(0.001, 0.003)
+temp_pitch = random.uniform(0.002, 0.004)
+wr.engine_object.steer_yaw = temp_yaw
+wr.engine_object.steer_pitch = temp_pitch
+wr.blob.set("radar_color_override", "#f0c")
+set_inventory_value(wr.id, "hp", 150)
+set_inventory_value(wr.id, "hull_side", dest_side)
+set_inventory_value(wr.id, "hull_type", dest_hull)
+wr_hp = get_inventory_value(wr.id, "hp", 0)
+wr_side = get_inventory_value(wr.id, "hull_side", 0)
+wr_hull = get_inventory_value(wr.id, "hull_type", 0)
+print(f"Wreck created {dest_posx},{dest_posy},{dest_posz} HP: {wr_hp} Side: {wr_side} Name: {wr_hull}")
+
+->END

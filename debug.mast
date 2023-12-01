@@ -28,9 +28,18 @@ Under construction
 
 gui_section(style="area:10,15,35,100;row-height:35px;")
 gui_row()
-on message gui_button("Test anomalies"):
+on message gui_button("Test Anomalies"):
     jump spawn_test_anom
 end_on
+gui_row()
+on message gui_button("Test Wreck"):
+    jump spawn_test_wreck
+end_on
+gui_row()
+on message gui_button("Test Enemy"):
+    jump spawn_test_enemy
+end_on
+
 
 
 gui_activate_console("debug")
@@ -56,12 +65,54 @@ _pos = _pos_eo + (_forward * 300)
 pickup_spawn(_pos.x, _pos.y, _pos.z, "carapaction_coil")
 pickup_spawn(200+_pos.x, _pos.y, _pos.z+250, "infusion_pcoils")
 pickup_spawn(275+_pos.x, _pos.y, _pos.z+250, "tauron_focuser")
- pickup_spawn(125+_pos.x, _pos.y, _pos.z+325, "secret_codecase")
- pickup_spawn(200+_pos.x, _pos.y, _pos.z+325, "hidens_powercell")
- pickup_spawn(275+_pos.x, _pos.y, _pos.z+325, "vigoranium_nodule")
- pickup_spawn(125+_pos.x, _pos.y, _pos.z+400, "cetrocite_crystal")
- pickup_spawn(200+_pos.x, _pos.y, _pos.z+400, "lateral_array")
- pickup_spawn(275+_pos.x, _pos.y, _pos.z+400, "haplix_overcharger")
+pickup_spawn(125+_pos.x, _pos.y, _pos.z+325, "secret_codecase")
+pickup_spawn(200+_pos.x, _pos.y, _pos.z+325, "hidens_powercell")
+pickup_spawn(275+_pos.x, _pos.y, _pos.z+325, "vigoranium_nodule")
+pickup_spawn(125+_pos.x, _pos.y, _pos.z+400, "cetrocite_crystal")
+pickup_spawn(200+_pos.x, _pos.y, _pos.z+400, "lateral_array")
+pickup_spawn(275+_pos.x, _pos.y, _pos.z+400, "haplix_overcharger")
+
+jump debug_screen
+
+===== spawn_test_wreck ===== 
+# For testing wrecks, load one up front
+_ship_id = get_inventory_value(client_id, "assigned_ship")
+jump debug_screen if _ship_id is None
+
+eo = to_engine_object(_ship_id)
+_pos_eo = eo.pos
+_forward = eo.forward_vector()
+_pos = _pos_eo + (_forward * 300)
+
+wr = terrain_spawn(_pos.x, _pos.y, _pos.z+300, "Wreck", "wreck", "wreck", "behav_asteroid")
+temp_yaw = random.uniform(0.001, 0.003)
+temp_pitch = random.uniform(0.002, 0.004)
+wr.engine_object.steer_yaw = temp_yaw
+wr.engine_object.steer_pitch = temp_pitch
+wr.blob.set("radar_color_override", "#f0c")
+set_inventory_value(wr.id, "hp", 150)
+set_inventory_value(wr.id, "hull_side", "skaraan")
+set_inventory_value(wr.id, "hull_type", "cruiser")
+
+jump debug_screen
+
+
+===== spawn_test_enemy ===== 
+# For testing wrecks, load one up front
+_ship_id = get_inventory_value(client_id, "assigned_ship")
+jump debug_screen if _ship_id is None
+
+eo = to_engine_object(_ship_id)
+_pos_eo = eo.pos
+_forward = eo.forward_vector()
+_pos = _pos_eo + (_forward * 300)
+
+spawn_data = npc_spawn(_pos.x, _pos.y, _pos.z+400, "Clay Pigeon", "ximni, raider", "xim_light_cruiser", "behav_npcship")
+raider = spawn_data.py_object
+set_face(raider.id, random_face("ximni"))
+r_blob = to_blob(raider.id)
+set_data_set_value(r_blob, "shield_val", 0, 0)
+set_data_set_value(r_blob, "shield_val", 0, 1)
 
 jump debug_screen
 

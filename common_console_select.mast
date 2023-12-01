@@ -158,7 +158,7 @@ sbs.set_sky_box(client_id, sky_box)
 #
 set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
 #------------------------------------------------------------------------------------------------------------
-sbs.set_beam_damages(client_id, 7.0, enemy_count)
+sbs.set_beam_damages(client_id, 7.0, difficulty)
 #------------------------------------------------------------------------------------------------------------
 gui_add_console_tab(_ship_id, console_select, console_select, None)
 gui_console(console_select)
