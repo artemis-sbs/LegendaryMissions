@@ -52,20 +52,20 @@
         {
             "button": "Taunt intelligence",
             "transmit": "Hey bug-brain! You're so stupid, one of these asteroids could out-think you!",
-            "failure": "This obvious taunt weill be ignored, {name}. Go annoy someone else.",
+            "failure": "This obvious taunt will be ignored, {name}. Go annoy someone else.",
             "success": "Your pathetic ship will be crushed {name}. Your brain most resembles a rock!",
             "science": "The captain was criticized by his classmates at the Academy for sub-standard grades."
         },
         {
             "button": "Taunt captain's height",
             "transmit": "Hey pipsqueek! Are you ready to fight with the big people, or should you run back home to your hive-mommy?",
-            "failure": "My hive-mother taught said to ignore useless fools, {name}. Cease communication.",
+            "failure": "The hive-mother teaches that useless fools should be ignored, {name}. Cease communication.",
             "success": "You will learn respect when your ship is blasted into tiny pieces of scrap metal!",
             "science": "The captain was the smallest hatchling in his egg cluth, and is sensitive about his stature."
         },
         {
             "button": "Taunt captain's age",
-            "transmit": "Are the High Priests giving such big toys to hatchlings now? Bring it over hear, and it might get broken!",
+            "transmit": "Are the High Priests giving such big toys to hatchlings now? Bring it over here, and it might get broken!",
             "failure": "Wise Kraliens ignore tricks like this, {name}. Go play games with someone else.",
             "success": "Worthless Terrans! The wages of your insolence will be paid only with agony and death!",
             "science": "The captain is young and inexperienced. They may be over-eager to prove themselves in battle."
@@ -111,7 +111,7 @@
             "button": "Taunt nepotism",
             "transmit": "Did you get that warship from your mommy? Do you know how to use it, or was it just to make you feel better?",
             "failure": "Your idiotic chatter bores me, {name}. No further communication.",
-            "success": "What would a bunch of smelly primates know about good breeding? Prepare to die, Terrans!",
+            "success": "What would a bunch of smelly primates know about good breeding? Your bloodlines end today, Terrans!",
             "science": "The captain receieved their commission because they are the eldest child of a famous war hero."
         },
         {
@@ -119,7 +119,7 @@
             "transmit": "Hey snot-head! I heard you're too dumb to play cards. I bet you can't fight, either!",
             "failure": "Don't bother me with your silly games, {name}. Go play with someone else.",
             "success": "You want to play games, {name}? Prepare for a lesson in death and destruction!",
-            "science": "The captain recently got into a fight over a Mala-Mala game after another player criticized their intelligence."
+            "science": "The captain recently got into a fight over a mala-mala game after another player criticized their intelligence."
         },
         {
             "button": "Taunt cowardice",
@@ -129,18 +129,11 @@
             "science": "The captain was reprimanded at the Battle of Gemini Rift for failing to engage the enemy."
 	},
         {
-            "button": "Taunt social status",
+            "button": "Taunt disgraced family",
             "transmit": "Your superiors must not consider us a threat, if they are throwing their dregs and washouts after us!",
             "failure": "Your prattling nonsense is beneath me, {name}. Communications ceased.",
             "success": "The vysama-worm eats both the queen and manure-farmer, {name}. Your corpses will provide a feast for them!",
             "science": "The captain was sponsored by a disgraced family, and is sensitive about their lack of family connections."
-	},
-        {
-            "button": "Taunt fashion choices",
-            "transmit": "Your superiors must not consider us a threat, if they are throwing their dregs and washouts after us!",
-            "failure": "I have better things to do than listen to you, {name}. Do not bother contacting us again.",
-            "success": "We will be happy to drape your graves with !",
-            "science": "The captain wore a purple battle-skirt to an officer's dinner party. Can you believe it... purple!"
 	},
         {
             "button": "Taunt captain's birth",
@@ -149,14 +142,14 @@
             "success": "How curious. Our Naval Intelligence found your death certificates. We have already signed them for you!",
             "science": "The captain was an orphan, and doesn't like to talk about the circumstances of their birth."
 	}
-    ],
+],
     "torgoth": [
         {
-            "button": "Taunt mother",
-            "transmit": "Hey Jumbo! Your mother is a Space Whale!",
-            "failure": "You are an idiot, {name}. My mother died years ago.",
-            "success": "You shall die for insulting my mother, {name}!",
-            "science": "The captain loves their mother and is proud that she is so beautiful."
+            "button": "Taunt pod-mother",
+            "transmit": "Hey Jumbo! Your pod-mother is a Space Whale!",
+            "failure": "You are an idiot, {name}. My pod-mother died years ago.",
+            "success": "You shall die for insulting my pod-mother, {name}!",
+            "science": "The captain loves their pod-mother and visits her frequently."
         },
         {
             "button": "Taunt spouse",
@@ -180,27 +173,48 @@
             "science": "The captain is a warmonger who finds the idea of peace offensive."
         },
         {
-            "button": "Taunt captain's children",
-            "transmit": "I've never seen Torgoth move faster than when your children left the Naval Academy. Maybe you should follow them!",
-            "failure": "You're the pathetic ones, {name}. I have never had any children.",
-            "success": "You just crossed a line, {name}! For that I'm coming to kill you!",
-            "science": "All of the captain's four children dropped out of the Naval Academy or refused to join the Navy."
-        },
-        {
             "button": "Taunt ship is slow",
             "transmit": "Can't that thing move any faster? My grandmother can move faster than that... and she's dead!",
             "failure": "Patience, {name}. Your inevitable death will come soon enough.",
             "success": "Death comes to us all, {name}. Apparently your time has arrived. Full speed ahead!",
-            "science": "At the last refit, maintenance records show that the captain complained about the ship's speed."
+            "science": "At the last refit, maintenance records show that the captain complained about the ship's lack of speed."
         },
         {
             "button": "Taunt cowardice",
-            "transmit": "Hey there, squid-face! I thought you'd already surrendered, but I guess I just have to wait a few seconds.",
-            "failure": "Your nonsense chatter does not interest us, {name}. Ending all communication.",
-            "success": "You will have to wait longer, {name}. Perhaps for the rest of your miserable lives. Prepare to die!",
-            "science": "The captain has surrendered three times in the last six months."
-        }
-    ],
+            "transmit": "Hey there, squid-face! If you're too scared to fight, maybe you could surrender to our shuttle?",
+            "failure": "That is old history, {name}. Today is another day. No further communication.",
+            "success": "We will not tolerate such insolence, {name}! We will destroy you!",
+            "science": "The captain surrendered a Behemoth-class dreadnought to a pirate scout at the Battle of Polaris Wharf."
+        },
+        {
+            "button": "Taunt captain's eating habits",
+            "transmit": "Hey grass-eater! We've got a delicious fruit salad over here, it would look great on your trophy wall!",
+            "failure": "An amusing joke, but we have no use for humor. Enjoy your fruit salad, {name}.",
+            "success": "I will display this fruit salad right next to your skulls, {name}. Prepare to die!",
+            "science": "The captain was spotted eating in a vegetarian restaurant three months ago."
+        },
+        {
+            "button": "Taunt captain's height",
+            "transmit": "Hey ch'thotgh! We were expecting someone a little taller, can we get you a step-stool?",
+            "failure": "I am tall enough to know a fool when I see one, {name}. End communication.",
+            "success": "We will see how tall you are after I have trampled you to death, Terran!",
+            "science": "The captain is shorter than most Torgoth, a race that places considerable emphasis on physical size."
+        },
+        {
+            "button": "Taunt intelligence",
+            "transmit": "Hey melon-brain! I've met cabbages that are smarter than you!",
+            "failure": "Even a cabbage can see through this pointless ruse, {name}. Go bother someone else.",
+            "success": "Insolent fledgelings! We will see how smart you are when I split your skulls open!",
+            "science": "A double-agent reported the captain is a slow-thinking, plodding tactiction, and gets angry when questioned."
+        },
+        {
+            "button": "Taunt captain's love interests",
+            "transmit": "Hey love-handles! We heard from NuVeenu's Love Nest, they got a tall one already waiting for you!",
+            "failure": "You must be mistaken, {name}. I have never been to such a place. Do not speak again.",
+            "success": "You are disgusting, {name}! How dare you! I will rid the galaxy of your filth!",
+            "science": "The captain was spotted entering an Arvonian pleasure-palace, and reportedly prefers them tall and skinny."
+	}
+],
     "skaraan": [
         {
             "button": "Taunt ship is slow",
@@ -224,20 +238,55 @@
             "science": "The captain is very status conscious and believe they are a very important person."
         },
         {
-            "button": "Taunt captain's children",
-            "transmit": "I've never seen Torgoth move faster than when your children left the Naval Academy. Maybe you should follow them!",
-            "failure": "You're the pathetic ones, {name}. I have never had any children.",
-            "success": "You just crossed a line, {name}! For that I'm coming to kill you!",
-            "science": "All of the captain's four children dropped out of the Naval Academy or refused to join the Navy."
+            "button": "Taunt captain's appearance",
+            "transmit": "Hey, horse-face! If I was that ugly, I'd hide behind a cloaking device, too!",
+            "failure": "Your annoying taunts will not work on us, {name}. Go annoy someone else.",
+            "success": "Worthless Terrans! I will obliterate you!",
+            "science": "The captain spends a considerable portion of their salary on skin treatments and hair stylists."
         },
         {
-            "button": "Taunt slowness",
-            "transmit": "Can't that thing move any faster? My grandmother can move faster than that... and she's dead!",
-            "failure": "Patience, {name}. Your inevitable death will come soon enough.",
-            "success": "Death comes to us all, {name}. Apparently your time has arrived. Full speed ahead!!",
-            "science": "At the last refit, maintenance records show that the captain complained about the ship's speed."
-        }
-    ],
+            "button": "Taunt ship is old",
+            "transmit": "Wow, what an ancient rust-bucket! Is that all you could afford, cheap-skate?",
+            "failure": "Oh, this old thing? Well, she's got it where it counts, {name}. Communication ended.",
+            "success": "We got these battle-scars by tearing apart idiots like you, {name}. Prepare to die!",
+            "science": "The ship is an older model, and maintenance records suggest the captain is having trouble paying for repairs."
+        },
+        {
+            "button": "Taunt captain's promotion",
+            "transmit": "Hey flunky! We've got a promotion for you over here. We could use another deputy assistant boot-licker!",
+            "failure": "Go lick your own boots, {name}. We've got better things to do than listen to you.",
+            "success": "I've got one for you, too, {name}! You've been promoted from worthless scum to pathetic cannon-fodder!",
+            "science": "The captain has been passed-over for promotion five times."
+        },
+        {
+            "button": "Taunt captain's tail",
+            "transmit": "Hey sweet-cheeks! We found your tail in Lyra sector, you can have it back if you say 'pretty please'!",
+            "failure": "I have nothing to say to you, {name}. Ending communications.",
+            "success": "When I'm done with you, {name}, there won't be anything left of you to bury!",
+            "science": "The captain lost their tail during the Battle of Lyra 6, and spent three months regrowing a new one."
+        },
+        {
+            "button": "Taunt captain's reputation",
+            "transmit": "Hey snot-ball! Are you really here to fight, or will you just run away and file another fake report?",
+            "failure": "I assure you, all our paperwork is in order, {name}. No further communication.",
+            "success": "Nothing will give me greater satisfaction than reporting on your untimely demise, {name}!",
+            "science": "One of our agents found out the captain has been falsifying their battle-reports to build up their reputation."
+        },
+        {
+            "button": "Taunt ship's appearance",
+            "transmit": "Hey fancy-pants! You sure you want to bring that shiny trinket into battle? It might get dirty!",
+            "failure": "We appreciate your conceern for our appearance, but we appear to be ignoring you, {name}.",
+            "success": "Worthless Terrans! We will rid the galaxy of your filth!",
+            "science": "The captain demands their ship be kept excessively clean, and frequently brags about it's pristine appearance."
+        },
+        {
+            "button": "Taunt captain's intelligence",
+            "transmit": "Hey snot-brain! I bet you're so dumb, you file your taxes with a tail-rasp!",
+            "failure": "We have no interest in your attempts at humor, {name}. End communications.",
+            "success": "How dare you, {name}! You will not find it so funny when we destroy you!",
+            "science": "The captain has been recongized for his financial skills, but is not regarded as a particularly smart tactician."
+        }  
+],
     "ximni": [
         {
             "button": "Taunt captain's father",
@@ -258,7 +307,7 @@
             "transmit": "You wouldn’t dare fight me, you cowering Lepusian mud mouse!",
             "failure": "I'll get around to fighting you eventually, {name}. Right now I have other Terrans to defeat.",
             "success": "I have ten times your courage, {name}! And I am coming to kill you!",
-            "science": "The captain is insecure about his own courage."
+            "science": "One of our agents has reported that the captain is inexperienced and insecure about his own courage."
         },
         {
             "button": "Taunt captain's carousing",
@@ -266,8 +315,50 @@
             "failure": "You're such a dreary milquetoast, {name}. I'm blocking you.",
             "success": "This party will be your last! Arm weapons! Destroy {name}!",
             "science": "The captain is proud of their wild reputation for drinking and carousing."
+        },
+        {
+            "button": "Taunt captain's politics",
+            "transmit": "Hey, neblir-kanedil! We took a vote, and we all agree, you are a sniveling nitwit!",
+            "failure": "How droll, {name}. We took another vote, and we all decided to ignore you.",
+            "success": "We took another vote, {name}, and we all decided to destroy you!",
+            "science": "The captain has made public statements that are critical of the Ximni's democratic government."
+        },
+        {
+            "button": "Taunt captain's voice",
+            "transmit": "Hey, fenol-harkelag! We heard you singing earlier, and it was so abom we almost surrendered!",
+            "failure": "You're the one with the annoying voice, {name}. We will no longer listen to it.",
+            "success": "We will sing about our glorious victory after we annihilate you, {name}. Too bad you won't be around to hear it!",
+            "science": "The captain is proud of his singing voice, but is considered by shipmates to be more enthusiastic than talented."
+        },
+        {
+            "button": "Taunt captain's clan",
+            "transmit": "Hey, voret-za! You might as well run away. Your worthless clan never sticks around for a real fight!",
+            "failure": "When the battle ends, we shall see who remains, {name}. Until then, no further communication.",
+            "success": "Pathetic Terrans! Our clan will sing of your stupidity at your funeral, {name}!",
+            "science": "The captain's clan has a reputation for being unreliable and duplicitous."
+        },
+        {
+            "button": "Taunt captain's mother-in-law",
+            "transmit": "Hey, kaljotel-asinowit! Your gedovatin called us, she said you'd better give up before you get everyone killed!",
+            "failure": "If you want to listen to that wendin-kikal, {name}, maybe you should take her advice. Communication ended.",
+            "success": "Lesmikni azulfes! Your death with be excrutiatingly painful, {name}!",
+            "science": "The captain's mother-in-law has made frequent comments about their lack of intelligence and poor leadership skills."
+        },
+	{
+            "button": "Taunt captain's cheating",
+            "transmit": "Hey, geleronil! You better run away, we know you can't win unless you cheat like a fom-loponal!",
+            "failure": "We don't have time for your silly games, {name}. Go play with someone else.",
+            "success": "You want to raise the stakes, {name}? How about a fight to the death!",
+            "science": "The captain was caught cheating in a mala-mala tournement a few months ago."
+        },
+	{
+            "button": "Taunt captain's virility",
+            "transmit": "Hey, lepon-ashon! Are those guns shooting blanks? Because we know the captain is!",
+            "failure": "We don't know what you're talking about, {name}. Go annoy someone else.",
+            "success": "Your concern about our ammunition is noted, {name}. You will be more intimately familiar with it shortly!",
+            "science": "The captain's ex-lover told one of our agents that they are infertile and lousy in the sack."
         }
-    ],
+],
     "unknown": [{
         "button": "",
         "transmit": "",
