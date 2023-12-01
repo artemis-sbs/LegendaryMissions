@@ -1,7 +1,7 @@
 import sbslibs
 from  sbs_utils.handlerhooks import *
 from sbs_utils.gui import Gui
-from sbs_utils.mast.maststoryscheduler import StoryPage
+from sbs_utils.mast.maststorypage import StoryPage
 from sbs_utils.mast.mast import Mast
 
 #import damage
