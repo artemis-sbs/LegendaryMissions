@@ -347,7 +347,7 @@ else:
 end_if
 
 
-await gui
+await gui()
 
 # Countdown timers adjust the upgrade coefficients from the ship blob, 
 # starts the timer, then sets the upgrade coefficients back to normal. 

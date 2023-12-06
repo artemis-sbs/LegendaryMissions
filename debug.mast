@@ -44,7 +44,7 @@ end_on
 
 gui_activate_console("debug")
 
-await gui
+await gui()
 
 
 
@@ -127,4 +127,4 @@ Under construction
 
 gui_activate_console("mast")
 
-await gui
+await gui()

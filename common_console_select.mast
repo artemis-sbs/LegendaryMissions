@@ -117,7 +117,7 @@ on change console_select:
     jump select_console
 end_on
 
-await gui
+await gui()
 
 
 # Multiple labels to call to get here
@@ -171,7 +171,7 @@ gui_console(console_select)
 #        You code
 #
 ==== console_bottom_choices ====
-await gui
+await gui()
 
 
 
@@ -189,6 +189,6 @@ gui_section( style="area: 0,50px, 100,100;")
 """""
 Task count {task_count}
 """"""
-await gui timeout 4s
+await gui(timeout(4))
 
 jump debug_mast

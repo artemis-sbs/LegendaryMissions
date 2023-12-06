@@ -48,7 +48,7 @@ text: Hello {player_name} tell us what to do
 # and set in inventory
 #
 message = None
-await choice:
+await gui():
    + "APPLY":
         target_id = get_inventory_value(comms_selected, "WEAPONS_SELECTED_ID", None)
         target_point = get_inventory_value(comms_selected, "WEAPONS_SELECTED_POINT", None)

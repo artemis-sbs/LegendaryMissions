@@ -91,10 +91,10 @@ next k
 
 await comms:
     + "Hail":
-        homing = get_engine_data(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.HOMING)
-        nuke = get_engine_data(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.NUKE)
-        emp = get_engine_data(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.EMP)
-        mine = get_engine_data(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.MINE)
+        homing = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.HOMING)
+        nuke = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.NUKE)
+        emp = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.EMP)
+        mine = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.MINE)
         build_time = format_time_remaining(COMMS_SELECTED_ID, "build_time")
 
         ~~comms_receive(f"""Hello, {comms_id}.  We stand ready to assist.
@@ -152,7 +152,7 @@ comms_id = to_object(ship_id).name
 set_timer(station_id, "build_time", seconds = build_time)
 # print(f"build time = {build_time}")
 
-await until is_timer_finished(station_id, "build_time"):
+await is_timer_finished(station_id, "build_time"):
 #pass
 end_await 
 clear_timer(station_id, "build_time")
@@ -163,8 +163,8 @@ self = to_object(station_id)
 #
 ->END if self is None
 
-cur_count = get_engine_data(station_id, "torpedo_count", torpedo_build_type)
-set_engine_data(station_id, "torpedo_count", cur_count+1, torpedo_build_type)
+cur_count = get_data_set_value(station_id, "torpedo_count", torpedo_build_type)
+set_data_set_value(station_id, "torpedo_count", cur_count+1, torpedo_build_type)
 
 
 
@@ -241,7 +241,7 @@ await comms:
             remove_role(COMMS_SELECTED_ID, "raider")
 		    sc_timer = 0
 		    set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
-		    set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
+		    set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
         elif s_ratio < 0.09:
             if random.randint(1,6)<3:
                 comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
@@ -249,7 +249,7 @@ await comms:
                 ~~ game_stats["ships_surrender"] += 1~~
                 remove_role(COMMS_SELECTED_ID, "raider")
 
-                set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
+                set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
             else:
                 comms_receive(f"""We will fight to our last breath!""", title_color=raider_color)
                 add_role(COMMS_SELECTED_ID, "never_surrender")
@@ -259,7 +259,7 @@ await comms:
                 comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
                 add_role(COMMS_SELECTED_ID, "surrendered")
                 remove_role(COMMS_SELECTED_ID, "raider")
-                set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
+                set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
             else:
                 comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title_color=raider_color)
             end_if

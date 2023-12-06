@@ -113,5 +113,5 @@ gui_hole()
 """color:yellow;justify: right; text:{end_time} minutes"""
 
 
-await gui
+await gui()
 # Kind of need to restart, which is good for now since cleanup is not guaranteed
