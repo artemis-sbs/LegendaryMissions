@@ -13,7 +13,7 @@ jump wreck_science if has_role(SCIENCE_SELECTED_ID, "wreck")
 
 ========= station_science =======
 
-await scan fog 0:
+await scan():
     + "scan":
         scan_results("This is a friendly station.")
     + "bio":
@@ -25,7 +25,7 @@ end_await
 
 ========= friendly_science =======
 
-await scan:
+await scan():
     + "scan":
         scan_results("This is a friendly ship.")
     + "bio":
@@ -50,7 +50,7 @@ if taunt_trait is not None and taunt_data is not None:
     end_if
 end_if
 
-await scan:
+await scan():
     + "scan":
         scan_results("Enemy vessel. Exercise caution.")
     + "bio":
@@ -84,7 +84,7 @@ elif has_roles(SCIENCE_SELECTED_ID, "upgrade, haplix_overcharger"):
 end_if
 
 
-await scan:
+await scan():
     + "scan":
         scan_results("{upg_desc}")
 end_await
@@ -95,7 +95,7 @@ wr_desc = "Gutted and battle-scarred wreckage, the mangled remains of a fierce b
 bio_intel = "No signs of life detected."
 mat_intel = "Material scan: no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging."
 
-await scan:
+await scan():
     + "scan":
         scan_results("{wr_desc}")
     + "bio":

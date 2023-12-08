@@ -51,7 +51,7 @@ comms_info("static")
 
 ===== friendly_comms =======
 
-await comms:
+await comms():
     + "Give Orders":
         comms_client_id = EVENT.client_id
         gui_reroute_client(comms_client_id, friendly_give_orders)
@@ -89,7 +89,7 @@ next k
 
 
 
-await comms:
+await comms():
     + "Hail":
         homing = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.HOMING)
         nuke = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.NUKE)
@@ -174,7 +174,7 @@ comms_receive(f"""{comms_id}. {torpedo_build_type} Production complete.""", titl
 
 ======== comms_enemy_station ====== 
 comms_id = to_object(COMMS_ORIGIN_ID).comms_id
-await comms:
+await comms():
     + "Hail":
         comms_receive(f"{comms_id}! We will destroy you, disgusting Terran scum!", title_color=raider_color)
     + "You're Ugly":
@@ -210,7 +210,7 @@ hide_surr = surrender_count >= 3 or hide_surr
 #
 show_surr = not hide_surr or (sc_timer > 0)
 
-await comms:
+await comms():
     + "Hail":
         comms_receive(f"Go away, {name}! You talk too much!", title_color=raider_color)
     + "Taunt":    # if enrage_value is None and not hide_taunt:
@@ -288,7 +288,7 @@ taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
 
 right_button = this_taunt_data[taunt_trait]['button']
 
-await comms:
+await comms():
     + "{data['button']}" for data in this_taunt_data:
         # Need to format the data
        msg = data['transmit']
@@ -337,7 +337,7 @@ set_inventory_value(COMMS_ORIGIN_ID, "face_security",  random_terran())
 #
 # Shows button color, face and title overrides
 #
-await comms:
+await comms():
     + "Sickbay" color "blue":
         comms_receive_internal("The crew health is great!", from_name="sickbay", title_color="blue")
     + "Security" color "red":
