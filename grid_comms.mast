@@ -33,7 +33,7 @@ comms_info("static")
 marker_go_id = get_inventory_value(COMMS_ORIGIN_ID, "marker_id")
 m_blob = to_blob(marker_go_id)
 is_idle = get_inventory_value(COMMS_SELECTED_ID, "idle")
-await comms:
+await comms():
  + "go to rally point" if not is_idle:
     loc_x = m_blob.get("curx", 0)
     loc_y = m_blob.get("cury", 0)
@@ -63,7 +63,7 @@ orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
 if orders is None:
     orders = []
 end_if
-await comms:
+await comms():
  + "back":
     jump comms_damcons
 
@@ -80,7 +80,7 @@ orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
 if orders is None:
     orders = []
 end_if
-await comms:
+await comms():
  + "back":
     jump comms_damcons
 
@@ -107,7 +107,7 @@ next dc
 
 
 #color: get_inventory_value(d.id, 'color');
-await comms:
+await comms():
  + "assign {d.name}" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
     # Add this to the 
     link(d.id, "work-order", COMMS_SELECTED_ID)
@@ -122,7 +122,7 @@ await comms:
 #
 change has_role(COMMS_SELECTED_ID, "__damaged__") == True:
     jump comms_undamaged
-focus:
+=focus:
     print("focus D")
 end_await
 
@@ -131,7 +131,7 @@ jump comms_damaged
 
 ==== comms_undamaged ====== 
 
-await comms:
+await comms():
     + "set rally point":
         jump room_set_idle_loc
     #
@@ -140,7 +140,7 @@ await comms:
     #
     change has_role(COMMS_SELECTED_ID, "__damaged__") == False:
         jump comms_damaged
-    focus:
+    =focus:
         print("focus D")
 end_await
 
@@ -150,7 +150,7 @@ jump comms_undamaged
 ==== room_set_idle_loc ====== 
 
 dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
-await comms:
+await comms():
  + "back":
     jump grid_comms
  + "set {d.name} rally point" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
@@ -180,7 +180,7 @@ jump grid_comms
 
 ===== marker_comms  =====
 
-await comms:
+await comms():
     + "set rally point":
         jump marker_set_idle_loc
 end_await
@@ -190,7 +190,7 @@ jump marker_comms
 ==== marker_set_idle_loc ====== 
 
 dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
-await comms:
+await comms():
  + "set {d.name} rally point" color "{get_inventory_value(d.id, 'color')}" for d in dcs:
     # Add this to the 
     _blob = to_blob(COMMS_SELECTED_ID)

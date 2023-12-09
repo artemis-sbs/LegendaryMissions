@@ -27,7 +27,7 @@ surrender_color = "yellow"
 # Each player ship will have its own thread for comms.
 # This enables each ship to have a unique dialog path
 # of conversation with each agent.
-
+print("Router")
 if COMMS_SELECTED_ID == COMMS_ORIGIN_ID:
     # This is the same ship
     jump internal_comms
@@ -143,6 +143,7 @@ You have full docking privileges.
         
 end_await
 -> station_comms
+#assert(False)
 
 === task_station_building ===
 COMMS_ORIGIN_ID = ship_id
@@ -152,9 +153,10 @@ comms_id = to_object(ship_id).name
 set_timer(station_id, "build_time", seconds = build_time)
 # print(f"build time = {build_time}")
 
+
 await is_timer_finished(station_id, "build_time"):
-#pass
-end_await 
+end_await
+
 clear_timer(station_id, "build_time")
 self = to_object(station_id)
 
@@ -171,8 +173,12 @@ set_data_set_value(station_id, "torpedo_count", cur_count+1, torpedo_build_type)
 comms_receive(f"""{comms_id}. {torpedo_build_type} Production complete.""", title_color=station_color)
 ->task_station_building
 
+======== weird ====== 
+#ASSERT(False)
+->END
 
 ======== comms_enemy_station ====== 
+
 comms_id = to_object(COMMS_ORIGIN_ID).comms_id
 await comms():
     + "Hail":
