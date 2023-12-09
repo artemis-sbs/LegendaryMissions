@@ -48,7 +48,7 @@ temp_pitch = random.uniform(0.002, 0.004)
 wr.engine_object.steer_yaw = temp_yaw
 wr.engine_object.steer_pitch = temp_pitch
 wr.blob.set("radar_color_override", "#f0c")
-set_inventory_value(wr.id, "hp", 150)
+set_inventory_value(wr.id, "hp", 30.0)
 set_inventory_value(wr.id, "hull_side", dest_side)
 set_inventory_value(wr.id, "hull_type", dest_hull)
 wr_hp = get_inventory_value(wr.id, "hp", 0)

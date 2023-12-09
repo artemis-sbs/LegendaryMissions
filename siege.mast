@@ -346,6 +346,8 @@ for v in spawn_points:
     #upg+=1    
 next v
 
+#shape1 = terrain_spawn(100, 0, 500, "Shape 1", "shape", "generics-torus", "behav_asteroid")
+
 #wr = terrain_spawn(200, 0, 600, "Wreck", "wreck", "wreck", "behav_asteroid")
 #temp_yaw = random.uniform(0.001, 0.003)
 #temp_pitch = random.uniform(0.002, 0.004)
