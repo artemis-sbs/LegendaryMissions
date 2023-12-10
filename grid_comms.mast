@@ -14,7 +14,7 @@ route_grid_focus("grid_focus")
 #
 # The grid item is selected
 #
-print("{COMMS_SELECTED_ID&0xffff}")
+#print("{COMMS_SELECTED_ID&0xffff}")
 
 jump comms_damcons if has_role(COMMS_SELECTED_ID, "damcons")
 jump comms_damaged if has_role(COMMS_SELECTED_ID, "__damaged__")
@@ -120,7 +120,7 @@ await comms():
 # This watches for state changes tht should change
 # the comms e.g. this grid object gets fixed
 #
-change has_role(COMMS_SELECTED_ID, "__damaged__") == True:
+=change has_role(COMMS_SELECTED_ID, "__damaged__") == True:
     jump comms_undamaged
 =focus:
     print("focus D")
@@ -138,12 +138,12 @@ await comms():
     # This watches for state changes tht should change
     # the comms e.g. this grid object gets damaged
     #
-    change has_role(COMMS_SELECTED_ID, "__damaged__") == False:
+    =change has_role(COMMS_SELECTED_ID, "__damaged__") == False:
         jump comms_damaged
     =focus:
-        print("focus D")
+        print("focus UD")
 end_await
-
+print("rerunning UD")
 jump comms_undamaged
 
 
