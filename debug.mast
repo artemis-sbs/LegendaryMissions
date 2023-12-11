@@ -28,15 +28,15 @@ Under construction
 
 gui_section(style="area:10,15,35,100;row-height:35px;")
 gui_row()
-on message gui_button("Test Anomalies"):
+on gui_message(gui_button("Test Anomalies")):
     jump spawn_test_anom
 end_on
 gui_row()
-on message gui_button("Test Wreck"):
+on gui_message(gui_button("Test Wreck")):
     jump spawn_test_wreck
 end_on
 gui_row()
-on message gui_button("Test Enemy"):
+on gui_message(gui_button("Test Enemy")):
     jump spawn_test_enemy
 end_on
 

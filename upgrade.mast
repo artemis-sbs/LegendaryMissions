@@ -98,7 +98,7 @@ gui_row()
 gui_blank()
 gui_row()
 if cc_count > 0 and (ctype == "weapons" or ctype == "engineering") and not cc_timer > 0:
-    on message gui_button("Carapaction Coil"):
+    on gui_message(gui_button("Carapaction Coil")):
         cc_count -= 1
         set_inventory_value(ship_id, "carapaction_coil", cc_count)
         set_inventory_value(ship_id, "cc_timer", 300)
@@ -118,7 +118,7 @@ else:
 end_if
 gui_row()
 if ip_count > 0 and ctype == "helm" and not ip_timer > 0:
-    on message gui_button("Infusion P-Coils"):
+    on gui_message(gui_button("Infusion P-Coils")):
         ip_count -= 1
         set_inventory_value(ship_id, "infusion_pcoils", ip_count)
         set_inventory_value(ship_id, "ip_timer", 300)
@@ -138,7 +138,7 @@ else:
 end_if
 gui_row()
 if tf_count > 0 and ctype == "weapons" and not tf_timer > 0:
-    on message gui_button("Tauron Focuser"):
+    on gui_message(gui_button("Tauron Focuser")):
         tf_count -= 1
         tf_timer = 300
         set_inventory_value(ship_id, "tauron_focuser", tf_count)
@@ -159,7 +159,7 @@ else:
 end_if
 gui_row()
 if sc_count > 0 and ctype == "comms" and not sc_timer > 0:
-    on message gui_button("Secret Codecase"):
+    on gui_message(gui_button("Secret Codecase")):
         sc_count -= 1
         set_inventory_value(ship_id, "secret_codecase", sc_count)
         set_inventory_value(ship_id, "sc_timer", 300)
@@ -179,7 +179,7 @@ else:
 end_if
 gui_row()
 if vn_count > 0 and ctype == "engineering":
-    on message gui_button("Vigoranium Nodule"):
+    on gui_message(gui_button("Vigoranium Nodule")):
         all_dcs = grid_objects(ship_id) & role("damcons") # Get DamCon grid objects, count up HP
         total_hp = 0
         for dc in all_dcs:
@@ -204,7 +204,7 @@ else:
 end_if
 gui_row()
 if cl_count > 0 and ctype == "engineering" and not cl_timer > 0:
-    on message gui_button("Cetrocite Crystal"):
+    on gui_message(gui_button("Cetrocite Crystal")):
         cl_count -= 1
         set_inventory_value(ship_id, "cetrocite_crystal", cl_count)
         set_inventory_value(ship_id, "cl_timer", 300)
@@ -224,7 +224,7 @@ else:
 end_if
 gui_row()
 if la_count > 0 and ctype == "science" and not la_timer > 0:
-    on message gui_button("Lateral Array"):
+    on gui_message(gui_button("Lateral Array")):
         la_count -= 1
         set_inventory_value(ship_id, "lateral_array", la_count)
         set_inventory_value(ship_id, "la_timer", 300)
@@ -244,7 +244,7 @@ else:
 end_if
 gui_row()
     if ho_count > 0 and (ctype == "engineering" or ctype == "weapons"):
-        on message gui_button("Haplix Overcharger"):
+        on gui_message(gui_button("Haplix Overcharger")):
             player_blob = to_blob(ship_id) # Get shield values from ship
             fshield = get_data_set_value(player_blob,"shield_val", 0)
             rshield = get_data_set_value(player_blob,"shield_val", 1)
