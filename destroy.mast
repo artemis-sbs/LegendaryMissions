@@ -34,7 +34,7 @@ elif dest_hull == "battleship" or dest_hull == "light carrier" or dest_hull == "
     dest_chance = 6
 elif dest_hull == "dreadnought" or dest_hull == "carrier" or dest_hull == "behemoth" or dest_hull == "enforcer" or dest_hull == "brigantine":
     dest_chance = 8
-end_if
+
 print(f"Enemy {dest_hull} destroyed, dest_rand: {dest_rand}, dest_chance: {dest_chance}")
 ->END if dest_rand > dest_chance
 

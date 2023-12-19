@@ -33,7 +33,7 @@ match friendly_select:
         # no civilian or friendly npcs
         # But added eyes
         jump add_eye_to_players
-end_match
+
 
 total_hull_points = 0
 
@@ -56,11 +56,10 @@ for x while total_hull_points<max_hull_points:
         # failed to find a small enough ship
         if attempts > 20:
             break
-        end_if
         #
         # try again
         continue
-    end_if
+
     # reset attempts
     attempts = 0
     # OK add this ship
@@ -69,7 +68,6 @@ for x while total_hull_points<max_hull_points:
     count += 1
     total_hull_points += hull_points
     set_face(friend, random_terran())
-next x
 
 civilian_count = 0
 match friendly_select:
@@ -83,7 +81,6 @@ match friendly_select:
         civilian_count = 1
     case "none":
         ->RETURN
-end_match
 
 # grab the ship data for all ships on TSN side
 civilian_data = names_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
@@ -96,7 +93,7 @@ for pos in scatter_sphere(civilian_count, 0,0,0, 500, 5000, ring=True):
     friend = to_id(npc_spawn(*pos, f"civ {str(count).zfill(2)}", "tsn, friendly, civilian", ship["key"], "behav_npcship"))
     set_face(friend, random_terran(civilian=True))
     count += 1
-next x
+
 
 #### vvvvvvv  ###
 
@@ -112,14 +109,10 @@ for player in my_players:
         blob.set("extra_scan_source", friend, num_ids)
         num_ids += 1
         follow_route_science_select(player, friend)
-    next friend
 
     blob.set("num_extra_scan_sources",num_ids,0)
-next player
 
 ->END
-
-
 
 ====== spawn_players =======
 c=0
@@ -133,7 +126,6 @@ for player_ship_data in player_list:
         # make sure the id is cleared dry docked ships
         player_ship_data.id = None
         continue
-    end_if
 
     player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, player_ship_data.ship))
     # player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, "tsn_light_cruiser"))
@@ -145,9 +137,9 @@ for player_ship_data in player_list:
     if first:
         assign_client_to_ship(0,player_ship)
         first = False
-    end_if
+
     points = get_open_grid_points(player_ship)
-next player_ship_data
+
 ->END
     
     

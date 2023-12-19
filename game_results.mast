@@ -33,12 +33,10 @@ if obj is not None:
         race = race[0:under]
         if race=="xim":
             race= "ximni"
-        end_if
+        
         race = "{race.lower()}_ships_destroyed"
         count = game_stats.get(race, 0)
         ~~ game_stats[race] = count + 1~~
-    end_if        
-end_if
 
 ->END
 

@@ -8,8 +8,6 @@ gui_add_console_tab(SHARED, "weapons", "upgrade", "upgrade_screen")
 gui_add_console_tab(SHARED, "upgrade", "upgrade", None)
 gui_add_console_tab(SHARED, "upgrade", "__back_tab__", "console_selected")
 
-
-
 ==== upgrade_screen ====
 
 # Get inventory values for upgrade counts and timers.
@@ -48,41 +46,41 @@ if cc_timer > 0:
     """color:#0f0; text: {cc_count};""" style="tag:sh-cc-count;"
 else:
     """text: {cc_count};""" style="tag:sh-cc-count;"
-end_if
+
 gui_row()
 if ip_timer > 0:
     """color:#0f0; text: {ip_count};""" style="tag:sh-ip-count;"
 else:
     """text: {ip_count};""" style="tag:sh-ip-count;"
-end_if
+
 gui_row()
 if tf_timer > 0:
     """color:#0f0; text: {tf_count};""" style="tag:sh-tf-count;"
 else:
     """text: {tf_count};""" style="tag:sh-tf-count;"
-end_if
+
 gui_row()
 if sc_timer > 0:
     """color:#0f0; text: {sc_count};""" style="tag:sh-sc-count;"
 else:
     """text: {sc_count};""" style="tag:sh-sc-count;"
-end_if
+
 gui_row()
-    """text: {vn_count};""" style="tag:sh-vn-count;"
+"""text: {vn_count};""" style="tag:sh-vn-count;"
 gui_row()
 if cl_timer > 0:
     """color:#0f0; text: {cl_count};""" style="tag:sh-cl-count;"
 else:
     """text: {cl_count};""" style="tag:sh-cl-count;"
-end_if
+
 gui_row()
 if la_timer > 0:
     """color:#0f0; text: {la_count};""" style="tag:sh-la-count;"
 else:
     """text: {la_count};""" style="tag:sh-la-count;"
-end_if
+
 gui_row()
-    """text: {ho_count};""" style="tag:sh-ho-count;"
+"""text: {ho_count};""" style="tag:sh-ho-count;"
 
 
 # Second Column, show the name of the upgrade, or show a button to activate it.
@@ -108,14 +106,12 @@ if cc_count > 0 and (ctype == "weapons" or ctype == "engineering") and not cc_ti
         gui_update_shared("sh-cc-txt", "color:#0f0; text: Carapaction Coil;")
         gui_update_shared("sh-cc-timer", "color:#0f0; text: {cc_timer} seconds remaining.;")
         jump upgrade_screen
-    end_on
+
 else:
     if cc_timer > 0:
         """color:#0f0; text: Carapaction Coil;""" style="tag:sh-cc-txt;"
     else:
         """text: Carapaction Coil;""" style="tag:sh-cc-txt;"
-    end_if
-end_if
 gui_row()
 if ip_count > 0 and ctype == "helm" and not ip_timer > 0:
     on gui_message(gui_button("Infusion P-Coils")):
@@ -128,14 +124,11 @@ if ip_count > 0 and ctype == "helm" and not ip_timer > 0:
         gui_update_shared("sh-ip-txt", "color:#0f0; text: Infusion P-Coils;")
         gui_update_shared("sh-ip-timer", "color:#0f0; text: {ip_timer} seconds remaining.;")
         jump upgrade_screen
-    end_on
 else:
     if ip_timer > 0:
         """color:#0f0; text: Infusion P-Coils;""" style="tag:sh-ip-txt;"
     else:
         """text: Infusion P-Coils;""" style="tag:sh-ip-txt;"
-    end_if
-end_if
 gui_row()
 if tf_count > 0 and ctype == "weapons" and not tf_timer > 0:
     on gui_message(gui_button("Tauron Focuser")):
@@ -149,14 +142,12 @@ if tf_count > 0 and ctype == "weapons" and not tf_timer > 0:
         gui_update_shared("sh-tf-txt", "color:#0f0; text: Tauron Focuser;")
         gui_update_shared("sh-tf-timer", "color:#0f0; text: {tf_timer} seconds remaining.;")
         jump upgrade_screen
-    end_on
+
 else:
     if tf_timer > 0:
         """color:#0f0; text: Tauron Focuser;""" style="tag:sh-tf-txt;"
     else:
         """text: Tauron Focuser;""" style="tag:sh-tf-txt;"
-    end_if
-end_if
 gui_row()
 if sc_count > 0 and ctype == "comms" and not sc_timer > 0:
     on gui_message(gui_button("Secret Codecase")):
@@ -169,14 +160,13 @@ if sc_count > 0 and ctype == "comms" and not sc_timer > 0:
         gui_update_shared("sh-sc-txt", "color:#0f0; text: Secret Codecase;")
         gui_update_shared("sh-sc-timer", "color:#0f0; text: {sc_timer} seconds remaining.;")
         jump upgrade_screen
-    end_on
+
 else:
     if sc_timer > 0:
         """color:#0f0; text: Secret Codecase;""" style="tag:sh-sc-txt;"
     else:
         """text: Secret Codecase;""" style="tag:sh-sc-txt;"
-    end_if    
-end_if
+
 gui_row()
 if vn_count > 0 and ctype == "engineering":
     on gui_message(gui_button("Vigoranium Nodule")):
@@ -185,7 +175,7 @@ if vn_count > 0 and ctype == "engineering":
         for dc in all_dcs:
             hp = get_inventory_value(dc, "HP",0)
             total_hp += hp
-        next dc
+
         print(f"DamCon Total HPs: {total_hp}")
         if total_hp == 18: # Show warning message if DamCons already at full strength
             set_inventory_value(ship_id, "vn_timer", 5)
@@ -196,12 +186,12 @@ if vn_count > 0 and ctype == "engineering":
             grid_restore_damcons(ship_id)
             vn_count -= 1
             set_inventory_value(ship_id, "vigoranium_nodule", vn_count)
-        end_if
+
         jump upgrade_screen
-    end_on
+
 else:
     """text: Vigoranium Nodule;""" style="tag:sh-vn-txt;"
-end_if
+
 gui_row()
 if cl_count > 0 and ctype == "engineering" and not cl_timer > 0:
     on gui_message(gui_button("Cetrocite Crystal")):
@@ -214,14 +204,13 @@ if cl_count > 0 and ctype == "engineering" and not cl_timer > 0:
         gui_update_shared("sh-cl-txt", "color:#0f0; text: Cetrocite Crystal;")
         gui_update_shared("sh-cl-timer", "color:#0f0; text: {cl_timer} seconds remaining.;")
         jump upgrade_screen
-    end_on
+
 else:
     if cl_timer > 0:
         """color:#0f0; text: Cetrocite Crystal;""" style="tag:sh-cl-txt;"
     else:
         """text: Cetrocite Crystal;""" style="tag:sh-cl-txt;"
-    end_if
-end_if
+
 gui_row()
 if la_count > 0 and ctype == "science" and not la_timer > 0:
     on gui_message(gui_button("Lateral Array")):
@@ -234,59 +223,61 @@ if la_count > 0 and ctype == "science" and not la_timer > 0:
         gui_update_shared("sh-la-txt", "color:#0f0; text: Lateral Array;")
         gui_update_shared("sh-la-timer", "color:#0f0; text: {la_timer} seconds remaining.;")
         jump upgrade_screen   
-    end_on
+
 else:
     if la_timer > 0:
         """color:#0f0; text: Lateral Array;""" style="tag:sh-la-txt;"
     else:
         """text: Lateral Array;""" style="tag:sh-la-txt;"
-    end_if
-end_if
+
 gui_row()
-    if ho_count > 0 and (ctype == "engineering" or ctype == "weapons"):
-        on gui_message(gui_button("Haplix Overcharger")):
-            player_blob = to_blob(ship_id) # Get shield values from ship
-            fshield = get_data_set_value(player_blob,"shield_val", 0)
-            rshield = get_data_set_value(player_blob,"shield_val", 1)
-            fshieldmax = get_data_set_value(player_blob,"shield_max_val", 0)
-            rshieldmax = get_data_set_value(player_blob,"shield_max_val", 1)
-            print (f"Front Shield: Max = {fshieldmax} Cur = {fshield} Rear Shield: Max = {rshieldmax} Cur= {rshield}")
-            if fshield > fshieldmax or rshield > rshieldmax: # Show warning message if one/both shields are already over the max
-                set_inventory_value(ship_id, "ho_timer", 5)
-                ho_timer = get_inventory_value(ship_id, "ho_timer" )
-                task_schedule(ho_countdown)
-                gui_update_shared("sh-ho-timer", "color:#ff0; text: Shields already overcharged;")
-            else: 
-                fshield += 300.0
-                rshield += 300.0
-                print (f"Front Shield: {fshield} Rear Shield: {rshield}")
-                set_data_set_value(player_blob, "shield_val", fshield, 0)
-                set_data_set_value(player_blob, "shield_val", rshield, 1)
-                ho_count -= 1
-                set_inventory_value(ship_id, "haplix_overcharger", ho_count)
-                dmgcheck = 95
-                # Damage loop, activating Haplix Overcharger may damage up to four shield nodes. 
-                # First node is 95%, second is 70%, third is 45%, fourth is 20%.
-                for dmg in range(4):
-                    dmgrand = random.randrange(1,100)
-                    if dmgrand <= dmgcheck:
-                        was_damaged = grid_damage_system(ship_id, "shield")
-                        if was_damaged:
-                            print(f"Haplix Shield Damage dmgcheck = {dmgcheck} dmgrand = {dmgrand}")
-                        else:
-                            print(f"Haplix All Shields Damaged")
-                        end_if
+#
+#
+#
+if ho_count > 0 and (ctype == "engineering" or ctype == "weapons"):
+    on gui_message(gui_button("Haplix Overcharger")):
+        player_blob = to_blob(ship_id) # Get shield values from ship
+        fshield = get_data_set_value(player_blob,"shield_val", 0)
+        rshield = get_data_set_value(player_blob,"shield_val", 1)
+        fshieldmax = get_data_set_value(player_blob,"shield_max_val", 0)
+        rshieldmax = get_data_set_value(player_blob,"shield_max_val", 1)
+        print (f"Front Shield: Max = {fshieldmax} Cur = {fshield} Rear Shield: Max = {rshieldmax} Cur= {rshield}")
+        if fshield > fshieldmax or rshield > rshieldmax: # Show warning message if one/both shields are already over the max
+            set_inventory_value(ship_id, "ho_timer", 5)
+            ho_timer = get_inventory_value(ship_id, "ho_timer" )
+            task_schedule(ho_countdown)
+            gui_update_shared("sh-ho-timer", "color:#ff0; text: Shields already overcharged;")
+        else: 
+            fshield += 300.0
+            rshield += 300.0
+            print (f"Front Shield: {fshield} Rear Shield: {rshield}")
+            set_data_set_value(player_blob, "shield_val", fshield, 0)
+            set_data_set_value(player_blob, "shield_val", rshield, 1)
+            ho_count -= 1
+            set_inventory_value(ship_id, "haplix_overcharger", ho_count)
+            dmgcheck = 95
+            # Damage loop, activating Haplix Overcharger may damage up to four shield nodes. 
+            # First node is 95%, second is 70%, third is 45%, fourth is 20%.
+            for dmg in range(4):
+                dmgrand = random.randrange(1,100)
+                if dmgrand <= dmgcheck:
+                    was_damaged = grid_damage_system(ship_id, "shield")
+                    if was_damaged:
+                        print(f"Haplix Shield Damage dmgcheck = {dmgcheck} dmgrand = {dmgrand}")
                     else:
-                        print(f"Haplix NO Shield Damage dmgcheck = {dmgcheck} dmgrand = {dmgrand}")
-                    end_if
-                    dmgcheck -= 25
-                next dmg
-            end_if
-            jump upgrade_screen
-        end_on
-    else:
-        """text: Haplix Overcharger;""" style="tag:sh-ho-txt;"
-    end_if
+                        print(f"Haplix All Shields Damaged")
+
+                else:
+                    print(f"Haplix NO Shield Damage dmgcheck = {dmgcheck} dmgrand = {dmgrand}")
+
+                dmgcheck -= 25
+    
+    
+        jump upgrade_screen
+    
+else:
+    """text: Haplix Overcharger;""" style="tag:sh-ho-txt;"
+
 
 # Third Column, displays short description if inactive, or timer countdown (in green) if active.
 # For Vigoranium Nodule or Haplix Overcharger, will also display yellow warning if button is pressed 
@@ -302,50 +293,48 @@ if cc_timer > 0:
     """color:#0f0; text: {cc_timer} seconds remaining.""" style="tag:sh-cc-timer;"
 else:
     """text: 5 Minute 300% Shield Recharge Boost""" style="tag:sh-cc-timer;"
-end_if
+
 gui_row()
 if ip_timer > 0:
     """color:#0f0; text: {ip_timer} seconds remaining.""" style="tag:sh-ip-timer;"
 else:
     """text: 5 Minute 300% Impulse and Maneuver Speed Boost""" style="tag:sh-ip-timer;"
-end_if
+
 gui_row()
 if tf_timer > 0:
     """color:#0f0; text: {tf_timer} seconds remaining.""" style="tag:sh-tf-timer;"
 else:
     """text: 5 Minute 100% Beam and Reload Speed Boost""" style="tag:sh-tf-timer;"
-end_if
+
 gui_row()
 if sc_timer > 0:
     """color:#0f0; text: {sc_timer} seconds remaining.""" style="tag:sh-sc-timer;"
 else:
     """text: Force one enemy ship to auto-surrender""" style="tag:sh-sc-timer;"
-end_if
+
 gui_row()
 if vn_timer > 0:
     """color:#ff0; text: Damage Control Teams already at full strength""" style="tag:sh-vn-timer;"
 else:
     """text: Restore Damage Control Teams.""" style="tag:sh-vn-timer;"
-end_if
+
 gui_row()
 if cl_timer > 0:
     """color:#0f0; text: {cl_timer} seconds remaining.""" style="tag:sh-cl-timer;"
 else:
     """text: 5 Minute 100% Faster Heat Reduction""" style="tag:sh-cl-timer;"
-end_if
+
 gui_row()
 if la_timer > 0:
     """color:#0f0; text: {la_timer} seconds remaining.""" style="tag:sh-la-timer;"
 else:
     """text: 5 Minute Target Scan Triple Speed""" style="tag:sh-la-timer;"
-end_if
+
 gui_row()
 if ho_timer > 0:
     """color:#ff0; text: Shields already overcharged""" style="tag:sh-ho-timer;"
 else:
     """text: +300 to shields but may damage shield generators""" style="tag:sh-ho-timer;"
-end_if
-
 
 await gui()
 
@@ -367,7 +356,7 @@ for x in range(300):
     cc_timer -= 1
     set_inventory_value(ship_id, "cc_timer", cc_timer )
     await delay_app(1)
-next x
+
 shieldrate /= 3.0
 print(f"Reset Shield Repair Rate: {shieldrate}")
 set_data_set_value(player_blob, "all_shield_upgrade_coeff", shieldrate)
@@ -399,7 +388,7 @@ for x in range(300):
     ip_timer -= 1
     set_inventory_value(ship_id, "ip_timer", ip_timer )
     await delay_app(1)
-next x
+
 impfaster /= 3.0
 turnfaster /= 3.0
 #warpfaster /= 3.0
@@ -432,7 +421,7 @@ for x in range(300):
     tf_timer -= 1
     set_inventory_value(ship_id, "tf_timer", tf_timer )
     await delay_app(1)
-next x
+
 beamfaster /= 2.0
 tubefaster /= 2.0
 print(f"Reset Beam Damage Coefficient: {beamfaster}")
@@ -452,7 +441,7 @@ for x in range(300):
     sc_timer -= 1
     set_inventory_value(ship_id, "sc_timer", sc_timer )
     await delay_app(1)
-next x
+
 gui_update_shared("sh-sc-count", "text: {sc_count};")
 gui_update_shared("sh-sc-txt", "text: Secret Codecase;")
 gui_update_shared("sh-sc-timer", "text: Force one enemy ship to auto-surrender;")
@@ -466,7 +455,7 @@ for x in range(5):
     set_inventory_value(ship_id, "vn_timer", vn_timer )
     print(f"VN Timer: {vn_timer}")
     await delay_app(1)
-next x
+
 gui_update_shared("sh-vn-timer", "text: Restore Damage Control Teams;")
 ->END
 
@@ -478,7 +467,7 @@ if stayfrosty == None:
     stayfrosty = 2.0
 else:
     stayfrosty *= 2.0
-end_if
+
 set_data_set_value(player_blob, "coolant_upgrade_coeff", stayfrosty)
 print(f"New Coolant Coefficient: {stayfrosty}")
 for x in range(300):
@@ -487,7 +476,7 @@ for x in range(300):
     cl_timer -= 1
     set_inventory_value(ship_id, "cl_timer", cl_timer )
     await delay_app(1)
-next x
+
 stayfrosty /= 2.0
 print(f"Reset Coolant Coefficient: {stayfrosty}")
 set_data_set_value(player_blob, "coolant_upgrade_coeff", stayfrosty)
@@ -504,7 +493,7 @@ if scanrate == None:
     scanrate = 3.0
 else:
     scanrate *= 3.0
-end_if
+
 set_data_set_value(player_blob, "sensor_upgrade_coeff", scanrate)
 print(f"New Scan Speed: {scanrate}")
 for x in range(300):
@@ -513,7 +502,7 @@ for x in range(300):
     la_timer -= 1
     set_inventory_value(ship_id, "la_timer", la_timer )
     await delay_app(1)
-next x
+
 scanrate /= 3.0
 print(f"Reset Scan Speed: {scanrate}")
 set_data_set_value(player_blob, "sensor_upgrade_coeff", scanrate)
@@ -530,7 +519,7 @@ for x in range(5):
     set_inventory_value(ship_id, "ho_timer", ho_timer )
     print(f"HO Timer: {ho_timer}")
     await delay_app(1)
-next x
+
 gui_update_shared("sh-ho-timer", "text: +300 to shields but may damage shield generators")
 ->END
 

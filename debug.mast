@@ -13,9 +13,6 @@ if allow_debug==is_dev_build():
     gui_add_console_tab(SHARED, "mast", "mast", None)    
     gui_add_console_tab(SHARED, "mast", "debug", "debug_screen")
     gui_add_console_tab(SHARED, "mast", "__back_tab__", "console_selected")
-end_if
-
-
 
 
 ===== debug_screen ======
@@ -30,23 +27,21 @@ gui_section(style="area:10,15,35,100;row-height:35px;")
 gui_row()
 on gui_message(gui_button("Test Anomalies")):
     jump spawn_test_anom
-end_on
+
 gui_row()
 on gui_message(gui_button("Test Wreck")):
     jump spawn_test_wreck
-end_on
+
 gui_row()
 on gui_message(gui_button("Test Enemy")):
     jump spawn_test_enemy
-end_on
+
 
 
 
 gui_activate_console("debug")
 
 await gui()
-
-
 
 
 ===== spawn_test_anom === 
