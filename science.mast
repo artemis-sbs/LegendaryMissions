@@ -41,8 +41,8 @@ intel_list = get_inventory_value(SCIENCE_SELECTED_ID, "taunt_data")
 
 taunt_intel = "The captain cannot be taunted."
 bio_intel = "The bio scan has failed."
+
 if taunt_trait is not None and taunt_data is not None:
-    
     race = get_race(SCIENCE_SELECTED_ID)
     if race is not None:
         taunt_intel = intel_list[taunt_trait]['science']

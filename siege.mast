@@ -131,7 +131,7 @@ for station in spawn_points:
             _dist_test = distv.dot(distv)
             if _dist_test < dist:
                 move = True
-                print("Move Station")
+                #print("Move Station")
                 _pos = next(spawn_points)
                 break
     _spawned_pos.append(_pos)

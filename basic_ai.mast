@@ -78,16 +78,14 @@ if surrendered:
     target_pos(SPAWNED_ID, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
     # TODO: When it reaches spawn_pos tally and remove
     ->END
-
-
 #
+# Auto scan: If you can see it you get the initial scan
 # This is naive and assume players are on one side
 #
 if not scanned: 
     should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
     if should_scan is not None:
         follow_route_science_select(should_scan, SPAWNED_ID)
-
 #
 # Comms enraged this npc, But enraged is time limited
 #
@@ -159,7 +157,7 @@ scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 # This is naive and assume players are on one side
 #
 if not scanned: 
-    should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
+    should_scan = closest(SPAWNED_ID, role("PlayerShip"))
     if should_scan is not None:
         follow_route_science_select(should_scan, SPAWNED_ID)
 
@@ -198,6 +196,15 @@ torpedo_build_type = sbs.TORPEDO.HOMING
 build_time = 3*60
 task_cancel(build_task) 
 build_task = task_schedule(task_station_building)
+
+scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
+#
+# This is naive and assume players are on one side
+#
+if not scanned: 
+    should_scan = closest(SPAWNED_ID, role("PlayerShip"))
+    if should_scan is not None:
+        follow_route_science_select(should_scan, SPAWNED_ID)
 
 
 -> END

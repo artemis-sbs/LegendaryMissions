@@ -27,7 +27,7 @@ surrender_color = "yellow"
 # Each player ship will have its own thread for comms.
 # This enables each ship to have a unique dialog path
 # of conversation with each agent.
-print("Router")
+#print("Router")
 if COMMS_SELECTED_ID == COMMS_ORIGIN_ID:
     # This is the same ship
     jump internal_comms
