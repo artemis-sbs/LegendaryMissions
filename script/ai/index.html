@@ -1880,6 +1880,15 @@
 <p>The various npc ships: raiders, friendly, civilian, stations.
 As well the npcs in Engineering: damcons, etc.</p>
 <p>The AI wi be described in this section.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; handle_route_spawn
+    state route &lt;&lt;choice&gt;&gt;
+    handle_route_spawn --&gt; route
+        route --&gt; ai_player: if has_role("__player__")
+        route --&gt; ai_task_friendly: if has_roles("tsn, friendly")
+        route --&gt; spawn_task_station: if has_roles("tsn, station")
+        route --&gt; raider_start: if has_role("raider") 
+</code></pre>
 
 
 
