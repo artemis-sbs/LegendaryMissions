@@ -106,10 +106,10 @@ gui_section( style="area: 5, 10, 50, 90;")
 
 gui_section(  style="area: 50, 10, 95,90;row-height:65px;padding:0px,10px")
 """ justify:right;text:Player ships """
-gui_slider("low: 1.0;high:8.0", var="player_count")
+gui_int_slider("low: 1.0;high:8.0", var="player_count")
 gui_row()
 """ justify:right;text:Difficulty """
-gui_slider("low: 1.0;high:11.0", var="difficulty")
+gui_int_slider("low: 1.0;high:11.0", var="difficulty")
 gui_row()
 
 """ justify:right;text:Mission Type"""
@@ -143,10 +143,10 @@ gui_drop_down("text: Upgrades;list:none, few,some, lots, many", var="upgrade_sel
 #gui_row()
 
 await gui():
-+ "Start Mission":
-    sim_create()
-    sim_resume()
-    -> start
+    + "Start Mission":
+        sim_create()
+        sim_resume()
+        -> start
 
 
 
@@ -220,6 +220,6 @@ if len(raiders)==0:
     game_started = False
     sbs.play_music_file(0, "music/default/victory")
     gui_reroute_clients(show_game_results)
-    gui_reroute_server(  show_game_results)
+    gui_reroute_server(show_game_results)
 
 -> task_end_game

@@ -37,7 +37,7 @@ for player_ship in player_list:
     ship_list = ship_list + player_ship.name.lower()
 
 # Clamp selected index
-client_selected_index = min(player_count, client_selected_index )
+client_selected_index = min(int(player_count), client_selected_index )
 
 ship_type_def = player_list[client_selected_index].ship
 client_select_ship =player_list[client_selected_index].name.lower()
@@ -80,7 +80,7 @@ else:
         jump console_selected
 
 on change player_count:
-    client_selected_index = min(client_selected_index, player_count-1)
+    client_selected_index = min(client_selected_index, int(player_count)-1)
     jump select_console
 
 #
