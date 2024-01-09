@@ -27,7 +27,7 @@ surrender_color = "yellow"
 # Each player ship will have its own thread for comms.
 # This enables each ship to have a unique dialog path
 # of conversation with each agent.
-
+#print("Router")
 if COMMS_SELECTED_ID == COMMS_ORIGIN_ID:
     # This is the same ship
     jump internal_comms
@@ -42,7 +42,6 @@ elif has_roles(COMMS_SELECTED_ID, 'Station'):
     jump comms_enemy_station
 elif has_role(COMMS_SELECTED_ID, "Raider"):
     jump npc_comms
-end_if
 
 # Default clear comms Present static
 comms_info("static")
@@ -51,11 +50,11 @@ comms_info("static")
 
 ===== friendly_comms =======
 
-await comms:
+await comms():
     + "Give Orders":
         comms_client_id = EVENT.client_id
         gui_reroute_client(comms_client_id, friendly_give_orders)
-end_await
+
 jump  friendly_comms
 
 
@@ -84,17 +83,15 @@ for k in _build_times:
     if k in artid:
         build_times = _build_times[k]["build_times"]
         break
-    end_if
-next k
 
 
 
-await comms:
+await comms():
     + "Hail":
-        homing = get_engine_data(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.HOMING)
-        nuke = get_engine_data(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.NUKE)
-        emp = get_engine_data(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.EMP)
-        mine = get_engine_data(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.MINE)
+        homing = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.HOMING)
+        nuke = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.NUKE)
+        emp = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.EMP)
+        mine = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.MINE)
         build_time = format_time_remaining(COMMS_SELECTED_ID, "build_time")
 
         ~~comms_receive(f"""Hello, {comms_id}.  We stand ready to assist.
@@ -140,9 +137,9 @@ You have full docking privileges.
         build_time = 4*60
         task_cancel(build_task)
         build_task = task_schedule(task_station_building)
-        
-end_await
+
 -> station_comms
+#assert(False)
 
 === task_station_building ===
 COMMS_ORIGIN_ID = ship_id
@@ -152,9 +149,8 @@ comms_id = to_object(ship_id).name
 set_timer(station_id, "build_time", seconds = build_time)
 # print(f"build time = {build_time}")
 
-await until is_timer_finished(station_id, "build_time"):
-#pass
-end_await 
+await is_timer_finished(station_id, "build_time")
+
 clear_timer(station_id, "build_time")
 self = to_object(station_id)
 
@@ -163,25 +159,28 @@ self = to_object(station_id)
 #
 ->END if self is None
 
-cur_count = get_engine_data(station_id, "torpedo_count", torpedo_build_type)
-set_engine_data(station_id, "torpedo_count", cur_count+1, torpedo_build_type)
+cur_count = get_data_set_value(station_id, "torpedo_count", torpedo_build_type)
+set_data_set_value(station_id, "torpedo_count", cur_count+1, torpedo_build_type)
 
 
 
 comms_receive(f"""{comms_id}. {torpedo_build_type} Production complete.""", title_color=station_color)
 ->task_station_building
 
+======== weird ====== 
+#ASSERT(False)
+->END
 
 ======== comms_enemy_station ====== 
+
 comms_id = to_object(COMMS_ORIGIN_ID).comms_id
-await comms:
+await comms():
     + "Hail":
         comms_receive(f"{comms_id}! We will destroy you, disgusting Terran scum!", title_color=raider_color)
     + "You're Ugly":
         comms_receive(f"""You are a foolish Terran, {comms_id}.  Taunting enemy stations is not currently implemented.^""", title_color=raider_color)
     + "Surrender now":
         comms_receive(f"""Eat my soiled undergarments, {comms_id}.""", title_color=raider_color)
-end_await
 
 -> comms_enemy_station
 
@@ -210,7 +209,7 @@ hide_surr = surrender_count >= 3 or hide_surr
 #
 show_surr = not hide_surr or (sc_timer > 0)
 
-await comms:
+await comms():
     + "Hail":
         comms_receive(f"Go away, {name}! You talk too much!", title_color=raider_color)
     + "Taunt":    # if enrage_value is None and not hide_taunt:
@@ -221,8 +220,7 @@ await comms:
         else:
             # Navigate to sub Menu
             jump comms_taunts
-    
-        end_if
+
     + "Surrender now" if show_surr:
         blob = to_blob(COMMS_SELECTED_ID)
         set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
@@ -232,42 +230,40 @@ await comms:
             s_max = blob.get("shield_max_val", s )
             s_cur = blob.get("shield_val", s )
             s_ratio = min(s_cur/s_max, s_ratio)
-        next s
+
 # Secret Codecase, force surrender if active, otherwise check shield ratio
 	if sc_timer > 0:
-	    comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
+        comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
+        add_role(COMMS_SELECTED_ID, "surrendered")
+        ~~ game_stats["ships_surrender"] += 1~~
+        remove_role(COMMS_SELECTED_ID, "raider")
+        sc_timer = 0
+        set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
+        set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
+    elif s_ratio < 0.09:
+        if random.randint(1,6)<3:
+            comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
             add_role(COMMS_SELECTED_ID, "surrendered")
             ~~ game_stats["ships_surrender"] += 1~~
             remove_role(COMMS_SELECTED_ID, "raider")
-		    sc_timer = 0
-		    set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
-		    set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
-        elif s_ratio < 0.09:
-            if random.randint(1,6)<3:
-                comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
-                add_role(COMMS_SELECTED_ID, "surrendered")
-                ~~ game_stats["ships_surrender"] += 1~~
-                remove_role(COMMS_SELECTED_ID, "raider")
 
-                set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
-            else:
-                comms_receive(f"""We will fight to our last breath!""", title_color=raider_color)
-                add_role(COMMS_SELECTED_ID, "never_surrender")
-            end_if
-        elif s_ratio < 0.5:
-            if random.randint(0,6)<=2:
-                comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
-                add_role(COMMS_SELECTED_ID, "surrendered")
-                remove_role(COMMS_SELECTED_ID, "raider")
-                set_engine_data(COMMS_SELECTED_ID, "surrender_flag", 1)
-            else:
-                comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title_color=raider_color)
-            end_if
+            set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
         else:
-            comms_receive(f"""Go climb a tree, {name}!""", title_color=raider_color)
-        end_if
-        
-end_await
+            comms_receive(f"""We will fight to our last breath!""", title_color=raider_color)
+            add_role(COMMS_SELECTED_ID, "never_surrender")
+       
+    elif s_ratio < 0.5:
+        if random.randint(0,6)<=2:
+            comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
+            add_role(COMMS_SELECTED_ID, "surrendered")
+            remove_role(COMMS_SELECTED_ID, "raider")
+            set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
+        else:
+            comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title_color=raider_color)
+
+    else:
+        comms_receive(f"""Go climb a tree, {name}!""", title_color=raider_color)
+
 jump npc_comms
 
 
@@ -288,11 +284,11 @@ taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
 
 right_button = this_taunt_data[taunt_trait]['button']
 
-await comms:
+await comms():
     + "{data['button']}" for data in this_taunt_data:
         # Need to format the data
-       msg = data['transmit']
-       msg = mast_format_string(msg)
+        msg = data['transmit']
+        msg = mast_format_string(msg)
         comms_transmit(f"{msg}", title_color="green")
         # failure
         if right_button != data['button']:
@@ -308,14 +304,13 @@ await comms:
             comms_receive(f"{msg}", title_color=raider_color)
             set_inventory_value(COMMS_SELECTED_ID, "enrage_target",COMMS_ORIGIN_ID)
             set_timer(COMMS_SELECTED_ID, "enrage_timer", minutes=2)
-        end_if
         #
         # Clear the taunt data, only can taunt once
         #
         set_inventory_value(COMMS_SELECTED_ID, "taunt_data", None)
     + "Back":
         -> npc_comms    
-end_await
+
 
 # Jump back to main comms menu
 -> npc_comms
@@ -331,13 +326,11 @@ set_inventory_value(COMMS_ORIGIN_ID, "face_exobiology", random_terran())
 set_inventory_value(COMMS_ORIGIN_ID, "face_counselor", random_terran())
 set_inventory_value(COMMS_ORIGIN_ID, "face_security",  random_terran())
 
-
-
 ================ internal_comms_loop ==================
 #
 # Shows button color, face and title overrides
 #
-await comms:
+await comms():
     + "Sickbay" color "blue":
         comms_receive_internal("The crew health is great!", from_name="sickbay", title_color="blue")
     + "Security" color "red":
@@ -353,7 +346,7 @@ await comms:
         #
         await delay_sim(seconds=3)
         comms_receive_internal("Things feel like they are getting worse", from_name="counselor", title_color="purple")
-end_await
+
 -> internal_comms_loop
 
 ====== test_finished ======

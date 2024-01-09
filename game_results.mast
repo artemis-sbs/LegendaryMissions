@@ -33,12 +33,10 @@ if obj is not None:
         race = race[0:under]
         if race=="xim":
             race= "ximni"
-        end_if
+        
         race = "{race.lower()}_ships_destroyed"
         count = game_stats.get(race, 0)
         ~~ game_stats[race] = count + 1~~
-    end_if        
-end_if
 
 ->END
 
@@ -48,7 +46,7 @@ end_if
 
 sim_pause()
 
-gui_section(style="area: 10, 10, 99, 90;")
+gui_section(style="area: 10, 10, 90, 90;")
 
 """color:white;justify: center; font: gui-6;text:Game results"""
 gui_row()
@@ -113,5 +111,5 @@ gui_hole()
 """color:yellow;justify: right; text:{end_time} minutes"""
 
 
-await gui
+await gui()
 # Kind of need to restart, which is good for now since cleanup is not guaranteed

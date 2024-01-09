@@ -4,3 +4,4 @@
 /sphinx/_build/
 *.sbslib
 /typings/
+/mkdocs/site/

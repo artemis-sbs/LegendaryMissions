@@ -13,26 +13,26 @@ jump wreck_science if has_role(SCIENCE_SELECTED_ID, "wreck")
 
 ========= station_science =======
 
-await scan fog 0:
+await scan():
     + "scan":
         scan_results("This is a friendly station.")
     + "bio":
         scan_results("The crew is mostly human, plus a few aliens, pets, and lab animals.")
     + "intl":
         scan_results("Built ten years ago, this station was in excellent condition before the battle.")
-end_await
+
 ->END
 
 ========= friendly_science =======
 
-await scan:
+await scan():
     + "scan":
         scan_results("This is a friendly ship.")
     + "bio":
         scan_results("The crew is mostly human.")
     + "intl":
         scan_results("The ship is ready for battle.")
-end_await
+
 ->END
 
 ====== raider_science  ===========
@@ -41,23 +41,21 @@ intel_list = get_inventory_value(SCIENCE_SELECTED_ID, "taunt_data")
 
 taunt_intel = "The captain cannot be taunted."
 bio_intel = "The bio scan has failed."
+
 if taunt_trait is not None and taunt_data is not None:
-    
     race = get_race(SCIENCE_SELECTED_ID)
     if race is not None:
         taunt_intel = intel_list[taunt_trait]['science']
         bio_intel = "A bunch of {race} creatures."
-    end_if
-end_if
 
-await scan:
+await scan():
     + "scan":
         scan_results("Enemy vessel. Exercise caution.")
     + "bio":
         scan_results("{bio_intel}")
     + "intl":
         scan_results("{taunt_intel}")
-end_await
+
 ->END
 
 
@@ -81,13 +79,12 @@ elif has_roles(SCIENCE_SELECTED_ID, "upgrade, lateral_array"):
     upg_desc = "Lateral Array. 5 Minute Target Scan Triple Speed."
 elif has_roles(SCIENCE_SELECTED_ID, "upgrade, haplix_overcharger"):
     upg_desc = "Haplix Overcharger. +300 to shields but may damage shield generators."
-end_if
 
 
-await scan:
+
+await scan():
     + "scan":
         scan_results("{upg_desc}")
-end_await
 ->END
 
 ===== wreck_science =====
@@ -95,12 +92,12 @@ wr_desc = "Gutted and battle-scarred wreckage, the mangled remains of a fierce b
 bio_intel = "No signs of life detected."
 mat_intel = "Material scan: no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging."
 
-await scan:
+await scan():
     + "scan":
         scan_results("{wr_desc}")
     + "bio":
         scan_results("{bio_intel}")
     + "mat":
         scan_results("{mat_intel}")
-end_await
+
 ->END

@@ -1,6 +1,5 @@
 route_damage_object("take_damage")
 
-
 ============= take_damage =========
 #print(f"O: {0xFFFFFF &DAMAGE_ORIGIN_ID} P: {0xFFFFFF &DAMAGE_PARENT_ID} S: {0xFFFFFF &DAMAGE_SOURCE_ID} T: {0xFFFFFFF & DAMAGE_TARGET_ID}")
 
@@ -29,7 +28,7 @@ elif DAMAGE_PARENT_ID==0 and DAMAGE_ORIGIN_ID != 0:
 elif DAMAGE_PARENT_ID != 0:
     set_inventory_value(DAMAGE_TARGET_ID, "enrage_target",DAMAGE_PARENT_ID)
     set_timer(DAMAGE_TARGET_ID, "enrage_timer", minutes=2)
-end_if
+
 
 ->END
 
@@ -61,12 +60,10 @@ elif DAMAGE_PARENT_ID!=0:
 else:
     # Parent and origin = 0, Mine?
     ->END
-end_if
 
 for player in role(fr.side) & role("__player__"):
     player_obj = to_object(player)
     comms_message(f"Help. {player_obj.name} we are under attack from {source}", DAMAGE_TARGET_ID, player, title_color="green")
-next player
 #
 # Only request help if you haven't for two minutes
 #
@@ -94,25 +91,7 @@ wr_posz = wr_eobj.pos.z
 wr_pos = wr_eobj.pos        # Need this vector for the particle effect
 wr_side = get_inventory_value(wr.id, "hull_side", 0)
 
-# Once we have the position and the side value, grab some data from the EVENT. 
-# Get the hp from the wreck's inventory, subtract the damage, and check if the remaining hp > 0.
-# If so, END the task, as we don't need to delete anything or drop an upgrade.  
-
-dmgtag = EVENT.sub_tag
-dmgfloat = EVENT.sub_float
-dmgsrc = EVENT.source_point
-dmgside = EVENT.value_tag
-print(f"Damage Event dmgtag = {dmgtag}, dmgfloat = {dmgfloat}, dmgsrc = {dmgsrc}, dmgside {dmgside}")
-
-dmgtemp = get_inventory_value(wr.id, "hp", 0)
-if dmgtemp is None:
-    dmgtemp = 30
-end_if
-dmgtemp = dmgtemp - dmgfloat
-set_inventory_value(wr.id, "hp", dmgtemp)
-->END if dmgtemp > 0
-
-# If the damage is enough to bring hp < 0, destroy the wreck, delete the engine object, and generate a particle effect.
+# Once we have the position and the side value, destroy the wreck, delete the engine object, and generate a particle effect. 
 
 wr.destroyed()
 sbs.delete_object(DAMAGE_TARGET_ID)
@@ -129,7 +108,6 @@ elif "lots" == upgrade_select:
     upg_dropchance = 6
 elif "many" == upgrade_select:
     upg_dropchance = 8
-end_if
 
 # Generate random number, end task if upg_rand is higher than the drop chance (determined by upgrade_select)
 
@@ -155,8 +133,6 @@ if wr_side == "kralien":
     elif upg_rand >= 1 and upg_rand <= 2:
         # Carapaction Coil 20%
         pickup_spawn(wr_posx, wr_posy, wr_posz, "carapaction_coil")
-    end_if
-end_if
 
 if wr_side == "arvonian":
     if upg_rand >= 6 and upg_rand <= 10:
@@ -168,8 +144,6 @@ if wr_side == "arvonian":
     elif upg_rand >= 1 and upg_rand <= 2:
         # HiDens Powercell 20%
         pickup_spawn(wr_posx, wr_posy, wr_posz, "hidens_powercell")
-    end_if
-end_if
 
 if wr_side == "torgoth":
     if upg_rand >= 6 and upg_rand <= 10:
@@ -181,8 +155,6 @@ if wr_side == "torgoth":
     elif upg_rand >= 1 and upg_rand <= 2:
         # Cetrocite Crystal 20%
         pickup_spawn(wr_posx, wr_posy, wr_posz, "cetrocite_crystal")
-    end_if
-end_if
 
 if wr_side == "ximni":
     if upg_rand >= 6 and upg_rand <= 10:
@@ -194,8 +166,6 @@ if wr_side == "ximni":
     elif upg_rand >= 1 and upg_rand <= 2:
         # Infusion P-Coils 20%
         pickup_spawn(wr_posx, wr_posy, wr_posz, "infusion_pcoils")
-    end_if
-end_if
 
 if wr_side == "skaraan" or wr_side is None:
     upg_rand = random.randint(1,9)          # For all upgrades, equal chance. The Skaraans can be expected to carry any type of exotic technology.
@@ -217,7 +187,5 @@ if wr_side == "skaraan" or wr_side is None:
         pickup_spawn(wr_posx, wr_posy, wr_posz, "lateral_array")
     elif upg_rand == 9:
         pickup_spawn(wr_posx, wr_posy, wr_posz, "haplix_overcharger")
-    end_if
-end_if
 
 ->END

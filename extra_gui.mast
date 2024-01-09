@@ -21,7 +21,6 @@ if player:
     player_name = player.name
 else:
     player_name = "Terran"
-end_if
 #
 # Switch to the friendly ship
 #
@@ -48,7 +47,7 @@ text: Hello {player_name} tell us what to do
 # and set in inventory
 #
 message = None
-await choice:
+await gui():
    + "APPLY":
         target_id = get_inventory_value(comms_selected, "WEAPONS_SELECTED_ID", None)
         target_point = get_inventory_value(comms_selected, "WEAPONS_SELECTED_POINT", None)
@@ -62,18 +61,15 @@ await choice:
                     message = "OK {player_name} - going to attack {target_obj.name}"
                 else:
                     message = "OK {player_name} - going to rendezvous with {target_obj.name}"
-                end_if
-                
+                    
                 target(comms_selected, target_id, shoot)
-            end_if
+            
         elif target_point is not None:
             message = "Heading to designated waypoint"
             target_pos(comms_selected, target_point.x, target_point.y, target_point.z )
-        end_if
         
    + "CANCEL":
         # pass
-end_await
 #
 # Get back on the right ship
 #
@@ -81,7 +77,7 @@ assign_client_to_ship(client_id,ship)
 if message is not None:
     comms_message(message, comms_selected, ship, title_color="cyan")
     #receive ship comms_selected "{message}"
-end_if
+
 jump show_console_selected
 
 ========== weapons_select_route ========
@@ -94,7 +90,7 @@ nav = get_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_NAV", None)
 if nav:
     sim.delete_navpoint_by_reference(nav)
     set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_NAV", None)
-end_if
+
 # Handle initial clicks
 if EVENT.selected_id != 0:
     set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_POINT", None)
@@ -106,7 +102,7 @@ else:
     nav = sim.add_navpoint(EVENT.source_point.x,EVENT.source_point.y, EVENT.source_point.z, "goto", "white")
     ~~ nav.visibleToShip =WEAPONS_ORIGIN_ID~~
     set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_NAV", nav)
-end_if
+
 #Done no point running more
 ->END
 

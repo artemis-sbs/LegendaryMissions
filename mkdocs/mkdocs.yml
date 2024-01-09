@@ -1,0 +1,127 @@
+site_name: Basic Siege Documentation
+copyright: "An Artemis: Cosmos mission"
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/solid/cart-shopping
+      link: https://www.artemisspaceshipbridge.com/
+    - icon: fontawesome/brands/youtube 
+      link: https://www.youtube.com/@ArtemisSbs
+    - icon: fontawesome/brands/steam 
+      link: https://store.steampowered.com/app/2467840/Artemis_Cosmos/
+    - icon: material/forum
+      link: https://artemis.forumchitchat.com/
+
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - content.code.copy
+    #- navigation.footer
+  custom_dir: overrides
+  icon: 
+    #logo: material/castle
+    logo: mast/icon
+    admonition:
+      note: simple/windowsterminal
+
+repo_url: https://github.com/artemis-sbs/BasicSiegeMAst
+repo_name: artemis-sbs/BasicSiegeMast
+
+nav:
+  - Home: index.md
+  - Playing:
+    - playing/index.md
+    - Updating: playing/updating.md
+
+  - Script:
+    - script/index.md
+    - GUI:
+      - script/gui/index.md
+      - Mission Start: script/gui/server.md
+      - Console selections: script/gui/console.md
+      - End Screen: script/gui/end_game.md
+      - Debug: script/gui/debug.md
+
+    - AI: 
+      - script/ai/index.md
+      - Raider: script/ai/raider.md
+      - Station: script/ai/station.md
+      - Friendly: script/ai/friendly.md
+      - civilian: script/ai/civilian.md
+      - Engineering: 
+        - script/ai/engineering/index.md
+        - Damcon: script/ai/engineering/damcon.md
+        - Rooms: script/ai/engineering/rooms.md
+        - Commands: script/ai/engineering/commands.md
+      
+    - Comms:
+      - script/comms/index.md
+      
+      - Enemy Comms: 
+        - script/comms/enemy.md
+        - Taunts: script/comms/taunt.md
+        - Surrender: script/comms/surrender.md
+      - Station Comms: script/comms/station.md
+      - Friendly Comms: script/comms/friendly.md
+      - Civ Comms: script/comms/civ.md
+      - Internal Comms: script/comms/internal.md
+
+    - Damage:
+      - script/damage/index.md
+      - Wrecks: script/damage/wrecks.md
+      - Damage Comms: script/damage/comms.md
+      - Internal Damage: script/damage/internal.md
+      - Heat Damage: script/damage/heat.md
+
+    - Pickups:
+      - script/pickups/index.md
+      - Upgrades: 
+        - script/pickups/upgrades/index.md
+        - Each Type: script/pickups/upgrades/each.md
+
+    - Science:
+      - script/science/index.md
+      - Raider: script/science/raider.md
+      - Station: script/science/station.md
+
+    - Contributing:
+      - script/contribute/index.md
+
+
+    - API:
+      - script/api/index.md
+
+  - About: 
+    - about/index.md
+
+
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji 
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      options:
+        custom_icons:
+          - overrides/.icons
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [".."]

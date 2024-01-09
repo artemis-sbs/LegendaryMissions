@@ -13,9 +13,6 @@ if allow_debug==is_dev_build():
     gui_add_console_tab(SHARED, "mast", "mast", None)    
     gui_add_console_tab(SHARED, "mast", "debug", "debug_screen")
     gui_add_console_tab(SHARED, "mast", "__back_tab__", "console_selected")
-end_if
-
-
 
 
 ===== debug_screen ======
@@ -28,29 +25,26 @@ Under construction
 
 gui_section(style="area:10,15,35,100;row-height:35px;")
 gui_row()
-on message gui_button("Test Anomalies"):
+on gui_message(gui_button("Test Anomalies")):
     jump spawn_test_anom
-end_on
+
 gui_row()
-on message gui_button("Test Wreck"):
+on gui_message(gui_button("Test Wreck")):
     jump spawn_test_wreck
-end_on
+
 gui_row()
-on message gui_button("Test Enemy"):
+on gui_message(gui_button("Test Enemy")):
     jump spawn_test_enemy
-end_on
+
 gui_row()
-on message gui_button("Test Shapes"):
+on gui_message(gui_button("Test Shapes")):
     jump spawn_test_shapes
-end_on
 
 
 
 gui_activate_console("debug")
 
-await gui
-
-
+await gui()
 
 
 ===== spawn_test_anom === 
@@ -94,7 +88,7 @@ temp_pitch = random.uniform(0.002, 0.004)
 wr.engine_object.steer_yaw = temp_yaw
 wr.engine_object.steer_pitch = temp_pitch
 wr.blob.set("radar_color_override", "#f0c")
-set_inventory_value(wr.id, "hp", 30.0)
+set_inventory_value(wr.id, "hp", 150)
 set_inventory_value(wr.id, "hull_side", "skaraan")
 set_inventory_value(wr.id, "hull_type", "cruiser")
 
@@ -102,7 +96,7 @@ jump debug_screen
 
 
 ===== spawn_test_enemy ===== 
-# For testing damage/destroy effects, load an enemy with no shields
+# For testing wrecks, load one up front
 _ship_id = get_inventory_value(client_id, "assigned_ship")
 jump debug_screen if _ship_id is None
 
@@ -119,6 +113,8 @@ set_data_set_value(r_blob, "shield_val", 0, 0)
 set_data_set_value(r_blob, "shield_val", 0, 1)
 
 jump debug_screen
+
+
 
 ===== spawn_test_shapes === 
 # For testing generic shapes
@@ -144,8 +140,6 @@ shape11 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+1100, "Shape 11", "shape", "a
 shape12 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+1100, "Shape 12", "shape", "aa-generic-torus", "behav_asteroid")
 
 
-jump debug_screen
-
 
 ===== mast_debug_screen ======
 
@@ -157,4 +151,4 @@ Under construction
 
 gui_activate_console("mast")
 
-await gui
+await gui()

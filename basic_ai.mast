@@ -78,18 +78,14 @@ if surrendered:
     target_pos(SPAWNED_ID, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
     # TODO: When it reaches spawn_pos tally and remove
     ->END
-end_if
-
 #
+# Auto scan: If you can see it you get the initial scan
 # This is naive and assume players are on one side
 #
 if not scanned: 
     should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
     if should_scan is not None:
         follow_route_science_select(should_scan, SPAWNED_ID)
-    end_if
-end_if
-
 #
 # Comms enraged this npc, But enraged is time limited
 #
@@ -104,33 +100,29 @@ if enraged is not None:
         else:
             clear = True
             the_target = None
-        end_if
-    end_if
     if clear:
         # clear the enraged value
         set_inventory_value(SPAWNED_ID, "enrage_target", None)
         clear_timer(SPAWNED_ID, "enrage_timer")
-    end_if
-end_if
 
 #
 # Look for a station near 
 #
 if the_target is None:
     the_target = closest(SPAWNED_ID, role("Station") & role("tsn"), 3000)
-end_if
+
 #
 # Look for a player near 
 #
 if the_target is None:
     the_target = closest(SPAWNED_ID, role("PlayerShip"), 3000)
-end_if
+
 #
 # Otherwise look for a tsn station
 #
 if the_target is None:
     the_target = closest(SPAWNED_ID, role("Station") & role("tsn"))
-end_if
+
 #
 # If any of these check resulted in a target
 #
@@ -139,11 +131,9 @@ if the_target is not None:
     distance = sbs.distance_id(SPAWNED_ID, to_id(the_target))
     throt = 1
     if distance < 500:
-    throt = 0
-    end_if
-
+        throt = 0
+    
     target(SPAWNED_ID, the_target, True, throt)
-end_if
 #
 # Call this logic again in 5 seconds
 #
@@ -167,11 +157,9 @@ scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 # This is naive and assume players are on one side
 #
 if not scanned: 
-    should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
+    should_scan = closest(SPAWNED_ID, role("PlayerShip"))
     if should_scan is not None:
         follow_route_science_select(should_scan, SPAWNED_ID)
-    end_if
-end_if
 
 #
 # Only shoot raiders
@@ -182,12 +170,10 @@ if the_target is not None:
     distance = sbs.distance_id(SPAWNED_ID,to_id(the_target))
     throt = 1
     if distance < 500:
-    throt = 0
-    end_if
+        throt = 0
+
 
     target(SPAWNED_ID, the_target, shoot, throt)
-
-end_if
 
 #
 # call this logic every 5 seconds
@@ -210,6 +196,15 @@ torpedo_build_type = sbs.TORPEDO.HOMING
 build_time = 3*60
 task_cancel(build_task) 
 build_task = task_schedule(task_station_building)
+
+scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
+#
+# This is naive and assume players are on one side
+#
+if not scanned: 
+    should_scan = closest(SPAWNED_ID, role("PlayerShip"))
+    if should_scan is not None:
+        follow_route_science_select(should_scan, SPAWNED_ID)
 
 
 -> END
