@@ -112,8 +112,8 @@ await comms():
     #
     =change has_role(COMMS_SELECTED_ID, "__damaged__") == True:
         jump comms_undamaged
-    =focus:
-        print("focus D")
+    #=focus:
+    #    print("focus D")
 
 jump comms_damaged
 
@@ -129,8 +129,8 @@ await comms():
     #
     =change has_role(COMMS_SELECTED_ID, "__damaged__") == False:
         jump comms_damaged
-    =focus:
-        print("focus UD")
+    #=focus:
+    #    print("focus UD")
 
 print("rerunning UD")
 jump comms_undamaged
