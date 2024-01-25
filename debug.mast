@@ -139,7 +139,7 @@ shape10 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+1100, "Shape 10", "shape", "a
 shape11 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+1100, "Shape 11", "shape", "aa-generic-tetrahedron", "behav_asteroid")
 shape12 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+1100, "Shape 12", "shape", "aa-generic-torus", "behav_asteroid")
 
-
+jump debug_screen
 
 ===== mast_debug_screen ======
 
