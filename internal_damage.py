@@ -98,6 +98,8 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
         color = theme[color]
 
         go =  grid_spawn(ship_id,  name_tag, name_tag, loc_x, loc_y, g["icon"], color, g["roles"])
+        if go is None: return
+
         go.blob.set("icon_scale", g["scale"]/2, 0)
         # save color so it cn be restored
         set_inventory_value(go.id, "color", color)
@@ -158,6 +160,8 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
 
 def grid_restore_damcons(id_or_obj):
     ship_id = to_id(id_or_obj)
+    if has_role(ship_id, "cockpit"):
+        return
 
     hm = sbs.get_hull_map(ship_id)
     if hm is None: return

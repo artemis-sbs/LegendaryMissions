@@ -1,0 +1,140 @@
+route_spawn(hangar_handle_route_spawn)
+
+
+========== hangar_handle_route_spawn =========
+jump fighter_mission if has_roles(SPAWNED_ID, "tsn,fighter")
+jump shuttle_mission if has_roles(SPAWNED_ID, "tsn,shuttle")
+
+#### ELSE don't run a task
+->END
+
+
+=====  fighter_mission =====
+
+#
+# Create the interior for the ship, defined in grid_ai
+#
+# force create hullmap
+# task_schedule(spawn_grid_objects)
+#
+# The remaining AI for the player is docking
+#
+set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a fighter mission")
+
+->END
+
+
+=====  shuttle_mission =====
+
+#
+# Create the interior for the ship, defined in grid_ai
+#
+# force create hullmap
+# task_schedule(spawn_grid_objects)
+#
+# The remaining AI for the player is docking
+#
+set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a shuttle mission")
+
+pick = random.randint(0,2)
+
+jump story_mission_goto_nav_point if pick==0
+jump story_mission_goto_nav_point if pick==1
+jump story_mission_goto_nav_point if pick==2
+
+
+
+
+->END
+
+
+=====  shuttle_deliver_mission =====
+
+#
+# Create the interior for the ship, defined in grid_ai
+#
+# force create hullmap
+# task_schedule(spawn_grid_objects)
+#
+# The remaining AI for the player is docking
+#
+set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a shuttle mission")
+
+->END
+
+=====  shuttle_protect_mission =====
+
+#
+# Create the interior for the ship, defined in grid_ai
+#
+# force create hullmap
+# task_schedule(spawn_grid_objects)
+#
+# The remaining AI for the player is docking
+#
+
+set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a shuttle mission")
+
+->END
+
+
+=====  story_mission_goto_nav_point =====
+
+#
+# Assumes the start location is properly set
+#
+return_point = get_science_selection(SPAWNED_ID)
+mission_ship_id = SPAWNED_ID
+
+
+so = to_object(return_point)
+_pos = Vec3.create(so.engine_object.pos)
+#print("ship X: {_pos.x} Z: {_pos.z}" )
+_pos = _pos.rand_offset(2000, 5000, ring=True)
+#print("moved X: {_pos.x} Z: {_pos.z}" )
+
+co = to_object(mission_ship_id)
+name_point_name = "{co.name}:nav"
+_navpoint = sim.add_navpoint(*_pos.xyz, name_point_name, "yellow")
+_navcursor = terrain_spawn(*_pos, name_point_name, "tsn", "cursor", "behav_cusror")
+
+set_inventory_value(SPAWNED_ID, "briefing", "This a test of a shuttle mission. You simply got to the specified points and return.")
+
+# No longer needed
+so = None
+co = None
+
+==== story_mission_goto_nav_point_travel_to =====
+await delay_sim(seconds=5)
+#
+# Goto there locations
+#
+dist = sbs.distance_to_navpoint(name_point_name, mission_ship_id)
+print("dist {dist}")
+#
+# If you haven't reach the nave point keep checking
+# 
+jump story_mission_goto_nav_point_travel_to if dist > 700 or dist < 0
+
+#
+# Move Point
+#
+
+print("Move nav point")
+return_point = get_science_selection(SPAWNED_ID)
+so = to_object(return_point)
+# Return point is gone
+-> END if so is None
+    
+_pos = Vec3.create(so.engine_object.pos)
+_pos = _pos.rand_offset(2000, 5000, ring=True)
+
+# Moving navpoint doesn't work so delete,recreate
+sim.delete_navpoint_by_name(name_point_name)
+sim.add_navpoint(*_pos.xyz, name_point_name, "yellow")
+set_pos(_navcursor, _pos)
+
+jump story_mission_goto_nav_point_travel_to
+
+
+->END

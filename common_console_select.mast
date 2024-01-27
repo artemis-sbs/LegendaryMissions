@@ -68,8 +68,9 @@ if console_select == "helm" and not game_started:
 gui_section( style="area: 50,60px,75,90;")
 gui_vradio(f"{ship_list}", style="row-height: 50px;", var="client_select_ship")
 
-gui_section( style="area: 80,60px, 99,90;")
-gui_vradio("helm,weapons, comms,science,engineering,mainscreen", style="row-height: 50px;", var="console_select")
+gui_section( style="area: 80,60px, 99,90-60px;")
+gui_vradio("helm,weapons, comms,science,engineering,hangar,mainscreen", style="row-height: 45px;", var="console_select")
+gui_section( style="area: 80,90-60px, 99,90;")
 gui_row(style="row-height: 50px;")
 
 if not game_started:
@@ -119,6 +120,8 @@ for player_ship in to_object_list(role("__PLAYER__")):
         _ship_id = player_ship.id
         sbs.assign_client_to_ship(client_id, player_ship.id)
         set_inventory_value(client_id, "assigned_ship", player_ship.id)
+        link(_ship_id, "consoles", client_id)
+
 
 jump select_console if _ship_id is None
 #
@@ -134,6 +137,9 @@ sbs.set_sky_box(client_id, sky_box)
 # Make it so the console can be found if needed
 #
 set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
+add_role(client_id, "console, {console_select}")
+jump show_hanger if console_select == "hangar"
+
 #------------------------------------------------------------------------------------------------------------
 sbs.set_beam_damages(client_id, 7.0, difficulty)
 #------------------------------------------------------------------------------------------------------------
@@ -162,3 +168,6 @@ Task count {task_count}
 await gui(timeout(4))
 
 jump debug_mast
+
+
+

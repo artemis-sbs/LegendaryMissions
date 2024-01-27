@@ -23,6 +23,7 @@ jump ai_player if has_role(SPAWNED_ID, "__player__")
 jump ai_task_friendly if has_roles(SPAWNED_ID, "tsn, friendly")
 jump spawn_task_station if has_roles(SPAWNED_ID, "tsn, station")
 jump raider_start if has_role(SPAWNED_ID, "raider")
+#jump ai_fighter if has_roles(SPAWNED_ID, "tsn,fighter")
 
 #### ELSE don't run a task
 ->END
@@ -30,8 +31,13 @@ jump raider_start if has_role(SPAWNED_ID, "raider")
 =====  ai_player =====
 
 #
+# For now put on a fighter
+#
+hangar_fighter_spawn(SPAWNED_ID)
+#
 # Create the interior for the ship, defined in grid_ai
 #
+
 task_schedule(spawn_grid_objects)
 #
 # The remaining AI for the player is docking
@@ -42,7 +48,6 @@ schedule_player_docking(SPAWNED_ID, difficulty)
 # With other tasks started end this one
 #
 ->END
-
 
 
 ====== raider_start ======
@@ -205,6 +210,15 @@ if not scanned:
     should_scan = closest(SPAWNED_ID, role("PlayerShip"))
     if should_scan is not None:
         follow_route_science_select(should_scan, SPAWNED_ID)
+
+
+eo = to_engine_object(station_id)
+_pos = eo.pos
+
+#_pos.y += 300
+
+for x in range(random.randint(1,3)):
+    hangar_random_craft_spawn(station_id)
 
 
 -> END

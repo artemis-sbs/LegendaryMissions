@@ -530,5 +530,18 @@
 "tsn_mine_layer":
  {"grid_objects": []},
 "tsn_juggernaught":
- {"grid_objects": []}
+ {"grid_objects": []},
+ "tsn_fighter":
+ {"grid_objects": [
+   {"x": 3.0,"y": 4.0,"icon": 106,"name": "aft-shield","color": "lime","scale": 1.2,"roles": "shield,system,aft,room"},
+   {"x": 3.0,"y": 0.0,"icon": 117,"name": "beam","color": "lime","scale": 1.0,"roles": "weapon,system,beam,room"},
+   {"x": 3.0,"y": 1.0,"icon": 106,"name": "fwd-shield","color": "lime","scale": 1.2,"roles": "shield,system,fwd,room"},
+   {"x": 2.0,"y": 4.0,"icon": 62,"name": "Impulse","color": "lime","scale": 1.0,"roles": "sensor,system,impulse,room"},
+   {"x": 4.0,"y": 2.0,"icon": 40,"name": "torpedo-tube","color": "lime","scale": 1.0,"roles": "weapon,system,torpedo,room"},
+   {"x": 2.0,"y": 2.0,"icon": 68,"name": "COMPUTER","color": "lime","scale": 1.0,"roles": "sensor,system,room"},
+   {"x": 3.0,"y": 2.0,"icon": 13,"name": "NAVIGATION","color": "lime","scale": 1.0,"roles": "sensor,system,room"},
+   {"x": 4.0,"y": 4.0,"icon": 62,"name": "Impulse","color": "lime","scale": 1.0,"roles": "ENGINE,system,impulse,room"},
+   {"x": 2.0,"y": 3.0,"icon": 126,"name": "cargo","color": "silver","scale": 1.0,"roles": "bay,cargo,room"},
+   {"x": 4.0,"y": 3.0,"icon": 11,"name": "sensors","color": "lime","scale": 1.0,"roles": "sensor,system,room"}
+  ]}
 }
