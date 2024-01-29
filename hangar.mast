@@ -94,9 +94,9 @@ sbs.retrieve_from_standby_list(ride_select.engine_object)
 # Create the Ships internals
 #
 ride_id = to_id(ride_select)
-#hm = sbs.get_hull_map(ride_id, True)
-#SPAWNED_ID = ride_id
-#task_schedule(spawn_grid_objects)
+hm = sbs.get_hull_map(ride_id, True)
+SPAWNED_ID = ride_id
+task_schedule(spawn_grid_objects)
 
 sbs.assign_client_to_ship(client_id,to_id(ride_select))
 set_inventory_value(ride_select, "client_id", client_id)

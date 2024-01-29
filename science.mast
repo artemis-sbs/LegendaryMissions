@@ -7,6 +7,7 @@ jump friendly_science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 jump raider_science if has_role(SCIENCE_SELECTED_ID, "raider")
 jump upgrade_science if has_role(SCIENCE_SELECTED_ID, "upgrade")
 jump wreck_science if has_role(SCIENCE_SELECTED_ID, "wreck")
+jump typhon_science if has_role(SCIENCE_SELECTED_ID, "typhon")
 
 
 ->END
@@ -99,5 +100,20 @@ await scan():
         scan_results("{bio_intel}")
     + "mat":
         scan_results("{mat_intel}")
+
+->END
+
+===== typhon_science =====
+scan_desc = "A classic typhon."
+_bio = "Seems to be very much alive."
+_intel = "Just avoid it and it won't bother you."
+
+await scan():
+    + "scan":
+        scan_results("{scan_desc}")
+    + "bio":
+        scan_results("{_bio}")
+    + "intl":
+        scan_results("{_intel}")
 
 ->END

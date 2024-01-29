@@ -15,7 +15,7 @@ jump shuttle_mission if has_roles(SPAWNED_ID, "tsn,shuttle")
 # Create the interior for the ship, defined in grid_ai
 #
 # force create hullmap
-# task_schedule(spawn_grid_objects)
+task_schedule(spawn_grid_objects)
 #
 # The remaining AI for the player is docking
 #
@@ -30,7 +30,7 @@ set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a fighter miss
 # Create the interior for the ship, defined in grid_ai
 #
 # force create hullmap
-# task_schedule(spawn_grid_objects)
+task_schedule(spawn_grid_objects)
 #
 # The remaining AI for the player is docking
 #
@@ -54,7 +54,7 @@ jump story_mission_goto_nav_point if pick==2
 # Create the interior for the ship, defined in grid_ai
 #
 # force create hullmap
-# task_schedule(spawn_grid_objects)
+task_schedule(spawn_grid_objects)
 #
 # The remaining AI for the player is docking
 #
@@ -68,7 +68,7 @@ set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a shuttle miss
 # Create the interior for the ship, defined in grid_ai
 #
 # force create hullmap
-# task_schedule(spawn_grid_objects)
+task_schedule(spawn_grid_objects)
 #
 # The remaining AI for the player is docking
 #

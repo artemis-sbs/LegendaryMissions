@@ -16,6 +16,7 @@ ship_type_def = player_list[0].ship
 shared ship_list = ""
 client_selected_index = 0
 shared valid_interiors = set()
+
 for key in grid_data:
     if len(grid_data[key]["grid_objects"])>0:
         valid_interiors.add(key)

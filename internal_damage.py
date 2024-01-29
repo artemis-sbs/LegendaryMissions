@@ -317,7 +317,10 @@ def set_damage_coefficients(id_or_obj):
         _undam = undamaged & all_roles(sys_role)
         _dam = damaged & all_roles(sys_role)
         _total = max(1, len(_dam)+len(_undam))
-        _coef = len(_undam) / _total
+        if (len(_undam) + len(_dam)) == 0:
+            _coef = 1.0
+        else:
+            _coef = len(_undam) / _total
         # do print(f"damage {_coef} {_blob_name}")
         blob.set(_blob_name, _coef, _idx)
 

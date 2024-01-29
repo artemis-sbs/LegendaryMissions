@@ -17,6 +17,7 @@ import pickup_common.mast
 import upgrade.mast
 import story.py
 import hangar.mast
+import monster.mast
 
 
 
