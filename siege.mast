@@ -240,7 +240,7 @@ for v in spawn_points:
     cluster_spawn_points = scatter_sphere(random.randint(terrain_value*2,terrain_value*4), v.x, 0,v.z, 1000, 10000, ring=False)
     for v2 in cluster_spawn_points:
         v2.y = v2.y % 500.0
-        nebula = terrain_spawn(v2.x, v2.y, v2.z,None, None, "nebula", "behav_nebula")
+        nebula = terrain_spawn(v2.x, v2.y, v2.z,None, "#, nebula", "nebula", "behav_nebula")
         nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
         nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
         nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
@@ -267,7 +267,7 @@ for v in spawn_points:
     for v2 in cluster_spawn_points:
         a_type = random.choice(asteroid_types)
 
-        asteroid = terrain_spawn(v2.x, v2.y, v2.z,None, None, a_type, "behav_asteroid")
+        asteroid = terrain_spawn(v2.x, v2.y, v2.z,None, "#,asteroid", a_type, "behav_asteroid")
         asteroid.engine_object.steer_yaw = random.uniform(0.0001, 0.003)
         asteroid.engine_object.steer_pitch = -random.uniform(0.0001, 0.003)
         asteroid.engine_object.steer_roll = random.uniform(0.0001, 0.003)

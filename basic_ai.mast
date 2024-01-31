@@ -33,7 +33,7 @@ jump raider_start if has_role(SPAWNED_ID, "raider")
 #
 # For now put on a fighter
 #
-hangar_fighter_spawn(SPAWNED_ID)
+hangar_fighter_spawn(SPAWNED_ID, "tsn")
 #
 # Create the interior for the ship, defined in grid_ai
 #
@@ -218,7 +218,7 @@ _pos = eo.pos
 #_pos.y += 300
 
 for x in range(random.randint(1,3)):
-    hangar_random_craft_spawn(station_id)
+    hangar_random_craft_spawn(station_id, "tsn")
 
 
 -> END

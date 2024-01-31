@@ -3,10 +3,8 @@ import hangar/missions.mast
 
 route_dock(handle_hangar_docking)
 
-shared hangar_missions = hangar_get_mission_data()
+shared hangar_version = 1
 call_sign = "Selene"
-
-
 build_task = None
 #
 # The route_spawn label is the entry point 
@@ -16,7 +14,7 @@ build_task = None
 #
 
 
-==== show_hanger ====
+==== show_hangar ====
 #
 # Get all the available rides 
 #
@@ -59,49 +57,48 @@ on change ride_choice.value:
     if len(ride_choice.value):
         fighter = ride_choice.value[0]
         dock = get_science_selection(fighter)
-        sbs.assign_client_to_ship(client_id, dock)
         dock = to_object(dock)
-        defa = f"Protect {dock.name}"
-        briefing = get_inventory_value(fighter, "briefing", defa)
-        gui_update("briefing-text", "text: {briefing}")
+ 
+        if dock is not None:
+            sbs.assign_client_to_ship(client_id, dock.id)
+            defa = f"Protect {dock.name}"
+            briefing = get_inventory_value(fighter, "briefing", defa)
+            gui_update("briefing-text", "text: {briefing}")
 
+# If a thing launches or docks things need to refresh
+on change hangar_version:
+    jump show_hangar
 
 
 await gui():
     + "Head to Bar":
-        print("")
+        print("Bar")
+        jump show_hangar
     + "Casino":
-        print("")
+        print("Casino")
+        jump show_hangar
     + "Quarters":
-        print("")
+        print("Quarters")
+        jump show_hangar
     + "Launch":
-        ride_select = ride_choice.value[0]
-        jump launch_to_cockpit
+        if len(ride_choice.value) != 0:
+            ride_select = ride_choice.value[0]
+            jump launch_to_cockpit
+        jump show_hangar
 
-jump show_hanger
+
+jump show_hangar
 
 ==== launch_to_cockpit ======
 
+jump show_hangar if ride_select is None
+jump show_hangar if not has_role(ride_select, "standby")
 
-jump show_hanger if ride_select is None
-jump show_hanger if not has_role(ride_select, "standby")
-
-#
-# Add the craft back into the game arena
-#
-sbs.retrieve_from_standby_list(ride_select.engine_object)
-#
-# Create the Ships internals
-#
-ride_id = to_id(ride_select)
-hm = sbs.get_hull_map(ride_id, True)
-SPAWNED_ID = ride_id
-task_schedule(spawn_grid_objects)
+jump show_hangar if not hangar_launch_craft(to_id(ride_select))
 
 sbs.assign_client_to_ship(client_id,to_id(ride_select))
 set_inventory_value(ride_select, "client_id", client_id)
 
-remove_role(ride_select, "standby")
 gui_console("cockpit")
 
 await gui()
@@ -109,27 +106,13 @@ await gui()
 
 
 ==== handle_hangar_docking ======
-
-
-
 fighter_so = to_object(EVENT.parent_id)
 fighter = fighter_so.engine_object
-#
-# Simple case for now, just dock with stations
-#
-dock_rng = 600
 
-dockable = broad_test(fighter.pos.x-dock_rng , fighter.pos.z-dock_rng, dock_rng + fighter.pos.x, dock_rng + fighter.pos.z, 1)
-dock_target = closest(EVENT.parent_id, dockable & all_roles("tsn, station"))
-->END if dock_target is None
-set_science_selection(EVENT.parent_id, dock_target)
-
-# Not counted for end game
-fighter_so.add_role("standby")
-sbs.push_to_standby_list(fighter)
-fighter_client = get_inventory_value(EVENT.parent_id, "client_id")
-if fighter_client is not None:
-    gui_reroute_client(fighter_client, show_hanger)
+if hangar_attempt_dock_craft(fighter_so.id):
+    fighter_client = get_inventory_value(fighter_so.id, "client_id")
+    if fighter_client is not None:
+        gui_reroute_client(fighter_client, show_hangar)
 
 
 ->END

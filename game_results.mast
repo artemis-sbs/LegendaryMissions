@@ -52,44 +52,59 @@ gui_section(style="area: 10, 10, 90, 90;")
 gui_row()
 """""color:cyan;justify:center;font:gui-5;text:{start_text}"""""
 gui_row()
+gui_hole(5)
 """color:yellow;justify: right; text:TSN Destroyed"""
 gui_blank(style="col-width: 1;")
+gui_hole(5)
 """color:yellow;justify: left; text:{game_stats["tsn_destroyed"]}"""
 
 gui_row()
+gui_hole(5)
 """color:yellow; justify: right; text:arvonian ships destroyed"""
 gui_blank(style="col-width: 1;")
+gui_hole(5)
 """color:yellow;justify: left; text:{game_stats["arvonian_ships_destroyed"]}"""
 
 gui_row()
+gui_hole(5)
 """color:yellow; justify: right; text:kralien ships destroyed"""
 gui_blank(style="col-width: 1;")
+gui_hole(5)
 """color:yellow;justify: left; text:{game_stats["kralien_ships_destroyed"]}"""
 
 gui_row()
+gui_hole(5)
 """color:yellow; justify: right;text:skaraan ships destroyed"""
 gui_blank(style="col-width: 1;")
+gui_hole(5)
 """color:yellow;justify: left; text:{game_stats["skaraan_ships_destroyed"]}"""
 
 gui_row()
+gui_hole(5)
 """color:yellow; justify: right;text:ximni ships destroyed"""
 gui_blank(style="col-width: 1;")
+gui_hole(5)
 """color:yellow;justify: left; text:{game_stats["ximni_ships_destroyed"]}"""
 
 gui_row()
+gui_hole(5)
 """color:yellow; justify: right; text:torgoth ships destroyed"""
 gui_blank(style="col-width: 1;")
+gui_hole(5)
 """color:yellow;justify: left; text:{game_stats["torgoth_ships_destroyed"]}"""
 
 gui_row()
+gui_hole(5)
 """color:yellow; justify: right;text:ships surrendered"""
 gui_blank(style="col-width: 1;")
+gui_hole(5)
 """color:yellow;justify: left; text:{game_stats["ships_surrender"]}"""
 gui_row()
-
+gui_hole(5)
 end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)
 """color:yellow; justify: right; text:Game Time"""
 gui_blank(style="col-width: 1;")
+gui_hole(5)
 """color:yellow;justify: left; text:{end_time} minutes"""
 
 

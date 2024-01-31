@@ -110,7 +110,7 @@ await delay_sim(seconds=5)
 # Goto there locations
 #
 dist = sbs.distance_to_navpoint(name_point_name, mission_ship_id)
-print("dist {dist}")
+# print("dist {dist}")
 #
 # If you haven't reach the nave point keep checking
 # 

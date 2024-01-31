@@ -9,8 +9,24 @@ jump upgrade_science if has_role(SCIENCE_SELECTED_ID, "upgrade")
 jump wreck_science if has_role(SCIENCE_SELECTED_ID, "wreck")
 jump typhon_science if has_role(SCIENCE_SELECTED_ID, "typhon")
 
+# VVVVV Default scan VVVVV
+
+# These are fast scan of known things or things unknown to the script
+if has_roles(SCIENCE_SELECTED_ID, "tsn,fighter"):
+    briefing = get_inventory_value(SCIENCE_SELECTED_ID, "briefing", "Mission unknown")
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "A Friendly Fighter", "intl": briefing})
+elif has_roles(SCIENCE_SELECTED_ID, "tsn,shuttle"):
+    briefing = get_inventory_value(SCIENCE_SELECTED_ID, "briefing", "Mission unknown")
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "A Friendly shuttle", "intl": briefing})
+elif has_role(SCIENCE_SELECTED_ID, "asteroid"):
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Asteroid", "intl": "The object is a boring asteroid"})
+elif has_role(SCIENCE_SELECTED_ID, "nebula"):
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Nebula.", "intl": "Pretty clouds"})
+else:
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, "unknown object type.")
 
 ->END
+
 
 ========= station_science =======
 
