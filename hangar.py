@@ -41,11 +41,7 @@ def hagar_handle_destroy(so):
         #
         # TODO: The engine is nor deleting the object properly
         # For know forcing the script to forget about it
-        #
-        #sbs.retrieve_from_standby_list_id(id)
-        #sbs.delete_object(id)
-        craft = to_object(id)
-        craft.destroyed()
+        sbs.delete_object(id)
     hangar_bump_version()    
         
     
