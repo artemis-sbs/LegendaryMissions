@@ -101,6 +101,7 @@ if cc_count > 0 and (ctype == "weapons" or ctype == "engineering") and not cc_ti
         set_inventory_value(ship_id, "carapaction_coil", cc_count)
         set_inventory_value(ship_id, "cc_timer", 300)
         cc_timer = get_inventory_value(ship_id, "cc_timer" )
+        comms_broadcast(ship_id, "Carapaction Coil Activated", "#FF0")
         task_schedule(cc_countdown)
         gui_update_shared("sh-cc-count", "color:#0f0; text: {cc_count};")
         gui_update_shared("sh-cc-txt", "color:#0f0; text: Carapaction Coil;")
@@ -119,6 +120,7 @@ if ip_count > 0 and ctype == "helm" and not ip_timer > 0:
         set_inventory_value(ship_id, "infusion_pcoils", ip_count)
         set_inventory_value(ship_id, "ip_timer", 300)
         ip_timer = get_inventory_value(ship_id, "ip_timer" )
+        comms_broadcast(ship_id, "Infusion P-Coils Activated", "#FF0")
         task_schedule(ip_countdown)
         gui_update_shared("sh-ip-count", "color:#0f0; text: {ip_count};")
         gui_update_shared("sh-ip-txt", "color:#0f0; text: Infusion P-Coils;")
@@ -137,6 +139,7 @@ if tf_count > 0 and ctype == "weapons" and not tf_timer > 0:
         set_inventory_value(ship_id, "tauron_focuser", tf_count)
         set_inventory_value(ship_id, "tf_timer", 300)
         tf_timer = get_inventory_value(ship_id, "tf_timer" )
+        comms_broadcast(ship_id, "Tauron Focuser Activated", "#FF0")
         task_schedule(tf_countdown)
         gui_update_shared("sh-tf-count", "color:#0f0; text: {tf_count};")
         gui_update_shared("sh-tf-txt", "color:#0f0; text: Tauron Focuser;")
@@ -155,6 +158,7 @@ if sc_count > 0 and ctype == "comms" and not sc_timer > 0:
         set_inventory_value(ship_id, "secret_codecase", sc_count)
         set_inventory_value(ship_id, "sc_timer", 300)
         sc_timer = get_inventory_value(ship_id, "sc_timer" )
+        comms_broadcast(ship_id, "Secret Codecase Activated", "#FF0")
         task_schedule(sc_countdown)
         gui_update_shared("sh-sc-count", "color:#0f0; text: {sc_count};")
         gui_update_shared("sh-sc-txt", "color:#0f0; text: Secret Codecase;")
@@ -186,6 +190,7 @@ if vn_count > 0 and ctype == "engineering":
             grid_restore_damcons(ship_id)
             vn_count -= 1
             set_inventory_value(ship_id, "vigoranium_nodule", vn_count)
+            comms_broadcast(ship_id, "Vigoranium Nodule Activated", "#FF0")
 
         jump upgrade_screen
 
@@ -199,6 +204,7 @@ if cl_count > 0 and ctype == "engineering" and not cl_timer > 0:
         set_inventory_value(ship_id, "cetrocite_crystal", cl_count)
         set_inventory_value(ship_id, "cl_timer", 300)
         cl_timer = get_inventory_value(ship_id, "cl_timer" )
+        comms_broadcast(ship_id, "Cetrocite Crystal Activated", "#FF0")
         task_schedule(cl_countdown)
         gui_update_shared("sh-cl-count", "color:#0f0; text: {cl_count};")
         gui_update_shared("sh-cl-txt", "color:#0f0; text: Cetrocite Crystal;")
@@ -218,6 +224,7 @@ if la_count > 0 and ctype == "science" and not la_timer > 0:
         set_inventory_value(ship_id, "lateral_array", la_count)
         set_inventory_value(ship_id, "la_timer", 300)
         la_timer = get_inventory_value(ship_id, "la_timer" )
+        comms_broadcast(ship_id, "Lateral Array Activated", "#FF0")
         task_schedule(la_countdown)
         gui_update_shared("sh-la-count", "color:#0f0; text: {la_count};")
         gui_update_shared("sh-la-txt", "color:#0f0; text: Lateral Array;")
@@ -255,6 +262,7 @@ if ho_count > 0 and (ctype == "engineering" or ctype == "weapons"):
             set_data_set_value(player_blob, "shield_val", rshield, 1)
             ho_count -= 1
             set_inventory_value(ship_id, "haplix_overcharger", ho_count)
+            comms_broadcast(ship_id, "Haplix Overcharger Activated", "#FF0")
             dmgcheck = 95
             # Damage loop, activating Haplix Overcharger may damage up to four shield nodes. 
             # First node is 95%, second is 70%, third is 45%, fourth is 20%.
