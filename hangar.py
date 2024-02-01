@@ -5,7 +5,7 @@ from sbs_utils.procedural.query import set_science_selection, to_object, to_id, 
 from sbs_utils.procedural.links import link, unlink, get_dedicated_link, set_dedicated_link, linked_to
 from sbs_utils.procedural.roles import has_role, remove_role, any_role, role
 from sbs_utils.procedural.space_objects import broad_test_around, closest
-from sbs_utils.procedural.routes import RouteDestroy, RouteSpawn
+from sbs_utils.procedural.routes import RouteDestroy
 from sbs_utils.agent import Agent
 
 from internal_damage import grid_rebuild_grid_objects
@@ -34,15 +34,18 @@ def hagar_handle_destroy(so):
     # also remove things that are docked at the station
     #
     docked_crafts = linked_to(so, "hangar_craft") & role("standby")
+
     for id in docked_crafts:
         print(f"deleting docked craft {id&0xffff}")
         # restore it so delete message goes out
-        sbs.retrieve_from_standby_list(id)
-        sbs.delete_object(id)
+        #
+        # TODO: The engine is nor deleting the object properly
+        # For know forcing the script to forget about it
+        #
+        #sbs.retrieve_from_standby_list_id(id)
+        #sbs.delete_object(id)
         craft = to_object(id)
         craft.destroyed()
-        
-
     hangar_bump_version()    
         
     
@@ -135,8 +138,10 @@ def hangar_launch_craft(craft_id):
 def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     if craft_id is None: return
     if has_role(craft_id, "standby"): return
-    hangar_bump_version()
     craft = to_object(craft_id)
+    if craft is None: return
+    hangar_bump_version()
+    
     #
     # Simple case for now, just dock with stations
     #

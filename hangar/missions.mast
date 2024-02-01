@@ -83,18 +83,14 @@ sel_o = None # free
 ==== story_mission_deliver_ammo_travel ====
 
 await delay_sim(seconds=5)
-print("tick")
 # END tesk if things no longer exist
 ->END if to_object(COMMS_ORIGIN_ID) is None # If in standby it won't 'exist'
 ->END if not object_exists(COMMS_SELECTED_ID)
 
-print("not docked")
 # Must be docked
 jump story_mission_deliver_ammo_travel if not has_role(COMMS_ORIGIN_ID, "standby")
-print("docked")
 # must be docked at expected location
 jump story_mission_deliver_ammo_travel if get_dedicated_link(COMMS_ORIGIN_ID, "home_dock") != COMMS_SELECTED_ID
-print("docked at the right place")
 
 # Get the current load
 current_load = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", torp_type)
