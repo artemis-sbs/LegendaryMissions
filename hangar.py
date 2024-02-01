@@ -1,7 +1,7 @@
 from sbs_utils.fs import load_json_data, get_mission_dir_filename
 from random import randint
 from sbs_utils.procedural.spawn import player_spawn
-from sbs_utils.procedural.query import set_science_selection, to_object, to_id
+from sbs_utils.procedural.query import set_science_selection, to_object, to_id, object_exists
 from sbs_utils.procedural.links import link, unlink, get_dedicated_link, set_dedicated_link, linked_to
 from sbs_utils.procedural.roles import has_role, remove_role, any_role, role
 from sbs_utils.procedural.space_objects import broad_test_around, closest
@@ -46,8 +46,22 @@ def hagar_handle_destroy(so):
     hangar_bump_version()    
         
     
+def hangar_set_dock(craft_id, docked_id):
+    craft_id = to_id(craft_id)
+    docked_id = to_id(docked_id)
+    if not object_exists(craft_id):
+        return
+    if not object_exists(docked_id):
+        return
 
+    current = get_dedicated_link(craft_id, "home_dock")
+    if current is not None: 
+        unlink(docked_id, "hangar_craft", craft_id)
 
+    set_dedicated_link(craft_id, "home_dock", docked_id) # dedicated = can only have one
+    link(docked_id, "hangar_craft", craft_id)
+    set_science_selection(craft_id, docked_id)
+    hangar_bump_version()
 
 def hangar_craft_spawn(docked_id, art, roles, prefix):
     global _craft_id
@@ -69,9 +83,7 @@ def hangar_craft_spawn(docked_id, art, roles, prefix):
     #
     # Cross links
     #
-    set_dedicated_link(craft.id, "home_dock", docked_id) # dedicated = can only have one
-    link(docked_id, "hangar_craft", craft.id)
-    hangar_bump_version()
+    hangar_set_dock(craft.id, docked_id)
     sbs.push_to_standby_list(craft.engine_object)
     set_science_selection(craft.id, docked_id)
     return craft

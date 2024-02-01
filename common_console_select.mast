@@ -19,6 +19,11 @@ shared valid_interiors = set()
 
 for key in grid_data:
     if len(grid_data[key]["grid_objects"])>0:
+        sd = ship_data_get_ship_data_for(key)
+        continue if sd is  None
+        roles = sd.get("roles")
+        continue if roles is None
+        continue if "ship" not in roles
         valid_interiors.add(key)
 
 ========== select_console ==========
@@ -40,6 +45,7 @@ for player_ship in player_list:
 # Clamp selected index
 client_selected_index = min(int(player_count), client_selected_index )
 
+
 ship_type_def = player_list[client_selected_index].ship
 client_select_ship =player_list[client_selected_index].name.lower()
 ship_name = client_select_ship
@@ -53,7 +59,7 @@ if console_select == "helm" and not game_started:
   #
   # Specify only ships with defined engineering grid
   #
-  gui_content(ship_picker_control("Your Ship", ship_type_def, ship_keys=valid_interiors), var="ship_type")
+  gui_content(ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors), var="ship_type")
   gui_row( style="row-height: 50px;")
   gui_blank()
   gui_row(style="row-height: 50px;")

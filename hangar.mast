@@ -1,5 +1,6 @@
 import hangar.py
 import hangar/missions.mast
+import hangar/hangar_comms.mast
 
 route_dock(handle_hangar_docking)
 

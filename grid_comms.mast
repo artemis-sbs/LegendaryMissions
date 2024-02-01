@@ -12,6 +12,8 @@ route_grid_focus("grid_focus")
 #
 #print("{COMMS_SELECTED_ID&0xffff}")
 
+->END if not has_role(COMMS_ORIGIN_ID, "__player__")
+
 jump comms_damcons if has_role(COMMS_SELECTED_ID, "damcons")
 jump comms_damaged if has_role(COMMS_SELECTED_ID, "__damaged__")
 jump comms_undamaged if has_role(COMMS_SELECTED_ID, "__undamaged__")
@@ -55,8 +57,6 @@ jump comms_damcons
 ==== damcons_work_order ====== 
 
 orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
-if orders is None:
-    orders = []
 
 await comms():
  + "back":
@@ -236,7 +236,7 @@ marker_blob.set("cury", EVENT.source_point.y)
 found_id = None
 
 damcons = go_set_at_loc & role("damcons")
-rooms = go_set_at_loc & role("room")
+rooms = go_set_at_loc & any_role("room, computer")
 #
 # Pick damcons over rooms
 #
