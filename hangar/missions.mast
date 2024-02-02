@@ -181,13 +181,23 @@ station = random.choice(list(stations))
 set_inventory_value(SPAWNED_ID, "briefing", f"Test mission patrol stations. Visit all of the stations.")
 idx = 0
 for st in stations:
-    so.data_set.set("waypoint_id_array", st, idx)
+    st_obj = to_object(st)
+    continue if st_obj is None
+    pos= st_obj.engine_object.pos
+    so.data_set.set("waypoint_x_array", pos.x, idx)
+    so.data_set.set("waypoint_y_array", pos.y, idx)
+    so.data_set.set("waypoint_z_array", pos.z, idx)
+    so.data_set.set("waypoint_name_array", st_obj.name, idx)
     idx += 1
-so.data_set.set("waypoint_id_array", 0, idx)
+
+so.data_set.set("waypoint_count_array", idx, 0)
+
 
 so = None # no longer needed
 
 ==== story_mission_investigate_loop ===
+
+await delay_sim(seconds=5)
 
 so = to_object(SPAWNED_ID)
 ->END if so is None
@@ -199,9 +209,14 @@ for st in near_station:
     stations.discard(near_station)
 idx = 0
 for st in stations:
-    so.data_set.set("waypoint_id_array", st, idx)
+    st_obj = to_object(st)
+    continue if st_obj is None
+    pos= st_obj.engine_object.pos
+    so.data_set.set("waypoint_x_array", pos.x, idx)
+    so.data_set.set("waypoint_y_array", pos.y, idx)
+    so.data_set.set("waypoint_z_array", pos.z, idx)
+    so.data_set.set("waypoint_name_array", st_obj.name, idx)
     idx += 1
-so.data_set.set("waypoint_id_array", 0, idx)
 
 jump  story_mission_investigate_loop if len(stations)==0
 so = None
