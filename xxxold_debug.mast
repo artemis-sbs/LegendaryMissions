@@ -13,6 +13,9 @@ if allow_debug==is_dev_build():
     gui_add_console_tab(SHARED, "mast", "mast", None)    
     gui_add_console_tab(SHARED, "mast", "debug", "debug_screen")
     gui_add_console_tab(SHARED, "mast", "__back_tab__", "console_selected")
+end_if
+
+
 
 
 ===== debug_screen ======
@@ -25,28 +28,33 @@ Under construction
 
 gui_section(style="area:10,15,35,100;row-height:35px;")
 gui_row()
-on gui_message(gui_button("Test Upgrades")):
-    jump spawn_test_upgrades
-
+on message gui_button("Test Anomalies"):
+    jump spawn_test_anom
+end_on
 gui_row()
-on gui_message(gui_button("Test Wreck")):
+on message gui_button("Test Wreck"):
     jump spawn_test_wreck
-
+end_on
 gui_row()
-on gui_message(gui_button("Test Enemy")):
+on message gui_button("Test Enemy"):
     jump spawn_test_enemy
-
+end_on
 gui_row()
-on gui_message(gui_button("Test Shapes")):
+on message gui_button("Test Shapes"):
     jump spawn_test_shapes
+end_on
+
+
 
 gui_activate_console("debug")
 
-await gui()
+await gui
 
 
-===== spawn_test_upgrades === 
-# For testing upgrades, load some candy up front
+
+
+===== spawn_test_anom === 
+# For testing anomalies, load some candy up front
 _ship_id = get_inventory_value(client_id, "assigned_ship")
 jump debug_screen if _ship_id is None
 
@@ -86,7 +94,7 @@ temp_pitch = random.uniform(0.002, 0.004)
 wr.engine_object.steer_yaw = temp_yaw
 wr.engine_object.steer_pitch = temp_pitch
 wr.blob.set("radar_color_override", "#f0c")
-set_inventory_value(wr.id, "hp", 150)
+set_inventory_value(wr.id, "hp", 30.0)
 set_inventory_value(wr.id, "hull_side", "skaraan")
 set_inventory_value(wr.id, "hull_type", "cruiser")
 
@@ -94,7 +102,7 @@ jump debug_screen
 
 
 ===== spawn_test_enemy ===== 
-# For testing wrecks, load one up front
+# For testing damage/destroy effects, load an enemy with no shields
 _ship_id = get_inventory_value(client_id, "assigned_ship")
 jump debug_screen if _ship_id is None
 
@@ -112,8 +120,6 @@ set_data_set_value(r_blob, "shield_val", 0, 1)
 
 jump debug_screen
 
-
-
 ===== spawn_test_shapes === 
 # For testing generic shapes
 _ship_id = get_inventory_value(client_id, "assigned_ship")
@@ -124,20 +130,22 @@ _pos_eo = eo.pos
 _forward = eo.forward_vector()
 _pos = _pos_eo + (_forward * 300)
 
-shape1 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+300, "Shape 1", "shape", "generic-cube", "behav_asteroid")
-shape2 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+300, "Shape 2", "shape", "generic-cylinder", "behav_asteroid")
-shape3 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+300, "Shape 3", "shape", "generic-dodecahedron", "behav_asteroid")
-shape4 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+300, "Shape 4", "shape", "generic-disk", "behav_asteroid")
-shape5 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+700, "Shape 5", "shape", "generic-hexagon", "behav_asteroid")
-shape6 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+700, "Shape 6", "shape", "generic-icosahedron", "behav_asteroid")
-shape7 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+700, "Shape 7", "shape", "generic-cone", "behav_asteroid")
-shape8 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+700, "Shape 8", "shape", "generic-octohedron", "behav_asteroid")
-shape9 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+1100, "Shape 9", "shape", "generic-rectangle", "behav_asteroid")
-shape10 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+1100, "Shape 10", "shape", "generic-sphere", "behav_asteroid")
-shape11 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+1100, "Shape 11", "shape", "generic-tetrahedron", "behav_asteroid")
-shape12 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+1100, "Shape 12", "shape", "generic-torus", "behav_asteroid")
+shape1 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+300, "Shape 1", "shape", "aa-generic-cube", "behav_asteroid")
+shape2 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+300, "Shape 2", "shape", "aa-generic-cylinder", "behav_asteroid")
+shape3 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+300, "Shape 3", "shape", "aa-generic-dodecahedron", "behav_asteroid")
+shape4 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+300, "Shape 4", "shape", "aa-generic-disk", "behav_asteroid")
+shape5 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+700, "Shape 5", "shape", "aa-generic-hexagon", "behav_asteroid")
+shape6 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+700, "Shape 6", "shape", "aa-generic-icosahedron", "behav_asteroid")
+shape7 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+700, "Shape 7", "shape", "aa-generic-cone", "behav_asteroid")
+shape8 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+700, "Shape 8", "shape", "aa-generic-octohedron", "behav_asteroid")
+shape9 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+1100, "Shape 9", "shape", "aa-generic-rectangle", "behav_asteroid")
+shape10 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+1100, "Shape 10", "shape", "aa-generic-sphere", "behav_asteroid")
+shape11 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+1100, "Shape 11", "shape", "aa-generic-tetrahedron", "behav_asteroid")
+shape12 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+1100, "Shape 12", "shape", "aa-generic-torus", "behav_asteroid")
+
 
 jump debug_screen
+
 
 ===== mast_debug_screen ======
 
@@ -149,4 +157,4 @@ Under construction
 
 gui_activate_console("mast")
 
-await gui()
+await gui
