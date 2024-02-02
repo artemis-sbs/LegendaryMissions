@@ -155,6 +155,6 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     set_science_selection(craft.id, dock_target)
     # Not counted for end game
     craft.add_role("standby")
-    sbs.push_to_standby_list(craft.id)
+    sbs.push_to_standby_list_id(craft.id)
     return True
 
