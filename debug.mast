@@ -30,9 +30,12 @@ on gui_message(gui_button("Test Upgrades")):
 
 gui_row()
 on gui_message(gui_button("Test Wreck")):
+on gui_message(gui_button("Test Wreck")):
     jump spawn_test_wreck
 
+
 gui_row()
+on gui_message(gui_button("Test Enemy")):
 on gui_message(gui_button("Test Enemy")):
     jump spawn_test_enemy
 

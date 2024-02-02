@@ -7,9 +7,26 @@ jump friendly_science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 jump raider_science if has_role(SCIENCE_SELECTED_ID, "raider")
 jump upgrade_science if has_role(SCIENCE_SELECTED_ID, "upgrade")
 jump wreck_science if has_role(SCIENCE_SELECTED_ID, "wreck")
+jump typhon_science if has_role(SCIENCE_SELECTED_ID, "typhon")
 
+# VVVVV Default scan VVVVV
+
+# These are fast scan of known things or things unknown to the script
+if has_roles(SCIENCE_SELECTED_ID, "tsn,fighter"):
+    briefing = get_inventory_value(SCIENCE_SELECTED_ID, "briefing", "Mission unknown")
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "A Friendly Fighter", "intl": briefing})
+elif has_roles(SCIENCE_SELECTED_ID, "tsn,shuttle"):
+    briefing = get_inventory_value(SCIENCE_SELECTED_ID, "briefing", "Mission unknown")
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "A Friendly shuttle", "intl": briefing})
+elif has_role(SCIENCE_SELECTED_ID, "asteroid"):
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Asteroid", "intl": "The object is a boring asteroid"})
+elif has_role(SCIENCE_SELECTED_ID, "nebula"):
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Nebula.", "intl": "Pretty clouds"})
+else:
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, "unknown object type.")
 
 ->END
+
 
 ========= station_science =======
 
@@ -99,5 +116,20 @@ await scan():
         scan_results("{bio_intel}")
     + "mat":
         scan_results("{mat_intel}")
+
+->END
+
+===== typhon_science =====
+scan_desc = "A classic typhon."
+_bio = "Seems to be very much alive."
+_intel = "Just avoid it and it won't bother you."
+
+await scan():
+    + "scan":
+        scan_results("{scan_desc}")
+    + "bio":
+        scan_results("{_bio}")
+    + "intl":
+        scan_results("{_intel}")
 
 ->END

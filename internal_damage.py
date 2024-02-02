@@ -95,9 +95,12 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
         coords = f"{loc_x},{loc_y}"
         name_tag = f"{g['name']}:{coords}"
         color = g["color"]
-        color = theme[color]
+        # see if there is a theme replace color
+        color = theme.get(color, color)
 
         go =  grid_spawn(ship_id,  name_tag, name_tag, loc_x, loc_y, g["icon"], color, g["roles"])
+        if go is None: return
+
         go.blob.set("icon_scale", g["scale"]/2, 0)
         # save color so it cn be restored
         set_inventory_value(go.id, "color", color)
@@ -158,6 +161,8 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
 
 def grid_restore_damcons(id_or_obj):
     ship_id = to_id(id_or_obj)
+    if has_role(ship_id, "cockpit"):
+        return
 
     hm = sbs.get_hull_map(ship_id)
     if hm is None: return
@@ -183,6 +188,10 @@ def grid_restore_damcons(id_or_obj):
         else:
             v = sbs.vec3(0.5,0,0.5)
             point = sbs.find_valid_unoccupied_grid_point_for_vector3(ship_id, v, 5)
+            
+            if len(point) == 0:
+                break
+
             dc = grid_spawn(ship_id, _name, _name, point[0],point[1],80, colors[i], "damcons, lifeform")
             dc.blob.set("icon_scale", 0.75,0 )
             _id = to_id(dc)
@@ -313,7 +322,10 @@ def set_damage_coefficients(id_or_obj):
         _undam = undamaged & all_roles(sys_role)
         _dam = damaged & all_roles(sys_role)
         _total = max(1, len(_dam)+len(_undam))
-        _coef = len(_undam) / _total
+        if (len(_undam) + len(_dam)) == 0:
+            _coef = 1.0
+        else:
+            _coef = len(_undam) / _total
         # do print(f"damage {_coef} {_blob_name}")
         blob.set(_blob_name, _coef, _idx)
 

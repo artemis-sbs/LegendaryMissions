@@ -40,7 +40,7 @@ total_hull_points = 0
 attempts = 0
 
 # grab the ship data for all ships on TSN side
-tsn_ship_data = names_filter_ship_data_by_side(None, "TSN", "support", ret_key_only=False)
+tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "support", ret_key_only=False)
 # pick a random tsn ship
 count = 1
 
@@ -83,7 +83,7 @@ match friendly_select:
         ->RETURN
 
 # grab the ship data for all ships on TSN side
-civilian_data = names_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
+civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
 ->END if len(civilian_data)==0
 count = 1
 for pos in scatter_sphere(civilian_count, 0,0,0, 500, 5000, ring=True):

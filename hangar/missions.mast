@@ -1,0 +1,159 @@
+route_spawn(hangar_handle_route_spawn)
+
+
+========== hangar_handle_route_spawn =========
+jump fighter_mission if has_roles(SPAWNED_ID, "tsn,fighter")
+jump shuttle_mission if has_roles(SPAWNED_ID, "tsn,shuttle")
+
+#### ELSE don't run a task
+->END
+
+
+=====  fighter_mission =====
+
+#
+# Create the interior for the ship, defined in grid_ai
+#
+# force create hullmap
+#task_schedule(spawn_grid_objects)
+#
+# The remaining AI for the player is docking
+#
+set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a fighter mission")
+
+->END
+
+
+=====  shuttle_mission =====
+
+#
+# Create the interior for the ship, defined in grid_ai
+#
+# force create hullmap
+#task_schedule(spawn_grid_objects)
+#
+# The remaining AI for the player is docking
+#
+set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a shuttle mission")
+docked_with = get_dedicated_link(SPAWNED_ID, "home_dock")
+
+jump story_mission_deliver_to_player if has_role(docked_with, "station")
+jump story_mission_deliver_to_station has_role(docked_with, "__player__")
+
+
+->END
+
+
+=====  story_mission_deliver_to_player =====
+# SPAWNED_ID assumed
+
+so = to_object(SPAWNED_ID)
+->END if so is None
+side = so.side
+so = None # no longer needed
+
+mission_types = ["ammunition"] #, "upgrade"]
+mission_type = random.choice(range(len(mission_types)))
+
+# get player on my side, and exclude me
+COMMS_ORIGIN_ID = SPAWNED_ID
+COMMS_SELECTED_ID = random_id(role(get_side(SPAWNED_ID)) & role("__player__") - to_set(SPAWNED_ID))
+
+jump story_mission_deliver_ammo if mission_type ==0
+
+->END
+
+
+=====  story_mission_deliver_ammo =====
+# Expects COMMS_ORIGIN_ID and COMMS_SELECTED_ID
+#
+# The remaining AI for the player is docking
+#
+torp_type = random.choice(range(sbs.TORPEDO.TORPTYPECOUNT.value))
+amount = random.randint(2, 6-torp_type)
+torp = sbs.TORPEDO(torp_type)
+torp_name = torp.name
+
+sel_o = to_object(COMMS_SELECTED_ID)
+->END if sel_o is None
+
+set_inventory_value(SPAWNED_ID, "briefing", f"Deliver {torp_name} to {sel_o.name}^Take the {amount} {torp_name} and delivery them to {sel_o.name}.")
+sel_o = None # free
+
+==== story_mission_deliver_ammo_travel ====
+
+await delay_sim(seconds=5)
+# END tesk if things no longer exist
+->END if to_object(COMMS_ORIGIN_ID) is None # If in standby it won't 'exist'
+->END if not object_exists(COMMS_SELECTED_ID)
+
+# Must be docked
+jump story_mission_deliver_ammo_travel if not has_role(COMMS_ORIGIN_ID, "standby")
+# must be docked at expected location
+jump story_mission_deliver_ammo_travel if get_dedicated_link(COMMS_ORIGIN_ID, "home_dock") != COMMS_SELECTED_ID
+
+# Get the current load
+current_load = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", torp_type)
+# Add the torps
+set_data_set_value(COMMS_SELECTED_ID, "torpedo_count", amount + current_load, torp_type)
+
+
+jump hangar_handle_route_spawn
+
+->END
+
+=====  story_mission_deliver_to_station =====
+# SPAWNED_ID assumed
+
+so = to_object(SPAWNED_ID)
+->END if so is None
+side = so.side
+so = None # no longer needed
+
+mission_types = ["ammunition"] #, "upgrade"]
+mission_type = random.choice(range(len(mission_types)))
+
+# get player on my side, and exclude me
+COMMS_ORIGIN_ID = SPAWNED_ID
+COMMS_SELECTED_ID = random_id(role(get_side(SPAWNED_ID)) & role("station") - to_set(SPAWNED_ID))
+
+jump story_mission_deliver_life_form if mission_type ==0
+
+->END
+
+
+
+=====  story_mission_deliver_life_form =====
+# Expects COMMS_ORIGIN_ID and COMMS_SELECTED_ID
+
+sel_o = to_object(COMMS_SELECTED_ID)
+->END if sel_o is None
+
+life_forms = ~~["Admiral Xeno Nakada", "Prince Zayne Alcantar", "Admiral Tharay sh'Firri", "Skarran delegate", "Torgoth delegate"] ~~
+
+life_form_name = random.choice(life_forms)
+
+set_inventory_value(SPAWNED_ID, "briefing", f"Deliver {life_form_name} to {sel_o.name}^Take the {life_form_name} and delivery them to {sel_o.name}.")
+sel_o = None # free
+
+==== story_mission_deliver_life_form_travel ====
+
+await delay_sim(seconds=5)
+
+# END task if things no longer exist
+->END if to_object(COMMS_ORIGIN_ID) is None # If in standby it won't 'exist'
+->END if not object_exists(COMMS_SELECTED_ID)
+
+
+# Must be docked
+jump story_mission_deliver_life_form_travel if not has_role(COMMS_ORIGIN_ID, "standby")
+# must be docked at expected location
+jump story_mission_deliver_life_form_travel if get_dedicated_link(COMMS_ORIGIN_ID, "home_dock") != COMMS_SELECTED_ID
+
+# Get the current load
+print("life form delivered")
+
+jump hangar_handle_route_spawn
+
+->END
+

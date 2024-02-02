@@ -4,14 +4,12 @@ from sbs_utils.gui import Gui
 from sbs_utils.mast.maststorypage import StoryPage
 from sbs_utils.mast.mast import Mast
 
-#import damage
-#Mast.import_python_module('damage')
-
 class MyStoryPage(StoryPage):
     story_file = "story.mast"
 #
 # Uncomment this out to have Mast show the mast code in 
-# runtime errors
+# runtime errors.
+# Comment it out will reduce memory used.
 #
 Mast.include_code = True
 

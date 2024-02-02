@@ -44,7 +44,7 @@ def grid_damcons_detailed_status(id_or_obj, short_status=None, short_color=None,
     work = linked_to(_go_id, "work-order")
     color = get_inventory_value(_go_id, "color", "white")
     work_count = len(work)
-    hp = get_inventory_value(_go_id, "HP")
+    hp = get_inventory_value(_go_id, "HP", 1)
 
     rested = "tired"
     if get_inventory_value(_go_id, "rested_speed_coeff",1.0) > 1.0:

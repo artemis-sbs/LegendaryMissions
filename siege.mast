@@ -166,7 +166,7 @@ for station in spawn_points:
         cluster_spawn_points = scatter_ring(width, depth, apos.x,apos.y,apos.z, inner, inner, startAngle, endAngle)
 #        cluster_spawn_points = scatter_ring_density(widthArray, apos.x,apos.y,apos.z, inner, 0, startAngle, endAngle)
         # Random type, but same for cluster
-        # a_type = f"danger_{1}{'a'}"
+        # a_type = f"danger_{1}{ship_data'a'}"
         for v2 in cluster_spawn_points:
             #keep value between -500 and 500??
     #                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
@@ -175,11 +175,11 @@ for station in spawn_points:
 
 #------------------------------------------------------------------------------------------------------------
 enemyTypeNameList = []
-enemyTypeNameList.extend(names_torgoth_ship_keys())
-enemyTypeNameList.extend(names_kralien_ship_keys())
-enemyTypeNameList.extend(names_skaraan_ship_keys())
-enemyTypeNameList.extend(names_arvonian_ship_keys())
-enemyTypeNameList.extend(names_ximni_ship_keys())
+enemyTypeNameList.extend(ship_data_torgoth_ship_keys())
+enemyTypeNameList.extend(ship_data_kralien_ship_keys())
+enemyTypeNameList.extend(ship_data_skaraan_ship_keys())
+enemyTypeNameList.extend(ship_data_arvonian_ship_keys())
+enemyTypeNameList.extend(ship_data_ximni_ship_keys())
 
 enemy_prefix = "KLMNQ"
 
@@ -240,7 +240,7 @@ for v in spawn_points:
     cluster_spawn_points = scatter_sphere(random.randint(terrain_value*2,terrain_value*4), v.x, 0,v.z, 1000, 10000, ring=False)
     for v2 in cluster_spawn_points:
         v2.y = v2.y % 500.0
-        nebula = terrain_spawn(v2.x, v2.y, v2.z,None, None, "nebula", "behav_nebula")
+        nebula = terrain_spawn(v2.x, v2.y, v2.z,None, "#, nebula", "nebula", "behav_nebula")
         nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
         nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
         nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
@@ -253,7 +253,7 @@ t_min = terrain_value * 7
 t_max = t_min * 3
 spawn_points = scatter.box(random.randint(t_min,t_max), 0,0,0, 100000, 1000, 100000, centered=True)
 
-asteroid_types = names_plain_asteroid_keys()
+asteroid_types = ship_data_plain_asteroid_keys()
 for v in spawn_points:
     
     amount = random.randint(t_min+10,t_max+10)
@@ -267,7 +267,7 @@ for v in spawn_points:
     for v2 in cluster_spawn_points:
         a_type = random.choice(asteroid_types)
 
-        asteroid = terrain_spawn(v2.x, v2.y, v2.z,None, None, a_type, "behav_asteroid")
+        asteroid = terrain_spawn(v2.x, v2.y, v2.z,None, "#,asteroid", a_type, "behav_asteroid")
         asteroid.engine_object.steer_yaw = random.uniform(0.0001, 0.003)
         asteroid.engine_object.steer_pitch = -random.uniform(0.0001, 0.003)
         asteroid.engine_object.steer_roll = random.uniform(0.0001, 0.003)
@@ -337,6 +337,12 @@ for v in spawn_points:
 #wr.engine_object.steer_yaw = temp_yaw
 #wr.engine_object.steer_pitch = temp_pitch
 #wr.blob.set("radar_color_override", "#f0c")
+
+
+
+spawn_points = scatter.box(monster_value, 0,0,0, 75000, 1000, 75000, centered=True)
+for v in spawn_points:
+    typhon_classic_spawn(*v.xyz)
 
 jump spawn_friendly_npc
 #------------------------------------------------------------------------------------------------------------

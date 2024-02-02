@@ -1,0 +1,119 @@
+import hangar.py
+import hangar/missions.mast
+import hangar/hangar_comms.mast
+
+route_dock(handle_hangar_docking)
+
+shared hangar_version = 1
+call_sign = "Selene"
+build_task = None
+#
+# The route_spawn label is the entry point 
+# it examines the SPAWNED_ID to either
+# jump to another label proper for that item
+# or END which stops running this task/flow 
+#
+
+
+==== show_hangar ====
+#
+# Get all the available rides 
+#
+crafts = to_object_list(all_roles("cockpit,tsn,standby"))
+briefing = "Select a craft to pilot. If you accept the mission hit launch."
+
+
+# get_dock_name is defined in story.py
+ride_picker = ~~list_box_control(crafts, 
+                               text=lambda item: f"text:{item.name} {get_dock_name(item)}",
+                               select=True,
+                               item_height=3)~~
+
+gui_section(style="area: 0,0, 36,97;background: #fff1;")
+
+
+gui_section(style="area: 5,6,35,10;")
+gui_input("desc:Call sign", var="call_sign")
+gui_section(style="area: 5,10+20px, 35,10+40px;background: #0bb;")
+gui_text("text:Select ship;color: #003;justify: center;")
+
+gui_section(style="area: 5,10+50px, 35, 49;")
+gui_content(ride_picker, var="ride_choice")
+
+gui_section(style="area: 5,50, 35,90;background: #002;")
+gui_row(style="row-height:20px;")
+gui_text("text:Mission Briefing;color: #003;justify: center;", style="background: #0bb;")
+gui_row(style="padding:0,15px,0,0;")
+"""""
+{briefing}
+"""""" style="tag:briefing-text;padding: 10px,5px,10px,0;"
+
+
+gui_activate_console("hangar")
+gui_section(style="area: 36,0, 100,97;")
+
+gui_layout_widget("2dview")
+
+on change ride_choice.value:
+    if len(ride_choice.value):
+        fighter = ride_choice.value[0]
+        dock = get_science_selection(fighter)
+        dock = to_object(dock)
+ 
+        if dock is not None:
+            sbs.assign_client_to_ship(client_id, dock.id)
+            defa = f"Protect {dock.name}"
+            briefing = get_inventory_value(fighter, "briefing", defa)
+            gui_update("briefing-text", "text: {briefing}")
+
+# If a thing launches or docks things need to refresh
+on change hangar_version:
+    jump show_hangar
+
+
+await gui():
+    + "Head to Bar":
+        print("Bar")
+        jump show_hangar
+    + "Casino":
+        print("Casino")
+        jump show_hangar
+    + "Quarters":
+        print("Quarters")
+        jump show_hangar
+    + "Launch":
+        if len(ride_choice.value) != 0:
+            ride_select = ride_choice.value[0]
+            jump launch_to_cockpit
+        jump show_hangar
+
+
+jump show_hangar
+
+==== launch_to_cockpit ======
+
+jump show_hangar if ride_select is None
+jump show_hangar if not has_role(ride_select, "standby")
+
+jump show_hangar if not hangar_launch_craft(to_id(ride_select))
+
+sbs.assign_client_to_ship(client_id,to_id(ride_select))
+set_inventory_value(ride_select, "client_id", client_id)
+
+gui_console("cockpit")
+
+await gui()
+
+
+
+==== handle_hangar_docking ======
+fighter_so = to_object(EVENT.parent_id)
+fighter = fighter_so.engine_object
+
+if hangar_attempt_dock_craft(fighter_so.id):
+    fighter_client = get_inventory_value(fighter_so.id, "client_id")
+    if fighter_client is not None:
+        gui_reroute_client(fighter_client, show_hangar)
+
+
+->END

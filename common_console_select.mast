@@ -16,8 +16,14 @@ ship_type_def = player_list[0].ship
 shared ship_list = ""
 client_selected_index = 0
 shared valid_interiors = set()
+
 for key in grid_data:
     if len(grid_data[key]["grid_objects"])>0:
+        sd = ship_data_get_ship_data_for(key)
+        continue if sd is  None
+        roles = sd.get("roles")
+        continue if roles is None
+        continue if "ship" not in roles
         valid_interiors.add(key)
 
 ========== select_console ==========
@@ -39,6 +45,7 @@ for player_ship in player_list:
 # Clamp selected index
 client_selected_index = min(int(player_count), client_selected_index )
 
+
 ship_type_def = player_list[client_selected_index].ship
 client_select_ship =player_list[client_selected_index].name.lower()
 ship_name = client_select_ship
@@ -52,7 +59,7 @@ if console_select == "helm" and not game_started:
   #
   # Specify only ships with defined engineering grid
   #
-  gui_content(ship_picker_control("Your Ship", ship_type_def, ship_keys=valid_interiors), var="ship_type")
+  gui_content(ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors), var="ship_type")
   gui_row( style="row-height: 50px;")
   gui_blank()
   gui_row(style="row-height: 50px;")
@@ -68,8 +75,9 @@ if console_select == "helm" and not game_started:
 gui_section( style="area: 50,60px,75,90;")
 gui_vradio(f"{ship_list}", style="row-height: 50px;", var="client_select_ship")
 
-gui_section( style="area: 80,60px, 99,90;")
-gui_vradio("helm,weapons, comms,science,engineering,mainscreen", style="row-height: 50px;", var="console_select")
+gui_section( style="area: 80,60px, 99,90-60px;")
+gui_vradio("helm,weapons, comms,science,engineering,hangar,mainscreen", style="row-height: 45px;", var="console_select")
+gui_section( style="area: 80,90-60px, 99,90;")
 gui_row(style="row-height: 50px;")
 
 if not game_started:
@@ -119,6 +127,8 @@ for player_ship in to_object_list(role("__PLAYER__")):
         _ship_id = player_ship.id
         sbs.assign_client_to_ship(client_id, player_ship.id)
         set_inventory_value(client_id, "assigned_ship", player_ship.id)
+        link(_ship_id, "consoles", client_id)
+
 
 jump select_console if _ship_id is None
 #
@@ -134,6 +144,9 @@ sbs.set_sky_box(client_id, sky_box)
 # Make it so the console can be found if needed
 #
 set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
+add_role(client_id, "console, {console_select}")
+jump show_hangar if console_select == "hangar"
+
 #------------------------------------------------------------------------------------------------------------
 sbs.set_beam_damages(client_id, 7.0, difficulty)
 #------------------------------------------------------------------------------------------------------------
@@ -162,3 +175,6 @@ Task count {task_count}
 await gui(timeout(4))
 
 jump debug_mast
+
+
+

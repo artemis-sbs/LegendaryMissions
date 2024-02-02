@@ -237,6 +237,7 @@ else:
     else:
         """text: Lateral Array;""" style="tag:sh-la-txt;"
 
+
 gui_row()
 #
 #

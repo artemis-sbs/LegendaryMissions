@@ -1,4 +1,7 @@
 from random import choice
+from sbs_utils.procedural.query import get_science_selection, to_object
+# Expose monster.py
+from monster import *
 
 
 def skybox_get_random():
@@ -13,3 +16,11 @@ def skybox_get_random():
     ]
 
     return choice(sky_boxes)
+
+
+def get_dock_name(so):
+    dock = get_science_selection(so)
+    if not dock: return ""
+    dock = to_object(dock)
+    if not dock: return ""
+    return f":  {dock.name}"

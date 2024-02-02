@@ -16,6 +16,9 @@ import grid_comms.mast
 import pickup_common.mast
 import upgrade.mast
 import story.py
+import hangar.mast
+import monster.mast
+
 
 
 
@@ -204,7 +207,7 @@ jump pause_screen
 await delay_sim(4)
 
 stations = role('tsn') & role('station')
-if len(stations)==0:
+if len(stations) ==0:
     start_text = "Mission is lost!  All yer base are belong to us, dammit."
     game_started = False
 

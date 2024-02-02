@@ -1,0 +1,28 @@
+route_spawn(monster_handle_route_spawn)
+
+
+========== monster_handle_route_spawn =========
+
+#
+# AI for the player is the docking logic
+#
+jump classic_typhon if has_roles(SPAWNED_ID, "monster, typhon, classic")
+
+->END
+
+=== classic_typhon ===
+monster_id = SPAWNED_ID
+
+_target = closest(monster_id, broad_test_around(monster_id, 3000,3000, -1)-role("__terrain__")-role("monster"))
+if _target is None:
+    clear_target(monster_id)
+else:
+    #print("Typhon hunting")
+    target(monster_id, _target)
+
+await delay_sim(seconds=5)
+
+jump classic_typhon if object_exists(monster_id)
+
+
+
