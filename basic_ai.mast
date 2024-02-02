@@ -85,6 +85,7 @@ if surrendered:
     ->END
 #
 # Auto scan: If you can see it you get the initial scan
+# Auto scan: If you can see it you get the initial scan
 # This is naive and assume players are on one side
 #
 if not scanned: 
