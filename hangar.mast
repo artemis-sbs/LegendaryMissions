@@ -25,7 +25,7 @@ briefing = "Select a craft to pilot. If you accept the mission hit launch."
 
 # get_dock_name is defined in story.py
 ride_picker = ~~list_box_control(crafts, 
-                               text=lambda item: f"text:{item.name} {get_dock_name(item)}",
+                               text=lambda item: f"text:{item.name} {get_dock_name(item)};justify: center;",
                                select=True,
                                item_height=3)~~
 

@@ -1,10 +1,11 @@
 from sbs_utils.procedural.query import to_id, to_blob, to_object, to_list, to_set
 from sbs_utils.procedural.roles import role, add_role, remove_role, all_roles,has_role
-from sbs_utils.procedural.links import link,unlink
-from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+from sbs_utils.procedural.links import link,unlink, linked_to
+from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value, get_shared_inventory_value
 from sbs_utils.procedural.grid import grid_objects, grid_objects_at, grid_closest
 from sbs_utils.procedural.spawn import grid_spawn
 from sbs_utils.procedural.comms import comms_broadcast
+from sbs_utils.procedural.gui import gui_reroute_client
 from sbs_utils.procedural.space_objects import get_pos
 from sbs_utils.helpers import FrameContext
 from sbs_utils.fs import load_json_data, get_mission_dir_filename
@@ -147,6 +148,8 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
     #
     v = sbs.vec3(0.5,0,0.5)
     loc = sbs.find_valid_grid_point_for_vector3(ship_id, v, 5)
+    if len(loc)==0:
+        return
     loc_x = loc[0]
     loc_y = loc[1]
     ship = ship_id & 0xFFFFFFFF
@@ -237,14 +240,26 @@ def grid_apply_system_damage(id_or_obj):
 
     if should_explode:
         explode_player_ship(ship_id)
-        respawn_seconds = get_inventory_value(ship_id, "respawn_time", None)
-        if respawn_seconds is not None:
-            def _do_respawn(t):
-                respawn_player_ship(t.ship_id)    
-                grid_rebuild_grid_objects(t.ship_id)
+        def _delete_ship(t):
+            if get_shared_inventory_value("game_ended", False):
+                return
+            for cid in linked_to(ship_id, "consoles"):
+                gui_reroute_client(cid, "show_hangar")
 
-            t = TickDispatcher.do_once(_do_respawn, respawn_seconds)
-            t.ship_id = ship_id
+            so = to_object(t.ship_id)
+            if so is not None:
+                sbs.delete_object(t.ship_id)
+
+        t = TickDispatcher.do_once(_delete_ship, 3)
+        t.ship_id = ship_id
+        # respawn_seconds = get_inventory_value(ship_id, "respawn_time", None)
+        # if respawn_seconds is not None:
+        #     def _do_respawn(t):
+        #         respawn_player_ship(t.ship_id)    
+        #         grid_rebuild_grid_objects(t.ship_id)
+
+        #     t = TickDispatcher.do_once(_do_respawn, respawn_seconds)
+        #     t.ship_id = ship_id
 
     return should_explode
 

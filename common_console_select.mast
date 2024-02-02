@@ -128,6 +128,7 @@ for player_ship in to_object_list(role("__PLAYER__")):
         sbs.assign_client_to_ship(client_id, player_ship.id)
         set_inventory_value(client_id, "assigned_ship", player_ship.id)
         link(_ship_id, "consoles", client_id)
+        
 
 
 jump select_console if _ship_id is None
