@@ -37,6 +37,9 @@ set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a fighter miss
 set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a shuttle mission")
 docked_with = get_dedicated_link(SPAWNED_ID, "home_dock")
 
+
+jump story_mission_investigate
+
 jump story_mission_deliver_to_player if has_role(docked_with, "station")
 jump story_mission_deliver_to_station has_role(docked_with, "__player__")
 
@@ -157,3 +160,49 @@ jump hangar_handle_route_spawn
 
 ->END
 
+
+=====  story_mission_investigate =====
+# SPAWNED_ID assumed
+
+so = to_object(SPAWNED_ID)
+->END if so is None
+side = so.side
+
+
+mission_types = ["ammunition"] #, "upgrade"]
+mission_type = random.choice(range(len(mission_types)))
+
+# get player on my side, and exclude me
+COMMS_ORIGIN_ID = SPAWNED_ID
+COMMS_SELECTED_ID = random_id(role(get_side(SPAWNED_ID)) & role("__player__") - to_set(SPAWNED_ID))
+
+stations = role("station")
+station = random.choice(list(stations))
+set_inventory_value(SPAWNED_ID, "briefing", f"Test mission patrol stations. Visit all of the stations.")
+idx = 0
+for st in stations:
+    so.data_set.set("waypoint_id_array", st, idx)
+    idx += 1
+so.data_set.set("waypoint_id_array", 0, idx)
+
+so = None # no longer needed
+
+==== story_mission_investigate_loop ===
+
+so = to_object(SPAWNED_ID)
+->END if so is None
+
+near_station = broad_test_around(COMMS_ORIGIN_ID, 1000, 1000, 1) & stations
+jump story_mission_investigate_loop if len(near_station) == 0
+
+for st in near_station:
+    stations.discard(near_station)
+idx = 0
+for st in stations:
+    so.data_set.set("waypoint_id_array", st, idx)
+    idx += 1
+so.data_set.set("waypoint_id_array", 0, idx)
+
+jump  story_mission_investigate_loop if len(stations)==0
+so = None
+->END
