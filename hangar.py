@@ -1,11 +1,12 @@
 from sbs_utils.fs import load_json_data, get_mission_dir_filename
 from random import randint
 from sbs_utils.procedural.spawn import player_spawn
-from sbs_utils.procedural.query import set_science_selection, to_object, to_id, object_exists
+from sbs_utils.procedural.query import set_science_selection, to_object, to_id, object_exists, set_data_set_value
 from sbs_utils.procedural.links import link, unlink, get_dedicated_link, set_dedicated_link, linked_to
 from sbs_utils.procedural.roles import has_role, remove_role, any_role, role
-from sbs_utils.procedural.space_objects import broad_test_around, closest
+from sbs_utils.procedural.space_objects import broad_test_around, closest, get_pos, set_pos
 from sbs_utils.procedural.routes import RouteDestroy
+from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished, clear_timer, format_time_remaining, get_time_remaining
 from sbs_utils.agent import Agent
 
 from internal_damage import grid_rebuild_grid_objects
@@ -113,6 +114,8 @@ def hangar_launch_craft(craft_id):
     craft = to_object(craft_id)
     if craft is None: return
     if not has_role(craft_id, "standby"): return
+    if not is_timer_finished(craft_id, "refit"): return
+
     hangar_bump_version()
     #
     # Add the craft back into the game arena
@@ -124,6 +127,8 @@ def hangar_launch_craft(craft_id):
     hm = sbs.get_hull_map(craft.id, True)
     if hm is None: return False
     grid_rebuild_grid_objects(craft.id)
+    if has_role(craft.id, "fighter"):
+        set_data_set_value(craft.id, "torpedo_count", 5, sbs.TORPEDO.HOMING)
     remove_role(craft.id, "standby")
 
     home_id = get_dedicated_link(craft.id, "home_dock")
@@ -136,7 +141,7 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     if has_role(craft_id, "standby"): return
     craft = to_object(craft_id)
     if craft is None: return
-    hangar_bump_version()
+    
     
     #
     # Simple case for now, just dock with stations
@@ -151,10 +156,19 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
         dock_target = closest(craft_id, dockable & role("tsn") & any_role("station, __player__"))
 
     if dock_target is None: return False
+    hangar_bump_version()
 
     set_science_selection(craft.id, dock_target)
     # Not counted for end game
     craft.add_role("standby")
+    craft.data_set.set("fighter_thrust_flag", 0,0)
+    craft.data_set.set("fighter_shoot_flag", 0,0)
+    craft.data_set.set("fighter_boost_flag", 0,0)
+    craft.data_set.set("throttle", 0.0,0)
+    pos = get_pos(dock_target)
+    if pos:
+        set_pos(craft.id, pos)
     sbs.push_to_standby_list_id(craft.id)
+    set_timer(craft.id, "refit", seconds=30)
     return True
 

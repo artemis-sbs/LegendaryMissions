@@ -6,7 +6,10 @@ route_dock(handle_hangar_docking)
 
 shared hangar_version = 1
 call_sign = "Selene"
-build_task = None
+#
+#  Background task to look for strays
+#
+shared find_stray = task_schedule(find_stray_crafts)
 #
 # The route_spawn label is the entry point 
 # it examines the SPAWNED_ID to either
@@ -19,6 +22,7 @@ build_task = None
 #
 # Get all the available rides 
 #
+
 crafts = to_object_list(all_roles("cockpit,tsn,standby"))
 briefing = "Select a craft to pilot. If you accept the mission hit launch."
 
@@ -54,17 +58,42 @@ gui_section(style="area: 36,0, 100,97;")
 
 gui_layout_widget("2dview")
 
+fighter_change = 0
 on change ride_choice.value:
     if len(ride_choice.value):
         fighter = ride_choice.value[0]
         dock = get_science_selection(fighter)
         dock = to_object(dock)
+        fighter_change += 1
  
         if dock is not None:
             sbs.assign_client_to_ship(client_id, dock.id)
             defa = f"Protect {dock.name}"
             briefing = get_inventory_value(fighter, "briefing", defa)
             gui_update("briefing-text", "text: {briefing}")
+
+gui_section(style="area: 75,92, 100,97;background: #002;")
+gui_text("select ship", style="tag:refit-text")
+
+# Set a counter to allow timed refresh
+# elegant or pure hack
+start_counter(client_id, "refresh_status")
+update_ticker = get_counter_elapsed_seconds(client_id, "refresh_status")+2
+
+on change update_ticker < get_counter_elapsed_seconds(client_id, "refresh_status"):
+    fighter_change += 1
+    update_ticker = get_counter_elapsed_seconds(client_id, "refresh_status")+5
+
+on change fighter_change:
+    gui_update("refit-text", "text: select ship")
+    ->RETURN if len(ride_choice.value)==0 
+    fighter = ride_choice.value[0]
+    if is_timer_finished(fighter, "refit"):
+        gui_update("refit-text", "text: ready to launch")
+    else:
+        refit_time = format_time_remaining(fighter, "refit")
+        gui_update("refit-text", "text: refit - launch in {refit_time}")
+
 
 # If a thing launches or docks things need to refresh
 on change hangar_version:
@@ -94,6 +123,9 @@ jump show_hangar
 
 ==== launch_to_cockpit ======
 
+
+
+
 jump show_hangar if ride_select is None
 jump show_hangar if not has_role(ride_select, "standby")
 
@@ -101,6 +133,7 @@ jump show_hangar if not hangar_launch_craft(to_id(ride_select))
 
 sbs.assign_client_to_ship(client_id,to_id(ride_select))
 set_inventory_value(ride_select, "client_id", client_id)
+set_dedicated_link(client_id, "craft_id", ride_select)
 
 gui_console("cockpit")
 
@@ -115,7 +148,36 @@ fighter = fighter_so.engine_object
 if hangar_attempt_dock_craft(fighter_so.id):
     fighter_client = get_inventory_value(fighter_so.id, "client_id")
     if fighter_client is not None:
+        set_dedicated_link(fighter_client, "craft_id", None)    
         gui_reroute_client(fighter_client, show_hangar)
 
-
 ->END
+
+
+==== find_stray_crafts ====
+await delay_sim(seconds=1) # hack for task_schedule in main
+
+print("finding stray fighters start")
+
+==== find_stray_craft_loop ====
+await delay_sim(seconds=3) # Run every 23 seconds
+launched_crafts = role("cockpit") - role("standby")
+for craft in launched_crafts:
+    cid = get_inventory_value(craft, "client_id")
+    cid_obj = to_object(cid)
+    if cid_obj is None:
+        print("Client disconnected")
+    #
+    # check if this is the correct fighter
+    #
+    continue if craft == get_dedicated_link(cid, "craft_id") and get_inventory_value(cid, "CONSOLE_TYPE") == "cockpit"
+    so = to_object(craft)
+    continue if so is None
+    print("Return craft {so.name}")
+    redocked = hangar_attempt_dock_craft(craft, 100000)
+    if redocked:
+        print("redocked")
+    else:
+        print("redocked FAILED")
+        
+jump find_stray_craft_loop
