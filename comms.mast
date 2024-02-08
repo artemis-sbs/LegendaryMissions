@@ -145,7 +145,11 @@ You have full docking privileges.
 COMMS_ORIGIN_ID = ship_id
 COMMS_SELECTED_ID = station_id
 
-comms_id = to_object(ship_id).name
+# Player ships can die now
+ship_obj = to_object(ship_id)
+-> END if ship_obj is None
+
+comms_id = ship_obj.name
 set_timer(station_id, "build_time", seconds = build_time)
 # print(f"build time = {build_time}")
 

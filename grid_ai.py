@@ -2,7 +2,7 @@ from sbs_utils.procedural.grid import grid_detailed_status, grid_short_status
 from sbs_utils.procedural.links import linked_to
 from sbs_utils.procedural.query import to_id, to_object, to_blob
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
-from sbs_utils.procedural.roles import has_role, any_role
+from sbs_utils.procedural.roles import has_role
 from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished, clear_timer, format_time_remaining, get_time_remaining
 from sbs_utils.procedural.comms import comms_broadcast
 from internal_damage import grid_get_max_hp

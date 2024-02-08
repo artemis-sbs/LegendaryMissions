@@ -44,7 +44,7 @@ Written using MAST and is a great reference for those looking to write their own
 # Game data
 #
 shared game_started = False
-
+shared game_ended = False
 
 shared difficulty=5
 shared player_count = 1
@@ -210,6 +210,7 @@ stations = role('tsn') & role('station')
 if len(stations) ==0:
     start_text = "Mission is lost!  All yer base are belong to us, dammit."
     game_started = False
+    game_ended = True
 
     sbs.play_music_file(0, "music/default/failure")
 
@@ -221,6 +222,7 @@ raiders = role('Raider')
 if len(raiders)==0:
     start_text = "Mission is won!  All the enemies have been destroyed."
     game_started = False
+    game_ended = True
     sbs.play_music_file(0, "music/default/victory")
     gui_reroute_clients(show_game_results)
     gui_reroute_server(show_game_results)
