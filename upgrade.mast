@@ -245,10 +245,10 @@ gui_row()
 if ho_count > 0 and (ctype == "engineering" or ctype == "weapons"):
     on gui_message(gui_button("Haplix Overcharger")):
         player_blob = to_blob(ship_id) # Get shield values from ship
-        fshield = get_data_set_value(player_blob,"shield_val", 0)
-        rshield = get_data_set_value(player_blob,"shield_val", 1)
-        fshieldmax = get_data_set_value(player_blob,"shield_max_val", 0)
-        rshieldmax = get_data_set_value(player_blob,"shield_max_val", 1)
+        fshield = player_blob.get("shield_val", 0)
+        rshield = player_blob.get("shield_val", 1)
+        fshieldmax = player_blob.get("shield_max_val", 0)
+        rshieldmax = player_blob.get("shield_max_val", 1)
         print (f"Front Shield: Max = {fshieldmax} Cur = {fshield} Rear Shield: Max = {rshieldmax} Cur= {rshield}")
         if fshield > fshieldmax or rshield > rshieldmax: # Show warning message if one/both shields are already over the max
             set_inventory_value(ship_id, "ho_timer", 5)
@@ -354,8 +354,11 @@ await gui()
 
 ===== cc_countdown ===== 
 player_blob = to_blob(ship_id)
-shieldrate = get_data_set_value(player_blob,"all_shield_upgrade_coeff", 0)
+->END if player_blob is None
+shieldrate = player_blob.get("all_shield_upgrade_coeff", 0)
 print(f"Current Shield Repair Rate: {shieldrate}")
+if shieldrate is None:
+    shieldrate = 1.0
 shieldrate *= 3.0
 set_data_set_value(player_blob, "all_shield_ugprade_coeff", shieldrate)
 print(f"New Shield Repair Rate: {shieldrate}")
@@ -376,16 +379,17 @@ gui_update_shared("sh-cc-timer", "text: 5 Minute 300% Shield Recharge Boost;")
 
 ===== ip_countdown ===== 
 player_blob = to_blob(ship_id)
-impfaster = get_data_set_value(player_blob,"impulse_upgrade_coeff", 0)
-turnfaster = get_data_set_value(player_blob,"turn_upgrade_coeff", 0)
-#warpfaster = get_data_set_value(player_blob,"warp_upgrade_coeff", 0)
+->END if player_blob is None
+impfaster = player_blob.get("impulse_upgrade_coeff", 0)
+turnfaster = player_blob.get("turn_upgrade_coeff", 0)
+#warpfaster = player_blob.get("warp_upgrade_coeff", 0)
 print(f"Current Impulse Coefficent: {impfaster}")
 print(f"Current Turn Coefficent: {turnfaster}")
 #print(f"Current Warp Coefficent: {warpfaster}")
 impfaster *= 3.0
 turnfaster *= 3.0
 #warpfaster *= 3.0
-set_data_set_value(player_blob, "impuls_upgrade_coeff", impfaster)
+set_data_set_value(player_blob, "impulse_upgrade_coeff", impfaster)
 set_data_set_value(player_blob, "turn_upgrade_coeff", turnfaster)
 #set_data_set_value(player_blob, "warp_upgrade_coeff", warpfaster)
 print(f"New Impulse Coefficient: {impfaster}")
@@ -414,8 +418,12 @@ gui_update_shared("sh-ip-timer", "text: 5 Minute 300% Impulse and Maneuver Speed
 
 ===== tf_countdown ===== 
 player_blob = to_blob(ship_id)
-beamfaster = get_data_set_value(player_blob,"all_beam_upgrade_coeff", 0)
-tubefaster = get_data_set_value(player_blob,"all_tube_upgrade_coeff", 0)
+beamfaster = player_blob.get("all_beam_upgrade_coeff", 0)
+#if beamfaster is None:
+#    beamfaster = 1.0
+tubefaster = player_blob.get("all_tube_upgrade_coeff", 0)
+#if tubefaster is None:
+#    tubefaster = 1.0
 print(f"Current Beam Speed Coefficent: {beamfaster}")
 print(f"Current TorpeTube Coefficent: {tubefaster}")
 beamfaster *= 2.0
@@ -470,7 +478,7 @@ gui_update_shared("sh-vn-timer", "text: Restore Damage Control Teams;")
 
 ===== cl_countdown ===== 
 player_blob = to_blob(ship_id)
-stayfrosty = get_data_set_value(player_blob,"coolant_upgrade_coeff", 0)
+stayfrosty = player_blob.get("coolant_upgrade_coeff", 0)
 print(f"Current Coolant Coefficient: {stayfrosty}")
 if stayfrosty == None:
     stayfrosty = 2.0
@@ -496,7 +504,7 @@ gui_update_shared("sh-cl-timer", "text: 5 Minute 100% Faster Heat Reduction;")
 
 ===== la_countdown ===== 
 player_blob = to_blob(ship_id)
-scanrate = get_data_set_value(player_blob,"sensor_upgrade_coeff", 0)
+scanrate = player_blob.get("sensor_upgrade_coeff", 0)
 print(f"Current Scan Speed: {scanrate}")
 if scanrate == None:
     scanrate = 3.0
