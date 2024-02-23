@@ -1,11 +1,13 @@
 import hangar.py
 import hangar/missions.mast
 import hangar/hangar_comms.mast
+import hangar/bar.mast
 
 route_dock(handle_hangar_docking)
 
 shared hangar_version = 1
 call_sign = "Selene"
+set_inventory_value(client_id, "call_sign", call_sign)
 #
 #  Background task to look for strays
 #
@@ -30,6 +32,8 @@ briefing = "Select a craft to pilot. If you accept the mission hit launch."
 # get_dock_name is defined in story.py
 ride_picker = ~~list_box_control(crafts, 
                                text=lambda item: f"text:{item.name} {get_dock_name(item)};justify: center;",
+                               title = lambda: "text:Select Ship;justify:center;",
+                               background= "#1572", title_background="#1578",
                                select=True,
                                item_height=3)~~
 
@@ -38,19 +42,19 @@ gui_section(style="area: 0,0, 36,97;background: #fff1;")
 
 gui_section(style="area: 5,6,35,10;")
 gui_input("desc:Call sign", var="call_sign")
-gui_section(style="area: 5,10+20px, 35,10+40px;background: #0bb;")
-gui_text("text:Select ship;color: #003;justify: center;")
+on change call_sign:
+    set_inventory_value(client_id, "call_sign", call_sign)
 
-gui_section(style="area: 5,10+50px, 35, 49;")
+gui_section(style="area: 5,10+20px, 35, 49;")
 gui_content(ride_picker, var="ride_choice")
 
-gui_section(style="area: 5,50, 35,90;background: #002;")
+gui_section(style="area: 5,50, 35,50+20px;")
 gui_row(style="row-height:20px;")
-gui_text("text:Mission Briefing;color: #003;justify: center;", style="background: #0bb;")
-gui_row(style="padding:0,15px,0,0;")
+gui_text("text:Mission Briefing;color: white;justify: center;", style="background: #1578;")
+gui_section(style="area: 5,50+20px, 35,90;background: #1572;")
 """""
 {briefing}
-"""""" style="tag:briefing-text;padding: 10px,5px,10px,0;"
+"""""" style="tag:briefing-text;padding: 10px,15px,10px,0;"
 
 
 gui_activate_console("hangar")
@@ -101,15 +105,16 @@ on change hangar_version:
 
 
 await gui():
+    print("Slip")
     + "Head to Bar":
         print("Bar")
-        jump show_hangar
+        jump bar_enter
     + "Casino":
         print("Casino")
-        jump show_hangar
+        #jump show_hangar
     + "Quarters":
         print("Quarters")
-        jump show_hangar
+        #jump show_hangar
     + "Launch":
         if len(ride_choice.value) != 0:
             ride_select = ride_choice.value[0]
@@ -118,7 +123,7 @@ await gui():
             jump launch_to_cockpit
         jump show_hangar
 
-
+print("Out of await")
 jump show_hangar
 
 ==== launch_to_cockpit ======

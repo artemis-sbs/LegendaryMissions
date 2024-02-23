@@ -1,0 +1,14 @@
+{
+    "barkeep": {
+        "call_sign":barkeep,
+        "face":barkeep
+    },
+    "NightSky": {
+        "call_sign": "NightSky",
+        "face": faces.random_terran_male()
+    },
+    "ghost": {
+        "call_sign": "ghost",
+        "face":faces.random_terran_female()
+    }
+}

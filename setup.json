@@ -1,0 +1,53 @@
+{
+    "auto_start": false,
+    "players_count": 1,
+    "difficulty": 5,
+    "world_select": "siege",
+    "terrain_select": "some",
+    "lethal_select": "none",
+    "friendly_select": "few",
+    "monster_select": "few",
+    "upgrade_select": "lots",
+    "player_ships": [
+        {
+            "name": "Artemis",
+            "side": "tsn",
+            "ship": "tsn_battle_cruiser"
+        },
+        {
+            "name": "Intrepid",
+            "side": "tsn",
+            "ship": "tsn_battle_cruiser"
+        },
+        {
+            "name": "Aegis",
+            "side": "tsn",
+            "ship": "tsn_battle_cruiser"
+        },
+        {
+            "name": "Horatio",
+            "side": "tsn",
+            "ship": "tsn_battle_cruiser"
+        },
+        {
+            "name": "Excalibur",
+            "side": "tsn",
+            "ship": "tsn_battle_cruiser"
+        },
+        {
+            "name": "Hera",
+            "side": "tsn",
+            "ship": "tsn_battle_cruiser"
+        },
+        {
+            "name": "Ceres",
+            "side": "tsn",
+            "ship": "tsn_battle_cruiser"
+        },
+        {
+            "name": "Diana",
+            "side": "tsn",
+            "ship": "tsn_battle_cruiser"
+        }
+    ]
+}

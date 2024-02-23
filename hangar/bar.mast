@@ -1,0 +1,153 @@
+shared barkeep = faces.random_torgoth()
+shared pilots = {"barkeep": {"call_sign":"barkeep", "face":barkeep}, "NightSky": {"call_sign": "NightSky", "face": faces.random_terran_male()}, "ghost": {"call_sign":"ghost", "face":faces.random_terran_female()}}
+shared martinis = 10
+shared beer = 10
+shared vodka = 8
+
+shared customers = pilots.copy()
+shared messages = []
+shared message_id = 0
+shared banter = task_schedule(bar_banter)
+message = ""
+
+
+===== bar_enter ===
+log("BAR")
+if len(message)==0:
+    my_face = faces.random_terran()
+cs = get_inventory_value(client_id, "call_sign", "No call sign")
+
+cid = str(client_id&0xffffffff)
+~~ customers[client_id]= {"call_sign": cs, "face": my_face} ~~
+
+============== bar_show ===================
+gui_section("area: 0,0,60,60;")
+
+gui_face(barkeep)
+"""""""""""""""""""""""""""""""""
+Thirsty?
+I have
+"""""""""""""""""""""""""""""""""
+^^^    {martinis} Martini{"s" if martinis>1 else ""}^^^ if martinis>0
+^^^    {"and " if martinis>0 and (vodka) == 0 else ""}{beer} beer{"s" if beer>1 else ""}^^^ if beer > 0
+^^^    {"and " if (beer+martinis) > 0 else ""}{vodka} vodka^^^ if vodka > 0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+nothing
+....
+I'm all out. 
+If you go to DS1 and get more supply them the Next one is on me.
+^^^^^^^^^^^^ if martinis == 0 and vodka == 0 and beer ==0
+
+gui_section("area: 60,100-100px, 100,100+45px;")
+# holes give the next control its space
+gui_row(style="row-height: 45px;")
+gui_hole()
+gui_hole()
+gui_input("desc:Make a toast", var="message")
+
+on gui_message(gui_button("send")):
+    to_send = ~~message.strip()~~
+    if len(to_send)>0:
+        messages.append({"face": my_face, "msg": to_send})
+        if len(messages)>12:
+            messages.pop(0)
+        message = ""
+        message_id += 1
+        # This is broken it pushes and pops wrong
+        ->bar_show
+
+
+gui_section("area: 60,0, 100,80;")
+_sort_msgs = list(reversed(messages))
+
+lb_messages = ~~list_box_control(_sort_msgs, 
+                               text=lambda item: f"text:{item.get('msg', 'Hmm')};justify: left;",
+                               face= lambda item: f"{item.get('face','')}",
+                               title = lambda: "text:Conversation;justify:center;",
+                               background= "#1572", title_background="#1578",
+                               select=False,
+                               item_height=6)~~
+gui_content(lb_messages)
+
+gui_section("area: 0,60,25,100-40px;background: #1572;")
+lb_customers = ~~list_box_control(list(customers.values()), 
+                               text=lambda item: f"text:{item.get('call_sign', 'Hmm')};justify: center;",
+                               face= lambda item: f"{item.get('face','')}",
+                               title = lambda: "text:Patrons;justify:center;",
+                               background= "#1572", title_background="#1578",
+                               select=True,
+                               item_height=6)~~
+gui_content(lb_customers)
+
+
+
+
+#
+# Watch for changes in data
+# If it changes rego
+#
+on change len(customers.values()):
+    gui_refresh("bar_show")
+    jump bar_show
+
+
+on change message_id:
+    gui_refresh("bar_show")
+    jump bar_show
+
+
+on change beer+martinis+vodka:
+    gui_refresh("bar_show")
+    jump bar_show
+
+
+await gui():
+    + "Martini" if martinis > 0:
+        shared martinis = martinis-1
+        ->bar_show
+    + "Beer"  if beer > 0:
+        shared beer = beer-1
+        ->bar_show
+    + "Vodka" if vodka > 0:
+        shared vodka = vodka-1
+        ->bar_show
+    + "Had enough"  if (beer+martinis+vodka) > 0:
+        customers.pop(client_id, None)
+        gui_refresh("bar_show")
+        jump show_hangar
+    =disconnect:
+        customers.pop(client_id, None)
+        ->END
+
+
+if (beer+martinis+vodka) > 0:
+    gui_refresh("bar_show")
+    ->bar_show
+
+
+gui_section("area: 30, 20, 80, 60;")
+
+gui_face(barkeep)
+gui_row()
+"""""""""""""""""""""""""""""""""""
+BAR is closed until more supplies arrive
+they are available at DS1
+"""""""""""""""""""""""""""""""""""
+await gui(timeout(5))
+
+jump show_hangar
+
+===== bar_banter ==== 
+
+await delay_sim(seconds=random.randint(3,10)*5)
+
+speaker = random.choice(list(pilots.keys()))
+to_send = "Random comment"
+messages.append({"face": pilots.get(speaker, ""), "msg": to_send})
+if len(messages)>12:
+    messages.pop(0)
+
+gui_refresh("bar_show")
+
+jump bar_banter

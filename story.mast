@@ -37,29 +37,6 @@ Written using MAST and is a great reference for those looking to write their own
 """~~
 
 
-
-
-
-#
-# Game data
-#
-shared game_started = False
-shared game_ended = False
-
-shared difficulty=5
-shared player_count = 1
-shared player_list = ~~[
-    MastDataObject({"name": "Artemis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (200,0,0) , "face": random_terran()}),
-    MastDataObject({"name": "Intrepid", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (300,0, -100), "face": random_terran()}),
-    MastDataObject({"name": "Aegis", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser" , "spawn_point": (500,0, -200), "face": random_terran()}),
-    MastDataObject({"name": "Horatio", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser" , "spawn_point": (700,0, -300), "face": random_terran()}),
-    MastDataObject({"name": "Excalibur", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-200,0,0) , "face": random_terran()}),
-    MastDataObject({"name": "Hera", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point":  (-300,0,-100), "face": random_terran()}),
-    MastDataObject({"name": "Ceres", "id": None, "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-500,0, -200) , "face": random_terran()}),
-    MastDataObject({"name": "Diana", "id": None , "side": "tsn", "ship": "tsn_battle_cruiser", "spawn_point": (-700,0, -300), "face": random_terran()}),
-]~~
-
-
 #
 # This directs the script 
 # to the client and server GUI
@@ -69,30 +46,40 @@ gui_reroute_server("start_server")
 gui_reroute_clients("client_main")
 
 
-
 #
 # The Server GUI
 #   This label runs once, to initialize server data
 #
 ========== start_server ===============
 
-shared world_select = "siege"
-shared terrain_select = "some"
-shared lethal_select = "none"
-shared friendly_select = "few"
-shared monster_select = "none"
-shared upgrade_select = "many"
-shared seed_value = 0
+settings = story_get_mission_setup()
+shared world_select  = settings["world_select"]
+shared terrain_select  = settings["terrain_select"]
+shared lethal_select  = settings["lethal_select"]
+shared friendly_select  = settings["friendly_select"]
+shared monster_select  = settings["monster_select"]
+shared upgrade_select  = settings["upgrade_select"]
+shared seed_value  = settings["seed_value"]
+shared game_started  = settings["game_started"]
+shared game_ended  = settings["game_ended"]
+shared difficulty=   settings["difficulty"]
+shared player_count  = settings["player_count"]
+shared player_list  =  settings["player_list"]
+
+auto_start = settings["auto_start"]
 
 watch_end_game_task = None
 shared skybox = skybox_get_random()
 
 sbs.set_sky_box_all(skybox)
 
+
 #
 # The Server GUI
 #
 ====== show_server_menu =====
+
+jump start if auto_start
 
 if watch_end_game_task is not None:
     task_cancel(watch_end_game_task)
@@ -107,54 +94,50 @@ gui_section( style="area: 5, 10, 50, 90;")
 #gui_input("""desc: Integer""", var="seed_value")
 
 
-gui_section(  style="area: 50, 10, 95,90;row-height:65px;padding:0px,10px")
+gui_section(  style="area: 50, 10, 95,90;row-height:45px;padding:0px,10px")
+gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 """ justify:right;text:Player ships """
 gui_int_slider("low: 1.0;high:8.0", var="player_count")
-gui_row()
+gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 """ justify:right;text:Difficulty """
 gui_int_slider("low: 1.0;high:11.0", var="difficulty")
-gui_row()
+gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 
 """ justify:right;text:Mission Type"""
-gui_drop_down("text: Mission type;list:siege,single front,double front,deep strike,peacetime,border war,infestation", var="world_select")
-gui_row()
+gui_drop_down("text: {world_select};list:siege,single front,double front,deep strike,peacetime,border war,infestation", var="world_select")
+gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 gui_blank()
-gui_row()
+gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 
 """justify:right;text:Terrain"""
-gui_drop_down("text: Terrain;list: none, few, some, lots, many", var="terrain_select")
-gui_row()
+gui_drop_down("text: {terrain_select};list: none, few, some, lots, many", var="terrain_select")
+gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 
 """justify:right;text:Lethal Terrain"""
-gui_drop_down("text: Lethal Terrain;list: none, few, some, lots, many", var="lethal_select")
-gui_row()
+gui_drop_down("text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")
+gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 
 """justify:right;text:Friendly Ships"""
-gui_drop_down("text: Friendly Ships;list: none, few, some, lots, many", var="friendly_select")
-gui_row()
+gui_drop_down("text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")
+gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 
 """justify:right;text:Monsters"""
-gui_drop_down("text: Monsters;list: none, few, some, lots, many", var="monster_select")
-gui_row()
+gui_drop_down("text: {monster_select};list: none, few, some, lots, many", var="monster_select")
+gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 
 """justify:right;text:Upgrades"""
-gui_drop_down("text: Upgrades;list:none, few,some, lots, many", var="upgrade_select")
+gui_drop_down("text:{upgrade_select};list:none, few,some, lots, many", var="upgrade_select")
 
-#gui_row()
-
-#blank
-#gui_row()
 
 await gui():
     + "Start Mission":
-        sim_create()
-        sim_resume()
         -> start
 
 
 
 ===== start ======
-
+sim_create()
+sim_resume()
 #
 # Based on the game type call the right 
 # label to build the world

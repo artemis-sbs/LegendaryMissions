@@ -1,23 +1,6 @@
 ################
 ## common code for different map type
 
-
-#
-#
-# Example embedded python this may not be supported long term
-# This is limited only to the things mast can see
-# i.e. you cannot import other modules
-#
-#~~~~
-#@export
-#def test_func(x,y,z, art_id):
-#    pu = terrain_spawn(0,0,0, None, None, art_id, "behav_pickup")
-#    blob = pu.blob
-#    if blob is not None:
-#        print(f"Blobby {x}")
-#~~~~
-
-
 =========== spawn_friendly_npc ===========
 
 match friendly_select:
@@ -44,7 +27,8 @@ tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "support", ret_k
 # pick a random tsn ship
 count = 1
 
-spawn_points = scatter_sphere(100, 0,0,0, 500, 5000, ring=True)
+spawn_pos = Vec3(0,0,0)
+stations_friendly = to_object_list(role("tsn")  & role("station"))
 for x while total_hull_points<max_hull_points:
     #
     ship = random.choice(tsn_ship_data)
@@ -63,8 +47,12 @@ for x while total_hull_points<max_hull_points:
     # reset attempts
     attempts = 0
     # OK add this ship
-    spawn_point = next(spawn_points)
-    friend = to_id(npc_spawn(*spawn_point, f"tsn {str(count).zfill(2)}", "tsn, friendly", ship["key"], "behav_npcship"))
+    if len(stations_friendly) > 0:
+        so = random.choice(stations_friendly)
+        spawn_pos = so.pos
+        spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
+
+    friend = to_id(npc_spawn(*spawn_pos, f"tsn {str(count).zfill(2)}", "tsn, friendly", ship["key"], "behav_npcship"))
     count += 1
     total_hull_points += hull_points
     set_face(friend, random_terran())
@@ -86,18 +74,59 @@ match friendly_select:
 civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
 ->END if len(civilian_data)==0
 count = 1
-for pos in scatter_sphere(civilian_count, 0,0,0, 500, 5000, ring=True):
+
+for count in range(civilian_count):
     #
     ship = random.choice(civilian_data)
+    #
+    if len(stations_friendly) > 0:
+        so = random.choice(stations_friendly)
+        spawn_pos = so.pos
+        spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
 
-    friend = to_id(npc_spawn(*pos, f"civ {str(count).zfill(2)}", "tsn, friendly, civilian", ship["key"], "behav_npcship"))
+    friend = to_id(npc_spawn(*spawn_pos, f"civ {str(count).zfill(2)}", "tsn, friendly, civilian", ship["key"], "behav_npcship"))
     set_face(friend, random_terran(civilian=True))
     count += 1
 
 
-#### vvvvvvv  ###
+====== spawn_players =======
+c=0
+first = True
 
-========= add_eye_to_players =====
+#test_func(3)
+
+stations_friendly = to_object_list(role("tsn")  & role("station"))
+
+spawn_pos = Vec3(0,0,0)
+#------------------------------------------------------------------------------------------------------------
+for player_ship_data in player_list:
+    if c>= player_count:
+        # make sure the id is cleared dry docked ships
+        ~~player_ship_data["id"] = None~~
+        continue
+
+    
+    if len(stations_friendly) > 0:
+        so = random.choice(stations_friendly)
+        spawn_pos = so.pos
+        spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
+    
+    
+
+    player_ship = to_id(player_spawn(*spawn_pos, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
+    
+    c+=1
+    ~~player_ship_data["id"] = player_ship~~
+
+    set_face(player_ship, get_face_from_data(player_ship_data["face"]))
+    set_inventory_value(player_ship, "respawn_time", 5)
+    if first:
+        assign_client_to_ship(0,player_ship)
+        first = False
+
+    points = get_open_grid_points(player_ship)
+
+
 
 my_players = role("__player__") & role("tsn")
 for player in my_players:
@@ -113,32 +142,6 @@ for player in my_players:
     blob.set("num_extra_scan_sources",num_ids,0)
 
 ->END
-
-====== spawn_players =======
-c=0
-first = True
-
-#test_func(3)
-
-#------------------------------------------------------------------------------------------------------------
-for player_ship_data in player_list:
-    if c>= player_count:
-        # make sure the id is cleared dry docked ships
-        player_ship_data.id = None
-        continue
-
-    player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, player_ship_data.ship))
-    # player_ship = to_id(player_spawn(*player_ship_data.spawn_point, player_ship_data.name, player_ship_data.side, "tsn_light_cruiser"))
-    c+=1
-    player_ship_data.id = player_ship
-
-    set_face(player_ship, player_ship_data.face)
-    set_inventory_value(player_ship, "respawn_time", 5)
-    if first:
-        assign_client_to_ship(0,player_ship)
-        first = False
-
-    points = get_open_grid_points(player_ship)
 
 ->END
     

@@ -40,6 +40,11 @@ gui_row()
 on gui_message(gui_button("Test Shapes")):
     jump spawn_test_shapes
 
+gui_row()
+on gui_message(gui_button("Test list consoles")):
+    jump debug_show_list_consoles
+
+
 gui_activate_console("debug")
 
 await gui()
@@ -150,3 +155,50 @@ Under construction
 gui_activate_console("mast")
 
 await gui()
+
+
+==== debug_show_list_consoles ====
+
+gui_section(style="area: 10,10,90,90;")
+
+## To get the ships this client is on
+####    get_inventory_value(client_id,"assigned_ship")
+#
+## To get the things link to the player ship as a console
+####    linked_to( ....as set of things ...., "consoles")
+#
+## Everything that has a inventory_value CONSOLE_TYPE 
+## That has the value "helm"
+####         has_inventory_value("CONSOLE_TYPE", "helm")
+#
+#
+consoles =  linked_to(get_inventory_value(client_id,"assigned_ship"), "consoles") & has_inventory_value("CONSOLE_TYPE", "helm")
+
+#
+# 
+#
+all_helm_consoles =  role("__gui__") & has_inventory_value("CONSOLE_TYPE", "helm")
+
+"""
+My ships's Helm count {len(consoles)}
+All Helm count {len(all_helm_consoles)}
+"""
+
+for c in consoles:
+    comms_broadcast(c, f"my ship's Helm console", "green")
+
+
+for c in all_helm_consoles:
+    p = to_object(get_inventory_value(c,"assigned_ship"))
+    comms_broadcast(c, f"{p.name}'s Helm console", "blue")
+
+
+await gui():
+    + "refresh":
+        jump debug_show_list_consoles
+    + "back":
+        jump debug_screen
+    
+
+
+

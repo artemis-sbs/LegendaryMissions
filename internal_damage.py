@@ -2,13 +2,12 @@ from sbs_utils.procedural.query import to_id, to_blob, to_object, to_list, to_se
 from sbs_utils.procedural.roles import role, add_role, remove_role, all_roles,has_role
 from sbs_utils.procedural.links import link,unlink, linked_to
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value, get_shared_inventory_value
-from sbs_utils.procedural.grid import grid_objects, grid_objects_at, grid_closest
+from sbs_utils.procedural.grid import grid_objects, grid_objects_at, grid_closest, grid_get_grid_data
 from sbs_utils.procedural.spawn import grid_spawn
 from sbs_utils.procedural.comms import comms_broadcast
 from sbs_utils.procedural.gui import gui_reroute_client
 from sbs_utils.procedural.space_objects import get_pos
 from sbs_utils.helpers import FrameContext
-from sbs_utils.fs import load_json_data, get_mission_dir_filename
 from sbs_utils.tickdispatcher import TickDispatcher
 import random
 import sbs
@@ -24,12 +23,6 @@ def grid_get_max_hp():
     return _MAX_HP
 
 
-_grid_data = None 
-def grid_get_grid_data():
-    global _grid_data
-    if _grid_data is None:
-        _grid_data = load_json_data(get_mission_dir_filename("grid_data.json"))
-    return _grid_data
 
 _themes = [
     {"silhouette": "#0F1F1F", "lines": "#2F4F4F", "nodes": "#778899", "silver": "LightYellow", "lime":"springgreen", "dc": ["slateblue", "CadetBlue", "royalblue"], "dc_damage": ["LightCoral", "LightSalmon", "Salmon"], "damage": "Crimson"},

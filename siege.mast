@@ -1,7 +1,7 @@
 import map_common.mast
 
 ================= siege_build_world ===================
-task_schedule(spawn_players)
+
 
 terrain_value = 0
 if "few" == terrain_select:
@@ -172,6 +172,8 @@ for station in spawn_points:
     #                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
             terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
     num += 1
+
+task_schedule(spawn_friendly_npc)
 
 #------------------------------------------------------------------------------------------------------------
 enemyTypeNameList = []
@@ -344,6 +346,7 @@ spawn_points = scatter.box(monster_value, 0,0,0, 75000, 1000, 75000, centered=Tr
 for v in spawn_points:
     typhon_classic_spawn(*v.xyz)
 
-jump spawn_friendly_npc
+
+
 #------------------------------------------------------------------------------------------------------------
 
