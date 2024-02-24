@@ -18,6 +18,10 @@ import upgrade.mast
 import story.py
 import hangar.mast
 import monster.mast
+import operator/main_screen.mast
+import operator/remote_console.mast
+import operator/admin_console.mast
+
 
 
 
@@ -36,6 +40,7 @@ Missions rich in the history of Artemis re-imagined for Cosmos.
 Written using MAST and is a great reference for those looking to write their own missions.
 """~~
 
+# print(story_get_console_type())
 
 #
 # This directs the script 
@@ -53,25 +58,31 @@ gui_reroute_clients("client_main")
 ========== start_server ===============
 
 settings = story_get_mission_setup()
-shared world_select  = settings["world_select"]
-shared terrain_select  = settings["terrain_select"]
-shared lethal_select  = settings["lethal_select"]
-shared friendly_select  = settings["friendly_select"]
-shared monster_select  = settings["monster_select"]
-shared upgrade_select  = settings["upgrade_select"]
-shared seed_value  = settings["seed_value"]
-shared game_started  = settings["game_started"]
-shared game_ended  = settings["game_ended"]
-shared difficulty=   settings["difficulty"]
-shared player_count  = settings["player_count"]
-shared player_list  =  settings["player_list"]
+shared world_select  = settings.get("world_select")
+shared terrain_select  = settings.get("terrain_select")
+shared lethal_select  = settings.get("lethal_select")
+shared friendly_select  = settings.get("friendly_select")
+shared monster_select  = settings.get("monster_select")
+shared upgrade_select  = settings.get("upgrade_select")
+shared seed_value  = settings.get("seed_value")
+shared game_started  = settings.get("game_started")
+shared game_ended  = settings.get("game_ended")
+shared difficulty=   settings.get("difficulty")
+shared player_count  = settings.get("player_count")
+shared player_list  =  settings.get("player_list")
 
-auto_start = settings["auto_start"]
+shared auto_start = settings.get("auto_start", False)
+
+shared operator_mode = settings.get("operator_mode", {"enable: False"})
+shared operator_mode_enabled = operator_mode.get("enable", False)
+
 
 watch_end_game_task = None
 shared skybox = skybox_get_random()
 
 sbs.set_sky_box_all(skybox)
+
+jump operator_main_screen if operator_mode_enabled
 
 
 #

@@ -1,0 +1,5 @@
+
+====== operator_admin_console ===== 
+
+watch_end_game_task = None
+jump show_server_menu

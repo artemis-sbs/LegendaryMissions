@@ -8,6 +8,7 @@ route_change_console("select_console")
 
 ========= client_main ==========
 console_select = "helm"
+console_prev = "helm"
 client_select_ship = "artemis"
 console_ready = False
 ship_name = "artemis"
@@ -16,6 +17,16 @@ ship_type_def = player_list[0]["ship"]
 shared ship_list = ""
 client_selected_index = 0
 shared valid_interiors = set()
+mode = story_get_console_type()
+if mode is not None:
+    modes = mode.split(';')
+    mode = None
+    if len(modes)>=3:
+        mode = modes[2]
+        console_select = mode
+        jump operator_admin_console if mode=='admin'
+    
+
 
 for key in grid_data:
     if len(grid_data[key]["grid_objects"])>0:
@@ -29,18 +40,6 @@ for key in grid_data:
 ========== select_console ==========
 # default console_select = "helm"
 # default client_select_ship = "artemis"
-
-i = 0
-shared ship_list = ""
-for player_ship in player_list:
-    if i>=player_count:
-        break
-
-    i += 1
-    if len(ship_list) >0:
-        ship_list = ship_list + ","
-
-    ship_list = ship_list + player_ship["name"].lower()
 
 # Clamp selected index
 client_selected_index = min(int(player_count), client_selected_index )
@@ -58,19 +57,8 @@ if console_select == "helm" and not game_started:
   on gui_message(gui_input(_input, var="ship_name")):
     ~~player_list[client_selected_index]["name"] = ship_name~~
     client_select_ship = ship_name
-    ~~player_list[client_selected_index]["ship"] = ship_type.value~~
-    shared ship_list = ""
-    i=0
-    for player_ship in player_list:
-        if i>=player_count:
-            break
-
-        i += 1
-        if len(ship_list) >0:
-            ship_list = ship_list + ","
-
-        ship_list = ship_list + player_ship["name"].lower()
-    gui_update_shared("sh_ship_radio", f"{ship_list}")
+    ~~player_list[client_selected_index]["ship"] = ship_type~~
+    gui_update_shared("sh_ship_list", None)
 
   gui_section(style="area: 1,115px,40,100")
   gui_row() #style="row-height: 300px;")
@@ -79,19 +67,44 @@ if console_select == "helm" and not game_started:
   # Specify only ships with defined engineering grid
   #
   gui_content(ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors), style="tag:sh_ship_picker", var="ship_type")
-  on change ship_type.value:
-    ~~player_list[client_selected_index]["ship"] = ship_type.value~~
-    gui_update_shared("sh_ship_picker", ship_type.value, {"client_select_ship": client_select_ship})
+  on change ship_type:
+    ~~player_list[client_selected_index]["ship"] = ship_type~~
+    gui_update_shared("sh_ship_picker", ship_type, {"client_select_ship": client_select_ship})
+    gui_update_shared("sh_ship_list", None)
 
-  #gui_row( style="row-height: 50px;")
-  #gui_blank()
-  #gui_row(style="row-height: 50px;")
 
+#
+# List of available ships
+#
 gui_section( style="area: 50,60px,75,90;")
-r = gui_vradio(f"{ship_list}", style="row-height: 50px;tag:sh_ship_radio;", var="client_select_ship")
+ship_list = player_list[:player_count]
+lb_ships = ~~list_box_control(ship_list, 
+                               text=lambda item: f"text:{item['name']};justify: center;",
+                               title = lambda: "text:ship;justify:center;",
+                               ship=lambda item: item['ship'],
+                               background= "#1572", title_background="#1578",
+                               select=True,
+                               item_height=6,
+                               convert_value = lambda item: item['name'].lower()
+                               )~~
+
+gui_content(lb_ships, style="tag:sh_ship_list;", var="client_select_ship")
+#
+# List of available consoles
+#
+consoles = {"helm": 0,"weapons":0,"comms":0,"science":0,"engineering":0,"hangar":0,"mainscreen":0}
+lb_consoles = ~~list_box_control(list(consoles.keys()), 
+                               text=lambda item: f"text:{item};justify: center;",
+                               title = lambda: "text:Console;justify:center;",
+                               background= "#1572", title_background="#1578",
+                               select=True,
+                               item_height=6)~~
 
 gui_section( style="area: 80,60px, 99,90-60px;")
-gui_vradio("helm,weapons, comms,science,engineering,hangar,mainscreen", style="row-height: 45px;", var="console_select")
+gui_content(lb_consoles, var="console_select")
+#
+# Ready state
+#
 gui_section( style="area: 80,90-60px, 99,90;")
 gui_row(style="row-height: 50px;")
 
@@ -104,7 +117,22 @@ else:
 
 on change player_count:
     client_selected_index = min(client_selected_index, int(player_count)-1)
-    jump select_console
+    # Just refresh if reduce ship count for now
+    jump select_console if len(lb_ships.items)>player_count
+    # Otherwise can refresh faster if adding ships
+    ship_list = player_list[:player_count]
+    lb_ships.items = ship_list
+    gui_update_shared("sh_ship_list", None)
+
+on change console_select:
+    #
+    # Redo gui if change involves helm
+    #
+    if console_select == "helm" or console_prev=="helm":
+        console_prev = console_select
+        jump select_console
+    console_prev = console_select
+
 
 #
 # See when other console changes the ships list?
@@ -114,14 +142,9 @@ on change player_count:
 
 
 on change client_select_ship:
-    #print(f"I'm triggered css {client_select_ship}")
     for i in range(player_count):
         client_selected_index = i
-        break if player_list[i]["name"].strip().lower() == client_select_ship
-    jump select_console
-
-on change console_select:
-    jump select_console
+        break if player_list[i]["name"].strip().lower() == client_select_ship.lower()
 
 await gui()
 

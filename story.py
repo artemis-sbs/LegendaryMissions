@@ -2,9 +2,14 @@ from random import choice
 from sbs_utils.procedural.query import get_science_selection, to_object
 from sbs_utils.fs import load_json_data, get_mission_dir_filename
 from sbs_utils import faces as faces
+import os
 
 # Expose monster.py
 from monster import *
+
+
+def story_get_console_type():
+    return os.environ.get("cosmos_start_mode")
 
 
 def skybox_get_random():

@@ -63,9 +63,9 @@ gui_section(style="area: 36,0, 100,97;")
 gui_layout_widget("2dview")
 
 fighter_change = 0
-on change ride_choice.value:
-    if len(ride_choice.value):
-        fighter = ride_choice.value[0]
+on change ride_choice:
+    if ride_choice is not None:
+        fighter = ride_choice
         dock = get_science_selection(fighter)
         dock = to_object(dock)
         fighter_change += 1
@@ -90,8 +90,7 @@ on change update_ticker < get_counter_elapsed_seconds(client_id, "refresh_status
 
 on change fighter_change:
     gui_update("refit-text", "text: select ship")
-    ->RETURN if len(ride_choice.value)==0 
-    fighter = ride_choice.value[0]
+    fighter = ride_choice
     if is_timer_finished(fighter, "refit"):
         gui_update("refit-text", "text: ready to launch")
     else:
@@ -105,7 +104,6 @@ on change hangar_version:
 
 
 await gui():
-    print("Slip")
     + "Head to Bar":
         print("Bar")
         jump bar_enter
@@ -116,8 +114,8 @@ await gui():
         print("Quarters")
         #jump show_hangar
     + "Launch":
-        if len(ride_choice.value) != 0:
-            ride_select = ride_choice.value[0]
+        if ride_choice is not None:
+            ride_select = ride_choice
             set_inventory_value(client_id, "assigned_ship", ride_select)
             link(ride_select , "consoles", client_id)
             jump launch_to_cockpit

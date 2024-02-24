@@ -1,0 +1,8 @@
+
+====== operator_main_screen =====
+
+gui_section( style="area: 5, 10, 50, 90;")
+
+""" Show a Logo and say waiting for game to start """
+
+await gui()
