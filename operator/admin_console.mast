@@ -1,5 +1,77 @@
+shared game_paused = False
+====== operator_login ===== 
+
+gui_section( style=f"area: 20, 40, 80, 40+40px;")
+pin = ""
+"""operator pin"""
+_in = gui_input("""desc: Enter pin;password:True;""", var="pin")
+on gui_message(_in):
+   jump operator_admin_console if pin == operator_mode.get("pin")
+
+await gui():
+    + "cancel":
+        jump select_console
+
+
+jump operator_login
 
 ====== operator_admin_console ===== 
 
+jump operator_stats if game_started
+
 watch_end_game_task = None
+shared watch_raider_count = None
 jump show_server_menu
+
+
+====== operator_stats ===== 
+
+if watch_raider_count is None:
+    watch_raider_count = task_schedule(update_raider_count)
+
+gui_section(style=f"area: 20, 40, 80, 60;row-height:45px")
+#
+# Show time remaining
+#
+if is_timer_set(SHARED, "time_limit"):
+    gui_text("text: time remaining;justify: right;")
+    t = format_time_remaining(SHARED, "time_limit")
+    gui_text(f"text: {t};justify:left;", style="tag: sh_game_time;padding:20px;")    
+    gui_row("row-height: 45px")
+
+
+r = role("raider") 
+count=len(r)
+
+gui_text("text: remaining raiders;justify: right;")
+gui_text(f"text: {count};justify:left;", style="tag: sh_raider_count;padding:20px;")
+
+await gui():
+    + "pause game" if not game_paused:
+        game_paused = True
+        sbs.pause_sim()
+    + "resume game" if game_paused:
+        game_paused = False
+        sbs.resume_sim()
+    + "end game":
+        r = list(role("raider")) # copy
+        for i in r:
+            remove_role(i, "raider")
+
+        jump operator_stats
+jump operator_stats
+
+==== update_raider_count =====
+
+await delay_sim(seconds=10)
+
+r = role("raider")
+count = len(r)
+gui_update_shared("sh_raider_count", f"text:{count};justify:left;")
+
+if is_timer_set(SHARED, "time_limit"):
+    t = format_time_remaining(SHARED, "time_limit")
+    gui_update_shared("sh_game_time",f"text: {t};justify:left;")
+
+
+jump update_raider_count

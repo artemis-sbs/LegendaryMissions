@@ -1,11 +1,10 @@
 {
     "auto_start": false,
     "operator_mode": {
-        "enable": false,
-        "logo": "nomads",
+        "enable": true,
+        "logo": "media/operator",
         "remote_console_select": true,
-        "pin": "000000",
-        "time_limit": 20
+        "pin": "000000"
     },
     "players_count": 1,
     "difficulty": 5,
@@ -15,6 +14,7 @@
     "friendly_select": "few",
     "monster_select": "few",
     "upgrade_select": "lots",
+    "game_time_limit": 20,
     "player_ships": [
         {
             "name": "Artemis",

@@ -41,6 +41,7 @@ for key in grid_data:
 # default console_select = "helm"
 # default client_select_ship = "artemis"
 
+
 # Clamp selected index
 client_selected_index = min(int(player_count), client_selected_index )
 
@@ -93,6 +94,7 @@ gui_content(lb_ships, style="tag:sh_ship_list;", var="client_select_ship")
 # List of available consoles
 #
 consoles = {"helm": 0,"weapons":0,"comms":0,"science":0,"engineering":0,"hangar":0,"mainscreen":0}
+
 lb_consoles = ~~list_box_control(list(consoles.keys()), 
                                text=lambda item: f"text:{item};justify: center;",
                                title = lambda: "text:Console;justify:center;",
@@ -105,8 +107,7 @@ gui_content(lb_consoles, var="console_select")
 #
 # Ready state
 #
-gui_section( style="area: 80,90-60px, 99,90;")
-gui_row(style="row-height: 50px;")
+gui_section( style="area: 80,90-60px, 99,90;row-height: 50px;")
 
 if not game_started:
     gui_checkbox("ready", var="console_ready")
@@ -114,6 +115,12 @@ else:
     on gui_message(gui_button("ready")):
         console_ready = True
         jump console_selected
+
+if operator_mode_enabled:
+    gui_row(style="padding:0,15px,0,0;")
+    on gui_message(gui_button("admin")):
+        jump operator_login
+
 
 on change player_count:
     client_selected_index = min(client_selected_index, int(player_count)-1)

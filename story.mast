@@ -41,6 +41,7 @@ Written using MAST and is a great reference for those looking to write their own
 """~~
 
 # print(story_get_console_type())
+#print(get_mission_graphics_file("media/artemis_home_page"))
 
 #
 # This directs the script 
@@ -67,6 +68,7 @@ shared upgrade_select  = settings.get("upgrade_select")
 shared seed_value  = settings.get("seed_value")
 shared game_started  = settings.get("game_started")
 shared game_ended  = settings.get("game_ended")
+shared game_time_limit  = str(settings.get("game_time_limit", ""))
 shared difficulty=   settings.get("difficulty")
 shared player_count  = settings.get("player_count")
 shared player_list  =  settings.get("player_list")
@@ -75,6 +77,7 @@ shared auto_start = settings.get("auto_start", False)
 
 shared operator_mode = settings.get("operator_mode", {"enable: False"})
 shared operator_mode_enabled = operator_mode.get("enable", False)
+
 
 
 watch_end_game_task = None
@@ -139,6 +142,11 @@ gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 """justify:right;text:Upgrades"""
 gui_drop_down("text:{upgrade_select};list:none, few,some, lots, many", var="upgrade_select")
 
+gui_row(style="row-height: 45px;padding:10px,0,0,0;")
+
+"""justify:right;text:Time limit"""
+gui_input("desc: Minutes;", var="game_time_limit")
+
 
 await gui():
     + "Start Mission":
@@ -153,6 +161,10 @@ sim_resume()
 # Based on the game type call the right 
 # label to build the world
 #
+
+tl = safe_int(game_time_limit)
+if tl >0:
+    set_timer(SHARED, "time_limit", minutes=tl)
 
 #------------------------------------------------------------------------------------------------------------
 sbs.set_beam_damages(0, 7.0, difficulty)
@@ -177,16 +189,16 @@ match world_select.lower():
 # Consoles are waiting to be started 
 #
 game_started = True
-gui_reroute_clients(game_started_console)
 watch_end_game_task = task_schedule(task_end_game)
+
+gui_reroute_clients(game_started_console, exclude={client_id})
 
 
 ====  pause_screen ====
+jump operator_stats if operator_mode_enabled
 
 gui_section( style="area: 5, 10, 50, 90;")
 """""Simulation paused"""""
-
-
 
 await gui():
 + "Resume Mission":
@@ -199,6 +211,10 @@ jump pause_screen
 ============ task_end_game ======= 
 
 await delay_sim(4)
+
+if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"):
+    remove_role(role("raider"), "raider")
+
 
 stations = role('tsn') & role('station')
 if len(stations) ==0:
@@ -213,6 +229,7 @@ if len(stations) ==0:
 
 
 raiders = role('Raider')
+# print (f"raiders {len(raiders)}")
 if len(raiders)==0:
     start_text = "Mission is won!  All the enemies have been destroyed."
     game_started = False

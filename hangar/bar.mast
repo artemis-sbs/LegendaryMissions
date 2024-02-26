@@ -1,5 +1,13 @@
+#
+# Bitters - bartender 
+# Cogs - Mechanic - Know things like were to find hero damcons
+# Ghost - Pilot  - Rumors about where 
+#
+# Interacting with them opens new hangar mission
+#
+
 shared barkeep = faces.random_torgoth()
-shared pilots = {"barkeep": {"call_sign":"barkeep", "face":barkeep}, "NightSky": {"call_sign": "NightSky", "face": faces.random_terran_male()}, "ghost": {"call_sign":"ghost", "face":faces.random_terran_female()}}
+shared pilots = {"barkeep": {"call_sign":"Bitters", "face":barkeep}, "Cogs": {"call_sign": "NightSky", "face": faces.random_terran_male()}, "ghost": {"call_sign":"ghost", "face":faces.random_terran_female()}}
 shared martinis = 10
 shared beer = 10
 shared vodka = 8
