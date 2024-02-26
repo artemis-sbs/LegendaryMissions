@@ -142,7 +142,7 @@ gui_row()
 BAR is closed until more supplies arrive
 they are available at DS1
 """""""""""""""""""""""""""""""""""
-await gui(timeout(5))
+await gui(timeout=timeout(5))
 
 jump show_hangar
 

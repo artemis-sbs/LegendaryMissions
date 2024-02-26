@@ -180,7 +180,7 @@ jump select_console if _ship_id is None
 #
 # This should get a skybox with client overriding, shp, overriding shared
 #
-sky_box = get_inventory_value(SHARED, "skybox", "sky1")
+sky_box = get_shared_variable("skybox", "sky1")
 sky_box = get_inventory_value(_ship_id, "skybox", sky_box)
 sky_box = get_inventory_value(client_id, "skybox", sky_box)
 sbs.set_sky_box(client_id, sky_box)
@@ -218,7 +218,7 @@ gui_section( style="area: 0,50px, 100,100;")
 """""
 Task count {task_count}
 """"""
-await gui(timeout(4))
+await gui(timeout=timeout(4))
 
 jump debug_mast
 
