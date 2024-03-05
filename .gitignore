@@ -5,3 +5,4 @@
 *.sbslib
 /typings/
 /mkdocs/site/
+/.vs

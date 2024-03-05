@@ -1,7 +1,7 @@
 {
     "auto_start": false,
     "operator_mode": {
-        "enable": true,
+        "enable": false,
         "logo": "media/operator",
         "remote_console_select": true,
         "pin": "000000"
