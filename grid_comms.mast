@@ -265,15 +265,17 @@ else:
 cur_select = get_inventory_value(GRID_ORIGIN_ID, "click_select", 0)
 if cur_select is not None and cur_select > 0:
     cur_blob = to_blob(cur_select)
-    cur_scale = cur_blob.get("icon_scale", 0) 
-    cur_blob.set("icon_scale", cur_scale/2,0) 
+    if cur_blob is not None:
+        cur_scale = cur_blob.get("icon_scale", 0) 
+        cur_blob.set("icon_scale", cur_scale/2,0) 
 
 #
 # Scale current selection
 #
 set_inventory_value(GRID_ORIGIN_ID, "click_select", GRID_SELECTED_ID)
 cur_blob = to_blob(GRID_SELECTED_ID)
-cur_scale = cur_blob.get("icon_scale", 0) 
-cur_blob.set("icon_scale", cur_scale*2,0) 
+if cur_blob is not None:
+    cur_scale = cur_blob.get("icon_scale", 0) 
+    cur_blob.set("icon_scale", cur_scale*2,0) 
 
 ->END

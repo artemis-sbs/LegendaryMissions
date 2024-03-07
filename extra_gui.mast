@@ -49,9 +49,11 @@ text: Hello {player_name} tell us what to do
 message = None
 await gui():
    + "APPLY":
-        target_id = get_inventory_value(comms_selected, "WEAPONS_SELECTED_ID", None)
+        target_id = get_weapons_selection(comms_selected)
         target_point = get_inventory_value(comms_selected, "WEAPONS_SELECTED_POINT", None)
-        if target_id is not None:
+        print("GIVE ORDERS {target_id} {target_point}")
+        if target_id is not None and target_id != 0:
+            print("GIVE ORDERS inner {target_id}")
             target_obj = to_object(target_id)
             if target_obj is not None:
                 shoot = has_role(target_id, "raider")
@@ -63,8 +65,9 @@ await gui():
                     message = "OK {player_name} - going to rendezvous with {target_obj.name}"
                     
                 target(comms_selected, target_id, shoot)
-            
-        elif target_point is not None:
+                
+        if target_point is not None:
+            print("GIVE ORDERS")
             message = "Heading to designated waypoint"
             target_pos(comms_selected, target_point.x, target_point.y, target_point.z )
         
@@ -73,6 +76,7 @@ await gui():
 #
 # Get back on the right ship
 #
+
 assign_client_to_ship(client_id,ship)
 if message is not None:
     comms_message(message, comms_selected, ship, title_color="cyan")
@@ -96,7 +100,7 @@ if EVENT.selected_id != 0:
     set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_POINT", None)
     set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_ID", EVENT.selected_id)
 else:
-    set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_POINT", EVENT.source_point)
+    set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_POINT", Vec3(EVENT.source_point))
     set_inventory_value(WEAPONS_ORIGIN_ID, "WEAPONS_SELECTED_ID", None)
     
     nav = sim.add_navpoint(EVENT.source_point.x,EVENT.source_point.y, EVENT.source_point.z, "goto", "white")

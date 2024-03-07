@@ -21,6 +21,7 @@ import monster.mast
 import operator/main_screen.mast
 import operator/remote_console.mast
 import operator/admin_console.mast
+import commerce/resource_gather.py
 
 
 
