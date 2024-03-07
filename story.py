@@ -2,10 +2,20 @@ from random import choice
 from sbs_utils.procedural.query import get_science_selection, to_object
 from sbs_utils.fs import load_json_data, get_mission_dir_filename
 from sbs_utils import faces as faces
+from sbs_utils.mast.label import label
+from sbs_utils.procedural.execution import AWAIT, task_schedule, jump
+from sbs_utils.procedural.timers import delay_sim
 import os
 
 # Expose monster.py
 from monster import *
+
+@label()
+def test_delay():
+    yield AWAIT(delay_sim(5))
+    print("test tick") 
+    yield jump(test_delay)
+
 
 
 def story_get_console_type():

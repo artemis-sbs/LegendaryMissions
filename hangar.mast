@@ -164,7 +164,7 @@ print("finding stray fighters start")
 
 ==== find_stray_craft_loop ====
 await delay_sim(seconds=3) # Run every 23 seconds
-launched_crafts = role("cockpit") - role("standby")
+launched_crafts = role("cockpit") & role("tsn") - role("standby")
 for craft in launched_crafts:
     cid = get_inventory_value(craft, "client_id")
     cid_obj = to_object(cid)

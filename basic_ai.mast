@@ -1,4 +1,6 @@
 import common_docking.py
+import fleet.py
+
 #
 # route spawn will call the specify label when something is spawned
 # This allows the system to test what type of item it is
@@ -78,11 +80,11 @@ set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
 enraged = get_inventory_value(SPAWNED_ID, "enrage_target")
 scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 surrendered = has_role(SPAWNED_ID, "surrendered")
-if surrendered:
-    so = to_object(SPAWNED_ID)
-    target_pos(SPAWNED_ID, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
+#if surrendered:
+#    so = to_object(SPAWNED_ID)
+#    target_pos(SPAWNED_ID, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
     # TODO: When it reaches spawn_pos tally and remove
-    ->END
+#    ->END
 #
 # Auto scan: If you can see it you get the initial scan
 # Auto scan: If you can see it you get the initial scan
@@ -92,59 +94,46 @@ if not scanned:
     should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
     if should_scan is not None:
         follow_route_science_select(should_scan, SPAWNED_ID)
-#
-# Comms enraged this npc, But enraged is time limited
-#
-the_target = None
-if enraged is not None:
-    # if still enraged, use its target
-    clear = True
-    if not is_timer_finished(SPAWNED_ID, "enrage_timer"):
-        the_target = enraged
-        if object_exists(enraged):
-            clear = False           
-        else:
-            clear = True
-            the_target = None
-    if clear:
-        # clear the enraged value
-        set_inventory_value(SPAWNED_ID, "enrage_target", None)
-        clear_timer(SPAWNED_ID, "enrage_timer")
 
-#
-# Look for a station near 
-#
-if the_target is None:
-    the_target = closest(SPAWNED_ID, role("Station") & role("tsn"), 3000)
+#fleet_obj = closest(SPAWNED_ID, role("fleet") & role(get_side(SPAWNED_ID)), 40000)
 
-#
-# Look for a player near 
-#
-if the_target is None:
-    the_target = closest(SPAWNED_ID, role("PlayerShip"), 3000)
+#print("making a raider.")
 
-#
-# Otherwise look for a tsn station
-#
-if the_target is None:
-    the_target = closest(SPAWNED_ID, role("Station") & role("tsn"))
+# brute force find closest fleet ----------------------------------------
+best_fleet = None
+my_pos = Vec3(get_pos(SPAWNED_ID))
+best_dist = 3000
+fleet_list = to_object_list(role("fleet"))# & role("raider")) #role(get_side(SPAWNED_ID)))
+#print(f"finded closest fleet: {len(fleet_list)} fleets checked")
+for e in fleet_list:
+    diff = my_pos - Vec3(e.position)
+    distance = diff.length()
+    if best_dist > distance:
+        best_dist = distance
+        best_fleet = e
 
-#
-# If any of these check resulted in a target
-#
-if the_target is not None:
+fleet_obj = best_fleet
 
-    distance = sbs.distance_id(SPAWNED_ID, to_id(the_target))
-    throt = 1
-    if distance < 500:
-        throt = 0
-    
-    target(SPAWNED_ID, the_target, True, throt)
+if fleet_obj is None:
+#    print("fleet not found!")
+    # okay, I need to make a fleet for myself here
+    fleet_obj = fleet_spawn(my_pos, "RaiderFleet") #get_side(SPAWNED_ID))
+#    print(f"new fleet_obj = {fleet_obj} {fleet_obj.position.x} {fleet_obj.position.y} {fleet_obj.position.z} ")
+
+# link to this fleet
+set_inventory_value(SPAWNED_ID, "my_fleet_id", fleet_obj.id)
+link(fleet_obj.id,"ship_list", SPAWNED_ID)
+# move me to fleet
+set_pos(SPAWNED_ID, fleet_obj.position)
+
+-> END
+
+
 #
 # Call this logic again in 5 seconds
 #
-await delay_sim(seconds=5)
--> task_npc_targeting
+#await delay_sim(seconds=5)
+#-> task_npc_targeting
 
 
 
