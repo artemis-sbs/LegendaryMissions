@@ -104,7 +104,7 @@ best_fleet = None
 my_pos = Vec3(get_pos(SPAWNED_ID))
 best_dist = 3000
 fleet_list = to_object_list(role("fleet"))# & role("raider")) #role(get_side(SPAWNED_ID)))
-#print(f"finded closest fleet: {len(fleet_list)} fleets checked")
+print(f"finded closest fleet: {len(fleet_list)} fleets checked")
 for e in fleet_list:
     diff = my_pos - Vec3(e.position)
     distance = diff.length()
@@ -118,7 +118,7 @@ if fleet_obj is None:
 #    print("fleet not found!")
     # okay, I need to make a fleet for myself here
     fleet_obj = fleet_spawn(my_pos, "RaiderFleet") #get_side(SPAWNED_ID))
-#    print(f"new fleet_obj = {fleet_obj} {fleet_obj.position.x} {fleet_obj.position.y} {fleet_obj.position.z} ")
+    print(f"new fleet_obj = {fleet_obj} {fleet_obj.position.x} {fleet_obj.position.y} {fleet_obj.position.z} ")
 
 # link to this fleet
 set_inventory_value(SPAWNED_ID, "my_fleet_id", fleet_obj.id)

@@ -44,6 +44,10 @@ gui_row()
 on gui_message(gui_button("Test list consoles")):
     jump debug_show_list_consoles
 
+gui_row()
+on gui_message(gui_button("Fake scan all")):
+    jump debug_fake_scan_all
+
 
 gui_activate_console("debug")
 
@@ -201,4 +205,10 @@ await gui():
     
 
 
+==== debug_fake_scan_all =====
 
+for p in role("__player__"):
+    for r in role("raider"):
+        science_set_scan_data(p, r, "Debug Default scan")
+
+jump debug_screen
