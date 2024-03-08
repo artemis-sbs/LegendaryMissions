@@ -12,6 +12,13 @@ jump wreck_damage if has_role(DAMAGE_TARGET_ID, "wreck")
 
 
 ========= npc_damage_target ==============
+
+->END
+
+#
+# No longer needed fleet's handle this
+#
+
 #
 # If an NPC is shot they will get angry at the shooter for two minutes
 # New shooter won't change this

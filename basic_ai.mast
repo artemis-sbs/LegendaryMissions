@@ -77,7 +77,7 @@ set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
 #  - or a stations
 #
 ========== task_npc_targeting === 
-enraged = get_inventory_value(SPAWNED_ID, "enrage_target")
+
 scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 surrendered = has_role(SPAWNED_ID, "surrendered")
 #if surrendered:

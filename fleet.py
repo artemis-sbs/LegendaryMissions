@@ -160,6 +160,16 @@ class Fleet(Agent):
     def ship_takes_damage(self, my_ship_id, attacker_id):
         self.anger_dict[attacker_id] = 100  # how long I will be angry
 
+    def get_heat_for(self, an_id_or_obj):
+        id = to_id(an_id_or_obj)
+        return self.anger_dict.get(id, 0)
+
+    def make_enraged_by(self, an_id_or_obj):
+        id = to_id(an_id_or_obj)
+        if id is None:
+            return
+        self.anger_dict[id] = 100  # how long I will be angry
+
 #--------------------------------------------------------------------------------------
 @RouteDamageObject 
 def ship_takes_damage():#event):
