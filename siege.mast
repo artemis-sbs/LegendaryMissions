@@ -180,9 +180,9 @@ task_schedule(spawn_friendly_npc)
 enemyTypeNameList = []
 enemyTypeNameList.append(ship_data_torgoth_ship_keys())
 enemyTypeNameList.append(ship_data_kralien_ship_keys())
-#enemyTypeNameList.append(ship_data_skaraan_ship_keys())
-enemyTypeNameList.append(ship_data_arvonian_ship_keys())
 enemyTypeNameList.append(ship_data_ximni_ship_keys())
+enemyTypeNameList.append(ship_data_arvonian_ship_keys())
+#enemyTypeNameList.append(ship_data_skaraan_ship_keys())
 
 enemy_prefix = "KLMNQ"
 
@@ -193,6 +193,7 @@ fleet_quality = 2 + difficulty
 call_signs = []
 enemy_name_number = 0
 call_signs.extend(range(1,100))
+print(f"call_signs size = {len(call_signs)}")
 random.shuffle(call_signs)
 
 for a in range(fleet_count):
@@ -206,10 +207,25 @@ for a in range(fleet_count):
     if race=="xim":
         race = "ximni"
 
+    carrier_count = 0
     for b in range(fleet_quality):
+
+        done_ae = False
+        for x_ae while not done_ae:
+            art_id = random.choice(r_type)
+            ship_data_ae = ship_data_get_ship_data_for(art_id)
+
+            # is this shis gonna be a carrier?
+            d_roles = ship_data_ae.get("roles", "")
+            if "carrier" in d_roles and carrier_count >= (difficulty-1)/3:
+                continue
+            if "carrier" in d_roles:
+                carrier_count += 1
+            done_ae = True
+
         roles = "{race}, raider"
         r_name = f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
-        art_id = random.choice(r_type)
+        enemy_name_number = (enemy_name_number+1)%99
 
         spawn_data = npc_spawn(v.x, v.y, v.z, r_name, roles, art_id, "behav_npcship")
         raider = spawn_data.py_object
@@ -226,10 +242,6 @@ enemyTypeNameList.append(ship_data_skaraan_ship_keys())
 enemy_prefix = "TR"
 
 #------------------------------------------------------------------------------------------------------------
-call_signs = []
-enemy_name_number = 0
-call_signs.extend(range(1,100))
-random.shuffle(call_signs)
 
 for a in range(fleet_count-2):
     angle = random.randrange(0,359)
@@ -244,7 +256,7 @@ for a in range(fleet_count-2):
 
     roles = "{race}, raider"
     r_name = f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
-    art_id = random.choice(r_type)
+    enemy_name_number = (enemy_name_number+1)%99
 
     spawn_data = npc_spawn(v.x, v.y, v.z, r_name, roles, art_id, "behav_npcship")
     raider = spawn_data.py_object

@@ -4,14 +4,13 @@ from sbs_utils.mast.label import label
 from sbs_utils.tickdispatcher import TickDispatcher
 from sbs_utils.procedural.execution import task_schedule, jump, AWAIT, get_variable
 from sbs_utils.procedural.timers import delay_sim
-from sbs_utils.procedural.query import to_object, to_id, object_exists
+from sbs_utils.procedural.query import to_object, to_id, object_exists, is_client_id, get_side
 from sbs_utils.procedural.space_objects import target, closest, clear_target, closest_list
 from sbs_utils.procedural.roles import role
 from sbs_utils.procedural.science import science_set_scan_data
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils import faces
 from sbs_utils.vec import Vec3
-
 
 
 from enum import IntEnum
@@ -95,6 +94,11 @@ class Fleet(Agent):
         best_id = None
         best_anger = 0
         for e in self.anger_dict:
+            #print(f"fleet anger at {e}!")
+            if 0 == e:
+                #print(f"0 is in anger_dict.     WTF!")
+                return
+
             that_anger = self.anger_dict[e]
             if best_anger < that_anger:
                 best_anger = that_anger
@@ -117,47 +121,54 @@ class Fleet(Agent):
         #--------------------------------------------------------------------
         #tell all my ships to go to that point (and go throttle 1.0)
         for e in ship_set:
-            blob = e.data_set
-            blob.set("target_pos_x", self.position.x,0)
-            blob.set("target_pos_y", self.position.y,0)
-            blob.set("target_pos_z", self.position.z,0)
+            if object_exists(e):            
+                blob = e.data_set
+                blob.set("target_pos_x", self.position.x,0)
+                blob.set("target_pos_y", self.position.y,0)
+                blob.set("target_pos_z", self.position.z,0)
 
-            diff = Vec3(e.engine_object.pos) - self.position
-            if diff.length() < 500:
-                blob.set("throttle", 0.0,0)
-            else:
-                blob.set("throttle", 1.0,0)
+                diff = Vec3(e.engine_object.pos) - self.position
+                if diff.length() < 500:
+                    blob.set("throttle", 0.0,0)
+                else:
+                    blob.set("throttle", 1.0,0)
 
         #--------------------------------------------------------------------
         # find target to move to and attack
 
         # Look for a station near 
+        lead_ship_id = to_id(ship_set[0])
         the_target = None
         if the_target is None:
-            the_target = closest(ship_set[0], role("Station") & role("tsn"), 3000)
+            the_target = closest(lead_ship_id, role("Station") - role(get_side(lead_ship_id)), 3000)
 
         # Look for a player near 
         if the_target is None:
-            the_target = closest(ship_set[0], role("PlayerShip"), 3000)
+            the_target = closest(lead_ship_id, role("PlayerShip") - role(get_side(lead_ship_id)), 3000)
 
         # Otherwise look for a tsn station
         if the_target is None:
-            the_target = closest(ship_set[0], role("Station") & role("tsn"))
+            the_target = closest(lead_ship_id, role("Station")- role(get_side(lead_ship_id)))
 
         # If any of these check resulted in a target
         if the_target is not None:
-            distance = sbs.distance_id(to_id(ship_set[0]), to_id(the_target))
+            distance = sbs.distance_id(to_id(lead_ship_id), to_id(the_target))
             self.destination = Vec3(to_object(the_target).engine_object.pos)
 
             for e in ship_set:
-                blob = e.data_set
-                blob.set("target_id", the_target.id,0)
+                if object_exists(e):            
+                    blob = e.data_set
+                    blob.set("target_id", the_target.id,0)
 
         yield AWAIT(delay_sim(seconds=10))
         yield jump(self.tick)
 
     #--------------------------------------------------------------------------------------
     def ship_takes_damage(self, my_ship_id, attacker_id):
+        if 0 == attacker_id:
+            print(f"0 == attacker_id:     WTF!")
+            return
+
         self.anger_dict[attacker_id] = 100  # how long I will be angry
 
     def get_heat_for(self, an_id_or_obj):
@@ -174,7 +185,15 @@ class Fleet(Agent):
 @RouteDamageObject 
 def ship_takes_damage():#event):
     event = get_variable("EVENT")
+#    print(f"fleet  ship_takes_damage {event.tag} {event.sub_tag}")
+
     attacker_id = event.origin_id
+    if 0 is attacker_id:
+        attacker_id = event.parent_id
+
+    if is_client_id(attacker_id):
+        print(f"if is_client_id(attacker_id):     WTF!   {event.tag} {event.sub_tag}")
+        return
     victim_id = event.selected_id
     my_fleet = to_object(get_inventory_value(victim_id, "my_fleet_id"))
     if None != my_fleet:
