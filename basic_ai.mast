@@ -95,36 +95,7 @@ if not scanned:
     if should_scan is not None:
         follow_route_science_select(should_scan, SPAWNED_ID)
 
-#fleet_obj = closest(SPAWNED_ID, role("fleet") & role(get_side(SPAWNED_ID)), 40000)
 
-#print("making a raider.")
-
-# brute force find closest fleet ----------------------------------------
-best_fleet = None
-my_pos = Vec3(get_pos(SPAWNED_ID))
-best_dist = 3000
-fleet_list = to_object_list(role("fleet"))# & role("raider")) #role(get_side(SPAWNED_ID)))
-print(f"finded closest fleet: {len(fleet_list)} fleets checked")
-for e in fleet_list:
-    diff = my_pos - Vec3(e.position)
-    distance = diff.length()
-    if best_dist > distance:
-        best_dist = distance
-        best_fleet = e
-
-fleet_obj = best_fleet
-
-if fleet_obj is None:
-#    print("fleet not found!")
-    # okay, I need to make a fleet for myself here
-    fleet_obj = fleet_spawn(my_pos, "RaiderFleet") #get_side(SPAWNED_ID))
-    print(f"new fleet_obj = {fleet_obj} {fleet_obj.position.x} {fleet_obj.position.y} {fleet_obj.position.z} ")
-
-# link to this fleet
-set_inventory_value(SPAWNED_ID, "my_fleet_id", fleet_obj.id)
-link(fleet_obj.id,"ship_list", SPAWNED_ID)
-# move me to fleet
-set_pos(SPAWNED_ID, fleet_obj.position)
 
 -> END
 

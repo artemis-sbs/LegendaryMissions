@@ -26,7 +26,7 @@ class NpcCAG(Agent):
     def __init__(self):
         super().__init__()
 
-        print("NpcCAG(Agent): START")
+        #print("NpcCAG(Agent): START")
 
         self.id = get_story_id()
         self.add()
@@ -79,7 +79,7 @@ class NpcCAG(Agent):
                 fighter_key = self.get_fighter_key(get_race(e))
                 start_pos = e.pos
 
-                print(f"tick_fighter_launch: managing {e.name} carrier")
+                #print(f"tick_fighter_launch: managing {e.name} carrier")
 
                 # set up the refit timer for this carrier
                 if not e.has_role("fighter_refit_timer"):
@@ -92,7 +92,7 @@ class NpcCAG(Agent):
                     if None is not target_id:
 #                        target_ref = to_object(target_id)
 
-                        print(f"Launching {fighter_count} fighters")
+                        #print(f"Launching {fighter_count} fighters")
 
                         for g in range(fighter_count):
                             # launch an npc fighter
@@ -123,7 +123,7 @@ class NpcCAG(Agent):
         fighter_set = self.get_link_objects("active_fighter_list")
         for e in fighter_set:
             if object_exists(e):            
-                print(f"managing {e.name} fighter")
+                #print(f"managing {e.name} fighter")
 
                 fighter_id = to_id(e)
                 # check the bingo timer
@@ -132,13 +132,13 @@ class NpcCAG(Agent):
                     carrier = to_object(get_dedicated_link(fighter_id, "my_carrier"))
                     if None is not carrier:
                         target(fighter_id, carrier, shoot=False) # going to my fighter
-                        print(f"bingo fuel")
+                        #print(f"bingo fuel")
 
                         # if they get close enough to their carrier
                         difference = Vec3(carrier.pos) - Vec3(e.pos)
                         if difference.length() < 500:
 
-                            print(f"recovering {e.name} fighter")
+                            #print(f"recovering {e.name} fighter")
                             # destroy them and reset the carrier's launch timer
                             fv = get_inventory_value(carrier, "fighters_in_bay",0)
                             set_inventory_value(carrier, "fighters_in_bay", fv+1)
