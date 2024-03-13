@@ -104,15 +104,15 @@ on change hangar_version:
 
 
 await gui():
-    + "Head to Bar":
-        print("Bar")
-        jump bar_enter
-    + "Casino":
-        print("Casino")
-        #jump show_hangar
-    + "Quarters":
-        print("Quarters")
-        #jump show_hangar
+#    + "Head to Bar":
+#        print("Bar")
+#        jump bar_enter
+#    + "Casino":
+#        print("Casino")
+#        #jump show_hangar
+#    + "Quarters":
+#        print("Quarters")
+#        #jump show_hangar
     + "Launch":
         if ride_choice is not None:
             ride_select = ride_choice

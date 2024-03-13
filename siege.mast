@@ -1,4 +1,5 @@
 import map_common.mast
+import map_common.py
 
 ================= siege_build_world ===================
 
@@ -177,94 +178,18 @@ task_schedule(spawn_friendly_npc)
 
 #------------------------------------------------------------------------------------------------------------
 # generate fleets
-enemyTypeNameList = []
-enemyTypeNameList.append(ship_data_torgoth_ship_keys())
-enemyTypeNameList.append(ship_data_kralien_ship_keys())
-enemyTypeNameList.append(ship_data_ximni_ship_keys())
-enemyTypeNameList.append(ship_data_arvonian_ship_keys())
-#enemyTypeNameList.append(ship_data_skaraan_ship_keys())
-enemyTypeNameList.append(ship_data_arvonian_ship_keys())
-enemyTypeNameList.append(ship_data_ximni_ship_keys())
-enemyTypeNameList.append(ship_data_skaraan_ship_keys())
+enemyTypeNameList = ["torgoth","kralien","ximni","arvonian"]
 
-
-
-
-#------------------------------------------------------------------------------------------------------------
 fleet_count = 3 + int(difficulty/2)
 fleet_quality = 2 + difficulty
-call_signs = []
-enemy_name_number = 0
-call_signs.extend(range(1,100))
-print(f"call_signs size = {len(call_signs)}")
-random.shuffle(call_signs)
 
 for a in range(fleet_count):
+    race = random.choice(enemyTypeNameList)
     fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
-    fleet_obj = fleet_spawn(fleet_pos, "RaiderFleet")
-    angle = random.randrange(0,359)
-    
-    race = ""
-    r_type = random.choice(enemyTypeNameList)
-    race = r_type[0].split("_")
-    race = race[0]
-    if race=="xim":
-        race = "ximni"
-
-    # TODO: Add race to fleet?
-
-    enemy_prefix = "KLMNQ"
-    fleet_quality = 2 + difficulty
-    if race == "skaraan":
-        fleet_quality = 1
-        enemy_prefix = "TR"
-
-    carrier_count = 0
-    for b in range(fleet_quality):
-
-        done_ae = False
-        for x_ae while not done_ae:
-            art_id = random.choice(r_type)
-            ship_data_ae = ship_data_get_ship_data_for(art_id)
-
-            # is this shis gonna be a carrier?
-            d_roles = ship_data_ae.get("roles", "")
-            if "carrier" in d_roles and carrier_count >= (difficulty-1)/3:
-                continue
-            if "carrier" in d_roles:
-                carrier_count += 1
-            done_ae = True
-
-        roles = "{race}, raider"
-        r_name = f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
-        #hull_key = random.choice(r_type)
-
-        done_ae = False
-
-        for x_ae while not done_ae:
-            hull_key = random.choice(r_type)
-            ship_data_ae = ship_data_get_ship_data_for(hull_key)
-
-            # is this shis gonna be a carrier?
-            d_roles = ship_data_ae.get("roles", "")
-            if "carrier" in d_roles and carrier_count >= (difficulty-1)/3:
-                #print("Skipped")
-                continue
-            if "carrier" in d_roles:
-                carrier_count += 1
-            done_ae = True
-
-
-        spawn_data = npc_spawn(fleet_pos.x, fleet_pos.y, fleet_pos.z, r_name, roles, hull_key, "behav_npcship")
-        raider = spawn_data.py_object
-        set_inventory_value(raider.id, "my_fleet_id", fleet_obj.id)
-        link(fleet_obj.id,"ship_list", raider.id)
-
-
-        # Should add a common function to call to get the face based on race
-        set_face(raider.id, random_face(race))
-
-
+    create_npc_fleet_and_ships(race, fleet_quality, fleet_quality/3, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+    if a > 1 and difficulty > 2:
+        fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
+        create_npc_fleet_and_ships("skaraan", 1,0, fleet_pos.x, fleet_pos.y, fleet_pos.z)
 
 
 #------------------------------------------------------------------------------------------------------------
