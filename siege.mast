@@ -179,7 +179,7 @@ task_schedule(spawn_friendly_npc)
 #------------------------------------------------------------------------------------------------------------
 # generate fleets
 enemyTypeNameList = ["torgoth","kralien","ximni","arvonian"]
-
+ 
 fleet_count = 3 + int(difficulty/2)
 fleet_quality = 2 + difficulty
 

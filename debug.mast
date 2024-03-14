@@ -119,6 +119,10 @@ r_blob = to_blob(raider.id)
 set_data_set_value(r_blob, "shield_val", 0, 0)
 set_data_set_value(r_blob, "shield_val", 0, 1)
 
+add_role(raider.id, "elite")
+add_role(raider.id, "elite_cloak")
+
+
 jump debug_screen
 
 

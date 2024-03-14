@@ -21,6 +21,9 @@ build_task = None
 #
 # AI for the player is the docking logic
 #
+if has_role(SPAWNED_ID, "elite"):
+    task_schedule(handle_elite_abilities)
+
 jump ai_player if has_role(SPAWNED_ID, "__player__")
 jump ai_task_friendly if has_roles(SPAWNED_ID, "tsn, friendly")
 jump spawn_task_station if has_roles(SPAWNED_ID, "tsn, station")
@@ -183,3 +186,63 @@ for x in range(random.randint(1,3)):
 
 
 -> END
+
+
+========== handle_elite_abilities =========
+
+so = to_object(SPAWNED_ID)
+if None == so:
+    -> END
+
+abilities = []
+if has_role(SPAWNED_ID, "elite_cloak"):
+    abilities.append("elite_cloak")
+if has_role(SPAWNED_ID, "elite_jump_front"):
+    abilities.append("elite_jump_front")
+if has_role(SPAWNED_ID, "elite_jump_back"):
+    abilities.append("elite_jump_back")
+random.shuffle(abilities)
+print(f"abilities len = {len(abilities)}, zero = {abilities[0]}")
+
+
+for abi in abilities:
+    print("for abi in abilities:")
+    if "elite_cloak" == abi:
+
+        print("handle cloaking...")
+        old_art_id = get_inventory_value(SPAWNED_ID, "visible_art_id")
+        if None == old_art_id: #if I'm not currently cloaked
+
+            set_inventory_value(SPAWNED_ID, "visible_art_id", so.art_id) # remember art id that's visible
+            so.set_art_id("invisible") # cloaking!
+            sim.force_update_to_clients(SPAWNED_ID)
+            print(f"cloaking!")
+
+            sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
+
+            -> done_elite_handler
+        else:
+            print(f"uncloak to {old_art_id}")
+            so.set_art_id(old_art_id)
+            sim.force_update_to_clients(SPAWNED_ID)
+            set_inventory_value(SPAWNED_ID, "visible_art_id", None)
+
+            sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
+
+#    if "elite_jump_front" == abi:
+#        -> done_elite_handler
+#    if "elite_jump_back" == abi:
+#        -> done_elite_handler
+
+
+
+#
+# call this logic every 30 seconds
+#
+========== done_elite_handler =========
+print("elite handle end")
+await delay_sim(seconds=30)
+print("elite handle awaited")
+-> handle_elite_abilities
+
+

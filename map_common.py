@@ -6,7 +6,7 @@ from sbs_utils.procedural.execution import task_schedule, jump, AWAIT, get_varia
 from sbs_utils.procedural.timers import delay_sim, is_timer_set_and_finished, is_timer_finished, set_timer, is_timer_set, clear_timer
 from sbs_utils.procedural.query import to_object, to_id, object_exists, to_object_list, get_side
 from sbs_utils.procedural.space_objects import target, closest, clear_target, closest_list
-from sbs_utils.procedural.roles import role, all_roles, get_race
+from sbs_utils.procedural.roles import role, all_roles, get_race,add_role
 from sbs_utils.procedural.science import science_set_scan_data
 from sbs_utils.procedural.spawn import npc_spawn
 from sbs_utils.procedural.links import get_dedicated_link, set_dedicated_link, unlink, link
@@ -70,6 +70,9 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
         raider = spawn_data.py_object
         set_inventory_value(raider.id, "my_fleet_id", fleet_obj.id)
         link(fleet_obj.id,"ship_list", raider.id)
+
+#        add_role(raider.id, "elite")
+#        add_role(raider.id, "elite_cloak")
 
 
         # Should add a common function to call to get the face based on race
