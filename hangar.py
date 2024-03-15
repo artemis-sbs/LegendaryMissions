@@ -155,7 +155,7 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     if home_id is not None and sbs.distance_id(craft.id, home_id) < dock_rng:
         dock_target = home_id
     else:
-        dockable = broad_test_around(craft.id, dock_rng, dock_rng, -1)
+        dockable = broad_test_around(craft.id, dock_rng, dock_rng, 0x10)
         # print(len(role("tsn") & any_role("station,__player__")))
         dock_target = closest(craft_id, dockable & role("tsn") & any_role("station, __player__"))
 

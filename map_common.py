@@ -1,15 +1,9 @@
-from sbs_utils.objects import Npc
-from sbs_utils.agent import Agent, get_story_id
 from sbs_utils.mast.label import label
-from sbs_utils.tickdispatcher import TickDispatcher
-from sbs_utils.procedural.execution import task_schedule, jump, AWAIT, get_variable
-from sbs_utils.procedural.timers import delay_sim, is_timer_set_and_finished, is_timer_finished, set_timer, is_timer_set, clear_timer
-from sbs_utils.procedural.query import to_object, to_id, object_exists, to_object_list, get_side
-from sbs_utils.procedural.space_objects import target, closest, clear_target, closest_list
-from sbs_utils.procedural.roles import role, all_roles, get_race,add_role
-from sbs_utils.procedural.science import science_set_scan_data
+from sbs_utils.procedural.execution import get_shared_variable
+# from sbs_utils.procedural.query import to_object, to_id, object_exists, to_object_list, get_side
+from sbs_utils.procedural.roles import add_role
 from sbs_utils.procedural.spawn import npc_spawn
-from sbs_utils.procedural.links import get_dedicated_link, set_dedicated_link, unlink, link
+from sbs_utils.procedural.links import link
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.ship_data import get_ship_data_for, filter_ship_data_by_side
 from sbs_utils.faces import set_face, random_face
@@ -71,8 +65,21 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
         set_inventory_value(raider.id, "my_fleet_id", fleet_obj.id)
         link(fleet_obj.id,"ship_list", raider.id)
 
-#        add_role(raider.id, "elite")
-#        add_role(raider.id, "elite_cloak")
+        # 1 in 50 is elite, all skarran are elite
+        # Abilities 
+        chances = get_shared_variable("elite_chance_non_skaraan", 50)
+        if race == "skaraan" or random.randint(1,chances) == 23:
+            if random.randint(1,10) == 4:
+                add_role(raider.id, "elite")
+                max_abi = get_shared_variable("elite_abilities_count", 4)
+                abi = random.randint(0,pow(2,max_abi))
+                set_inventory_value(raider.id, "elite_abilities", abi)
+                # bit field
+                # & 0x1
+                # & 0x2 == Cloak  
+                # & 0x4 == Jump forward
+                # & 0x8 == Jump Back
+                # & 0x8 == Jump Back
 
 
         # Should add a common function to call to get the face based on race

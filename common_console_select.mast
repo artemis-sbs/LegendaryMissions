@@ -190,6 +190,9 @@ sbs.set_sky_box(client_id, sky_box)
 # Make it so the console can be found if needed
 #
 set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
+# Remove any console roles
+for k in consoles:
+    remove_role(client_id, k)
 add_role(client_id, "console, {console_select}")
 jump show_hangar if console_select == "hangar"
 

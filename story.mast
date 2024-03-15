@@ -31,7 +31,9 @@ import commerce/resource_gather.py
 #
 # Uncomment to enable logging via the log command
 #
-#logger
+#logger()
+logger("mast:internal")
+
 
 shared start_text = ~~"""
 Legendary Missions:
@@ -50,6 +52,7 @@ Written using MAST and is a great reference for those looking to write their own
 # to the client and server GUI
 # when the client is started
 #
+route_main_screen_change(server_game_screen)
 gui_reroute_server("start_server")
 gui_reroute_clients("client_main")
 
@@ -194,6 +197,27 @@ game_started = True
 watch_end_game_task = task_schedule(task_end_game)
 
 gui_reroute_clients(game_started_console, exclude={client_id})
+
+
+=== server_game_screen === 
+
+# Just restate the console, it looks internally for the proper view
+# To override use gui_activate_console, and gui_widget_list
+# MAIN_SCREEN_VIEW variable has the view: 3d_view, info, data
+# MAIN_SCREEN_FACING has the facing right, left, front, back
+# MAIN_SCREEN_MODE is for 3d (first_person, chase, tracking) 2d (long, short)
+
+# Find a valid ship
+# for p in player_list:
+#    i
+ship_id = player_list[0]["id"]
+
+gui_console("mainscreen")
+link(ship_id,"consoles", client_id)
+add_role(client_id, "console, mainscreen")
+
+
+await gui()
 
 
 ====  pause_screen ====

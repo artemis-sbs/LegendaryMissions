@@ -202,8 +202,17 @@ if has_role(SPAWNED_ID, "elite_jump_front"):
 if has_role(SPAWNED_ID, "elite_jump_back"):
     abilities.append("elite_jump_back")
 random.shuffle(abilities)
-print(f"abilities len = {len(abilities)}, zero = {abilities[0]}")
+# print(f"abilities len = {len(abilities)}, zero = {abilities[0]}")
 
+
+
+#get_inventory_value(raider.id, "elite_abilities", abi)
+# bit field
+# & 0x1
+# & 0x2 == Cloak  
+# & 0x4 == Jump forward
+# & 0x8 == Jump Back
+# & 0x8 == Jump Back
 
 for abi in abilities:
     print("for abi in abilities:")
