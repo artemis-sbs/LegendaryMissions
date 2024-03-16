@@ -31,8 +31,12 @@ import commerce/resource_gather.py
 #
 # Uncomment to enable logging via the log command
 #
-#logger()
-logger("mast:internal")
+# logger(file="mast.log") #default to file
+# logger(file="mast.log", std_err=True) #default to file and console
+# logger() #default to console
+# logger(var="fred") #default to variable
+logger("mast:internal") #
+
 
 
 shared start_text = ~~"""
@@ -215,6 +219,12 @@ ship_id = player_list[0]["id"]
 gui_console("mainscreen")
 link(ship_id,"consoles", client_id)
 add_role(client_id, "console, mainscreen")
+
+view = get_variable("MAIN_SCREEN_VIEW", "3d_view")
+facing = get_variable("MAIN_SCREEN_FACING", "front")
+mode = get_variable("MAIN_SCREEN_MODE", "chase")
+
+sbs.set_main_view_modes(client_id, view, facing, mode)
 
 
 await gui()
