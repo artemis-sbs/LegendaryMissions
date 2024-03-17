@@ -161,10 +161,7 @@ my_players = role("__player__") & role("tsn")
 ship_id = next(iter(my_players))
 station_id = SPAWNED_ID
 
-torpedo_build_type = sbs.TORPEDO.HOMING
-build_time = 3*60
-task_cancel(build_task) 
-build_task = task_schedule(task_station_building)
+build_munition_queue_task(station_id, sbs.TORPEDO.HOMING)
 
 scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 #

@@ -10,10 +10,22 @@ route_comms_select("route_comms")
 taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
 
 # Set title colors for incoming messages from stations, raiders, and surrendered raiders.
-
 station_color = "green"
 raider_color = "red"
 surrender_color = "yellow"
+
+#
+# Set the build times for station types
+#
+#   HOMING : 0, NUKE : 1, EMP : 2, MINE : 3
+shared build_times = ~~{
+    "command": {"build_times": [2, 5, 3, 2]},
+    "civil": {"build_times": [6, 20, 10, 8 ]},
+    "industry": {"build_times": [1, 4, 2, 2 ]},
+    "science": {"build_times": [6, 20, 10, 8 ]},
+    "default": {"build_times": [3, 10, 5, 4 ]}
+}~~
+
 
 #############################################
 # Handle logic to present buttons for player Comms to an agent
@@ -66,24 +78,13 @@ station_obj = to_object(COMMS_SELECTED_ID)
 ->END if station_obj is None
 
 comms_id = to_object(COMMS_ORIGIN_ID).name
+station_comms_id = station_obj.name
 
 #   HOMING : 0, NUKE : 1, EMP : 2, MINE : 3
-
-_build_times = ~~{
-    "command": {"build_times": [2, 5, 3, 2]},
-    "civil": {"build_times": [6, 20, 10, 8 ]},
-    "industry": {"build_times": [1, 4, 2, 2 ]},
-    "science": {"build_times": [6, 20, 10, 8 ]},
-    "default": {"build_times": [3, 10, 5, 4 ]}
-}~~
 artid = station_obj.art_id
-
-build_times = _build_times["default"]["build_times"]
-for k in _build_times:
-    if k in artid:
-        build_times = _build_times[k]["build_times"]
-        break
-
+station_build_times = get_build_times(station_id)
+torpedo_build_type = get_inventory_value(station_id, "build_type", 0)
+torpedo_build_type = sbs.TORPEDO(torpedo_build_type)
 
 
 await comms():
@@ -101,74 +102,100 @@ You have full docking privileges.
 {torpedo_build_type} in production. Completion in {build_time}
 
 {"type":<10}{"ready": >5}{"time to produce": >20}
-{"Homing": <10}{homing: >5}{"": >16}{build_times[sbs.TORPEDO.HOMING.value]}:00 
-{"Nuke": <10}{nuke: >5}{"": >16}{build_times[sbs.TORPEDO.NUKE.value]}:00
-{"EMP": <10}{emp: >5}{"": >16}{build_times[sbs.TORPEDO.EMP.value]}:00
-{"Mine": <10}{mine: >5}{"": >16}{build_times[sbs.TORPEDO.MINE.value]}:00
+{"Homing": <10}{homing: >5}{"": >16}{station_build_times[sbs.TORPEDO.HOMING.value]}:00 
+{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times[sbs.TORPEDO.NUKE.value]}:00
+{"EMP": <10}{emp: >5}{"": >16}{station_build_times[sbs.TORPEDO.EMP.value]}:00
+{"Mine": <10}{mine: >5}{"": >16}{station_build_times[sbs.TORPEDO.MINE.value]}:00
 
 """, title_color=station_color)~~
-    + "Now Docking":
-        comms_receive(f"""We read you, {comms_id}.  We're standing by for expedited docking.^""", title_color=station_color)
+    + "Request Priority Docking":
+        comms_receive(f"""{station_comms_id} will give {comms_id} priority docking for the next 2 minutes.^""", title_color=station_color)
+        # Set a timer counting down the priority docking
+        set_timer(ship_id,"priority_docking",120)
+        # Set a variable for which station this ship can priority dock with
+        set_inventory_value(ship_id,"priority_docking_id",station_id)
 
+
+    + "Build Weapons": 
+        jump station_comms_building
+     
+-> station_comms
+
+
+=============== station_comms_building ===============
+station_id = COMMS_SELECTED_ID
+ship_id = COMMS_ORIGIN_ID
+station_obj = to_object(COMMS_SELECTED_ID)
+->END if station_obj is None
+
+comms_id = to_object(COMMS_ORIGIN_ID).name
+
+await comms():
+  
     + "Build Homing": 
-        comms_receive(f"""We read you, {comms_id}.  We will focus on homing production.^""", title_color=station_color)
-        torpedo_build_type = sbs.TORPEDO.HOMING
-        build_time = 3*60
-        task_cancel(build_task)
-        build_task = task_schedule(task_station_building)
+        if build_munition_queue_task(station_id, sbs.TORPEDO.HOMING):
+            comms_receive(f"""We read you, {comms_id}.  We will focus on homing production.^""", title_color=station_color)
+        else:
+            comms_receive(f"""{comms_id}, we are already producing homing.^""", title_color=station_color)
 
     + "Build Nuke":
-        comms_receive(f"""We read you, {comms_id}.  We will focus on nuke production.^""", title_color=station_color)
-        torpedo_build_type= sbs.TORPEDO.NUKE
-        build_time = 10*60
-        task_cancel(build_task)
-        build_task = task_schedule(task_station_building)
-
+        if build_munition_queue_task(station_id, sbs.TORPEDO.NUKE):
+            comms_receive(f"""We read you, {comms_id}.  We will focus on nuke production.^""", title_color=station_color)
+        else:
+            comms_receive(f"""{comms_id}, we are already producing nuke.^""", title_color=station_color)
+        
     + "Build Emp":
-        comms_receive(f"""We read you, {comms_id}.  We will focus on EMP production.^""", title_color=station_color)
-        torpedo_build_type= sbs.TORPEDO.EMP
-        build_time = 5*60
-        task_cancel(build_task)
-        build_task = task_schedule(task_station_building)
-
+        if build_munition_queue_task(station_id, sbs.TORPEDO.EMP):
+            comms_receive(f"""We read you, {comms_id}.  We will focus on EMP production.^""", title_color=station_color)
+        else:
+            comms_receive(f"""{comms_id}, we are already producing EMP.^""", title_color=station_color)
+        
     + "Build Mine":
-        comms_receive(f"""We read you, {comms_id}.  We will focus on MINE production.^""", title_color=station_color)
-        torpedo_build_type = sbs.TORPEDO.MINE
-        build_time = 4*60
-        task_cancel(build_task)
-        build_task = task_schedule(task_station_building)
+        if build_munition_queue_task(station_id, sbs.TORPEDO.MINE):
+            comms_receive(f"""We read you, {comms_id}.  We will focus on mine production.^""", title_color=station_color)
+        else:
+            comms_receive(f"""{comms_id}, we are already producing mine.^""", title_color=station_color)
+
+    + "Back":
+        jump station_comms
 
 -> station_comms
 #assert(False)
 
 === task_station_building ===
-COMMS_ORIGIN_ID = ship_id
-COMMS_SELECTED_ID = station_id
 
 # Player ships can die now
-ship_obj = to_object(ship_id)
--> END if ship_obj is None
 
-comms_id = ship_obj.name
 set_timer(station_id, "build_time", seconds = build_time)
-# print(f"build time = {build_time}")
+#print(f"build time = {build_time} {torpedo_build_type}")
 
 await is_timer_finished(station_id, "build_time")
+#print(f"finished {torpedo_build_type}")
 
 clear_timer(station_id, "build_time")
-self = to_object(station_id)
+station = to_object(station_id)
 
 #
 # If the station was destroyed  END
 #
-->END if self is None
+->END if station is None
 
 cur_count = get_data_set_value(station_id, "torpedo_count", torpedo_build_type)
 set_data_set_value(station_id, "torpedo_count", cur_count+1, torpedo_build_type)
 
+side = station.side
+COMMS_SELECTED_ID = station_id
+ps = all_roles(f"__player__, {side}" )
+# print(f"Players to tell about building stuff {len(ps)}")
 
+for player in all_roles(f"__player__, {side}" ):
+    COMMS_ORIGIN_ID = player
+    ship_obj = to_object(player)
+    continue if ship_obj is None
 
-comms_receive(f"""{comms_id}. {torpedo_build_type} Production complete.""", title_color=station_color)
+    comms_id = ship_obj.name
+    comms_receive(f"""{comms_id}. {torpedo_build_type} Production complete.""", title_color=station_color)
+
 ->task_station_building
 
 ======== weird ====== 
