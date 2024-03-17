@@ -1,5 +1,5 @@
 from sbs_utils.mast.label import label
-from sbs_utils.procedural.execution import get_shared_variable
+from sbs_utils.procedural.execution import get_shared_variable, set_shared_variable
 # from sbs_utils.procedural.query import to_object, to_id, object_exists, to_object_list, get_side
 from sbs_utils.procedural.roles import add_role
 from sbs_utils.procedural.spawn import npc_spawn
@@ -43,7 +43,6 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
     
     carrier_count = 0
     for b in range(num_ships):
-
         done_ae = False
         while not done_ae:
             art_id = random.choice(ship_key_list)
@@ -65,21 +64,36 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
         set_inventory_value(raider.id, "my_fleet_id", fleet_obj.id)
         link(fleet_obj.id,"ship_list", raider.id)
 
-        # 1 in 50 is elite, all skarran are elite
-        # Abilities 
+        
+        # Abilities can be set by script to have more
+        abilities = get_shared_variable("elite_abilities")
+        # set it in case it wasn't set
+        if abilities is None:
+             abilities = [
+                "elite_cloak",
+                "elite_jump_back",
+                "elite_jump_forward"
+                ]
+             set_shared_variable("elite_abilities", abilities)
+
+
         chances = get_shared_variable("elite_chance_non_skaraan", 50)
         if race == "skaraan" or random.randint(1,chances) == 23:
             if random.randint(1,10) == 4:
                 add_role(raider.id, "elite")
-                max_abi = get_shared_variable("elite_abilities_count", 4)
-                abi = random.randint(0,pow(2,max_abi))
-                set_inventory_value(raider.id, "elite_abilities", abi)
+                max_abi = len(abilities)
+                abits = random.randint(0,pow(2,max_abi))
+                set_inventory_value(raider.id, "elite_abilities", abits)
                 # bit field
-                # & 0x1
-                # & 0x2 == Cloak  
+                # & 0x1 == Cloak  
+                # & 0x2 == Jump Back
                 # & 0x4 == Jump forward
                 # & 0x8 == Jump Back
-                # & 0x8 == Jump Back
+                for count, ab in enumerate(abilities):
+                    bit = count * 2
+                    if (abits & bit)  == bit:
+                        add_role(raider.id, ab)
+
 
 
         # Should add a common function to call to get the face based on race

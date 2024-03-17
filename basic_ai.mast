@@ -194,64 +194,81 @@ so = to_object(SPAWNED_ID)
 if None == so:
     -> END
 
+all_abilities = get_shared_variable("elite_abilities")
 abilities = []
-if has_role(SPAWNED_ID, "elite_cloak"):
-    abilities.append("elite_cloak")
-if has_role(SPAWNED_ID, "elite_jump_front"):
-    abilities.append("elite_jump_front")
-if has_role(SPAWNED_ID, "elite_jump_back"):
-    abilities.append("elite_jump_back")
-random.shuffle(abilities)
-# print(f"abilities len = {len(abilities)}, zero = {abilities[0]}")
 
-
-
-#get_inventory_value(raider.id, "elite_abilities", abi)
-# bit field
-# & 0x1
-# & 0x2 == Cloak  
-# & 0x4 == Jump forward
-# & 0x8 == Jump Back
-# & 0x8 == Jump Back
-
-for abi in abilities:
-    print("for abi in abilities:")
-    if "elite_cloak" == abi:
-
-        print("handle cloaking...")
-        old_art_id = get_inventory_value(SPAWNED_ID, "visible_art_id")
-        if None == old_art_id: #if I'm not currently cloaked
-
-            set_inventory_value(SPAWNED_ID, "visible_art_id", so.art_id) # remember art id that's visible
-            so.set_art_id("invisible") # cloaking!
-            sim.force_update_to_clients(SPAWNED_ID)
-            print(f"cloaking!")
-
-            sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
-
-            -> done_elite_handler
-        else:
-            print(f"uncloak to {old_art_id}")
-            so.set_art_id(old_art_id)
-            sim.force_update_to_clients(SPAWNED_ID)
-            set_inventory_value(SPAWNED_ID, "visible_art_id", None)
-
-            sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
-
-#    if "elite_jump_front" == abi:
-#        -> done_elite_handler
-#    if "elite_jump_back" == abi:
-#        -> done_elite_handler
-
-
+for ab in all_abilities:
+    if has_role(SPAWNED_ID, ab):
+        abilities.append(ab)
+ab = random.choice(abilities)
 
 #
-# call this logic every 30 seconds
+# This will run a sequence based on the elite type
+# awaiting will wait until the sequence is finished
 #
-========== done_elite_handler =========
-print("elite handle end")
-await delay_sim(seconds=30)
-print("elite handle awaited")
+if ab == "elite_cloak":
+    await bt_seq(elite_cloak_start,elite_wait, elite_cloak_clear, elite_wait, data={"BT_ID": SPAWNED_ID})
+elif ab == "elite_jump_forward":
+    await bt_seq(elite_jump_forward,elite_wait, data={"BT_ID": SPAWNED_ID})
+elif ab == "elite_jump_back":
+    await bt_seq(elite_jump_back,elite_wait, data={"BT_ID": SPAWNED_ID})
+else:
+    await delay_sim(seconds=30)
+
 -> handle_elite_abilities
 
 
+========== elite_wait =========
+await delay_sim(seconds=30)
+yield SUCCESS
+
+==== elite_cloak_start ======
+old_art_id = get_inventory_value(BT_ID, "visible_art_id")
+yield FAIL if None != old_art_id #if I'm currently cloaked
+
+set_inventory_value(BT_ID, "visible_art_id", so.art_id) # remember art id that's visible
+so.set_art_id("invisible") # cloaking!
+sim.force_update_to_clients(BT_ID)
+sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
+yield SUCCESS
+
+==== elite_cloak_clear ======
+
+so = to_object(BT_ID)
+old_art_id = get_inventory_value(BT_ID, "visible_art_id")
+#log(f"uncloak to {old_art_id}", "elites")
+so.set_art_id(old_art_id)
+sim.force_update_to_clients(BT_ID)
+set_inventory_value(BT_ID, "visible_art_id", None)
+sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
+
+yield SUCCESS
+
+
+==== elite_jump_forward ======
+so = to_object(BT_ID)
+yield FAIL if so is None
+
+eo = to_engine_object(BT_ID)
+_pos_eo = eo.pos
+_forward = Vec3(eo.forward_vector())
+_pos = Vec3(_pos_eo) + (_forward * 300)
+
+so.pos = _pos
+sbs.particle_at(_pos_eo, "align:False; offset:0,0,200;color:blue; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
+
+yield SUCCESS
+
+==== elite_jump_back ======
+so = to_object(BT_ID)
+yield FAIL if so is None
+
+eo = to_engine_object(BT_ID)
+_pos_eo = eo.pos
+_forward = Vec3(eo.forward_vector())
+_pos = Vec3(_pos_eo) + (_forward * -300)
+
+so.pos = _pos
+sbs.particle_at(_pos_eo, "align:False; offset:0,0,200;color:blue; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
+
+yield SUCCESS

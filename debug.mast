@@ -34,7 +34,21 @@ on gui_message(gui_button("Test Wreck")):
 
 gui_row()
 on gui_message(gui_button("Test Enemy")):
-    jump spawn_test_enemy
+    await task_schedule(spawn_test_enemy)
+
+gui_row()
+on gui_message(gui_button("Test cloak")):
+    await task_schedule(spawn_test_enemy, data={"abi": "elite_cloak"})
+gui_row()    
+on gui_message(gui_button("Test Jump back")):
+    await task_schedule(spawn_test_enemy, data={"abi": "elite_jump_back"})
+gui_row()    
+on gui_message(gui_button("Test JUmp Forward")):
+    await task_schedule(spawn_test_enemy, data={"abi": "elite_jump_forward"})
+gui_row()        
+on gui_message(gui_button("Test all abilities")):
+    await task_schedule(spawn_test_enemy, data={"abi": "elite_cloak, elite_jump_forward, elite_jump_back"})    
+
 
 gui_row()
 on gui_message(gui_button("Test Shapes")):
@@ -118,12 +132,13 @@ set_face(raider.id, random_face("ximni"))
 r_blob = to_blob(raider.id)
 set_data_set_value(r_blob, "shield_val", 0, 0)
 set_data_set_value(r_blob, "shield_val", 0, 1)
+print(f"{abi}")
+if abi is not None:
+    add_role(raider.id, "elite")
+    add_role(raider.id, abi)
 
-add_role(raider.id, "elite")
-add_role(raider.id, "elite_cloak")
+->END
 
-
-jump debug_screen
 
 
 
