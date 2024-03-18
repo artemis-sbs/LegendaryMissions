@@ -5,7 +5,7 @@ from sbs_utils.tickdispatcher import TickDispatcher
 from sbs_utils.procedural.execution import task_schedule, jump, AWAIT, get_variable
 from sbs_utils.procedural.timers import delay_sim
 from sbs_utils.procedural.query import to_object, to_id, object_exists, is_client_id, get_side
-from sbs_utils.procedural.space_objects import target, closest, clear_target, closest_list
+from sbs_utils.procedural.space_objects import target_pos, closest, broad_test_around
 from sbs_utils.procedural.roles import role
 from sbs_utils.procedural.science import science_set_scan_data
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
@@ -119,32 +119,24 @@ class Fleet(Agent):
 
 
         #--------------------------------------------------------------------
-        #tell all my ships to go to that point (and go throttle 1.0)
-        for e in ship_set:
-            if object_exists(e):            
-                blob = e.data_set
-                blob.set("target_pos_x", self.position.x,0)
-                blob.set("target_pos_y", self.position.y,0)
-                blob.set("target_pos_z", self.position.z,0)
-
-                diff = Vec3(e.engine_object.pos) - self.position
-                if diff.length() < 500:
-                    blob.set("throttle", 0.0,0)
-                else:
-                    blob.set("throttle", 1.0,0)
 
         #--------------------------------------------------------------------
         # find target to move to and attack
 
         # Look for a station near 
         lead_ship_id = to_id(ship_set[0])
+        #
+        # Limit some tests to area around the fleet
+        #
+        local_arena = broad_test_around(lead_ship_id, 3000,3000, 0xF0)
+
         the_target = None
         if the_target is None:
-            the_target = closest(lead_ship_id, role("Station") - role(get_side(lead_ship_id)), 3000)
+            the_target = closest(lead_ship_id, local_arena & role("Station") - role(get_side(lead_ship_id)))
 
         # Look for a player near 
         if the_target is None:
-            the_target = closest(lead_ship_id, role("PlayerShip") - role(get_side(lead_ship_id)), 3000)
+            the_target = closest(lead_ship_id, local_arena & role("PlayerShip") - role(get_side(lead_ship_id)))
 
         # Otherwise look for a tsn station
         if the_target is None:
@@ -152,13 +144,11 @@ class Fleet(Agent):
 
         # If any of these check resulted in a target
         if the_target is not None:
-            distance = sbs.distance_id(to_id(lead_ship_id), to_id(the_target))
             self.destination = Vec3(to_object(the_target).engine_object.pos)
 
-            for e in ship_set:
-                if object_exists(e):            
-                    blob = e.data_set
-                    blob.set("target_id", the_target.id,0)
+        # Set the target position, optionally shot at something
+        target_pos(ship_set, *self.position.xyz, 1.0, the_target, stop_dist=500)
+        
 
         yield AWAIT(delay_sim(seconds=10))
         yield jump(self.tick)
