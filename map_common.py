@@ -33,11 +33,11 @@ def get_random_npc_call_sign(race):
 
 
 #--------------------------------------------------------------------------------------
-def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, roles = "RaiderFleet"):
+def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, fleet_roles = "RaiderFleet", ship_roles=None):
 
     num_ships = int(num_ships)
     max_carriers = int(max_carriers)
-    fleet_obj = fleet_spawn(Vec3(posx, posy, posz), roles)
+    fleet_obj = fleet_spawn(Vec3(posx, posy, posz), fleet_roles)
 
     ship_key_list = filter_ship_data_by_side(None, race, "ship", True)
     
@@ -56,7 +56,9 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
                 carrier_count += 1
             done_ae = True
 
-        roles = f"{race}, raider"
+        roles = f"{race}, raider,{ship_roles}" if ship_roles is not None else f"{race}, raider"
+        
+            
         r_name = get_random_npc_call_sign(race)                           #  f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
 
         spawn_data = npc_spawn(posx, posy, posz, r_name, roles, art_id, "behav_npcship")
@@ -72,18 +74,22 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
              abilities = [
                 "elite_cloak",
                 "elite_jump_back",
-                "elite_jump_forward"
+                "elite_jump_forward",
+                "elite_warp",
+                "elite_turn",
                 ]
              set_shared_variable("elite_abilities", abilities)
 
 
         chances = get_shared_variable("elite_chance_non_skaraan", 50)
-        if race == "skaraan" or random.randint(1,chances) == 23:
+        if (ship_roles is None or "elite" not in ship_roles) and (
+            race == "skaraan" or random.randint(1,chances) == 23):
+
             if random.randint(1,10) == 4:
                 add_role(raider.id, "elite")
                 max_abi = len(abilities)
                 abits = random.randint(0,pow(2,max_abi))
-                set_inventory_value(raider.id, "elite_abilities", abits)
+                # set_inventory_value(raider.id, "elite_abilities", abits)
                 # bit field
                 # & 0x1 == Cloak  
                 # & 0x2 == Jump Back
@@ -98,4 +104,4 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
 
         # Should add a common function to call to get the face based on race
         set_face(raider.id, random_face(race))
-
+    return fleet_obj

@@ -34,20 +34,25 @@ on gui_message(gui_button("Test Wreck")):
 
 gui_row()
 on gui_message(gui_button("Test Enemy")):
-    await task_schedule(spawn_test_enemy)
-
+    await task_schedule(spawn_test_enemy,data={"abi": None})
 gui_row()
 on gui_message(gui_button("Test cloak")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite_cloak"})
+    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_cloak"})
 gui_row()    
 on gui_message(gui_button("Test Jump back")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite_jump_back"})
+    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_jump_back"})
 gui_row()    
-on gui_message(gui_button("Test JUmp Forward")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite_jump_forward"})
+on gui_message(gui_button("Test Jump Forward")):
+    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_jump_forward"})
+gui_row()    
+on gui_message(gui_button("Test Elite Turn")):
+    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_turn"})
+gui_row()    
+on gui_message(gui_button("Test Elite Warp")):
+    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_warp"})
 gui_row()        
 on gui_message(gui_button("Test all abilities")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite_cloak, elite_jump_forward, elite_jump_back"})    
+    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_cloak, elite_jump_forward, elite_jump_back, elite_warp, elite_turn"})    
 
 
 gui_row()
@@ -126,16 +131,15 @@ _pos_eo = eo.pos
 _forward = eo.forward_vector()
 _pos = _pos_eo + (_forward * 300)
 
-spawn_data = npc_spawn(_pos.x, _pos.y, _pos.z+400, "Clay Pigeon", "ximni, raider", "xim_light_cruiser", "behav_npcship")
-raider = spawn_data.py_object
-set_face(raider.id, random_face("ximni"))
-r_blob = to_blob(raider.id)
-set_data_set_value(r_blob, "shield_val", 0, 0)
-set_data_set_value(r_blob, "shield_val", 0, 1)
-print(f"{abi}")
-if abi is not None:
-    add_role(raider.id, "elite")
-    add_role(raider.id, abi)
+# spawn_data = npc_spawn(_pos.x, _pos.y, _pos.z+400, "Clay Pigeon", "ximni, raider", "xim_light_cruiser", "behav_npcship")
+
+fleet_obj = create_npc_fleet_and_ships("ximni", 1,0, _pos.x, _pos.y, _pos.z+400, ship_roles=abi)
+
+for e in linked_to(fleet_obj.id,"ship_list"):
+    r_blob = to_blob(e)
+    continue if r_blob is None
+    r_blob.set("shield_val", 0, 0)
+    r_blob.set("shield_val", 0, 1)
 
 ->END
 

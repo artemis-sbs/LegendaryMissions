@@ -203,21 +203,23 @@ ab = random.choice(abilities)
 # This will run a sequence based on the elite type
 # awaiting will wait until the sequence is finished
 #
+
 if ab == "elite_cloak":
-    await bt_seq(elite_cloak_start,elite_wait, elite_cloak_clear, elite_wait, data={"BT_ID": SPAWNED_ID})
+    await bt_seq(elite_cloak_start, delay_sim(30), elite_cloak_clear, delay_sim(10), data={"BT_ID": SPAWNED_ID})
 elif ab == "elite_jump_forward":
-    await bt_seq(elite_jump_forward,elite_wait, data={"BT_ID": SPAWNED_ID})
+    await bt_seq(elite_jump_forward, delay_sim(30), data={"BT_ID": SPAWNED_ID})
 elif ab == "elite_jump_back":
-    await bt_seq(elite_jump_back,elite_wait, data={"BT_ID": SPAWNED_ID})
+    await bt_seq(elite_jump_back, delay_sim(30), data={"BT_ID": SPAWNED_ID})
+elif ab == "elite_warp":
+    await bt_seq(elite_warp_start,delay_sim(5),elite_warp_clear, delay_sim(30), data={"BT_ID": SPAWNED_ID})
+elif ab == "elite_turn":
+    await bt_seq(elite_turn_start,delay_sim(30),elite_turn_clear, delay_sim(10), data={"BT_ID": SPAWNED_ID})
 else:
     await delay_sim(seconds=30)
 
 -> handle_elite_abilities
 
 
-========== elite_wait =========
-await delay_sim(seconds=30)
-yield SUCCESS
 
 ==== elite_cloak_start ======
 old_art_id = get_inventory_value(BT_ID, "visible_art_id")
@@ -230,8 +232,9 @@ sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifes
 yield SUCCESS
 
 ==== elite_cloak_clear ======
-
 so = to_object(BT_ID)
+yield FAIL if so is None
+
 old_art_id = get_inventory_value(BT_ID, "visible_art_id")
 #log(f"uncloak to {old_art_id}", "elites")
 so.set_art_id(old_art_id)
@@ -248,11 +251,12 @@ yield FAIL if so is None
 
 eo = to_engine_object(BT_ID)
 _pos_eo = eo.pos
-_forward = Vec3(eo.forward_vector())
-_pos = Vec3(_pos_eo) + (_forward * 300)
-
-so.pos = _pos
 sbs.particle_at(_pos_eo, "align:False; offset:0,0,200;color:blue; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
+
+_forward = Vec3(eo.forward_vector())
+_pos = Vec3(_pos_eo) + (_forward * 5000)
+so.pos = _pos
+
 
 yield SUCCESS
 
@@ -262,10 +266,61 @@ yield FAIL if so is None
 
 eo = to_engine_object(BT_ID)
 _pos_eo = eo.pos
-_forward = Vec3(eo.forward_vector())
-_pos = Vec3(_pos_eo) + (_forward * -300)
-
-so.pos = _pos
+# Do particle here while pos is right
 sbs.particle_at(_pos_eo, "align:False; offset:0,0,200;color:blue; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
 
+_forward = Vec3(eo.forward_vector())
+_pos = Vec3(_pos_eo) + (_forward * -5000)
+so.pos = _pos
+
 yield SUCCESS
+
+
+=== elite_warp_start === 
+blob = to_blob(BT_ID)
+yield FAIL if blob is None
+# Set the current Value
+cur = blob.get("throttle", 0)
+bt_set_variable("throttle", cur)
+# double it 
+blob.set("throttle", cur*2.0, 0)
+
+yield SUCCESS
+
+=== elite_warp_clear === 
+blob = to_blob(BT_ID)
+yield FAIL if blob is None
+# Set the current Value
+cur = bt_get_variable("throttle", 1.0)
+# Restore
+blob.set("throttle", cur, 0)
+
+yield SUCCESS
+
+
+=== elite_turn_start === 
+
+blob = to_blob(BT_ID)
+yield FAIL if blob is None
+# Set the current Value
+tru = blob.get("turn_upgrade_coeff", 0)
+if tru is None:
+    tru = 1.0
+
+bt_set_variable("turn_upgrade_coeff", tru)
+# Triple it 
+blob.set("turn_upgrade_coeff", tru*3.0, 0)
+
+yield SUCCESS
+
+=== elite_turn_clear === 
+
+blob = to_blob(BT_ID)
+yield FAIL if blob is None
+# Set the current Value
+tru = bt_get_variable("turn_upgrade_coeff", 1.0)
+# Restore
+blob.set("turn_upgrade_coeff", tru, 0)
+
+yield SUCCESS
+

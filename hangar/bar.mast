@@ -15,11 +15,14 @@ shared vodka = 8
 shared customers = pilots.copy()
 shared messages = []
 shared message_id = 0
-shared banter = task_schedule(bar_banter)
+shared banter = None
 message = ""
 
 
 ===== bar_enter ===
+if banter is None:
+    banter = task_schedule(bar_banter)
+    
 log("BAR")
 if len(message)==0:
     my_face = faces.random_terran()
