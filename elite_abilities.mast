@@ -41,23 +41,23 @@ ab = random.choice(abilities)
 #
 data={"BT_ID": SPAWNED_ID} 
 if ab == "elite_cloak":
-    await bt_seq(elite_cloak_start, delay_sim(30), elite_cloak_clear, delay_sim(10), data={"BT_ID": SPAWNED_ID})
+    await task_schedule(elite_cloak_start, data={"BT_ID": SPAWNED_ID})
 elif ab == "elite_jump_forward":
-    await bt_seq(elite_jump_forward, delay_sim(30), data={"BT_ID": SPAWNED_ID})
+    await task_schedule(elite_jump_drive, data={"BT_ID": SPAWNED_ID, "distance": 5000})
 elif ab == "elite_jump_back":
-    await bt_seq(elite_jump_back, delay_sim(30), data={"BT_ID": SPAWNED_ID})
+    await task_schedule(elite_jump_drive, data={"BT_ID": SPAWNED_ID, "distance": -5000})
 elif ab == "elite_warp":
-    await bt_seq(elite_warp_start,delay_sim(5),elite_warp_clear, delay_sim(30), data =data)
+    await task_schedule(elite_warp_start, data =data)
 elif ab == "elite_het_turn":
-    await bt_seq(elite_turn_start,delay_sim(30),elite_turn_clear, delay_sim(10), data={"BT_ID": SPAWNED_ID})
+    await task_schedule(elite_turn_start, data={"BT_ID": SPAWNED_ID})
 elif ab == "elite_tractor":
-    await bt_seq(elite_tractor_start,delay_sim(30),elite_tractor_clear, delay_sim(10), data={"BT_ID": SPAWNED_ID})
+    await task_schedule(elite_tractor_start, data={"BT_ID": SPAWNED_ID})
 elif ab == "elite_shield_drain":
-    await bt_seq(elite_shield_drain_start, elite_shield_drain_cycle, delay_sim(20), data=data)
+    await task_schedule(elite_shield_drain_start, data=data)
 elif ab == "elite_shield_vamp":
-    await bt_seq(elite_shield_drain_start, elite_shield_drain_cycle, delay_sim(20), data={"BT_ID": SPAWNED_ID, "vamp": True})
+    await task_schedule(elite_shield_drain_start, data={"BT_ID": SPAWNED_ID, "vamp": True})
 elif ab == "elite_shield_scramble":
-    await bt_seq(elite_shield_scramble_start,delay_sim(30), data={"BT_ID": SPAWNED_ID})        
+    await task_schedule(elite_shield_scramble_start, data={"BT_ID": SPAWNED_ID})        
 else:
     await delay_sim(seconds=30)
 
@@ -73,7 +73,8 @@ set_inventory_value(BT_ID, "visible_art_id", so.art_id) # remember art id that's
 so.set_art_id("invisible") # cloaking!
 sim.force_update_to_clients(BT_ID)
 sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
-yield SUCCESS
+
+await delay_sim(30)
 
 ==== elite_cloak_clear ======
 so = to_object(BT_ID)
@@ -86,36 +87,23 @@ sim.force_update_to_clients(BT_ID)
 set_inventory_value(BT_ID, "visible_art_id", None)
 sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
 
+await delay_sim(10)
 yield SUCCESS
 
-
-==== elite_jump_forward ======
+==== elite_jump_drive ======
 so = to_object(BT_ID)
 yield FAIL if so is None
 
 eo = to_engine_object(BT_ID)
 _pos_eo = eo.pos
 sbs.particle_at(_pos_eo, "align:False; offset:0,0,200;color:blue; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
+distance = get_variable("distance")
 
 _forward = Vec3(eo.forward_vector())
-_pos = Vec3(_pos_eo) + (_forward * 5000)
+_pos = Vec3(_pos_eo) + (_forward * distance)
 so.pos = _pos
 
-
-yield SUCCESS
-
-==== elite_jump_back ======
-so = to_object(BT_ID)
-yield FAIL if so is None
-
-eo = to_engine_object(BT_ID)
-_pos_eo = eo.pos
-# Do particle here while pos is right
-sbs.particle_at(_pos_eo, "align:False; offset:0,0,200;color:blue; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
-
-_forward = Vec3(eo.forward_vector())
-_pos = Vec3(_pos_eo) + (_forward * -5000)
-so.pos = _pos
+await delay_sim(30)
 
 yield SUCCESS
 
@@ -126,20 +114,22 @@ yield FAIL if blob is None
 # Set the current Value
 
 cur = blob.get("speedCoeff", 0)
-bt_set_variable("speedCoeff", cur)
+set_variable("speedCoeff", cur)
 # double it 
 blob.set("speedCoeff", cur*2.0, 0)
 
-yield SUCCESS
+await delay_sim(5)
+
 
 === elite_warp_clear === 
 blob = to_blob(BT_ID)
 yield FAIL if blob is None
 # Set the current Value
-cur = bt_get_variable("speedCoeff", 1.0)
+cur = get_variable("speedCoeff", 1.0)
 # Restore
 blob.set("speedCoeff", cur, 0)
 
+await delay_sim(30)
 yield SUCCESS
 
 
@@ -152,21 +142,21 @@ tru = blob.get("turn_upgrade_coeff", 0)
 if tru is None:
     tru = 1.0
 
-bt_set_variable("turn_upgrade_coeff", tru)
+set_variable("turn_upgrade_coeff", tru)
 # Triple it 
 blob.set("turn_upgrade_coeff", tru*3.0, 0)
-
-yield SUCCESS
+await delay_sim(30)
 
 === elite_turn_clear === 
 
 blob = to_blob(BT_ID)
 yield FAIL if blob is None
 # Set the current Value
-tru = bt_get_variable("turn_upgrade_coeff", 1.0)
+tru = get_variable("turn_upgrade_coeff", 1.0)
 # Restore
 blob.set("turn_upgrade_coeff", tru, 0)
 
+await delay_sim(10)
 yield SUCCESS
 
 ==== elite_tractor_start === 
@@ -193,25 +183,20 @@ target_id = closest(BT_ID, local - role(get_side(BT_ID)))
 yield FAIL if target_id is None
 target_eo = to_engine_object(target_id)
 yield FAIL if target_eo is None
-is_vamp = bt_get_variable("vamp", False)
+is_vamp = get_variable("vamp", False)
 color = "cyan,blue"
 if is_vamp:
     color = "yellow,brown"
 
 emittor_id = sbs.add_particle_emittor(target_eo, -1, f"align:True; shape:hull; color:{color}; lifespan:4; image_cell:0,3; size:0.8; speed: 5; count:10")
-
-bt_set_variable("target_id", target_id)
-bt_set_variable("emittor_id", emittor_id)
-bt_set_variable("count", 0)
-
-yield SUCCESS
+count = 5
 
 ==== elite_shield_drain_cycle === 
 # Fail early if nothing is near
 yield FAIL if BT_ID is None or not object_exists(BT_ID)
-target_id = bt_get_variable("target_id")
+target_id = get_variable("target_id")
 yield FAIL if target_id is None
-emittor_id = bt_get_variable("emittor_id")
+emittor_id = get_variable("emittor_id")
 yield FAIL if emittor_id is None
 
 if not object_exists(target_id):
@@ -231,7 +216,7 @@ for s in range(shield_count):
     sv = max(0, sv)
     r_blob.set("shield_val", sv, s)
 
-is_vamp = bt_get_variable("vamp", False)
+is_vamp = get_variable("vamp", False)
 if is_vamp:
     r_blob = to_blob(BT_ID)
     shield_count = r_blob.get("shield_count", 0)
@@ -242,19 +227,14 @@ if is_vamp:
         sv = min(sm,sv)
         r_blob.set("shield_val", sv, s)
         
-
-
-
 await delay_sim(5)
 
-count = bt_get_variable("count", 0)
 count += 1
-bt_set_variable("count", count)
 jump elite_shield_drain_cycle if count < 5
 
 sbs.delete_particle_emittor(emittor_id)
+await delay_sim(10)
 yield SUCCESS
-
 
 
 
@@ -268,5 +248,6 @@ for s in range(5):
     # m -= feq
     blob.set("shield_freq_strength", feq, s)
 
+await delay_sim(30)
 yield SUCCESS
 
