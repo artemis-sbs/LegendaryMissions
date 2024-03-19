@@ -32,6 +32,22 @@ gui_row()
 on gui_message(gui_button("Test Wreck")):
     jump spawn_test_wreck
 
+
+
+gui_row()
+on gui_message(gui_button("Test Shapes")):
+    jump spawn_test_shapes
+
+gui_row()
+on gui_message(gui_button("Test list consoles")):
+    jump debug_show_list_consoles
+
+gui_row()
+on gui_message(gui_button("Fake scan all")):
+    jump debug_fake_scan_all
+
+
+gui_section(style="area:50,15,80,100;row-height:35px;")
 gui_row()
 on gui_message(gui_button("Test Enemy")):
     await task_schedule(spawn_test_enemy,data={"abi": None})
@@ -50,22 +66,19 @@ on gui_message(gui_button("Test Elite Turn")):
 gui_row()    
 on gui_message(gui_button("Test Elite Warp")):
     await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_warp"})
+gui_row()    
+on gui_message(gui_button("Test Elite Scramble")):
+    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_shield_scramble"})
+gui_row()
+on gui_message(gui_button("Test Elite shield drain")):
+    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_shield_drain"})
+gui_row()
+on gui_message(gui_button("Test Elite shield vamp")):
+    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_shield_vamp"})
 gui_row()        
 on gui_message(gui_button("Test all abilities")):
     await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_cloak, elite_jump_forward, elite_jump_back, elite_warp, elite_turn"})    
 
-
-gui_row()
-on gui_message(gui_button("Test Shapes")):
-    jump spawn_test_shapes
-
-gui_row()
-on gui_message(gui_button("Test list consoles")):
-    jump debug_show_list_consoles
-
-gui_row()
-on gui_message(gui_button("Fake scan all")):
-    jump debug_fake_scan_all
 
 
 gui_activate_console("debug")

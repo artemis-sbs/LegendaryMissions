@@ -5,7 +5,7 @@ from sbs_utils.tickdispatcher import TickDispatcher
 from sbs_utils.procedural.execution import task_schedule, jump, AWAIT, get_variable
 from sbs_utils.procedural.timers import delay_sim, is_timer_set_and_finished, is_timer_finished, set_timer, is_timer_set, clear_timer
 from sbs_utils.procedural.query import to_object, to_id, object_exists, to_object_list, get_side
-from sbs_utils.procedural.space_objects import target, closest, clear_target, closest_list
+from sbs_utils.procedural.space_objects import target, closest, broad_test_around
 from sbs_utils.procedural.roles import role, all_roles, get_race
 from sbs_utils.procedural.science import science_set_scan_data
 from sbs_utils.procedural.spawn import npc_spawn
@@ -57,14 +57,15 @@ class NpcCAG(Agent):
     #--------------------------------------------------------------------------------------
     def find_fighter_target_id(self, fighter_id):
         the_target = None
+        local_arena = broad_test_around(fighter_id, 8000,8000, 0xF0)
 
         # Look for a player near 
         if None is the_target:
-            the_target = closest(fighter_id, role("PlayerShip") - role(get_side(fighter_id)), 8000)
+            the_target = closest(fighter_id, local_arena & role("PlayerShip") - role(get_side(fighter_id)))
 
         # Look for a station near 
         if None == the_target:
-            the_target = closest(fighter_id, role("Station") - role(get_side(fighter_id)), 8000)
+            the_target = closest(fighter_id, local_arena & role("Station") - role(get_side(fighter_id)))
 
         return to_id(the_target)
 

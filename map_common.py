@@ -32,6 +32,47 @@ def get_random_npc_call_sign(race):
     return r_name
 
 
+engine_abilities = [
+        # Blob flags (Always On)
+        "elite_low_vis",
+        "elite_main_scn_invis",
+        "elite_drone_launcher",
+        "elite_anti_mine",
+        "elite_anti_torpedo"
+]
+abilities = [
+
+    "elite_cloak",
+    "elite_jump_back",
+    "elite_jump_forward",
+    "elite_warp",
+    "elite_het_turn",
+    # Blob Flags Randomize
+    "elite_tractor",  # also needs to set tractor_target_uid
+    "elite_shield_drain",
+    "elite_shield_vamp", # Drain is also assumed
+    "elite_shield_scramble",
+]
+
+
+def elite_is_engine_ability(ab):
+    return ab in engine_abilities
+
+def elite_get_non_engine():
+    script_abilities = get_shared_variable("elite_script_abilities", [])
+    all_abilities = []
+    all_abilities.extend(abilities)
+    all_abilities.extend(script_abilities)
+    return all_abilities
+
+def elite_get_all_abilities(abilities):
+    script_abilities = get_shared_variable("elite_script_abilities", [])
+    all_abilities = []
+    all_abilities.extend(abilities)
+    all_abilities.extend(engine_abilities)
+    all_abilities.extend(script_abilities)
+    return all_abilities
+
 #--------------------------------------------------------------------------------------
 def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, fleet_roles = "RaiderFleet", ship_roles=None):
 
@@ -40,6 +81,14 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
     fleet_obj = fleet_spawn(Vec3(posx, posy, posz), fleet_roles)
 
     ship_key_list = filter_ship_data_by_side(None, race, "ship", True)
+
+    # Allow the script to extend abilities
+    script_abilities = get_shared_variable("elite_script_abilities", [])
+    all_abilities = []
+    all_abilities.extend(abilities)
+    all_abilities.extend(engine_abilities)
+    all_abilities.extend(script_abilities)
+
     
     carrier_count = 0
     for b in range(num_ships):
@@ -58,7 +107,6 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
 
         roles = f"{race}, raider,{ship_roles}" if ship_roles is not None else f"{race}, raider"
         
-            
         r_name = get_random_npc_call_sign(race)                           #  f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
 
         spawn_data = npc_spawn(posx, posy, posz, r_name, roles, art_id, "behav_npcship")
@@ -66,28 +114,13 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
         set_inventory_value(raider.id, "my_fleet_id", fleet_obj.id)
         link(fleet_obj.id,"ship_list", raider.id)
 
-        
-        # Abilities can be set by script to have more
-        abilities = get_shared_variable("elite_abilities")
-        # set it in case it wasn't set
-        if abilities is None:
-             abilities = [
-                "elite_cloak",
-                "elite_jump_back",
-                "elite_jump_forward",
-                "elite_warp",
-                "elite_turn",
-                ]
-             set_shared_variable("elite_abilities", abilities)
-
-
         chances = get_shared_variable("elite_chance_non_skaraan", 50)
         if (ship_roles is None or "elite" not in ship_roles) and (
             race == "skaraan" or random.randint(1,chances) == 23):
 
             if random.randint(1,10) == 4:
                 add_role(raider.id, "elite")
-                max_abi = len(abilities)
+                max_abi = len(all_abilities)
                 abits = random.randint(0,pow(2,max_abi))
                 # set_inventory_value(raider.id, "elite_abilities", abits)
                 # bit field
@@ -95,9 +128,14 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
                 # & 0x2 == Jump Back
                 # & 0x4 == Jump forward
                 # & 0x8 == Jump Back
-                for count, ab in enumerate(abilities):
+                for count, ab in enumerate(all_abilities):
                     bit = count * 2
                     if (abits & bit)  == bit:
+                        #
+                        # Set the flag in engine for always on 
+                        #
+                        if elite_is_engine_ability(ab):
+                            raider.data_set.set(ab, 1,0)
                         add_role(raider.id, ab)
 
 
