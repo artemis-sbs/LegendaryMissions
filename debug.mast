@@ -47,38 +47,32 @@ on gui_message(gui_button("Fake scan all")):
     jump debug_fake_scan_all
 
 
-gui_section(style="area:50,15,80,100;row-height:35px;")
+gui_section(style="area:50,15,80,15+35px;row-height:35px;")
 gui_row()
 on gui_message(gui_button("Test Enemy")):
-    await task_schedule(spawn_test_enemy,data={"abi": None})
-gui_row()
-on gui_message(gui_button("Test cloak")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_cloak"})
-gui_row()    
-on gui_message(gui_button("Test Jump back")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_jump_back"})
-gui_row()    
-on gui_message(gui_button("Test Jump Forward")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_jump_forward"})
-gui_row()    
-on gui_message(gui_button("Test Elite Turn")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_turn"})
-gui_row()    
-on gui_message(gui_button("Test Elite Warp")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_warp"})
-gui_row()    
-on gui_message(gui_button("Test Elite Scramble")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_shield_scramble"})
-gui_row()
-on gui_message(gui_button("Test Elite shield drain")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_shield_drain"})
-gui_row()
-on gui_message(gui_button("Test Elite shield vamp")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_shield_vamp"})
-gui_row()        
-on gui_message(gui_button("Test all abilities")):
-    await task_schedule(spawn_test_enemy, data={"abi": "elite, elite_cloak, elite_jump_forward, elite_jump_back, elite_warp, elite_turn"})    
+    abis = lb_abilities.get_value()
+    if len(abis)>0:
+        abis = ~~"elite,"+",".join(abis)~~
+    else:
+        abis = None
+    await task_schedule(spawn_test_enemy,data={"abi": abis})
 
+abilities = elite_get_all_abilities()
+lb_abilities = ~~list_box_control(list(abilities), 
+                               text=lambda item: f"text:{item};justify: center;",
+                               title = lambda: "text:Elite Abilities;justify:center;",
+                               background= "#1572", title_background="#1578",
+                               multi=True,
+                               item_height=4)~~
+
+gui_section(style="area:50,25,80,75;")
+gui_content(lb_abilities, var="abils")
+
+gui_section(style="area:50,76,80,76+35px;")
+on gui_message(gui_button("clear")):
+    lb_abilities.select_none()
+on gui_message(gui_button("all")):
+    lb_abilities.select_all()
 
 
 gui_activate_console("debug")

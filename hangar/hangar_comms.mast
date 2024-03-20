@@ -11,7 +11,7 @@ route_grid_select("hangar_grid_comms")
 
 jump hagar_grid_comms_computer if has_role(COMMS_SELECTED_ID,"computer")
 jump hagar_grid_comms_shield if has_role(COMMS_SELECTED_ID,"shield")
-jump hagar_grid_comms_impulse if has_roles(COMMS_SELECTED_ID,"engine,system,impulse")
+# jump hagar_grid_comms_impulse if has_roles(COMMS_SELECTED_ID,"engine,system,impulse")
 
 
 comms_info("static")

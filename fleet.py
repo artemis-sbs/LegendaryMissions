@@ -178,7 +178,7 @@ def ship_takes_damage():#event):
 #    print(f"fleet  ship_takes_damage {event.tag} {event.sub_tag}")
 
     attacker_id = event.origin_id
-    if 0 is attacker_id:
+    if 0 == attacker_id:
         attacker_id = event.parent_id
 
     if is_client_id(attacker_id):

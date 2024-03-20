@@ -1,7 +1,7 @@
 from sbs_utils.procedural.query import to_id, to_blob, to_object, to_list, to_set
 from sbs_utils.procedural.roles import role, add_role, remove_role, all_roles,has_role
 from sbs_utils.procedural.links import link,unlink, linked_to
-from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value, get_shared_inventory_value
+from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value, get_shared_inventory_value, has_inventory_value
 from sbs_utils.procedural.grid import grid_objects, grid_objects_at, grid_closest, grid_get_grid_data
 from sbs_utils.procedural.spawn import grid_spawn
 from sbs_utils.procedural.comms import comms_broadcast
@@ -236,7 +236,7 @@ def grid_apply_system_damage(id_or_obj):
         def _delete_ship(t):
             if get_shared_inventory_value("game_ended", False):
                 return
-            for cid in linked_to(ship_id, "consoles"):
+            for cid in linked_to(ship_id, "consoles") -  role("mainscreen"):
                 gui_reroute_client(cid, "show_hangar")
 
             so = to_object(t.ship_id)

@@ -65,7 +65,7 @@ def elite_get_non_engine():
     all_abilities.extend(script_abilities)
     return all_abilities
 
-def elite_get_all_abilities(abilities):
+def elite_get_all_abilities():
     script_abilities = get_shared_variable("elite_script_abilities", [])
     all_abilities = []
     all_abilities.extend(abilities)
