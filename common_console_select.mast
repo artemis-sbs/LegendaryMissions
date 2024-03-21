@@ -61,7 +61,7 @@ if console_select == "helm" and not game_started:
     ~~player_list[client_selected_index]["ship"] = ship_type~~
     gui_update_shared("sh_ship_list", None)
 
-  gui_section(style="area: 1,115px,40,100")
+  gui_section(style="area: 1,15,40,100")
   gui_row() #style="row-height: 300px;")
   
   #
