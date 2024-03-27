@@ -8,7 +8,6 @@ route_change_console("select_console")
 
 ========= client_main ==========
 console_select = "helm"
-console_prev = "helm"
 client_select_ship = "artemis"
 console_ready = False
 ship_name = "artemis"
@@ -50,28 +49,33 @@ ship_type_def = player_list[client_selected_index]["ship"]
 client_select_ship =player_list[client_selected_index]["name"].lower()
 ship_name = client_select_ship
 
-if console_select == "helm" and not game_started:
-  gui_section(style="area: 1,60px,40,105px")
-  gui_row(style="row-height: 45px;")
 
-  _input = "desc:Ship Name"
-  on gui_message(gui_input(_input, var="ship_name")):
+ship_sec = gui_section(style="area: 1,60px,40,105px")
+gui_row(style="row-height: 45px;")
+
+_input = "desc:Ship Name"
+on gui_message(gui_input(_input, var="ship_name")):
     ~~player_list[client_selected_index]["name"] = ship_name~~
     client_select_ship = ship_name
     ~~player_list[client_selected_index]["ship"] = ship_type~~
     gui_update_shared("sh_ship_list", None)
 
-  gui_section(style="area: 1,15,40,100")
-  gui_row() #style="row-height: 300px;")
-  
-  #
-  # Specify only ships with defined engineering grid
-  #
-  gui_content(ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors), style="tag:sh_ship_picker", var="ship_type")
-  on change ship_type:
+ship_sec2 = gui_section(style="area: 1,15,40,100")
+gui_row() #style="row-height: 300px;")
+
+#
+# Specify only ships with defined engineering grid
+#
+gui_content(ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors), style="tag:sh_ship_picker", var="ship_type")
+on change ship_type:
     ~~player_list[client_selected_index]["ship"] = ship_type~~
     gui_update_shared("sh_ship_picker", ship_type, {"client_select_ship": client_select_ship})
     gui_update_shared("sh_ship_list", None)
+
+if console_select != "helm" or game_started:
+    gui_hide(ship_sec)
+    gui_hide(ship_sec2)
+
 
 
 #
@@ -89,7 +93,7 @@ lb_ships = ~~list_box_control(ship_list,
                                convert_value = lambda item: item['name'].lower()
                                )~~
 
-gui_content(lb_ships, style="tag:sh_ship_list;", var="client_select_ship")
+li_ships = gui_content(lb_ships, style="tag:sh_ship_list;", var="client_select_ship")
 #
 # List of available consoles
 #
@@ -125,20 +129,25 @@ if operator_mode_enabled:
 on change player_count:
     client_selected_index = min(client_selected_index, int(player_count)-1)
     # Just refresh if reduce ship count for now
-    jump select_console if len(lb_ships.items)>player_count
+    #jump select_console if len(lb_ships.items)>player_count
     # Otherwise can refresh faster if adding ships
     ship_list = player_list[:player_count]
     lb_ships.items = ship_list
+    gui_represent(li_ships)
     gui_update_shared("sh_ship_list", None)
 
 on change console_select:
     #
     # Redo gui if change involves helm
     #
-    if console_select == "helm" or console_prev=="helm":
-        console_prev = console_select
-        jump select_console
-    console_prev = console_select
+    if console_select == "helm" and not game_started:
+        gui_show(ship_sec)
+        gui_show(ship_sec2)
+    else:
+        gui_hide(ship_sec)
+        gui_hide(ship_sec2)
+
+  
 
 
 #

@@ -1,6 +1,7 @@
 import sbs
 from sbs_utils.procedural.query import to_id, to_object, to_blob, object_exists, to_engine_object, to_list, inc_disable_weapons_selection, dec_disable_weapons_selection
 from sbs_utils.procedural.roles import role
+from sbs_utils.procedural.comms import comms_message
 from sbs_utils.procedural.execution import get_shared_variable, task_cancel, task_schedule
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.timers import is_timer_finished, set_timer
@@ -8,6 +9,7 @@ from sbs_utils.procedural.space_objects import closest
 from sbs_utils.procedural.grid import grid_objects
 from sbs_utils.tickdispatcher import TickDispatcher
 from internal_damage import grid_restore_damcons, grid_repair_grid_objects
+from sbs_utils.faces import get_face
 
 
 __build_times  = {
@@ -143,6 +145,16 @@ def player_docking_docking(player_id_or_obj, dock_station):
     dock_station_id = to_id(dock_station)
     dock_station_so = to_engine_object(dock_station_id)
 
+    if player_so is None:
+        return None # Player ship died stop running
+    
+    if dock_station_so is None:
+        # Station died
+        player_blob.set("dock_state", "undocked")
+        return RATE_SLOW
+
+    
+
     # check to see if the player ship is close enough to be docked
     distanceValue = sbs.distance_id(dock_station_id, player_id)
 
@@ -155,6 +167,8 @@ def player_docking_docking(player_id_or_obj, dock_station):
 def player_docking_dock_start(player_id_or_obj, dock_station):
     player_blob = to_blob(player_id_or_obj)
     player_id = to_id(player_id_or_obj)
+    if player_blob is None:
+        return None # Player died
 
     player_blob.set("dock_state", "docked")
     grid_restore_damcons(player_id)
@@ -164,7 +178,17 @@ def player_docking_dock_start(player_id_or_obj, dock_station):
 def player_docking_docked(player_id_or_obj, dock_station):
     player_blob = to_blob(player_id_or_obj)
     dock_station_blob = to_blob(dock_station)
+    dock_station_id = to_id(dock_station)
     player_id = to_id(player_id_or_obj)
+
+    if player_blob is None:
+        return None # Player ship died stop running
+    
+    if dock_station_blob is None:
+        # Station died
+        player_blob.set("dock_state", "undocked")
+        return RATE_SLOW
+
 
     refuel_amount = 20
     load_torp = is_timer_finished(player_id,"priority_docking_torp")
@@ -178,6 +202,13 @@ def player_docking_docked(player_id_or_obj, dock_station):
             set_timer(player_id,"priority_docking_torp", 6)
     
         
+    throttle = player_blob.get("playerThrottle",0)
+    if throttle >1.0:
+        player_blob.set("playerThrottle",0.5, 0)
+        comms_message("Attempting to warp while docked can hurt our systems.", dock_station_id, player_id,  "GEEZ! YOU'RE STILL DOCKED", None, "white", "red")
+        return RATE_SLOW
+
+
 
     # refuel
     fuel_value = player_blob.get("energy",0)

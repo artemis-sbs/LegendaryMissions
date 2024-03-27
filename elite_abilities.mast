@@ -113,10 +113,10 @@ blob = to_blob(BT_ID)
 yield FAIL if blob is None
 # Set the current Value
 
-cur = blob.get("speedCoeff", 0)
-set_variable("speedCoeff", cur)
+cur = blob.get("speed_coeff", 0)
+set_variable("speed_coeff", cur)
 # double it 
-blob.set("speedCoeff", cur*2.0, 0)
+blob.set("speed_coeff", cur*2.0, 0)
 
 await delay_sim(5)
 
@@ -125,9 +125,9 @@ await delay_sim(5)
 blob = to_blob(BT_ID)
 yield FAIL if blob is None
 # Set the current Value
-cur = get_variable("speedCoeff", 1.0)
+cur = get_variable("speed_coeff", 1.0)
 # Restore
-blob.set("speedCoeff", cur, 0)
+blob.set("speed_coeff", cur, 0)
 
 await delay_sim(30)
 yield SUCCESS
