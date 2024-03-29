@@ -326,7 +326,7 @@ for coeff in coeffs:
     who = whos[i]
     msg = msgs[i]
     color = who_color[i]
-    comms_receive_internal(msg, SPAWNED_ID, who, title_color=color)
+    comms_receive_internal(msg, SPAWNED_ID, who, title="damcon status", title_color=color)
     set_timer(SPAWNED_ID, timer, minutes=random.randrange(4,10))
 
 jump loop_grid_send_comms_messages

@@ -79,7 +79,7 @@ await gui():
 
 assign_client_to_ship(client_id,ship)
 if message is not None:
-    comms_message(message, comms_selected, ship, title_color="cyan")
+    comms_message(message, comms_selected, ship, title="orders accepted", title_color="cyan")
     #receive ship comms_selected "{message}"
 
 jump show_console_selected

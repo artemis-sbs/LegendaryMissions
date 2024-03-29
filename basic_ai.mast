@@ -11,6 +11,7 @@ import elite_abilities.mast
 #
 route_spawn(handle_route_spawn)
 build_task = None
+task_schedule(take_surrendered_home)
 #
 # The route_spawn label is the entry point 
 # it examines the SPAWNED_ID to either
@@ -178,5 +179,26 @@ for x in range(random.randint(1,3)):
 
 
 -> END
+
+
+======== take_surrendered_home  =========
+
+await delay_sim(5)
+
+surrendered = role("surrendered")
+for ship in surrendered:
+    ship_obj = to_object(ship)
+    continue if ship_obj is None
+
+    spawn_pos = Vec3(ship_obj.spawn_pos)
+    _pos = ship_obj.pos
+    target_pos(ship, spawn_pos.x, spawn_pos.y, spawn_pos.z)
+    diff = _pos - spawn_pos
+    continue if diff.length() > 500
+    # if Close to 500, then delete
+    sbs.delete_object(ship)
+
+
+jump take_surrendered_home
 
 

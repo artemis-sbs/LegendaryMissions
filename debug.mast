@@ -44,7 +44,16 @@ on gui_message(gui_button("Test list consoles")):
 
 gui_row()
 on gui_message(gui_button("Fake scan all")):
-    jump debug_fake_scan_all
+    await task_schedule(debug_fake_scan_all)
+    
+gui_row()
+on gui_message(gui_button("Kill enemy shields")):
+    for e in role("raider"):
+        r_blob = to_blob(e)
+        continue if r_blob is None
+        r_blob.set("shield_val", 0, 0)
+        r_blob.set("shield_val", 0, 1)
+
 
 
 gui_section(style="area:50,15,80,15+35px;row-height:35px;")

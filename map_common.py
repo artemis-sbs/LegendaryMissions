@@ -1,9 +1,9 @@
-from sbs_utils.mast.label import label
-from sbs_utils.procedural.execution import get_shared_variable, set_shared_variable
-# from sbs_utils.procedural.query import to_object, to_id, object_exists, to_object_list, get_side
+
+from sbs_utils.procedural.execution import get_shared_variable
+from sbs_utils.procedural.query import to_id #, object_exists, to_object_list, get_side
 from sbs_utils.procedural.roles import add_role
 from sbs_utils.procedural.spawn import npc_spawn
-from sbs_utils.procedural.links import link
+from sbs_utils.procedural.links import link, unlink
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.ship_data import get_ship_data_for, filter_ship_data_by_side
 from sbs_utils.faces import set_face, random_face
@@ -73,8 +73,33 @@ def elite_get_all_abilities():
     all_abilities.extend(script_abilities)
     return all_abilities
 
+
+
+def fleet_remove_ship(id_or_obj):
+    ship_id = to_id(id_or_obj)
+    if ship_id is None:
+        return
+    fleet_id = get_inventory_value(ship_id, "my_fleet_id")
+    unlink(fleet_id,"ship_list", ship_id)
+
+
 #--------------------------------------------------------------------------------------
 def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, fleet_roles = "RaiderFleet", ship_roles=None):
+    """Create a new fleet and add the appropriate amount of ships
+
+    Args:
+        race (str): 
+        num_ships (int): The Number of ships in the fleet
+        max_carriers (int): Maximum number of ships
+        posx (float): location
+        posy (float): location
+        posz (float): location
+        fleet_roles (str, optional): Role for the fleet. Defaults to "RaiderFleet".
+        ship_roles (str, optional): Roles for the ships. Defaults to None.
+
+    Returns:
+        fleet (Fleet): The created fleet
+    """
 
     num_ships = int(num_ships)
     max_carriers = int(max_carriers)
@@ -137,8 +162,6 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
                         if elite_is_engine_ability(ab):
                             raider.data_set.set(ab, 1,0)
                         add_role(raider.id, ab)
-
-
 
         # Should add a common function to call to get the face based on race
         set_face(raider.id, random_face(race))
