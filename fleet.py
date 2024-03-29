@@ -93,12 +93,13 @@ class Fleet(Agent):
         # am I angry at someone?
         best_id = None
         best_anger = 0
+        anger_as_set = set()
         for e in self.anger_dict:
             #print(f"fleet anger at {e}!")
             if 0 == e:
                 #print(f"0 is in anger_dict.     WTF!")
                 return
-
+            anger_as_set.add(e)
             that_anger = self.anger_dict[e]
             if best_anger < that_anger:
                 best_anger = that_anger
@@ -130,7 +131,19 @@ class Fleet(Agent):
         #
         local_arena = broad_test_around(lead_ship_id, 3000,3000, 0xF0)
 
+        #
+        # Target who you're most angry with first
+        # Look for anything in anger list
+        # This should include fighters and or friendlies as well as players
+        #
         the_target = None
+        if the_target is None and len(anger_as_set)>0:
+            if best_anger in local_arena:
+                the_target = best_anger
+            else:
+                the_target = closest(lead_ship_id, local_arena & anger_as_set )
+
+
         if the_target is None:
             the_target = closest(lead_ship_id, local_arena & role("Station") - role(get_side(lead_ship_id)))
 
@@ -177,12 +190,13 @@ def ship_takes_damage():#event):
     event = get_variable("EVENT")
 #    print(f"fleet  ship_takes_damage {event.tag} {event.sub_tag}")
 
-    attacker_id = event.origin_id
+    # parent is 0 for ship as origin, ship for ordinance 
+    attacker_id = event.parent_id
     if 0 == attacker_id:
-        attacker_id = event.parent_id
+        attacker_id = event.origin_id
 
-    if is_client_id(attacker_id):
-        print(f"if is_client_id(attacker_id):     WTF!   {event.tag} {event.sub_tag}")
+    if 0 == attacker_id:
+        print(f"if damage origin and parent are 0  WTF!   {event.tag} {event.sub_tag}")
         return
     victim_id = event.selected_id
     my_fleet = to_object(get_inventory_value(victim_id, "my_fleet_id"))

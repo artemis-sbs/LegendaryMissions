@@ -121,7 +121,7 @@ await gui():
             jump launch_to_cockpit
         jump show_hangar
 
-print("Out of await")
+# print("Out of await")
 jump show_hangar
 
 ==== launch_to_cockpit ======
@@ -176,8 +176,8 @@ for craft in launched_crafts:
     continue if craft == get_dedicated_link(cid, "craft_id") and get_inventory_value(cid, "CONSOLE_TYPE") == "cockpit"
     so = to_object(craft)
     continue if so is None
-    print("Return craft {so.name}")
-    redocked = hangar_attempt_dock_craft(craft, 100000)
+    # print("Return craft {so.name}")
+    redocked = hangar_attempt_dock_craft(craft, None)
     if redocked:
         print("redocked")
     else:

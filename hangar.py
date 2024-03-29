@@ -84,6 +84,12 @@ def hangar_craft_spawn(docked_id, art, roles, prefix):
     hm = sbs.get_hull_map(craft.id,True)
     # Not counted for end game
     craft.py_object.remove_role("PlayerShip,__player__")
+    c = craft.blob.get("shield_count", 0)
+    for x in range(c):
+        m = craft.blob.get("shield_max_val", x)
+        craft.blob.set("shield_max_val", m*4, x)
+        v = craft.blob.get("shield_val", x)
+        craft.blob.set("shield_val", v*4, x)
     #
     # Cross links
     #
@@ -152,7 +158,10 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     #
     home_id = get_dedicated_link(craft.id, "home_dock") 
 
-    if home_id is not None and sbs.distance_id(craft.id, home_id) < dock_rng:
+    # None mean dock anywhere
+    if dock_rng is None:
+        dock_target = closest(craft_id, role("tsn") & any_role("station, __player__"))
+    elif home_id is not None and sbs.distance_id(craft.id, home_id) < dock_rng:
         dock_target = home_id
     else:
         dockable = broad_test_around(craft.id, dock_rng, dock_rng, 0x10)

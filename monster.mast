@@ -13,7 +13,7 @@ jump classic_typhon if has_roles(SPAWNED_ID, "monster, typhon, classic")
 === classic_typhon ===
 monster_id = SPAWNED_ID
 
-_target = closest(monster_id, broad_test_around(monster_id, 4000,4000, 0xf0)-role("__terrain__")-role("monster"))
+_target = closest(monster_id, broad_test_around(monster_id, 5000,5000, 0xf0)-role("__terrain__")-role("monster"))
 if _target is None:
     clear_target(monster_id)
 else:
