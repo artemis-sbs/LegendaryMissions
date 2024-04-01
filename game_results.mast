@@ -108,5 +108,19 @@ gui_hole(5)
 """color:yellow;justify: left; text:{end_time} minutes"""
 
 
-await gui()
+mission = get_mission_name()
+start_mission = get_startup_mission_name()
+if start_mission is not None:
+    same = mission == start_mission
+
+if start_mission is None or start_mission=="":
+    same = True
+    start_mission = mission
+
+await gui():
+    + "replay":
+        sbs.run_next_mission(mission)
+    + "run startup" if not same:
+        sbs.run_next_mission(start_mission)
+
 # Kind of need to restart, which is good for now since cleanup is not guaranteed

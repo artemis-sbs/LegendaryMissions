@@ -238,9 +238,13 @@ gui_row()
 
 mission = get_mission_name()
 start_mission = get_startup_mission_name()
-same = mission == start_mission
+if start_mission is not None:
+    same = mission == start_mission
 
-same = False
+if start_mission is None:
+    same = True
+    start_mission = mission
+
 # if same only two buttons
 if same:
     gui_blank()

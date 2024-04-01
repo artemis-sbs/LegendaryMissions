@@ -100,10 +100,16 @@ stations_friendly = to_object_list(role("tsn")  & role("station"))
 spawn_pos = Vec3(0,0,0)
 #------------------------------------------------------------------------------------------------------------
 for player_ship_data in player_list:
+
+    if player_ship_data["id"] is not None:
+        print("WARNING: player ship {player_ship_data['name]} may have been spawned twice" )
+
     if c>= player_count:
         # make sure the id is cleared dry docked ships
         ~~player_ship_data["id"] = None~~
         continue
+
+    
 
     
     if len(stations_friendly) > 0:
@@ -124,8 +130,6 @@ for player_ship_data in player_list:
         assign_client_to_ship(0,player_ship)
         first = False
 
-    points = get_open_grid_points(player_ship)
-
 
 
 my_players = role("__player__") & role("tsn")
@@ -141,7 +145,6 @@ for player in my_players:
 
     blob.set("num_extra_scan_sources",num_ids,0)
 
-->END
 
 ->END
     

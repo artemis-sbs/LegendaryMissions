@@ -97,7 +97,7 @@ li_ships = gui_content(lb_ships, style="tag:sh_ship_list;", var="client_select_s
 #
 # List of available consoles
 #
-consoles = {"helm": 0,"weapons":0,"comms":0,"science":0,"engineering":0,"hangar":0,"mainscreen":0}
+consoles = {"helm": 0,"weapons":0,"comms":0,"science":0,"engineering":0,"hangar":0,"mainscreen":0, "cinematic":0}
 
 lb_consoles = ~~list_box_control(list(consoles.keys()), 
                                text=lambda item: f"text:{item};justify: center;",
@@ -179,6 +179,7 @@ _ship_id= None
 for player_ship in to_object_list(role("__PLAYER__")):
     if player_ship.name.lower() == client_select_ship:
         _ship_id = player_ship.id
+
         sbs.assign_client_to_ship(client_id, _ship_id)
         set_inventory_value(client_id, "assigned_ship", _ship_id)
         link(_ship_id, "consoles", client_id)
@@ -205,6 +206,7 @@ for k in consoles:
 add_role(client_id, "console, {console_select}")
 jump show_hangar if console_select == "hangar"
 jump show_main_game_screen if console_select == "mainscreen"
+jump show_cinematic_screen if console_select == "cinematic"
 
 #------------------------------------------------------------------------------------------------------------
 sbs.set_beam_damages(client_id, 7.0, difficulty)
@@ -237,3 +239,18 @@ jump debug_mast
 
 
 
+======== show_cinematic_screen ===========
+
+# Layout to assure it takes up full screen 
+
+gui_section("area:0,0,100,100;")
+gui_activate_console("cinematic")
+gui_layout_widget("3dview")
+
+if _ship_id is None:
+    print("WARNING: cinematic on None player ship")
+
+sbs.assign_client_to_ship(client_id, _ship_id)
+gui_cinematic_auto(client_id)
+
+await gui()
