@@ -1,4 +1,4 @@
-# Basic Legendary Missions
+# Legendary Missions
 
 Legendary Missions is a mission script for Artemis: Cosmos
 
