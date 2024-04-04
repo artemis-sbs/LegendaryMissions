@@ -53,6 +53,12 @@ nav:
     - playing/index.md
     - Updating: playing/updating.md
 
+  - hosting:
+    - hosting/index.md
+    - hosting/setup.json.md
+    
+
+
   - Script:
     - script/index.md
     - GUI:
