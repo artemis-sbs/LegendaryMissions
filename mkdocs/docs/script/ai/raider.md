@@ -1,8 +1,8 @@
 # Enemy (Raider) AI
 
-## Basic Siege AI
+## Legendary Missions AI
 
-The enemy AI in a Basic Siege Map is defined in 
+The enemy AI in a Legendary Missions Map is defined in 
 
 :fontawesome-brands-python:
 

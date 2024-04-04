@@ -1,6 +1,6 @@
 # About
 
-Basic Siege is a mission script for Artemis: Cosmos
+Legendary Missions is a mission script for Artemis: Cosmos
 
 It was written by:
 

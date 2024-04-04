@@ -1,4 +1,4 @@
-site_name: Basic Siege Documentation
+site_name: Legendary Missions Documentation
 copyright: "An Artemis: Cosmos mission"
 extra:
   generator: false
@@ -44,8 +44,8 @@ theme:
       #example: octicons/beaker-16
       #quote: octicons/quote-16
 
-repo_url: https://github.com/artemis-sbs/BasicSiegeMAst
-repo_name: artemis-sbs/BasicSiegeMast
+repo_url: https://github.com/artemis-sbs/LegendaryMissions
+repo_name: artemis-sbs/LegendaryMissions
 
 nav:
   - Home: index.md
@@ -56,7 +56,7 @@ nav:
   - hosting:
     - hosting/index.md
     - hosting/setup.json.md
-    
+
 
 
   - Script:
