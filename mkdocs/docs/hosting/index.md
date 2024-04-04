@@ -9,7 +9,7 @@ When running a Artemis Cosmos Server in some scenarios e.g. cloud based servers,
 Artemis Cosmos still runs in a grapical manner, however there are now options to simplify the running a remote server.
 
 ## Preference: default_mission_folder
-In the Artemis Cosmos data directory there is a setting to automatically start a mission when the artemis executable runs.
+In the Artemis Cosmos data directory there is a file *preferences.json". In this file there is a setting to automatically start a mission when the artemis executable runs: default_mission_folder.
 
 By uncommenting and setting this value it will run in server mode the specified mission.
 
