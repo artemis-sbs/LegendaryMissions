@@ -16,13 +16,15 @@ You can set an image file to display one the server screen. Useful for operators
 For future use
 
 ### pin
-string need to be typed to gain access to the operator and startup screen
+string needed to be typed to gain access to the operator and startup screen.
+The default is 000000
+
 
 ## Default selections
 You set the default selection values for the startup settings screen.
 
 ### players_count
-1 to the number of ships in the player ship list
+How many player ships are available foe the missions. Values are 1 to the number of ships in the player ship list.
 
 ### difficulty
 1-11
@@ -49,6 +51,10 @@ none, few, some, lots, many
 0 is unlimited any other values is the number of minutes the mission will last.
 Pausing the mission will also pause this timer.
 
+The remote admin screen can be used to pause the game.
+
 ### player_ships
 A list of Player ships names, side and hull keys
+
 You could add or reduce the number of options. e.g. Operators may Only want one player ship.
+

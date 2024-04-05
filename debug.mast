@@ -54,6 +54,19 @@ on gui_message(gui_button("Kill enemy shields")):
         r_blob.set("shield_val", 0, 0)
         r_blob.set("shield_val", 0, 1)
 
+gui_row()
+on gui_message(gui_button("science cinema focus")):
+    ship = get_inventory_value(client_id, "assigned_ship")
+    await task_schedule(debug_cinema_focus, data={"_focus": "science", "_ship_id": ship})
+
+on gui_message(gui_button("weapons cinema focus")):
+    ship = get_inventory_value(client_id, "assigned_ship")
+    await task_schedule(debug_cinema_focus, data={"_focus": "weapons", "_ship_id": ship})
+
+on gui_message(gui_button("player cinema focus")):
+    ship = get_inventory_value(client_id, "assigned_ship")
+    await task_schedule(debug_cinema_focus, data={"_focus": "player", "_ship_id": ship})
+
 
 
 gui_section(style="area:50,15,80,15+35px;row-height:35px;")
@@ -251,3 +264,18 @@ for p in role("__player__"):
         science_set_scan_data(p, r, "Debug Default scan")
 
 jump debug_screen
+
+
+===== debug_cinema_focus ==== 
+# data: "_focus", "_ship_id"
+->END if _ship_id is None
+->END if _focus is None
+
+other = _ship_id
+if _focus == "weapons":
+    other = get_weapons_selection(_ship_id)
+if _focus == "science":
+    other = get_science_selection(_ship_id)
+
+set_inventory_value(_ship_id, "cinema_focus", other)
+

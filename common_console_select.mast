@@ -246,11 +246,18 @@ jump debug_mast
 gui_section("area:0,0,100,100;")
 gui_activate_console("cinematic")
 gui_layout_widget("3dview")
+set_inventory_value(_ship_id, "cinema_focus", _ship_id)
 
 if _ship_id is None:
     print("WARNING: cinematic on None player ship")
 
 sbs.assign_client_to_ship(client_id, _ship_id)
 gui_cinematic_auto(client_id)
+
+on change get_inventory_value(_ship_id, "cinema_focus"):
+    focus_id = get_inventory_value(_ship_id, "cinema_focus", _ship_id)
+    if focus_id is not None:
+        sbs.assign_client_to_ship(client_id, focus_id)
+        gui_cinematic_auto(client_id)
 
 await gui()

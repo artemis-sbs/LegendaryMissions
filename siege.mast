@@ -174,7 +174,7 @@ for station in spawn_points:
             terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
     num += 1
 
-task_schedule(spawn_friendly_npc)
+await task_schedule(spawn_friendly_npc)
 
 #------------------------------------------------------------------------------------------------------------
 # generate fleets

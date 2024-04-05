@@ -16,7 +16,7 @@ By uncommenting and setting this value it will run in server mode the specified 
 For example:
 
 ``` ini
-"default_mission_folder":  "LegendaryLissions"
+"default_mission_folder":  "LegendaryMissions"
 ```
 
 Will run the the Legendary Mission on startup.
