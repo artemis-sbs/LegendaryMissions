@@ -1,0 +1,76 @@
+#
+# Hook when a ship spawns
+#
+route_spawn(crew_initialize_crew)
+route_damage_internal(crew_internal_damage)
+route_damage_heat(crew_heat_damage)
+route_dock(crew_replenish)
+
+
+==== crew_initialize_crew  ====
+->END if not has_role(SPAWNED_ID, "__player__")
+
+# Do later so the grid objects are sure to be there
+await delay_sim(seconds=2)
+
+# for future
+task_schedule(crew_manage_health)
+
+grid_count = len(role("quarters") & grid_objects(SPAWNED_ID)) # general idea of ship size
+crew_size = grid_count * 10
+set_inventory_value(SPAWNED_ID, "crew_size", crew_size)
+set_inventory_value(SPAWNED_ID, "max_crew_size", crew_size)
+
+-> END
+
+======== crew_internal_damage   ====
+
+======== crew_heat_damage   ====
+
+crew_size = get_inventory_value(DAMAGE_ORIGIN_ID, "crew_size", 0)
+dead = get_inventory_value(DAMAGE_ORIGIN_ID, "casulaty_count", 0)
+total_dead = get_inventory_value(DAMAGE_ORIGIN_ID, "accumalted_casulaty_count", 0)
+if crew_size > 0:
+    set_inventory_value(DAMAGE_ORIGIN_ID, "crew_size", crew_size-1)
+    set_inventory_value(DAMAGE_ORIGIN_ID, "casulaty_count", dead + 1)
+    set_inventory_value(DAMAGE_ORIGIN_ID, "accumalted_casulaty_count", total_dead+1)
+->END
+
+
+======= crew_manage_health ========
+
+await delay_sim(minutes=2)
+
+crew_size = get_inventory_value(SPAWNED_ID, "crew_size", 0)
+dead = get_inventory_value(SPAWNED_ID, "casulaty_count", 0)
+total_dead = get_inventory_value(SPAWNED_ID, "accumalted_casulaty_count", 0)
+
+
+jump crew_manage_health if dead <  1
+if random.randint(0,25) == 12:
+    set_inventory_value(SPAWNED_ID, "crew_size", crew_size+1)
+    set_inventory_value(SPAWNED_ID, "casulaty_count", dead - 1)
+    set_inventory_value(SPAWNED_ID, "accumalted_casulaty_count", total_dead-1)
+
+jump crew_manage_health
+
+
+
+========= crew_replenish =========
+
+# ID of the thing docking
+SPAWNED_ID =  EVENT.origin_id
+
+# If it is not a player ship exit
+->END if not has_role(SPAWNED_ID, "__player__")
+
+
+crew_size = get_inventory_value(SPAWNED_ID, "crew_size", 0)
+max_crew_size = get_inventory_value(SPAWNED_ID, "crew_size", 0)
+dead = get_inventory_value(SPAWNED_ID, "casulaty_count", 0)
+
+set_inventory_value(SPAWNED_ID, "crew_size", max_crew_size)
+set_inventory_value(SPAWNED_ID, "casulaty_count", 0)
+
+->END
+

@@ -2,7 +2,7 @@ import grid_ai.py
 
 
 route_grid_spawn(handle_route_grid_spawn)
-route_spawn("grid_send_comms_messages")
+route_spawn(grid_init_when_player_spawned)
 
 
 # Not using this route, changing target ia AI loop
@@ -263,22 +263,33 @@ for id in at_point:
 
 jump loop_damcons_ai
 
+====== grid_init_when_player_spawned  =======
+
+#
+# Is is called once when when a player ship is spawned
+# We will initiallize any addition data for that
+# for example, the cast of internal characters
+
+->END if not has_role(SPAWNED_ID, "__player__")
+
+set_inventory_value(SPAWNED_ID, "face_sickbay", random_terran())
+set_inventory_value(SPAWNED_ID, "face_biologist", random_terran())
+set_inventory_value(SPAWNED_ID, "face_counselor", random_terran())
+set_inventory_value(SPAWNED_ID, "face_exobiology", random_terran())
+set_inventory_value(SPAWNED_ID, "face_quartermaster", random_terran())
+set_inventory_value(SPAWNED_ID, "face_security",  random_terran())
+
 
 
 ======= grid_send_comms_messages =====
-
 #
-# Route when a ships is spawned
 # this will send out messages when all damcons could get boosted
+# It will do this over time, and try not be annoying
 #
 ->END if not has_role(SPAWNED_ID, "__player__")
 #
 # Wait for first messages
 #
-
-set_inventory_value(SPAWNED_ID, "face_sickbay", random_terran())
-set_inventory_value(SPAWNED_ID, "face_biologist", random_terran())
-set_inventory_value(SPAWNED_ID, "face_counselor", random_terran())
 
 
 coeffs = ["fed_speed_coeff", "ripped_speed_coeff", "rested_speed_coeff"]
