@@ -365,12 +365,9 @@ await comms():
 
 ================ internal_comms ==================
 #
-# Setup faces for the departments
+# faces for the departments are defined in grid_ai.mast 
+# since they are associated with rooms on tjhe grid
 #
-set_inventory_value(COMMS_ORIGIN_ID, "face_sickbay", random_terran())
-set_inventory_value(COMMS_ORIGIN_ID, "face_exobiology", random_terran())
-set_inventory_value(COMMS_ORIGIN_ID, "face_counselor", random_terran())
-set_inventory_value(COMMS_ORIGIN_ID, "face_security",  random_terran())
 
 ================ internal_comms_loop ==================
 #
@@ -378,7 +375,9 @@ set_inventory_value(COMMS_ORIGIN_ID, "face_security",  random_terran())
 #
 await comms():
     + "Sickbay" color "blue":
-        comms_receive_internal("The crew health is great!", from_name="sickbay", title="crew health", title_color="blue")
+        crew_size = get_inventory_value(COMMS_ORIGIN_ID, "crew_size", 0)
+        dead = get_inventory_value(COMMS_ORIGIN_ID, "casulaty_count", 0)
+        comms_receive_internal(f"Currently we have {crew_size} healthy crew members and {dead} casualties", from_name="sickbay", title="crew health", title_color="blue")
     + "Security" color "red":
         comms_receive_internal("All secure", from_name="security", title="Security update",   title_color="red")
     + "Exobiology" color "green":
