@@ -1,5 +1,4 @@
 from random import choice
-from sbs_utils.procedural.query import get_science_selection, to_object
 from sbs_utils.fs import load_json_data, get_mission_dir_filename
 from sbs_utils import faces as faces
 from sbs_utils.mast.label import label
@@ -116,14 +115,6 @@ def story_get_mission_setup():
     return defaults
 
 
-def get_dock_name(so):
-    dock = get_science_selection(so)
-    if not dock:
-        return ""
-    dock = to_object(dock)
-    if not dock:
-        return ""
-    return f":  {dock.name}"
 
 
 def get_face_from_data(face_style):

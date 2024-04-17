@@ -9,6 +9,7 @@ from sbs_utils.procedural.routes import RouteDestroy
 from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished
 from sbs_utils.procedural.execution import set_shared_variable, get_shared_variable, get_variable
 from sbs_utils.agent import Agent
+from sbs_utils.procedural.query import get_science_selection, to_object
 
 from internal_damage import grid_rebuild_grid_objects
 import sbs
@@ -184,4 +185,28 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     sbs.push_to_standby_list_id(craft.id)
     set_timer(craft.id, "refit", seconds=30)
     return True
+
+from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text
+
+def get_dock_name(so):
+    dock = get_science_selection(so)
+    if not dock:
+        return ""
+    dock = to_object(dock)
+    if not dock:
+        return ""
+    return f"{dock.name}"
+
+
+def hangar_console_ship_template(item):
+    gui_row("row-height: 1.2em;padding:13px;")
+    gui_text(f"text:{item.name};justify: left;")
+    gui_text(f"text:{get_dock_name(item)};justify: left;")
+    
+
+def hangar_console_title_template():
+    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
+    gui_text(f"text:ship;justify: left;")
+    gui_text(f"text:dock;justify: left;")
+
 
