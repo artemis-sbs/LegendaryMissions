@@ -38,14 +38,6 @@ on change call_sign:
     set_inventory_value(client_id, "call_sign", call_sign)
 
 gui_section(style="area: 5,10+20px, 35, 49;")
-# get_dock_name is defined in story.py
-#ride_picker = ~~list_box_control(crafts, 
-#                               text=lambda item: f"text:{item.name} {get_dock_name(item)};justify: center;",
-#                               title = lambda: "text:Select Ship;justify:center;",
-#                               background= "#1572", title_background="#1578",
-#                               select=True,
-#                               item_height=3)~~
-#gui_content(ride_picker, var="ride_choice")
 
 ride_choice = None
 ride_picker = gui_list_box(crafts,"row-height: 2em; background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)

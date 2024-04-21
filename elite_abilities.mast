@@ -206,8 +206,11 @@ if not object_exists(target_id):
 #
 # Hit shield
 #
+
 r_blob = to_blob(target_id)
+jump elite_shield_drain_clean_up if r_blob is None
 shield_count = r_blob.get("shield_count", 0)
+jump elite_shield_drain_clean_up if shield_count is None
 
 for s in range(shield_count):
     sm = r_blob.get("shield_max_val", s)
@@ -219,6 +222,8 @@ for s in range(shield_count):
 is_vamp = get_variable("vamp", False)
 if is_vamp:
     r_blob = to_blob(BT_ID)
+    jump elite_shield_drain_clean_up if r_blob is None
+
     shield_count = r_blob.get("shield_count", 0)
     for s in range(shield_count):
         sm = r_blob.get("shield_max_val", s)
@@ -232,6 +237,7 @@ await delay_sim(5)
 count += 1
 jump elite_shield_drain_cycle if count < 5
 
+==== elite_shield_drain_clean_up =====
 sbs.delete_particle_emittor(emittor_id)
 await delay_sim(10)
 yield SUCCESS

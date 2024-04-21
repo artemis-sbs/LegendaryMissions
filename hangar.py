@@ -206,7 +206,7 @@ def hangar_console_ship_template(item):
 
 def hangar_console_title_template():
     gui_row("row-height: 1.2em;padding:13px;background:#1578;")
-    gui_text(f"text:ship;justify: left;")
-    gui_text(f"text:dock;justify: left;")
+    gui_text(f"text:SHIP;justify: left;")
+    gui_text(f"text:DOCK;justify: left;")
 
 

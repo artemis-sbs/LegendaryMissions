@@ -40,7 +40,6 @@ for key in grid_data:
 # default console_select = "helm"
 # default client_select_ship = "artemis"
 
-
 # Clamp selected index
 client_selected_index = min(int(player_count), client_selected_index )
 
