@@ -8,6 +8,13 @@ import internal_damage.mast
 import basic_ai.mast
 import grid_ai.mast
 import siege.mast
+import singlefront.mast
+import doublefront.mast
+import deepstrike.mast
+import peacetime.mast
+import borderwar.mast
+import map_common.mast
+import map_common.py
 import extra_gui.mast
 import game_results.mast
 import damage.mast
@@ -128,7 +135,7 @@ gui_int_slider("low: 1.0;high:11.0", var="difficulty")
 gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 
 """ justify:right;text:Mission Type"""
-gui_drop_down("text: {world_select};list:siege,single front,double front,deep strike,peacetime,border war,infestation", var="world_select")
+gui_drop_down("text: {world_select};list:siege,single front,double front,deep strike,peacetime,border war", var="world_select")
 gui_row(style="row-height: 45px;padding:10px,0,0,0;")
 gui_blank()
 gui_row(style="row-height: 45px;padding:10px,0,0,0;")
@@ -184,15 +191,15 @@ match world_select.lower():
     case "siege": 
         task_schedule(siege_build_world)
     case "single front": 
-        task_schedule(siege_build_world)
+        task_schedule(single_front_build_world)
     case "double front": 
-        task_schedule(siege_build_world)
+        task_schedule(double_front_build_world)
     case "deep strike": 
-        task_schedule(siege_build_world)
+        task_schedule(deep_strike_build_world)
     case "peacetime": 
-        task_schedule(siege_build_world)
+        task_schedule(peacetime_build_world)
     case "border war": 
-        task_schedule(siege_build_world)
+        task_schedule(border_war_build_world)
 
 
 #
@@ -322,7 +329,7 @@ if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"
     ->END
 
 stations = role('tsn') & role('station')
-if len(stations) ==0:
+if len(stations) ==0 and world_select != "deep strike":
     start_text = "Mission is lost!  All yer base are belong to us, dammit."
     game_started = False
     game_ended = True
@@ -336,7 +343,7 @@ if len(stations) ==0:
 
 raiders = role('Raider')
 # print (f"raiders {len(raiders)}")
-if len(raiders)==0:
+if len(raiders)==0 and world_select !="peacetime":
     start_text = "Mission is won!  All the enemies have been destroyed."
     game_started = False
     game_ended = True

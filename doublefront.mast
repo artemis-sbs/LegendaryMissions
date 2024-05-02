@@ -1,4 +1,4 @@
-================= siege_build_world ===================
+================= double_front_build_world ===================
 
 
 terrain_value = 0
@@ -174,26 +174,66 @@ for station in spawn_points:
 await task_schedule(spawn_friendly_npc)
 
 #------------------------------------------------------------------------------------------------------------
-# Generate Siege Fleets - These fleets are weighted towards Kraliens (based on difficulty), from 94% Kralien at Difficulty 1 
-# to 40% Kralien at Difficulty 10. The fleet lists can be found in 'map_common.py'. Skaraans are generated separately, as these 
-# 'independent contractors' tend to operate better on their own. The idea is to hopefully match the 'feel' of Artemis 2.x. 
+# generate fleets
+# For Single Front, one enemy is randomly chosen as the attacker, so all fleets will be chosen from that enemy.
+# For Double Front, two enemies are randomly choseen, each attacking from a different direction. Same enemy may be chosen twice.
 
 enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
+enemy_temp = []
+enemy_temp = random.choices(enemyTypeNameList, weights=(40, 20, 20, 20))
+enemy1 = enemy_temp[0]
+enemy_temp = random.choices(enemyTypeNameList, weights=(40, 20, 20, 20))
+enemy2 = enemy_temp[0]
 
+# Pick a random direction for both attackers, 1 = North, 2 = East, 3 = South, 4 = West
+enemyDirectionList = [1, 2, 3, 4]
+direction1 = enemyDirectionList.pop(random.randint(0,3))
+print(f"Test Enemy Direction1: {direction1} Enemy List: {enemyDirectionList}")
+direction2 = enemyDirectionList.pop(random.randint(0,2))
+print(f"Test Enemy Direction2: {direction2} Enemy List: {enemyDirectionList}")
  
-fleet_count = 3 + int(difficulty/2)
+fleet_count1 = 1 + int(difficulty/2)
+fleet_count2 = 1 + int(difficulty/2)
 fleet_index = int(difficulty - 1)
 
-for a in range(fleet_count):
-    enemy_temp = random.choices(enemyTypeNameList, weights=(100-6*difficulty, difficulty*2, difficulty*2, difficulty*2))
-    enemy = enemy_temp[0]
-    fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
-#    create_npc_fleet_and_ships(enemy, fleet_quality, fleet_quality/3, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-    create_siege_fleet(enemy, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-    if a > 1 and difficulty > 2:
-        fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
+# Ximni fleets are typically only one ship, so double fleets to balance this out until we code some better Ximni AI.
+if enemy1 == "Ximni":
+    fleet_count1 = fleet_count1*2 
+if enemy2 == "Ximni":
+    fleet_count2 = fleet_count2*2 
+
+print(f"Fleet Count1: {fleet_count1} Enemy1: {enemy1} Direction1: {direction1} Fleet Count2: {fleet_count2} Enemy2: {enemy2} Direction2: {direction2}")
+
+for a in range(fleet_count1):
+    if direction1 == 1:
+        fleet_pos = next(scatter_box(1, -40000, -1000, 40000, 40000, 1000, 50000))
+    if direction1 == 2:
+        fleet_pos = next(scatter_box(1, 40000, -1000, 40000, 50000, 1000, -40000))
+    if direction1 == 3:
+        fleet_pos = next(scatter_box(1, 40000, -1000, -40000, -40000, 1000, -50000))
+    if direction1 == 4:
+        fleet_pos = next(scatter_box(1, -40000, -1000, 40000, -50000, 1000, -40000))
+    print(f"Fleet1 Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
+    create_siege_fleet(enemy1, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+
+for b in range(fleet_count2):
+    if direction2 == 1:
+        fleet_pos = next(scatter_box(1, -40000, -1000, 40000, 40000, 1000, 50000))
+    if direction2 == 2:
+        fleet_pos = next(scatter_box(1, 40000, -1000, 40000, 50000, 1000, -40000))
+    if direction2 == 3:
+        fleet_pos = next(scatter_box(1, 40000, -1000, -40000, -40000, 1000, -50000))
+    if direction2 == 4:
+        fleet_pos = next(scatter_box(1, -40000, -1000, 40000, -50000, 1000, -40000))
+    print(f"Fleet2 Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
+    create_siege_fleet(enemy2, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+
+
+# At this time, keep the Skaraans out of a Single Front mission
+#    if a > 1 and difficulty > 2:
+#        fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
 #        create_npc_fleet_and_ships("skaraan", 1,0, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-        create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+#        create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
 
 
 #------------------------------------------------------------------------------------------------------------

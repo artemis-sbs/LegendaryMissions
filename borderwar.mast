@@ -1,4 +1,4 @@
-================= siege_build_world ===================
+================= border_war_build_world ===================
 
 
 terrain_value = 0
@@ -75,9 +75,6 @@ if "many" == upgrade_select:
     upgrade_value = 4
     num_upgrade = random.randint(10,15)
 
-
-
-
 if seed_value != 0:
     random.seed(seed_value)
     print(f"Seed Value: {seed_value}")
@@ -86,14 +83,27 @@ else:
     random.seed(seed_value)
     print(f"Random Seed Value: {seed_value}")
 
+#------------------------------------------------------------------------------------------------------------
+# Add the "Neutral Zone" 
+
+sim.add_navarea(-10000, 500000, 10000, 500000, -10000, -500000, 10000, -500000, "Neutral Zone", "#004")
+
 
 #------------------------------------------------------------------------------------------------------------
+# Determine Enemy Antagonists
+
+enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian"]
+enemy_temp = []
+enemy_temp = random.choices(enemyTypeNameList, weights=(50, 25, 25))
+enemy1 = enemy_temp[0]
+
+#------------------------------------------------------------------------------------------------------------
+# Build friendly stations
+
+_station_weights  = {"starbase_command": 3,"starbase_civil": 1,"starbase_industry": 5,"starbase_science": 1}
 
 
- _station_weights  = {"starbase_command": 3,"starbase_civil": 1,"starbase_industry": 5,"starbase_science": 1}
-
-
-spawn_points = scatter.box(10000, 0,0,0, 65000, 1000, 65000, centered=True)
+spawn_points = scatter.box(10000, 25000,1000,50000, 50000, -1000, -50000, centered=False)
 num = 1
 total_weight = (12-difficulty) *2
 _spawned_pos = []
@@ -174,26 +184,75 @@ for station in spawn_points:
 await task_schedule(spawn_friendly_npc)
 
 #------------------------------------------------------------------------------------------------------------
-# Generate Siege Fleets - These fleets are weighted towards Kraliens (based on difficulty), from 94% Kralien at Difficulty 1 
-# to 40% Kralien at Difficulty 10. The fleet lists can be found in 'map_common.py'. Skaraans are generated separately, as these 
-# 'independent contractors' tend to operate better on their own. The idea is to hopefully match the 'feel' of Artemis 2.x. 
+# Build enemy stations, generate fleets
 
-enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
+fleet_index = int(difficulty) - 1
 
- 
-fleet_count = 3 + int(difficulty/2)
-fleet_index = int(difficulty - 1)
+num_enemy_stations = int(difficulty)
+if num_enemy_stations < 3:
+    num_enemy_stations = 3
+num = 1
+_enemy_spawned_pos = []
 
-for a in range(fleet_count):
-    enemy_temp = random.choices(enemyTypeNameList, weights=(100-6*difficulty, difficulty*2, difficulty*2, difficulty*2))
-    enemy = enemy_temp[0]
-    fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
-#    create_npc_fleet_and_ships(enemy, fleet_quality, fleet_quality/3, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-    create_siege_fleet(enemy, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-    if a > 1 and difficulty > 2:
-        fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
-#        create_npc_fleet_and_ships("skaraan", 1,0, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-        create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+if enemy1 == "Kralien":
+    station_prefix = "KB"
+    station_type = "starbase_kralien"
+if enemy1 == "Torgoth": 
+    station_prefix = "TB"
+    station_type = "starbase_torgoth"
+if enemy1 == "Arvonian":
+    station_prefix = "AB"
+    station_type = "starbase_arvonian"
+
+enemy_spawn_points = scatter.box(10000, -25000,1000,50000, -50000, -1000, -50000, centered=False)
+
+for enemy_station in enemy_spawn_points:
+    name = "{station_prefix} {num}"
+    #
+    # Space stations
+    #
+    _enpos = enemy_station
+    dist = 15000 * 15000
+    move = True
+    for x while move:
+        move = False
+        for _enprev in _enemy_spawned_pos:
+            distv = _enpos - _enprev
+            _dist_test = distv.dot(distv)
+            if _dist_test < dist:
+                move = True
+                #print("Move Station")
+                _enpos = next(enemy_spawn_points)
+                break
+    _enemy_spawned_pos.append(_enpos)
+
+    if enemy1 == "Kralien":
+        enemy_station_object = npc_spawn(*_enpos, name, "kralien, station", station_type, "behav_station")
+    if enemy1 == "Torgoth":
+        enemy_station_object = npc_spawn(*_enpos, name, "torgoth, station", station_type, "behav_station")
+    if enemy1 == "Arvonian":
+        enemy_station_object = npc_spawn(*_enpos, name, "arvonian, station", station_type, "behav_station")
+    
+    print(f"{enemy1} Station created {_enpos.x} {_enpos.y} {_enpos.z}")
+    
+    ds = to_id(enemy_station_object)
+    apos = enemy_station_object.engine_object.pos
+    apos.x = apos.x + 50.0
+    apos.z = apos.z + 50.0
+
+    if enemy1 == "Kralien":
+        set_face(ds, random_kralien())
+    if enemy1 == "Torgoth":
+        set_face(ds, random_torgoth())
+    if enemy1 == "Arvonian":
+        set_face(ds, random_arvonian())
+    
+    create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
+
+    print(f"{enemy1} Fleet created {apos.x} {apos.y} {apos.z}")
+
+    break if num == num_enemy_stations
+    num += 1
 
 
 #------------------------------------------------------------------------------------------------------------
