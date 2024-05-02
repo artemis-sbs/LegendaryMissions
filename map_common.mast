@@ -3,6 +3,9 @@
 
 =========== spawn_friendly_npc ===========
 
+if world_select == "deep strike":
+    freindly_select = "none"
+
 match friendly_select:
     case "many":
         max_hull_points=10
