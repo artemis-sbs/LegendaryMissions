@@ -1,0 +1,15 @@
+route_comms_navigate("", friendly_comms)
+
+
+===== friendly_comms =======
+
+yield success if not has_roles(COMMS_SELECTED_ID, "tsn, friendly")
+
+comms_add_button("New Give Orders", friendly_comms_give_orders)
+yield success
+
+
+===== friendly_comms_give_orders =======
+comms_client_id = EVENT.client_id
+gui_reroute_client(comms_client_id, friendly_give_orders)
+yield success

@@ -1,0 +1,86 @@
+
+route_comms_navigate("", comms_raider_surrender)
+
+================ comms_raider_surrender ==================
+
+yield fail if not object_exists(COMMS_ORIGIN_ID)
+yield fail if not object_exists(COMMS_SELECTED_ID)
+yield fail if not has_role(COMMS_SELECTED_ID, "raider")
+yield fail if has_role(COMMS_SELECTED_ID, "never_surrender")
+yield fail if has_role(COMMS_SELECTED_ID, "surrendered")
+
+#
+# Hide surrender if tried too much, or already failed uor succeeded
+# BUT allow it you have a secret code case
+#
+surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
+hide_surr = surrender_count >= 3
+#
+# Secret code case
+#
+sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
+show_surr = not hide_surr or (sc_timer > 0)
+
+yield fail if not show_surr
+
+comms_add_button("Surrender now", handle_comms_raider_surrender)
+
+yield success
+
+
+
+===== handle_comms_raider_surrender ====
+
+blob = to_blob(COMMS_SELECTED_ID)
+->END if blob is None
+
+surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
+set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
+
+
+shield_count = blob.get("shield_count", 0)
+s_ratio = 100
+for s in range(shield_count):
+    s_max = blob.get("shield_max_val", s )
+    s_cur = blob.get("shield_val", s )
+    s_ratio = min(s_cur/s_max, s_ratio)
+
+# Secret Codecase, force surrender if active, otherwise check shield ratio
+if sc_timer > 0:
+    sc_timer = 0
+    set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
+    await task_schedule(comms_do_surrender)
+    
+elif s_ratio < 0.09:
+    if random.randint(1,6)<3:
+        await task_schedule(comms_do_surrender)
+    else:
+        comms_receive(f"""We will fight to our last breath!""", title="failed surrender", title_color=raider_color)
+        add_role(COMMS_SELECTED_ID, "never_surrender")
+
+elif s_ratio < 0.5:
+    if random.randint(0,6)<=2:
+        await task_schedule(comms_do_surrender)
+    else:
+        comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title="Surrender ignored", title_color=raider_color)
+
+else:
+    comms_receive(f"""Go climb a tree, {name}!""", title="failed surrender", title_color=raider_color)
+
+yield success
+
+
+======== comms_do_surrender ========
+
+comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
+add_role(COMMS_SELECTED_ID, "surrendered")
+~~ game_stats["ships_surrender"] += 1~~
+remove_role(COMMS_SELECTED_ID, "raider")
+set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
+fleet_remove_ship(COMMS_SELECTED_ID)
+
+yield SUCCESS
+
+
+
+

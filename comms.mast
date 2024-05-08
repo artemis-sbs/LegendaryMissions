@@ -2,29 +2,14 @@
 # and communicate with space objects, grid objects,
 # or any other objects.
 
-route_comms_select("route_comms")
+import comms/friendly_give_orders.mast
+import comms/station_weapon_building.mast
+import comms/enemy_taunt.mast
+import comms/enemy_surrender.mast
+import comms/priority_docking.mast
 
-#
-# Load taunt data from the json file which contains the current taunts.
-#
-taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
 
-# Set title colors for incoming messages from stations, raiders, and surrendered raiders.
-station_color = "green"
-raider_color = "red"
-surrender_color = "yellow"
-
-#
-# Set the build times for station types
-#
-#   HOMING : 0, NUKE : 1, EMP : 2, MINE : 3
-shared build_times = ~~{
-    "command": {"build_times": [2, 5, 3, 2]},
-    "civil": {"build_times": [6, 20, 10, 8 ]},
-    "industry": {"build_times": [1, 4, 2, 2 ]},
-    "science": {"build_times": [6, 20, 10, 8 ]},
-    "default": {"build_times": [3, 10, 5, 4 ]}
-}~~
+route_comms_select("route_comms_await")
 
 
 #############################################
@@ -34,175 +19,31 @@ shared build_times = ~~{
 # specific agent that Comms might communicate with.
 #############################################
 
-=========== route_comms  ========
+==== route_comms_await ===== 
 # Start new dialog thread for a player ship with agent.
 # Each player ship will have its own thread for comms.
 # This enables each ship to have a unique dialog path
 # of conversation with each agent.
-#print("Router")
 if COMMS_SELECTED_ID == COMMS_ORIGIN_ID:
     # This is the same ship
     jump internal_comms
 elif has_roles(COMMS_SELECTED_ID, "tsn, Station"):
 # The station is already building something. This line is is needed so
 # the Comms task has a value initialized for the conversation. 
-    jump station_comms
+    # jump station_comms
+    await comms()
 elif has_roles(COMMS_SELECTED_ID, "tsn, friendly"):
-    jump friendly_comms
+    await comms()
 elif has_roles(COMMS_SELECTED_ID, 'Station'):
     jump comms_enemy_station
 elif has_role(COMMS_SELECTED_ID, "Raider"):
-    jump npc_comms
+    # jump npc_comms
+    await comms()
 
 # Default clear comms Present static
 comms_info("static")
 
-->END
 
-===== friendly_comms =======
-
-await comms():
-    + "Give Orders":
-        comms_client_id = EVENT.client_id
-        gui_reroute_client(comms_client_id, friendly_give_orders)
-
-jump  friendly_comms
-
-
-
-=============== station_comms ===============
-station_id = COMMS_SELECTED_ID
-ship_id = COMMS_ORIGIN_ID
-station_obj = to_object(COMMS_SELECTED_ID)
-->END if station_obj is None
-
-comms_id = to_object(COMMS_ORIGIN_ID).name
-station_comms_id = station_obj.name
-
-#   HOMING : 0, NUKE : 1, EMP : 2, MINE : 3
-artid = station_obj.art_id
-station_build_times = get_build_times(station_id)
-torpedo_build_type = get_inventory_value(station_id, "build_type", 0)
-torpedo_build_type = sbs.TORPEDO(torpedo_build_type)
-
-
-await comms():
-    + "Hail":
-        homing = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.HOMING)
-        nuke = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.NUKE)
-        emp = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.EMP)
-        mine = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.MINE)
-        build_time = format_time_remaining(COMMS_SELECTED_ID, "build_time")
-
-        ~~comms_receive(f"""Hello, {comms_id}.  We stand ready to assist.
-
-You have full docking privileges.
-
-{torpedo_build_type} in production. Completion in {build_time}
-
-{"type":<10}{"ready": >5}{"time to produce": >20}
-{"Homing": <10}{homing: >5}{"": >16}{station_build_times[sbs.TORPEDO.HOMING.value]}:00 
-{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times[sbs.TORPEDO.NUKE.value]}:00
-{"EMP": <10}{emp: >5}{"": >16}{station_build_times[sbs.TORPEDO.EMP.value]}:00
-{"Mine": <10}{mine: >5}{"": >16}{station_build_times[sbs.TORPEDO.MINE.value]}:00
-
-""", title="hail", title_color=station_color)~~
-    + "Request Priority Docking":
-        comms_receive(f"""{station_comms_id} will give {comms_id} priority docking for the next 2 minutes.^""", title="priority docking", title_color=station_color)
-        # Set a timer counting down the priority docking
-        set_timer(ship_id,"priority_docking",120)
-        # Set a variable for which station this ship can priority dock with
-        set_inventory_value(ship_id,"priority_docking_id",station_id)
-
-
-    + "Build Weapons": 
-        jump station_comms_building
-     
--> station_comms
-
-
-=============== station_comms_building ===============
-station_id = COMMS_SELECTED_ID
-ship_id = COMMS_ORIGIN_ID
-station_obj = to_object(COMMS_SELECTED_ID)
-->END if station_obj is None
-
-comms_id = to_object(COMMS_ORIGIN_ID).name
-
-await comms():
-  
-    + "Build Homing": 
-        if build_munition_queue_task(station_id, sbs.TORPEDO.HOMING):
-            comms_receive(f"""We read you, {comms_id}.  We will focus on homing production.^""", title="build homing", title_color=station_color)
-        else:
-            comms_receive(f"""{comms_id}, we are already producing homing.^""", title="build homing", title_color=station_color)
-
-    + "Build Nuke":
-        if build_munition_queue_task(station_id, sbs.TORPEDO.NUKE):
-            comms_receive(f"""We read you, {comms_id}.  We will focus on nuke production.^""", title="build nuke", title_color=station_color)
-        else:
-            comms_receive(f"""{comms_id}, we are already producing nuke.^""", title="build nuke", title_color=station_color)
-        
-    + "Build Emp":
-        if build_munition_queue_task(station_id, sbs.TORPEDO.EMP):
-            comms_receive(f"""We read you, {comms_id}.  We will focus on EMP production.^""", title="build EMP", title_color=station_color)
-        else:
-            comms_receive(f"""{comms_id}, we are already producing EMP.^""", title="build EMP", title_color=station_color)
-        
-    + "Build Mine":
-        if build_munition_queue_task(station_id, sbs.TORPEDO.MINE):
-            comms_receive(f"""We read you, {comms_id}.  We will focus on mine production.^""",title="build mine",  title_color=station_color)
-        else:
-            comms_receive(f"""{comms_id}, we are already producing mine.^""", title="build mine", title_color=station_color)
-
-    + "Back":
-        jump station_comms
-
--> station_comms
-#assert(False)
-
-=== task_station_building ===
-
-# Player ships can die now
-
-set_timer(station_id, "build_time", seconds = build_time)
-await is_timer_finished(station_id, "build_time")
-#print(f"finished {torpedo_build_type}")
-
-clear_timer(station_id, "build_time")
-station = to_object(station_id)
-
-#
-# If the station was destroyed  END
-#
-->END if station is None
-torpedo_build_type = get_inventory_value(station_id, "build_type")
-# print(f"build time = {build_time} inv {torpedo_build_type}")
-
-cur_count = get_data_set_value(station_id, "torpedo_count", torpedo_build_type)
-set_data_set_value(station_id, "torpedo_count", cur_count+1, torpedo_build_type)
-
-side = station.side
-COMMS_SELECTED_ID = station_id
-ps = all_roles(f"__player__, {side}" )
-# print(f"Players to tell about building stuff {len(ps)}")
-
-torp_names =["homing","nuke", "EMP", "mine"]
-torp_name = torp_names[torpedo_build_type]
-
-for player in all_roles(f"__player__, {side}" ):
-    COMMS_ORIGIN_ID = player
-    ship_obj = to_object(player)
-    continue if ship_obj is None
-
-    comms_id = ship_obj.name
-    comms_receive(f"""{comms_id}. {torp_name} Production complete.""", title=f"""{torp_name} complete.""", title_color=station_color)
-
-->task_station_building
-
-======== weird ====== 
-#ASSERT(False)
-->END
 
 ======== comms_enemy_station ====== 
 
@@ -216,150 +57,6 @@ await comms():
         comms_receive(f"""Eat my soiled undergarments, {comms_id}.""", title="surrender denied", title_color=raider_color)
 
 -> comms_enemy_station
-
-
-================ npc_comms ==================
-name = to_object(COMMS_ORIGIN_ID).name
-station_id = COMMS_SELECTED_ID
-ship_id = COMMS_ORIGIN_ID
-fleet_id = get_inventory_value(COMMS_SELECTED_ID, "my_fleet_id")
-fleet_obj = to_object(fleet_id)
-
-enrage_value= None
-
-if fleet_obj:
-    # Is the target's fleet already mad at this ship? 
-    enrage_value = fleet_obj.get_heat_for(ship_id)
-
-# Get the Secret Codecase timer, set hide_taunt and hide_surr to hide taunts if ship is surrendered, 
-# but show Surrender button if sc_timer is active
-sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
-this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
-hide_taunt = this_taunt_data is None or has_role(COMMS_SELECTED_ID, "surrendered")
-
-#
-# Hide surrender if tried too much, or already failed uor succeeded
-# BUT allow it you have a secret code case
-#
-surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
-hide_surr = has_role(COMMS_SELECTED_ID, "never_surrender") or has_role(COMMS_SELECTED_ID, "surrendered")
-hide_surr = surrender_count >= 3 or hide_surr
-#
-# Secret code case
-#
-show_surr = not hide_surr or (sc_timer > 0)
-
-await comms():
-    + "Hail":
-        comms_receive(f"Go away, {name}! You talk too much!", title="Hail", title_color=raider_color)
-    + "Taunt":    # if enrage_value is None and not hide_taunt:
-        if enrage_value:
-            comms_receive(f"""I'm too angry to deal with you right now, {name}.""", title="Already angry", title_color=raider_color)
-        elif hide_taunt==True:
-            comms_receive(f"""Your taunts are worthless to us, {name}.""", title="Taunt worthless", title_color=raider_color)
-        else:
-            # Navigate to sub Menu
-            jump comms_taunts
-
-    + "Surrender now" if show_surr:
-        blob = to_blob(COMMS_SELECTED_ID)
-        ->END if blob is None
-
-        set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
-        shield_count = blob.get("shield_count", 0)
-        s_ratio = 100
-        for s in range(shield_count):
-            s_max = blob.get("shield_max_val", s )
-            s_cur = blob.get("shield_val", s )
-            s_ratio = min(s_cur/s_max, s_ratio)
-
-        # Secret Codecase, force surrender if active, otherwise check shield ratio
-        if sc_timer > 0:
-            sc_timer = 0
-            set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
-            await task_schedule(comms_do_surrender)
-            
-        elif s_ratio < 0.09:
-            if random.randint(1,6)<3:
-                await task_schedule(comms_do_surrender)
-            else:
-                comms_receive(f"""We will fight to our last breath!""", title="failed surrender", title_color=raider_color)
-                add_role(COMMS_SELECTED_ID, "never_surrender")
-        
-        elif s_ratio < 0.5:
-            if random.randint(0,6)<=2:
-                await task_schedule(comms_do_surrender)
-            else:
-                comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title="Surrender ignored", title_color=raider_color)
-
-        else:
-            comms_receive(f"""Go climb a tree, {name}!""", title="failed surrender", title_color=raider_color)
-
-jump npc_comms
-
-
-======== comms_do_surrender ========
-
-comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
-add_role(COMMS_SELECTED_ID, "surrendered")
-~~ game_stats["ships_surrender"] += 1~~
-remove_role(COMMS_SELECTED_ID, "raider")
-set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
-fleet_remove_ship(COMMS_SELECTED_ID)
-
-yield SUCCESS
-
-
-
-================ comms_taunts ==================
-#
-# Present taunts
-#
-name = to_object(COMMS_ORIGIN_ID).name
-   
-
-
-this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
-#
-# Skip if the loading of taunts failed
-#
-jump npc_comms if this_taunt_data is None
-
-taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
-
-right_button = this_taunt_data[taunt_trait]['button']
-
-await comms():
-    + "{data['button']}" for data in this_taunt_data:
-        # Need to format the data
-        msg = data['transmit']
-        msg = mast_format_string(msg)
-        comms_transmit(f"{msg}", title="taunt", title_color="green")
-        # failure
-        if right_button != data['button']:
-            msg = "{data['failure']}"
-            msg = mast_format_string(msg)
-            comms_receive(f"{msg}", title="taunt succeeded", title_color=raider_color)
-        # success
-        else:
-            msg = "{data['success']}"
-            msg = mast_format_string(msg)
-            comms_receive(f"{msg}", title="taunt failure", title_color=raider_color)
-            fleet_id = get_inventory_value(COMMS_SELECTED_ID, "my_fleet_id")
-            fleet_obj = to_object(fleet_id)
-            if fleet_obj:
-                fleet_obj.make_enraged_by(COMMS_ORIGIN_ID)
-
-        #
-        # Clear the taunt data, only can taunt once
-        #
-        set_inventory_value(COMMS_SELECTED_ID, "taunt_data", None)
-    + "Back":
-        -> npc_comms    
-
-
-# Jump back to main comms menu
--> npc_comms
 
 
 

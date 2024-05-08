@@ -1,0 +1,32 @@
+route_comms_navigate("", comms_station_priority_docking)
+
+
+===== comms_station_priority_docking =======
+yield success if not has_roles(COMMS_SELECTED_ID, "tsn, station")
+
+comms_add_button("Request Priority Docking", handle_comms_station_priority_docking)
+yield success
+
+
+===== handle_comms_station_priority_docking =======
+station_id = COMMS_SELECTED_ID
+ship_id = COMMS_ORIGIN_ID
+
+station_obj = to_object(COMMS_SELECTED_ID)
+ship_obj = to_object(COMMS_ORIGIN_ID)
+
+yield fail if station_obj is None
+yield fail if ship_obj is None
+
+comms_id = ship_obj.name
+station_comms_id = station_obj.name
+
+
+comms_receive(f"""{station_comms_id} will give {comms_id} priority docking for the next 2 minutes.^""", title="priority docking", title_color=station_color)
+# Set a timer counting down the priority docking
+set_timer(ship_id,"priority_docking",120)
+# Set a variable for which station this ship can priority dock with
+set_inventory_value(ship_id,"priority_docking_id",station_id)
+
+     
+yield success

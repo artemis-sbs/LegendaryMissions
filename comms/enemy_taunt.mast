@@ -1,0 +1,131 @@
+#
+# This will allow buttons to be added at the top level
+#
+route_comms_navigate("", comms_taunt_raider_top)
+#
+# This will allow buttons to be added at the 'station/build' level
+#
+route_comms_navigate("taunt/raider", comms_taunt_raider_menu)
+
+#
+# Load taunt data from the json file which contains the current taunts.
+#
+shared taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
+
+
+
+===== comms_taunt_raider_top ====
+#
+# Only for friendly station
+#
+yield success if not has_roles(COMMS_SELECTED_ID, 'raider')
+yield success if has_roles(COMMS_SELECTED_ID, 'surrendered')
+
+comms_add_button("Hail", handle_comms_hail_raider)
+comms_add_button("Taunt", handle_comms_taunt_raider_top)
+
+yield success
+
+
+================ handle_comms_hail_raider ==================
+player = to_object(COMMS_ORIGIN_ID)
+yield fail if player is None
+name = player.name
+
+comms_receive(f"Go away, {name}! You talk too much!", title="Hail", title_color=raider_color)
+    
+yield success
+
+
+
+=== handle_comms_taunt_raider_top ====
+player = to_object(COMMS_ORIGIN_ID)
+yield fail if player is None
+name = to_object(COMMS_ORIGIN_ID).name
+ship_id = COMMS_SELECTED_ID
+ship = to_object(ship_id)
+yield fail if ship is None
+
+fleet_id = get_inventory_value(COMMS_SELECTED_ID, "my_fleet_id")
+fleet_obj = to_object(fleet_id)
+yield fail if fleet_obj is None
+
+enrage_value = fleet_obj.get_heat_for(ship_id)
+this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
+
+hide_taunt = this_taunt_data is None or has_role(ship_id, "surrendered")
+
+if enrage_value:
+    comms_receive(f"""I'm too angry to deal with you right now, {name}.""", title="Already angry", title_color=raider_color)
+elif hide_taunt==True:
+    comms_receive(f"""Your taunts are worthless to us, {name}.""", title="Taunt worthless", title_color=raider_color)
+else:
+    comms_set_path("taunt/raider")
+
+yield success
+
+
+
+
+================ comms_taunt_raider_menu ==================
+#
+# Present taunts
+#
+name = to_object(COMMS_ORIGIN_ID).name
+   
+
+
+this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
+#
+# Skip if the loading of taunts failed
+#
+jump npc_comms if this_taunt_data is None
+
+taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
+
+right_button = this_taunt_data[taunt_trait]['button']
+
+for data in this_taunt_data:
+    button_text = data["button"]
+    data_wrap = {"data": data}
+    ~~data_wrap["select_right"] = right_button == button_text~~
+    comms_add_button(button_text, handle_comms_taunt_raider_select, data=data_wrap)
+#
+# Add a back button
+#
+comms_add_button("back", path="")
+    
+yield success
+
+
+================ handle_comms_taunt_raider_select ==================
+
+# Need to format the data
+msg = data['transmit']
+msg = mast_format_string(msg)
+comms_transmit(f"{msg}", title="taunt", title_color="green")
+# failure
+right = select_right
+if not right:
+    msg = "{data['failure']}"
+    msg = mast_format_string(msg)
+    comms_receive(f"{msg}", title="taunt failed", title_color=raider_color)
+# success == enrage the fleet
+else:
+    msg = "{data['success']}"
+    msg = mast_format_string(msg)
+    comms_receive(f"{msg}", title="taunt succeeded", title_color=raider_color)
+    fleet_id = get_inventory_value(COMMS_SELECTED_ID, "my_fleet_id")
+    fleet_obj = to_object(fleet_id)
+    if fleet_obj:
+        fleet_obj.make_enraged_by(COMMS_ORIGIN_ID)    
+#
+# Return to top menu
+#
+comms_set_path("")
+#
+# Clear the taunt data, only can taunt once
+#
+set_inventory_value(COMMS_SELECTED_ID, "taunt_data", None)
+yield success
+
