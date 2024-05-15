@@ -12,6 +12,24 @@ route_comms_navigate("taunt/raider", comms_taunt_raider_menu)
 #
 shared taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
 
+route_spawn(raider_taunt_initialize)
+
+====== raider_taunt_initialize ======
+# add a taunt trait
+->END if not has_role(SPAWNED_ID, "raider")
+
+#
+# Select 3 taunts
+#
+race = get_race(SPAWNED_ID)
+jump task_npc_targeting if race is None
+
+
+this_taunt_data = random.sample(taunt_data[race], 3)
+set_inventory_value(SPAWNED_ID, "taunt_data", this_taunt_data)
+set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
+
+yield success
 
 
 ===== comms_taunt_raider_top ====
@@ -60,7 +78,7 @@ if enrage_value:
 elif hide_taunt==True:
     comms_receive(f"""Your taunts are worthless to us, {name}.""", title="Taunt worthless", title_color=raider_color)
 else:
-    comms_set_path("taunt/raider")
+    comms_navigate("taunt/raider")
 
 yield success
 
@@ -99,6 +117,10 @@ yield success
 
 
 ================ handle_comms_taunt_raider_select ==================
+player = to_object(COMMS_ORIGIN_ID)
+yield fail if player is None
+
+name = player.name
 
 # Need to format the data
 msg = data['transmit']
@@ -122,7 +144,7 @@ else:
 #
 # Return to top menu
 #
-comms_set_path("")
+comms_navigate("")
 #
 # Clear the taunt data, only can taunt once
 #

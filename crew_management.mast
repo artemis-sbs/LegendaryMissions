@@ -6,9 +6,6 @@ route_damage_internal(crew_internal_damage)
 route_damage_heat(crew_heat_damage)
 route_dock(crew_replenish)
 
-route_comms_navigate("", test_one)
-route_comms_navigate("", test_two)
-route_comms_navigate("taunts", test_three)
 
 
 ==== crew_initialize_crew  ====
@@ -78,32 +75,3 @@ set_inventory_value(SPAWNED_ID, "casulaty_count", 0)
 
 ->END
 
-==== test_one ====
-comms_add_button("All see this", test_one_handler)
-yield success
-
-==== test_one_handler ====
-print("Pressed the all button ")
-yield success
-
-
-==== test_two ====
-
-yield success if not has_role(COMMS_SELECTED_ID, "__player__")
-comms_add_button("Players see this", test_two_handler)
-yield success
-
-==== test_two_handler ====
-print("Pressed the player button ")
-comms_set_path("taunts")
-yield success
-
-
-==== test_three ====
-comms_add_button("Only path taunt see this", test_three_handler)
-yield success
-
-==== test_three_handler ====
-print("Clearing the path ")
-comms_set_path("")
-yield success

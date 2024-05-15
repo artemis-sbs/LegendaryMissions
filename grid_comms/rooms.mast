@@ -1,0 +1,71 @@
+route_comms_navigate("", comms_room)
+route_comms_navigate("room/rally", comms_room_rally_point)
+
+
+===== comms_room =======
+yield success if not has_roles(COMMS_SELECTED_ID, "room")
+
+
+all_dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
+dcs = []
+workers = []
+for dc in all_dcs:
+    if has_link_to(dc.id, "work-order", COMMS_SELECTED_ID):
+        workers.append(dc)
+    else:
+        dcs.append(dc)
+
+
+#on change has_role(COMMS_SELECTED_ID, "__damaged__"):
+#    comms_navigate()
+
+comms_add_button("set rally point", path="room/rally")
+
+if has_role(COMMS_SELECTED_ID, "__damaged__"):
+    for d in dcs:
+        comms_add_button(f"assign {d.name}", comms_room_assign_dc, color=f"{get_inventory_value(d.id, 'color')}", data={"d": d})
+    for d in workers:
+        comms_add_button(f"cancel {d.name}", comms_room_cancel_dc, color=f"{get_inventory_value(d.id, 'color')}", data={"d": d})
+
+yield success
+
+
+====== comms_room_assign_dc =======
+link(d.id, "work-order", COMMS_SELECTED_ID)
+yield success
+
+====== comms_room_cancel_dc =======
+unlink(d.id, "work-order", COMMS_SELECTED_ID)
+yield success
+
+
+ ==== comms_room_rally_point  =======
+
+comms_add_button("Back", path="")
+dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
+for d in dcs:
+    comms_add_button(f"set {d.name} rally point", comms_room_rally_dc, color=f"{get_inventory_value(d.id, 'color')}", data={"d": d})
+yield success
+
+===== comms_room_rally_dc =======
+
+# Add this to the 
+_blob = to_blob(COMMS_SELECTED_ID)
+_loc_x = _blob.get("curx", 0)
+_loc_y = _blob.get("cury", 0)
+set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
+idle_marker = get_inventory_value(d.id, "idle_marker", None)
+#
+#
+clear_timer(d.id, "boost_timer")
+
+if idle_marker is not None:
+    _blob = to_blob(idle_marker)
+    _blob.set("curx",_loc_x, 0)
+    _blob.set("cury",_loc_y, 0)
+
+is_idle = get_inventory_value(d.id, "idle")
+if is_idle:
+    set_inventory_value(d.id, "idle_state", "start" )
+
+yield success

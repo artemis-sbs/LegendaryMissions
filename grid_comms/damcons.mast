@@ -1,0 +1,68 @@
+route_comms_navigate("", comms_damcons)
+route_comms_navigate("dc/work/order", comms_damcons_work_order)
+route_comms_navigate("dc/work/cancel", comms_damcons_work_cancel)
+
+
+===== comms_damcons =======
+yield success if not has_roles(COMMS_SELECTED_ID, "damcons")
+
+is_idle = get_inventory_value(COMMS_SELECTED_ID, "idle")
+if is_idle:
+    comms_add_button("Go to work", comms_damcons_goto_work)
+else:
+    comms_add_button("go to rally point", comms_damcons_goto_rally_point)
+
+comms_add_button("do work order now", path="dc/work/order")
+comms_add_button("cancel work order", path="dc/work/cancel")
+
+yield success
+
+
+===== comms_damcons_goto_work =======
+set_inventory_value(COMMS_SELECTED_ID, "idle", False )
+set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
+set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
+set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
+
+
+yield success
+
+===== comms_damcons_goto_rally_point =======
+marker_go_id = get_inventory_value(COMMS_ORIGIN_ID, "marker_id")
+m_blob = to_blob(marker_go_id)
+
+loc_x = m_blob.get("curx", 0)
+loc_y = m_blob.get("cury", 0)
+set_inventory_value(COMMS_SELECTED_ID, "idle", True )
+set_inventory_value(COMMS_SELECTED_ID, "idle_state", "start" )
+set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
+
+yield success
+
+
+==== comms_damcons_work_order ====== 
+orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
+
+comms_add_button("Back", path="")
+for d in orders:
+    comms_add_button(f"Fix now {d.name}", handle_damcons_work_order, data={"target_room": d.id})
+
+yield success
+
+==== handle_damcons_work_order ====== 
+set_inventory_value(COMMS_SELECTED_ID, "target_room", target_room)
+yield success
+
+==== comms_damcons_work_cancel ====== 
+orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
+
+comms_add_button("Back", path="")
+for d in orders:
+    comms_add_button(f"Cancel {d.name}", handle_damcons_work_cancel, data={"target_room": d.id})
+
+yield success
+
+==== handle_damcons_work_cancel ====== 
+unlink(COMMS_SELECTED_ID, "work-order", target_room)
+yield success
+

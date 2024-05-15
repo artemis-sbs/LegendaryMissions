@@ -10,8 +10,9 @@ import elite_abilities.mast
 # NOTE: More than one route spawn can exist
 #
 route_spawn(handle_route_spawn)
+
 build_task = None
-task_schedule(take_surrendered_home)
+
 #
 # The route_spawn label is the entry point 
 # it examines the SPAWNED_ID to either
@@ -23,7 +24,7 @@ task_schedule(take_surrendered_home)
 jump ai_player if has_role(SPAWNED_ID, "__player__")
 jump ai_task_friendly if has_roles(SPAWNED_ID, "tsn, friendly")
 jump spawn_task_station if has_roles(SPAWNED_ID, "tsn, station")
-jump raider_start if has_role(SPAWNED_ID, "raider")
+jump task_npc_targeting  if has_role(SPAWNED_ID, "raider")
 #jump ai_fighter if has_roles(SPAWNED_ID, "tsn,fighter")
 
 #### ELSE don't run a task
@@ -51,22 +52,9 @@ schedule_player_docking(SPAWNED_ID, difficulty)
 ->END
 
 
-====== raider_start ======
-# add a taunt trait
-
-#
-# Select 3 taunts
-#
-race = get_race(SPAWNED_ID)
-jump task_npc_targeting if race is None
 
 
-this_taunt_data = random.sample(taunt_data[race], 3)
-set_inventory_value(SPAWNED_ID, "taunt_data", this_taunt_data)
-set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
-
-## falls through # jump task_npc_targeting
-
+========== task_npc_targeting === 
 #
 # This is for enemy AI
 # For now this is in priority
@@ -75,7 +63,6 @@ set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
 #  - a player that is withing 2000
 #  - or a stations
 #
-========== task_npc_targeting === 
 
 scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 surrendered = has_role(SPAWNED_ID, "surrendered")
@@ -148,17 +135,6 @@ await delay_sim(seconds=5)
 
 ================ spawn_task_station ================= 
 
-#
-# All stations start building homing, just us any player
-# Build task needs a player to talk to
-#
-my_players = role("__player__") & role("tsn")
-->END if len(my_players)==0
-ship_id = next(iter(my_players))
-station_id = SPAWNED_ID
-
-build_munition_queue_task(station_id, sbs.TORPEDO.HOMING)
-
 scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 #
 # This is naive and assume players are on one side
@@ -169,36 +145,16 @@ if not scanned:
         follow_route_science_select(should_scan, SPAWNED_ID)
 
 
-eo = to_engine_object(station_id)
+eo = to_engine_object(SPAWNED_ID)
 _pos = eo.pos
 
 #_pos.y += 300
 
 for x in range(random.randint(1,3)):
-    hangar_random_craft_spawn(station_id, "tsn")
+    hangar_random_craft_spawn(SPAWNED_ID, "tsn")
 
 
 -> END
 
-
-======== take_surrendered_home  =========
-
-await delay_sim(5)
-
-surrendered = role("surrendered")
-for ship in surrendered:
-    ship_obj = to_object(ship)
-    continue if ship_obj is None
-
-    spawn_pos = Vec3(ship_obj.spawn_pos)
-    _pos = ship_obj.pos
-    target_pos(ship, spawn_pos.x, spawn_pos.y, spawn_pos.z)
-    diff = _pos - spawn_pos
-    continue if diff.length() > 500
-    # if Close to 500, then delete
-    sbs.delete_object(ship)
-
-
-jump take_surrendered_home
 
 

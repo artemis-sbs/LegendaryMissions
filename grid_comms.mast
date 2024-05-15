@@ -1,5 +1,7 @@
 # This code is for Engineering Console to select
 # and communicate with objects in grid object list.
+import grid_comms/damcons.mast
+import grid_comms/rooms.mast
 
 route_grid_point("grid_point_select")
 route_grid_select("grid_comms")
@@ -14,75 +16,17 @@ route_grid_focus("grid_focus")
 
 ->END if not has_role(COMMS_ORIGIN_ID, "__player__")
 
-jump comms_damcons if has_role(COMMS_SELECTED_ID, "damcons")
-jump comms_damaged if has_role(COMMS_SELECTED_ID, "__damaged__")
-jump comms_undamaged if has_role(COMMS_SELECTED_ID, "__undamaged__")
+if has_role(COMMS_SELECTED_ID, "damcons"):
+    await comms()
+if has_role(COMMS_SELECTED_ID, "room"):
+    await comms()
+
+# jump comms_damaged if has_role(COMMS_SELECTED_ID, "__damaged__")
+# jump comms_undamaged if has_role(COMMS_SELECTED_ID, "__undamaged__")
 jump marker_comms if has_role(COMMS_SELECTED_ID, "marker")
 
 comms_info("static")
 ->END
-
-
-==== comms_damcons ====== 
-
-#
-# Create marker if it doesn't exist
-# 
-marker_go_id = get_inventory_value(COMMS_ORIGIN_ID, "marker_id")
-m_blob = to_blob(marker_go_id)
-is_idle = get_inventory_value(COMMS_SELECTED_ID, "idle")
-await comms():
- + "go to rally point" if not is_idle:
-    loc_x = m_blob.get("curx", 0)
-    loc_y = m_blob.get("cury", 0)
-    set_inventory_value(COMMS_SELECTED_ID, "idle", True )
-    set_inventory_value(COMMS_SELECTED_ID, "idle_state", "start" )
-    set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
-
- + "Go to work" if is_idle:
-    set_inventory_value(COMMS_SELECTED_ID, "idle", False )
-    set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
-    set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
-    set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
-
-  + "do work order now":
-    jump damcons_work_order
-
- + "cancel work order":
-    jump damcons_cancel
-
-
-jump comms_damcons
-
-==== damcons_work_order ====== 
-
-orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
-
-await comms():
- + "back":
-    jump comms_damcons
-
- + "Fix now {d.name}" for d in orders:
-    set_inventory_value(COMMS_SELECTED_ID, "target_room", d.id)
-    jump comms_damcons
-
-
-jump comms_damcons
-
-==== damcons_cancel ====== 
-
-orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
-if orders is None:
-    orders = []
-
-await comms():
- + "back":
-    jump comms_damcons
-
- + "Cancel {d.name}" for d in orders:
-    unlink(COMMS_SELECTED_ID, "work-order", d.id)
-
-jump comms_damcons
 
 
 ==== comms_damaged ====== 

@@ -6,6 +6,7 @@ route_comms_navigate("", station_weapon_building)
 # This will allow buttons to be added at the 'station/build' level
 #
 route_comms_navigate("station/build", station_comms_building)
+route_spawn(spawn_task_station_start_building)
 
 # Set title colors for incoming messages from stations, raiders, and surrendered raiders.
 station_color = "green"
@@ -103,7 +104,7 @@ if build_munition_queue_task(station_id, build_type):
 else:
     comms_receive(f"""{comms_id}, we are already producing {weapon_text}.^""", title=f"build {weapon_text}", title_color=station_color)
 
-comms_set_path("")
+comms_navigate("")
 yield success
 
 === task_station_building ===
@@ -144,3 +145,20 @@ for player in all_roles(f"__player__, {side}" ):
     comms_receive(f"""{comms_id}. {torp_name} Production complete.""", title=f"""{torp_name} complete.""", title_color=station_color)
 
 ->task_station_building
+
+
+
+================ spawn_task_station_start_building ================= 
+#
+# All stations start building homing, just us any player
+# Build task needs a player to talk to
+#
+->END if not has_roles(SPAWNED_ID, "tsn, station")
+
+station_id = SPAWNED_ID
+
+build_munition_queue_task(station_id, sbs.TORPEDO.HOMING)
+
+scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
+
+-> END

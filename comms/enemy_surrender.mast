@@ -1,6 +1,8 @@
 
 route_comms_navigate("", comms_raider_surrender)
 
+shared _surrender_return = task_schedule(take_surrendered_home)
+
 ================ comms_raider_surrender ==================
 
 yield fail if not object_exists(COMMS_ORIGIN_ID)
@@ -83,4 +85,27 @@ yield SUCCESS
 
 
 
+#
+# This is a single task to return surrendered 
+# enemies to their spawn point and remove from map
+#
+======== take_surrendered_home  =========
+
+await delay_sim(5)
+
+surrendered = role("surrendered")
+for ship in surrendered:
+    ship_obj = to_object(ship)
+    continue if ship_obj is None
+
+    spawn_pos = Vec3(ship_obj.spawn_pos)
+    _pos = ship_obj.pos
+    target_pos(ship, spawn_pos.x, spawn_pos.y, spawn_pos.z)
+    diff = _pos - spawn_pos
+    continue if diff.length() > 500
+    # if Close to 500, then delete
+    sbs.delete_object(ship)
+
+
+jump take_surrendered_home
 
