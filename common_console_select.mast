@@ -49,27 +49,29 @@ client_select_ship =player_list[client_selected_index]["name"].lower()
 ship_name = client_select_ship
 
 
-ship_sec = gui_section(style="area: 1,60px,40,105px")
-gui_row(style="row-height: 45px;")
+ship_sec = gui_region(style="area: 1,60px,40,105px")
+with ship_sec:
+    gui_row(style="row-height: 45px;")
 
-_input = "desc:Ship Name"
-on gui_message(gui_input(_input, var="ship_name")):
-    ~~player_list[client_selected_index]["name"] = ship_name~~
-    client_select_ship = ship_name
-    ~~player_list[client_selected_index]["ship"] = ship_type~~
-    gui_update_shared("sh_ship_list", None)
+    _input = "desc:Ship Name"
+    on gui_message(gui_input(_input, var="ship_name")):
+        ~~player_list[client_selected_index]["name"] = ship_name~~
+        client_select_ship = ship_name
+        ~~player_list[client_selected_index]["ship"] = ship_type~~
+        gui_update_shared("sh_ship_list", None)
 
-ship_sec2 = gui_section(style="area: 1,15,40,100")
-gui_row() #style="row-height: 300px;")
+ship_sec2 = gui_region(style="area: 1,15,40,100")
+with ship_sec2:
+    gui_row() #style="row-height: 300px;")
 
-#
-# Specify only ships with defined engineering grid
-#
-gui_content(ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors), style="tag:sh_ship_picker", var="ship_type")
-on change ship_type:
-    ~~player_list[client_selected_index]["ship"] = ship_type~~
-    gui_update_shared("sh_ship_picker", ship_type, {"client_select_ship": client_select_ship})
-    gui_update_shared("sh_ship_list", None)
+    #
+    # Specify only ships with defined engineering grid
+    #
+    gui_content(ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors), style="tag:sh_ship_picker", var="ship_type")
+    on change ship_type:
+        ~~player_list[client_selected_index]["ship"] = ship_type~~
+        gui_update_shared("sh_ship_picker", ship_type, {"client_select_ship": client_select_ship})
+        gui_update_shared("sh_ship_list", None)
 
 if console_select != "helm" or game_started:
     gui_hide(ship_sec)

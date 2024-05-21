@@ -150,7 +150,7 @@ for player in all_roles(f"__player__, {side}" ):
 
 ================ spawn_task_station_start_building ================= 
 #
-# All stations start building homing, just us any player
+# All stations start building homing, just as any player
 # Build task needs a player to talk to
 #
 ->END if not has_roles(SPAWNED_ID, "tsn, station")

@@ -1,0 +1,115 @@
+# Need concept of sub_task 
+#*   sub task end only on failure and lifetime controlled by task
+#*       task needs add_subtask, stop_subtask, remove_all_subtasks
+#*       task needs to act as a sub task, and tick sub sub_tasks
+#*       task as subtask goes idle on success/end stops, jump clears idle, fail is a stop
+
+#*  task now will manage on change
+
+# add signal concept
+
+
+
+# This will just spawn the label as a sub task
+route_gui_navigate("normal_weap", manual_weapons_start)
+
+# this could be a subtask or routed
+==== manual_weapons_start ====
+
+manual =  gui_region("area: 0,90,50,100;")
+
+==== manual_weapons_minimize =======
+_state = 0
+with gui_rebuild(manual):
+    ib = gui_icon("icon_index:112;color:green;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:manual_beams")
+    on gui_click(ib):
+        print("CLICK MAX")
+        jump manual_weapons_maximize if "manual_beams" == __CLICKED__
+
+
+ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+
+on change get_weapons_selection(ship_id):
+    jump  manual_weapons_maximize if _state == 1
+
+
+yield success
+
+====== manual_weapons_maximize =====
+
+#
+# This adds the window to a gui about to present
+#
+
+ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+ship = to_object(ship_id)
+yield fail if ship is None
+target_id = get_weapons_selection(ship_id)
+jump manual_weapons_minimize if target_id==0
+_target = to_object(target_id)
+jump manual_weapons_minimize if _target is None
+dist = sbs.distance_id(ship_id, target_id)
+jump manual_weapons_minimize if dist > 2000
+
+name = _target.comms_id
+_state = 1
+
+with gui_rebuild(manual):
+    gui_text(f"targeting {name}")
+    gui_row()
+    ib = gui_icon("icon_index:112;color:green;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:min_manual_beams")
+    on gui_click(ib):
+        print("CLICK MIN")
+        jump manual_weapons_minimize if "min_manual_beams" == __CLICKED__
+
+    gui_blank()
+    on gui_message(gui_button("weapons")):
+        print("PEW")
+        jump manual_weapons_shoot
+    on gui_message(gui_button("engine")):
+        print("PEW")
+        jump manual_weapons_shoot
+    on gui_message(gui_button("sensors")):
+        print("PEW")
+        jump manual_weapons_shoot
+    on gui_message(gui_button("shields")):
+        print("PEW")
+        jump manual_weapons_shoot
+
+
+    
+    #on gui_message(gui_button("Close")):
+    #    with gui_rebuild(manual):
+    #        print("close")
+            # clears the gui
+            # With needs a single operation to work
+            # Need to fix that ?
+
+        # sub_tasks only end on failure    
+        #yield fail
+
+    # New signals executes on task and subtasks
+    #signal_emit("something")
+
+    # Passing an ID with resolve the task if task, 
+    # or if client_id the gui_task
+    #signal_emit("something", client_id)
+
+    #on signal("something", label)
+
+    #on signal("something"):
+        # This will replace reroute client
+
+
+#
+# This ends execution of the task
+# but keeps it alive
+#
+yield success
+
+
+
+
+==== manual_weapons_shoot  =======
+print("PEW PEW")
+yield success

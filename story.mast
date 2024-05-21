@@ -31,9 +31,7 @@ import operator/remote_console.mast
 import operator/admin_console.mast
 import commerce/resource_gather.py
 import crew_management.mast
-
-
-
+import consoles/manual_weapons.mast
 
 
 #
