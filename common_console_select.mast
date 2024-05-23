@@ -171,6 +171,13 @@ await gui()
 ====== game_started_console ====
 if not console_ready:
     jump select_console
+#
+# This delay lets the server finish
+# building the map, some times 
+# a race condition occurs like the grid objects 
+# or player ship aren't spawn first
+#
+await delay_sim(1)
 
 ====== console_selected ====
 if console_select is None or client_select_ship is None:
@@ -188,6 +195,10 @@ for player_ship in to_object_list(role("__PLAYER__")):
 
 
 jump select_console if _ship_id is None
+
+
+
+
 #
 # This should get a skybox with client overriding, shp, overriding shared
 #
@@ -209,11 +220,36 @@ jump show_hangar if console_select == "hangar"
 jump show_main_game_screen if console_select == "mainscreen"
 jump show_cinematic_screen if console_select == "cinematic"
 
+
 #------------------------------------------------------------------------------------------------------------
 sbs.set_beam_damages(client_id, 7.0, difficulty)
 #------------------------------------------------------------------------------------------------------------
+#
+# Handle jump drive
+#
+is_warp = False
+is_jump = False
+warp_nodes = to_object_list(grid_objects(_ship_id) & role("warp"))
+#
+_jump_nodes = to_object_list(grid_objects(_ship_id) & role("jump"))
+_jump_nodes = role("jump")
+print(_jump_nodes)
+
+is_warp = len(warp_nodes) > 0
+is_jump = len(_jump_nodes) > 0
+
+if console_select == "helm":
+    _warp = 1 if is_warp else 0
+    _jump = 1 if is_jump else 0
+    _label = "JUMP" if is_jump else "WARP"
+
+    blob = to_blob(_ship_id)
+    blob.set("warp_drive_active",_warp,0)
+    blob.set("jump_drive_active", _jump,0)
+    blob.set("eng_control_label", _label, 3)
+
 gui_add_console_tab(_ship_id, console_select, console_select, None)
-gui_console(console_select)
+gui_console(console_select, is_jump)
 #
 #
 # Use a label replace to override: 

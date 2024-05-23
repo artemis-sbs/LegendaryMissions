@@ -33,7 +33,7 @@ on change get_weapons_selection(ship_id):
     jump  manual_weapons_maximize if _state == 1
 
 
-yield success
+yield idle
 
 ====== manual_weapons_maximize =====
 
@@ -105,11 +105,11 @@ with gui_rebuild(manual):
 # This ends execution of the task
 # but keeps it alive
 #
-yield success
+yield idle
 
 
 
 
 ==== manual_weapons_shoot  =======
 print("PEW PEW")
-yield success
+yield idle

@@ -40,7 +40,7 @@ hangar_fighter_spawn(SPAWNED_ID, "tsn")
 # Create the interior for the ship, defined in grid_ai
 #
 
-task_schedule(spawn_grid_objects)
+await task_schedule(spawn_grid_objects)
 #
 # The remaining AI for the player is docking
 #

@@ -39,7 +39,7 @@ blob = to_blob(COMMS_SELECTED_ID)
 surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
 set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
 
-
+sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
 shield_count = blob.get("shield_count", 0)
 s_ratio = 100
 for s in range(shield_count):

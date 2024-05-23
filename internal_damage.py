@@ -188,7 +188,7 @@ def grid_restore_damcons(id_or_obj):
             if len(point) == 0:
                 break
 
-            dc = grid_spawn(ship_id, _name, _name, point[0],point[1],80, colors[i], "damcons, lifeform")
+            dc = grid_spawn(ship_id, _name, _name, point[0],point[1],80, colors[i], "crew,damcons,lifeform")
             dc.blob.set("icon_scale", 0.75,0 )
             _id = to_id(dc)
             _go = to_object(dc)

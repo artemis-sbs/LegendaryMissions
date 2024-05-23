@@ -206,10 +206,11 @@ match world_select.lower():
 game_started = True
 watch_end_game_task = task_schedule(task_end_game)
 
-gui_reroute_clients(game_started_console, exclude={client_id})
-
 # Temp set this when first running
 SIM_STATE = "sim_running"
+
+
+gui_reroute_clients(game_started_console, exclude={client_id})
 
 
 === show_main_game_screen === 
