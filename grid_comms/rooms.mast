@@ -3,7 +3,9 @@ route_comms_navigate("room/rally", comms_room_rally_point)
 
 
 ===== comms_room =======
-yield success if not has_roles(COMMS_SELECTED_ID, "room")
+has_any = to_set(COMMS_SELECTED_ID) & any_role("room,system,access")
+yield success if len(has_any)==0
+
 
 
 all_dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))

@@ -1,7 +1,11 @@
 import internal_damage.py
+
 route_damage_internal("take_internal_damage")
 route_damage_heat("take_heat_damage")
 
+settings = story_get_mission_setup()
+shared GRID_THEME_INDEX = settings.get("grid_theme",0) 
+grid_set_grid_current_theme(GRID_THEME_INDEX )
 
 ======== take_heat_damage  =======
 # This called when there is damage being taken from heat

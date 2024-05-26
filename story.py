@@ -50,6 +50,7 @@ def story_get_mission_setup():
         "game_ended": False,
         "difficulty": 5,
         "player_count": 1,
+        "grid_theme": 0,
         "player_list": [
             {
                 "name": "Artemis",

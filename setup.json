@@ -7,6 +7,7 @@
         "pin": "000000"
     },
     "players_count": 1,
+    "grid_theme": 0,
     "difficulty": 5,
     "world_select": "siege",
     "terrain_select": "some",

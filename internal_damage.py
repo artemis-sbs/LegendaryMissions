@@ -2,13 +2,14 @@ from sbs_utils.procedural.query import to_id, to_blob, to_object, to_list, to_se
 from sbs_utils.procedural.roles import role, add_role, remove_role, all_roles,has_role
 from sbs_utils.procedural.links import link,unlink, linked_to
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value, get_shared_inventory_value, has_inventory_value
-from sbs_utils.procedural.grid import grid_objects, grid_objects_at, grid_closest, grid_get_grid_data
+from sbs_utils.procedural.grid import grid_objects, grid_objects_at, grid_closest, grid_get_grid_data, grid_get_item_theme_data, grid_get_grid_current_theme, grid_set_grid_current_theme
 from sbs_utils.procedural.spawn import grid_spawn
 from sbs_utils.procedural.comms import comms_broadcast
 from sbs_utils.procedural.gui import gui_reroute_client
 from sbs_utils.procedural.space_objects import get_pos
 from sbs_utils.helpers import FrameContext
 from sbs_utils.tickdispatcher import TickDispatcher
+
 import random
 import sbs
 
@@ -22,25 +23,6 @@ def grid_get_max_hp():
     global _MAX_HP
     return _MAX_HP
 
-
-
-_themes = [
-    {"silhouette": "#0F1F1F", "lines": "#2F4F4F", "nodes": "#778899", "silver": "LightYellow", "lime":"springgreen", "dc": ["slateblue", "CadetBlue", "royalblue"], "dc_damage": ["LightCoral", "LightSalmon", "Salmon"], "damage": "Crimson"},
-    {"silhouette": "Gainsboro", "lines": "DarkKhaki", "nodes": "Khaki", "silver": "#003", "lime":"#060", "dc": ["slateblue", "CadetBlue", "royalblue"], "dc_damage": ["LightCoral", "LightSalmon", "Salmon"], "damage": "Crimson" },
-    {"silhouette": "#0000bb66", "lines": "gray", "nodes": "darkgray", "silver": "#00a0a0", "lime":"#0ee", "dc": ["PaleGreen", "Cornsilk", "Lavender"], "dc_damage": ["LightCoral", "LightSalmon", "Salmon"], "damage": "#FE00FE"}
-]
-
-_grid_current_theme = 0
-def grid_get_theme(theme=_grid_current_theme):
-    if theme >= len(_themes):
-        theme = 0
-    return _themes[theme]
-
-def grid_set_theme(theme):
-    global _grid_current_theme
-    if theme >= len(_themes):
-        theme = 0
-    _grid_current_theme  = theme
 
 
 def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
@@ -57,15 +39,15 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
     if ship_grid is None: return
     internal_items = ship_grid.get("grid_objects")
     if internal_items is None: return
-    theme = grid_get_theme()
+    theme = grid_get_grid_current_theme()
 
 
     #
     # Setup theme
     #
-    blob.set("internal_color_ship_sillouette", theme["silhouette"],0)
-    blob.set("internal_color_ship_lines", theme["lines"],0)
-    blob.set("internal_color_ship_nodes", theme["nodes"],0)
+    blob.set("internal_color_ship_sillouette", theme["colors"]["silhouette"],0)
+    blob.set("internal_color_ship_lines", theme["colors"]["lines"],0)
+    blob.set("internal_color_ship_nodes", theme["colors"]["nodes"],0)
 
 
     # Delete all grid objects
@@ -88,14 +70,16 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
         loc_y = int(g["y"])
         coords = f"{loc_x},{loc_y}"
         name_tag = f"{g['name']}:{coords}"
-        color = g["color"]
-        # see if there is a theme replace color
-        color = theme.get(color, color)
 
-        go =  grid_spawn(ship_id,  name_tag, name_tag, loc_x, loc_y, g["icon"], color, g["roles"])
+        item_theme_data = grid_get_item_theme_data(g["roles"])
+
+        color = item_theme_data.color
+        icon = item_theme_data.icon
+        scale = item_theme_data.scale
+        go =  grid_spawn(ship_id,  name_tag, name_tag, loc_x, loc_y, icon, color, g["roles"])
         if go is None: return
 
-        go.blob.set("icon_scale", g["scale"]/2, 0)
+        go.blob.set("icon_scale", scale/2, 0)
         # save color so it cn be restored
         set_inventory_value(go.id, "color", color)
         #
@@ -162,15 +146,18 @@ def grid_restore_damcons(id_or_obj):
 
     hm = sbs.get_hull_map(ship_id)
     if hm is None: return
-    theme = grid_get_theme()
+
+    item_theme_data = grid_get_item_theme_data("damcons")
+    rally_theme_data = grid_get_item_theme_data("rally_point")
     #
     # Get Colors from theme
     # 
-    colors  = theme["dc"]
-    damage_colors  = theme["dc_damage"]
+    colors  = item_theme_data.color
+    damage_colors  = item_theme_data.damage_color
     #
     # Create damcons/lifeforms
     #
+    color_count = len(colors)
     for i in range(3):
         # See if damcon exists
         _name = f"DC{i+1}"
@@ -178,7 +165,7 @@ def grid_restore_damcons(id_or_obj):
         if _test_go is not None:
             _id = _test_go.unique_ID # _test_go is an object from the engine
             _blob = to_blob(_test_go.unique_ID)
-            _blob.set("icon_color", colors[i], 0)
+            _blob.set("icon_color", colors[i%color_count], 0)
             # Hit points == MAX_HP
             set_inventory_value(_id, "HP", grid_get_max_hp() )
         else:
@@ -187,13 +174,15 @@ def grid_restore_damcons(id_or_obj):
             
             if len(point) == 0:
                 break
-
-            dc = grid_spawn(ship_id, _name, _name, point[0],point[1],80, colors[i], "crew,damcons,lifeform")
-            dc.blob.set("icon_scale", 0.75,0 )
+            icon = item_theme_data.icon
+            scale = item_theme_data.scale
+            dc = grid_spawn(ship_id, _name, _name, point[0],point[1],icon, colors[i%color_count], "crew,damcons,lifeform")
+            
+            dc.blob.set("icon_scale", scale,0 )
             _id = to_id(dc)
             _go = to_object(dc)
-            set_inventory_value(_id, "color", colors[i])
-            set_inventory_value(_id, "damage_color", damage_colors[i])
+            set_inventory_value(_id, "color", colors[i%color_count])
+            set_inventory_value(_id, "damage_color", damage_colors[i%color_count])
             set_inventory_value(_id, "idle_pos", (point[0], point[1]) )
             # Hit points == MAX_HP
             set_inventory_value(_id, "HP", grid_get_max_hp() )
@@ -202,9 +191,13 @@ def grid_restore_damcons(id_or_obj):
             #
             dc_color = get_inventory_value(_id, "color", "white")
             marker_tag = f"{_go.name} rally point"
-            idle_marker = grid_spawn(ship_id, marker_tag, marker_tag, point[0],point[1], 23, dc_color, "#,rally_point") 
+            
+            icon = rally_theme_data.icon
+            scale = rally_theme_data.scale
+
+            idle_marker = grid_spawn(ship_id, marker_tag, marker_tag, point[0],point[1], icon, dc_color, "#,rally_point") 
             _blob = to_blob(idle_marker)
-            _blob.set("icon_scale", 1.2, 0)
+            _blob.set("icon_scale", scale, 0)
             set_inventory_value(_id, "idle_marker", to_id(idle_marker))
 
 
@@ -290,7 +283,7 @@ def grid_damage_hallway(id_or_obj, loc_x, loc_y, damage_color):
     ship_id = to_id(id_or_obj)
     icon = 45 #fire   # 113 - Door
 
-    name_tag = "hallway:{loc_x},{loc_y}"
+    name_tag = f"hallway:{loc_x},{loc_y}"
     dam_go = grid_spawn(ship_id, name_tag, name_tag, loc_x,loc_y, icon, damage_color, "hallway, __damaged__") 
     link(ship_id, "damage", to_id(dam_go))
 
@@ -389,7 +382,9 @@ def grid_damage_system(id_or_obj, the_system):
     if len(hittable) == 0:
         return False
     go_id = random.choice(hittable)
-    damage_color = grid_get_theme()["damage"]
+    # TODO: Maybe this should be inventory like the damcons
+    damage_color = grid_get_grid_current_theme()["damage_colors"]["default"]
+
     grid_damage_grid_object(ship_id, go_id, damage_color)
     add_role(go_id, "__damaged__")
     grid_apply_system_damage(ship_id)
@@ -438,7 +433,7 @@ def grid_take_internal_damage_at(id_or_obj, source_point, system_hit, damage_amo
     #
     # If empty hallway hit, Drop damage down 
     #
-    damage_color = grid_get_theme()["damage"]
+    damage_color = grid_get_grid_current_theme()["damage_colors"]["default"]
     if len(go_set_at_loc) == 0:
 
         grid_damage_hallway(ship_id, loc_x, loc_y, damage_color)

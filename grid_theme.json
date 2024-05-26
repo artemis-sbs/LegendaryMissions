@@ -1,0 +1,215 @@
+[
+    {
+        "name": "cosmos",
+        "primary_roles": [
+            "room",
+            "system",
+            "crew",
+            "access"
+        ],
+        "colors": {
+            "silhouette": "#0F1F1F",
+            "lines": "#2F4F4F",
+            "nodes": "#778899",
+            "default": "LightYellow",
+            "room": "LightYellow",
+            "system": "springgreen",
+            "damcons": [
+                "slateblue",
+                "CadetBlue",
+                "royalblue"
+            ]
+        },
+        "damage_colors": {
+            "default": "Crimson",
+            "damcons": [
+                "LightCoral",
+                "LightSalmon",
+                "Salmon"
+            ]
+        },
+        "icons": {
+            "damcons": {"icon": 80,"scale": 0.7},
+            "rally_point": {"icon": 121,"scale": 1.2},
+            "warp": {
+                "icon": 36,
+                "scale": 1.0
+            },
+            "quarters": {
+                "icon": 142,
+                "scale": 1.0
+            },
+            "vip": {
+                "icon": 73,
+                "scale": 1.0
+            },
+            "sickbay": {
+                "icon": 133,
+                "scale": 1.0
+            },
+            "sensor": {
+                "icon": 11,
+                "scale": 1.0
+            },
+            "shuttle": {
+                "icon": 140,
+                "scale": 1.0
+            },
+            "shield": {
+                "icon": 106,
+                "scale": 1.21
+            },
+            "beam": {
+                "icon": 117,
+                "scale": 1.0
+            },
+            "saloon": {
+                "icon": 104,
+                "scale": 1.0
+            },
+            "brig": {
+                "icon": 81,
+                "scale": 1.0
+            },
+            "torpedo": {
+                "icon": 40,
+                "scale": 1.0
+            },
+            "maneuver": {
+                "icon": 110,
+                "scale": 1.0
+            },
+            "gym": {
+                "icon": 71,
+                "scale": 1.0
+            },
+            "mess": {
+                "icon": 141,
+                "scale": 1.0
+            },
+            "rec": {
+                "icon": 132,
+                "scale": 1.0
+            },
+            "recreation": {
+                "icon": 132,
+                "scale": 1.0
+            },
+            "galley": {
+                "icon": 127,
+                "scale": 1.0
+            },
+            "astro": {
+                "icon": 88,
+                "scale": 1.0
+            },
+            "bio": {
+                "icon": 63,
+                "scale": 1.0
+            },
+            "lounge": {
+                "icon": 138,
+                "scale": 1.0
+            },
+            "physics": {
+                "icon": 29,
+                "scale": 1.0
+            },
+            "cargo": {
+                "icon": 126,
+                "scale": 1.0
+            },
+            "impulse": {
+                "icon": 62,
+                "scale": 1.0
+            },
+            "workshop": {
+                "icon": 58,
+                "scale": 1.0
+            },
+            "conference": {
+                "icon": 131,
+                "scale": 1.0
+            },
+            "computer": {
+                "icon": 5,
+                "scale": 1.2
+            },
+            "hyper": {
+                "icon": 96,
+                "scale": 1.0
+            },
+            "hatch": {
+                "icon": 89,
+                "scale": 1.0
+            },
+            "jump": {
+                "icon": 60,
+                "scale": 1.0
+            },
+            "school": {
+                "icon": 37,
+                "scale": 1.0
+            },
+            "airlock": {
+                "icon": 46,
+                "scale": 1.0
+            },
+            "passenger": {
+                "icon": 83,
+                "scale": 1.21
+            },
+            "priest": {
+                "icon": 108,
+                "scale": 1.0
+            },
+            "shrine": {
+                "icon": 76,
+                "scale": 1.0
+            },
+            "production": {
+                "icon": 125,
+                "scale": 1.0
+            }
+        }
+    },
+    {
+        "name": "Retro",
+        "primary_roles": ["room","system","crew","access"],
+        "colors": {
+            "silhouette": "#0000dd44",
+            "lines": "gray",
+            "nodes": "darkgray",
+            "default": "#00a0a0",
+            "room": "#00a0a0",
+            "system": "#0ee",
+            "damcons": [
+                "PaleGreen",
+                "Cornsilk",
+                "Lavender"
+            ],
+            "damage": "#FE00FE",
+            "damcons_damage": [
+                "LightCoral",
+                "LightSalmon",
+                "Salmon"
+            ]
+        },
+        "damage_colors": {
+            "default": "Crimson",
+            "damcons": [
+                "LightCoral",
+                "LightSalmon",
+                "Salmon"
+            ]
+        },
+        "icons": {
+            "room": {"icon": 129,"scale": 1.0},
+            "access": {"icon": 129,"scale": 1.0},
+            "system": {"icon": 97,"scale": 1.0},
+            "damcons": {"icon": 12,"scale": 1.0},
+            "rally_point": {"icon": 121,"scale": 1.0}
+        }
+    }
+]
+

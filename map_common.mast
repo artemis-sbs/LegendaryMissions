@@ -18,7 +18,7 @@ match friendly_select:
     case "none":
         # no civilian or friendly npcs
         # But added eyes
-        jump add_eye_to_players
+        jump spawn_players
 
 
 total_hull_points = 0
@@ -71,7 +71,7 @@ match friendly_select:
     case "few":
         civilian_count = 1
     case "none":
-        ->RETURN
+        jump spawn_players
 
 # grab the ship data for all ships on TSN side
 civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)

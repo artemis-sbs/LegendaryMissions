@@ -12,25 +12,48 @@
 
 # This will just spawn the label as a sub task
 route_gui_navigate("normal_weap", manual_weapons_start)
+route_damage_object(manual_beam_damage)
+
+
+
 
 # this could be a subtask or routed
 ==== manual_weapons_start ====
+#~~mast_scheduler.page.add_console_widget("3dview")~~
+#gui_section("area: 0,70,50,100;")
+#with gui_sub_section():
+#    gui_layout_widget("helm_movement")
+#    #source = Vec3(0,0, 0)
+#    ## source = source.rotate_around(Vec3(0,0,0), 0, orbit, 0)
+#    #gui_cinematic_full_control(client_id, ship_id, source, target_id, source)
 
-manual =  gui_region("area: 0,90,50,100;")
+manual =  gui_region("area: 0,70,50,100;orientation:BT;")
+
+
+latest_target = None
+_state = 0
+
+ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+on change get_weapons_selection(ship_id):
+    jump  manual_weapons_show
+
+
+==== manual_weapons_show ====
+jump  manual_weapons_maximize if _state == 1
 
 ==== manual_weapons_minimize =======
-_state = 0
+
 with gui_rebuild(manual):
-    ib = gui_icon("icon_index:112;color:green;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:manual_beams")
+    gui_row("row-height: 3em;")
+    ib = gui_icon("icon_index:112;color:yellow;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:manual_beams")
     on gui_click(ib):
-        print("CLICK MAX")
-        jump manual_weapons_maximize if "manual_beams" == __CLICKED__
+        _state = 1
+        jump manual_weapons_maximize
+    gui_row()
+    gui_blank()
 
 
 ship_id = get_inventory_value(client_id, "assigned_ship", 0)
-
-on change get_weapons_selection(ship_id):
-    jump  manual_weapons_maximize if _state == 1
 
 
 yield idle
@@ -49,57 +72,38 @@ jump manual_weapons_minimize if target_id==0
 _target = to_object(target_id)
 jump manual_weapons_minimize if _target is None
 dist = sbs.distance_id(ship_id, target_id)
-jump manual_weapons_minimize if dist > 2000
+
+#jump manual_weapons_minimize if dist > 2000
 
 name = _target.comms_id
 _state = 1
 
+# Drawing is bottom to top set in region style
 with gui_rebuild(manual):
-    gui_text(f"targeting {name}")
-    gui_row()
+    gui_row("row-height: 3em;")
+    # Bottom row 
     ib = gui_icon("icon_index:112;color:green;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:min_manual_beams")
     on gui_click(ib):
-        print("CLICK MIN")
-        jump manual_weapons_minimize if "min_manual_beams" == __CLICKED__
-
+        _state = 0
+        jump manual_weapons_minimize
     gui_blank()
     on gui_message(gui_button("weapons")):
-        print("PEW")
+        _manual_system = sbs.SHPSYS.WEAPONS
         jump manual_weapons_shoot
     on gui_message(gui_button("engine")):
-        print("PEW")
+        _manual_system = sbs.SHPSYS.ENGINES
         jump manual_weapons_shoot
     on gui_message(gui_button("sensors")):
-        print("PEW")
+        _manual_system = sbs.SHPSYS.SENSORS
         jump manual_weapons_shoot
-    on gui_message(gui_button("shields")):
-        print("PEW")
-        jump manual_weapons_shoot
+    gui_row("row-height: 2em;")
+    gui_text(f"targeting {name}")
+    gui_row()
+    
 
 
     
-    #on gui_message(gui_button("Close")):
-    #    with gui_rebuild(manual):
-    #        print("close")
-            # clears the gui
-            # With needs a single operation to work
-            # Need to fix that ?
-
-        # sub_tasks only end on failure    
-        #yield fail
-
-    # New signals executes on task and subtasks
-    #signal_emit("something")
-
-    # Passing an ID with resolve the task if task, 
-    # or if client_id the gui_task
-    #signal_emit("something", client_id)
-
-    #on signal("something", label)
-
-    #on signal("something"):
-        # This will replace reroute client
-
+    
 
 #
 # This ends execution of the task
@@ -111,5 +115,75 @@ yield idle
 
 
 ==== manual_weapons_shoot  =======
-print("PEW PEW")
+# Re-get ship ID incase switch ship
+ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+->END if ship_id == 0
+
+critical = get_inventory_value(ship_id, "MANUAL_CRITICAL_HIT", False)
+if _manual_system != latest_target:
+    set_inventory_value(ship_id, "MANUAL_SYSTEM", _manual_system)
+    set_inventory_value(ship_id, "MANUAL_CRITICAL_HIT", None)
+    if critical:
+        comms_broadcast(client_id, "Lost Critical hit, chance", "cyan")
+
+latest_target = _manual_system
+
+#
+# If critical don't do it again
+#
+yield idle if critical
+
+target_id = get_weapons_selection(ship_id)
+yield = target_id==0
+t = to_object(target_id)
+jump manual_weapons_show if t is None
+
+if random.randint(1,20) == 20:
+    set_inventory_value(ship_id, "MANUAL_SYSTEM", _manual_system)
+    set_inventory_value(ship_id, "MANUAL_CRITICAL_HIT", target_id)
+    comms_broadcast(client_id, f"Potential Critical hit {t.name}", "yellow")
+
+
 yield idle
+
+
+
+============= manual_beam_damage =========
+->END if not has_role(DAMAGE_TARGET_ID, "raider")
+
+system = get_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_SYSTEM")
+target_id = get_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_CRITICAL_HIT")
+->END if target_id == 0
+
+->END if target_id != DAMAGE_TARGET_ID
+
+set_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_SYSTEM", None)
+set_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_CRITICAL_HIT", None)
+
+->END if system is None
+->END if target_id is None
+
+t = to_object(target_id)
+->END if t is None
+
+#
+# Cause some damage
+#
+max_damage = t.data_set.get('system_max_damage', system)
+cur = t.data_set.get('system_damage', system)
+up = cur*1.2
+
+# Note: this may not by the same task or client ID of the weapons
+# So don't assume it is
+#
+
+t.data_set.set('system_damage', up, system)
+if cur > max_damage:
+    comms_broadcast(DAMAGE_SOURCE_ID, f"{t.name} {system.name} Destroyed", "white")
+else:
+
+    comms_broadcast(DAMAGE_SOURCE_ID, f"Critical hit {t.name} {system.name}", "red")
+
+
+
+->END

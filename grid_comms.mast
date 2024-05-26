@@ -20,6 +20,8 @@ if has_role(COMMS_SELECTED_ID, "damcons"):
     await comms()
 if has_role(COMMS_SELECTED_ID, "room"):
     await comms()
+if has_role(COMMS_SELECTED_ID, "system"):
+    await comms()
 
 # jump comms_damaged if has_role(COMMS_SELECTED_ID, "__damaged__")
 # jump comms_undamaged if has_role(COMMS_SELECTED_ID, "__undamaged__")
@@ -180,7 +182,7 @@ marker_blob.set("cury", EVENT.source_point.y)
 found_id = None
 
 damcons = go_set_at_loc & role("damcons")
-rooms = go_set_at_loc & any_role("room, computer")
+rooms = go_set_at_loc & any_role("system, room, access")
 #
 # Pick damcons over rooms
 #
