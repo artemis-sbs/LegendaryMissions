@@ -1,0 +1,17 @@
+route_science_navigate("", science_debug_scan)
+
+#
+#
+# This is an example of extending science
+# by doing a debug panel
+#
+
+
+===== science_debug_scan =======
+science_add_scan("Debug", science_debug_scan_results)
+yield success
+
+===== science_debug_scan_results =======
+print("DEBUG SCAN")
+scan_results("This is a debug string.", tab="Debug")
+yield success

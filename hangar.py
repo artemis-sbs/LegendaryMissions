@@ -139,7 +139,7 @@ def hangar_launch_craft(craft_id):
     if hm is None: return False
     grid_rebuild_grid_objects(craft.id)
     if has_role(craft.id, "fighter"):
-        set_data_set_value(craft.id, "torpedo_count", 5, sbs.TORPEDO.HOMING)
+        set_data_set_value(craft.id, "Homing_NUM", 5, 0)
     remove_role(craft.id, "standby")
 
     home_id = get_dedicated_link(craft.id, "home_dock")

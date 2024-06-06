@@ -15,25 +15,25 @@ route_gui_navigate("normal_weap", manual_weapons_start)
 route_damage_object(manual_beam_damage)
 
 
-
-
 # this could be a subtask or routed
 ==== manual_weapons_start ====
-#~~mast_scheduler.page.add_console_widget("3dview")~~
-#gui_section("area: 0,70,50,100;")
-#with gui_sub_section():
-#    gui_layout_widget("helm_movement")
-#    #source = Vec3(0,0, 0)
-#    ## source = source.rotate_around(Vec3(0,0,0), 0, orbit, 0)
-#    #gui_cinematic_full_control(client_id, ship_id, source, target_id, source)
 
-manual =  gui_region("area: 0,70,50,100;orientation:BT;")
+ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+~~mast_scheduler.page.add_console_widget("3dview")~~
+gui_section("area: 0,70,50,90;")
+with gui_sub_section():
+    gui_layout_widget("3dview")
+    source = Vec3(0,0, 0)
+    ## source = source.rotate_around(Vec3(0,0,0), 0, orbit, 0)
+    gui_cinematic_full_control(client_id, ship_id, source, ship_id, source)
+
+manual =  gui_region("area: 0,90,50,100;orientation:BT;")
 
 
 latest_target = None
 _state = 0
 
-ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+
 on change get_weapons_selection(ship_id):
     jump  manual_weapons_show
 
@@ -73,7 +73,10 @@ _target = to_object(target_id)
 jump manual_weapons_minimize if _target is None
 dist = sbs.distance_id(ship_id, target_id)
 
-#jump manual_weapons_minimize if dist > 2000
+jump manual_weapons_minimize if dist > 2000
+source = Vec3(0,0, 200)
+t = Vec3(0,0, 0)
+gui_cinematic_full_control(client_id, target_id, source, target_id, t)
 
 name = _target.comms_id
 _state = 1
@@ -171,7 +174,9 @@ t = to_object(target_id)
 #
 max_damage = t.data_set.get('system_max_damage', system)
 cur = t.data_set.get('system_damage', system)
-up = cur*1.2
+if cur < 1:
+    cur = 1
+up = cur*1.35
 
 # Note: this may not by the same task or client ID of the weapons
 # So don't assume it is

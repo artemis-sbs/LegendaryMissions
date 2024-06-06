@@ -51,7 +51,8 @@ on gui_message(gui_button("Test Wreck")):
 
 gui_row()
 on gui_message(gui_button("Test Shapes")):
-    jump spawn_test_shapes
+    print("Why is this triggering")
+    # jump spawn_test_shapes
 
 gui_row()
 on gui_message(gui_button("Test list consoles")):
@@ -194,12 +195,12 @@ for e in linked_to(fleet_obj.id,"ship_list"):
     r_blob.set("shield_val", 0, 0)
     r_blob.set("shield_val", 0, 1)
 
+
 ->END
 
 
-
-
 ===== spawn_test_shapes === 
+
 # For testing generic shapes
 _ship_id = get_inventory_value(client_id, "assigned_ship")
 jump debug_screen if _ship_id is None

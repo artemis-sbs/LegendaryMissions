@@ -1,4 +1,5 @@
 route_science_select("handle_science")
+import science_scans/science_debug.mast
 
 ====== handle_science =====
 

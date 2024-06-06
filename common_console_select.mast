@@ -145,7 +145,9 @@ on change console_select:
         gui_show(ship_sec)
         gui_show(ship_sec2)
     else:
+        print("hiding 1")
         gui_hide(ship_sec)
+        print("hiding 2")
         gui_hide(ship_sec2)
 
   

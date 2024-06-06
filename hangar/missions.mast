@@ -73,13 +73,24 @@ jump story_mission_deliver_ammo if mission_type ==0
 #
 # The remaining AI for the player is docking
 #
-torp_type = random.choice(range(sbs.TORPEDO.TORPTYPECOUNT.value))
-amount = random.randint(2, 6-torp_type)
-torp = sbs.TORPEDO(torp_type)
-torp_name = torp.name
-
 sel_o = to_object(COMMS_SELECTED_ID)
 ->END if sel_o is None
+
+origin_o = to_object(COMMS_ORIGIN_ID)
+->END if origin_o is None
+
+_torp_types = origin_o.data_set.get("torpeo_types_available",0)
+# 
+# 
+#
+if  _torp_types is None:
+     print("torpedo mission no needed")
+     ->END
+_torp_types = _torp_types.split(",")
+torp_type = random.choice(len(_torp_types))
+amount = random.randint(2, 6-torp_type)
+torp_name = _torp_types[torp_type].strip()
+
 
 set_inventory_value(SPAWNED_ID, "briefing", f"Deliver {torp_name} to {sel_o.name}^Take the {amount} {torp_name} and delivery them to {sel_o.name}.")
 sel_o = None # free
@@ -97,9 +108,9 @@ jump story_mission_deliver_ammo_travel if not has_role(COMMS_ORIGIN_ID, "standby
 jump story_mission_deliver_ammo_travel if get_dedicated_link(COMMS_ORIGIN_ID, "home_dock") != COMMS_SELECTED_ID
 
 # Get the current load
-current_load = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", torp_type)
+current_load = get_data_set_value(COMMS_SELECTED_ID, f"{torp_type}_NUM", 0)
 # Add the torps
-set_data_set_value(COMMS_SELECTED_ID, "torpedo_count", amount + current_load, torp_type)
+set_data_set_value(COMMS_SELECTED_ID, f"{torp_type}_NUM", amount + current_load, 0)
 
 
 jump hangar_handle_route_spawn

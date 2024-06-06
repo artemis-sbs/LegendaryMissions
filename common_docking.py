@@ -12,13 +12,21 @@ from internal_damage import grid_restore_damcons, grid_repair_grid_objects
 from sbs_utils.faces import get_face
 
 
-__build_times  = {
-    "command": {"build_times": [2, 5, 3, 2]},
-    "civil": {"build_times": [6, 20, 10, 8 ]},
-    "industry": {"build_times": [1, 4, 2, 2 ]},
-    "science": {"build_times": [6, 20, 10, 8 ]},
-    "default": {"build_times": [3, 10, 5, 4 ]}
+
+
+__build_times = {
+    "command": {"build_times": {"Homing": 2, "Nuke": 5, "EMP": 3, "Mine": 2}},
+    "civil": {"build_times": {"Homing": 6, "Nuke": 20, "EMP": 10, "Mine": 8 }},
+    "industry": {"build_times": {"Homing": 1, "Nuke": 4, "EMP": 2, "Mine": 2 }},
+    "science": {"build_times": {"Homing": 6, "Nuke": 20, "EMP": 10, "Mine": 8}},
+    "default": {"build_times": {"Homing": 3, "Nuke": 10, "EMP": 5, "Mine": 4}}
 }
+
+sbs.set_shared_string("Homing","gui_text:Homing;  speed:10; lifetime:25; flare_color:white; trail_color:white;warhead:standard;damage:35; explosion_size:10;explosion_color:fire; behavior:homing; energy_conversion_value:100")
+sbs.set_shared_string("Nuke"  ,"gui_text:Nuke  ;  speed:10; lifetime:25; flare_color:white; trail_color:#99f;warhead:blast; blast_radius:1000; damage:5; explosion_size:20;explosion_color:fire; behavior:homing; energy_conversion_value:200")
+sbs.set_shared_string("EMP"   , "gui_text:EMP  ;  speed:10; lifetime:25; flare_color:yellow; trail_color:#99f;warhead:blast,reduce_shields; blast_radius:1000; damage:50; explosion_size:20;explosion_color:#11F; behavior:homing; energy_conversion_value:50")
+sbs.set_shared_string("Mine"  , "gui_text:Mine ;  speed:10; lifetime:25; flare_color:white; trail_color:white; warhead:blast; blast_radius:1000; damage:5; explosion_size:20; explosion_color:fire; behavior:mine; energy_conversion_value:200")
+
 
 def get_build_times(id_or_obj):
     build_times = get_shared_variable("build_times", __build_times)
@@ -37,8 +45,8 @@ def get_build_times(id_or_obj):
 
 def get_build_time_for(id_or_obj, torp_type):
     bt = get_build_times(id_or_obj)
-    if torp_type.value < len(bt):
-        return bt[torp_type]  * 60
+    return bt.get(torp_type, 1000) * 60
+
 
 def build_munition_queue_task(id_or_obj, torp_type):
     build_task = get_inventory_value(id_or_obj, "build_task")
@@ -47,7 +55,7 @@ def build_munition_queue_task(id_or_obj, torp_type):
     if build_type == torp_type:
         return False
 
-    set_inventory_value(id_or_obj, "build_type", torp_type.value)
+    set_inventory_value(id_or_obj, "build_type", torp_type)
     # if it is running stop it
     if build_task is not None:
         task_cancel(build_task)
@@ -219,15 +227,17 @@ def player_docking_docked(player_id_or_obj, dock_station):
 
     # resupply torps
     if load_torp:
-        for torps in range(sbs.TORPEDO.TORPTYPECOUNT):
-            tLeft = dock_station_blob.get("torpedo_count", torps)
+        _torp_types = player_blob.get("torpedo_types_available")
+        _torp_types =  [x.strip() for x in _torp_types.split(',')]
+        for torps in _torp_types:
+            tLeft = dock_station_blob.get(f"{torps}_NUM", 0)
             if tLeft > 0:
-                torp_max = player_blob.get("torpedo_max", torps)
-                torp_now = player_blob.get("torpedo_count", torps)
+                torp_max = player_blob.get(f"{torps}_MAX", 0)
+                torp_now = player_blob.get(f"{torps}_NUM", 0)
                 if torp_now < torp_max:
                     torp_now = torp_now + 1
-                    player_blob.set("torpedo_count", torp_now,torps)
-                    dock_station_blob.set("torpedo_count", tLeft-1, torps)
+                    player_blob.set(f"{torps}_NUM", torp_now,0)
+                    dock_station_blob.set(f"{torps}_NUM", tLeft-1, 0)
 
 
 

@@ -13,17 +13,6 @@ station_color = "green"
 raider_color = "red"
 surrender_color = "yellow"
 
-#
-# Set the build times for station types
-#
-#   HOMING : 0, NUKE : 1, EMP : 2, MINE : 3
-shared build_times = ~~{
-    "command": {"build_times": [2, 5, 3, 2]},
-    "civil": {"build_times": [6, 20, 10, 8 ]},
-    "industry": {"build_times": [1, 4, 2, 2 ]},
-    "science": {"build_times": [6, 20, 10, 8 ]},
-    "default": {"build_times": [3, 10, 5, 4 ]}
-}~~
 
 
 ===== station_weapon_building ====
@@ -50,13 +39,12 @@ station_comms_id = station_obj.name
 #   HOMING : 0, NUKE : 1, EMP : 2, MINE : 3
 station_build_times = get_build_times(station_id)
 torpedo_build_type = get_inventory_value(station_id, "build_type", 0)
-torpedo_build_type = sbs.TORPEDO(torpedo_build_type)
 
 
-homing = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.HOMING)
-nuke = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.NUKE)
-emp = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.EMP)
-mine = get_data_set_value(COMMS_SELECTED_ID, "torpedo_count", sbs.TORPEDO.MINE)
+homing = get_data_set_value(COMMS_SELECTED_ID, "Homing_NUM", 0)
+nuke = get_data_set_value(COMMS_SELECTED_ID, "Nuke_NUM", 0)
+emp = get_data_set_value(COMMS_SELECTED_ID, "EMP_NUM", 0)
+mine = get_data_set_value(COMMS_SELECTED_ID, "Mine_NUM", )
 build_time = format_time_remaining(COMMS_SELECTED_ID, "build_time")
 
 ~~comms_receive(f"""Hello, {comms_id}.  We stand ready to assist.
@@ -66,14 +54,18 @@ You have full docking privileges.
 {torpedo_build_type} in production. Completion in {build_time}
 
 {"type":<10}{"ready": >5}{"time to produce": >20}
-{"Homing": <10}{homing: >5}{"": >16}{station_build_times[sbs.TORPEDO.HOMING.value]}:00 
-{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times[sbs.TORPEDO.NUKE.value]}:00
-{"EMP": <10}{emp: >5}{"": >16}{station_build_times[sbs.TORPEDO.EMP.value]}:00
-{"Mine": <10}{mine: >5}{"": >16}{station_build_times[sbs.TORPEDO.MINE.value]}:00
+{"Homing": <10}{homing: >5}{"": >16}{station_build_times["Homing"]}:00 
+{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times["Nuke"]}:00
+{"EMP": <10}{emp: >5}{"": >16}{station_build_times["EMP"]}:00
+{"Mine": <10}{mine: >5}{"": >16}{station_build_times["Mine"]}:00
 
 """, title="hail", title_color=station_color)~~
 
 yield success
+
+
+
+
 
 
 
@@ -84,10 +76,10 @@ yield success
 comms_id = to_object(COMMS_ORIGIN_ID).name
 
   
-comms_add_button("Build Homing", station_build_weapon, data={"build_type": sbs.TORPEDO.HOMING, "comms_id": comms_id, "weapon_text": "homing"})
-comms_add_button("Build Nuke", station_build_weapon, data={"build_type": sbs.TORPEDO.NUKE, "comms_id": comms_id, "weapon_text": "nuke"})
-comms_add_button("Build EMP", station_build_weapon, data={"build_type": sbs.TORPEDO.EMP, "comms_id": comms_id, "weapon_text": "EMP"})
-comms_add_button("Build Mine", station_build_weapon, data={"build_type": sbs.TORPEDO.MINE, "comms_id": comms_id, "weapon_text": "Mine"})
+comms_add_button("Build Homing", station_build_weapon, data={"build_type": "Homing", "comms_id": comms_id, "weapon_text": "Homing"})
+comms_add_button("Build Nuke", station_build_weapon, data={"build_type": "Nuke", "comms_id": comms_id, "weapon_text": "Nuke"})
+comms_add_button("Build EMP", station_build_weapon, data={"build_type": "EMP", "comms_id": comms_id, "weapon_text": "EMP"})
+comms_add_button("Build Mine", station_build_weapon, data={"build_type": "Mine", "comms_id": comms_id, "weapon_text": "Mine"})
 comms_add_button("back", path="")
 yield success
 
@@ -108,9 +100,11 @@ comms_navigate("")
 yield success
 
 === task_station_building ===
+#
+# torpedo_build_type, build_time is passed in from build_munition_queue_task
+#
 
 # Player ships can die now
-
 set_timer(station_id, "build_time", seconds = build_time)
 await is_timer_finished(station_id, "build_time")
 #print(f"finished {torpedo_build_type}")
@@ -122,19 +116,19 @@ station = to_object(station_id)
 # If the station was destroyed  END
 #
 ->END if station is None
-torpedo_build_type = get_inventory_value(station_id, "build_type")
+torpedo_build_type = get_inventory_value(station_id, "build_type", "Homing")
 # print(f"build time = {build_time} inv {torpedo_build_type}")
 
-cur_count = get_data_set_value(station_id, "torpedo_count", torpedo_build_type)
-set_data_set_value(station_id, "torpedo_count", cur_count+1, torpedo_build_type)
+cur_count = get_data_set_value(station_id, f"{torpedo_build_type}_NUM", 0)
+set_data_set_value(station_id, f"{torpedo_build_type}_NUM", cur_count+1, 0)
 
 side = station.side
 COMMS_SELECTED_ID = station_id
 ps = all_roles(f"__player__, {side}" )
 # print(f"Players to tell about building stuff {len(ps)}")
 
-torp_names =["homing","nuke", "EMP", "mine"]
-torp_name = torp_names[torpedo_build_type]
+# torp_names =["homing","nuke", "EMP", "mine"]
+torp_name = torpedo_build_type
 
 for player in all_roles(f"__player__, {side}" ):
     COMMS_ORIGIN_ID = player
@@ -157,7 +151,7 @@ for player in all_roles(f"__player__, {side}" ):
 
 station_id = SPAWNED_ID
 
-build_munition_queue_task(station_id, sbs.TORPEDO.HOMING)
+build_munition_queue_task(station_id, "Homing")
 
 scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 

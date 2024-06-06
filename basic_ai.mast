@@ -124,7 +124,6 @@ if the_target is not None:
     if distance < 500:
         throt = 0
 
-
     target(SPAWNED_ID, the_target, shoot, throt)
 
 #

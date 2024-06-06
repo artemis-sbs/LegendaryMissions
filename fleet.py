@@ -196,7 +196,8 @@ def ship_takes_damage():#event):
         attacker_id = event.origin_id
 
     if 0 == attacker_id:
-        print(f"if damage origin and parent are 0  WTF!   {event.tag} {event.sub_tag}")
+         # Probably a mine
+        # print(f"if damage origin and parent are 0  WTF!   {event.tag} {event.sub_tag}")
         return
     victim_id = event.selected_id
     my_fleet = to_object(get_inventory_value(victim_id, "my_fleet_id"))
