@@ -1,0 +1,52 @@
+route_weapons_focus("weapons_select_route")
+route_comms_focus("stop_give_orders")
+
+
+
+========== weapons_select_route ========
+#
+# Handles the 2dView selection for friendlies
+#
+
+# this should focus on the give client
+nav_focus_id = EVENT.client_id
+
+alt_ship = get_inventory_value(nav_focus_id, "2dview_alt_ship", 0)
+
+->END if not alt_ship
+->END if not has_role(alt_ship, "friendly")
+
+nav = get_inventory_value(nav_focus_id, "WEAPONS_SELECTED_NAV", None)
+if nav:
+    sim.delete_navpoint_by_reference(nav)
+    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_NAV", None)
+
+# Handle initial clicks
+if EVENT.selected_id != 0:
+    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_POINT", None)
+    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_ID", EVENT.selected_id)
+else:
+    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_POINT", Vec3(EVENT.source_point))
+    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_ID", None)
+    
+    nav = sim.add_navpoint(EVENT.source_point.x,EVENT.source_point.y, EVENT.source_point.z, "goto", "white")
+    ~~ nav.visibleToShip =alt_ship ~~
+    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_NAV", nav)
+
+#Done no point running more
+->END
+
+=== stop_give_orders
+#
+# Something else selected get out of give orders
+#
+nav_focus_id = EVENT.client_id
+alt_ship = get_inventory_value(nav_focus_id, "2dview_alt_ship", 0)
+->END if not alt_ship
+->END if not has_role(alt_ship, "friendly")
+set_inventory_value(nav_focus_id, "2dview_alt_ship", 0)
+assign_client_to_alt_ship(nav_focus_id, 0)
+comms_navigate("")
+gui_reroute_client(nav_focus_id, "console_selected")
+
+yield success

@@ -1,15 +1,175 @@
 route_comms_navigate("", friendly_comms)
+route_comms_navigate("give_orders", friendly_give_orders_comms)
 
 
 ===== friendly_comms =======
 
 yield success if not has_roles(COMMS_SELECTED_ID, "tsn, friendly")
 
-comms_add_button("New Give Orders", friendly_comms_give_orders)
+# This is necessary clear give orders
+assign_client_to_alt_ship(client_id,0)
+set_inventory_value(client_id, "2dview_alt_ship", 0)
+
+comms_add_button("Give Orders", friendly_start_give_orders)
 yield success
 
 
-===== friendly_comms_give_orders =======
+
+===== friendly_start_give_orders =======
 comms_client_id = EVENT.client_id
-gui_reroute_client(comms_client_id, friendly_give_orders)
+assign_client_to_alt_ship(comms_client_id,COMMS_SELECTED_ID)
+# This is necessary for the selection to work
+set_inventory_value(comms_client_id, "2dview_alt_ship", COMMS_SELECTED_ID)
+comms_navigate("give_orders")
+# Make sure we have a brain
+brain_id = COMMS_SELECTED_ID
+jump brain_assure_task 
+
+
+
+
+===== friendly_give_orders_comms =======
+
+yield success if not has_roles(COMMS_SELECTED_ID, "tsn, friendly")
+if not get_inventory_value(EVENT.client_id, "2dview_alt_ship"):
+    comms_navigate("")
+    jump friendly_comms
+
+comms_add_button("Protect", friendly_give_orders_protect)
+comms_add_button("Attack", friendly_give_orders_attack)
+comms_add_button("Patrol", friendly_give_orders_patrol)
+comms_add_button("Cancel", friendly_cancel_give_orders)
 yield success
+
+#
+# Common way to back out of give orders
+#
+===== friendly_cancel_give_orders =======
+comms_client_id = EVENT.client_id
+set_inventory_value(comms_client_id, "2dview_alt_ship", 0)
+assign_client_to_alt_ship(comms_client_id, 0)
+comms_navigate("")
+gui_reroute_client(comms_client_id, "console_selected")
+yield success
+
+
+=== friendly_give_orders_protect
+comms_client_id = EVENT.client_id
+comms_receive("We will go and protect", title="orders accepted", title_color="cyan")
+###gui_reroute_client(comms_client_id, console_selected)
+comms_navigate("")
+yield success
+
+
+=== friendly_give_orders_attack
+comms_client_id = EVENT.client_id
+alt_ship = get_inventory_value(comms_client_id, "2dview_alt_ship", 0)
+jump friendly_cancel_give_orders if not alt_ship
+jump friendly_cancel_give_orders if not has_role(alt_ship, "friendly")
+
+
+alt_ship_target = get_weapons_selection(alt_ship)
+jump friendly_cancel_give_orders if not alt_ship_target
+
+t_obj = to_object(alt_ship_target)
+if t_obj is not None:
+    comms_receive(f"We will go and attack {t_obj.name}", title="Orders to attack", title_color="cyan")
+    set_inventory_value(alt_ship, "BRAIN_ATTACK_ID", alt_ship_target)
+    set_inventory_value(alt_ship, "BRAIN_LABEL", "brain_attack")
+else:
+    comms_receive(f"Nothing to attack {alt_ship_target}", title="Orders to attack", title_color="cyan")
+
+jump friendly_cancel_give_orders
+
+
+=== friendly_give_orders_patrol
+comms_client_id = EVENT.client_id
+comms_receive("We will go and patrol", title="orders accepted", title_color="cyan")
+###gui_reroute_client(comms_client_id, console_selected)
+comms_navigate("")
+yield success
+
+=== Stuff 
+
+target_id = get_weapons_selection(comms_selected)
+target_point = get_inventory_value(comms_selected, "WEAPONS_SELECTED_POINT", None)
+#print("GIVE ORDERS {target_id} {target_point}")
+if target_id is not None and target_id != 0:
+    #print("GIVE ORDERS inner {target_id}")
+    target_obj = to_object(target_id)
+    if target_obj is not None:
+        shoot = has_role(target_id, "raider")
+
+        set_inventory_value(comms_selected, "TARGET_ID", target_id)
+        if shoot:
+            message = "OK {player_name} - going to attack {target_obj.name}"
+        else:
+            message = "OK {player_name} - going to rendezvous with {target_obj.name}"
+            
+        target(comms_selected, target_id, shoot)
+        
+if target_point is not None:
+    # print("GIVE ORDERS")
+    message = "Heading to designated waypoint"
+    target_pos(comms_selected, target_point.x, target_point.y, target_point.z )
+
+yield success
+
+
+
+
+#
+# This is mast now, but consider putting the library
+# for a general purpose 'brain'
+#
+#
+# Keep thinking
+# Script can change the label that
+# has the current thinking process
+#
+=== brain_assure_task
+brain_task = get_inventory_value(brain_id, "BRAIN_TASK", None)
+# Already has a brain
+yield success  if brain_task
+brain_task = task_schedule(brain_start)
+set_inventory_value(brain_id, "BRAIN_TASK", brain_task)
+set_inventory_value(brain_id, "BRAIN_LABEL", "brain_nop")
+yield success
+
+=== brain_start
+brain_sub_task = sub_task_schedule(brain_nop)
+last_thought = "brain_nop"
+==== brain_loop
+# Expect brain_id to be set
+-> END if brain_id is None
+noggin = to_object(brain_id)
+-> END if noggin is None
+# OK object still exists
+
+brain_label = get_inventory_value(brain_id, "BRAIN_LABEL", None)
+print(f"BRAIN {brain_label}")
+~~brain_sub_task.jump(brain_label)~~
+~~brain_sub_task.tick_in_context()~~
+
+=== brain_next
+await delay_sim(1)
+jump brain_loop
+
+
+=== brain_attack
+atk_id = get_inventory_value(brain_id, "BRAIN_ATTACK_ID", None)
+yield idle  if atk_id is None
+yield idle  if atk_id ==0
+atk = to_object(atk_id)
+yield idle  if atk is None
+
+# Set the target position, optionally shot at something
+target_pos(brain_id, atk.pos.x, atk.pos.y, atk.pos.z, 1.0, atk_id, stop_dist=500)
+
+yield idle
+#
+# Think nothing but happy thoughts
+#
+=== brain_nop
+yield idle
+

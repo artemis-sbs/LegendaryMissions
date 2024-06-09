@@ -227,12 +227,14 @@ def player_docking_docked(player_id_or_obj, dock_station):
 
     # resupply torps
     if load_torp:
-        _torp_types = player_blob.get("torpedo_types_available")
+        _torp_types = player_blob.get("torpedo_types_available",0)
         _torp_types =  [x.strip() for x in _torp_types.split(',')]
         for torps in _torp_types:
             tLeft = dock_station_blob.get(f"{torps}_NUM", 0)
-            if tLeft > 0:
+            if tLeft is not None and tLeft > 0:
                 torp_max = player_blob.get(f"{torps}_MAX", 0)
+                if torp_max is None:
+                    torp_max = 10
                 torp_now = player_blob.get(f"{torps}_NUM", 0)
                 if torp_now < torp_max:
                     torp_now = torp_now + 1

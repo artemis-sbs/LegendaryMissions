@@ -257,8 +257,10 @@ def explode_player_ship(id_or_obj):
     so = to_object(ship_id)
     
     pos = get_pos(ship_id)
-    if pos:
-        sbs.create_transient(1, 0, ship_id, 0, 0, pos.x, pos.y, pos.z, "")  
+    # if pos:
+    #     sbs.create_transient(1, 0, ship_id, 0, 0, pos.x, pos.y, pos.z, "")  
+    #
+    # Need to replace transient
 
     add_role(ship_id, "exploded")
     

@@ -1,6 +1,6 @@
 ## 
 # Example shows reusable common client select
-import debug.mast #want debug tabs left of upgrade
+import consoles/debug.mast #want debug tabs left of upgrade
 import common_console_select.mast
 import science.mast
 import comms.mast
@@ -15,8 +15,6 @@ import peacetime.mast
 import borderwar.mast
 import map_common.mast
 import map_common.py
-import extra_gui.mast
-import game_results.mast
 import damage.mast
 import destroy.mast
 import grid_comms.mast
@@ -32,7 +30,8 @@ import operator/admin_console.mast
 import commerce/resource_gather.py
 import crew_management.mast
 import consoles/manual_weapons.mast
-
+import consoles/give_orders.mast
+import game_results.mast
 
 #
 # Uncomment to enable logging via the log command

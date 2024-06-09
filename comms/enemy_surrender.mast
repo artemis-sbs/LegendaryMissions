@@ -35,7 +35,9 @@ yield success
 
 blob = to_blob(COMMS_SELECTED_ID)
 ->END if blob is None
-
+player = to_object(COMMS_ORIGIN_ID)
+->END if player is None
+name = player.name
 surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
 set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
 
@@ -73,7 +75,9 @@ yield success
 
 
 ======== comms_do_surrender ========
-
+player = to_object(COMMS_ORIGIN_ID)
+->END if player is None
+name = player.name
 comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
 add_role(COMMS_SELECTED_ID, "surrendered")
 ~~ game_stats["ships_surrender"] += 1~~
