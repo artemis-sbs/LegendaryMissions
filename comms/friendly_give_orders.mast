@@ -3,6 +3,9 @@ route_weapons_focus("weapons_select_route")
 route_comms_focus("stop_give_orders")
 import give_orders.py
 
+# Example defining a color theme
+# Which is just a list of colors
+=$xmas green,red
 
 //comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
 + "Give Orders" //comms/give_orders
@@ -13,70 +16,138 @@ import give_orders.py
 + "Attack"  friendly_give_orders_attack
 + "Patrol"  friendly_give_orders_patrol
 + "Cancel"  //comms/
-
-
-
-
-
-
-/*
-//comms/ 
-
-yield success if not role_exp("friendly | station & tsn")
-
-//comms/ $friendly
-+ "Give Orders" //comms/give_orders/
-
-//comms/give_orders/  $friendly
-+ "Protect"  friendly_give_orders_protect
-+ "Attack" friendly_give_orders_attack
-+ "Patrol" friendly_give_orders_patrol
-+ "Cancel"  //comms/
-
-
-//comms/give_orders/  $friendly
-+ "Investigate"  friendly_give_orders_investing
-
-
-# label auto yield idle
-#
-# Transition labels?
-#
-=== //comms/give_orders/ //comms/
-#
-# Other routes
-#
-//spawn/
-//grid/spawn/
-//comms/focus/
-//signal/end_game/
-//damage/object/
-//listbox/name/item/
-
-*/
-
-
++ "Random"  test_random
+    
+=== test_random
+<<[$xmas] Trouble
+    % {COMMS_ORIGIN.name} we are desperate need of help
+    " Are engines are offline 
+    " we need your help fast
+    % Engine trouble here
+    " {COMMS_ORIGIN.name} Can you come and gives us a Jump
+    " Jump drive that is eh he
+comms_navigate("")    
+yield success
 
 #
 # Common way to back out of give orders
 #
-===== friendly_cancel_give_orders =======
-#comms_client_id = EVENT.client_id
-#set_inventory_value(comms_client_id, "2dview_alt_ship", 0)
-#assign_client_to_alt_ship(comms_client_id, 0)
-comms_navigate("comms")
-#gui_reroute_client(comms_client_id, "console_selected")
+=== friendly_cancel_give_orders
+comms_navigate("")
+yield success
+
+=== friendly_give_orders_protect
+jump carry_out_orders
+
+=== friendly_give_orders_attack
+jump carry_out_orders
+
+=== friendly_give_orders_patrol
+jump carry_out_orders
+
+
+=== carry_out_orders 
+#
+# This needs to use the brain system,
+# but that needs work
+#
+
+target_id = get_weapons_selection(COMMS_SELECTED_ID)
+target_point = get_inventory_value(COMMS_SELECTED_ID, "WEAPONS_SELECTED_POINT", None)
+#print("GIVE ORDERS {target_id} {target_point}")
+message = None
+if target_id is not None and target_id != 0:
+    #print("GIVE ORDERS inner {target_id}")
+    target_obj = to_object(target_id)
+    if target_obj is not None:
+        shoot = has_role(target_id, "raider")
+
+        set_inventory_value(COMMS_SELECTED_ID, "TARGET_ID", target_id)
+        if shoot:
+            message = "OK {COMMS_ORIGIN.name} - going to attack {target_obj.name}"
+        else:
+            message = "OK {COMMS_ORIGIN.name} - going to rendezvous with {target_obj.name}"
+        
+            
+        target(COMMS_SELECTED_ID, target_id, shoot)
+        
+if target_point is not None:
+    # print("GIVE ORDERS")
+    message = "Heading to designated waypoint"
+
+    target_pos(COMMS_SELECTED_ID, target_point.x, target_point.y, target_point.z )
+
+if message is not None:
+    comms_receive(message, "Orders accepted", color="white", title_color="cyan")
+
+comms_navigate("")
 yield success
 
 
-=== friendly_give_orders_protect
-comms_client_id = EVENT.client_id
-comms_receive("We will go and protect", title="orders accepted", title_color="cyan")
+========== weapons_select_route ========
+#
+# Handles the 2dView selection for friendlies
+#
 
-jump friendly_cancel_give_orders
+# this should focus on the give client
+alt_ship = get_inventory_value(EVENT.client_id, "2dview_alt_ship", 0)
+on_ship = get_inventory_value(EVENT.client_id, "assigned_ship", 0)
+
+->END if not alt_ship
+->END if not has_role(alt_ship, "friendly")
+
+nav = get_inventory_value(alt_ship, "WEAPONS_SELECTED_NAV", None)
+if nav:
+    sim.delete_navpoint_by_reference(nav)
+    set_inventory_value(alt_ship, "WEAPONS_SELECTED_NAV", None)
+
+# Handle initial clicks
+if EVENT.selected_id != 0:
+    set_inventory_value(alt_ship, "WEAPONS_SELECTED_POINT", None)
+    set_inventory_value(alt_ship, "WEAPONS_SELECTED_ID", EVENT.selected_id)
+else:
+    set_inventory_value(alt_ship, "WEAPONS_SELECTED_POINT", Vec3(EVENT.source_point))
+    set_inventory_value(alt_ship, "WEAPONS_SELECTED_ID", None)
+    
+    nav = sim.add_navpoint(EVENT.source_point.x,EVENT.source_point.y, EVENT.source_point.z, "goto", "white")
+    ~~ nav.visibleToShip = alt_ship ~~
+    set_inventory_value(alt_ship, "WEAPONS_SELECTED_NAV", nav)
+
+#Done no point running more
+->END
+
+=== stop_give_orders
 
 
-=== friendly_give_orders_attack
+#
+# Trying always focus on comms selection
+#
+
+##### Old code that only focuses in give orders
+#
+# Something else selected get out of give orders
+#
+nav_focus_id = EVENT.client_id
+#alt_ship = get_inventory_value(nav_focus_id, "2dview_alt_ship", 0)
+#->END if not alt_ship
+#->END if not has_role(alt_ship, "friendly")
+
+comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
+
+#gui_reroute_client(nav_focus_id, "console_selected")
+
+yield success
+
+
+
+
+#############################################################
+## Pay no attention below this
+## its basically notes when I refactored comms 
+## Needs to be removed after more RouteLabels are added
+
+
+/*
 comms_client_id = EVENT.client_id
 alt_ship = get_inventory_value(comms_client_id, "2dview_alt_ship", 0)
 jump friendly_cancel_give_orders if not alt_ship
@@ -89,46 +160,15 @@ jump friendly_cancel_give_orders if not alt_ship_target
 t_obj = to_object(alt_ship_target)
 if t_obj is not None:
     comms_receive(f"We will go and attack {t_obj.name}", title="Orders to attack", title_color="cyan")
+    
     set_inventory_value(alt_ship, "BRAIN_ATTACK_ID", alt_ship_target)
     set_inventory_value(alt_ship, "BRAIN_LABEL", "brain_attack")
+    await task_schedule(brain_assure_task, data={"brain_id": alt_ship})
 else:
     comms_receive(f"Nothing to attack {alt_ship_target}", title="Orders to attack", title_color="cyan")
 
 jump friendly_cancel_give_orders
-
-
-=== friendly_give_orders_patrol
-comms_client_id = EVENT.client_id
-comms_receive("We will go and patrol", title="orders accepted", title_color="cyan")
-jump friendly_cancel_give_orders
-
-
-=== Stuff 
-
-target_id = get_weapons_selection(comms_selected)
-target_point = get_inventory_value(comms_selected, "WEAPONS_SELECTED_POINT", None)
-#print("GIVE ORDERS {target_id} {target_point}")
-if target_id is not None and target_id != 0:
-    #print("GIVE ORDERS inner {target_id}")
-    target_obj = to_object(target_id)
-    if target_obj is not None:
-        shoot = has_role(target_id, "raider")
-
-        set_inventory_value(comms_selected, "TARGET_ID", target_id)
-        if shoot:
-            message = "OK {player_name} - going to attack {target_obj.name}"
-        else:
-            message = "OK {player_name} - going to rendezvous with {target_obj.name}"
-            
-        target(comms_selected, target_id, shoot)
-        
-if target_point is not None:
-    # print("GIVE ORDERS")
-    message = "Heading to designated waypoint"
-    target_pos(comms_selected, target_point.x, target_point.y, target_point.z )
-
-yield success
-
+*/
 
 
 
@@ -191,98 +231,65 @@ yield idle
 
 
 
-========== weapons_select_route ========
-#
-# Handles the 2dView selection for friendlies
-#
 
-# this should focus on the give client
-nav_focus_id = EVENT.client_id
+/*
 
-alt_ship = get_inventory_value(nav_focus_id, "2dview_alt_ship", 0)
++ "Random inline":
+    <<[$alert] Trouble
+        % {COMMS_ORIGIN.name} we are desperate need of help
+        " Are engines are offline 
+        " we need your help fast
+        % Engine trouble here
+        " {COMMS_ORIGIN.name} Can you come and gives us a Jump
+        " Jump drive that is eh he
 
-->END if not alt_ship
-->END if not has_role(alt_ship, "friendly")
-
-nav = get_inventory_value(nav_focus_id, "WEAPONS_SELECTED_NAV", None)
-if nav:
-    sim.delete_navpoint_by_reference(nav)
-    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_NAV", None)
-
-# Handle initial clicks
-if EVENT.selected_id != 0:
-    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_POINT", None)
-    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_ID", EVENT.selected_id)
-else:
-    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_POINT", Vec3(EVENT.source_point))
-    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_ID", None)
-    
-    nav = sim.add_navpoint(EVENT.source_point.x,EVENT.source_point.y, EVENT.source_point.z, "goto", "white")
-    ~~ nav.visibleToShip =alt_ship ~~
-    set_inventory_value(nav_focus_id, "WEAPONS_SELECTED_NAV", nav)
-
-#Done no point running more
-->END
-
-=== stop_give_orders
+# define a comms style
 
 
-#
-# Trying always focus on comms selection
-#
+//comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
++ "Give Orders":
+    <<[$alert] Under attack
+        % Option one 
+        "  
+        "
+        % Second line
+        "
+        "
+    <<[$alert]33% Under attack
+        " Option 2
+    <<[$alert]33% Under attack
+        " Option 2
 
-##### Old code that only focuses in give orders
-#
-# Something else selected get out of give orders
-#
-nav_focus_id = EVENT.client_id
-#alt_ship = get_inventory_value(nav_focus_id, "2dview_alt_ship", 0)
-#->END if not alt_ship
-#->END if not has_role(alt_ship, "friendly")
+    >>[blue,white] Info
+        "
+        "
+        "
+*/
 
-comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
+        
 
-#gui_reroute_client(nav_focus_id, "console_selected")
-
-yield success
 
 
 
 /*
 
+# Transition labels?
+#
+=== //comms/give_orders/ //comms/
+#
+# Other routes
+#
 
-route_comms_navigate("", friendly_comms)
+//spawn/
+//spawn/grid
+//focus/comms/
+//focus/weapons/
+//select/comms/
+//select/weapons/
 
-===== friendly_comms =======
-yield success if not has_roles(COMMS_SELECTED_ID, "tsn, friendly")
-comms_add_button("Give Orders", friendly_start_give_orders)
-yield success
+//signal/end_game/
+//damage/object/
 
-route_comms_navigate("give_orders", friendly_give_orders_comms)
+//listbox/name/item/
 
-===== friendly_start_give_orders =======
-comms_client_id = EVENT.client_id
-assign_client_to_alt_ship(comms_client_id,COMMS_SELECTED_ID)
-# This is necessary for the selection to work
-set_inventory_value(comms_client_id, "2dview_alt_ship", COMMS_SELECTED_ID)
-comms_navigate("give_orders")
-# Make sure we have a brain
-brain_id = COMMS_SELECTED_ID
-jump brain_assure_task 
-
-
-
-
-===== friendly_give_orders_comms =======
-
-yield success if not has_roles(COMMS_SELECTED_ID, "tsn, friendly")
-if not get_inventory_value(EVENT.client_id, "2dview_alt_ship"):
-    comms_navigate("")
-    jump friendly_comms
-
-comms_add_button("Protect", friendly_give_orders_protect)
-comms_add_button("Attack", friendly_give_orders_attack)
-comms_add_button("Patrol", friendly_give_orders_patrol)
-comms_add_button("Cancel", friendly_cancel_give_orders)
-yield success
 */

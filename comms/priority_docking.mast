@@ -1,11 +1,9 @@
-route_comms_navigate("comms", comms_station_priority_docking)
 
 
-===== comms_station_priority_docking =======
-yield success if not has_roles(COMMS_SELECTED_ID, "tsn, station")
 
-comms_add_button("Request Priority Docking", handle_comms_station_priority_docking)
-yield success
+//comms if has_roles(COMMS_SELECTED_ID, "tsn, station")
++ "Request Priority Docking" handle_comms_station_priority_docking
+
 
 
 ===== handle_comms_station_priority_docking =======
