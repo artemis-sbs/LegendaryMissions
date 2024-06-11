@@ -1,11 +1,11 @@
 #
 # This will allow buttons to be added at the top level
 #
-route_comms_navigate("", station_weapon_building)
+route_comms_navigate("comms", station_weapon_building)
 #
 # This will allow buttons to be added at the 'station/build' level
 #
-route_comms_navigate("station/build", station_comms_building)
+route_comms_navigate("comms/station/build", station_comms_building)
 route_spawn(spawn_task_station_start_building)
 
 # Set title colors for incoming messages from stations, raiders, and surrendered raiders.

@@ -1,5 +1,5 @@
 
-route_comms_navigate("", comms_raider_surrender)
+route_comms_navigate("comms", comms_raider_surrender)
 
 shared _surrender_return = task_schedule(take_surrendered_home)
 

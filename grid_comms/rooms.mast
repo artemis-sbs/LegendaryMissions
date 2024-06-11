@@ -1,5 +1,5 @@
-route_comms_navigate("", comms_room)
-route_comms_navigate("room/rally", comms_room_rally_point)
+route_comms_navigate("comms", comms_room)
+route_comms_navigate("comms/room/rally", comms_room_rally_point)
 
 
 ===== comms_room =======

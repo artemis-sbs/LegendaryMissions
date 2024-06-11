@@ -1,6 +1,6 @@
-route_comms_navigate("", comms_damcons)
-route_comms_navigate("dc/work/order", comms_damcons_work_order)
-route_comms_navigate("dc/work/cancel", comms_damcons_work_cancel)
+route_comms_navigate("comms", comms_damcons)
+route_comms_navigate("comms/dc/work/order", comms_damcons_work_order)
+route_comms_navigate("comms/dc/work/cancel", comms_damcons_work_cancel)
 
 
 ===== comms_damcons =======

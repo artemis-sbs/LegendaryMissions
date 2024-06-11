@@ -1,11 +1,11 @@
 #
 # This will allow buttons to be added at the top level
 #
-route_comms_navigate("", comms_taunt_raider_top)
+route_comms_navigate("comms", comms_taunt_raider_top)
 #
 # This will allow buttons to be added at the 'station/build' level
 #
-route_comms_navigate("taunt/raider", comms_taunt_raider_menu)
+route_comms_navigate("comms/taunt/raider", comms_taunt_raider_menu)
 
 #
 # Load taunt data from the json file which contains the current taunts.

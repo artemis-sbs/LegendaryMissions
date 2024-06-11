@@ -56,9 +56,9 @@ await comms():
  + "back":
     jump hagar_grid_comms_computer
 
- + "{d.name} as dock" for d in dockable:
-    hangar_set_dock(COMMS_ORIGIN_ID, d.id)
-    jump hagar_grid_comms_computer
+# + "{d.name} as dock" for d in dockable:
+#    hangar_set_dock(COMMS_ORIGIN_ID, d.id)
+#    jump hagar_grid_comms_computer
 
 
 jump hagar_grid_comms_computer

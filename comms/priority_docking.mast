@@ -1,4 +1,4 @@
-route_comms_navigate("", comms_station_priority_docking)
+route_comms_navigate("comms", comms_station_priority_docking)
 
 
 ===== comms_station_priority_docking =======
