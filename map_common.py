@@ -353,19 +353,19 @@ siege_ximni_fleet = [
      [["xim_scout"],
      ["xim_corsair"],
      ["xim_corsair"],
-     ["xim_light_crusier"],
+     ["xim_light_cruiser"],
      ["xim_light_cruiser"]],
      # Difficulty 5
      [["xim_scout"],
      ["xim_corsair"],
      ["xim_light_cruiser"],
-     ["xim_light_crusier"],
+     ["xim_light_cruiser"],
      ["xim_light_cruiser"]],
      # Difficulty 6
      [["xim_corsair"],
      ["xim_light_cruiser"],
      ["xim_light_cruiser"],
-     ["xim_light_crusier"],
+     ["xim_light_cruiser"],
      ["xim_light_cruiser"]],
      # Difficulty 7
      [["xim_light_cruiser"],

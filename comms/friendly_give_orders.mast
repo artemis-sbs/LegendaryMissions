@@ -21,7 +21,7 @@ import give_orders.py
 === test_random
 <<[$xmas] Trouble
     % {COMMS_ORIGIN.name} we are desperate need of help
-    " Are engines are offline 
+    " Our engines are offline 
     " we need your help fast
     % Engine trouble here
     " {COMMS_ORIGIN.name} Can you come and gives us a Jump

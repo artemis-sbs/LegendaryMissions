@@ -4,7 +4,7 @@ route_comms_navigate("marker/rally", comms_marker_rally_point)
 ===== comms_marker =======
 
 yield success if not has_role(COMMS_SELECTED_ID, "marker")
-comms_add_button("set rally point", path="marker/rally")
+comms_add_button("set rally point", path="comms/marker/rally")
 
 yield success
 

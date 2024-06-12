@@ -15,7 +15,7 @@
     "friendly_select": "few",
     "monster_select": "few",
     "upgrade_select": "lots",
-    "game_time_limit": 20,
+    "game_time_limit": 0,
     "player_ships": [
         {
             "name": "Artemis",

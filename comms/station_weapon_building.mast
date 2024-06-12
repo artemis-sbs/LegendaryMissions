@@ -22,7 +22,7 @@ surrender_color = "yellow"
 yield success if not has_roles(COMMS_SELECTED_ID, 'Station')
 
 comms_add_button("Hail", handle_comms_station_hail)
-comms_add_button("Build Weapons", path="station/build")
+comms_add_button("Build Weapons", path="comms/station/build")
 
 yield success
 
