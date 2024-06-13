@@ -1,0 +1,19 @@
+=$raider red, white
+
+//enable/comms if has_roles(COMMS_SELECTED_ID, 'raider, Station')
+
+//comms if has_roles(COMMS_SELECTED_ID, 'raider, Station')
+#
+# Data defined here is NOT available to the button body,
+# but just like other buttons to labels, the data can be attached to the button
+#
++ "Hail and rain" {"test": "hello"}:
+    <<[$raider] Hail
+        " {COMMS_ORIGIN.name}! {test} We will destroy you, disgusting Terran scum!", title="Hail", title_color=raider_color
++ "You're Ugly":
+    <<[red, white] Taunt
+        " You are a foolish Terran, {COMMS_ORIGIN.name}.  Taunting enemy stations is not currently implemented.
++ "Surrender now":
+    <<[red, white] Surrender Denied
+        " Eat my soiled undergarments, {COMMS_ORIGIN.name}.
+

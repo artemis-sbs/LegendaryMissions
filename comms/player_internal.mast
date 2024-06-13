@@ -1,0 +1,47 @@
+//enable/comms if has_roles(COMMS_SELECTED_ID, '__PLAYER__')
+
+//comms if COMMS_SELECTED_ID == COMMS_ORIGIN_ID
++[blue] "Sickbay":
+    crew_size = COMMS_ORIGIN["crew_size"] #| 0
+    dead = COMMS_ORIGIN["casulaty_count"] # | 0
+    <<[blue,white] sickbay crew health
+        " Currently we have {crew_size} healthy crew members and {dead} casualties
+        
++[red] "Security":
+    <<[red,white] Security update
+        % All secure
+        % All quiet on the port bow
+        % Times like this boring is good
+
++[green] "Exobiology":
+    <<[green] exobiology Potential biohazard
+        "Testing running, one moment
+
+    # It is best to schedule delayed responses so the comms buttons are not stalled
+    task_schedule(test_finished)
+
++[purple] "counselor":
+    <<[purple, white] counselor crew update
+        "Something is disturbing the crew
+    #
+    # but you can delay comms, There will be no buttons during this delay
+    #
+    await delay_sim(seconds=3)
+    <<[purple, white] counselor crew update
+        "Things feel like they are getting worse
+    
+
+
+
+
+====== test_finished ======
+# This is a new task to delay the response of the test results
+# COMMS variables should migrate to this task
+
+await delay_sim(seconds=2)
+<<[green,white]  exobiology biohazard test results
+    "test results finished. Tell the captain we do not have a pathogen.
+
+->END
+
+

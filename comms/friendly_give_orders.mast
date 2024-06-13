@@ -3,6 +3,9 @@ route_focus_weapons("weapons_select_route")
 route_focus_comms("stop_give_orders")
 import give_orders.py
 
+
+//enable/comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
+
 # Example defining a color theme
 # Which is just a list of colors
 =$xmas green,red
@@ -19,13 +22,14 @@ import give_orders.py
 + "Random"  test_random
     
 === test_random
+COMMS_ORIGIN.set_inventory_value("test", "HELLO")
 <<[$xmas] Trouble
     % {COMMS_ORIGIN.name} we are desperate need of help
-    " Our engines are offline 
+    " Our engines are offline {COMMS_ORIGIN["test"]}
     " we need your help fast
     % Engine trouble here
     " {COMMS_ORIGIN.name} Can you come and gives us a Jump
-    " Jump drive that is eh he
+    " Jump drive that is eh he {COMMS_ORIGIN["test"]}
 comms_navigate("")    
 yield success
 
