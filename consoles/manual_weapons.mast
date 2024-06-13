@@ -20,6 +20,7 @@ route_damage_object(manual_beam_damage)
 
 ship_id = get_inventory_value(client_id, "assigned_ship", 0)
 ~~mast_scheduler.page.add_console_widget("3dview")~~
+# gui_update_widget_list("3dview")
 gui_section("area: 0,70,50,90;")
 with gui_sub_section():
     gui_layout_widget("3dview")
@@ -59,7 +60,6 @@ ship_id = get_inventory_value(client_id, "assigned_ship", 0)
 yield idle
 
 ====== manual_weapons_maximize =====
-
 #
 # This adds the window to a gui about to present
 #

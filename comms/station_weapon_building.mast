@@ -1,11 +1,6 @@
 #
-# This will allow buttons to be added at the top level
-#
-route_comms_navigate("comms", station_weapon_building)
-#
 # This will allow buttons to be added at the 'station/build' level
 #
-route_comms_navigate("comms/station/build", station_comms_building)
 route_spawn(spawn_task_station_start_building)
 
 # Set title colors for incoming messages from stations, raiders, and surrendered raiders.
@@ -14,17 +9,17 @@ raider_color = "red"
 surrender_color = "yellow"
 
 
+//comms if has_roles(COMMS_SELECTED_ID, 'Station')
++ "Hail"  handle_comms_station_hail
++ "Build Weapons" //comms/station/build
 
-===== station_weapon_building ====
-#
-# Only for friendly station
-#
-yield success if not has_roles(COMMS_SELECTED_ID, 'Station')
-
-comms_add_button("Hail", handle_comms_station_hail)
-comms_add_button("Build Weapons", path="comms/station/build")
-
-yield success
+//comms/station/build
+comms_id = COMMS_ORIGIN.name
++ "Build Homing" station_build_weapon {"build_type": "Homing", "comms_id": comms_id, "weapon_text": "Homing"}
++ "Build Nuke" station_build_weapon {"build_type": "Nuke", "comms_id": comms_id, "weapon_text": "Nuke"}
++ "Build EMP" station_build_weapon {"build_type": "EMP", "comms_id": comms_id, "weapon_text": "EMP"}
++ "Build Mine" station_build_weapon {"build_type": "Mine", "comms_id": comms_id, "weapon_text": "Mine"}
++ "back" //comms
 
 
 =============== handle_comms_station_hail  ===============
@@ -71,17 +66,6 @@ yield success
 
 
 
-=============== station_comms_building ===============
-
-comms_id = to_object(COMMS_ORIGIN_ID).name
-
-  
-comms_add_button("Build Homing", station_build_weapon, data={"build_type": "Homing", "comms_id": comms_id, "weapon_text": "Homing"})
-comms_add_button("Build Nuke", station_build_weapon, data={"build_type": "Nuke", "comms_id": comms_id, "weapon_text": "Nuke"})
-comms_add_button("Build EMP", station_build_weapon, data={"build_type": "EMP", "comms_id": comms_id, "weapon_text": "EMP"})
-comms_add_button("Build Mine", station_build_weapon, data={"build_type": "Mine", "comms_id": comms_id, "weapon_text": "Mine"})
-comms_add_button("back", path="")
-yield success
 
 
 ==== station_build_weapon ===== 

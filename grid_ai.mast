@@ -1,7 +1,7 @@
 import grid_ai.py
 
 
-route_grid_spawn(handle_route_grid_spawn)
+route_spawn_grid(handle_route_grid_spawn)
 route_spawn(grid_init_when_player_spawned)
 
 

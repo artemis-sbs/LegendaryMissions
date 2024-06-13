@@ -9,7 +9,7 @@ import comms/enemy_surrender.mast
 import comms/priority_docking.mast
 
 
-route_comms_select("route_comms_await")
+# route_select_comms("route_comms_await")
 
 
 #############################################
@@ -19,7 +19,7 @@ route_comms_select("route_comms_await")
 # specific agent that Comms might communicate with.
 #############################################
 
-==== route_comms_await ===== 
+//select/comms
 # Start new dialog thread for a player ship with agent.
 # Each player ship will have its own thread for comms.
 # This enables each ship to have a unique dialog path
@@ -43,20 +43,20 @@ elif has_role(COMMS_SELECTED_ID, "Raider"):
 # Default clear comms Present static
 comms_info("static")
 
+=$raider red, white
 
-
-======== comms_enemy_station ====== 
-
+//comms if has_roles(COMMS_SELECTED_ID, 'Station')
 comms_id = to_object(COMMS_ORIGIN_ID).comms_id
-await comms():
-    + "Hail":
-        comms_receive(f"{comms_id}! We will destroy you, disgusting Terran scum!", title="Hail", title_color=raider_color)
-    + "You're Ugly":
-        comms_receive(f"""You are a foolish Terran, {comms_id}.  Taunting enemy stations is not currently implemented.^""", title="taunt", title_color=raider_color)
-    + "Surrender now":
-        comms_receive(f"""Eat my soiled undergarments, {comms_id}.""", title="surrender denied", title_color=raider_color)
++ "Hail and rain":
+    <<[$raider] Hail
+        " {comms_id}! We will destroy you, disgusting Terran scum!", title="Hail", title_color=raider_color
 
--> comms_enemy_station
++ "You're Ugly":
+    <<[red, white] Taunt
+        " You are a foolish Terran, {comms_id}.  Taunting enemy stations is not currently implemented.
++ "Surrender now":
+    <<[red, white] Surrender Denied
+        " Eat my soiled undergarments, {comms_id}.
 
 
 

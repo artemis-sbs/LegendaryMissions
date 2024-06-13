@@ -9,7 +9,7 @@ import elite_abilities.mast
 #
 # NOTE: More than one route spawn can exist
 #
-route_spawn(handle_route_spawn)
+
 
 build_task = None
 
@@ -19,9 +19,12 @@ build_task = None
 # jump to another label proper for that item
 # or END which stops running this task/flow 
 #
+route_spawn(handle_route_spawn)
+
+
 ========== handle_route_spawn =========
 
-jump ai_player if has_role(SPAWNED_ID, "__player__")
+# jump ai_player if has_role(SPAWNED_ID, "__player__")
 jump ai_task_friendly if has_roles(SPAWNED_ID, "tsn, friendly")
 jump spawn_task_station if has_roles(SPAWNED_ID, "tsn, station")
 jump task_npc_targeting  if has_role(SPAWNED_ID, "raider")
@@ -30,8 +33,7 @@ jump task_npc_targeting  if has_role(SPAWNED_ID, "raider")
 #### ELSE don't run a task
 ->END
 
-=====  ai_player =====
-
+//spawn if has_role(SPAWNED_ID, "__player__")
 #
 # For now put on a fighter
 #
@@ -39,17 +41,11 @@ hangar_fighter_spawn(SPAWNED_ID, "tsn")
 #
 # Create the interior for the ship, defined in grid_ai
 #
-
 await task_schedule(spawn_grid_objects)
 #
 # The remaining AI for the player is docking
 #
-
 schedule_player_docking(SPAWNED_ID, difficulty)
-#
-# With other tasks started end this one
-#
-->END
 
 
 
@@ -79,7 +75,7 @@ surrendered = has_role(SPAWNED_ID, "surrendered")
 if not scanned: 
     should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
     if should_scan is not None:
-        follow_route_science_select(should_scan, SPAWNED_ID)
+        follow_route_select_science(should_scan, SPAWNED_ID)
 
 
 
@@ -111,7 +107,7 @@ scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 if not scanned: 
     should_scan = closest(SPAWNED_ID, role("PlayerShip"))
     if should_scan is not None:
-        follow_route_science_select(should_scan, SPAWNED_ID)
+        follow_route_select_science(should_scan, SPAWNED_ID)
 
 #
 # Only shoot raiders
@@ -141,7 +137,7 @@ scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
 if not scanned: 
     should_scan = closest(SPAWNED_ID, role("PlayerShip"))
     if should_scan is not None:
-        follow_route_science_select(should_scan, SPAWNED_ID)
+        follow_route_select_science(should_scan, SPAWNED_ID)
 
 
 eo = to_engine_object(SPAWNED_ID)

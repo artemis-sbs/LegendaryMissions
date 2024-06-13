@@ -1,5 +1,3 @@
-route_science_navigate("", science_debug_scan)
-
 #
 #
 # This is an example of extending science
@@ -7,9 +5,9 @@ route_science_navigate("", science_debug_scan)
 #
 
 
-===== science_debug_scan =======
-science_add_scan("Debug", science_debug_scan_results)
-yield success
+//science 
++ "Debug" science_debug_scan_results
+
 
 ===== science_debug_scan_results =======
 print("DEBUG SCAN")

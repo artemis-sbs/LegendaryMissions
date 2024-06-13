@@ -1,9 +1,6 @@
 
-
-
 //comms if has_roles(COMMS_SELECTED_ID, "tsn, station")
 + "Request Priority Docking" handle_comms_station_priority_docking
-
 
 
 ===== handle_comms_station_priority_docking =======

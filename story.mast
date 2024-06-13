@@ -60,7 +60,7 @@ Written using MAST and is a great reference for those looking to write their own
 # to the client and server GUI
 # when the client is started
 #
-route_main_screen_change(show_main_game_screen)
+route_console_mainscreen_change(show_main_game_screen)
 gui_reroute_server("start_server")
 gui_reroute_clients("client_main")
 

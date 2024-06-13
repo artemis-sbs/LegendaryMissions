@@ -1,20 +1,12 @@
 
-route_comms_navigate("comms", comms_raider_surrender)
-
 shared _surrender_return = task_schedule(take_surrendered_home)
 
-================ comms_raider_surrender ==================
 
-yield fail if not object_exists(COMMS_ORIGIN_ID)
-yield fail if not object_exists(COMMS_SELECTED_ID)
-yield fail if not has_role(COMMS_SELECTED_ID, "raider")
+//comms if has_role(COMMS_SELECTED_ID, "raider")
+
 yield fail if has_role(COMMS_SELECTED_ID, "never_surrender")
 yield fail if has_role(COMMS_SELECTED_ID, "surrendered")
 
-#
-# Hide surrender if tried too much, or already failed uor succeeded
-# BUT allow it you have a secret code case
-#
 surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
 hide_surr = surrender_count >= 3
 #
@@ -25,9 +17,10 @@ show_surr = not hide_surr or (sc_timer > 0)
 
 yield fail if not show_surr
 
-comms_add_button("Surrender now", handle_comms_raider_surrender)
+### comms_add_button("Surrender now", handle_comms_raider_surrender)
++ "Surrender now"  handle_comms_raider_surrender
 
-yield success
+
 
 
 

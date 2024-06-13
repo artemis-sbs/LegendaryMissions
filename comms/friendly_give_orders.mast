@@ -1,6 +1,6 @@
 
-route_weapons_focus("weapons_select_route")
-route_comms_focus("stop_give_orders")
+route_focus_weapons("weapons_select_route")
+route_focus_comms("stop_give_orders")
 import give_orders.py
 
 # Example defining a color theme
@@ -55,7 +55,8 @@ jump carry_out_orders
 target_id = get_weapons_selection(COMMS_SELECTED_ID)
 target_point = get_inventory_value(COMMS_SELECTED_ID, "WEAPONS_SELECTED_POINT", None)
 #print("GIVE ORDERS {target_id} {target_point}")
-message = None
+message = "Your order were unclear {COMMS_ORIGIN.name} - please confirm"
+title = "Orders unclear"
 if target_id is not None and target_id != 0:
     #print("GIVE ORDERS inner {target_id}")
     target_obj = to_object(target_id)
@@ -65,8 +66,10 @@ if target_id is not None and target_id != 0:
         set_inventory_value(COMMS_SELECTED_ID, "TARGET_ID", target_id)
         if shoot:
             message = "OK {COMMS_ORIGIN.name} - going to attack {target_obj.name}"
+            title = "Orders accepted"
         else:
             message = "OK {COMMS_ORIGIN.name} - going to rendezvous with {target_obj.name}"
+            title = "Orders accepted"
         
             
         target(COMMS_SELECTED_ID, target_id, shoot)
@@ -74,11 +77,12 @@ if target_id is not None and target_id != 0:
 if target_point is not None:
     # print("GIVE ORDERS")
     message = "Heading to designated waypoint"
+    title = "Orders accepted"
 
     target_pos(COMMS_SELECTED_ID, target_point.x, target_point.y, target_point.z )
 
 if message is not None:
-    comms_receive(message, "Orders accepted", color="white", title_color="cyan")
+    comms_receive(message, title, color="white", title_color="cyan")
 
 comms_navigate("")
 yield success

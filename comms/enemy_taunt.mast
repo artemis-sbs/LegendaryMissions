@@ -1,48 +1,55 @@
 #
-# This will allow buttons to be added at the top level
-#
-route_comms_navigate("comms", comms_taunt_raider_top)
-#
-# This will allow buttons to be added at the 'station/build' level
-#
-route_comms_navigate("comms/taunt/raider", comms_taunt_raider_menu)
-
-#
 # Load taunt data from the json file which contains the current taunts.
 #
 shared taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
 
-route_spawn(raider_taunt_initialize)
 
-====== raider_taunt_initialize ======
-# add a taunt trait
-->END if not has_role(SPAWNED_ID, "raider")
-
+//spawn if has_role(SPAWNED_ID, "raider")
 #
 # Select 3 taunts
 #
 race = get_race(SPAWNED_ID)
-jump task_npc_targeting if race is None
-
-
 this_taunt_data = random.sample(taunt_data[race], 3)
 set_inventory_value(SPAWNED_ID, "taunt_data", this_taunt_data)
 set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
 
-yield success
+
+//comms if has_roles(COMMS_SELECTED_ID, 'raider') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
++ "Hail"  handle_comms_hail_raider
++ "Taunt"  handle_comms_taunt_raider_top
 
 
-===== comms_taunt_raider_top ====
+//comms/taunt/raider
 #
-# Only for friendly station
+# Present taunts
+# Taunts are added when the raider spawns 
+# see the above //spawn handler
 #
-yield success if not has_roles(COMMS_SELECTED_ID, 'raider')
-yield success if has_roles(COMMS_SELECTED_ID, 'surrendered')
+name = COMMS_ORIGIN.name
+this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
+#
+# Skip if the loading of taunts failed
+#
+yield fail if this_taunt_data is None
 
-comms_add_button("Hail", handle_comms_hail_raider)
-comms_add_button("Taunt", handle_comms_taunt_raider_top)
+taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
+right_button = this_taunt_data[taunt_trait]['button']
 
-yield success
+
+#data_wrap = {"data": data}
+#~~data_wrap["select_right"] = right_button == button_text~~
+
+for data in this_taunt_data:
+    button_text = data["button"]
+    right = right_button == button_text
+    + "{button_text}" handle_comms_taunt_raider_select {"data": data, "select_right": right}
+#
+# Add a back button
+#
++ "back"  //comms
+    
+
+
 
 
 ================ handle_comms_hail_raider ==================
@@ -78,42 +85,12 @@ if enrage_value:
 elif hide_taunt==True:
     comms_receive(f"""Your taunts are worthless to us, {name}.""", title="Taunt worthless", title_color=raider_color)
 else:
-    comms_navigate("taunt/raider")
+    comms_navigate("//comms/taunt/raider")
 
 yield success
 
 
 
-
-================ comms_taunt_raider_menu ==================
-#
-# Present taunts
-#
-name = to_object(COMMS_ORIGIN_ID).name
-   
-
-
-this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
-#
-# Skip if the loading of taunts failed
-#
-jump npc_comms if this_taunt_data is None
-
-taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
-
-right_button = this_taunt_data[taunt_trait]['button']
-
-for data in this_taunt_data:
-    button_text = data["button"]
-    data_wrap = {"data": data}
-    ~~data_wrap["select_right"] = right_button == button_text~~
-    comms_add_button(button_text, handle_comms_taunt_raider_select, data=data_wrap)
-#
-# Add a back button
-#
-comms_add_button("back", path="")
-    
-yield success
 
 
 ================ handle_comms_taunt_raider_select ==================

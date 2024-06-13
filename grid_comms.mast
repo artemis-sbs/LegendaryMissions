@@ -4,9 +4,9 @@ import grid_comms/damcons.mast
 import grid_comms/rooms.mast
 import grid_comms/marker.mast
 
-route_grid_point("grid_point_select")
-route_grid_select("grid_comms")
-route_grid_focus("grid_focus")
+route_point_grid("grid_point_select")
+route_select_grid("grid_comms")
+route_focus_grid("grid_focus")
 
 
 ======= grid_comms ======
@@ -84,11 +84,11 @@ if found_id is not None:
     ship_blob.set("grid_selected_ship_UID", found_id , 0)
 
     marker_go.comms_id = "marker"
-    follow_route_grid_select(GRID_PARENT_ID, found_id)
+    follow_route_select_grid(GRID_PARENT_ID, found_id)
 else:
     # Set the name of the marker to hallway
     marker_go.comms_id = f"hallway:{int(EVENT.source_point.x)},{int(EVENT.source_point.y)}"
-    follow_route_grid_select(GRID_PARENT_ID, marker_go_id)
+    follow_route_select_grid(GRID_PARENT_ID, marker_go_id)
 
 ->END
 
