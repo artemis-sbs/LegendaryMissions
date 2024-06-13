@@ -45,7 +45,7 @@ comms_info("static")
 
 =$raider red, white
 
-//comms if has_roles(COMMS_SELECTED_ID, 'Station')
+//comms if has_roles(COMMS_SELECTED_ID, 'dontrun, Station')
 comms_id = to_object(COMMS_ORIGIN_ID).comms_id
 + "Hail and rain":
     <<[$raider] Hail
