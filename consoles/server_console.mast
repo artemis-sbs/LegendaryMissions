@@ -1,0 +1,307 @@
+#
+# Uncomment to enable logging via the log command
+#
+# logger(file="mast.log") #default to file
+# logger(file="mast.log", std_err=True) #default to file and console
+# logger() #default to console
+# logger(var="fred") #default to variable
+logger("mast:internal") #
+
+
+
+shared start_text = ~~"""
+Legendary Missions:
+
+Missions rich in the history of Artemis re-imagined for Cosmos.
+
+
+Written using MAST and is a great reference for those looking to write their own missions.
+"""~~
+
+# print(story_get_console_type())
+#print(get_mission_graphics_file("media/artemis_home_page"))
+
+#
+# This directs the script 
+# to the client and server GUI
+# when the client is started
+#
+route_console_mainscreen_change(show_main_game_screen)
+gui_reroute_server("start_server")
+gui_reroute_clients("client_main")
+
+
+#
+# The Server GUI
+#   This label runs once, to initialize server data
+#
+========== start_server ===============
+
+settings = story_get_mission_setup()
+shared world_select  = settings.get("world_select")
+shared terrain_select  = settings.get("terrain_select")
+shared lethal_select  = settings.get("lethal_select")
+shared friendly_select  = settings.get("friendly_select")
+shared monster_select  = settings.get("monster_select")
+shared upgrade_select  = settings.get("upgrade_select")
+shared seed_value  = settings.get("seed_value")
+shared game_started  = settings.get("game_started")
+shared game_ended  = settings.get("game_ended")
+shared game_time_limit  = str(settings.get("game_time_limit", ""))
+shared difficulty=   settings.get("difficulty")
+shared player_count  = settings.get("player_count")
+shared player_list  =  settings.get("player_list")
+
+shared auto_start = settings.get("auto_start", False)
+
+shared operator_mode = settings.get("operator_mode", {"enable: False"})
+shared operator_mode_enabled = operator_mode.get("enable", False)
+
+start_npc_cag()
+
+watch_end_game_task = None
+shared skybox = skybox_get_random()
+
+sbs.set_sky_box_all(skybox)
+
+jump operator_main_screen if operator_mode_enabled
+
+
+#
+# The Server GUI
+#
+====== show_server_menu =====
+
+jump start if auto_start
+
+if watch_end_game_task is not None:
+    task_cancel(watch_end_game_task)
+    watch_end_game_task = None
+
+gui_section( style="area: 5, 30px, 95, 350px;")
+"""""{start_text}"""""
+
+# For using a seed value when randomly generating terrain, not currently implemented
+#row style="row-height:65px;"
+#"""justify:right;text:Seed (Optional)"""
+#gui_input("""desc: Integer""", var="seed_value")
+
+rs= "row-height: 45px;margin:5px,5px,0,0;"
+ts= "row-height: 45px;col-width: 7em;margin:0,2px, 0,0;"
+
+gui_section(style="area: 50, 95-500px, 100, 95;row-height:45px;margin:30px,0px,10px,0;padding:0,10px,10px,0;background:#1578;")
+gui_row(style=rs)
+gui_text("justify:right;text:Player ships", style=ts)
+gui_blank("col-width:15px")
+gui_int_slider("text:int;low: 1.0;high:8.0",  var="player_count")
+
+gui_row(style=rs)
+gui_text(" justify:right;text:Difficulty", style=ts)
+gui_blank("col-width:15px")
+gui_int_slider("text:int;low: 1.0;high:11.0", var="difficulty")
+gui_row(style=rs)
+
+gui_text("justify:right;text:Mission Type", style=ts)
+gui_blank("col-width:15px")
+gui_drop_down("text: {world_select};list:siege,single front,double front,deep strike,peacetime,border war", var="world_select")
+gui_row(style=rs)
+gui_blank()
+gui_row(style=rs)
+
+gui_text("justify:right;text:Terrain", style=ts)
+gui_blank("col-width:15px")
+gui_drop_down("text: {terrain_select};list: none, few, some, lots, many", var="terrain_select")
+gui_row(style=rs)
+
+gui_text("justify:right;text:Lethal Terrain", style=ts)
+gui_blank("col-width:15px")
+gui_drop_down("text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")
+gui_row(style=rs)
+
+gui_text("justify:right;text:Friendly Ships", style=ts)
+gui_blank("col-width:15px")
+gui_drop_down("text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")
+gui_row(style=rs)
+
+gui_text("justify:right;text:Monsters", style=ts)
+gui_blank("col-width:15px")
+gui_drop_down("text: {monster_select};list: none, few, some, lots, many", var="monster_select")
+gui_row(style=rs)
+
+gui_text("justify:right;text:Upgrades", style=ts)
+gui_blank("col-width:15px")
+gui_drop_down("text:{upgrade_select};list:none, few,some, lots, many", var="upgrade_select")
+
+gui_row(style=rs)
+
+gui_text("justify:right;text:Time limit", style=ts)
+gui_blank("col-width:15px")
+gui_input("desc: Minutes;", var="game_time_limit")
+
+
+
+
+mission_list = ~~[
+    {"name": "Siege", "description": "In this scenario, bases will be located in the center of the sector, with minefields ringing the center, and enemies advancing from every angle. Siege makes for a fast game, where stations are continually under threat."},
+    {"name": "Single Front", "description": "Bases will be lined up along the right edge of the sector, and the enemies will enter from the left. This layout makes a much longer game, with long travel distances. The bases are far from enemies, but more isolated."},
+    {"name": "Double Front", "description": "Bases are in a corner, protected by dense minefields while the enemies advance from two sides. This layout (especially with minefields) makes for a complex terrain situation, but isn't as open as a one-front layout."},
+    {"name": "Deep Strike", "description": "There are no friendly bases in this scenario, just a friendly bulk cargo ship that can resupply the player ship(s). The player ship(s) are launching an assault into enemy territory, which is defended by enemy bases."},
+    {"name": "Peacetime", "description": "This scenario appears to still be in development. There are very few enemy ships (none below difficulty 4, one or two fleets or single Skaraans on higher difficulties) in this scenario, although there may be monsters or quests for the player to complete if the appropriate Sector Options are set."},
+    {"name": "Border war", "description": "Both friendly and enemy bases appear in this scenario. A 'neutral zone' exists between the two sides, which the player ship cannot enter until a declaration of war is received by the Comms console. An additional control will allow you to set how many minutes will pass before war is declared. Obviously, this should be less than the Time Limit."}
+    ]~~
+
+for i in mission_list:
+    ~~i['description'] = i['description'].replace(",", "_") ~~
+
+gui_section(style="area: 20px, 95-500px, 50, 95;")
+mission_picker = gui_list_box(mission_list,"row-height: 7em; background:#1578;", item_template=main_mission_select_template, title_template=main_mission_select_title_template, select=True)
+
+
+
+await gui():
+    + "Start Mission":
+        -> start
+
+
+
+===== start ======
+sim_create()
+sim_resume()
+#
+# Based on the game type call the right 
+# label to build the world
+#
+
+tl = safe_int(game_time_limit)
+if tl >0:
+    set_timer(SHARED, "time_limit", minutes=tl)
+
+#------------------------------------------------------------------------------------------------------------
+sbs.set_beam_damages(0, 7.0, difficulty)
+
+
+match world_select.lower():
+    case "siege": 
+        task_schedule(siege_build_world)
+    case "single front": 
+        task_schedule(single_front_build_world)
+    case "double front": 
+        task_schedule(double_front_build_world)
+    case "deep strike": 
+        task_schedule(deep_strike_build_world)
+    case "peacetime": 
+        task_schedule(peacetime_build_world)
+    case "border war": 
+        task_schedule(border_war_build_world)
+
+
+#
+# Consoles are waiting to be started 
+#
+game_started = True
+watch_end_game_task = task_schedule(task_end_game)
+
+# Temp set this when first running
+SIM_STATE = "sim_running"
+
+
+gui_reroute_clients(game_started_console, exclude={client_id})
+
+
+=== show_main_game_screen === 
+
+# Just restate the console, it looks internally for the proper view
+# To override use gui_activate_console, and gui_widget_list
+# MAIN_SCREEN_VIEW variable has the view: 3d_view, info, data
+# MAIN_SCREEN_FACING has the facing right, left, front, back
+# MAIN_SCREEN_MODE is for 3d (first_person, chase, tracking) 2d (long, short)
+
+
+# Find a valid ship
+# for p in player_list:
+#    i
+ship_id = player_list[0]["id"]
+
+gui_console("mainscreen")
+link(ship_id,"consoles", client_id)
+add_role(client_id, "console, mainscreen")
+
+view = get_variable("MAIN_SCREEN_VIEW", "3d_view")
+facing = get_variable("MAIN_SCREEN_FACING", "front")
+mode = get_variable("MAIN_SCREEN_MODE", "chase")
+
+sbs.set_main_view_modes(client_id, view, facing, mode)
+
+######################################
+resume_controls = gui_section("area: 5, 75, 95, 90;")
+
+gui_text("text: Simulation paused;font:gui-6;justify:center;")
+gui_row()
+
+mission = get_mission_name()
+start_mission = get_startup_mission_name()
+if start_mission is not None:
+    same = mission == start_mission
+
+if start_mission is None:
+    same = True
+    start_mission = mission
+
+# if same only two buttons
+if same:
+    gui_blank()
+
+b = gui_button("text:Resume;justify:center;", style="padding:0,0,5px;")
+on gui_message(b):
+    sim_resume()
+    SIM_STATE = "sim_running"
+    gui_hide(resume_controls)
+
+mission = get_mission_name()
+
+# start_mission
+if mission:
+    b2 = gui_button("text:restart {mission};justify:center;", style="padding:0,0,5px;")
+    on gui_message(b2):
+        sbs.run_next_mission(mission)
+
+if start_mission is not None and start_mission != mission:
+    b3 = gui_button("text:mission_select;justify:center;") # , style="padding:0,0,5px;")
+    on gui_message(b3):
+        sbs.run_next_mission(start_mission)
+
+# if same only two buttons
+if same:
+    gui_blank()
+
+if SIM_STATE == "sim_running":
+    gui_hide(resume_controls)
+
+on change SIM_STATE:
+    if SIM_STATE == "sim_running":
+        gui_hide(resume_controls)
+    else:
+        gui_show(resume_controls)
+######################
+
+
+await gui()
+
+
+
+
+
+====  pause_screen ====
+jump operator_stats if operator_mode_enabled
+
+gui_section( style="area: 5, 10, 50, 90;")
+"""""Simulation paused"""""
+
+await gui():
++ "Resume Mission":
+    sim_resume()
+
+jump pause_screen
+##############
+
+

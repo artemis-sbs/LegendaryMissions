@@ -6,10 +6,6 @@
 
 
 //science 
-+ "Debug" science_debug_scan_results
-
-
-===== science_debug_scan_results =======
-print("DEBUG SCAN")
-scan_results("This is a debug string.", tab="Debug")
-yield success
++ "Debug":
+    print("DEBUG SCAN")
+    scan_results("This is a debug string.", tab="Debug")

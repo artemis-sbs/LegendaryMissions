@@ -1,4 +1,4 @@
-
+//enable/grid/comms if has_role(COMMS_SELECTED_ID, "marker")
 
 //comms if has_role(COMMS_SELECTED_ID, "marker")
 + "set rally point" //comms/marker/rally

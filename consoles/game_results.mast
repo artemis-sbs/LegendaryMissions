@@ -1,6 +1,3 @@
-route_destroy("update_score")
-
-
 #
 # Game Data
 #
@@ -17,7 +14,7 @@ shared game_stats = ~~{
 }~~
 
 
-====== update_score  ========
+//destroy
 ##
 ## Called via route destroy
 ##
@@ -39,6 +36,50 @@ if obj is not None:
         ~~ game_stats[race] = count + 1~~
 
 ->END
+
+
+============ task_end_game ======= 
+
+await delay_sim(4)
+
+if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"):
+    left = role("raider")
+    c = len(left)
+    # End attack
+    remove_role(left, "raider")
+    start_text = "Mission time has run out! {c} enemies left."
+    game_started = False
+    game_ended = True
+    sbs.play_music_file(0, "music/default/victory")
+    gui_reroute_clients(show_game_results)
+    gui_reroute_server(show_game_results)
+    ->END
+
+stations = role('tsn') & role('station')
+if len(stations) ==0 and world_select != "deep strike":
+    start_text = "Mission is lost!  All yer base are belong to us, dammit."
+    game_started = False
+    game_ended = True
+
+    sbs.play_music_file(0, "music/default/failure")
+
+    gui_reroute_clients(show_game_results)
+    gui_reroute_server(  show_game_results)
+    ->END
+
+
+raiders = role('Raider')
+# print (f"raiders {len(raiders)}")
+if len(raiders)==0 and world_select !="peacetime":
+    start_text = "Mission is won!  All the enemies have been destroyed."
+    game_started = False
+    game_ended = True
+    sbs.play_music_file(0, "music/default/victory")
+    gui_reroute_clients(show_game_results)
+    gui_reroute_server(show_game_results)
+    ->END
+
+-> task_end_game
 
 
 

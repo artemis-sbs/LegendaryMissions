@@ -19,7 +19,6 @@ from enum import IntEnum
 import random
 
 import sbs
-from sbs_utils.procedural.routes import RouteSpawn, RouteDamageObject, RouteCommsSelect, RouteCommsMessage
 
 class NpcCAG(Agent):
     #--------------------------------------------------------------------------------------

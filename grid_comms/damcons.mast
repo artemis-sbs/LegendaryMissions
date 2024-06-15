@@ -1,3 +1,5 @@
+//enable/grid/comms if has_role(COMMS_SELECTED_ID, "damcons")
+
 
 
 //comms if  has_roles(COMMS_SELECTED_ID, "damcons")

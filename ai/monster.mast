@@ -1,16 +1,11 @@
-route_spawn(monster_handle_route_spawn)
 
+//spawn if has_roles(SPAWNED_ID, "monster, typhon, classic")
 
-========== monster_handle_route_spawn =========
+#TODO: Need a way to loop a route label
+# or is this the best way to explicitly schedule logic?
+task_schedule(classic_typhon_ai)
 
-#
-# AI for the player is the docking logic
-#
-jump classic_typhon if has_roles(SPAWNED_ID, "monster, typhon, classic")
-
-->END
-
-=== classic_typhon ===
+==== classic_typhon_ai 
 monster_id = SPAWNED_ID
 
 _target = closest(monster_id, broad_test_around(monster_id, 5000,5000, 0xf0)-role("__terrain__")-role("monster"))
@@ -22,7 +17,7 @@ else:
 
 await delay_sim(seconds=5)
 
-jump classic_typhon if object_exists(monster_id)
+jump classic_typhon_ai if object_exists(monster_id)
 
 
 

@@ -1,0 +1,5 @@
+import debug.mast #want debug tabs left of upgrade
+import common_console_select.mast
+import manual_weapons.mast
+import game_results.mast
+import server_console.mast

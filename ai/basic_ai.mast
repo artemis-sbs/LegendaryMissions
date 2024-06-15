@@ -1,7 +1,3 @@
-import common_docking.py
-import fleet.py
-import elite_abilities.mast
-
 #
 # route spawn will call the specify label when something is spawned
 # This allows the system to test what type of item it is

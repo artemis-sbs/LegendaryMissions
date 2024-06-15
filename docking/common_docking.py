@@ -8,7 +8,7 @@ from sbs_utils.procedural.timers import is_timer_finished, set_timer
 from sbs_utils.procedural.space_objects import closest
 from sbs_utils.procedural.grid import grid_objects
 from sbs_utils.tickdispatcher import TickDispatcher
-from internal_damage import grid_restore_damcons, grid_repair_grid_objects
+from damage.internal_damage import grid_restore_damcons, grid_repair_grid_objects
 from sbs_utils.faces import get_face
 
 

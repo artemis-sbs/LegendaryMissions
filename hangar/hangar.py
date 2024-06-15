@@ -11,7 +11,7 @@ from sbs_utils.procedural.execution import set_shared_variable, get_shared_varia
 from sbs_utils.agent import Agent
 from sbs_utils.procedural.query import get_science_selection, to_object
 
-from internal_damage import grid_rebuild_grid_objects
+from damage.internal_damage import grid_rebuild_grid_objects
 import sbs
 
 _craft_id = 1

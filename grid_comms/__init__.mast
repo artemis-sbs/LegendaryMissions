@@ -1,43 +1,11 @@
 # This code is for Engineering Console to select
 # and communicate with objects in grid object list.
-import grid_comms/damcons.mast
-import grid_comms/rooms.mast
-import grid_comms/marker.mast
-
-route_point_grid("grid_point_select")
-route_select_grid("grid_comms")
-route_focus_grid("grid_focus")
+import damcons.mast
+import rooms.mast
+import marker.mast
 
 
-======= grid_comms ======
-#
-# The grid item is selected
-#
-#print("{COMMS_SELECTED_ID&0xffff}")
-
-->END if not has_role(COMMS_ORIGIN_ID, "__player__")
-
-if has_role(COMMS_SELECTED_ID, "damcons"):
-    await comms()
-if has_role(COMMS_SELECTED_ID, "room"):
-    await comms()
-if has_role(COMMS_SELECTED_ID, "system"):
-    await comms()
-if has_role(COMMS_SELECTED_ID, "marker"):
-    await comms()
-
-# jump comms_damaged if has_role(COMMS_SELECTED_ID, "__damaged__")
-# jump comms_undamaged if has_role(COMMS_SELECTED_ID, "__undamaged__")
-#jump marker_comms if has_role(COMMS_SELECTED_ID, "marker")
-
-comms_info("static")
-->END
-
-
-
-
-===== grid_point_select ====
-
+//point/grid
 #
 # Move Marker
 # 
@@ -52,7 +20,6 @@ go_set_at_loc = grid_objects_at(GRID_PARENT_ID, int(EVENT.source_point.x), int(E
 ship_blob = to_blob(GRID_PARENT_ID)
 ->END if ship_blob is None
 #
-
 
 ship_blob.set("grid_selected_UID", 0, 0)
 ship_blob.set("grid_selected_ship_UID", 0, 0)
@@ -93,7 +60,7 @@ else:
 ->END
 
 
-===== grid_focus =====
+//focus/grid
 
 cur_select = get_inventory_value(GRID_ORIGIN_ID, "click_select", 0)
 if cur_select is not None and cur_select > 0:

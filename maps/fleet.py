@@ -1,22 +1,18 @@
-from sbs_utils.objects import Npc
+
 from sbs_utils.agent import Agent, get_story_id
 from sbs_utils.mast.label import label
-from sbs_utils.tickdispatcher import TickDispatcher
 from sbs_utils.procedural.execution import task_schedule, jump, AWAIT, get_variable
 from sbs_utils.procedural.timers import delay_sim
-from sbs_utils.procedural.query import to_object, to_id, object_exists, is_client_id, get_side
+from sbs_utils.procedural.query import to_object, to_id, object_exists, get_side
 from sbs_utils.procedural.space_objects import target_pos, closest, broad_test_around
 from sbs_utils.procedural.roles import role
-from sbs_utils.procedural.science import science_set_scan_data
-from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+from sbs_utils.procedural.inventory import get_inventory_value
 from sbs_utils import faces
 from sbs_utils.vec import Vec3
 
 
-from enum import IntEnum
-from random import randint
 import sbs
-from sbs_utils.procedural.routes import RouteSpawn, RouteDamageObject, RouteCommsSelect, RouteCommsMessage
+from sbs_utils.procedural.routes import  RouteDamageObject
 
 class Fleet(Agent):
     #--------------------------------------------------------------------------------------

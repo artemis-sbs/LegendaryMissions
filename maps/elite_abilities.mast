@@ -1,23 +1,10 @@
-route_spawn(handle_route_spawn_elite)
+
 build_task = None
-#
-# The route_spawn label is the entry point 
-# it examines the SPAWNED_ID to either
-# jump to another label proper for that item
-# or END which stops running this task/flow 
-#
-========== handle_route_spawn_elite =========
 
-#
-# AI for the player is the docking logic
-#
-if not has_role(SPAWNED_ID, "elite"):
-    ->END
-#
-# else vvvvvvvvvvvvvvvvvvvvvvv
+//spawn if has_role(SPAWNED_ID, "elite")
+task_schedule(handle_elite_abilities)
 
-========== handle_elite_abilities =========
-
+==== handle_elite_abilities
 so = to_object(SPAWNED_ID)
 -> END if None == so
     

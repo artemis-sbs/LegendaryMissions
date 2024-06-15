@@ -1,14 +1,51 @@
-route_select_science("handle_science")
-import science_scans/science_debug.mast
+//enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
 
-====== handle_science =====
+//science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
++ "scan":
+    scan_results("This is a friendly station.")
++ "bio":
+    scan_results("The crew is mostly human, plus a few aliens, pets, and lab animals.")
++ "intl":
+    scan_results("Built ten years ago, this station was in excellent condition before the battle.")
 
-jump station_science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
-jump friendly_science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
+
+//enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
+//science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
++ "scan":
+    scan_results("This is a friendly ship.")
++ "bio":
+    scan_results("The crew is mostly human.")
++ "intl":
+    scan_results("The ship is ready for battle.")
+
+
+//enable/science if has_roles(SCIENCE_SELECTED_ID, "typhon")
+//science if has_role(SCIENCE_SELECTED_ID, "typhon")
++ "scan":
+    scan_results("A classic typhon.")
++ "bio":
+    scan_results("Seems to be very much alive.")
++ "intl":
+    scan_results("Just avoid it and it won't bother you.")
+
+
+//enable/science if has_roles(SCIENCE_SELECTED_ID, "wreck")
+//science if has_role(SCIENCE_SELECTED_ID, "wreck")
++ "scan":
+    scan_results("Gutted and battle-scarred wreckage, the mangled remains of a fierce battle.")
++ "bio":
+    scan_results("No signs of life detected.")
++ "mat":
+    scan_results("Material scan: no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging.")
+
+
+
+
+//select/science
+
 jump raider_science if has_role(SCIENCE_SELECTED_ID, "raider")
 jump upgrade_science if has_role(SCIENCE_SELECTED_ID, "upgrade")
-jump wreck_science if has_role(SCIENCE_SELECTED_ID, "wreck")
-jump typhon_science if has_role(SCIENCE_SELECTED_ID, "typhon")
+
 
 # VVVVV Default scan VVVVV
 
@@ -23,35 +60,15 @@ elif has_role(SCIENCE_SELECTED_ID, "asteroid"):
     science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Asteroid", "intl": "The object is a boring asteroid"})
 elif has_role(SCIENCE_SELECTED_ID, "nebula"):
     science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Nebula.", "intl": "Pretty clouds"})
-else:
-    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, "unknown object type.")
+#else:
+#    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, "unknown object type.")
 
 ->END
 
 
-========= station_science =======
 
-await scan():
-    + "scan":
-        scan_results("This is a friendly station.")
-    + "bio":
-        scan_results("The crew is mostly human, plus a few aliens, pets, and lab animals.")
-    + "intl":
-        scan_results("Built ten years ago, this station was in excellent condition before the battle.")
 
-->END
 
-========= friendly_science =======
-
-await scan():
-    + "scan":
-        scan_results("This is a friendly ship.")
-    + "bio":
-        scan_results("The crew is mostly human.")
-    + "intl":
-        scan_results("The ship is ready for battle.")
-
-->END
 
 ====== raider_science  ===========
 taunt_trait=get_inventory_value(SCIENCE_SELECTED_ID, "taunt_trait")
@@ -105,32 +122,4 @@ await scan():
         scan_results("{upg_desc}")
 ->END
 
-===== wreck_science =====
-wr_desc = "Gutted and battle-scarred wreckage, the mangled remains of a fierce battle."
-bio_intel = "No signs of life detected."
-mat_intel = "Material scan: no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging."
 
-await scan():
-    + "scan":
-        scan_results("{wr_desc}")
-    + "bio":
-        scan_results("{bio_intel}")
-    + "mat":
-        scan_results("{mat_intel}")
-
-->END
-
-===== typhon_science =====
-scan_desc = "A classic typhon."
-_bio = "Seems to be very much alive."
-_intel = "Just avoid it and it won't bother you."
-
-await scan():
-    + "scan":
-        scan_results("{scan_desc}")
-    + "bio":
-        scan_results("{_bio}")
-    + "intl":
-        scan_results("{_intel}")
-
-->END

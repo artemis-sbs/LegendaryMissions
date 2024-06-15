@@ -126,7 +126,6 @@ else:
 
 === stop_give_orders
 
-
 #
 # Trying always focus on comms selection
 #
@@ -141,6 +140,23 @@ nav_focus_id = EVENT.client_id
 #->END if not has_role(alt_ship, "friendly")
 
 comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
+if COMMS_SELECTED.has_role('tsn'):
+    ()[blue] Unused
+        % ready
+        % How can I help
+        % Your orders
+        % Yes, sir
+elif COMMS_SELECTED.has_role('raider'):
+    ()[red] Unused
+        % Piss off
+        % Eat my beams
+        % You shall perish
+        % You gonna die
+
+
+
+    
+
 
 #gui_reroute_client(nav_focus_id, "console_selected")
 

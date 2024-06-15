@@ -1,13 +1,9 @@
-route_destroy(destroy_object)
 
-===== destroy_object ======
+//destroy if has_role(DESTROYED_ID, "raider")or has_role(DESTROYED_ID, "wreck")
+# Old code reference a label that does not exist
 
-jump destroy_enemy if has_role(DESTROYED_ID, "raider")
-jump destroy_wreck if has_role(DESTROYED_ID, "wreck")
 
-->END
-
-===== destroy_enemy =====
+//destroy if has_role(DESTROYED_ID, "raider")
 
 # When an enemy ship is destroyed, we want to replace it with a wreck. Before we delete the enemy, we need to 
 # grab a few things from it: the x/y/z position, and the side value, so we can determine later what type of 

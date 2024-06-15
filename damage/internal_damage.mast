@@ -1,23 +1,17 @@
 import internal_damage.py
 
-route_damage_internal("take_internal_damage")
-route_damage_heat("take_heat_damage")
 
 settings = story_get_mission_setup()
 shared GRID_THEME_INDEX = settings.get("grid_theme",0) 
 grid_set_grid_current_theme(GRID_THEME_INDEX )
 
-======== take_heat_damage  =======
-# This called when there is damage being taken from heat
-#
-# The DAMAGE_ORIGIN_ID is the ship being damaged
-# EVENT has the event data sub_float has the system
-#
+
+//damage/heat
 grid_damage_system(DAMAGE_ORIGIN_ID, int(EVENT.sub_tag))
-->END
 
 
-======== take_internal_damage  =======
+
+//damage/internal
 # This called when there is damage being taken internally
 #
 # The DAMAGE_ORIGIN_ID is the ship being damaged
@@ -26,10 +20,9 @@ grid_damage_system(DAMAGE_ORIGIN_ID, int(EVENT.sub_tag))
 system_hit = int(EVENT.sub_float)
 source_point = EVENT.source_point
 damage_amount = EVENT.sub_float
-
 grid_take_internal_damage_at(DAMAGE_ORIGIN_ID, source_point, system_hit, damage_amount)
 
-->END
+
 
 
 
