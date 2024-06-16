@@ -1,6 +1,7 @@
 ================= siege_build_world ===================
 
 
+
 terrain_value = 0
 if "few" == terrain_select:
     terrain_value = 1
