@@ -84,7 +84,7 @@ _torp_types = origin_o.data_set.get("torpeo_types_available",0)
 # 
 #
 if  _torp_types is None:
-     print("torpedo mission no needed")
+     print("torpedo mission not needed")
      ->END
 _torp_types = _torp_types.split(",")
 torp_type = random.choice(len(_torp_types))

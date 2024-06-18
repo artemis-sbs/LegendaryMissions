@@ -1,4 +1,4 @@
-route_change_console("select_console")
+route_change_console(select_console)
 #
 # Expects shared data 
 #    player_list that has the list of player ships
@@ -37,6 +37,7 @@ for key in grid_data:
         valid_interiors.add(key)
 
 ========== select_console ==========
+print("CHNAGE CONSOLE EVENT?")
 # default console_select = "helm"
 # default client_select_ship = "artemis"
 

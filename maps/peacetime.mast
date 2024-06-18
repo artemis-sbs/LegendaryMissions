@@ -1,4 +1,9 @@
-================= peacetime_build_world ===================
+@map Peacetime
+"This scenario appears to still be in development.
+" There are very few enemy ships (none below difficulty 4,
+" one or two fleets or single Skaraans on higher difficulties)
+" in this scenario, although there may be monsters or quests
+" for the player to complete if the appropriate Sector Options are set.
 
 
 terrain_value = 0

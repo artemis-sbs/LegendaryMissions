@@ -1,4 +1,11 @@
-================= border_war_build_world ===================
+@map Border War
+"Both friendly and enemy bases appear in this scenario.
+" A 'neutral zone' exists between the two sides, which
+" the player ship cannot enter until a declaration of
+" war is received by the Comms console. An additional
+" control will allow you to set how many minutes will
+" pass before war is declared. Obviously, this should be
+"  less than the Time Limit.
 
 
 terrain_value = 0

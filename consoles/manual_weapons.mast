@@ -1,18 +1,8 @@
-# Need concept of sub_task 
-#*   sub task end only on failure and lifetime controlled by task
-#*       task needs add_subtask, stop_subtask, remove_all_subtasks
-#*       task needs to act as a sub task, and tick sub sub_tasks
-#*       task as subtask goes idle on success/end stops, jump clears idle, fail is a stop
-
-#*  task now will manage on change
-
-# add signal concept
-
-
 
 # This will just spawn the label as a sub task
 route_gui_navigate("normal_weap", manual_weapons_start)
 route_damage_object(manual_beam_damage)
+
 
 
 # this could be a subtask or routed
@@ -32,24 +22,32 @@ manual =  gui_region("area: 0,90,50,100;orientation:BT;")
 
 
 latest_target = None
-_state = 0
-
 
 on change get_weapons_selection(ship_id):
     jump  manual_weapons_show
 
 
 ==== manual_weapons_show ====
-jump  manual_weapons_maximize if _state == 1
+ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+ship = to_object(ship_id)
+
+jump  manual_weapons_maximize if ship is not None and ship.get_inventory_value("MANUAL_BEAMS_ON", False)
 
 ==== manual_weapons_minimize =======
 
 with gui_rebuild(manual):
     gui_row("row-height: 3em;")
-    ib = gui_icon("icon_index:112;color:yellow;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:manual_beams")
-    on gui_click(ib):
-        _state = 1
+    #ib = gui_icon("icon_index:112;color:yellow;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:manual_beams")
+    #on gui_click(ib):
+    cb = gui_checkbox("text:Manual;state:True")
+    cb.value = ship.get_inventory_value("MANUAL_BEAMS_ON", False)
+    on gui_message(cb):
+        ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+        ship = to_object(ship_id)
+        if ship is not None:
+            ship.set_inventory_value("MANUAL_BEAMS_ON", not ship.get_inventory_value("MANUAL_BEAMS_ON", False))
         jump manual_weapons_maximize
+    gui_blank(4)
     gui_row()
     gui_blank()
 
@@ -71,23 +69,35 @@ target_id = get_weapons_selection(ship_id)
 jump manual_weapons_minimize if target_id==0
 _target = to_object(target_id)
 jump manual_weapons_minimize if _target is None
+
 dist = sbs.distance_id(ship_id, target_id)
 
 jump manual_weapons_minimize if dist > 2000
-source = Vec3(0,0, 200)
+
+s_pos = Vec3(ship.pos)
+t_pos = Vec3(_target.pos)
+diff = s_pos -t_pos
+n = diff.unit()
+source = n *dist - 150
+
 t = Vec3(0,0, 0)
-gui_cinematic_full_control(client_id, target_id, source, target_id, t)
+
+gui_cinematic_full_control(client_id, ship_id, source, target_id, t)
 
 name = _target.comms_id
-_state = 1
-
 # Drawing is bottom to top set in region style
 with gui_rebuild(manual):
     gui_row("row-height: 3em;")
     # Bottom row 
-    ib = gui_icon("icon_index:112;color:green;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:min_manual_beams")
-    on gui_click(ib):
-        _state = 0
+    # ib = gui_icon("icon_index:112;color:green;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:min_manual_beams")
+    # on gui_click(ib):
+    cb = gui_checkbox("text:Manual;state:True")
+    cb.value = ship.get_inventory_value("MANUAL_BEAMS_ON", False)
+    on gui_message(cb):
+        ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+        ship = to_object(ship_id)
+        if ship is not None:
+            ship.set_inventory_value("MANUAL_BEAMS_ON", not ship.get_inventory_value("MANUAL_BEAMS_ON", False))
         jump manual_weapons_minimize
     gui_blank()
     on gui_message(gui_button("weapons")):

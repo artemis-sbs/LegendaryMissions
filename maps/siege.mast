@@ -1,4 +1,7 @@
-================= siege_build_world ===================
+@map Siege
+" In this scenario, bases will be located in the center of the sector, 
+" with minefields ringing the center, and enemies advancing from every 
+" angle. Siege makes for a fast game, where stations are continually under threat.
 
 
 

@@ -2,19 +2,19 @@
 # Example shows reusable common client select
 
 
-import consoles/__init__.mast
-import docking/__init__.mast
-import science_scans/__init__.mast
-import comms/__init__.mast
-import damage/__init__.mast
-import operator/__init__.mast
-import grid_comms/__init__.mast
-import maps/__init__.mast
-import hangar/__init__.mast
-import upgrades/__init__.mast
-import commerce/__init__.mast
-import ai/__init__.mast
-import side_missions/__init__.mast
+#import consoles/__init__.mast
+#import docking/__init__.mast
+#import science_scans/__init__.mast
+#import comms/__init__.mast
+#import damage/__init__.mast
+#import operator/__init__.mast
+#import grid_comms/__init__.mast
+#import maps/__init__.mast
+#import hangar/__init__.mast
+#import upgrades/__init__.mast
+#import commerce/__init__.mast
+#import ai/__init__.mast
+#import side_missions/__init__.mast
 
 import story.py
 
