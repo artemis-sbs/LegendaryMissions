@@ -10,12 +10,9 @@ logger("mast:internal") #
 
 
 shared start_text = ~~"""
-Legendary Missions:
+$t Legendary Missions:
 
-Missions rich in the history of Artemis re-imagined for Cosmos.
-
-
-Written using MAST and is a great reference for those looking to write their own missions.
+A set of customizable scenarios reimagined from the original Artemis: Spaceship Bridge Simulator missions.Perfect for both new and experienced players, and a good reference for those writing their own missions.
 """~~
 
 # print(story_get_console_type())
@@ -78,8 +75,8 @@ if watch_end_game_task is not None:
     task_cancel(watch_end_game_task)
     watch_end_game_task = None
 
-gui_section( style="area: 5, 30px, 95, 350px;")
-"""""{start_text}"""""
+gui_section( style="area: 20px, 20px, 100, 210px;margin:0,0,10px,0;padding:10px,0;background:#1578;")
+gui_text_area(start_text)
 
 # For using a seed value when randomly generating terrain, not currently implemented
 #row style="row-height:65px;"
