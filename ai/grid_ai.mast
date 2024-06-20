@@ -12,11 +12,12 @@ import grid_ai.py
 shared grid_data = grid_get_grid_data()
 
 
-======== spawn_grid_objects ========
+//spawn if has_role(SPAWNED_ID, "__player__")
 #
-# Called by basic_ai, so we know this is a player ship already
+# Create the interior for the ship, defined in grid_ai
 #
 grid_rebuild_grid_objects(SPAWNED_ID, grid_data)
+
 ->END
 
 

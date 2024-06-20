@@ -1,15 +1,6 @@
-route_spawn(hangar_handle_route_spawn)
 
 
-========== hangar_handle_route_spawn =========
-jump fighter_mission if has_roles(SPAWNED_ID, "tsn,fighter")
-jump shuttle_mission if has_roles(SPAWNED_ID, "tsn,shuttle")
-
-#### ELSE don't run a task
-->END
-
-
-=====  fighter_mission =====
+//spawn if has_roles(SPAWNED_ID, "tsn,fighter")
 
 #
 # Create the interior for the ship, defined in grid_ai
@@ -24,7 +15,7 @@ set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a fighter miss
 ->END
 
 
-=====  shuttle_mission =====
+//spawn if has_roles(SPAWNED_ID, "tsn,shuttle")
 
 #
 # Create the interior for the ship, defined in grid_ai

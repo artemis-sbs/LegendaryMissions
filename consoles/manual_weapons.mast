@@ -1,8 +1,6 @@
 
 # This will just spawn the label as a sub task
 route_gui_navigate("normal_weap", manual_weapons_start)
-route_damage_object(manual_beam_damage)
-
 
 
 # this could be a subtask or routed
@@ -160,9 +158,7 @@ if random.randint(1,20) == 20:
 yield idle
 
 
-
-============= manual_beam_damage =========
-->END if not has_role(DAMAGE_TARGET_ID, "raider")
+//damage/object if has_role(DAMAGE_TARGET_ID, "raider")
 
 system = get_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_SYSTEM")
 target_id = get_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_CRITICAL_HIT")

@@ -78,6 +78,7 @@ remove_role(COMMS_SELECTED_ID, "raider")
 set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
 fleet_remove_ship(COMMS_SELECTED_ID)
 
+
 yield SUCCESS
 
 

@@ -145,7 +145,6 @@ on change mission_picker.get_selected_index():
     # This should be one thing, or None
     world_select = mission_picker.get_value()
     mission_index = mission_picker.get_selected_index()
-    print(world_select)
 
 
 

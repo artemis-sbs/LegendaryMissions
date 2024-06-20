@@ -1,6 +1,6 @@
 
 route_focus_weapons("weapons_select_route")
-route_focus_comms("stop_give_orders")
+
 import give_orders.py
 
 
@@ -124,21 +124,12 @@ else:
 #Done no point running more
 ->END
 
-=== stop_give_orders
-
+//focus/comms
 #
-# Trying always focus on comms selection
-#
-
-##### Old code that only focuses in give orders
 #
 # Something else selected get out of give orders
 #
 nav_focus_id = EVENT.client_id
-#alt_ship = get_inventory_value(nav_focus_id, "2dview_alt_ship", 0)
-#->END if not alt_ship
-#->END if not has_role(alt_ship, "friendly")
-
 comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
 if COMMS_SELECTED.has_role('tsn'):
     ()[blue] Unused
@@ -152,16 +143,6 @@ elif COMMS_SELECTED.has_role('raider'):
         % Eat my beams
         % You shall perish
         % You gonna die
-
-
-
-    
-
-
-#gui_reroute_client(nav_focus_id, "console_selected")
-
-yield success
-
 
 
 

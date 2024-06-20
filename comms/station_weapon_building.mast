@@ -1,7 +1,7 @@
 #
 # This will allow buttons to be added at the 'station/build' level
 #
-route_spawn(spawn_task_station_start_building)
+
 
 # Set title colors for incoming messages from stations, raiders, and surrendered raiders.
 station_color = "green"
@@ -128,17 +128,20 @@ for player in all_roles(f"__player__, {side}" ):
 
 
 
-================ spawn_task_station_start_building ================= 
+
+//spawn if  has_roles(SPAWNED_ID, "tsn, station")
 #
 # All stations start building homing, just as any player
 # Build task needs a player to talk to
 #
-->END if not has_roles(SPAWNED_ID, "tsn, station")
 
-station_id = SPAWNED_ID
+SPAWNED.data_set.set("Homing_NUM", random.randint(8,12),0)
+SPAWNED.data_set.set("Nuke_NUM",  random.randint(2,5),0)
+SPAWNED.data_set.set("EMP_NUM", random.randint(2,5),0)
+SPAWNED.data_set.set( "Mine_NUM", random.randint(2,5), 0)
 
-build_munition_queue_task(station_id, "Homing")
+build_munition_queue_task(SPAWNED_ID, "Homing")
 
-scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
+scanned = SPAWNED["SCANNED"]
 
 -> END
