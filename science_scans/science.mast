@@ -12,19 +12,20 @@
         % HELP ME HELP YOU HAVE BETTER TEXT
 
 + "intel":
-    <scan>
-        %Built ten years ago, this station was in excellent condition before the battle.
+    <scan> 
+        " Built ten years ago, this station was in excellent condition before the battle.
+        
 
 + "bio":
     <scan>
-        %The crew is mostly human, plus a few aliens, pets, and lab animals.
+        % The crew is mostly human, plus a few aliens, pets, and lab animals.
 
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 //science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 + "scan":
     <scan>
-        %This is a friendly ship.
+        % This is a friendly ship.
 + "status":
     <scan>
         %DARRIN OR MIKE PLEASE FIX ME.

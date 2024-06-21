@@ -23,7 +23,7 @@ import give_orders.py
     
 === test_random
 COMMS_ORIGIN.set_inventory_value("test", "HELLO")
-<<[$xmas] Trouble
+<<[$xmas] "Trouble"
     % {COMMS_ORIGIN.name} we are desperate need of help
     " Our engines are offline {COMMS_ORIGIN["test"]}
     " we need your help fast
@@ -132,13 +132,13 @@ else:
 nav_focus_id = EVENT.client_id
 comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
 if COMMS_SELECTED.has_role('tsn'):
-    ()[blue] Unused
+    ()[blue] "Unused"
         % ready
         % How can I help
         % Your orders
         % Yes, sir
 elif COMMS_SELECTED.has_role('raider'):
-    ()[red] Unused
+    ()[red] "Unused"
         % Piss off
         % Eat my beams
         % You shall perish
@@ -240,7 +240,7 @@ yield idle
 /*
 
 + "Random inline":
-    <<[$alert] Trouble
+    <<[$alert] "Trouble"
         % {COMMS_ORIGIN.name} we are desperate need of help
         " Are engines are offline 
         " we need your help fast
@@ -253,19 +253,19 @@ yield idle
 
 //comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
 + "Give Orders":
-    <<[$alert] Under attack
+    <<[$alert] "Under attack"
         % Option one 
         "  
         "
         % Second line
         "
         "
-    <<[$alert]33% Under attack
+    <<[$alert]33% "Under attack"
         " Option 2
-    <<[$alert]33% Under attack
+    <<[$alert]33% "Under attack"
         " Option 2
 
-    >>[blue,white] Info
+    >>[blue,white] "Info"
         "
         "
         "

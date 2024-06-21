@@ -23,7 +23,7 @@ set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
 
 //comms if has_roles(COMMS_SELECTED_ID, 'raider') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Hail":
-    <<[$raider] Hail
+    <<[$raider] "Hail"
         "Go away, {COMMS_SELECTED.name}! You talk too much!
 
 + "Taunt"  handle_comms_taunt_raider_top

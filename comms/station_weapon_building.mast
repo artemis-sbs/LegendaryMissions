@@ -44,7 +44,7 @@ emp = get_data_set_value(COMMS_SELECTED_ID, "EMP_NUM", 0)
 mine = get_data_set_value(COMMS_SELECTED_ID, "Mine_NUM", )
 build_time = format_time_remaining(COMMS_SELECTED_ID, "build_time")
 
-<<[green] Hail
+<<[green] "Hail"
     " Hello, {comms_id}.  We stand ready to assist.
     " ^^You have full docking privileges.
     " ^{torpedo_build_type} in production. Completion in {build_time}

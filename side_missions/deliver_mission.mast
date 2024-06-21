@@ -25,10 +25,8 @@ abort:
     yield fail if not fighter.exists and not fighter.standby
 
 
-objective/pickup Pickup the stuff:
-    % " Pick up the {torp_type} from {station.name}
-    " More
-    % goto {station.name} and pick up the {torp_type} 
+objective/pickup "Pickup the stuff" :
+    " Pick up the {torp_type} from {station.name}
 
     yield success if objectives_complete("pickup")
     dist = sbs.distance_id(fighter.id, station.id)
@@ -36,14 +34,14 @@ objective/pickup Pickup the stuff:
     yield fail if not is_docked(fighter, station)
     yield success
 
-objective/pickup/bonus Pickup in 4 minutes:
+objective/pickup/bonus "Pickup in 4 minutes":
     yield fail if objectives_complete("pickup")
     yield success if objectives_complete("pickup/bonus")
     yield success if not is_timer_complete("pickup_bonus")
     yield fail
 
 
-objective/deliver Deliver the stuff:
+objective/deliver "Deliver the stuff":
     " Deliver the {torp_type} to {player.name}
     
     yield success if objectives_complete("deliver")
@@ -55,7 +53,7 @@ objective/deliver Deliver the stuff:
     yield fail if is_docked(fighter, player)
     yield success
 
-objective/deliver/bonus Deliver in 8 minutes:
+objective/deliver/bonus "Deliver in 8 minutes":
     yield success if objectives_complete("deliver/bonus")
     yield fail if not objectives_complete("deliver")
     yield success if not is_timer_complete("deliver_bonus")
