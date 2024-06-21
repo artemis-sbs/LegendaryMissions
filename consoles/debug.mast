@@ -2,18 +2,6 @@ import debug.py
 
 shared allow_debug = True
 
-#if allow_debug==is_dev_build():
-#    gui_add_console_tab(SHARED, "helm", "debug", "debug_screen")
-#    gui_add_console_tab(SHARED, "comms", "debug", "debug_screen")
-#    gui_add_console_tab(SHARED, "engineering", "debug", "debug_screen")
-#    gui_add_console_tab(SHARED, "science", "debug", "debug_screen")
-#    gui_add_console_tab(SHARED, "weapons", "debug", "debug_screen")
-#    gui_add_console_tab(SHARED, "debug", "mast", "mast_debug_screen")
-#    gui_add_console_tab(SHARED, "debug", "debug", None)
-#    gui_add_console_tab(SHARED, "debug", "__back_tab__", "console_selected")
-#    gui_add_console_tab(SHARED, "mast", "mast", None)    
-#    gui_add_console_tab(SHARED, "mast", "debug", "debug_screen")
-#    gui_add_console_tab(SHARED, "mast", "__back_tab__", "console_selected")
 
 
 #  gui_active_path("console/helm, console/comms, console/engineering, console/science, console/weapons" )
