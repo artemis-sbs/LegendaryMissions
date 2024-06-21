@@ -9,11 +9,11 @@ logger("mast:internal") #
 
 
 
-shared start_text = ~~"""
+shared start_text = """
 $t Legendary Missions:
 
 A set of customizable scenarios reimagined from the original Artemis: Spaceship Bridge Simulator missions.Perfect for both new and experienced players, and a good reference for those writing their own missions.
-"""~~
+"""
 
 # print(story_get_console_type())
 #print(get_mission_graphics_file("media/artemis_home_page"))

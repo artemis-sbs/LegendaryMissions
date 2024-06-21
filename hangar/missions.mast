@@ -135,7 +135,7 @@ jump story_mission_deliver_life_form if mission_type ==0
 sel_o = to_object(COMMS_SELECTED_ID)
 ->END if sel_o is None
 
-life_forms = ~~["Admiral Xeno Nakada", "Prince Zayne Alcantar", "Admiral Tharay sh'Firri", "Skarran delegate", "Torgoth delegate"] ~~
+life_forms = ["Admiral Xeno Nakada", "Prince Zayne Alcantar", "Admiral Tharay sh'Firri", "Skarran delegate", "Torgoth delegate"]
 
 life_form_name = random.choice(life_forms)
 

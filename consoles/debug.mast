@@ -103,7 +103,7 @@ gui_row()
 on gui_message(gui_button("Test Enemy")):
     abis = lb_abilities.get_value()
     if len(abis)>0:
-        abis = ~~"elite,"+",".join(abis)~~
+        abis = "elite,"+",".join(abis)
     else:
         abis = None
     await task_schedule(spawn_test_enemy,data={"abi": abis})

@@ -2,8 +2,8 @@
 # As of now this doesn't really run it is a prototype to 
 # dream of what it will look like
 #
-#
-//mission Deliver Munitions if has_role(SPAWNED_ID, "tsn, fighter")
+
+//mission/deliver "Deliver Munitions" if has_role(SPAWNED_ID, "tsn, fighter")
 " Pick up {torp_type} torpedoes at {station.name} and deliver them to {player.name}
 
 init:
@@ -16,52 +16,59 @@ init:
     torp_type = random.choice(get_torp_types_for(player.id))
 
 start:
-    picked_up = False
-    delivered = False
-    pickup_bonus = False
-    deliver_bonus = False
     set_timer("pickup_bonus", minute=4)
     set_timer("deliver_bonus", minute=8)
 
-failure:
+abort:
     yield fail if not player.exists
     yield fail if not station.exists
     yield fail if not fighter.exists and not fighter.standby
 
+
 objective/pickup Pickup the stuff:
-    " Pick up the {torp_type} from {station.name}
-    yield success if picked_up
+    % " Pick up the {torp_type} from {station.name}
+    " More
+    % goto {station.name} and pick up the {torp_type} 
+
+    yield success if objectives_complete("pickup")
     dist = sbs.distance_id(fighter.id, station.id)
     yield fail if dist > 1000
-    yield fail if is_docked(fighter, station)
-    picked_up = True
+    yield fail if not is_docked(fighter, station)
+    yield success
 
-objective/pickup/bonus Pickup in 4 minutes if objectives_complete("pickup"):
-    yield success if pickup_bonus
+objective/pickup/bonus Pickup in 4 minutes:
+    yield fail if objectives_complete("pickup")
+    yield success if objectives_complete("pickup/bonus")
     yield success if not is_timer_complete("pickup_bonus")
     yield fail
 
 
-objective/deliver Deliver the stuff if objectives_complete("pickup"):
+objective/deliver Deliver the stuff:
     " Deliver the {torp_type} to {player.name}
-    yield success if delivered
+    
+    yield success if objectives_complete("deliver")
+    yield fail if not objectives_complete("pickup")
+
     dist = sbs.distance_id(player.id, station.id)
     yield fail if dist > 1000
     # is_docked doesn't exists but could
     yield fail if is_docked(fighter, player)
-    delivered = True
+    yield success
 
-objective/deliver/bonus Deliver in 8 minutes if objectives_complete("deliver"):
-    yield success if deliver_bonus
+objective/deliver/bonus Deliver in 8 minutes:
+    yield success if objectives_complete("deliver/bonus")
+    yield fail if not objectives_complete("deliver")
     yield success if not is_timer_complete("deliver_bonus")
     yield fail
 
 
-complete if objectives_complete("deliver"):
+complete:
+    yield fail if not objectives_complete("deliver")
     fighter["XP"] += 100
-    if pickup_bonus:
+    if objectives_complete("deliver/bonus"):
         fighter["XP"] += 50
-    if delivery_bonus:
+    if objectives_complete("pickup/bonus"):
         fighter["XP"] += 50
 
+    
 

@@ -7,7 +7,7 @@ route_gui_navigate("normal_weap", manual_weapons_start)
 ==== manual_weapons_start ====
 
 ship_id = get_inventory_value(client_id, "assigned_ship", 0)
-~~mast_scheduler.page.add_console_widget("3dview")~~
+mast_scheduler.page.add_console_widget("3dview")
 # gui_update_widget_list("3dview")
 gui_section("area: 0,70,50,90;")
 with gui_sub_section():

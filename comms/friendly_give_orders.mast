@@ -118,7 +118,7 @@ else:
     set_inventory_value(alt_ship, "WEAPONS_SELECTED_ID", None)
     
     nav = sim.add_navpoint(EVENT.source_point.x,EVENT.source_point.y, EVENT.source_point.z, "goto", "white")
-    ~~ nav.visibleToShip = alt_ship ~~
+    nav.visibleToShip = alt_ship
     set_inventory_value(alt_ship, "WEAPONS_SELECTED_NAV", nav)
 
 #Done no point running more
@@ -207,8 +207,8 @@ noggin = to_object(brain_id)
 
 brain_label = get_inventory_value(brain_id, "BRAIN_LABEL", None)
 print(f"BRAIN {brain_label}")
-~~brain_sub_task.jump(brain_label)~~
-~~brain_sub_task.tick_in_context()~~
+brain_sub_task.jump(brain_label)
+brain_sub_task.tick_in_context()
 
 === brain_next
 await delay_sim(1)
