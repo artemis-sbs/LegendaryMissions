@@ -186,7 +186,7 @@ sbs.set_beam_damages(0, 7.0, difficulty)
 
 
 if world_select is not None:
-    task_schedule(world_select["label"])
+    task_schedule(world_select)
 
 #
 # Consoles are waiting to be started 

@@ -76,7 +76,8 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
         color = item_theme_data.color
         icon = item_theme_data.icon
         scale = item_theme_data.scale
-        go =  grid_spawn(ship_id,  name_tag, name_tag, loc_x, loc_y, icon, color, g["roles"])
+        r = "#,"+g["roles"]
+        go =  grid_spawn(ship_id,  name_tag, name_tag, loc_x, loc_y, icon, color, r)
         if go is None: return
 
         go.blob.set("icon_scale", scale/2, 0)
