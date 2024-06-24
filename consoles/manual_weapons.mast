@@ -1,10 +1,11 @@
-
 # This will just spawn the label as a sub task
 route_gui_navigate("normal_weap", manual_weapons_start)
 
 
 # this could be a subtask or routed
 ==== manual_weapons_start ====
+
+# //gui/normal_weap
 
 ship_id = get_inventory_value(client_id, "assigned_ship", 0)
 mast_scheduler.page.add_console_widget("3dview")
@@ -32,7 +33,7 @@ ship = to_object(ship_id)
 jump  manual_weapons_maximize if ship is not None and ship.get_inventory_value("MANUAL_BEAMS_ON", False)
 
 ==== manual_weapons_minimize =======
-
+ship_id = get_inventory_value(client_id, "assigned_ship", 0)
 with gui_rebuild(manual):
     gui_row("row-height: 3em;")
     #ib = gui_icon("icon_index:112;color:yellow;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:manual_beams")
@@ -48,9 +49,6 @@ with gui_rebuild(manual):
     gui_blank(4)
     gui_row()
     gui_blank()
-
-
-ship_id = get_inventory_value(client_id, "assigned_ship", 0)
 
 
 yield idle
