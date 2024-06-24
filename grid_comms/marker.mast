@@ -30,9 +30,9 @@ if idle_marker is not None:
     _blob.set("curx",_loc_x, 0)
     _blob.set("cury",_loc_y, 0)
 
-is_idle = get_inventory_value(d.id, "idle")
-if is_idle:
-    set_inventory_value(d.id, "idle_state", "start" )
+#is_idle = get_inventory_value(d.id, "idle")
+#if is_idle:
+set_inventory_value(d.id, "idle_state", "start" )
 
 comms_navigate("//comms")
 yield success

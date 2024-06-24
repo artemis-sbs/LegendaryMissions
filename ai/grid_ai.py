@@ -76,10 +76,12 @@ def grid_damcons_detailed_status(id_or_obj, short_status=None, short_color=None,
         boost = f"boost in {boost_time}"
 
         
+    a = get_inventory_value(_go_id, "idle", 1.0)
+    b = get_inventory_value(_go_id, "idle_state", 1.0)
+    c = get_inventory_value(_go_id, "target_room", 1.0)
+    debug = f"{a}^{b}^{c}"
 
-
-
-    detailed_status = f"{short_status}^{work_item_status}^{health_status}^{boost}"
+    detailed_status = f"{short_status}^{work_item_status}^{health_status}^{boost}^{debug}"
     grid_detailed_status(_go_id, detailed_status, color)
 
 

@@ -23,6 +23,8 @@ grid_rebuild_grid_objects(SPAWNED_ID, grid_data)
 
 
 //spawn/grid if has_role(SPAWNED_ID, "damcons")
+set_inventory_value(SPAWNED_ID, "idle", True)
+set_inventory_value(SPAWNED_ID, "idle_state", "start")
 task_schedule(damcon_ai)
 
 
@@ -44,6 +46,9 @@ y = this_blob.get("cury", 0)
 # if we are at the assigned idle pos handle idle resting behavior
 #
 is_idle = get_inventory_value(SPAWNED_ID, "idle")
+if len(grid_objects(obj.host_id) & role("__damaged__"))>0:
+    is_idle = False
+
 idle_pos =  get_inventory_value(SPAWNED_ID, "idle_pos")
 idle_marker =  get_inventory_value(SPAWNED_ID, "idle_marker")
 #
@@ -60,8 +65,15 @@ target_room = get_inventory_value(SPAWNED_ID, "target_room")
 jump damcons_look_for_work if target_room == idle_marker
 # If already fixed move on
 jump damcons_look_for_work if target_room is None
+if not has_role(target_room, "__damaged__"):
+    unlink(SPAWNED_ID, "work-order", target_room)
+    set_inventory_value(SPAWNED_ID, "target_room", None)
+    set_inventory_value(SPAWNED_ID, "idle_state", "start")
+    jump damcons_look_for_work
+
+
 # If already fixed move on
-jump damcons_look_for_work if not has_role(target_room, "__damaged__")
+#jump damcons_look_for_work if not has_role(target_room, "__damaged__")
 
 #
 # This is testing to see if we've arrived
@@ -115,8 +127,6 @@ if cur_target is not None and cur_target != idle_marker:
     # Job already done
     if not has_role(cur_target, "__damaged__"):
         unlink(SPAWNED_ID, "work-order", cur_target)
-
-
 #
 # The damage needs to be a work order for a damcon
 #
@@ -131,21 +141,28 @@ if the_target == None:
 else:
     set_inventory_value(SPAWNED_ID, "work_speed_coeff", 1.25)
 
+
 #
-# Got ot rally point
+# Goto to rally point
 #
 if the_target == None:
+    idle_marker = get_inventory_value(SPAWNED_ID, "idle_marker")
     the_target = idle_marker
+    set_inventory_value(SPAWNED_ID, "idle", True)
+    set_inventory_value(SPAWNED_ID, "idle_state", "start")
+    _blob = to_blob(idle_marker)
+    _loc_x = _blob.get("curx", 0)
+    _loc_y = _blob.get("cury", 0)
+    set_inventory_value(SPAWNED_ID, "idle_pos", (_loc_x, _loc_y) )
 
+    jump loop_damcons_ai
 
-# If this is the target already move on
-#
-# todo: set speed?
-#
-_speed = grid_calc_speed(SPAWNED_ID)
-this_blob.set("move_speed", _speed, 0)
+    
+    
+
 jump loop_damcons_ai if the_target == get_inventory_value(SPAWNED_ID, "target_room")
-
+##########################
+#
 this_blob = to_blob(SPAWNED_ID)
 target_blob = to_blob(the_target)
 curx= this_blob.get("curx", 0)
@@ -161,6 +178,15 @@ if x==curx and y == cury:
     this_blob.set("move_speed", 0, 0)
     jump loop_damcons_ai
 
+
+# If this is the target already move on
+#
+# todo: set speed?
+#
+_speed = grid_calc_speed(SPAWNED_ID)
+this_blob.set("move_speed", _speed, 0)
+
+
 grid_target(SPAWNED_ID, the_target, _speed)
 t_obj = to_object(the_target)
 target_name = t_obj.name
@@ -168,7 +194,9 @@ target_name = t_obj.name
 grid_damcons_detailed_status(SPAWNED_ID, f"Heading to {target_name}", "orange", 3)
 # Set as current target
 set_inventory_value(SPAWNED_ID, "target_room", the_target )
-set_inventory_value(SPAWNED_ID, "work_needed", None) 
+set_inventory_value(SPAWNED_ID, "work_needed", None)
+set_inventory_value(SPAWNED_ID, "idle_state", "start")
+
 #
 # Delay 10 To avoid bouncing between closest
 #
@@ -198,9 +226,9 @@ hp = get_inventory_value(SPAWNED_ID, "HP")
 jump loop_damcons_ai if hp==0
 set_inventory_value(SPAWNED_ID, "work_needed", 20/hp) # 4 times 3 sec = 12 seconds
 
-
 # Set tooltip and speech bubble
 grid_damcons_detailed_status(SPAWNED_ID, f"Getting to work", "blue", 3)
+
 
 jump loop_damcons_ai
 
