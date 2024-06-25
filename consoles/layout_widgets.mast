@@ -78,9 +78,9 @@ with gui_sub_section("col-width:25;"):
     gui_row("row-height:200px;margin:0,0,0,10px;")
     gui_layout_widget("grid_face")
     gui_row()
-    gui_layout_widget("grid_object_list")
-    gui_row()
     gui_layout_widget("grid_control")
+    gui_row()
+    gui_layout_widget("grid_object_list")
     gui_row("row-height: 5;")
     gui_layout_widget("text_waterfall")
 
