@@ -1,15 +1,6 @@
-route_spawn(hangar_handle_route_spawn)
 
 
-========== hangar_handle_route_spawn =========
-jump fighter_mission if has_roles(SPAWNED_ID, "tsn,fighter")
-jump shuttle_mission if has_roles(SPAWNED_ID, "tsn,shuttle")
-
-#### ELSE don't run a task
-->END
-
-
-=====  fighter_mission =====
+//spawn if has_roles(SPAWNED_ID, "tsn,fighter")
 
 #
 # Create the interior for the ship, defined in grid_ai
@@ -24,7 +15,7 @@ set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a fighter miss
 ->END
 
 
-=====  shuttle_mission =====
+//spawn if has_roles(SPAWNED_ID, "tsn,shuttle")
 
 #
 # Create the interior for the ship, defined in grid_ai
@@ -84,7 +75,7 @@ _torp_types = origin_o.data_set.get("torpeo_types_available",0)
 # 
 #
 if  _torp_types is None:
-     print("torpedo mission no needed")
+     print("torpedo mission not needed")
      ->END
 _torp_types = _torp_types.split(",")
 torp_type = random.choice(len(_torp_types))
@@ -144,7 +135,7 @@ jump story_mission_deliver_life_form if mission_type ==0
 sel_o = to_object(COMMS_SELECTED_ID)
 ->END if sel_o is None
 
-life_forms = ~~["Admiral Xeno Nakada", "Prince Zayne Alcantar", "Admiral Tharay sh'Firri", "Skarran delegate", "Torgoth delegate"] ~~
+life_forms = ["Admiral Xeno Nakada", "Prince Zayne Alcantar", "Admiral Tharay sh'Firri", "Skarran delegate", "Torgoth delegate"]
 
 life_form_name = random.choice(life_forms)
 

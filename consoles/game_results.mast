@@ -22,7 +22,7 @@ obj = to_object(DESTROYED_ID)
 if obj is not None:
     side = "{obj.side.lower()}_destroyed"
     count = game_stats.get(side, 0)
-    ~~ game_stats[side] = count + 1~~
+    game_stats[side] = count + 1
 
     race = obj.art_id
     under = race.find("_")
@@ -33,7 +33,7 @@ if obj is not None:
         
         race = "{race.lower()}_ships_destroyed"
         count = game_stats.get(race, 0)
-        ~~ game_stats[race] = count + 1~~
+        game_stats[race] = count + 1
 
 ->END
 

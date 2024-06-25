@@ -1,23 +1,18 @@
-
 //spawn if has_roles(SPAWNED_ID, "monster, typhon, classic")
 
-#TODO: Need a way to loop a route label
-# or is this the best way to explicitly schedule logic?
-task_schedule(classic_typhon_ai)
+-- ai_loop
+->END if  not object_exists(SPAWNED_ID)
 
-==== classic_typhon_ai 
-monster_id = SPAWNED_ID
-
-_target = closest(monster_id, broad_test_around(monster_id, 5000,5000, 0xf0)-role("__terrain__")-role("monster"))
+_target = closest(SPAWNED_ID, broad_test_around(SPAWNED_ID, 5000,5000, 0xf0)-role("__terrain__")-role("monster"))
 if _target is None:
-    clear_target(monster_id)
+    clear_target(SPAWNED_ID)
 else:
     #print("Typhon hunting")
-    target(monster_id, _target)
+    target(SPAWNED_ID, _target)
 
 await delay_sim(seconds=5)
 
-jump classic_typhon_ai if object_exists(monster_id)
+jump ai_loop
 
 
 

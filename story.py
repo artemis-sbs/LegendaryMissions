@@ -146,17 +146,15 @@ def get_face_from_data(face_style):
     return face_style
 
 
-from sbs_utils.procedural.gui import gui_row, gui_text
+from sbs_utils.procedural.gui import gui_row, gui_text, text_sanitize
 
 
 def main_mission_select_template(item):
     gui_row("row-height:2px;background:#ddd;padding:10px,0,10px,3px;")
     gui_row("row-height: 2em;padding:10px,10px,10px,3px;")
-    gui_text(f"text:{item['name']};justify: left;font:gui-3;")
+    gui_text(f"text:{item.display_name};justify: left;font:gui-3;")
     gui_row("row-height:5em;padding:10px,0,10px,3px;")
-    gui_text(f"text:{item['description']};justify: left;color:#999;font:gui-2;")
-    
-    
+    gui_text(f"text:{text_sanitize(item.desc)};justify: left;color:#999;font:gui-2;")
     
     
 

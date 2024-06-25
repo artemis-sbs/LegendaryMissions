@@ -1,0 +1,7 @@
+#
+#
+# When a player spawns, enable docking
+#
+//spawn if has_role(SPAWNED_ID, "__player__")
+
+schedule_player_docking(SPAWNED_ID, difficulty)

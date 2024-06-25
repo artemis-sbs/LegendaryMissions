@@ -1,6 +1,6 @@
 
 route_focus_weapons("weapons_select_route")
-route_focus_comms("stop_give_orders")
+
 import give_orders.py
 
 
@@ -23,7 +23,7 @@ import give_orders.py
     
 === test_random
 COMMS_ORIGIN.set_inventory_value("test", "HELLO")
-<<[$xmas] Trouble
+<<[$xmas] "Trouble"
     % {COMMS_ORIGIN.name} we are desperate need of help
     " Our engines are offline {COMMS_ORIGIN["test"]}
     " we need your help fast
@@ -118,50 +118,31 @@ else:
     set_inventory_value(alt_ship, "WEAPONS_SELECTED_ID", None)
     
     nav = sim.add_navpoint(EVENT.source_point.x,EVENT.source_point.y, EVENT.source_point.z, "goto", "white")
-    ~~ nav.visibleToShip = alt_ship ~~
+    nav.visibleToShip = alt_ship
     set_inventory_value(alt_ship, "WEAPONS_SELECTED_NAV", nav)
 
 #Done no point running more
 ->END
 
-=== stop_give_orders
-
+//focus/comms
 #
-# Trying always focus on comms selection
-#
-
-##### Old code that only focuses in give orders
 #
 # Something else selected get out of give orders
 #
 nav_focus_id = EVENT.client_id
-#alt_ship = get_inventory_value(nav_focus_id, "2dview_alt_ship", 0)
-#->END if not alt_ship
-#->END if not has_role(alt_ship, "friendly")
-
 comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
 if COMMS_SELECTED.has_role('tsn'):
-    ()[blue] Unused
+    ()[blue] "Unused"
         % ready
         % How can I help
         % Your orders
         % Yes, sir
 elif COMMS_SELECTED.has_role('raider'):
-    ()[red] Unused
+    ()[red] "Unused"
         % Piss off
         % Eat my beams
         % You shall perish
         % You gonna die
-
-
-
-    
-
-
-#gui_reroute_client(nav_focus_id, "console_selected")
-
-yield success
-
 
 
 
@@ -226,8 +207,8 @@ noggin = to_object(brain_id)
 
 brain_label = get_inventory_value(brain_id, "BRAIN_LABEL", None)
 print(f"BRAIN {brain_label}")
-~~brain_sub_task.jump(brain_label)~~
-~~brain_sub_task.tick_in_context()~~
+brain_sub_task.jump(brain_label)
+brain_sub_task.tick_in_context()
 
 === brain_next
 await delay_sim(1)
@@ -259,7 +240,7 @@ yield idle
 /*
 
 + "Random inline":
-    <<[$alert] Trouble
+    <<[$alert] "Trouble"
         % {COMMS_ORIGIN.name} we are desperate need of help
         " Are engines are offline 
         " we need your help fast
@@ -272,19 +253,19 @@ yield idle
 
 //comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
 + "Give Orders":
-    <<[$alert] Under attack
+    <<[$alert] "Under attack"
         % Option one 
         "  
         "
         % Second line
         "
         "
-    <<[$alert]33% Under attack
+    <<[$alert]33% "Under attack"
         " Option 2
-    <<[$alert]33% Under attack
+    <<[$alert]33% "Under attack"
         " Option 2
 
-    >>[blue,white] Info
+    >>[blue,white] "Info"
         "
         "
         "

@@ -1,7 +1,7 @@
 #
 # This will allow buttons to be added at the 'station/build' level
 #
-route_spawn(spawn_task_station_start_building)
+
 
 # Set title colors for incoming messages from stations, raiders, and surrendered raiders.
 station_color = "green"
@@ -44,19 +44,15 @@ emp = get_data_set_value(COMMS_SELECTED_ID, "EMP_NUM", 0)
 mine = get_data_set_value(COMMS_SELECTED_ID, "Mine_NUM", )
 build_time = format_time_remaining(COMMS_SELECTED_ID, "build_time")
 
-~~comms_receive(f"""Hello, {comms_id}.  We stand ready to assist.
-
-You have full docking privileges.
-
-{torpedo_build_type} in production. Completion in {build_time}
-
-{"type":<10}{"ready": >5}{"time to produce": >20}
-{"Homing": <10}{homing: >5}{"": >16}{station_build_times["Homing"]}:00 
-{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times["Nuke"]}:00
-{"EMP": <10}{emp: >5}{"": >16}{station_build_times["EMP"]}:00
-{"Mine": <10}{mine: >5}{"": >16}{station_build_times["Mine"]}:00
-
-""", title="hail", title_color=station_color)~~
+<<[green] "Hail"
+    " Hello, {comms_id}.  We stand ready to assist.
+    " ^^You have full docking privileges.
+    " ^{torpedo_build_type} in production. Completion in {build_time}
+    " ^{"type":<10}{"ready": >5}{"time to produce": >20}
+    " ^{"Homing": <10}{homing: >5}{"": >16}{station_build_times["Homing"]}:00 
+    " ^{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times["Nuke"]}:00
+    " ^{"EMP": <10}{emp: >5}{"": >16}{station_build_times["EMP"]}:00
+    " ^{"Mine": <10}{mine: >5}{"": >16}{station_build_times["Mine"]}:00
 
 yield success
 
@@ -128,17 +124,20 @@ for player in all_roles(f"__player__, {side}" ):
 
 
 
-================ spawn_task_station_start_building ================= 
+
+//spawn if  has_roles(SPAWNED_ID, "tsn, station")
 #
 # All stations start building homing, just as any player
 # Build task needs a player to talk to
 #
-->END if not has_roles(SPAWNED_ID, "tsn, station")
 
-station_id = SPAWNED_ID
+SPAWNED.data_set.set("Homing_NUM", random.randint(8,12),0)
+SPAWNED.data_set.set("Nuke_NUM",  random.randint(2,5),0)
+SPAWNED.data_set.set("EMP_NUM", random.randint(2,5),0)
+SPAWNED.data_set.set( "Mine_NUM", random.randint(2,5), 0)
 
-build_munition_queue_task(station_id, "Homing")
+build_munition_queue_task(SPAWNED_ID, "Homing")
 
-scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
+scanned = SPAWNED["SCANNED"]
 
 -> END

@@ -3,11 +3,10 @@
 
 
 //comms if  has_roles(COMMS_SELECTED_ID, "damcons")
-if COMMS_SELECTED["idle"]:
-    + "Go to work"  comms_damcons_goto_work
-else:
-    + "go to rally point"  comms_damcons_goto_rally_point
-
+#if COMMS_SELECTED["idle"]:
+#    + "Go to work"  comms_damcons_goto_work
+#else:
+#    + "go to rally point"  comms_damcons_goto_rally_point
 + "do work order now" //comms/dc/work/order
 + "cancel work order" //comms/dc/work/cancel
 
@@ -31,8 +30,8 @@ for d in orders:
 
 
 ===== comms_damcons_goto_work =======
-set_inventory_value(COMMS_SELECTED_ID, "idle", False )
-set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
+#set_inventory_value(COMMS_SELECTED_ID, "idle", False )
+#set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
 set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
 set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
 yield success

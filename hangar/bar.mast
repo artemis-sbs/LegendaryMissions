@@ -29,7 +29,7 @@ if len(message)==0:
 cs = get_inventory_value(client_id, "call_sign", "No call sign")
 
 cid = str(client_id&0xffffffff)
-~~ customers[client_id]= {"call_sign": cs, "face": my_face} ~~
+customers[client_id]= {"call_sign": cs, "face": my_face}
 
 ============== bar_show ===================
 gui_section("area: 0,0,60,60;")
@@ -58,7 +58,7 @@ gui_hole()
 gui_input("desc:Make a toast", var="message")
 
 on gui_message(gui_button("send")):
-    to_send = ~~message.strip()~~
+    to_send = message.strip()
     if len(to_send)>0:
         messages.append({"face": my_face, "msg": to_send})
         if len(messages)>12:

@@ -1,4 +1,8 @@
-================= double_front_build_world ===================
+@map/double_front "Double Front"
+"Bases are in a corner, protected by dense minefields
+" while the enemies advance from two sides. This layout
+" (especially with minefields) makes for a complex terrain
+" situation, but isn't as open as a one-front layout.
 
 
 terrain_value = 0

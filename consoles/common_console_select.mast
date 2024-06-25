@@ -1,4 +1,4 @@
-route_change_console("select_console")
+route_change_console(select_console)
 #
 # Expects shared data 
 #    player_list that has the list of player ships
@@ -37,6 +37,7 @@ for key in grid_data:
         valid_interiors.add(key)
 
 ========== select_console ==========
+print("CHNAGE CONSOLE EVENT?")
 # default console_select = "helm"
 # default client_select_ship = "artemis"
 
@@ -55,9 +56,9 @@ with ship_sec:
 
     _input = "desc:Ship Name"
     on gui_message(gui_input(_input, var="ship_name")):
-        ~~player_list[client_selected_index]["name"] = ship_name~~
+        player_list[client_selected_index]["name"] = ship_name
         client_select_ship = ship_name
-        ~~player_list[client_selected_index]["ship"] = ship_type~~
+        player_list[client_selected_index]["ship"] = ship_type
         gui_update_shared("sh_ship_list", None)
 
 ship_sec2 = gui_region(style="area: 1,15,40,100")
@@ -69,7 +70,7 @@ with ship_sec2:
     #
     gui_content(ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors), style="tag:sh_ship_picker", var="ship_type")
     on change ship_type:
-        ~~player_list[client_selected_index]["ship"] = ship_type~~
+        player_list[client_selected_index]["ship"] = ship_type
         gui_update_shared("sh_ship_picker", ship_type, {"client_select_ship": client_select_ship})
         gui_update_shared("sh_ship_list", None)
 

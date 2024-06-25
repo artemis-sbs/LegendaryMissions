@@ -1,10 +1,7 @@
 
-
-route_dock(handle_hangar_docking)
-
 shared hangar_version = 1
-call_sign = "Selene"
-set_inventory_value(client_id, "call_sign", call_sign)
+
+set_inventory_value(client_id, "call_sign", "Selene")
 #
 #  Background task to look for strays
 #
@@ -16,7 +13,27 @@ shared find_stray = task_schedule(find_stray_crafts)
 # or END which stops running this task/flow 
 #
 
-    
+
+
+
+
+//spawn if has_role(SPAWNED_ID, "__player__")
+#
+# For now put on a fighter on the player ship
+#
+# If you want it on based on grid objects,
+# wait to be sure grid objects are one the 
+# ship
+# await delay_sim(2)
+#
+hangar_fighter_spawn(SPAWNED_ID, "tsn")
+
+
+//spawn if has_roles(SPAWNED_ID, "tsn, station")
+for x in range(random.randint(1,3)):
+    hangar_random_craft_spawn(SPAWNED_ID, "tsn")
+
+
 
 ==== show_hangar ====
 #
@@ -29,7 +46,7 @@ briefing = "Select a craft to pilot. If you accept the mission hit launch."
 
 gui_section(style="area: 0,0, 36,97;background: #fff1;")
 
-
+call_sign = get_inventory_value(client_id, "call_sign", "Selene")
 gui_section(style="area: 5,6,35,10;")
 gui_input("desc:Call sign", var="call_sign")
 on change call_sign:
@@ -120,9 +137,6 @@ jump show_hangar
 
 ==== launch_to_cockpit ======
 
-
-
-
 jump show_hangar if ride_select is None
 jump show_hangar if not has_role(ride_select, "standby")
 
@@ -138,7 +152,8 @@ await gui()
 
 
 
-==== handle_hangar_docking ======
+//dock if has_roles(EVENT.parent_id, "cockpit")
+
 fighter_so = to_object(EVENT.parent_id)
 fighter = fighter_so.engine_object
 

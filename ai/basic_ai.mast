@@ -1,109 +1,15 @@
 #
-# route spawn will call the specify label when something is spawned
-# This allows the system to test what type of item it is
-# typically using roles or other attributes
-#
-# NOTE: More than one route spawn can exist
-#
-
-
-build_task = None
-
-#
-# The route_spawn label is the entry point 
-# it examines the SPAWNED_ID to either
-# jump to another label proper for that item
-# or END which stops running this task/flow 
-#
-route_spawn(handle_route_spawn)
-
-
-========== handle_route_spawn =========
-
-# jump ai_player if has_role(SPAWNED_ID, "__player__")
-jump ai_task_friendly if has_roles(SPAWNED_ID, "tsn, friendly")
-jump spawn_task_station if has_roles(SPAWNED_ID, "tsn, station")
-jump task_npc_targeting  if has_role(SPAWNED_ID, "raider")
-#jump ai_fighter if has_roles(SPAWNED_ID, "tsn,fighter")
-
-#### ELSE don't run a task
-->END
-
-//spawn if has_role(SPAWNED_ID, "__player__")
-#
-# For now put on a fighter
-#
-hangar_fighter_spawn(SPAWNED_ID, "tsn")
-#
-# Create the interior for the ship, defined in grid_ai
-#
-await task_schedule(spawn_grid_objects)
-#
-# The remaining AI for the player is docking
-#
-schedule_player_docking(SPAWNED_ID, difficulty)
-
-
-
-
-========== task_npc_targeting === 
-#
-# This is for enemy AI
-# For now this is in priority
-#  - if surrendered go back to the spawn point
-#  - a player ship that comms enraged
-#  - a player that is withing 2000
-#  - or a stations
-#
-
-scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
-surrendered = has_role(SPAWNED_ID, "surrendered")
-#if surrendered:
-#    so = to_object(SPAWNED_ID)
-#    target_pos(SPAWNED_ID, so.spawn_pos.x, so.spawn_pos.y, so.spawn_pos.z)
-    # TODO: When it reaches spawn_pos tally and remove
-#    ->END
-#
-# Auto scan: If you can see it you get the initial scan
-# Auto scan: If you can see it you get the initial scan
-# This is naive and assume players are on one side
-#
-if not scanned: 
-    should_scan = closest(SPAWNED_ID, role("PlayerShip"), 5000)
-    if should_scan is not None:
-        follow_route_select_science(should_scan, SPAWNED_ID)
-
-
-
--> END
-
-
-#
-# Call this logic again in 5 seconds
-#
-#await delay_sim(seconds=5)
-#-> task_npc_targeting
-
-
-
-#
 # AI for friendly tsn ships (not citizen ships)
 #
-========== ai_task_friendly ===== 
-
+//spawn if has_roles(SPAWNED_ID, "tsn, friendly")
+#
+# ai_loop is a inline label to allow rerunning the logic
+#
+--- ai_loop
 #
 # Comms can give orders to attack a target (or approach another friendly) 
 #
 the_target = get_inventory_value(SPAWNED_ID, "TARGET_ID", None)
-
-scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
-#
-# This is naive and assume players are on one side
-#
-if not scanned: 
-    should_scan = closest(SPAWNED_ID, role("PlayerShip"))
-    if should_scan is not None:
-        follow_route_select_science(should_scan, SPAWNED_ID)
 
 #
 # Only shoot raiders
@@ -122,30 +28,6 @@ if the_target is not None:
 # call this logic every 5 seconds
 #
 await delay_sim(seconds=5)
--> ai_task_friendly
-
-================ spawn_task_station ================= 
-
-scanned = get_inventory_value(SPAWNED_ID, "SCANNED")
-#
-# This is naive and assume players are on one side
-#
-if not scanned: 
-    should_scan = closest(SPAWNED_ID, role("PlayerShip"))
-    if should_scan is not None:
-        follow_route_select_science(should_scan, SPAWNED_ID)
-
-
-eo = to_engine_object(SPAWNED_ID)
-_pos = eo.pos
-
-#_pos.y += 300
-
-for x in range(random.randint(1,3)):
-    hangar_random_craft_spawn(SPAWNED_ID, "tsn")
-
-
--> END
-
+jump ai_loop
 
 

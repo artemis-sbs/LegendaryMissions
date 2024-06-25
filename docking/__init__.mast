@@ -1,1 +1,2 @@
-import docking/common_docking.py
+import docking.mast
+import common_docking.py

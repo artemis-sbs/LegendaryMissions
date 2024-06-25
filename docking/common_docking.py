@@ -10,6 +10,7 @@ from sbs_utils.procedural.grid import grid_objects
 from sbs_utils.tickdispatcher import TickDispatcher
 from damage.internal_damage import grid_restore_damcons, grid_repair_grid_objects
 from sbs_utils.faces import get_face
+from sbs_utils.procedural.signal import signal_emit
 
 
 
@@ -61,7 +62,8 @@ def build_munition_queue_task(id_or_obj, torp_type):
         task_cancel(build_task)
     # Start the new work    
     build_time = get_build_time_for(id_or_obj, torp_type)
-    set_inventory_value(id_or_obj, "build_task", task_schedule("task_station_building", data={"build_time": build_time, "torpedo_build_type": torp_type}))
+    set_inventory_value(id_or_obj, "build_task", task_schedule("task_station_building", 
+        data={"station_id": to_id(id_or_obj), "build_time": build_time, "torpedo_build_type": torp_type}))
     return True
 
 
@@ -172,14 +174,21 @@ def player_docking_docking(player_id_or_obj, dock_station):
         player_blob.set("dock_state", "dock_start")
     return RATE_FAST
 
-def player_docking_dock_start(player_id_or_obj, dock_station):
+def player_docking_dock_start(player_id_or_obj, dock_station_id):
     player_blob = to_blob(player_id_or_obj)
     player_id = to_id(player_id_or_obj)
     if player_blob is None:
         return None # Player died
 
     player_blob.set("dock_state", "docked")
+    #TODO: move this out and respond to signal
     grid_restore_damcons(player_id)
+    # A hack to get attributes
+    data = {}
+    data["ORIGIN_ID"] = player_id
+    data["SELECTED_ID"] = dock_station_id
+    signal_emit("docked", data)
+    
     return RATE_FAST
 
 

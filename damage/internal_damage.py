@@ -76,12 +76,17 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
         color = item_theme_data.color
         icon = item_theme_data.icon
         scale = item_theme_data.scale
-        go =  grid_spawn(ship_id,  name_tag, name_tag, loc_x, loc_y, icon, color, g["roles"])
+        r = "#,"+g["roles"]
+        go =  grid_spawn(ship_id,  name_tag, name_tag, loc_x, loc_y, icon, color, r)
         if go is None: return
 
         go.blob.set("icon_scale", scale/2, 0)
         # save color so it cn be restored
         set_inventory_value(go.id, "color", color)
+        set_inventory_value(go.id, "icon_index", icon)
+        set_inventory_value(go.id, "icon_scale", scale)
+        # set_inventory_value(go.id, "simple_icon_index", 12 for system, 97 for room)
+
         #
         # Add link so query can find this relationship
         #       e.g. query to find engine grid objects on a ship
@@ -137,6 +142,20 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
     marker_go.blob.set("icon_scale",1.5,0)
     marker_go_id =  to_id(marker_go)
     set_inventory_value(ship_id, "marker_id", marker_go_id)
+    # Create EPAD
+    v = sbs.vec3(0.5,0,0.5)
+    loc = sbs.find_valid_grid_point_for_vector3(ship_id, v, 5)
+    if len(loc)==0:
+        return
+    loc_x = loc[0]
+    loc_y = loc[1]
+    ship = ship_id & 0xFFFFFFFF
+    epad_tag = f"epad:{ship}"
+    # marker is named hallway
+    # 23 flag, 101-filled square, 111
+    epad_go = grid_spawn(ship_id, "EPad", epad_tag, int(loc_x),int(loc_y), 134, "#9994", "tools,epad") 
+    epad_go.blob.set("icon_scale",0.01,0)
+    set_inventory_value(ship_id, "epad_id", epad_go.id)
 
 
 def grid_restore_damcons(id_or_obj):
@@ -286,7 +305,7 @@ def grid_damage_hallway(id_or_obj, loc_x, loc_y, damage_color):
     icon = 45 #fire   # 113 - Door
 
     name_tag = f"hallway:{loc_x},{loc_y}"
-    dam_go = grid_spawn(ship_id, name_tag, name_tag, loc_x,loc_y, icon, damage_color, "hallway, __damaged__") 
+    dam_go = grid_spawn(ship_id, name_tag, name_tag, loc_x,loc_y, icon, damage_color, "#,hallway, __damaged__") 
     link(ship_id, "damage", to_id(dam_go))
 
 
@@ -333,6 +352,10 @@ def set_damage_coefficients(id_or_obj):
         blob.set(_blob_name, _coef, _idx)
 
 def grid_damage_grid_object(ship_id, grid_id, damage_color):
+    if has_role(grid_id, "tools"):
+        return
+    if has_role(grid_id, "marker"):
+        return
     blob = to_blob(grid_id)
     blob.set("icon_color", damage_color, 0)
     link(ship_id, "damage", grid_id) 
@@ -457,6 +480,7 @@ def grid_take_internal_damage_at(id_or_obj, source_point, system_hit, damage_amo
             # track hit lifeforms
             #
             if has_role(go_id, "marker"): continue
+            if has_role(go_id, "tools"): continue
             if has_role(go_id, "rally_point"): continue
             if has_role(go_id, "lifeform"):
                 injured_dc.add(go_id)

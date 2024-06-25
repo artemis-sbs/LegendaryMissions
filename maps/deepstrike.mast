@@ -1,4 +1,8 @@
-================= deep_strike_build_world ===================
+@map/deep_strike "Deep Strike"
+"There are no friendly bases in this scenario,
+" just a friendly bulk cargo ship that can resupply
+" the player ship(s). The player ship(s) are launching
+" an assault into enemy territory, which is defended by enemy bases.
 
 
 terrain_value = 0

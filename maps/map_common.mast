@@ -109,7 +109,7 @@ for player_ship_data in player_list:
 
     if c>= player_count:
         # make sure the id is cleared dry docked ships
-        ~~player_ship_data["id"] = None~~
+        player_ship_data["id"] = None
         continue
 
     
@@ -125,7 +125,7 @@ for player_ship_data in player_list:
     player_ship = to_id(player_spawn(*spawn_pos, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
     
     c+=1
-    ~~player_ship_data["id"] = player_ship~~
+    player_ship_data["id"] = player_ship
 
     set_face(player_ship, get_face_from_data(player_ship_data["face"]))
     set_inventory_value(player_ship, "respawn_time", 5)

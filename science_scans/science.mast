@@ -4,17 +4,38 @@
 + "scan":
     scan_results("This is a friendly station.")
 + "status":
+<<<<<<< HEAD
     scan_results("DARRIN OR MIKE PLEASE FIX ME.")
 + "intl":
     scan_results("Built ten years ago, this station was in excellent condition before the battle.")
 + "bio":
     scan_results("The crew is mostly human, plus a few aliens, pets, and lab animals.")
+=======
+    <scan> 
+        % PLEASE DARRIN OR MIKE PLEASE FIX ME.
+        % I NEED BETTER TEXT
+        % HELP ME HELP YOU HAVE BETTER TEXT
+
++ "intel":
+    <scan> 
+        " Built ten years ago, this station was in excellent condition before the battle.
+        
+
++ "bio":
+    <scan>
+        % The crew is mostly human, plus a few aliens, pets, and lab animals.
+>>>>>>> f5253b1d5c1b96476c6fd08922605addec6c81eb
 
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 //science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 + "scan":
+<<<<<<< HEAD
     scan_results("This is a friendly ship.")
+=======
+    <scan>
+        % This is a friendly ship.
+>>>>>>> f5253b1d5c1b96476c6fd08922605addec6c81eb
 + "status":
     scan_results("DARRIN OR MIKE PLEASE FIX ME.")
 + "intl":
