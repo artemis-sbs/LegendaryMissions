@@ -48,6 +48,7 @@ shared seed_value  = settings.get("seed_value")
 shared game_started  = settings.get("game_started")
 shared game_ended  = settings.get("game_ended")
 shared game_time_limit  = str(settings.get("game_time_limit", ""))
+shared war_time_delay  = str(settings.get("war_time_delay", ""))
 shared difficulty=   settings.get("difficulty")
 shared player_count  = settings.get("player_count")
 shared player_list  =  settings.get("player_list")
@@ -89,7 +90,7 @@ gui_section( style="area: 5, 30px, 95, 350px;")
 rs= "row-height: 45px;margin:5px,5px,0,0;"
 ts= "row-height: 45px;col-width: 7em;margin:0,2px, 0,0;"
 
-gui_section(style="area: 50, 95-500px, 100, 95;row-height:45px;margin:30px,0px,10px,0;padding:0,10px,10px,0;background:#1578;")
+gui_section(style="area: 50, 95-520px, 100, 95;row-height:45px;margin:30px,0px,10px,0;padding:0,10px,10px,0;background:#1578;")
 gui_row(style=rs)
 gui_text("justify:right;text:Player ships", style=ts)
 gui_blank("col-width:15px")
@@ -103,7 +104,16 @@ gui_row(style=rs)
 
 gui_text("justify:right;text:Mission Type", style=ts)
 gui_blank("col-width:15px")
-gui_drop_down("text: {world_select};list:siege,single front,double front,deep strike,peacetime,border war", var="world_select")
+dd_wsel = gui_drop_down("text: {world_select};list:siege,single front,double front,deep strike,peacetime,border war", var="world_select")
+on gui_message(dd_wsel):
+    jump show_server_menu
+gui_row(style=rs)
+if world_select == "border war":
+    gui_text("justify:right;text:Minutes to War", style=ts)
+    gui_blank("col-width:15px")
+    gui_input("desc: Minutes;", var="war_time_delay")
+else:
+    gui_blank()
 gui_row(style=rs)
 gui_blank()
 gui_row(style=rs)
@@ -153,8 +163,8 @@ mission_list = ~~[
 for i in mission_list:
     ~~i['description'] = i['description'].replace(",", "_") ~~
 
-gui_section(style="area: 20px, 95-500px, 50, 95;")
-mission_picker = gui_list_box(mission_list,"row-height: 7em; background:#1578;", item_template=main_mission_select_template, title_template=main_mission_select_title_template, select=True)
+gui_section(style="area: 20px, 95-520px, 50, 95;")
+mission_picker = gui_list_box(mission_list,"row-height: 8em; background:#1578;", item_template=main_mission_select_template, title_template=main_mission_select_title_template, select=True)
 
 
 

@@ -2,74 +2,49 @@
 
 //science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
 + "scan":
-    <scan>
-        %This is a friendly station.
-
+    scan_results("This is a friendly station.")
 + "status":
-    <scan> 
-        % PLEASE DARRIN OR MIKE PLEASE FIX ME.
-        % I NEED BETTER TEXT
-        % HELP ME HELP YOU HAVE BETTER TEXT
-
-+ "intel":
-    <scan>
-        %Built ten years ago, this station was in excellent condition before the battle.
-
+    scan_results("DARRIN OR MIKE PLEASE FIX ME.")
++ "intl":
+    scan_results("Built ten years ago, this station was in excellent condition before the battle.")
 + "bio":
-    <scan>
-        %The crew is mostly human, plus a few aliens, pets, and lab animals.
+    scan_results("The crew is mostly human, plus a few aliens, pets, and lab animals.")
 
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 //science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 + "scan":
-    <scan>
-        %This is a friendly ship.
+    scan_results("This is a friendly ship.")
 + "status":
-    <scan>
-        %DARRIN OR MIKE PLEASE FIX ME.
-+ "intel":
-    <scan>
-        %The ship is ready for battle.
+    scan_results("DARRIN OR MIKE PLEASE FIX ME.")
++ "intl":
+    scan_results("The ship is ready for battle.")
 + "bio":
-    <scan>
-        %The crew is mostly human.
+    scan_results("The crew is mostly human.")
 
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "typhon")
 //science if has_role(SCIENCE_SELECTED_ID, "typhon")
 + "scan":
-    <scan>
-        %A classic typhon.
+    scan_results("A classic typhon.")
 + "status":
-    <scan>
-        %DARRIN OR MIKE PLEASE FIX ME.
+    scan_results("DARRIN OR MIKE PLEASE FIX ME.")
 + "bio":
-    <scan>
-        %Seems to be very much alive.
-+ "intel":
-    <scan>
-        %Just avoid it and it won't bother you.
+    scan_results("Seems to be very much alive.")
++ "intl":
+    scan_results("Just avoid it and it won't bother you.")
 
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "wreck")
 //science if has_role(SCIENCE_SELECTED_ID, "wreck")
 + "scan":
-    <scan>
-        %Gutted and battle-scarred wreckage, the mangled remains of a fierce battle.
+    scan_results("Gutted and battle-scarred wreckage, the mangled remains of a fierce battle.")
 + "status":
-    <scan> 
-        % DARRIN OR MIKE PLEASE FIX ME.
-        % I NEED BETTER TEXT
-        % HELP ME HELP YOU HAVE BETTER TEXT
-
+    scan_results("DARRIN OR MIKE PLEASE FIX ME.")
 + "bio":
-    <scan>
-        %No signs of life detected.
-        %Nothing could have survived that.
+    scan_results("No signs of life detected.")
 + "mat":
-    <scan>
-        %Material scan<colon> no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging.
+    scan_results("Material scan: no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging.")
 
 
 
@@ -85,14 +60,14 @@ jump upgrade_science if has_role(SCIENCE_SELECTED_ID, "upgrade")
 # These are fast scan of known things or things unknown to the script
 if has_roles(SCIENCE_SELECTED_ID, "tsn,fighter"):
     briefing = get_inventory_value(SCIENCE_SELECTED_ID, "briefing", "Mission unknown")
-    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "A Friendly Fighter", "intel": briefing})
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "A Friendly Fighter", "intl": briefing})
 elif has_roles(SCIENCE_SELECTED_ID, "tsn,shuttle"):
     briefing = get_inventory_value(SCIENCE_SELECTED_ID, "briefing", "Mission unknown")
-    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "A Friendly shuttle", "intel": briefing})
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "A Friendly shuttle", "intl": briefing})
 elif has_role(SCIENCE_SELECTED_ID, "asteroid"):
-    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Asteroid", "intel": "The object is a boring asteroid"})
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Asteroid", "intl": "The object is a boring asteroid"})
 elif has_role(SCIENCE_SELECTED_ID, "nebula"):
-    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Nebula.", "intel": "Pretty clouds"})
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Nebula.", "intl": "Pretty clouds"})
 #else:
 #    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, "unknown object type.")
 
@@ -121,7 +96,7 @@ await scan():
         scan_results("Enemy vessel. Exercise caution.")
     + "status":
         scan_results("DARRIN OR MIKE PLEASE FIX ME.")
-    + "intel":
+    + "intl":
         scan_results("{taunt_intel}")
     + "bio":
         scan_results("{bio_intel}")
