@@ -157,7 +157,6 @@ gui_section(style="area: 20px, 95-500px, 50, 95;")
 mission_picker = gui_list_box(mission_list,"row-height: 7em; background:#1578;", item_template=main_mission_select_template, title_template=main_mission_select_title_template, select=True, carousel=True)
 # Initialize the selection to account for if we already have one
 mission_picker.set_selected_index(mission_index)
-print(f"SERVER START {mission_index} {mission_picker.get_selected_index()}")
 world_select = mission_picker.get_value()
 
 on change mission_picker.get_selected_index():

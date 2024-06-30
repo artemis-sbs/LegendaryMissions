@@ -15,9 +15,17 @@ shared taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
 # Select 3 taunts
 #
 race = get_race(SPAWNED_ID)
-this_taunt_data = random.sample(taunt_data[race], 3)
-set_inventory_value(SPAWNED_ID, "taunt_data", this_taunt_data)
-set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
+if race is None:
+    print(f"spawn, raider invalid race {race}")
+    ->END
+
+race_taunts = taunt_data.get(race)
+if race_taunts is not None:
+    this_taunt_data = random.sample(race_taunts, 3)
+    set_inventory_value(SPAWNED_ID, "taunt_data", this_taunt_data)
+    set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
+   
+
 
 =$raider red,white
 
@@ -53,15 +61,7 @@ for data in this_taunt_data:
     button_text = data["button"]
     right = right_button == button_text
     + "{button_text}" handle_comms_taunt_raider_select {"data": data, "select_right": right}
-#
-# Add a back button
-#
-+ "back"  //comms
     
-
-
-
-
 
 
 
@@ -81,6 +81,9 @@ enrage_value = fleet_obj.get_heat_for(ship_id)
 this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
 
 hide_taunt = this_taunt_data is None or has_role(ship_id, "surrendered")
+if this_taunt_data is None:
+    race = get_race(COMMS_SELECTED_ID)
+    comms_receive(f"""The taunts for this element were not defined properly race expected: {race}.""", title="Taunt coding error", title_color=raider_color)
 
 if enrage_value:
     comms_receive(f"""I'm too angry to deal with you right now, {name}.""", title="Already angry", title_color=raider_color)

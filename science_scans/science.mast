@@ -1,6 +1,7 @@
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
 
 //science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
+
 + "scan":
     <scan>
         %This is a friendly station.
@@ -23,6 +24,7 @@
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 //science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
+
 + "scan":
     <scan>
         % This is a friendly ship.
@@ -39,6 +41,7 @@
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "typhon")
 //science if has_role(SCIENCE_SELECTED_ID, "typhon")
+
 + "scan":
     <scan>
         %A classic typhon.
@@ -55,6 +58,7 @@
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "wreck")
 //science if has_role(SCIENCE_SELECTED_ID, "wreck")
+
 + "scan":
     <scan>
         %Gutted and battle-scarred wreckage, the mangled remains of a fierce battle.
@@ -75,11 +79,9 @@
 
 
 
-//select/science
-
-jump raider_science if has_role(SCIENCE_SELECTED_ID, "raider")
-jump upgrade_science if has_role(SCIENCE_SELECTED_ID, "upgrade")
-
+### / / select/science
+=== Not_executing
+print("Not execuring is executing")
 
 # VVVVV Default scan VVVVV
 
@@ -104,33 +106,45 @@ elif has_role(SCIENCE_SELECTED_ID, "nebula"):
 
 
 
-====== raider_science  ===========
+//enable/science if has_role(SCIENCE_SELECTED_ID, "raider")
+//science if has_role(SCIENCE_SELECTED_ID, "raider")
+
+
 taunt_trait=get_inventory_value(SCIENCE_SELECTED_ID, "taunt_trait")
 intel_list = get_inventory_value(SCIENCE_SELECTED_ID, "taunt_data")
 
 taunt_intel = "The captain cannot be taunted."
 bio_intel = "The bio scan has failed."
 
-if taunt_trait is not None and taunt_data is not None:
-    race = get_race(SCIENCE_SELECTED_ID)
-    if race is not None:
-        taunt_intel = intel_list[taunt_trait]['science']
-        bio_intel = "A bunch of {race} creatures."
+race = get_race(SCIENCE_SELECTED_ID)
+if race is None:
+    race = f"unknown race {race}"
+    
+taunt_intel = "The captain cannot be taunted {race}."
+bio_intel = f"A bunch of {race} creatures."
 
-await scan():
-    + "scan":
-        scan_results("Enemy vessel. Exercise caution.")
-    + "status":
-        scan_results("DARRIN OR MIKE PLEASE FIX ME.")
-    + "intel":
-        scan_results("{taunt_intel}")
-    + "bio":
-        scan_results("{bio_intel}")
+if taunt_trait is not None and intel_list is not None:
+    taunt_intel = intel_list[taunt_trait]['science']
 
-->END
++ "scan":
+    <scan>
+        " Enemy vessel. Exercise caution.
++ "status":
+    <scan>
+        " DARRIN OR MIKE PLEASE FIX ME.
+
++ "intel" {"taunt_intel": taunt_intel}:
+    <scan>
+        " {taunt_intel}
+
++ "bio" {"bio_intel": bio_intel}:
+    <scan>
+        " {bio_intel}
 
 
-===== upgrade_science ======
+
+//enable/science if has_role(SCIENCE_SELECTED_ID, "upgrade")
+//science if has_role(SCIENCE_SELECTED_ID, "upgrade")
 
 if has_roles(SCIENCE_SELECTED_ID, "upgrade, carapaction_coil"):
     upg_desc = "Carapaction Coil. 5 min 300% shield recharge boost."
@@ -151,11 +165,9 @@ elif has_roles(SCIENCE_SELECTED_ID, "upgrade, lateral_array"):
 elif has_roles(SCIENCE_SELECTED_ID, "upgrade, haplix_overcharger"):
     upg_desc = "Haplix Overcharger. +300 to shields but may damage shield generators."
 
++ "scan" {"upg_desc": upg_desc}:
+    <scan>
+        " {upg_desc} 
 
-
-await scan():
-    + "scan":
-        scan_results("{upg_desc}")
-->END
 
 

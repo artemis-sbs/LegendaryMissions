@@ -8,8 +8,6 @@ gui_row()
 with gui_sub_section("col-width:280px;"):
     gui_row("row-height: 350px;")
     gui_layout_widget("ship_data")
-    gui_row("row-height: 10;")
-    gui_layout_widget("text_waterfall")
     gui_row("row-height: 50px;")
     gui_layout_widget("red_alert")
 
@@ -30,6 +28,9 @@ with gui_sub_section("col-width:25;"):
         gui_layout_widget("comms_face")
     gui_row()
     gui_layout_widget("comms_sorted_list")
+    gui_row("row-height: 10;")
+    gui_layout_widget("text_waterfall")
+
 
 yield idle
 

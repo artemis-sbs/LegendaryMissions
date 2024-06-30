@@ -8,5 +8,5 @@
 
 //science if is_dev_build()
 + "Debug":
-    print("DEBUG SCAN")
-    scan_results("This is a debug string.", tab="Debug")
+    <scan> 
+        " This is a debug string.

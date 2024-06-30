@@ -28,15 +28,15 @@ abort:
 objective/pickup "Pickup the stuff" :
     " Pick up the {torp_type} from {station.name}
 
-    yield success if objectives_complete("pickup")
+    yield success if are_objectives_complete("pickup")
     dist = sbs.distance_id(fighter.id, station.id)
     yield fail if dist > 1000
     yield fail if not is_docked(fighter, station)
     yield success
 
 objective/pickup/bonus "Pickup in 4 minutes":
-    yield fail if objectives_complete("pickup")
-    yield success if objectives_complete("pickup/bonus")
+    yield success if are_objectives_complete("pickup/bonus")
+    yield fail if are_objectives_complete("pickup")
     yield success if not is_timer_complete("pickup_bonus")
     yield fail
 
@@ -44,28 +44,28 @@ objective/pickup/bonus "Pickup in 4 minutes":
 objective/deliver "Deliver the stuff":
     " Deliver the {torp_type} to {player.name}
     
-    yield success if objectives_complete("deliver")
-    yield fail if not objectives_complete("pickup")
+    yield success if are_objectives_complete("deliver")
+    yield fail if not are_objectives_complete("pickup")
 
-    dist = sbs.distance_id(player.id, station.id)
+    dist = sbs.distance_id(player.id, player.id)
     yield fail if dist > 1000
     # is_docked doesn't exists but could
-    yield fail if is_docked(fighter, player)
+    yield fail if not is_docked(fighter, player)
     yield success
 
 objective/deliver/bonus "Deliver in 8 minutes":
-    yield success if objectives_complete("deliver/bonus")
-    yield fail if not objectives_complete("deliver")
+    yield success if are_objectives_complete("deliver/bonus")
+    yield fail if not are_objectives_complete("deliver")
     yield success if not is_timer_complete("deliver_bonus")
     yield fail
 
 
 complete:
-    yield fail if not objectives_complete("deliver")
+    yield fail if not are_objectives_complete("deliver")
     fighter["XP"] += 100
-    if objectives_complete("deliver/bonus"):
+    if are_objectives_complete("deliver/bonus"):
         fighter["XP"] += 50
-    if objectives_complete("pickup/bonus"):
+    if are_objectives_complete("pickup/bonus"):
         fighter["XP"] += 50
 
     
