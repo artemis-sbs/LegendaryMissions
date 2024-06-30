@@ -1,8 +1,6 @@
 #
 # Hook when a ship spawns
 #
-#signal_register("docked", signal_docked)
-
 //spawn if has_role(SPAWNED_ID, "__player__")
 
 # Do later so the grid objects are sure to be there

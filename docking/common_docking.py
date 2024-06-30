@@ -1,5 +1,5 @@
 import sbs
-from sbs_utils.procedural.query import to_id, to_object, to_blob, object_exists, to_engine_object, to_list, inc_disable_weapons_selection, dec_disable_weapons_selection
+from sbs_utils.procedural.query import to_id, to_object, to_blob, object_exists, to_engine_object, to_list, set_weapons_selection
 from sbs_utils.procedural.roles import role
 from sbs_utils.procedural.comms import comms_message
 from sbs_utils.procedural.execution import get_shared_variable, task_cancel, task_schedule
@@ -102,13 +102,8 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
 
 
     dock_state_string = player_blob.get("dock_state", 0)
-    prev_dock_state_string = get_inventory_value(player_id, "dock_state")
-    
-    
+
     if "undocked" == dock_state_string:
-        if prev_dock_state_string =="docked":
-            dec_disable_weapons_selection(player_id)
-        
         player_blob.set("dock_base_id", 0)
         _too_close = 300+(difficulty+1)*200
         raider = closest(player_id_or_obj, role("raider"), _too_close)
@@ -134,7 +129,7 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
     
     if "dock_start" == dock_state_string:
         rate = player_docking_dock_start(player_id, dock_stationID)
-        inc_disable_weapons_selection(player_id)
+        set_weapons_selection(player_id, 0)
         if dock_start_cb is not None:
             dock_start_cb(player_id)
         return rate
