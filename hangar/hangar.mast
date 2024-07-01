@@ -127,7 +127,7 @@ await gui():
     + "Launch":
         if ride_choice is not None:
             ride_select = ride_choice
-            set_inventory_value(client_id, "assigned_ship", ride_select)
+            #Dock ID replaced this? ###set_inventory_value(client_id, "assigned_ship", ride_select)
             link(ride_select , "consoles", client_id)
             jump launch_to_cockpit
         jump show_hangar

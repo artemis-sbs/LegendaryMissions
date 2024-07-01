@@ -193,7 +193,7 @@ for player_ship in to_object_list(role("__PLAYER__")):
 
         sbs.assign_client_to_ship(client_id, _ship_id)
         assign_client_to_alt_ship(client_id, 0)
-        set_inventory_value(client_id, "assigned_ship", _ship_id)
+        #set_inventory_value(client_id, "assigned_ship", _ship_id)
         #
         # Clear any alt ship e.g. comms give orders
         #

@@ -78,10 +78,12 @@ class Fleet(Agent):
         #move my point in the direction I want to go (perhaps 1000m?)
 
         difference = Vec3(self.destination) - Vec3(self.position)
-        if difference.length() > 3000:
-            use_path = True
+        lengthA = difference.length()
+#        if lengthA > 3000:
+#            use_path = True
         difference = difference.unit()
-        difference *= 1000
+        pushA = min(lengthA, 1000)
+        difference *= pushA
         self.position += difference
 
 

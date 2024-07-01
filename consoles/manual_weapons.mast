@@ -7,7 +7,7 @@ route_gui_navigate("normal_weap", manual_weapons_start)
 
 # //gui/normal_weap
 
-ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+ship_id = sbs.get_ship_of_client(client_id)
 mast_scheduler.page.add_console_widget("3dview")
 # gui_update_widget_list("3dview")
 gui_section("area: 0,70,50,90;")
@@ -27,13 +27,16 @@ on change get_weapons_selection(ship_id):
 
 
 ==== manual_weapons_show ====
-ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+ship_id = sbs.get_ship_of_client(client_id)
 ship = to_object(ship_id)
 
 jump  manual_weapons_maximize if ship is not None and ship.get_inventory_value("MANUAL_BEAMS_ON", False)
 
 ==== manual_weapons_minimize =======
-ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+ship_id = sbs.get_ship_of_client(client_id)
+ship = to_object(ship_id)
+yield fail if ship is None
+
 with gui_rebuild(manual):
     gui_row("row-height: 3em;")
     #ib = gui_icon("icon_index:112;color:yellow;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:manual_beams")
@@ -41,9 +44,9 @@ with gui_rebuild(manual):
     cb = gui_checkbox("text:Manual;state:True")
     cb.value = ship.get_inventory_value("MANUAL_BEAMS_ON", False)
     on gui_message(cb):
-        ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+        ship_id = sbs.get_ship_of_client(client_id)
         ship = to_object(ship_id)
-        if ship is not None:
+        if ship_id != 0 and ship is not None:
             ship.set_inventory_value("MANUAL_BEAMS_ON", not ship.get_inventory_value("MANUAL_BEAMS_ON", False))
         jump manual_weapons_maximize
     gui_blank(4)
@@ -58,7 +61,8 @@ yield idle
 # This adds the window to a gui about to present
 #
 
-ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+ship_id = sbs.get_ship_of_client(client_id)
+yield fail if ship_id == 0
 ship = to_object(ship_id)
 yield fail if ship is None
 target_id = get_weapons_selection(ship_id)
@@ -90,9 +94,9 @@ with gui_rebuild(manual):
     cb = gui_checkbox("text:Manual;state:True")
     cb.value = ship.get_inventory_value("MANUAL_BEAMS_ON", False)
     on gui_message(cb):
-        ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+        ship_id = sbs.get_ship_of_client(client_id)
         ship = to_object(ship_id)
-        if ship is not None:
+        if ship_id != 0 and ship is not None:
             ship.set_inventory_value("MANUAL_BEAMS_ON", not ship.get_inventory_value("MANUAL_BEAMS_ON", False))
         jump manual_weapons_minimize
     gui_blank()
@@ -125,7 +129,7 @@ yield idle
 
 ==== manual_weapons_shoot  =======
 # Re-get ship ID incase switch ship
-ship_id = get_inventory_value(client_id, "assigned_ship", 0)
+ship_id = sbs.get_ship_of_client(client_id)
 ->END if ship_id == 0
 
 critical = get_inventory_value(ship_id, "MANUAL_CRITICAL_HIT", False)
