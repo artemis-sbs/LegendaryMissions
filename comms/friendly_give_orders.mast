@@ -93,7 +93,7 @@ if target_point is not None:
 
 
     nav_name = "{ORDER} Orders^for {alt_ship_obj.name}"
-    nav = sim.add_navarea(x-size, y+size, x+size, y+size, x+size, y-size, x-size, y-size, nav_name, ORDER_COLOR)
+    nav = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, ORDER_COLOR)
     nav.visibleToShip = alt_ship
     set_inventory_value(alt_ship, "ORDERS_NAV", nav_name)
 
@@ -140,7 +140,9 @@ else:
 size = 5000
 
 nav_name = "Select Orders^for {alt_ship_obj.name}"
-nav = sim.add_navarea(x-size, y+size, x+size, y+size, x+size, y-size, x-size, y-size, nav_name, "#444")
+
+nav = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, "#444")
+
 nav.visibleToShip = alt_ship
 set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", nav_name)
 
