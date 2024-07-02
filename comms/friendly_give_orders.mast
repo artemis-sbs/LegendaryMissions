@@ -115,6 +115,7 @@ on_ship =  sbs.get_ship_of_client(client_id)
 ->END if not alt_ship
 alt_ship_obj = to_object(alt_ship)
 ->END if alt_ship_obj is None
+->END if not has_roles(alt_ship, "tsn, friendly")
 
 # clear existing pending
 nav = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
