@@ -242,5 +242,5 @@ for s in range(5):
     blob.set("shield_freq_strength", feq, s)
 
 await delay_sim(30)
-yield SUCCESS
+yield success
 

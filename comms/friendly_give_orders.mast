@@ -1,6 +1,4 @@
 
-route_focus_weapons("weapons_select_route")
-
 import give_orders.py
 
 
@@ -17,9 +15,9 @@ import give_orders.py
 //comms/give_orders if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
 + "Protect" friendly_give_orders_protect
 + "Attack"  friendly_give_orders_attack
-+ "Patrol"  friendly_give_orders_patrol
++ "Explore"  friendly_give_orders_explore
 + "Cancel"  //comms/
-+ "Random"  test_random
+
     
 === test_random
 COMMS_ORIGIN.set_inventory_value("test", "HELLO")
@@ -41,12 +39,18 @@ comms_navigate("")
 yield success
 
 === friendly_give_orders_protect
+ORDER="protect"
+ORDER_COLOR = "#040"
 jump carry_out_orders
 
 === friendly_give_orders_attack
+ORDER="attack"
+ORDER_COLOR = "#400"
 jump carry_out_orders
 
-=== friendly_give_orders_patrol
+=== friendly_give_orders_explore
+ORDER="explore"
+ORDER_COLOR = "#004"
 jump carry_out_orders
 
 
@@ -55,35 +59,47 @@ jump carry_out_orders
 # This needs to use the brain system,
 # but that needs work
 #
+alt_ship = get_inventory_value(EVENT.client_id, "2dview_alt_ship", 0)
+->END if not alt_ship
+alt_ship_obj = to_object(alt_ship)
+->END if alt_ship_obj is None
 
-target_id = get_weapons_selection(COMMS_SELECTED_ID)
-target_point = get_inventory_value(COMMS_SELECTED_ID, "WEAPONS_SELECTED_POINT", None)
-#print("GIVE ORDERS {target_id} {target_point}")
-message = "Your order were unclear {COMMS_ORIGIN.name} - please confirm"
+target_point = get_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
+message = "Your order were unclear {COMMS_ORIGIN.name} - please confirm. I didn't get the area for the order."
 title = "Orders unclear"
-if target_id is not None and target_id != 0:
-    #print("GIVE ORDERS inner {target_id}")
-    target_obj = to_object(target_id)
-    if target_obj is not None:
-        shoot = has_role(target_id, "raider")
 
-        set_inventory_value(COMMS_SELECTED_ID, "TARGET_ID", target_id)
-        if shoot:
-            message = "OK {COMMS_ORIGIN.name} - going to attack {target_obj.name}"
-            title = "Orders accepted"
-        else:
-            message = "OK {COMMS_ORIGIN.name} - going to rendezvous with {target_obj.name}"
-            title = "Orders accepted"
-        
-            
-        target(COMMS_SELECTED_ID, target_id, shoot)
+# Clear things
+
+nav = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
+if nav:
+    sim.delete_navpoint_by_name(nav)
+    set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
+
+# For now only one order
+nav = set_inventory_value(alt_ship, "ORDERS_NAV", nav)
+if nav:
+    sim.delete_navpoint_by_name(nav)
+    set_inventory_value(alt_ship, "ORDERS_NAV", None)
+
+set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
         
 if target_point is not None:
-    # print("GIVE ORDERS")
-    message = "Heading to designated waypoint"
+    message = "Heading to designated waypoint to {ORDER}"
     title = "Orders accepted"
-
     target_pos(COMMS_SELECTED_ID, target_point.x, target_point.y, target_point.z )
+    size = 5000
+    x = target_point.x
+    y = target_point.z
+
+
+    nav_name = "{ORDER} Orders^for {alt_ship_obj.name}"
+    nav = sim.add_navarea(x-size, y+size, x+size, y+size, x+size, y-size, x-size, y-size, nav_name, ORDER_COLOR)
+    nav.visibleToShip = alt_ship
+    set_inventory_value(alt_ship, "ORDERS_NAV", nav_name)
+
+    # A more advance version should allow multiple orders
+    # order = (order, target_point, nav)
+
 
 if message is not None:
     comms_receive(message, title, color="white", title_color="cyan")
@@ -92,37 +108,46 @@ comms_navigate("")
 yield success
 
 
-========== weapons_select_route ========
-#
-# Handles the 2dView selection for friendlies
-#
-
-# this should focus on the give client
+//focus/comms2d if has_role(COMMS2D_ORIGIN_ID, "__player__")
 alt_ship = get_inventory_value(EVENT.client_id, "2dview_alt_ship", 0)
 on_ship =  sbs.get_ship_of_client(client_id)
 
 ->END if not alt_ship
-->END if not has_role(alt_ship, "friendly")
+alt_ship_obj = to_object(alt_ship)
+->END if alt_ship_obj is None
 
-nav = get_inventory_value(alt_ship, "WEAPONS_SELECTED_NAV", None)
+# clear existing pending
+nav = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
 if nav:
-    sim.delete_navpoint_by_reference(nav)
-    set_inventory_value(alt_ship, "WEAPONS_SELECTED_NAV", None)
+    sim.delete_navpoint_by_name(nav)
+    set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
 
 # Handle initial clicks
 if EVENT.selected_id != 0:
-    set_inventory_value(alt_ship, "WEAPONS_SELECTED_POINT", None)
-    set_inventory_value(alt_ship, "WEAPONS_SELECTED_ID", EVENT.selected_id)
+    set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", None)
+    #set_inventory_value(alt_ship, "ORDERS_SELECTED_ID", EVENT.selected_id)
+    pos = Vec3(COMMS2D_SELECTED.pos)
+    set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", pos)
+    x = pos.x
+    y = pos.z
+
 else:
-    set_inventory_value(alt_ship, "WEAPONS_SELECTED_POINT", Vec3(EVENT.source_point))
-    set_inventory_value(alt_ship, "WEAPONS_SELECTED_ID", None)
-    
-    nav = sim.add_navpoint(EVENT.source_point.x,EVENT.source_point.y, EVENT.source_point.z, "goto", "white")
-    nav.visibleToShip = alt_ship
-    set_inventory_value(alt_ship, "WEAPONS_SELECTED_NAV", nav)
+    set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", Vec3(EVENT.source_point))
+    x = EVENT.source_point.x
+    y = EVENT.source_point.z
+
+size = 5000
+
+nav_name = "Select Orders^for {alt_ship_obj.name}"
+nav = sim.add_navarea(x-size, y+size, x+size, y+size, x+size, y-size, x-size, y-size, nav_name, "#444")
+nav.visibleToShip = alt_ship
+set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", nav_name)
+
 
 #Done no point running more
 ->END
+
+
 
 //focus/comms
 #

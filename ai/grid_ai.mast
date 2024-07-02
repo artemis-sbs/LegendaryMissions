@@ -302,7 +302,9 @@ set_inventory_value(SPAWNED_ID, "face_exobiology", random_terran())
 set_inventory_value(SPAWNED_ID, "face_quartermaster", random_terran())
 set_inventory_value(SPAWNED_ID, "face_security",  random_terran())
 
-task_schedule(grid_send_comms_messages)
+# This is the dacoms boost hint messages
+# disabled, because people found them annoying
+# task_schedule(grid_send_comms_messages)
 
 
 ======= grid_send_comms_messages =====
