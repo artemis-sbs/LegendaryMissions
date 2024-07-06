@@ -56,13 +56,17 @@ jump carry_out_orders
 
 === carry_out_orders 
 #
-# This needs to use the brain system,
-# but that needs work
+# The Alt ship should be the selected id at this point
+# But can get confused when disconnecting or new connection 
 #
-alt_ship = get_inventory_value(EVENT.client_id, "2dview_alt_ship", 0)
+#
+alt_ship= COMMS_SELECTED_ID
+
 ->END if not alt_ship
+set_inventory_value(EVENT.client_id, "2dview_alt_ship", alt_ship)
 alt_ship_obj = to_object(alt_ship)
 ->END if alt_ship_obj is None
+print("give orders on alta ship")
 
 target_point = get_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
 message = "Your order were unclear {COMMS_ORIGIN.name} - please confirm. I didn't get the area for the order."
@@ -72,13 +76,13 @@ title = "Orders unclear"
 
 nav = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
 if nav:
-    sim.delete_navpoint_by_name(nav)
+    sim.delete_navpoint_by_id(nav)
     set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
 
 # For now only one order
-nav = set_inventory_value(alt_ship, "ORDERS_NAV", nav)
+nav = get_inventory_value(alt_ship, "ORDERS_NAV", None)
 if nav:
-    sim.delete_navpoint_by_name(nav)
+    sim.delete_navpoint_by_id(nav)
     set_inventory_value(alt_ship, "ORDERS_NAV", None)
 
 set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
@@ -93,9 +97,10 @@ if target_point is not None:
 
 
     nav_name = "{ORDER} Orders^for {alt_ship_obj.name}"
-    nav = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, ORDER_COLOR)
+    nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, ORDER_COLOR)
+    nav = sim.get_navpoint_by_id(nav_id)
     nav.visibleToShip = alt_ship
-    set_inventory_value(alt_ship, "ORDERS_NAV", nav_name)
+    set_inventory_value(alt_ship, "ORDERS_NAV", nav_id)
 
     # A more advance version should allow multiple orders
     # order = (order, target_point, nav)
@@ -118,9 +123,10 @@ alt_ship_obj = to_object(alt_ship)
 ->END if not has_roles(alt_ship, "tsn, friendly")
 
 # clear existing pending
-nav = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
-if nav:
-    sim.delete_navpoint_by_name(nav)
+nav_id = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
+if nav_id:
+    print(f"NAV ID {nav_id}" )
+    sim.delete_navpoint_by_id(nav_id)
     set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
 
 # Handle initial clicks
@@ -141,10 +147,12 @@ size = 5000
 
 nav_name = "Select Orders^for {alt_ship_obj.name}"
 
-nav = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, "#444")
+nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, "#444")
+print(f"NAV ID {nav_id}" )
+nav = sim.get_navpoint_by_id(nav_id)
 
 nav.visibleToShip = alt_ship
-set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", nav_name)
+set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", nav_id)
 
 
 #Done no point running more

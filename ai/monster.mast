@@ -3,12 +3,12 @@
 -- ai_loop
 ->END if  not object_exists(SPAWNED_ID)
 
-_target = closest(SPAWNED_ID, broad_test_around(SPAWNED_ID, 5000,5000, 0xf0)-role("__terrain__")-role("monster"))
+_target = closest(SPAWNED_ID, broad_test_around(SPAWNED_ID, 6000,6000, 0xf0)-role("__terrain__")-role("monster"))
 if _target is None:
     clear_target(SPAWNED_ID)
 else:
     #print("Typhon hunting")
-    target(SPAWNED_ID, _target)
+    target(SPAWNED_ID, _target, True, 1.2)
 
 await delay_sim(seconds=5)
 

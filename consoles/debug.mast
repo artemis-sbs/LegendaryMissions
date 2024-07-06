@@ -27,7 +27,10 @@ console_select= "weapons"
 jump console_selected 
 
 
-//gui/tab/debug if is_dev_build() 
+//gui/tab/debug if is_dev_build()
+jump debug_screen
+
+=== debug_screen
 items = [{"icon": 12, "text": "file"}, {"icon": 13, "text": "edit"}]
 
 gui_section("area:0,10,5em,78;background: #fff1;")

@@ -8,19 +8,23 @@
 
 + "status":
     <scan> 
-        % PLEASE DARRIN OR MIKE PLEASE FIX ME.
-        % I NEED BETTER TEXT
-        % HELP ME HELP YOU HAVE BETTER TEXT
+        " Space station system status cannot be scanned in this beta version of the software.
 
 + "intel":
     <scan> 
-        " Built ten years ago, this station was in excellent condition before the battle.
-        
+        % Built ten years ago, this station was in excellent condition before the battle.
+        % This is a brand new space station that is not yet fully crewed.
+        % This station is currently hosting a wedding reception on level 9.
+        % This station is experiencing trouble with its waste management system. If you visit, you should wear boots.
+        % The commander of this station is going through a divorce. Patience is recommended.
+        % Many of this station's crew are fresh out o the academy.
 
 + "bio":
     <scan>
-        % The crew is mostly human, plus a few aliens, pets, and lab animals.
-
+        % The crew includes both humans and Ximni, plus a few Laparians, pets, and lab animals.
+        % Reading unknown life signs on this station. They may have experimental organisms aboard.
+        % Reading a mild flu circulating on this station. Shore leave is not recommended.
+        % There is no sign of pathogens on this station.
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
 //science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
@@ -28,15 +32,23 @@
 + "scan":
     <scan>
         % This is a friendly ship.
+        % This ship is on our side.
 + "status":
     <scan>
-        %DARRIN OR MIKE PLEASE FIX ME.
+        " Friendly ship systems cannot be scanned in this beta version of the software.
 + "intel":
     <scan>
-        %The ship is ready for battle.
+        % The ship is ready for battle.
+        % This ship has its escape pods prepared for launch.
+        % Today is the captain's birthday.
+
 + "bio":
     <scan>
-        %The crew is mostly human.
+        % Reading no sign of pathogens on this ship.
+        % Unknown organism detected. This ship may have science specimens aboard.
+        % A few crew members are in quarantine due to the Vega flu.
+        % There is a Laparian muskrat on the bridge. Perhaps the captain has a pet.
+        % Reading a nest of Vena rats in the cargo bay. If this ship invites you to dinner do not accept.
 
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "typhon")
@@ -44,16 +56,16 @@
 
 + "scan":
     <scan>
-        %A classic typhon.
+        % Space organism class<colon> Typhon.
 + "status":
     <scan>
-        %DARRIN OR MIKE PLEASE FIX ME.
+        % This extra-dimensional creature cannot be affected by any known weapon.
 + "bio":
     <scan>
-        %Seems to be very much alive.
+        % This life form defies our laws of biology and physics. No known form of communication can reach it.
 + "intel":
     <scan>
-        %Just avoid it and it won't bother you.
+        % Life form classification<colon> HOSTILE and extremely DANGEROUS.
 
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "wreck")
@@ -61,22 +73,33 @@
 
 + "scan":
     <scan>
-        %Gutted and battle-scarred wreckage, the mangled remains of a fierce battle.
+        % Gutted and battle-scarred wreckage that used to be a starship.
+        % Hulk of a destroyed ship.
+        % Wreckage of a destroyed starship. 
 + "status":
     <scan> 
-        % DARRIN OR MIKE PLEASE FIX ME.
-        % I NEED BETTER TEXT
-        % HELP ME HELP YOU HAVE BETTER TEXT
+        % WARNING<colon> Radiation leak detected! Do not board this derelict!
+        % Readings indicate this ship was destroyed by weapons fire.
+        % Cause of this ship's destruction cannot be determined by sensor scan.
+        % WARNING<colon> high radiation levels! This ship might have been destroyed by an accidental reactor leak.
+        % WARNING<colon> high radiation level warning for the entire crew! This ship might have been destroyed by an accidental reactor leak.
 
 + "bio":
     <scan>
-        %No signs of life detected.
-        %Nothing could have survived that.
+        % Indeterminate life signs detected. It could be alien eggs or pods. Proceed with caution.
+        % No life detected.
+        % Readings indicate a dangerous pathogen on this wreck. Recommend quarantine protocol Beta.
+        % Reading radiation mutations of pathogenetic viruses on this wreck. Recommend quarantine protocol Omicron.
+
 + "mat":
     <scan>
-        %Material scan<colon> no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging.
-
-
+        % Material scan<colon> no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging.
+        % Material scan<colon> minimal salvage value. Approximately 0.4 kilotons of fluxion.
+        % Material scan<colon> significant salvage value. Approximately 1.3 kilotons of urydium.
+        % Material scan<colon> minimal salvage value. Less than 0.1 kilotons of urydium.
+        % Material scan<colon> significant salvage value. More than 1.9 kilotons of fluxion.
+        % Material scan<colon> inconclusive. Something on this wreck is blocking our scans.
+       
 
 
 ### / / select/science
@@ -93,9 +116,9 @@ elif has_roles(SCIENCE_SELECTED_ID, "tsn,shuttle"):
     briefing = get_inventory_value(SCIENCE_SELECTED_ID, "briefing", "Mission unknown")
     science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "A Friendly shuttle", "intel": briefing})
 elif has_role(SCIENCE_SELECTED_ID, "asteroid"):
-    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Asteroid", "intel": "The object is a boring asteroid"})
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Asteroid", "intel": "The object is an ordinary asteroid"})
 elif has_role(SCIENCE_SELECTED_ID, "nebula"):
-    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Nebula.", "intel": "Pretty clouds"})
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Nebula.", "intel": "An ordinary nebula. It has minimal uel harvisting patential."})
 #else:
 #    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, "unknown object type.")
 
@@ -131,7 +154,7 @@ if taunt_trait is not None and intel_list is not None:
         " Enemy vessel. Exercise caution.
 + "status":
     <scan>
-        " DARRIN OR MIKE PLEASE FIX ME.
+        " Dynamic properties of enemy vessels cannot be scanned in this beta software.
 
 + "intel" {"taunt_intel": taunt_intel}:
     <scan>

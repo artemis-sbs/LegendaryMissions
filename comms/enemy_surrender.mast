@@ -73,7 +73,9 @@ player = to_object(COMMS_ORIGIN_ID)
 name = player.name
 comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
 add_role(COMMS_SELECTED_ID, "surrendered")
-game_stats["ships_surrender"] += 1
+surrender = game_stats.get("ships_surrender", 0 )
+surrender += 1
+game_stats["ships_surrender"] = surrender
 remove_role(COMMS_SELECTED_ID, "raider")
 set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
 fleet_remove_ship(COMMS_SELECTED_ID)
