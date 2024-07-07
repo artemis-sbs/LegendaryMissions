@@ -2,6 +2,13 @@
 //enable/grid/comms if len(to_set(COMMS_SELECTED_ID) & any_role("room,system,access"))
 
 //comms if len(to_set(COMMS_SELECTED_ID) & any_role("room,system,access"))
+
++ "set rally point" //comms/room/rally
+print("")
+
+
+yield success if not has_role(COMMS_SELECTED_ID, "__damaged__")
+
 all_dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
 dcs = []
 workers = []
@@ -11,18 +18,17 @@ for dc in all_dcs:
     else:
         dcs.append(dc)
 
-+ "set rally point" //comms/room/rally
+print("")
 
-if has_role(COMMS_SELECTED_ID, "__damaged__"):
-    #  Need to figure out colors 
-    #  color=f"{get_inventory_value(d.id, 'color')}", data=
-    #
-    for d in dcs:
-        + "assign {d.name}" {"d": d}:
-            link(d.id, "work-order", COMMS_SELECTED_ID)
-    for d in workers:
-        + "cancel {d.name}" {"d": d}:
-            unlink(d.id, "work-order", COMMS_SELECTED_ID)
+#  Need to figure out colors 
+#  color=f"{get_inventory_value(d.id, 'color')}", data=
+#
+for d in dcs:
+    + "assign {d.name}" {"d": d, "dcs": dcs, "workers": workers}:
+        link(d.id, "work-order", COMMS_SELECTED_ID)
+for d in workers:
+    + "cancel {d.name}" {"d": d, "dcs": dcs, "workers": workers}:
+        unlink(d.id, "work-order", COMMS_SELECTED_ID)
 
 
 //comms/room/rally
