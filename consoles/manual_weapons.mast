@@ -15,7 +15,8 @@ with gui_sub_section():
     gui_layout_widget("3dview")
     source = Vec3(0,0, 0)
     ## source = source.rotate_around(Vec3(0,0,0), 0, orbit, 0)
-    gui_cinematic_full_control(client_id, ship_id, source, ship_id, source)
+#    gui_cinematic_full_control(client_id, ship_id, source, ship_id, source)
+    gui_cinematic_full_control(client_id, 0, source, 0, source)
 
 manual =  gui_region("area: 0,90,50,100;orientation:BT;")
 
@@ -36,6 +37,8 @@ jump  manual_weapons_maximize if ship is not None and ship.get_inventory_value("
 ship_id = sbs.get_ship_of_client(client_id)
 ship = to_object(ship_id)
 yield fail if ship is None
+
+sbs.set_main_view_modes(client_id, "no_draw","a","a")
 
 with gui_rebuild(manual):
     gui_row("row-height: 3em;")
