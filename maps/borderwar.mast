@@ -159,7 +159,9 @@ for index in range(num_stations):
         # Random type, but same for cluster
         for v2 in cluster_spawn_points:
             #keep value between -500 and 500??
-            terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
+            mine_obj = terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
+            mine_obj.blob.set("damage_done", 5)
+            mine_obj.blob.set("blast_radius", 1000)
 
 # wait for the creation of the player ships
 await task_schedule(spawn_friendly_npc)
