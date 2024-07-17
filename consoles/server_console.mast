@@ -62,6 +62,16 @@ shared skybox = skybox_get_random()
 
 sbs.set_sky_box_all(skybox)
 mission_index = 0
+mission_list = maps_get_list()
+world_select_path  = settings.get("world_select")
+i = 0
+for m in mission_list:
+    if m.path == world_select_path:
+        mission_index = i
+        break
+    i += 1
+shared world_select = mission_list[mission_index]
+
 jump operator_main_screen if operator_mode_enabled
 
 
@@ -69,7 +79,7 @@ jump operator_main_screen if operator_mode_enabled
 # The Server GUI
 #
 ====== show_server_menu =====
-
+#
 jump start if auto_start
 
 if watch_end_game_task is not None:
@@ -87,7 +97,7 @@ gui_text_area(start_text)
 rs= "row-height: 45px;margin:5px,5px,0,0;"
 ts= "row-height: 45px;col-width: 7em;margin:0,2px, 0,0;"
 
-gui_section(style="area: 50, 95-520px, 100, 95;row-height:45px;margin:30px,0px,10px,0;padding:0,10px,10px,0;background:#1578;")
+gui_section(style="area: 50, 95-500px, 100, 95;row-height:45px;margin:30px,0px,10px,0;padding:0,10px,10px,0;background:#1578;")
 gui_row(style=rs)
 gui_text("justify:right;text:Player ships", style=ts)
 gui_blank(style="col-width:15px")
@@ -99,19 +109,6 @@ gui_blank(style="col-width:15px")
 gui_int_slider("text:int;low: 1.0;high:11.0", var="difficulty")
 gui_row(style=rs)
 
-gui_text("justify:right;text:Mission Type", style=ts)
-gui_blank("col-width:15px")
-dd_wsel = gui_drop_down("text: {world_select};list:siege,single front,double front,deep strike,peacetime,border war", var="world_select")
-on gui_message(dd_wsel):
-    jump show_server_menu
-gui_row(style=rs)
-if world_select == "border war":
-    gui_text("justify:right;text:Minutes to War", style=ts)
-    gui_blank("col-width:15px")
-    gui_input("desc: Minutes;", var="war_time_delay")
-else:
-    gui_blank()
-gui_row(style=rs)
 gui_blank()
 gui_row(style=rs)
 
@@ -145,12 +142,30 @@ gui_text("justify:right;text:Time limit", style=ts)
 gui_blank(style="col-width:15px")
 gui_input("desc: Minutes;", var="game_time_limit")
 
+gui_row(style=rs)
+if world_select.path == "border_war":
+    gui_text("justify:right;text:Minutes to War", style=ts)
+    gui_blank(style="col-width:15px")
+    gui_input("desc: Minutes;", var="war_time_delay")
+else:
+    gui_blank()
 
-mission_list = maps_get_list()
+
+
    
 
-gui_section(style="area: 20px, 95-520px, 50, 95;")
-mission_picker = gui_list_box(mission_list,"row-height: 8em; background:#1578;", item_template=main_mission_select_template, title_template=main_mission_select_title_template, select=True)
+gui_section(style="area: 20px, 95-500px, 50, 95;")
+mission_picker = gui_list_box(mission_list,"row-height: 7em; background:#1578;", item_template=main_mission_select_template, title_template=main_mission_select_title_template, select=True, carousel=True)
+# Initialize the selection to account for if we already have one
+mission_picker.set_selected_index(mission_index)
+print(f"SERVER START {mission_index} {mission_picker.get_selected_index()}")
+world_select = mission_picker.get_value()
+
+on change mission_picker.get_selected_index():
+    # This should be one thing, or None
+    world_select = mission_picker.get_value()
+    mission_index = mission_picker.get_selected_index()
+    jump show_server_menu
 
 
 

@@ -3,8 +3,9 @@
 
 =========== spawn_friendly_npc ===========
 
-if world_select == "deep strike":
-    freindly_select = "none"
+print(f"World Select: {world_select.path}")
+if world_select.path == "deep_strike":
+    friendly_select = "none"
 
 match friendly_select:
     case "many":
@@ -101,6 +102,7 @@ first = True
 stations_friendly = to_object_list(role("tsn")  & role("station"))
 
 spawn_pos = Vec3(0,0,0)
+
 #------------------------------------------------------------------------------------------------------------
 for player_ship_data in player_list:
 
@@ -119,6 +121,12 @@ for player_ship_data in player_list:
         so = random.choice(stations_friendly)
         spawn_pos = so.pos
         spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
+
+    if world_select.path == "deep_strike":
+        pickup_spawn(20000, 0, 700, "cetrocite_crystal")
+        spawn_pos = Vec3(20000, 0, 0)
+        print(f"Deep Strike, Spawn Player at 20000, 0, 0")
+
     
     
 

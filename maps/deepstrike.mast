@@ -1,5 +1,5 @@
 @map/deep_strike "Deep Strike"
-"There are no friendly bases in this scenario,
+" There are no friendly bases in this scenario,
 " just a friendly bulk cargo ship that can resupply
 " the player ship(s). The player ship(s) are launching
 " an assault into enemy territory, which is defended by enemy bases.
@@ -34,17 +34,17 @@ if "many" == lethal_select:
 
 
 friendly_value = 0
-if "few" == friendly_select:
-    friendly_value = 1
-
-if "some" == friendly_select:
-    friendly_value = 2
-
-if "lots" == friendly_select:
-    friendly_value = 3
-
-if "many" == friendly_select:
-    friendly_value = 4
+#if "few" == friendly_select:
+#    friendly_value = 1
+#
+#if "some" == friendly_select:
+#    friendly_value = 2
+#
+#if "lots" == friendly_select:
+#    friendly_value = 3
+#
+#if "many" == friendly_select:
+#    friendly_value = 4
 
 
 monster_value = 0
@@ -88,12 +88,6 @@ else:
     print(f"Random Seed Value: {seed_value}")
 
 #------------------------------------------------------------------------------------------------------------
-# Add the "Neutral Zone" 
-# No Neutral Zone in Deep Strike
-#sim.add_navarea(-10000, 500000, 10000, 500000, -10000, -500000, 10000, -500000, "Neutral Zone", "#004")
-
-
-#------------------------------------------------------------------------------------------------------------
 # Determine Enemy Antagonists
 
 enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian"]
@@ -102,90 +96,24 @@ enemy_temp = random.choices(enemyTypeNameList, weights=(50, 25, 25))
 enemy1 = enemy_temp[0]
 
 #------------------------------------------------------------------------------------------------------------
-# Build friendly stations - No Friendly Stations in Deep Strike
-#
-#_station_weights  = {"starbase_command": 3,"starbase_civil": 1,"starbase_industry": 5,"starbase_science": 1}
+# Reposition Player Ship, spawn Cargo Tender
 
+new_pos = Vec3(20500,0,1800)
 
-#spawn_points = scatter.box(10000, 25000,1000,50000, 50000, -1000, -50000, centered=False)
-#num = 1
-#total_weight = (12-difficulty) *2
-#_spawned_pos = []
+friend = to_id(npc_spawn(*new_pos, f"TSN Ganymede", "tsn, friendly", "transport_ship", "behav_npcship"))
+set_face(friend, random_terran())
 
-#for station in spawn_points:
-    #
-    # Pick a type of station
-    #
-#    break if total_weight <= 0
+await task_schedule(spawn_players)
 
-#    station_type = random.choice(list(_station_weights.keys()))
-#    station_weight = _station_weights[station_type]
-    #
-    #
-#    continue if total_weight < station_weight
+print(f"Reposition Player")
+new_pos = Vec3(20000,0,1500)
 
-    # Force big stations first
-#    continue if total_weight > 8 and station_weight==1
+my_players = to_object_list(role("__player__"))
+print(f"{my_players}")
+for player in my_players:
+    print(f"Player: {player}")
+    player.pos = new_pos
 
-#    total_weight -= station_weight
-
-#    name = "DS {num}"
-    #
-    # Space stations
-    #
-#    _pos = station
-#    dist = 15000 * 15000
-#    move = True
-#    for x while move:
-#        move = False
-#        for _prev in _spawned_pos:
-#            distv = _pos - _prev
-#            _dist_test = distv.dot(distv)
-#            if _dist_test < dist:
-#                move = True
-#                #print("Move Station")
-#                _pos = next(spawn_points)
-#                break
-#    _spawned_pos.append(_pos)
-
-#    station_object = npc_spawn(*_pos, name, "tsn, station", station_type, "behav_station")
-    #
-    #
-    
-    
-#    ds = to_id(station_object)
-    #
-    #
-    #
-#    apos = station_object.engine_object.pos
-    #
-    # Make sure not too close
-    #
-
-#    set_face(ds, random_terran(civilian=True))
-
-    #wrap a minefield around the station
-#    if lethal_value > 0:
-#        startAngle = random.randrange(0,359)
-#        angle = random.randrange(90,170)
-#        endAngle = startAngle + angle
-
-#        depth = 1#random.randrange(2,3)
-#        width = random.randrange(int(angle/6), int(angle/3))
-#        width = int(5 * lethal_value)
-#        widthArray = [int(angle / 5.0)]
-#        inner = random.randrange(1200,1500)
-#        cluster_spawn_points = scatter_ring(width, depth, apos.x,apos.y,apos.z, inner, inner, startAngle, endAngle)
-#        cluster_spawn_points = scatter_ring_density(widthArray, apos.x,apos.y,apos.z, inner, 0, startAngle, endAngle)
-        # Random type, but same for cluster
-        # a_type = f"danger_{1}{ship_data'a'}"
-#        for v2 in cluster_spawn_points:
-#            #keep value between -500 and 500??
-    #                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
-#            terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
-#    num += 1
-
-await task_schedule(spawn_friendly_npc)
 
 #------------------------------------------------------------------------------------------------------------
 # Build enemy stations, generate fleets
@@ -236,8 +164,9 @@ for enemy_station in enemy_spawn_points:
         enemy_station_object = npc_spawn(*_enpos, name, "torgoth, station", station_type, "behav_station")
     if enemy1 == "Arvonian":
         enemy_station_object = npc_spawn(*_enpos, name, "arvonian, station", station_type, "behav_station")
-    
-    print(f"{enemy1} Station created {_enpos.x} {_enpos.y} {_enpos.z}")
+    sim.add_navpoint(*_enpos, name, "#A44")
+
+    print(f"{enemy1} Station created: {int(_enpos.x)}, {int(_enpos.y)}, {int(_enpos.z)}")
     
     ds = to_id(enemy_station_object)
     apos = enemy_station_object.engine_object.pos
@@ -253,7 +182,7 @@ for enemy_station in enemy_spawn_points:
     
     create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
 
-    print(f"{enemy1} Fleet created {apos.x} {apos.y} {apos.z}")
+    #print(f"{enemy1} Fleet created {int(apos.x)} {int(apos.y)} {int(apos.z)}")
 
     break if num == num_enemy_stations
     num += 1

@@ -93,7 +93,7 @@ else:
 #------------------------------------------------------------------------------------------------------------
 # Add the "Neutral Zone" 
 
-sim.add_navarea(-10000, 500000, 10000, 500000, -10000, -500000, 10000, -500000, "Neutral Zone", "#004")
+sim.add_navarea(0, 500000, 20000, 500000, 0, -500000, 20000, -500000, "Neutral Zone", "#004")
 
 
 #------------------------------------------------------------------------------------------------------------
@@ -110,7 +110,7 @@ enemy1 = enemy_temp[0]
 _station_weights  = {"starbase_command": 3,"starbase_civil": 1,"starbase_industry": 5,"starbase_science": 1}
 
 
-spawn_points = scatter.box(10000, 25000,1000,50000, 50000, -1000, -50000, centered=False)
+spawn_points = scatter.box(10000, 30000,1000,50000, 80000, -1000, -50000, centered=False)
 num = 1
 total_weight = (12-difficulty) *2
 _spawned_pos = []
@@ -239,6 +239,7 @@ for enemy_station in enemy_spawn_points:
         enemy_station_object = npc_spawn(*_enpos, name, "torgoth, station", station_type, "behav_station")
     if enemy1 == "Arvonian":
         enemy_station_object = npc_spawn(*_enpos, name, "arvonian, station", station_type, "behav_station")
+    sim.add_navpoint(*_enpos, name, "#A44")
     
     print(f"{enemy1} Station created {_enpos.x} {_enpos.y} {_enpos.z}")
     
