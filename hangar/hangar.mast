@@ -35,7 +35,9 @@ for x in range(random.randint(1,3)):
 
 
 
-==== show_hangar ====
+@console/hangar "Flight Hangar"
+" Fly fighter, shuttle and cargo missions
+
 #
 # Get all the available rides 
 #

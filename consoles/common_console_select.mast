@@ -7,7 +7,10 @@ route_change_console(select_console)
 #
 
 ========= client_main ==========
-console_select = "helm"
+consoles = gui_get_console_type_list()
+console_select_item = consoles[0]
+console_select = consoles[0].path
+
 client_select_ship = "artemis"
 console_ready = False
 ship_name = "artemis"
@@ -22,7 +25,7 @@ if mode is not None:
     mode = None
     if len(modes)>=3:
         mode = modes[2]
-        console_select = mode
+        # console_select = mode
         jump operator_admin_console if mode=='admin'
     
 
@@ -35,6 +38,8 @@ for key in grid_data:
         continue if roles is None
         continue if "ship" not in roles
         valid_interiors.add(key)
+
+
 
 ========== select_console ==========
 #print("CHNAGE CONSOLE EVENT?")
@@ -74,7 +79,7 @@ with ship_sec2:
         gui_update_shared("sh_ship_picker", ship_type, {"client_select_ship": client_select_ship})
         gui_update_shared("sh_ship_list", None)
 
-if console_select != "helm" or game_started:
+if console_select_item.path != "helm" or game_started:
     gui_hide(ship_sec)
     gui_hide(ship_sec2)
 
@@ -99,17 +104,19 @@ li_ships = gui_content(lb_ships, style="tag:sh_ship_list;", var="client_select_s
 #
 # List of available consoles
 #
-consoles = {"helm": 0,"weapons":0,"comms":0,"science":0,"engineering":0,"hangar":0,"mainscreen":0, "cinematic":0}
+#consoles = {"helm": 0,"weapons":0,"comms":0,"science":0,"engineering":0,"hangar":0,"mainscreen":0, "cinematic":0}
 
-lb_consoles = ~~list_box_control(list(consoles.keys()), 
-                               text=lambda item: f"text:{item};justify: center;",
+
+
+lb_consoles = ~~list_box_control(list(consoles), 
+                               text=lambda item: f"text:{item.display_name};justify: center;",
                                title = lambda: "text:Console;justify:center;",
                                background= "#1572", title_background="#1578",
                                select=True,
                                item_height=6)~~
 
 gui_section( style="area: 80,60px, 99,90-60px;")
-gui_content(lb_consoles, var="console_select")
+gui_content(lb_consoles, var="console_select_item")
 #
 # Ready state
 #
@@ -138,11 +145,12 @@ on change player_count:
     gui_represent(li_ships)
     gui_update_shared("sh_ship_list", None)
 
-on change console_select:
+on change console_select_item:
     #
     # Redo gui if change involves helm
     #
-    if console_select == "helm" and not game_started:
+    console_select = console_select_item.path
+    if console_select_item.path == "helm" and not game_started:
         gui_show(ship_sec)
         gui_show(ship_sec2)
     else:
@@ -219,53 +227,28 @@ sbs.set_sky_box(client_id, sky_box)
 #
 # Make it so the console can be found if needed
 #
-set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
-# Remove any console roles
-for k in consoles:
-    remove_role(client_id, k)
-add_role(client_id, "console, {console_select}")
-jump show_hangar if console_select == "hangar"
-jump show_main_game_screen if console_select == "mainscreen"
-jump show_cinematic_screen if console_select == "cinematic"
-
-
 #------------------------------------------------------------------------------------------------------------
 sbs.set_beam_damages(client_id, 7.0, difficulty)
 #------------------------------------------------------------------------------------------------------------
-#
-# Handle jump drive
-#
-is_warp = False
-is_jump = False
-warp_nodes = to_object_list(grid_objects(_ship_id) & role("warp"))
-#
-_jump_nodes = to_object_list(grid_objects(_ship_id) & role("jump"))
-_jump_nodes = role("jump")
-#print(_jump_nodes)
 
-is_warp = len(warp_nodes) > 0
-is_jump = len(_jump_nodes) > 0
 
-if console_select == "helm":
-    _warp = 1 if is_warp else 0
-    _jump = 1 if is_jump else 0
-    _label = "JUMP" if is_jump else "WARP"
 
-    blob = to_blob(_ship_id)
-    blob.set("warp_drive_active",_warp,0)
-    blob.set("jump_drive_active", _jump,0)
-    blob.set("eng_control_label", _label, 3)
+set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
+# Remove any console roles
+for k in consoles:
+    remove_role(client_id, k.path)
+add_role(client_id, "console, {console_select}")
+# jump show_hangar if console_select == "hangar"
+#jump show_main_game_screen if console_select == "mainscreen"
+#jump show_cinematic_screen if console_select == "cinematic"
 
-gui_add_console_tab(_ship_id, console_select, console_select, None)
-gui_console(console_select, is_jump)
-#
-#
-# Use a label replace to override: 
-#   ==== replace: console_bottom_choices ====
-#        You code
-#
-==== console_bottom_choices ====
-await gui()
+# Retrieve the item by string (because might have navigator here via tab)
+console = gui_get_console_type(console_select)
+if console is not None:
+    jump(console.label)
+else:
+    """ Invalid Console defined and selected"""
+    await gui()
 
 =========== debug_mast =========
 

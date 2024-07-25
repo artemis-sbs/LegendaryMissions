@@ -56,8 +56,7 @@ jump crew_manage_health
 # The engine does NOT tell us when we're docked
 # but common_docking.py does emit a signal
 #
-//signal/docked if has_roles(ORIGIN_ID, "__player__")
-
+//shared/signal/docked if has_roles(ORIGIN_ID, "__player__")
 crew_size = get_inventory_value(ORIGIN_ID, "crew_size", 0)
 dead = get_inventory_value(ORIGIN_ID, "casulaty_count", 0)
 
