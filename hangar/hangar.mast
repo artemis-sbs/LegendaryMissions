@@ -36,7 +36,10 @@ for x in range(random.randint(1,3)):
 
 
 @console/hangar "Flight Hangar"
-" Fly fighter, shuttle and cargo missions
+" Fly fighter- shuttle and cargo missions
+jump show_hangar # This could be replaced with a new command gui_navigate("//console/hangar")
+
+=== show_hangar
 
 #
 # Get all the available rides 

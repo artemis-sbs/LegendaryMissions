@@ -8,7 +8,7 @@ import give_orders.py
 # Which is just a list of colors
 =$xmas green,red
 
-//comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
+//comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly") 
 + "Give Orders" //comms/give_orders
 
 
@@ -160,7 +160,7 @@ set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", nav_id)
 
 
 
-//focus/comms
+//focus/comms if not COMMS_SELECTED.has_role('admiral')
 #
 #
 # Something else selected get out of give orders

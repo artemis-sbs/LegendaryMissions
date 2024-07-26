@@ -1,0 +1,17 @@
+//enable/comms if has_roles(COMMS_ORIGIN_ID, 'admiral')
+
+
+//comms if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Spawn" //comms/admiral
+
+
+
+//comms/admiral if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "This is admiral" test_admiral
++ "Back" //comms
+
+
+
+
+==== test_admiral
+print("POC works")

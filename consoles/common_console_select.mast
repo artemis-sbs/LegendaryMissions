@@ -1,3 +1,5 @@
+import common_console_selection.py
+
 route_change_console(select_console)
 #
 # Expects shared data 
@@ -11,9 +13,10 @@ consoles = gui_get_console_type_list()
 console_select_item = consoles[0]
 console_select = consoles[0].path
 
-client_select_ship = "artemis"
+
 console_ready = False
-ship_name = "artemis"
+ship_name = player_list[0]["name"] 
+client_select_ship = ship_name
 ship_type = player_list[0]["ship"] 
 ship_type_def = player_list[0]["ship"]
 shared ship_list = ""
@@ -51,29 +54,37 @@ client_selected_index = min(int(player_count), client_selected_index )
 
 
 ship_type_def = player_list[client_selected_index]["ship"]
-client_select_ship =player_list[client_selected_index]["name"].lower()
-ship_name = client_select_ship
+ship_name = player_list[client_selected_index]["name"]
+client_select_ship = ship_name.lower()
 
 
-ship_sec = gui_region(style="area: 1,60px,40,105px")
+
+ship_sec = gui_region(style="area: 10px,60px,400px,105px")
 with ship_sec:
     gui_row(style="row-height: 45px;")
 
-    _input = "desc:Ship Name"
-    on gui_message(gui_input(_input, var="ship_name")):
+    _input = gui_input("desc:Ship Name", var="ship_name")
+    on gui_message(_input):
         player_list[client_selected_index]["name"] = ship_name
         client_select_ship = ship_name
         player_list[client_selected_index]["ship"] = ship_type
         gui_update_shared("sh_ship_list", None)
 
-ship_sec2 = gui_region(style="area: 1,15,40,100")
+ship_sec_not = gui_region(style="area: 10px,60px,400px,105px")
+with ship_sec_not:
+    gui_row(style="row-height: 45px;")
+
+    _input = gui_text(ship_name)
+
+ship_sec2 = gui_region(style="area: 10px,110px,500px,520px")
 with ship_sec2:
     gui_row() #style="row-height: 300px;")
 
     #
     # Specify only ships with defined engineering grid
     #
-    gui_content(ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors), style="tag:sh_ship_picker", var="ship_type")
+    spick = ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors)
+    gui_content(spick, style="tag:sh_ship_picker", var="ship_type")
     on change ship_type:
         player_list[client_selected_index]["ship"] = ship_type
         gui_update_shared("sh_ship_picker", ship_type, {"client_select_ship": client_select_ship})
@@ -82,45 +93,39 @@ with ship_sec2:
 if console_select_item.path != "helm" or game_started:
     gui_hide(ship_sec)
     gui_hide(ship_sec2)
+    gui_show(ship_sec_not)
+    spick.read_only = True
+elif console_select_item.path == "helm" and not game_started:
+    gui_hide(ship_sec_not)
+    spick.read_only = False
+    
+
+
 
 
 
 #
 # List of available ships
-#
-gui_section( style="area: 50,60px,75,90;")
+# ship_sec2 = gui_region(style="area: 1,110px,500px,520px")
+gui_section( style="area: 10px,550px,500px,100-60px;")
 ship_list = player_list[:player_count]
-lb_ships = ~~list_box_control(ship_list, 
-                               text=lambda item: f"text:{item['name']};justify: center;",
-                               title = lambda: "text:ship;justify:center;",
-                               ship=lambda item: item['ship'],
-                               background= "#1572", title_background="#1578",
-                               select=True,
-                               item_height=6,
-                               convert_value = lambda item: item['name'].lower()
-                               )~~
+ship_select_lb = gui_list_box(ship_list,"row-height: 3em; background:#1572;tag:sh_ship_list;", item_template=console_ship_select_template, title_template=console_ship_select_title_template, select=True)
+ship_select_lb.set_selected_index(client_selected_index)
 
-li_ships = gui_content(lb_ships, style="tag:sh_ship_list;", var="client_select_ship")
+
 #
 # List of available consoles
 #
-#consoles = {"helm": 0,"weapons":0,"comms":0,"science":0,"engineering":0,"hangar":0,"mainscreen":0, "cinematic":0}
+gui_section( style="area: 510px, 2, 99,100-60px;")
 
+console_select_lb = gui_list_box(consoles,"row-height: 3em; background:#1572;", item_template=console_select_template, title_template=console_select_title_template, select=True)
+console_select_lb.set_value(console_select_item)
 
-
-lb_consoles = ~~list_box_control(list(consoles), 
-                               text=lambda item: f"text:{item.display_name};justify: center;",
-                               title = lambda: "text:Console;justify:center;",
-                               background= "#1572", title_background="#1578",
-                               select=True,
-                               item_height=6)~~
-
-gui_section( style="area: 80,60px, 99,90-60px;")
-gui_content(lb_consoles, var="console_select_item")
 #
 # Ready state
 #
-gui_section( style="area: 80,90-60px, 99,90;row-height: 50px;")
+gui_section( style="area: 80,100-60px, 99,100;row-height: 50px;")
+
 
 if not game_started:
     gui_checkbox("ready", var="console_ready")
@@ -138,41 +143,47 @@ if operator_mode_enabled:
 on change player_count:
     client_selected_index = min(client_selected_index, int(player_count)-1)
     # Just refresh if reduce ship count for now
-    #jump select_console if len(lb_ships.items)>player_count
+    # jump select_console if len(lb_ships.items)>player_count
     # Otherwise can refresh faster if adding ships
     ship_list = player_list[:player_count]
-    lb_ships.items = ship_list
-    gui_represent(li_ships)
-    gui_update_shared("sh_ship_list", None)
+    ship_select_lb.items = ship_list
+    ship_select_lb.set_selected_index(min(client_selected_index, len(ship_list)))
+    #gui_update_shared("sh_ship_list", None)
+    gui_represent(ship_select_lb)
+    
 
-on change console_select_item:
+on change console_select_lb.get_value():
     #
     # Redo gui if change involves helm
     #
+    console_select_item = console_select_lb.get_value()
     console_select = console_select_item.path
     if console_select_item.path == "helm" and not game_started:
         gui_show(ship_sec)
-        gui_show(ship_sec2)
+        gui_hide(ship_sec_not)
+        spick.read_only = False
+        gui_represent(ship_sec2)
     else:
         #print("hiding 1")
         gui_hide(ship_sec)
-        #print("hiding 2")
-        gui_hide(ship_sec2)
+        gui_show(ship_sec_not)
+        spick.read_only = True
+        gui_represent(ship_sec2)
 
   
 
+on change ship_select_lb.get_value():
+    client_select_ship_item = ship_select_lb.get_value()
+    if client_select_ship_item is not None:
+        client_select_ship = client_select_ship_item['name']
 
-#
-# See when other console changes the ships list?
-#
-#on change player_list[client_selected_index]["ship"]+player_list[client_selected_index]["name"]:
-#    jump select_console
-
-
-on change client_select_ship:
-    for i in range(player_count):
-        client_selected_index = i
-        break if player_list[i]["name"].strip().lower() == client_select_ship.lower()
+        if client_select_ship is not None:
+            _input.value = client_select_ship
+            gui_represent(ship_sec)
+            client_select_ship = client_select_ship.lower()
+            for i in range(player_count):
+                client_selected_index = i
+                break if player_list[i]["name"].strip().lower() == client_select_ship
 
 await gui()
 
@@ -211,8 +222,6 @@ for player_ship in to_object_list(role("__PLAYER__")):
 
 
 jump select_console if _ship_id is None
-
-
 
 
 #
@@ -265,27 +274,3 @@ await gui(timeout=timeout(4))
 
 jump debug_mast
 
-
-
-======== show_cinematic_screen ===========
-
-# Layout to assure it takes up full screen 
-
-gui_section("area:0,0,100,100;")
-gui_activate_console("cinematic")
-gui_layout_widget("3dview")
-set_inventory_value(_ship_id, "cinema_focus", _ship_id)
-
-if _ship_id is None:
-    print("WARNING: cinematic on None player ship")
-
-sbs.assign_client_to_ship(client_id, _ship_id)
-gui_cinematic_auto(client_id)
-
-on change get_inventory_value(_ship_id, "cinema_focus"):
-    focus_id = get_inventory_value(_ship_id, "cinema_focus", _ship_id)
-    if focus_id is not None:
-        sbs.assign_client_to_ship(client_id, focus_id)
-        gui_cinematic_auto(client_id)
-
-await gui()

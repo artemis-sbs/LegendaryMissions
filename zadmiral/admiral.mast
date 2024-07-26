@@ -1,0 +1,91 @@
+#
+#
+#
+@console/admiral "Admiral"
+" Effect the overall battle
+
+#
+# Get side from selected ship
+#
+
+# Need Sci in the name for science selection
+gui_activate_console("admiral")
+
+_ship_id = sbs.get_ship_of_client(client_id) 
+faction_ship = to_object(_ship_id)
+
+cambot = npc_spawn(0,0,0, "Admiral", "#,admiral", "invisible", "behav_player")
+camera_id = to_id(cambot)
+#
+# Should have a way to get all factions/side
+#
+cambot.blob.set("ally_list","tsn,raider",0)
+
+await delay_sim(1)
+#
+# Assign before setting comms up
+#
+sbs.assign_client_to_ship(client_id, camera_id)
+science_set_scan_data(camera_id, camera_id, {"scan": "Admiral"})
+set_comms_selection(camera_id, camera_id)
+follow_route_select_comms(camera_id, camera_id)
+#comms_navigate("//comms/admiral")
+
+
+# Left
+gui_section(style="area:0,45px,100,100;")
+
+with gui_sub_section("col-width:20;"):
+    gui_row("row-height: 50;")
+    gui_layout_widget("3dview")
+
+# Middle
+with gui_sub_section():
+    gui_row()
+    #gui_layout_widget("science_2d_view")
+    gui_layout_widget("2dview")
+    gui_row()
+    gui_layout_widget("comms_control")
+
+# Right
+with gui_sub_section("col-width:25;"):
+    gui_row("row-height:35;margin:0,0,0,10px;")
+    gui_layout_widget("science_data")
+    gui_row()
+    gui_layout_widget("science_sorted_list")
+    gui_row("row-height: 10;")
+    gui_layout_widget("text_waterfall")
+
+
+await gui()
+
+
+//select/comms if has_roles(COMMS_ORIGIN_ID, "admiral")
+
+
+
+//focus/science if has_roles(SCIENCE_ORIGIN_ID, "admiral")
+# assign_client_to_alt_ship(EVENT.client_id, SCIENCE_SELECTED_ID)
+# print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
+SCIENCE_ORIGIN.pos = EVENT.source_point
+
+
+nav_id = get_inventory_value(SCIENCE_ORIGIN_ID, "ADMIRAL_SELECT_ID", None)
+if nav_id:
+    sim.delete_navpoint_by_id(nav_id)
+
+nav_name = "admiral"
+
+x = EVENT.source_point.x
+y = EVENT.source_point.z
+size = 5000
+
+nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, "#444")
+nav = sim.get_navpoint_by_id(nav_id)
+
+nav.visibleToShip = SCIENCE_ORIGIN_ID
+set_inventory_value(SCIENCE_ORIGIN_ID, "ADMIRAL_SELECT_ID", nav_id)
+
+
+
+
