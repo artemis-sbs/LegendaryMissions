@@ -515,6 +515,7 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
     Returns:
         fleet (Fleet): The created fleet
     """
+    race = race.strip().lower()
     num_ships = int(num_ships)
     max_carriers = int(max_carriers)
     fleet_obj = fleet_spawn(Vec3(posx, posy, posz), fleet_roles)
@@ -554,28 +555,28 @@ def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, 
         link(fleet_obj.id,"ship_list", raider.id)
 
         chances = get_shared_variable("elite_chance_non_skaraan", 50)
-        if (ship_roles is None or "elite" not in ship_roles) and (
-            race == "skaraan" or random.randint(1,chances) == 23):
+        if ship_roles is None:
+            ship_roles = ""
+        if "elite" in ship_roles or (race == "skaraan" and random.randint(1,10) == 4) or random.randint(1,chances) == 23:
+            add_role(raider.id, "elite")
+            max_abi = len(all_abilities)
+            abits = random.randint(0,pow(2,max_abi))
+            # set_inventory_value(raider.id, "elite_abilities", abits)
+            # bit field
+            # & 0x1 == Cloak  
+            # & 0x2 == Jump Back
+            # & 0x4 == Jump forward
+            # & 0x8 == Jump Back
+            for count, ab in enumerate(all_abilities):
+                bit = count * 2
+                if (abits & bit)  == bit:
+                    #
+                    # Set the flag in engine for always on 
+                    #
+                    if elite_is_engine_ability(ab):
+                        raider.data_set.set(ab, 1,0)
+                    add_role(raider.id, ab)
 
-            if random.randint(1,10) == 4:
-                add_role(raider.id, "elite")
-                max_abi = len(all_abilities)
-                abits = random.randint(0,pow(2,max_abi))
-                # set_inventory_value(raider.id, "elite_abilities", abits)
-                # bit field
-                # & 0x1 == Cloak  
-                # & 0x2 == Jump Back
-                # & 0x4 == Jump forward
-                # & 0x8 == Jump Back
-                for count, ab in enumerate(all_abilities):
-                    bit = count * 2
-                    if (abits & bit)  == bit:
-                        #
-                        # Set the flag in engine for always on 
-                        #
-                        if elite_is_engine_ability(ab):
-                            raider.data_set.set(ab, 1,0)
-                        add_role(raider.id, ab)
 
         # Should add a common function to call to get the face based on race
         set_face(raider.id, random_face(race))
@@ -657,28 +658,28 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
         link(fleet_obj.id,"ship_list", raider.id)
 
         chances = get_shared_variable("elite_chance_non_skaraan", 50)
-        if (ship_roles is None or "elite" not in ship_roles) and (
-            race == "skaraan" or random.randint(1,chances) == 23):
+        if ship_roles is None:
+            ship_roles = ""
+        if "elite" in ship_roles or (race == "skaraan" and random.randint(1,10) == 4) or random.randint(1,chances) == 23:
+            add_role(raider.id, "elite")
+            max_abi = len(all_abilities)
+            abits = random.randint(0,pow(2,max_abi))
+            # set_inventory_value(raider.id, "elite_abilities", abits)
+            # bit field
+            # & 0x1 == Cloak  
+            # & 0x2 == Jump Back
+            # & 0x4 == Jump forward
+            # & 0x8 == Jump Back
+            for count, ab in enumerate(all_abilities):
+                bit = count * 2
+                if (abits & bit)  == bit:
+                    #
+                    # Set the flag in engine for always on 
+                    #
+                    if elite_is_engine_ability(ab):
+                        raider.data_set.set(ab, 1,0)
+                    add_role(raider.id, ab)
 
-            if random.randint(1,10) == 4:
-                add_role(raider.id, "elite")
-                max_abi = len(all_abilities)
-                abits = random.randint(0,pow(2,max_abi))
-                # set_inventory_value(raider.id, "elite_abilities", abits)
-                # bit field
-                # & 0x1 == Cloak  
-                # & 0x2 == Jump Back
-                # & 0x4 == Jump forward
-                # & 0x8 == Jump Back
-                for count, ab in enumerate(all_abilities):
-                    bit = count * 2
-                    if (abits & bit)  == bit:
-                        #
-                        # Set the flag in engine for always on 
-                        #
-                        if elite_is_engine_ability(ab):
-                            raider.data_set.set(ab, 1,0)
-                        add_role(raider.id, ab)
 
         # Should add a common function to call to get the face based on race
         set_face(raider.id, random_face(race))
