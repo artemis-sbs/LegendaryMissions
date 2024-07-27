@@ -66,26 +66,18 @@ await gui()
 
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "admiral")
 # assign_client_to_alt_ship(EVENT.client_id, SCIENCE_SELECTED_ID)
-# print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
+print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
+print("IDs Adrmiral {EVENT.origin_id}, {EVENT.selected_id},{EVENT.parent_id}")
 SCIENCE_ORIGIN.pos = EVENT.source_point
 
 
-nav_id = get_inventory_value(SCIENCE_ORIGIN_ID, "ADMIRAL_SELECT_ID", None)
-if nav_id:
-    sim.delete_navpoint_by_id(nav_id)
-
-nav_name = "admiral"
-
-x = EVENT.source_point.x
-y = EVENT.source_point.z
-size = 5000
-
-nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, "#444")
-nav = sim.get_navpoint_by_id(nav_id)
-
-nav.visibleToShip = SCIENCE_ORIGIN_ID
-set_inventory_value(SCIENCE_ORIGIN_ID, "ADMIRAL_SELECT_ID", nav_id)
 
 
+# if no selection then use point
+pos = Vec3(EVENT.source_point)
+if SCIENCE_SELECTED_ID!=0:
+    pos = Vec3(SCIENCE_SELECTED.pos)
+    
+admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0)
 
 

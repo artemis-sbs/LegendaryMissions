@@ -7,7 +7,8 @@ task_schedule(handle_elite_abilities)
 ==== handle_elite_abilities
 so = to_object(SPAWNED_ID)
 -> END if None == so
-    
+
+
 
 # Get the abilities managed by script
 all_abilities = elite_get_non_engine()
@@ -26,7 +27,7 @@ ab = random.choice(abilities)
 # This will run a sequence based on the elite type
 # awaiting will wait until the sequence is finished
 #
-data={"BT_ID": SPAWNED_ID} 
+data={"BT_ID": SPAWNED_ID}
 if ab == "elite_cloak":
     await task_schedule(elite_cloak_start, data={"BT_ID": SPAWNED_ID})
 elif ab == "elite_jump_forward":

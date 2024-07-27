@@ -597,22 +597,23 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
     Returns:
         fleet (Fleet): The created fleet
     """
+    race = race.strip().lower()
     fleet_rand = random.randint(0, 4)
     siege_fleet = []
-    if race == "Kralien":
+    if race == "kralien":
         siege_fleet = siege_kralien_fleet[fleet_diff][fleet_rand]
-    if race == "Torgoth":
+    if race == "torgoth":
         siege_fleet = siege_torgoth_fleet[fleet_diff][fleet_rand]
-    if race == "Arvonian":
+    if race == "arvonian":
         siege_fleet = siege_arvonian_fleet[fleet_diff][fleet_rand]
-    if race == "Skaraan":
+    if race == "skaraan":
         siege_fleet = siege_skaraan_fleet[fleet_diff][fleet_rand]
-    if race == "Ximni":
+    if race == "ximni":
         siege_fleet = siege_ximni_fleet[fleet_diff][fleet_rand]
-    if race == "Pirate":
+    if race == "pirate":
         siege_fleet = siege_ximni_fleet[fleet_diff][fleet_rand]
     if race == None:
-        race = "Kralien"
+        race = "kralien"
         siege_fleet = siege_kralien_fleet[fleet_diff][fleet_rand]
 
     print(f"Create Fleet, Race: {race}, Ships: {siege_fleet}")
