@@ -68,16 +68,14 @@ await gui()
 # assign_client_to_alt_ship(EVENT.client_id, SCIENCE_SELECTED_ID)
 print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
 print("IDs Adrmiral {EVENT.origin_id}, {EVENT.selected_id},{EVENT.parent_id}")
-SCIENCE_ORIGIN.pos = EVENT.source_point
-
-
-
 
 # if no selection then use point
 pos = Vec3(EVENT.source_point)
 if SCIENCE_SELECTED_ID!=0:
     pos = Vec3(SCIENCE_SELECTED.pos)
-    
+
+SCIENCE_ORIGIN.pos = pos
+
 admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0)
 
 
