@@ -23,6 +23,20 @@ def grid_get_max_hp():
     global _MAX_HP
     return _MAX_HP
 
+"""
+Future use hero Damcon name
+
+Anushka
+Brickwell
+Cowbell
+Fergus
+Helga
+Jenkins
+Lumpy
+Moose
+Pliskin
+Wally
+"""
 
 
 def grid_rebuild_grid_objects(id_or_obj, grid_data=None):

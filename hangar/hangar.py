@@ -10,6 +10,8 @@ from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finish
 from sbs_utils.procedural.execution import set_shared_variable, get_shared_variable, get_variable
 from sbs_utils.agent import Agent
 from sbs_utils.procedural.query import get_science_selection, to_object
+from sbs_utils.procedural.inventory import get_inventory_value
+import random
 
 from damage.internal_damage import grid_rebuild_grid_objects
 import sbs
@@ -120,7 +122,7 @@ def hangar_shuttle_spawn(docked_id, roles):
         roles += ",shuttle" 
     return hangar_craft_spawn(docked_id, "tsn_shuttle", roles, "SX")
 
-def hangar_launch_craft(craft_id):
+def hangar_launch_craft(craft_id, client_id):
     if craft_id is None: return
     craft = to_object(craft_id)
     if craft is None: return
@@ -136,6 +138,12 @@ def hangar_launch_craft(craft_id):
     # Create the Ships internals
     #
     hm = sbs.get_hull_map(craft.id, True)
+    craft.set_inventory_value("craft_name", craft.name)
+    call_sign = get_inventory_value(client_id, "call_sign", None)
+    if call_sign is not None and len(call_sign)>0:
+        print(f"hangarpy {call_sign}")
+        craft.name = call_sign
+
     if hm is None: return False
     grid_rebuild_grid_objects(craft.id)
     if has_role(craft.id, "fighter"):
@@ -179,6 +187,9 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     craft.data_set.set("fighter_shoot_flag", 0,0)
     craft.data_set.set("fighter_boost_flag", 0,0)
     craft.data_set.set("throttle", 0.0,0)
+    craft_name = craft.get_inventory_value("craft_name", craft.name)
+    craft.name = craft_name
+
     pos = get_pos(dock_target)
     if pos:
         set_pos(craft.id, pos)
@@ -197,6 +208,24 @@ def get_dock_name(so):
         return ""
     return f"{dock.name}"
 
+def hangar_get_call_signs():
+    ret = ["Aardvark","Badger","Chainsaw","Duckbill","Foxbat","Gargoyle","Hammerhead","Jellyfish","Kodiak","Lockjaw","Mongoose","Needlenose","Ostrich","Pancake","Rascal","Scarecrow","Tigershark","Vixen","Whiplash","Zealot"]
+    random.shuffle(ret)
+    return ret
+     
+    """Bartenders:
+    Bubbles
+    Cliff
+    Flynn
+    Highball
+    Guff
+    Jolly
+    Mugsy
+    Snout
+    Tapper
+    Whiskers"""
+
+    
 
 def hangar_console_ship_template(item):
     gui_row("row-height: 1.2em;padding:13px;")
