@@ -1,26 +1,44 @@
 //enable/comms if has_roles(COMMS_SELECTED_ID, '__PLAYER__')
 
+
 //comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-+[blue] "Sickbay":
-    crew_size = COMMS_ORIGIN["crew_size"] #| 0
-    dead = COMMS_ORIGIN["casulaty_count"] # | 0
-    <<[blue,white] "sickbay crew health"
-        " Currently we have {crew_size} healthy crew members and {dead} casualties
-        
-+[red] "Security":
++"Sickbay" //comms/internal/sickbay
++"Security" //comms/internal/security
++"Exobiology" //comms/internal/exobiology
++"Counselor" //comms/internal/counselor 
+    
+
+//comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
++"Back" //comms
+
++"Status":
+    <<[blue,white] "Sickbay status"
+        % No serious injuries currently 
+        % Sickbay is ready when needed
+        % 
+
+//comms/internal/security if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
++"Back" //comms
++"Status":
     <<[red,white] "Security update"
         % All secure
         % All quiet on the port bow
         % Times like this boring is good
 
-+[green] "Exobiology":
+//comms/internal/exobiology if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
++"Back" //comms
+
++"Exobiology":
     <<[green] "exobiology Potential biohazard"
         "Testing running, one moment
 
     # It is best to schedule delayed responses so the comms buttons are not stalled
     task_schedule(test_finished)
 
-+[purple] "counselor":
+//comms/internal/counselor if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
++"Back" //comms
+
++ "Status":
     <<[purple, white] "counselor crew update"
         "Something is disturbing the crew
     #
@@ -43,5 +61,6 @@ await delay_sim(seconds=2)
     "test results finished. Tell the captain we do not have a pathogen.
 
 ->END
+
 
 

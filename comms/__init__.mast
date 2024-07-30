@@ -7,6 +7,5 @@ import station_weapon_building.mast
 import enemy_taunt.mast
 import enemy_surrender.mast
 import priority_docking.mast
-import player_internal.mast
 import enemy_stations.mast
 
