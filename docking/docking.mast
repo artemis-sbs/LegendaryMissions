@@ -5,3 +5,13 @@
 //spawn if has_role(SPAWNED_ID, "__player__")
 
 schedule_player_docking(SPAWNED_ID, difficulty)
+
+#
+# Can only select weapons when undocked
+#
+//select/weapons  if has_role(WEAPONS_ORIGIN_ID, "__player__")
+
+dock_state_string = WEAPONS_ORIGIN.data_set.get("dock_state", 0) 
+->END if dock_state_string == "undocked"
+
+set_weapons_selection(WEAPONS_ORIGIN_ID, 0)

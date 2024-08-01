@@ -27,7 +27,10 @@ console_select= "weapons"
 jump console_selected 
 
 
-//gui/tab/debug if is_dev_build() 
+//gui/tab/debug if is_dev_build()
+jump debug_screen
+
+=== debug_screen
 items = [{"icon": 12, "text": "file"}, {"icon": 13, "text": "edit"}]
 
 gui_section("area:0,10,5em,78;background: #fff1;")
@@ -76,24 +79,21 @@ on gui_message(gui_button("Kill enemy shields")):
 
 gui_row()
 on gui_message(gui_button("science cinema focus")):
-    ship = get_inventory_value(client_id, "assigned_ship")
-    await task_schedule(debug_cinema_focus, data={"_focus": "science", "_ship_id": ship})
+    await task_schedule(debug_cinema_focus, data={"_focus": "science"})
 
 on gui_message(gui_button("weapons cinema focus")):
-    ship = get_inventory_value(client_id, "assigned_ship")
-    await task_schedule(debug_cinema_focus, data={"_focus": "weapons", "_ship_id": ship})
+    await task_schedule(debug_cinema_focus, data={"_focus": "weapons"})
 
 on gui_message(gui_button("player cinema focus")):
-    ship = get_inventory_value(client_id, "assigned_ship")
-    task_schedule(debug_cinema_focus, data={"_focus": "player", "_ship_id": ship})
+    task_schedule(debug_cinema_focus, data={"_focus": "player"})
     
 gui_row()
 on gui_message(gui_button("weapons jump to")):
-    ship = get_inventory_value(client_id, "assigned_ship")
+    ship = sbs.get_ship_of_client(client_id)
     task_schedule(debug_jump_to, data={"_focus": "weapons", "_ship_id": ship})
 
 on gui_message(gui_button("science jump to")):
-    ship = get_inventory_value(client_id, "assigned_ship")
+    ship = sbs.get_ship_of_client(client_id)
     task_schedule(debug_jump_to, data={"_focus": "science", "_ship_id": ship})
 
 
@@ -133,7 +133,7 @@ await gui()
 
 ===== spawn_test_upgrades === 
 # For testing upgrades, load some candy up front
-_ship_id = get_inventory_value(client_id, "assigned_ship")
+_ship_id = sbs.get_ship_of_client(client_id)
 ->END if _ship_id is None
 
 eo = to_engine_object(_ship_id)
@@ -158,8 +158,8 @@ pickup_spawn(275+_pos.x, _pos.y, _pos.z+400, "haplix_overcharger")
 
 ===== spawn_test_wreck ===== 
 # For testing wrecks, load one up front
-_ship_id = get_inventory_value(client_id, "assigned_ship")
-jump debug_screen if _ship_id is None
+
+jump debug_screen if not _ship_id
 
 eo = to_engine_object(_ship_id)
 _pos_eo = eo.pos
@@ -181,8 +181,8 @@ set_inventory_value(wr.id, "hull_type", "cruiser")
 
 ===== spawn_test_enemy ===== 
 # For testing wrecks, load one up front
-_ship_id = get_inventory_value(client_id, "assigned_ship")
-jump debug_screen if _ship_id is None
+_ship_id = sbs.get_ship_of_client(client_id)
+jump debug_screen if not _ship_id
 
 eo = to_engine_object(_ship_id)
 _pos_eo = eo.pos
@@ -206,8 +206,8 @@ for e in linked_to(fleet_obj.id,"ship_list"):
 ===== spawn_test_shapes === 
 
 # For testing generic shapes
-_ship_id = get_inventory_value(client_id, "assigned_ship")
-jump debug_screen if _ship_id is None
+_ship_id = sbs.get_ship_of_client(client_id)
+jump debug_screen if not _ship_id
 
 eo = to_engine_object(_ship_id)
 _pos_eo = eo.pos
@@ -250,7 +250,7 @@ await gui()
 gui_section(style="area: 10,10,90,90;")
 
 ## To get the ships this client is on
-####    get_inventory_value(client_id,"assigned_ship")
+####    _ship_id = sbs.get_ship_of_client(client_id)
 #
 ## To get the things link to the player ship as a console
 ####    linked_to( ....as set of things ...., "consoles")
@@ -260,7 +260,8 @@ gui_section(style="area: 10,10,90,90;")
 ####         has_inventory_value("CONSOLE_TYPE", "helm")
 #
 #
-consoles =  linked_to(get_inventory_value(client_id,"assigned_ship"), "consoles") & has_inventory_value("CONSOLE_TYPE", "helm")
+_ship_id = sbs.get_ship_of_client(client_id)
+consoles =  linked_to(_ship_id, "consoles") & has_inventory_value("CONSOLE_TYPE", "helm")
 
 #
 # 
@@ -277,8 +278,10 @@ for c in consoles:
 
 
 for c in all_helm_consoles:
-    p = to_object(get_inventory_value(c,"assigned_ship"))
-    comms_broadcast(c, f"{p.name}'s Helm console", "blue")
+    _ship_id = sbs.get_ship_of_client(c)
+    if _ship_id:
+        p = to_object(_ship_id)
+        comms_broadcast(c, f"{p.name}'s Helm console", "blue")
 
 
 await gui():
@@ -300,7 +303,8 @@ jump debug_screen
 
 ===== debug_cinema_focus ==== 
 # data: "_focus", "_ship_id"
-->END if _ship_id is None
+_ship_id = sbs.get_ship_of_client(client_id)
+->END if not _ship_id
 ->END if _focus is None
 
 other = _ship_id

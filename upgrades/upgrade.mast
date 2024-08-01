@@ -8,12 +8,18 @@ import upgrade.py
 #gui_add_console_tab(SHARED, "upgrade", "upgrade", None)
 #gui_add_console_tab(SHARED, "upgrade", "__back_tab__", "console_selected")
 
-#==== upgrade_screen ====
+
 @gui/tab/upgrade
+jump upgrade_screen
+
+=== upgrade_screen
 
 # Get inventory values for upgrade counts and timers.
 
-ship_id = get_inventory_value(client_id, "assigned_ship")
+
+ship_id = sbs.get_ship_of_client(client_id)  
+->END if not ship_id
+
 ctype = get_inventory_value(client_id, "CONSOLE_TYPE")
 cc_count = get_inventory_value(ship_id, "carapaction_coil", 0)
 ip_count = get_inventory_value(ship_id, "infusion_pcoils", 0)

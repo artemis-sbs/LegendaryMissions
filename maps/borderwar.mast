@@ -107,87 +107,63 @@ enemy1 = enemy_temp[0]
 #------------------------------------------------------------------------------------------------------------
 # Build friendly stations
 
-_station_weights  = {"starbase_command": 3,"starbase_civil": 1,"starbase_industry": 5,"starbase_science": 1}
+_station_weights  = {"starbase_industry": 5,"starbase_command": 3,"starbase_civil": 1,"starbase_science": 1}
 
-
-spawn_points = scatter.box(10000, 30000,1000,50000, 80000, -1000, -50000, centered=False)
-num = 1
+# make the list of stations we will create -----------------------------------------------
+station_type_list = []
 total_weight = (12-difficulty) *2
-_spawned_pos = []
 
-for station in spawn_points:
-    #
-    # Pick a type of station
-    #
-    break if total_weight <= 0
-
+for x while total_weight > 0:
     station_type = random.choice(list(_station_weights.keys()))
     station_weight = _station_weights[station_type]
-    #
-    #
-    continue if total_weight < station_weight
 
     # Force big stations first
     continue if total_weight > 8 and station_weight==1
 
     total_weight -= station_weight
+    station_type_list.append(station_type)
 
-    name = "DS {num}"
-    #
-    # Space stations
-    #
-    _pos = station
-    dist = 15000 * 15000
-    move = True
-    for x while move:
-        move = False
-        for _prev in _spawned_pos:
-            distv = _pos - _prev
-            _dist_test = distv.dot(distv)
-            if _dist_test < dist:
-                move = True
-                #print("Move Station")
-                _pos = next(spawn_points)
-                break
-    _spawned_pos.append(_pos)
+pos = Vec3()
+startZ = 50000
+num_stations = len(station_type_list)
+station_step = 100000/num_stations
 
-    station_object = npc_spawn(*_pos, name, "tsn, station", station_type, "behav_station")
-    #
-    #
-    
-    
+
+# for each station
+for index in range(num_stations):
+    stat_type = station_type_list[index]
+    pos.x = random.random()*40000+20000
+    pos.y = random.random()*2000-1000
+    pos.z = startZ + random.random()*station_step/3  -   station_step/6
+#    _spawned_pos.append(pos)
+    startZ += station_step
+
+    #make the station ----------------------------------
+    name = "DS {index+1}"
+    station_object = npc_spawn(*pos, name, "tsn, station", stat_type, "behav_station")
     ds = to_id(station_object)
-    #
-    #
-    #
-    apos = station_object.engine_object.pos
-    #
-    # Make sure not too close
-    #
-
     set_face(ds, random_terran(civilian=True))
 
-    #wrap a minefield around the station
+    # wrap a minefield around the station ----------------------------
     if lethal_value > 0:
         startAngle = random.randrange(0,359)
         angle = random.randrange(90,170)
         endAngle = startAngle + angle
 
-        depth = 1#random.randrange(2,3)
-#        width = random.randrange(int(angle/6), int(angle/3))
+        depth = 1   #random.randrange(2,3)
         width = int(5 * lethal_value)
         widthArray = [int(angle / 5.0)]
         inner = random.randrange(1200,1500)
-        cluster_spawn_points = scatter_ring(width, depth, apos.x,apos.y,apos.z, inner, inner, startAngle, endAngle)
-#        cluster_spawn_points = scatter_ring_density(widthArray, apos.x,apos.y,apos.z, inner, 0, startAngle, endAngle)
+        cluster_spawn_points = scatter_ring(width, depth, pos.x,pos.y,pos.z, inner, inner, startAngle, endAngle)
+        
         # Random type, but same for cluster
-        # a_type = f"danger_{1}{ship_data'a'}"
         for v2 in cluster_spawn_points:
             #keep value between -500 and 500??
-    #                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
-            terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
-    num += 1
+            mine_obj = terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
+            mine_obj.blob.set("damage_done", 5)
+            mine_obj.blob.set("blast_radius", 1000)
 
+# wait for the creation of the player ships
 await task_schedule(spawn_friendly_npc)
 
 #------------------------------------------------------------------------------------------------------------

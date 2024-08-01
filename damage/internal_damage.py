@@ -23,6 +23,20 @@ def grid_get_max_hp():
     global _MAX_HP
     return _MAX_HP
 
+"""
+Future use hero Damcon name
+
+Anushka
+Brickwell
+Cowbell
+Fergus
+Helga
+Jenkins
+Lumpy
+Moose
+Pliskin
+Wally
+"""
 
 
 def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
@@ -79,7 +93,8 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
         r = "#,"+g["roles"]
         go =  grid_spawn(ship_id,  name_tag, name_tag, loc_x, loc_y, icon, color, r)
         if go is None: return
-
+        #
+        go.engine_object.layer = 0
         go.blob.set("icon_scale", scale/2, 0)
         # save color so it cn be restored
         set_inventory_value(go.id, "color", color)
@@ -140,6 +155,7 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
     # 23 flag, 101-filled square, 111
     marker_go = grid_spawn(ship_id, "marker", marker_tag, int(loc_x),int(loc_y), 101, "#9994", "#,marker") 
     marker_go.blob.set("icon_scale",1.5,0)
+    marker_go.engine_object.layer = 6
     marker_go_id =  to_id(marker_go)
     set_inventory_value(ship_id, "marker_id", marker_go_id)
     # Create EPAD
@@ -154,6 +170,7 @@ def grid_rebuild_grid_objects(id_or_obj, grid_data=None):
     # marker is named hallway
     # 23 flag, 101-filled square, 111
     epad_go = grid_spawn(ship_id, "EPad", epad_tag, int(loc_x),int(loc_y), 134, "#9994", "tools,epad") 
+    epad_go.engine_object.layer = 0
     epad_go.blob.set("icon_scale",0.01,0)
     set_inventory_value(ship_id, "epad_id", epad_go.id)
 
@@ -196,7 +213,8 @@ def grid_restore_damcons(id_or_obj):
             icon = item_theme_data.icon
             scale = item_theme_data.scale
             dc = grid_spawn(ship_id, _name, _name, point[0],point[1],icon, colors[i%color_count], "crew,damcons,lifeform")
-            
+
+            dc.engine_object.layer = 4
             dc.blob.set("icon_scale", scale,0 )
             _id = to_id(dc)
             _go = to_object(dc)

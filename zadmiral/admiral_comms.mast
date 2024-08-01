@@ -1,0 +1,100 @@
+//enable/comms if has_roles(COMMS_ORIGIN_ID, 'admiral')
+
+
+//comms if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Spawn" //comms/admiral/spawn
++ "Selected" //comms/admiral/selected
++ "Area" //comms/admiral/area
+
+
+//comms/admiral/spawn if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
++ "Ship" //comms/admiral/spawn/ship
++ "Station" //comms/admiral/spawn/station
++ "Terrain" //comms/admiral/spawn/terrain
+
+
+
+//comms/admiral/spawn/terrain if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
++ "Asteroids":
+    pos = Vec3(COMMS_ORIGIN.pos)
++ "Nebulas":
+    pos = Vec3(COMMS_ORIGIN.pos)
++ "Black hole":
+    pos = Vec3(COMMS_ORIGIN.pos)
++ "Monster":
+    pos = Vec3(COMMS_ORIGIN.pos)
+    typhon_classic_spawn(*pos.xyz)
++ "Minefield":
+    pos = Vec3(COMMS_ORIGIN.pos)
+
+
+//comms/admiral/spawn/station if has_roles(COMMS_ORIGIN_ID, 'admiral')
+station_data = filter_ship_data_by_side(None, None, "station", False)
++ "Back" //comms
+for station in station_data:
+    side = station.get("side", "tsn")
+    if side == "USFP":
+        side = "tsn, usfp"
+
+    roles =  side +"," + station.get("roles", "station")
+    + "{station['name']}" {"station_type": station["key"], "roles": roles}:
+        pos = Vec3(COMMS_ORIGIN.pos)
+        num = get_shared_variable("next_station", 20)
+        set_shared_variable("next_station", num+ 1)
+        npc_spawn(*pos, f"DS {num}", roles, station_type, "behav_station")
+
+
+
+
+//comms/admiral/spawn/ship if has_roles(COMMS_ORIGIN_ID, 'admiral')
+races = ["Arvonian", "Kralien", "Torgoth","Skaraan","Ximni", "Pirate" ]
++ "Back" //comms
+for race in races:
+    + "{race}" {"race": race.lower()}:
+        pos = Vec3(COMMS_ORIGIN.pos)
+        fleet_diff = get_shared_variable("difficulty", 5)
+        create_siege_fleet(race, fleet_diff, *pos.xyz)
+
+
+//comms/admiral/selected if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
++ "Delete":
+    _other = get_science_selection(COMMS_SELECTED_ID)
+    if _other:
+        sbs.delete_object(_other)
+
+//comms/admiral/area if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
++ "Change size" //comms/admiral/area/size
+
+//comms/admiral/area/size if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms/admiral/area
++ "Grow":
+    pos = Vec3(COMMS_ORIGIN.pos)
+    admiral_show_nav_area(COMMS_ORIGIN_ID, pos, 1000)
++ "Shrink":
+    pos = Vec3(COMMS_ORIGIN.pos)
+    admiral_show_nav_area(COMMS_ORIGIN_ID, pos, -1000)
++ "Reset":
+    pos = Vec3(COMMS_ORIGIN.pos)
+    set_inventory_value(COMMS_ORIGIN_ID, "ADMIRAL_SIZE", 5000)
+    admiral_show_nav_area(COMMS_ORIGIN_ID, pos, 0)
+
+
+
+
+
+
+
+
+#    id_set = broad_test(100,200,300, 400) & role("Asteroid")
+#    for id in id_set:
+#	    sbs.delete_object(id)
+
+
+
+
+==== test_admiral
+print("POC works")

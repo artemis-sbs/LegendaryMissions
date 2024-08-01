@@ -1,0 +1,104 @@
+
+#
+# This defines the standard consoles for the console selection screen
+# Helm, Weapons, Comms, Engineering, Science
+# Mainscreen, Cinematic
+#
+
+
+@console/helm "Helm"
+" Pilot the ship
+
+# get_type_of_client
+console_select = "helm"
+
+_ship_id = sbs.get_ship_of_client(client_id) 
+#
+# Handle jump vs Warp drive
+#
+is_warp = False
+is_jump = False
+warp_nodes = to_object_list(grid_objects(_ship_id) & role("warp"))
+#
+_jump_nodes = to_object_list(grid_objects(_ship_id) & role("jump"))
+_jump_nodes = role("jump")
+
+is_warp = len(warp_nodes) > 0
+is_jump = len(_jump_nodes) > 0
+
+if console_select == "helm":
+    _warp = 1 if is_warp else 0
+    _jump = 1 if is_jump else 0
+    _label = "JUMP" if is_jump else "WARP"
+
+    blob = to_blob(_ship_id)
+    blob.set("warp_drive_active",_warp,0)
+    blob.set("jump_drive_active", _jump,0)
+    blob.set("eng_control_label", _label, 3)
+
+gui_add_console_tab(_ship_id, console_select, console_select, None)
+gui_console(console_select, is_jump)
+
+await gui()
+
+
+@console/weapons "Weapons"
+" Protect the ship from enemies
+console_select = "weapons"
+jump common_console_show
+
+@console/engineering "Engineering"
+" Keep the ship running optimally
+console_select = "engineering"
+jump common_console_show
+
+@console/comms "Communication"
+" Interact with other ships and stations
+console_select = "comms"
+jump common_console_show
+
+@console/science "Science"
+" Discover and provide vital information
+console_select = "science"
+jump common_console_show
+
+
+===== common_console_show ====
+_ship_id = sbs.get_ship_of_client(client_id) 
+gui_add_console_tab(_ship_id, "helm", console_select, None)
+gui_console(console_select)
+
+await gui()
+
+@console/mainscreen "Mainscreen"
+" The main viewscreen
+
+#
+# Current this reuses the main screen view from the server
+#
+jump show_main_game_screen
+
+
+@console/cinematic "Cinematic"
+" The cinematic view of the action
+
+# Layout to assure it takes up full screen 
+
+gui_section("area:0,0,100,100;")
+gui_activate_console("cinematic")
+gui_layout_widget("3dview")
+set_inventory_value(_ship_id, "cinema_focus", _ship_id)
+
+if _ship_id is None:
+    print("WARNING: cinematic on None player ship")
+
+sbs.assign_client_to_ship(client_id, _ship_id)
+gui_cinematic_auto(client_id)
+
+on change get_inventory_value(_ship_id, "cinema_focus"):
+    focus_id = get_inventory_value(_ship_id, "cinema_focus", _ship_id)
+    if focus_id is not None:
+        sbs.assign_client_to_ship(client_id, focus_id)
+        gui_cinematic_auto(client_id)
+
+await gui()

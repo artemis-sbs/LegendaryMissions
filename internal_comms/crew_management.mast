@@ -1,8 +1,6 @@
 #
 # Hook when a ship spawns
 #
-#signal_register("docked", signal_docked)
-
 //spawn if has_role(SPAWNED_ID, "__player__")
 
 # Do later so the grid objects are sure to be there
@@ -15,6 +13,26 @@ grid_count = len(role("quarters") & grid_objects(SPAWNED_ID)) # general idea of 
 crew_size = grid_count * 10
 set_inventory_value(SPAWNED_ID, "crew_size", crew_size)
 set_inventory_value(SPAWNED_ID, "max_crew_size", crew_size)
+
+#
+# This is duplicated in player_internal, but should resolve to one
+#
+//comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
++"Sickbay" //comms/internal/sickbay
+
+
+#
+# The back is duplicated in player_internal, but should resolve to one
+# Having it here shows it doesn't assume player_internal is here
+#
+//comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
++"Back" //comms
++"Crew status":
+    crew_size = COMMS_ORIGIN["crew_size"] #| 0
+    dead = COMMS_ORIGIN["casulaty_count"] # | 0
+    <<[blue,white] "sickbay crew health"
+        " Currently we have {crew_size} healthy crew members and {dead} casualties
+
 
 
 //damage/internal
@@ -58,8 +76,7 @@ jump crew_manage_health
 # The engine does NOT tell us when we're docked
 # but common_docking.py does emit a signal
 #
-//signal/docked if has_roles(ORIGIN_ID, "__player__")
-
+//shared/signal/docked if has_roles(ORIGIN_ID, "__player__")
 crew_size = get_inventory_value(ORIGIN_ID, "crew_size", 0)
 dead = get_inventory_value(ORIGIN_ID, "casulaty_count", 0)
 
