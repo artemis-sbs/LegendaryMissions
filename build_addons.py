@@ -8,13 +8,13 @@ skip =  {"__pycache__"}
 
 def zipdir(path):
     try: 
-        os.mkdir('addons')
+        os.mkdir('.addons')
     except Exception:
         pass
     finally:
         pass
 
-    with zipfile.ZipFile(f"addons/{path}.zip", "w") as zf:
+    with zipfile.ZipFile(f".addons/{path}.zip", "w") as zf:
         
 
         for dirname, subdirs, files in os.walk(path):
