@@ -384,3 +384,23 @@ for v in spawn_points:
 
 #------------------------------------------------------------------------------------------------------------
 
+task_schedule(countdown_war)
+
+======= countdown_war ========
+
+war_delay = int(war_time_delay)
+set_timer(SHARED, "war_timer", minutes=war_delay)
+
+if is_timer_set(SHARED, "war_timer"):
+    gui_text("text: time remaining;justify: right;")
+    t = format_time_remaining(SHARED, "war_delay")
+    gui_text(f"text: {t};justify:left;", style="tag: sh_game_time;padding:20px;")    
+    gui_row("row-height: 45px")
+
+if is_timer_set(SHARED, "war_timer") and is_timer_finished(SHARED, "war_timer"):
+    print(f"WAR IS DECLARED")
+
+
+
+
+

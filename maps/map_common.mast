@@ -27,7 +27,7 @@ total_hull_points = 0
 attempts = 0
 
 # grab the ship data for all ships on TSN side
-tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "support", ret_key_only=False)
+tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "defender", ret_key_only=False)
 # pick a random tsn ship
 count = 1
 
