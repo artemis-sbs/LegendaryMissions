@@ -56,7 +56,7 @@ if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"
     ->END
 
 stations = role('tsn') & role('station')
-if len(stations) ==0 and world_select != "deep strike":
+if len(stations) ==0 and world_select.path != "deep_strike":
     start_text = "Mission is lost!  All yer base are belong to us, dammit."
     game_started = False
     game_ended = True

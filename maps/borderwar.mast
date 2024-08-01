@@ -93,7 +93,7 @@ else:
 #------------------------------------------------------------------------------------------------------------
 # Add the "Neutral Zone" 
 
-sim.add_navarea(-10000, 500000, 10000, 500000, -10000, -500000, 10000, -500000, "Neutral Zone", "#004")
+sim.add_navarea(0, 500000, 20000, 500000, 0, -500000, 20000, -500000, "Neutral Zone", "#004")
 
 
 #------------------------------------------------------------------------------------------------------------
@@ -215,6 +215,7 @@ for enemy_station in enemy_spawn_points:
         enemy_station_object = npc_spawn(*_enpos, name, "torgoth, station", station_type, "behav_station")
     if enemy1 == "Arvonian":
         enemy_station_object = npc_spawn(*_enpos, name, "arvonian, station", station_type, "behav_station")
+    sim.add_navpoint(*_enpos, name, "#A44")
     
     print(f"{enemy1} Station created {_enpos.x} {_enpos.y} {_enpos.z}")
     
@@ -358,4 +359,24 @@ for v in spawn_points:
 
 
 #------------------------------------------------------------------------------------------------------------
+
+task_schedule(countdown_war)
+
+======= countdown_war ========
+
+war_delay = int(war_time_delay)
+set_timer(SHARED, "war_timer", minutes=war_delay)
+
+if is_timer_set(SHARED, "war_timer"):
+    gui_text("text: time remaining;justify: right;")
+    t = format_time_remaining(SHARED, "war_delay")
+    gui_text(f"text: {t};justify:left;", style="tag: sh_game_time;padding:20px;")    
+    gui_row("row-height: 45px")
+
+if is_timer_set(SHARED, "war_timer") and is_timer_finished(SHARED, "war_timer"):
+    print(f"WAR IS DECLARED")
+
+
+
+
 

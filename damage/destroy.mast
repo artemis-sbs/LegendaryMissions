@@ -10,13 +10,16 @@
 # upgrade it might drop. 
 
 dest_obj = to_object(DESTROYED_ID)
-dest_side = dest_obj.side
+if dest_obj is not None:
+    dest_side = dest_obj.side
+    dest_key = dest_obj.art_id
 dest_eobj = to_engine_object(DESTROYED_ID)
 dest_posx = int(dest_eobj.pos.x)
 dest_posy = int(dest_eobj.pos.y)
 dest_posz = int(dest_eobj.pos.z)
-dest_blob = to_blob(DESTROYED_ID) # Get the hull name from the shipData file
-dest_hull = get_data_set_value(dest_blob, "hull_name", 0)
+dest_data = get_ship_data_for(dest_key)
+if dest_data is not None:
+    dest_hull = dest_data.get('hullpoints',0)
 
 # Not all destroyed ships leave behind wrecks. So here's some code to determine if a wreck is left behind.
 # Smaller hulls should have a lower chance, while bigger ships are more likely to leave behind wrecks.
@@ -24,12 +27,16 @@ dest_hull = get_data_set_value(dest_blob, "hull_name", 0)
 
 dest_rand = random.randint(1,10)
 dest_chance = 0
-if dest_hull == "cruiser" or dest_hull == "light cruiser" or dest_hull == "missile cruiser" or dest_hull == "barbarian" or dest_hull == "goliath" or dest_hull == "destroyer" or dest_hull == "defiler" or dest_hull == "strongbow":
+
+if dest_hull is None:
+    dest_chance = 7
+elif dest_hull >= 2 and dest_hull <= 4:
     dest_chance = 4
-elif dest_hull == "battleship" or dest_hull == "light carrier" or dest_hull == "leviathan" or dest_hull == "executor":
+elif dest_hull >=5 and dest_hull <=7:
     dest_chance = 6
-elif dest_hull == "dreadnought" or dest_hull == "carrier" or dest_hull == "behemoth" or dest_hull == "enforcer" or dest_hull == "brigantine":
+elif dest_hull >= 8 and dest_hull <= 99:
     dest_chance = 8
+    
 
 print(f"Enemy {dest_hull} destroyed, dest_rand: {dest_rand}, dest_chance: {dest_chance}")
 ->END if dest_rand > dest_chance

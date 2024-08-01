@@ -617,7 +617,8 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
         race = "kralien"
         siege_fleet = siege_kralien_fleet[fleet_diff][fleet_rand]
 
-    print(f"Create Fleet, Race: {race}, Ships: {siege_fleet}")
+    print(f"Create Fleet, Race: {race}, Ships: {siege_fleet}, Pos: {int(posx)}, {int(posy)}, {int(posz)}")
+
     
     num_ships = len(siege_fleet)
 #    max_carriers = int(max_carriers)
