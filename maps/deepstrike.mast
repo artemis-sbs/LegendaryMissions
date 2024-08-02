@@ -100,7 +100,7 @@ enemy1 = enemy_temp[0]
 
 new_pos = Vec3(20500,0,1800)
 
-friend = to_id(npc_spawn(*new_pos, f"TSN Ganymede", "tsn, friendly", "transport_ship", "behav_npcship"))
+friend = to_id(npc_spawn(*new_pos, f"TSN Ganymede", "tsn, friendly, resupply_tanker", "transport_ship", "behav_npcship"))
 set_face(friend, random_terran())
 
 await task_schedule(spawn_players)
