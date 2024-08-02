@@ -68,7 +68,7 @@ def build_munition_queue_task(id_or_obj, torp_type):
 
 
 
-def schedule_player_docking(player_id_or_obj, difficulty):
+def schedule_player_docking(player_id_or_obj, difficulty, roles, docked_cb):
     #
     # Schedule a simple tick task 
     # Pass the player ID to the task
@@ -76,6 +76,8 @@ def schedule_player_docking(player_id_or_obj, difficulty):
     t = TickDispatcher.do_interval(player_docking_task, 5)
     t.set_inventory_value("player_id", to_id(player_id_or_obj))
     t.set_inventory_value("difficulty", difficulty)
+    t.set_inventory_value("roles", roles)
+    t.set_inventory_value("docked_cb", docked_cb)
     
 
 RATE_SLOW = 5
@@ -84,15 +86,15 @@ RATE_FAST = 0
 def player_docking_task(t):
     player_id = t.get_inventory_value("player_id")
     difficulty = t.get_inventory_value("difficulty")
-    rate = player_docking(player_id, difficulty)
+    roles = t.get_inventory_value("roles")
+    docked_cb = t.get_inventory_value("docked_cb")
+    rate = player_docking(player_id, difficulty, dock_roles=roles, docked_cb=docked_cb)
     if rate is None:
         t.stop()
     else:
         t.delay = rate
 
-
-
-def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=None, docking_cb=None, dock_start_cb=None):
+def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=None, docking_cb=None, dock_start_cb=None, dock_roles=None):
     if not object_exists(player_id_or_obj):
         # Ship is destroyed
         return None
@@ -100,7 +102,7 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
     player_id = to_id(player_id_or_obj)
     player_blob = to_blob(player_id_or_obj)
 
-
+    print(f"Docking {dock_roles}")
     dock_state_string = player_blob.get("dock_state", 0)
 
     if "undocked" == dock_state_string:
@@ -108,7 +110,7 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
         _too_close = 300+(difficulty+1)*200
         raider = closest(player_id_or_obj, role("raider"), _too_close)
         if raider is None:
-            station = closest(player_id_or_obj, role("Station"), docking_range)
+            station = closest(player_id_or_obj, role(dock_roles), docking_range)
             if station is not None:
                 player_blob.set("dock_base_id", to_id(station))
     #
@@ -123,7 +125,7 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
     
     if "docking" == dock_state_string:
         rate = player_docking_docking(player_id, dock_stationID)
-        if docked_cb is not None:
+        if docking_cb is not None:
             docking_cb(player_id)
         return rate
     
@@ -138,7 +140,7 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
     if "docked" == dock_state_string:
         rate = player_docking_docked(player_id, dock_stationID)
         if docked_cb is not None:
-            docked_cb(player_id)
+            rate=docked_cb(player_id, dock_stationID)
         return rate
     
     return RATE_SLOW
@@ -186,8 +188,10 @@ def player_docking_dock_start(player_id_or_obj, dock_station_id):
     
     return RATE_FAST
 
-
 def player_docking_docked(player_id_or_obj, dock_station):
+    return player_docking_station_docked(player_id_or_obj, dock_station)
+
+def player_docking_station_docked(player_id_or_obj, dock_station):
     player_blob = to_blob(player_id_or_obj)
     dock_station_blob = to_blob(dock_station)
     dock_station_id = to_id(dock_station)
@@ -275,6 +279,5 @@ def player_docking_docked(player_id_or_obj, dock_station):
         if len(non_system_grid_objects):
             grid_repair_grid_objects(player_id, non_system_grid_objects[0])
 
-
-
     return RATE_FAST
+
