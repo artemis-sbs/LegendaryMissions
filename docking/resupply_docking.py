@@ -15,6 +15,12 @@ from sbs_utils.procedural.signal import signal_emit
 RATE_SLOW = 5
 RATE_FAST = 0
 
+# The Resupply Tanker is used in the Deep Strike mission. It provides energy and one nuclear torpedo every 5 minutes. 
+# In Artemis 2.x, the Resupply Tanker would give a +500 burst of energy and add a nuke to the player ship every 5 minutes.
+# In Cosmos, we can code the Resupply Tanker so it functions like a station. To match the functionality of the previous version,
+# some of the station operations have been removed, like resupplying all torpedo types, and faster shield/system repair.
+# To provide something similar to the +500 energy boost, we've added a button to Comms to request a HiDens Power Cell every 5 mins.   
+
 def player_docking_resupply_docked(player_id_or_obj, dock_station):
     print(f"Docking resupply")
     player_blob = to_blob(player_id_or_obj)
@@ -77,31 +83,31 @@ def player_docking_resupply_docked(player_id_or_obj, dock_station):
 
 
     #repair shields (more than normal)
-    shieldCoeff = player_blob.get("repair_rate_shields",0)
+    #shieldCoeff = player_blob.get("repair_rate_shields",0)
     
 
-    sCount = player_blob.get("shield_count",0)
-    for shield in range(sCount):
-        sVal = player_blob.get("shield_val", shield)
-        sValMax = player_blob.get("shield_max_val", shield)
-        changed = (sVal < sValMax)
-        sVal = max(0.0, min(sVal + shieldCoeff, sValMax)) # clamp the value
-        if changed:
-            player_blob.set("shield_val", sVal, shield)
+    #sCount = player_blob.get("shield_count",0)
+    #for shield in range(sCount):
+    #    sVal = player_blob.get("shield_val", shield)
+    #    sValMax = player_blob.get("shield_max_val", shield)
+    #    changed = (sVal < sValMax)
+    #    sVal = max(0.0, min(sVal + shieldCoeff, sValMax)) # clamp the value
+    #    if changed:
+    #        player_blob.set("shield_val", sVal, shield)
 
-    systemCoeff = player_blob.get("repair_rate_systems",0)
+    #systemCoeff = player_blob.get("repair_rate_systems",0)
     #
     # Repair a system rooms first
     #
-    system_grid_objects = to_list(grid_objects(player_id) & role("__damaged__") & role("system"))
-    if len(system_grid_objects):
-        grid_repair_grid_objects(player_id, system_grid_objects[0])
-    else:
+    #system_grid_objects = to_list(grid_objects(player_id) & role("__damaged__") & role("system"))
+    #if len(system_grid_objects):
+    #    grid_repair_grid_objects(player_id, system_grid_objects[0])
+    #else:
         #
         # Repair hallways and non system rooms
         #
-        non_system_grid_objects = to_list((grid_objects(player_id) & role("__damaged__") ) - role("system") -  role("lifeform"))
-        if len(non_system_grid_objects):
-            grid_repair_grid_objects(player_id, non_system_grid_objects[0])
+    #    non_system_grid_objects = to_list((grid_objects(player_id) & role("__damaged__") ) - role("system") -  role("lifeform"))
+    #    if len(non_system_grid_objects):
+    #        grid_repair_grid_objects(player_id, non_system_grid_objects[0])
 
     return RATE_FAST
