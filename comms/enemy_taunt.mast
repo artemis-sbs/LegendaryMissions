@@ -29,11 +29,96 @@ if race_taunts is not None:
 
 =$raider red,white
 
-//comms if has_roles(COMMS_SELECTED_ID, 'raider') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
+#//comms if has_roles(COMMS_SELECTED_ID, 'raider') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
+#+ "Hail":
+#    <<[$raider] "Hail"
+#        % Go away, {COMMS_ORIGIN.name}! You talk too much!
+
+//comms if has_roles(COMMS_SELECTED_ID, 'raider, kralien') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Hail":
     <<[$raider] "Hail"
-        "Go away, {COMMS_SELECTED.name}! You talk too much!
+        % Kraliens have arrived to collect rent. {COMMS_ORIGIN.name} will pay Kraliens in blood!
+        % Sector belongs to Kraliens. Pay rent or Kraliens will destroy {COMMS_ORIGIN.name}.
+        % Kraliens want peace. After Kraliens destroy {COMMS_ORIGIN.name}, there will be peace.
+        % {COMMS_ORIGIN.name} makes loud mouth noises. Kraliens not listening.
+        % Hive-mother told Kraliens, do not listen to inferior species. Go away, {COMMS_ORIGIN.name}. 
+        % Hive-mother told Kraliens, do not speak unless Kraliens have something good to say. Communications ended.
+        % Ancient Kralien prophecy says you will die today, {COMMS_ORIGIN.name}. Prepare to meet your ancestors!
+        % Kraliens cannot talk right now. Kraliens very busy getting ready to destroy you. 
+        % Kraliens not talking today. Vow of silence. Also, vow of vengeance. Hold position while Kraliens charge up weapons. 
+        % Kralien High Priests have decided you must be destroyed, {COMMS_ORIGIN.name}. No further discussion is needed.
 
+//comms if has_roles(COMMS_SELECTED_ID, 'raider, torgoth') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
++ "Hail":
+    <<[$raider] "Hail"
+        % We are here to eat oyster-bat cookies, and crush our enemies. We are all out of oyster-bat cookies, {COMMS_ORIGIN.name}.
+        % Pathetic little tadpoles. Stay out of our way, {COMMS_ORIGIN.name}, or you will be destroyed!
+        % My trophy room could use a few more skulls, {COMMS_ORIGIN.name}. Yours will do nicely!
+        % We could smell you ten sectors away, {COMMS_ORIGIN.name}. Leave or we will cleanse this sector of your filthy stench!
+        % We suspected your inferior species was capable of meaningful communication, {COMMS_ORIGIN.name}. But we were mistaken.
+        % The Torgoth are not interested in the noisy chatterings of lesser creatures, {COMMS_ORIGIN.name}. Go away.
+        % Do you wish to be crushed under the heel of the mighty Torgoth, {COMMS_ORIGIN.name}? We will be happy to accomodate you!
+        % You make more noise than a parrot-squid on a harpoon, {COMMS_ORIGIN.name}. The silence of death shall be your reward.
+        % Your mere existence annoys us, {COMMS_ORIGIN.name}. We shall rectify this with your destruction. 
+        % We are here to clean out the garbage in this sector, {COMMS_ORIGIN.name}, and you smell like trash. 
+
+//comms if has_roles(COMMS_SELECTED_ID, 'raider, arvonian') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
++ "Hail":
+    <<[$raider] "Hail"
+        % {COMMS_ORIGIN.name}, the Supreme Understander has decided that you are not capable of intelligent conversation.
+        % Your incessant mewlings are quite annoying, {COMMS_ORIGIN.name}. Perhaps you could go bother someone else?
+        % Were you saying something, {COMMS_ORIGIN.name}? We weren't listening. Never mind, I'm sure it wasn't important.
+        % Could you find something boring to do in another sector, {COMMS_ORIGIN.name}? You'll just get in our way.
+        % We smelled something like rotting zuniki in this sector. Apparently it was just your ship, {COMMS_ORIGIN.name}.
+        % Message received. Perhaps you could just go somewhere else and die, {COMMS_ORIGIN.name}? That would please us.
+        % Oh look, a nice juicy target for our fighter squadrons to play with! Hold position, {COMMS_ORIGIN.name}. 
+        % The Supreme Understander has predicted your defeat, {COMMS_ORIGIN.name}. Run away now, and we won't tell anyone. 
+        % This sector belongs to the Royal House of Queen Sasha, {COMMS_ORIGIN.name}. Leave or be destroyed!
+        % Your ugly ship makes us vomit, {COMMS_ORIGIN.name}. We are compelled to remove it from the universe! 
+
+//comms if has_roles(COMMS_SELECTED_ID, 'raider, skaraan') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
++ "Hail":
+    <<[$raider] "Hail"
+        % There is no profit in listening to your idiotic blathering, {COMMS_ORIGIN.name}. Go bother someone else.
+        % We have better things to do than listen to your infantile nonsense, {COMMS_ORIGIN.name}. Go away.
+        % Your moronic attempts at communication are of no value to us, {COMMS_ORIGIN.name}. End communcation.
+        % Communication privileges disengaged, {COMMS_ORIGIN.name}. Further attempts will incur a mandatory consultation fee.
+        % Market research tells us that communicating with you would not be profitable, {COMMS_ORIGIN.name}. Goodbye.
+        % Market research says the universe would be greatly improved without you in it, {COMMS_ORIGIN.name}. Go hug a tac-nuke.
+        % Thank you for waiting. Your call is very imporant to us. Please hold while we charge up our weapon systems. 
+        % Your quick destruction will be excellent material for our promotional holovids, {COMMS_ORIGIN.name}.  
+        % By all means, close to weapons range, {COMMS_ORIGIN.name}. We look forward to destroying you. 
+        % Your continued existence did not score well with our focus groups, {COMMS_ORIGIN.name}, so we will destroy you.
+
+//comms if has_roles(COMMS_SELECTED_ID, 'raider, ximni') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
++ "Hail":
+    <<[$raider] "Hail"
+        % This is not a good time to talk, {COMMS_ORIGIN.name}. Today we fight!
+        % No time to talk, {COMMS_ORIGIN.name}! We will bask in glorious victory, or choke on shameful defeat!
+        % Hold your position, {COMMS_ORIGIN.name}. We were looking for some easy target practice.
+        % We meet on the field of battle, {COMMS_ORIGIN.name}! Shall we determine where the fires of Xim burn the strongest?    
+        % Which of our crews has captured the true spirit of Xim, {COMMS_ORIGIN.name}? Let's find out! 
+        % We look forward to meeting you in battle, {COMMS_ORIGIN.name}. May the best crew emerge victorious! 
+        % We are honored to engage a worthy opponent, {COMMS_ORIGIN.name}. May the true spirit of Xim determine the victor!
+        % Fate has put us at opposite ends of the battlefield, {COMMS_ORIGIN.name}. May the spirit of Xim be with you! 
+        % We talk. We live. We fight. We die. Shall we roll the dice, {COMMS_ORIGIN.name}?
+        % We play the hand we are dealt, {COMMS_ORIGIN.name}. Prepare for battle!
+
+//comms if has_roles(COMMS_SELECTED_ID, 'raider, pirate') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
++ "Hail":
+    <<[$raider] "Hail"
+        % Don't get your panties in a twist, {COMMS_ORIGIN.name}. You can buy it back from us at a discount.
+        % Don't mind us, {COMMS_ORIGIN.name}. We're just here to burgle some things.
+        % Hey, if it wasn't nailed down, who can say if it really belonged to anybody?
+        % The universe is 12 billion years old, and we exist for the briefest of moments. So why get all upset out who owns what?
+        % Oh, hey there, {COMMS_ORIGIN.name}... In our defense, we were left unsupervised. 
+        % Uh, yeah... We were just checking on your security procedures.
+        % We don't want any trouble, {COMMS_ORIGIN.name}. We are just honest merchants exploring local business opportunities.   
+        % To be honest, we got into this line of work for the rum. Stealing-things-to-buy-more-rum sorta came after the rum ran out.  
+        % Well, it's not exactly our fault if some things over HERE are worth a lot more if we grab them and sell them over THERE. 
+        % We were, uh... just borrowing it. We'll put it all back when we're done. 
+
+//comms if has_roles(COMMS_SELECTED_ID, 'raider') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Taunt"  handle_comms_taunt_raider_top
 
 
