@@ -100,7 +100,7 @@ for ship in surrendered:
 
     spawn_pos = Vec3(ship_obj.spawn_pos)
     _pos = ship_obj.pos
-    target_pos(ship, spawn_pos.x, spawn_pos.y, spawn_pos.z)
+    target_pos(ship, spawn_pos.x, spawn_pos.y, spawn_pos.z, throttle=1.5, target_id=0)
     diff = _pos - spawn_pos
     continue if diff.length() > 500
     # if Close to 500, then delete

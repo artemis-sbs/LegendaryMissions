@@ -102,7 +102,7 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
     player_id = to_id(player_id_or_obj)
     player_blob = to_blob(player_id_or_obj)
 
-    print(f"Docking {dock_roles}")
+    #print(f"Docking {dock_roles}")
     dock_state_string = player_blob.get("dock_state", 0)
 
     if "undocked" == dock_state_string:

@@ -1,103 +1,42 @@
-route_select_grid("hangar_grid_comms")
+//enable/grid/comms if has_role(COMMS_ORIGIN_ID, "cockpit")
+
+//comms if has_role(COMMS_ORIGIN_ID, "cockpit") and has_role(COMMS_SELECTED_ID,"computer")
+
++ "set dock" //comms/set_dock
++ "eject":
+    COMMS_ORIGIN.data_set.set("fighter_thrust_flag", 0,0)
+    COMMS_ORIGIN.data_set.set("fighter_shoot_flag", 0,0)
+    COMMS_ORIGIN.data_set.set("fighter_boost_flag", 0,0)
+    COMMS_ORIGIN.data_set.set("throttle", 0.0,0)
+
+    fighter_client = get_inventory_value(COMMS_ORIGIN_ID, "client_id")
+    if fighter_client is not None:
+        set_dedicated_link(fighter_client, "craft_id", None)    
+        gui_reroute_client(fighter_client, show_hangar)
 
 
+//comms/set_dock if has_role(COMMS_ORIGIN_ID, "cockpit")
 
-======= hangar_grid_comms ======
-#
-# The grid item is selected
-#
-
-->END if not has_role(COMMS_ORIGIN_ID, "cockpit")
-
-jump hagar_grid_comms_computer if has_role(COMMS_SELECTED_ID,"computer")
-jump hagar_grid_comms_shield if has_role(COMMS_SELECTED_ID,"shield")
-
-####### Original Impulse menu obsoleted by engine updates
-# jump hagar_grid_comms_impulse if has_roles(COMMS_SELECTED_ID,"engine,system,impulse")
-
-
-comms_info("static")
-->END
-
-
-========== hagar_grid_comms_computer  ===========
-craft = to_object(COMMS_ORIGIN_ID)
-->END if craft is None
-
-await comms():
-    + "set dock":
-        jump hagar_grid_comms_computer_dock
-    + "eject":
-        craft.data_set.set("fighter_thrust_flag", 0,0)
-        craft.data_set.set("fighter_shoot_flag", 0,0)
-        craft.data_set.set("fighter_boost_flag", 0,0)
-        craft.data_set.set("throttle", 0.0,0)
-
-        fighter_client = get_inventory_value(craft.id, "client_id")
-        if fighter_client is not None:
-            set_dedicated_link(fighter_client, "craft_id", None)    
-            gui_reroute_client(fighter_client, show_hangar)
-        ->END
-        
-
-jump hagar_grid_comms_computer
-
-
-========== hagar_grid_comms_computer_dock  ===========
-
-so = to_object(COMMS_ORIGIN_ID)
-->END if so is None
-side = so.side
-so = None
-
+side = COMMS_ORIGIN.side
 dockable = to_object_list(role(side) & any_role("__player__, station"))
-
-await comms():
- + "back":
-    jump hagar_grid_comms_computer
-
-# + "{d.name} as dock" for d in dockable:
-#    hangar_set_dock(COMMS_ORIGIN_ID, d.id)
-#    jump hagar_grid_comms_computer
++ "back" //comms
+for d in dockable:
+    + "{d.name} as dock" {"dock": d.id}: 
+        hangar_set_dock(COMMS_ORIGIN_ID, dock)
+        comms_navigate("//comms")
 
 
-jump hagar_grid_comms_computer
 
+//comms if has_role(COMMS_ORIGIN_ID, "cockpit") and has_role(COMMS_SELECTED_ID,"shield")
++ "Balanced":
+    set_engineering_value(COMMS_ORIGIN_ID, "front shield", 1.0)
+    set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 1.0)
 
-========== hagar_grid_comms_shield  ===========
++ "All Fwd":
+    set_engineering_value(COMMS_ORIGIN_ID, "front shield", 2.0)
+    set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 0.0)
 
++ "All Aft":
+    set_engineering_value(COMMS_ORIGIN_ID, "front shield", 0.0)
+    set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 2.0)
 
-await comms():
-    + "Balanced":
-        set_engineering_value(COMMS_ORIGIN_ID, "front shield", 1.0)
-        set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 1.0)
-
-    + "All Fwd":
-        set_engineering_value(COMMS_ORIGIN_ID, "front shield", 2.0)
-        set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 0.0)
-
-    + "All Aft":
-        set_engineering_value(COMMS_ORIGIN_ID, "front shield", 0.0)
-        set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 2.0)
-
-jump hagar_grid_comms_shield
-
-========== hagar_grid_comms_impulse  ===========
-so = to_object(COMMS_ORIGIN_ID)
-->END if so is None
-
-current = get_data_set_value(COMMS_ORIGIN_ID, "impulse_upgrade_coeff", 0)
-# print(f"impulse at {current}")
-
-await comms():
- + "All off" if current != 0:
-    set_data_set_value(COMMS_ORIGIN_ID, "impulse_upgrade_coeff", 0.0)
-    jump hagar_grid_comms_impulse
-+ "Follow speed" if current != 0.5:
-    set_data_set_value(COMMS_ORIGIN_ID, "impulse_upgrade_coeff", 0.5)
-    jump hagar_grid_comms_impulse
-+ "Full speed" if current != 1.0:
-    set_data_set_value(COMMS_ORIGIN_ID, "impulse_upgrade_coeff", 1.0)
-    jump hagar_grid_comms_impulse
-
-jump hagar_grid_comms_impulse

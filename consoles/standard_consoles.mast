@@ -54,7 +54,10 @@ jump common_console_show
 
 @console/comms "Communication"
 " Interact with other ships and stations
+
+# Clear Comms Info
 console_select = "comms"
+comms_info("static")
 jump common_console_show
 
 @console/science "Science"
