@@ -66,17 +66,34 @@ await gui()
 
 
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "admiral")
-# assign_client_to_alt_ship(EVENT.client_id, SCIENCE_SELECTED_ID)
+
 print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
 print("IDs Adrmiral {EVENT.origin_id}, {EVENT.selected_id},{EVENT.parent_id}")
 
-# if no selection then use point
-pos = Vec3(EVENT.source_point)
-if SCIENCE_SELECTED_ID!=0:
-    pos = Vec3(SCIENCE_SELECTED.pos)
+if EVENT.extra_tag != "rmb":
+    # if no selection then use point
+    pos = Vec3(EVENT.source_point)
+    if SCIENCE_SELECTED_ID!=0:
+        pos = Vec3(SCIENCE_SELECTED.pos)
+    SCIENCE_ORIGIN.pos = pos
+    admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Admiral", "lmb", "#040")
+elif EVENT.extra_tag == "rmb":
+    # Need to reset scince to the right value????
+    # But when, Next tick?
+    prev_sci = get_inventory_value(SCIENCE_ORIGIN_ID, "prev_selection", SCIENCE_SELECTED_ID)
+    set_weapons_selection(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+    set_science_selection(SCIENCE_ORIGIN_ID, prev_sci)
+    
+    pos = Vec3(EVENT.source_point)
+    if SCIENCE_SELECTED_ID!=0:
+        pos = Vec3(SCIENCE_SELECTED.pos)
 
-SCIENCE_ORIGIN.pos = pos
+    # The selection point for the admiral is the pos of the Admiral ship
+    # But this selection we need to remmber
+    set_inventory_value(SCIENCE_ORIGIN_ID, "ADMIRAL_ORDERS_POINT", pos)
 
-admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0)
+    admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Orders", "rmb", "#400")
+    
+
 
 

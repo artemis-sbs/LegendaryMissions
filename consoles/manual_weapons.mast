@@ -70,7 +70,10 @@ ship = to_object(ship_id)
 yield fail if ship is None
 target_id = get_weapons_selection(ship_id)
 jump manual_weapons_minimize if target_id==0
+jump manual_weapons_minimize if target_id==ship_id
+
 _target = to_object(target_id)
+
 jump manual_weapons_minimize if _target is None
 
 dist = sbs.distance_id(ship_id, target_id)
