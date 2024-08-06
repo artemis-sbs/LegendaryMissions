@@ -22,7 +22,6 @@ RATE_FAST = 0
 # To provide something similar to the +500 energy boost, we've added a button to Comms to request a HiDens Power Cell every 5 mins.   
 
 def player_docking_resupply_docked(player_id_or_obj, dock_station):
-    print(f"Docking resupply")
     player_blob = to_blob(player_id_or_obj)
     dock_station_blob = to_blob(dock_station)
     dock_station_id = to_id(dock_station)
@@ -59,7 +58,7 @@ def player_docking_resupply_docked(player_id_or_obj, dock_station):
 
     # refuel
     fuel_value = player_blob.get("energy",0)
-    if fuel_value < 1500:
+    if fuel_value < 1000:
         fuel_value = fuel_value + refuel_amount
         player_blob.set("energy", int(fuel_value))
 

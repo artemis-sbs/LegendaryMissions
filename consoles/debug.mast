@@ -144,7 +144,7 @@ _forward = eo.forward_vector()
 _pos = _pos_eo + (_forward * 300)
 
 
-pickup_spawn(_pos.x, _pos.y, _pos.z, "carapaction_coil")
+pickup_spawn(125+_pos.x, _pos.y, _pos.z+250, "carapaction_coil")
 pickup_spawn(200+_pos.x, _pos.y, _pos.z+250, "infusion_pcoils")
 pickup_spawn(275+_pos.x, _pos.y, _pos.z+250, "tauron_focuser")
 pickup_spawn(125+_pos.x, _pos.y, _pos.z+325, "secret_codecase")

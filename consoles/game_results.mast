@@ -67,10 +67,19 @@ if len(stations) ==0 and world_select.path != "deep_strike":
     gui_reroute_server(  show_game_results)
     ->END
 
+# Used for Border War, game ends if a player ship enters the Neutral Zone
+if world_select.path == "border_war" and war_declared == 3:
+    start_text = "Mission Failed! TSN entered Neutral Zone before war declared."
+    game_started = False
+    game_ended = True
+    sbs.play_music_file(0, "music/default/failure")
+    gui_reroute_clients(show_game_results)
+    gui_reroute_server(show_game_results)
+    ->END
 
 raiders = role('Raider')
 # print (f"raiders {len(raiders)}")
-if len(raiders)==0 and world_select !="peacetime":
+if len(raiders)==0 and world_select.path !="peacetime":
     start_text = "Mission is won!  All the enemies have been destroyed."
     game_started = False
     game_ended = True
