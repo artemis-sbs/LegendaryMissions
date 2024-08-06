@@ -88,7 +88,7 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'operstor_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'operator_${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "operator"
