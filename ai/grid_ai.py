@@ -5,7 +5,7 @@ from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_va
 from sbs_utils.procedural.roles import has_role
 from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished, clear_timer, format_time_remaining, get_time_remaining
 from sbs_utils.procedural.comms import comms_broadcast
-from damage.internal_damage import grid_get_max_hp
+from sbs_utils.procedural.internal_damage import grid_get_max_hp
 import random
 
 def grid_calc_speed(id_or_obj):

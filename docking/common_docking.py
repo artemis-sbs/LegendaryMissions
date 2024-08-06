@@ -8,7 +8,7 @@ from sbs_utils.procedural.timers import is_timer_finished, set_timer
 from sbs_utils.procedural.space_objects import closest
 from sbs_utils.procedural.grid import grid_objects
 from sbs_utils.tickdispatcher import TickDispatcher
-from damage.internal_damage import grid_restore_damcons, grid_repair_grid_objects
+from sbs_utils.procedural.internal_damage import grid_restore_damcons, grid_repair_grid_objects
 from sbs_utils.faces import get_face
 from sbs_utils.procedural.signal import signal_emit
 
@@ -189,6 +189,7 @@ def player_docking_dock_start(player_id_or_obj, dock_station_id):
 
 def player_docking_docked(player_id_or_obj, dock_station):
     return player_docking_station_docked(player_id_or_obj, dock_station)
+
 
 def player_docking_station_docked(player_id_or_obj, dock_station):
     player_blob = to_blob(player_id_or_obj)

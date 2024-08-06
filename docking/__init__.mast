@@ -1,3 +1,5 @@
-import docking.mast
+# Need to be first
 import common_docking.py
 import resupply_docking.py
+
+import docking.mast

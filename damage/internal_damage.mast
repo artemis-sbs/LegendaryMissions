@@ -1,5 +1,3 @@
-import internal_damage.py
-
 
 settings = story_get_mission_setup()
 shared GRID_THEME_INDEX = settings.get("grid_theme",0) 

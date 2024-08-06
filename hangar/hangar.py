@@ -13,7 +13,7 @@ from sbs_utils.procedural.query import get_science_selection, to_object
 from sbs_utils.procedural.inventory import get_inventory_value
 import random
 
-from damage.internal_damage import grid_rebuild_grid_objects
+from sbs_utils.procedural.internal_damage import grid_rebuild_grid_objects
 import sbs
 
 _craft_id = 1
