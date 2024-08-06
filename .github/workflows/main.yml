@@ -1,0 +1,138 @@
+name: Create Archive
+on: 
+  push:
+    tags:
+      - "*"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set env version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      
+    - uses: actions/checkout@master
+    - name: Archive ai addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'ai_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "ai"
+
+    - name: Archive commerce addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'commerce_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "commerce"
+
+    - name: Archive consoles addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'consoles_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "consoles"        
+
+    - name: Archive damage addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'damage_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "damage"
+        
+    - name: Archive docking addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'docking_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "docking"
+
+    - name: Archive grid_comms addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'grid_comms_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "grid_comms"
+
+    - name: Archive hanagr addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'hangar_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "hangar"
+
+    - name: Archive internl comms addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'internal_comms_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "internal_comms"
+
+    - name: Archive operator addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'operstor_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "operator"
+
+    - name: Archive science_scans addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'science_scans_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "science_scans"
+
+    - name: Archive side_missions addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'side_missions_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "side_missions_"
+
+    - name: Archive upgrades addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'upgrades_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "upgrades"
+
+    - name: Archive admiral addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'zadmiral_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "zadmiral"
+
+
+    - name: Upload Release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "sbs_utils_${{ steps.get_version.outputs.VERSION }}.sbslib,sbs_utils_${{ steps.get_version.outputs.VERSION }}_types.zip"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
