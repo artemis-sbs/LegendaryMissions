@@ -109,7 +109,7 @@ jobs:
         filename: 'side_missions_${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
-        path: "side_missions_"
+        path: "side_missions"
 
     - name: Archive upgrades addon
       uses: thedoctor0/zip-release@main
@@ -133,6 +133,6 @@ jobs:
     - name: Upload Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "sbs_utils_${{ steps.get_version.outputs.VERSION }}.sbslib,sbs_utils_${{ steps.get_version.outputs.VERSION }}_types.zip"
+        artifacts: "*_${{ steps.get_version.outputs.VERSION }}.mastlib"
         token: ${{ secrets.GITHUB_TOKEN }}
 
