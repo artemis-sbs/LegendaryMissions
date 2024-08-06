@@ -99,19 +99,16 @@ enemy1 = enemy_temp[0]
 # Reposition Player Ship, spawn Cargo Tender
 
 new_pos = Vec3(20500,0,1800)
-
-friend = to_id(npc_spawn(*new_pos, f"TSN Ganymede", "tsn, friendly, resupply_tanker", "transport_ship", "behav_npcship"))
-set_face(friend, random_terran())
+tanker = to_id(npc_spawn(*new_pos, f"TSN Ganymede", "tsn, friendly, resupply_tanker", "transport_ship", "behav_npcship"))
+set_face(tanker, random_terran())
 
 await task_schedule(spawn_players)
 
-print(f"Reposition Player")
+print(f"Deep Strike: Reposition Player")
 new_pos = Vec3(20000,0,1500)
 
 my_players = to_object_list(role("__player__"))
-print(f"{my_players}")
 for player in my_players:
-    print(f"Player: {player}")
     player.pos = new_pos
 
 
@@ -308,4 +305,61 @@ for v in spawn_points:
 
 
 #------------------------------------------------------------------------------------------------------------
+# At the start of the Deep Strike scenario, the player can request a HiDens Power Cell and an extra nuke from the Resupply Tanker.
+# Every five minutes, they can request another HiDens Power Cell and another nuke. The Tanker will drop the power cell behind it,
+# but to get the nuke, the player ship has to be within 600m. 
 
+
+shared resupply_energy = 0
+shared resupply_nuke = 0
+-> END
+
+//comms if has_roles(COMMS_SELECTED_ID, 'resupply_tanker') 
++ "Energy Cell":
+    if resupply_energy == 0:
+        eo = to_engine_object(COMMS_SELECTED_ID)
+        _pos_eo = eo.pos
+        _offset = eo.forward_vector()
+        _pos = _pos_eo + (_offset * -100)
+        comms_receive_internal(f"""HiDens Energy Cell deployed.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Energy Cell", title_color="green")
+        pickup_spawn(_pos.x, _pos.y, _pos.z, "hidens_powercell")
+        resupply_energy = 5
+        jump resupply_energy_delay
+    else:
+        comms_receive_internal(f"""We're working on it, {COMMS_ORIGIN.name}. Energy Cell will be ready in {resupply_energy} minutes.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Energy Cell Not Ready", title_color="green")
+
+//comms if has_roles(COMMS_SELECTED_ID, 'resupply_tanker') 
++ "Transfer Nuke":
+    if resupply_nuke == 0:
+        dist = sbs.distance_id(COMMS_ORIGIN_ID,COMMS_SELECTED_ID)
+        if dist >= 600:
+            # Comms message, must be within 600m to transfer nuke
+            comms_receive_internal(f"""You're too far away, {COMMS_ORIGIN.name}. You need to be within 600m to transfer.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Too Far", title_color="green")
+        else:
+            # Add +1 nuke to player ship, Comms message to confirm transfer.
+            player_blob = to_blob(COMMS_ORIGIN_ID)
+            addtorp = player_blob.get(f"Nuke_NUM", 0)
+            addtorp += 1
+            player_blob.set(f"Nuke_NUM", addtorp, 0)
+            comms_receive_internal(f"""Nuclear torpedo transfer complete. Good luck, {COMMS_ORIGIN.name}!""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Nuke Transferred", title_color="green")
+            resupply_nuke = 5
+            jump resupply_nuke_delay
+    else:
+        comms_receive_internal(f"""We're working on it, {COMMS_ORIGIN.name}. Nuke will be ready in {resupply_nuke} minutes.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Nuke Not Ready", title_color="green")
+ 
+
+====== resupply_energy_delay ======
+await delay_sim(seconds=60)
+resupply_energy -= 1
+if resupply_energy == 0:
+    ->END
+else:
+    jump resupply_energy_delay
+
+====== resupply_nuke_delay ======
+await delay_sim(seconds=60)
+resupply_nuke -= 1
+if resupply_nuke == 0:
+    ->END
+else:
+    jump resupply_nuke_delay

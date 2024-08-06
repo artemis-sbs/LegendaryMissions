@@ -5,7 +5,7 @@
 //collision/object
 if has_roles(COLLISION_ORIGIN_ID, "upgrade, carapaction_coil"):
     print("Pickup: Carapaction Coil")
-    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Carapaction Coil", "#FF0")
+    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Carapaction Coil", "#E3F")
     addinv = get_inventory_value(COLLISION_SELECTED_ID, "carapaction_coil", 0)
     addinv += 1
     set_inventory_value(COLLISION_SELECTED_ID, "carapaction_coil", addinv)
@@ -15,7 +15,7 @@ if has_roles(COLLISION_ORIGIN_ID, "upgrade, carapaction_coil"):
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
 elif has_roles(COLLISION_ORIGIN_ID, "upgrade, infusion_pcoils"):
     print("Pickup: Infusion P-Coils")
-    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Infusion P-Coils", "#FF0")
+    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Infusion P-Coils", "#E3F")
     addinv = get_inventory_value(COLLISION_SELECTED_ID, "infusion_pcoils", 0)
     addinv += 1
     set_inventory_value(COLLISION_SELECTED_ID, "infusion_pcoils", addinv)
@@ -25,7 +25,7 @@ elif has_roles(COLLISION_ORIGIN_ID, "upgrade, infusion_pcoils"):
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
 elif has_roles(COLLISION_ORIGIN_ID, "upgrade, tauron_focuser"):
     print("Pickup: Tauron Focuser")
-    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Tauron Focuser", "#FF0")
+    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Tauron Focuser", "#E3F")
     addinv = get_inventory_value(COLLISION_SELECTED_ID, "tauron_focuser", 0)
     addinv += 1
     set_inventory_value(COLLISION_SELECTED_ID, "tauron_focuser", addinv)
@@ -35,7 +35,7 @@ elif has_roles(COLLISION_ORIGIN_ID, "upgrade, tauron_focuser"):
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
 elif has_roles(COLLISION_ORIGIN_ID, "upgrade, secret_codecase"):
     print("Pickup: Secret Code Case")
-    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Secret Codecase", "#FF0")
+    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Secret Codecase", "#E3F")
     addinv = get_inventory_value(COLLISION_SELECTED_ID, "secret_codecase", 0)
     addinv += 1
     set_inventory_value(COLLISION_SELECTED_ID, "secret_codecase", addinv)
@@ -45,7 +45,7 @@ elif has_roles(COLLISION_ORIGIN_ID, "upgrade, secret_codecase"):
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
 elif has_roles(COLLISION_ORIGIN_ID, "upgrade, hidens_powercell"):
     print("Pickup: HiDens Power Cell")
-    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: HiDens Power Cell", "#FF0")
+    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: HiDens Power Cell", "#E3F")
     if has_roles(COLLISION_SELECTED_ID, "__player__"):
         blob = to_blob(COLLISION_SELECTED_ID)
         if blob is not None:
@@ -58,7 +58,7 @@ elif has_roles(COLLISION_ORIGIN_ID, "upgrade, hidens_powercell"):
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
 elif has_roles(COLLISION_ORIGIN_ID, "upgrade, vigoranium_nodule"):
     print("Pickup: Vigoranium Nodule")
-    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Vigoranium Nodule", "#FF0")
+    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Vigoranium Nodule", "#E3F")
     addinv = get_inventory_value(COLLISION_SELECTED_ID, "vigoranium_nodule", 0)
     addinv += 1
     set_inventory_value(COLLISION_SELECTED_ID, "vigoranium_nodule", addinv)
@@ -68,7 +68,7 @@ elif has_roles(COLLISION_ORIGIN_ID, "upgrade, vigoranium_nodule"):
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
 elif has_roles(COLLISION_ORIGIN_ID, "upgrade, cetrocite_crystal"):
     print("Pickup: Cetrocite Crystal")
-    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Cetrocite Crystal", "#FF0")
+    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Cetrocite Crystal", "#E3F")
     addinv = get_inventory_value(COLLISION_SELECTED_ID, "cetrocite_crystal", 0)
     addinv += 1
     set_inventory_value(COLLISION_SELECTED_ID, "cetrocite_crystal", addinv)
@@ -78,7 +78,7 @@ elif has_roles(COLLISION_ORIGIN_ID, "upgrade, cetrocite_crystal"):
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
 elif has_roles(COLLISION_ORIGIN_ID, "upgrade, lateral_array"):
     print("Pickup: Lateral Array")
-    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Lateral Array", "#FF0")
+    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Lateral Array", "#E3F")
     addinv = get_inventory_value(COLLISION_SELECTED_ID, "lateral_array", 0)
     addinv += 1
     set_inventory_value(COLLISION_SELECTED_ID, "lateral_array", addinv)
@@ -88,7 +88,7 @@ elif has_roles(COLLISION_ORIGIN_ID, "upgrade, lateral_array"):
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
 elif has_roles(COLLISION_ORIGIN_ID, "upgrade, haplix_overcharger"):
     print("Pickup: Haplix Overcharger")
-    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Haplix Overcharger", "#FF0")
+    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Haplix Overcharger", "#E3F")
     addinv = get_inventory_value(COLLISION_SELECTED_ID, "haplix_overcharger", 0)
     addinv += 1
     set_inventory_value(COLLISION_SELECTED_ID, "haplix_overcharger", addinv)

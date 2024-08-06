@@ -124,7 +124,7 @@ for x while total_weight > 0:
     station_type_list.append(station_type)
 
 pos = Vec3()
-startZ = 50000
+startZ = -50000
 num_stations = len(station_type_list)
 station_step = 100000/num_stations
 
@@ -132,7 +132,7 @@ station_step = 100000/num_stations
 # for each station
 for index in range(num_stations):
     stat_type = station_type_list[index]
-    pos.x = random.random()*40000+20000
+    pos.x = random.random()*40000+21000
     pos.y = random.random()*2000-1000
     pos.z = startZ + random.random()*station_step/3  -   station_step/6
 #    _spawned_pos.append(pos)
@@ -217,7 +217,7 @@ for enemy_station in enemy_spawn_points:
         enemy_station_object = npc_spawn(*_enpos, name, "arvonian, station", station_type, "behav_station")
     sim.add_navpoint(*_enpos, name, "#A44")
     
-    print(f"{enemy1} Station created {_enpos.x} {_enpos.y} {_enpos.z}")
+    print(f"{enemy1} Station created {int(_enpos.x)} {int(_enpos.y)} {int(_enpos.z)}")
     
     ds = to_id(enemy_station_object)
     apos = enemy_station_object.engine_object.pos
@@ -360,27 +360,70 @@ for v in spawn_points:
 
 #------------------------------------------------------------------------------------------------------------
 
-task_schedule(countdown_war)
-
-->END
-
-======= countdown_war ========
-
+players = all_roles('__player__, tsn')
 war_delay = int(war_time_delay)
-set_timer(SHARED, "war_timer", minutes=war_delay)
 
-======= countdown_war_loop =========
-
-if is_timer_set(SHARED, "war_timer"):
-    t = format_time_remaining(SHARED, "war_timer")
-    print(f"Minutes Until War: {t}")
-
-if is_timer_set(SHARED, "war_timer") and is_timer_finished(SHARED, "war_timer"):
-    print(f"WAR IS DECLARED")
+if war_delay == 0:
+    comms_broadcast(players, "WAR HAS BEEN DECLARED!", "yellow")
+    for p in players:
+        comms_receive_internal(f"""WAR HAS BEEN DECLARED!""", p, "TSN Command", title="WAR DECLARED", title_color="yellow")
+    war_declared = 1
     ->END
 
+shared war_declared = 0
+task_schedule(war_timer_loop)
+task_schedule(check_neutral_zone)
+->END
+
+======= war_timer_loop =========
+if war_declared >= 1:
+    ->END
+
+if war_delay == int(war_time_delay):
+    # Send "WAR IN X MINUTES!" message to all player ships.
+    comms_broadcast(players, f"""WAR STARTS IN {war_delay} MINUTES!""", "yellow")
+    for p in players:
+        comms_receive_internal(f"""WAR STARTS IN {war_delay} MINUTES!""", p, "TSN Command", title="PREPARE FOR WAR", title_color="yellow")
+
+if war_delay == 1:
+    # Send 1-minute warning.
+    comms_broadcast(players, "WAR IMMINENT!", "yellow")
+    for p in players:
+        comms_receive_internal(f"""WAR STARTS IN 1 MINUTE!""", p, "TSN Command", title="WAR IMMINENT", title_color="yellow")
+
+war_delay -= 1
 await delay_sim(seconds=60)
-jump countdown_war_loop
+
+if war_delay == 0:
+    comms_broadcast(players, "WAR DECLARED!", "yellow")
+    for p in players:
+        comms_receive_internal(f"""WAR HAS BEEN DECLARED!""", p, "TSN Command", title="WAR DECLARED", title_color="yellow")
+    war_declared = 1
+    ->END
+else:   
+    jump war_timer_loop
+
+====== check_neutral_zone =======
+if war_declared == 1:
+    ->END
+for p in players:
+    eo = to_engine_object(p)
+    print(f"Player Position: {int(eo.pos.x)}, {int(eo.pos.y)}, {int(eo.pos.z)}")
+    if eo.pos.x <= 20000:
+        war_declared = 2
+
+if war_declared == 2:
+    comms_broadcast(players, "NEUTRAL ZONE VIOLATION", "red")
+    for p in players:
+        comms_receive_internal(f"""NEUTRAL ZONE VIOLATION - Mission Failed!""", p, "TSN Command", title="NETURAL ZONE VIOLATION", title_color="red")
+    await delay_sim(seconds=6)
+    war_declared = 3
+    jump task_end_game
+    ->END
+
+await delay_sim(seconds=5)
+jump check_neutral_zone
+
 
 
 
