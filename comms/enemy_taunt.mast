@@ -153,16 +153,21 @@ yield fail if fleet_obj is None
 
 enrage_value = fleet_obj.get_heat_for(ship_id)
 this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
+has_been_taunted = get_inventory_value(COMMS_SELECTED_ID, "taunt_attempted", False)
 
-hide_taunt = this_taunt_data is None or has_role(ship_id, "surrendered")
-if this_taunt_data is None:
+hide_taunt = this_taunt_data is None or has_role(ship_id, "surrendered") or has_been_taunted
+if hide_taunt==True:
+    <<[$raider] "Taunt Worthless"
+        % Your taunts are worthless to us, {name}.
+        % I've heard enough from you, {name}.
+        % I'm am weary off all this drivel, {name}.
+elif enrage_value:
+    <<[$raider] "Already Angry"
+        % I'm too angry to deal with you right now, {name}.
+        % You cannot make my hatred for you any greater, {name}.
+elif this_taunt_data is None:
     race = get_race(COMMS_SELECTED_ID)
     comms_receive(f"""The taunts for this element were not defined properly race expected: {race}.""", title="Taunt coding error", title_color=raider_color)
-
-if enrage_value:
-    comms_receive(f"""I'm too angry to deal with you right now, {name}.""", title="Already angry", title_color=raider_color)
-elif hide_taunt==True:
-    comms_receive(f"""Your taunts are worthless to us, {name}.""", title="Taunt worthless", title_color=raider_color)
 else:
     comms_navigate("//comms/taunt/raider")
 
@@ -205,5 +210,7 @@ comms_navigate("")
 # Clear the taunt data, only can taunt once
 #
 set_inventory_value(COMMS_SELECTED_ID, "taunt_data", None)
+set_inventory_value(COMMS_SELECTED_ID, "taunt_attempted", True)
+
 yield success
 
