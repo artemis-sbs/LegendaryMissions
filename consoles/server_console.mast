@@ -10,9 +10,9 @@ logger("mast:internal") #
 
 
 shared start_text = """
-$t Legendary Missions:
+$t Mission Selection:
 
-A set of customizable scenarios reimagined from the original Artemis: Spaceship Bridge Simulator missions.Perfect for both new and experienced players, and a good reference for those writing their own missions.
+Select a mission type below then select start mission.
 """
 
 # print(story_get_console_type())
@@ -63,6 +63,7 @@ shared skybox = skybox_get_random()
 sbs.set_sky_box_all(skybox)
 mission_index = 0
 mission_list = maps_get_list()
+mission_overview = maps_get_init()
 world_select_path  = settings.get("world_select")
 i = 0
 for m in mission_list:
@@ -85,6 +86,14 @@ jump start if auto_start
 if watch_end_game_task is not None:
     task_cancel(watch_end_game_task)
     watch_end_game_task = None
+
+#
+# if there is a single mission or a map/__init__
+# Use it for the start text
+if mission_overview is not None:
+    print("*"+start_text+"*")
+    start_text = """$t {mission_overview.display_name}:\n\n{mission_overview.desc}"""
+    print("*"+start_text+"*")
 
 gui_section( style="area: 20px, 20px, 100, 210px;margin:0,0,10px,0;padding:10px,0;background:#1578;")
 gui_text_area(start_text)

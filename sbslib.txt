@@ -1,2 +1,2 @@
-artemis-sbs sbs_utils v3.9.27c
+artemis-sbs sbs_utils v3.9.27d
 

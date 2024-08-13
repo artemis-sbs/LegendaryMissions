@@ -1,11 +1,8 @@
 ## Import 
 import story.py
 
-shared start_text = """
-$t Legendary Missions:
-
-A set of customizable scenarios reimagined from the original Artemis: Spaceship Bridge Simulator missions.Perfect for both new and experienced players, and a good reference for those writing their own missions.
-"""
+@map/__overview__ "Legendary Missions"
+"A set of customizable scenarios reimagined from the original Artemis: Spaceship Bridge Simulator missions.Perfect for both new and experienced players, and a good reference for those writing their own missions.
 
 
 #
