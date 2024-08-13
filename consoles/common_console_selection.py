@@ -27,3 +27,6 @@ def console_ship_select_title_template():
     gui_row("row-height: 1.2em;padding:13px;background:#1578;")
     gui_text(f"text:Ships;justify: left;")
     
+import os
+def console_get_console_type():
+    return os.environ.get("cosmos_start_mode")

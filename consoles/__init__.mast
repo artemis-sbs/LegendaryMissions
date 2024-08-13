@@ -2,7 +2,10 @@ import standard_consoles.mast
 import common_console_select.mast
 import manual_weapons.mast
 import game_results.mast
+
+import server_console.py
 import server_console.mast
+
 import layout_widgets.mast
 
 

@@ -22,7 +22,7 @@ ship_type_def = player_list[0]["ship"]
 shared ship_list = ""
 client_selected_index = 0
 shared valid_interiors = set()
-mode = story_get_console_type()
+mode = console_get_console_type()
 if mode is not None:
     modes = mode.split(';')
     mode = None

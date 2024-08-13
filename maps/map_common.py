@@ -6,6 +6,7 @@ from sbs_utils.procedural.spawn import npc_spawn
 from sbs_utils.procedural.links import link, unlink
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.ship_data import get_ship_data_for, filter_ship_data_by_side
+from sbs_utils import faces as faces
 from sbs_utils.faces import set_face, random_face
 from sbs_utils.vec import Vec3
 import random
@@ -685,3 +686,30 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
         # Should add a common function to call to get the face based on race
         set_face(raider.id, random_face(race))
     return fleet_obj
+
+def get_face_from_data(face_style):
+    match face_style:
+        case "terran":
+            return faces.random_terran()
+        case "terran_male":
+            return faces.random_terran_male()
+        case "terran_female":
+            return faces.random_terran_female()
+        case "terran_fluid":
+            return faces.random_terran_fluid()
+        case "terran_civilian":
+            return faces.random_terran_fluid()
+        case "torgoth":
+            return faces.random_torgoth()
+        case "skaraan":
+            return faces.random_skaraan()
+        case "ximni":
+            return faces.random_ximni()
+        case "arvonian":
+            return faces.random_arvonian()
+        case "kralien":
+            return faces.random_kralien()
+        case "random":
+            return faces.random_face()
+    return face_style
+
