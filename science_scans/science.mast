@@ -194,3 +194,13 @@ elif has_roles(SCIENCE_SELECTED_ID, "upgrade, haplix_overcharger"):
 
 
 
+//enable/science if has_role(SCIENCE_SELECTED_ID, "black_hole")
+//science if has_role(SCIENCE_SELECTED_ID, "black_hole")
+
++ "scan":
+    <scan>
+        % It's a Black hole Son
+        % That place really sucks you in
+        % If you go into you may come out, or not
+        % Pretty colors, but lethal
+

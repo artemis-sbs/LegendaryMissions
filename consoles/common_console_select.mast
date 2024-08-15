@@ -15,6 +15,7 @@ console_select = consoles[0].path
 
 
 console_ready = False
+console_read_only = False
 ship_name = player_list[0]["name"] 
 client_select_ship = ship_name
 ship_type = player_list[0]["ship"] 
@@ -22,14 +23,23 @@ ship_type_def = player_list[0]["ship"]
 shared ship_list = ""
 client_selected_index = 0
 shared valid_interiors = set()
-mode = console_get_console_type()
-if mode is not None:
-    modes = mode.split(';')
-    mode = None
-    if len(modes)>=3:
-        mode = modes[2]
-        # console_select = mode
-        jump operator_admin_console if mode=='admin'
+mode = await gui_request_client_string(client_id, "console_mode")
+if mode is not None and len(mode) > 0:
+    jump operator_admin_console if mode=='admin'
+    for i in range(len(consoles)):
+        continue if mode != consoles[i].path
+        console_select = consoles[i].path
+        console_select_item = consoles[i]
+        console_ready = True
+        console_read_only = True
+        break
+            
+    #modes = mode.split(';')
+    #mode = None
+    #if len(modes)>=3:
+    #    mode = modes[2]
+    #    # console_select = mode
+    #    jump operator_admin_console if mode=='admin'
     
 
 
@@ -118,7 +128,7 @@ ship_select_lb.set_selected_index(client_selected_index)
 #
 gui_section( style="area: 510px, 2, 99,100-60px;")
 
-console_select_lb = gui_list_box(consoles,"row-height: 3em; background:#1572;", item_template=console_select_template, title_template=console_select_title_template, select=True)
+console_select_lb = gui_list_box(consoles,"row-height: 3em; background:#1572;", item_template=console_select_template, title_template=console_select_title_template, select=True, read_only=console_read_only)
 console_select_lb.set_value(console_select_item)
 
 #
@@ -127,7 +137,7 @@ console_select_lb.set_value(console_select_item)
 gui_section( style="area: 80,100-60px, 99,100;row-height: 50px;")
 
 
-if not game_started:
+if not game_started and not console_ready:
     gui_checkbox("ready", var="console_ready")
 else:
     on gui_message(gui_button("ready")):

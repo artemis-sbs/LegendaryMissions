@@ -91,9 +91,7 @@ if watch_end_game_task is not None:
 # if there is a single mission or a map/__init__
 # Use it for the start text
 if mission_overview is not None:
-    print("*"+start_text+"*")
     start_text = """$t {mission_overview.display_name}:\n\n{mission_overview.desc}"""
-    print("*"+start_text+"*")
 
 gui_section( style="area: 20px, 20px, 100, 210px;margin:0,0,10px,0;padding:10px,0;background:#1578;")
 gui_text_area(start_text)
