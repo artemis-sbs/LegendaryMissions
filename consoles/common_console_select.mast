@@ -17,21 +17,45 @@ console_select = consoles[0].path
 console_ready = False
 console_read_only = False
 ship_name = player_list[0]["name"] 
-client_select_ship = ship_name
+client_select_ship = ship_name.lower()
 ship_type = player_list[0]["ship"] 
 ship_type_def = player_list[0]["ship"]
 shared ship_list = ""
 client_selected_index = 0
 shared valid_interiors = set()
+
+for key in grid_data:
+    if len(grid_data[key]["grid_objects"])>0:
+        sd = ship_data_get_ship_data_for(key)
+        continue if sd is  None
+        roles = sd.get("roles")
+        continue if roles is None
+        continue if "ship" not in roles
+        valid_interiors.add(key)
+
+
 mode = await gui_request_client_string(client_id, "console_mode")
+
 if mode is not None and len(mode) > 0:
     jump operator_admin_console if mode=='admin'
+    mode=mode.strip().lower()
+    sp = mode.split(";")
+    _ship = client_select_ship
+    #
+    # 
+    #
+    if len(sp) >1:
+        mode = sp[0].strip()
+        _ship = sp[1].strip()
+
     for i in range(len(consoles)):
         continue if mode != consoles[i].path
         console_select = consoles[i].path
         console_select_item = consoles[i]
         console_ready = True
         console_read_only = True
+        client_select_ship = _ship
+        jump console_force_mode
         break
             
     #modes = mode.split(';')
@@ -43,14 +67,6 @@ if mode is not None and len(mode) > 0:
     
 
 
-for key in grid_data:
-    if len(grid_data[key]["grid_objects"])>0:
-        sd = ship_data_get_ship_data_for(key)
-        continue if sd is  None
-        roles = sd.get("roles")
-        continue if roles is None
-        continue if "ship" not in roles
-        valid_interiors.add(key)
 
 
 
@@ -283,4 +299,42 @@ Task count {task_count}
 await gui(timeout=timeout(4))
 
 jump debug_mast
+
+
+
+======= console_force_mode
+
+jump game_started_console if game_started
+
+# "media/helm/consoles0001"
+_images = console_get_images(console_select)
+_image = 0
+
+
+--- loop
+gui_section( style=f"area: 0, 76, 100, 100;")
+"""
+$t Console assigned to {console_select}
+
+$t on ship {client_select_ship}
+"""
+jump no_images if len(_images)==0
+
+gui_section( style=f"area: 0, 0, 100, 76;")
+gui_image_keep_aspect_ratio_center(_images[_image])
+_image += 1 
+_image %= len(_images)
+
+# Remember delay_app is needed her because the sim
+# may not be running
+await gui(timeout = delay_app(10)):
+    on timeout:
+        jump loop
+
+
+jump loop
+
+--- no_images
+
+await gui()
 
