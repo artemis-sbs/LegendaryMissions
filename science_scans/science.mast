@@ -142,6 +142,11 @@ bio_intel = "The bio scan has failed."
 race = get_race(SCIENCE_SELECTED_ID)
 if race is None:
     race = f"unknown race {race}"
+
+elite_intel = ""
+if has_role(SCIENCE_SELECTED_ID, "elite"):
+    elite_intel = "Warning: Elite abilities" + elite_get_abilities_scan(SCIENCE_SELECTED_ID)
+
     
 taunt_intel = "The captain cannot be taunted {race}."
 bio_intel = f"A bunch of {race} creatures."
@@ -156,13 +161,15 @@ if taunt_trait is not None and intel_list is not None:
     <scan>
         " Dynamic properties of enemy vessels cannot be scanned in this beta software.
 
-+ "intel" {"taunt_intel": taunt_intel}:
++ "intel" {"taunt_intel": taunt_intel, "elite_intel": elite_intel}:
     <scan>
         " {taunt_intel}
+        " {elite_intel}
 
 + "bio" {"bio_intel": bio_intel}:
     <scan>
         " {bio_intel}
+        
 
 
 

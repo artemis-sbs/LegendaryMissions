@@ -8,6 +8,16 @@ task_schedule(handle_elite_abilities)
 so = to_object(SPAWNED_ID)
 -> END if None == so
 
+#
+# Elite should only use powers when near things
+# 
+#
+side = so.side
+stuff = broad_test_around(so, 18000,18000, 0xF0)
+nearest_target = closest(so, stuff - role(side) )
+if nearest_target is None:
+    await delay_sim(seconds=20)
+    jump handle_elite_abilities
 
 
 # Get the abilities managed by script

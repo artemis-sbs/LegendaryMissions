@@ -50,27 +50,28 @@ def terrain_spawn_black_hole(x,y,z, gravity_radius= 1500, gravity_strength=1.0, 
     return bh
 
 
-engine_abilities = [
+engine_abilities = {
         # Blob flags (Always On)
-        "elite_low_vis",
-        "elite_main_scn_invis",
-        "elite_drone_launcher",
-        "elite_anti_mine",
-        "elite_anti_torpedo"
-]
-abilities = [
+        "elite_low_vis": "LowVis",
+        "elite_main_scn_invis": "Invs",
+        "elite_drone_launcher": "Drones",
+        "elite_anti_mine": "AntiMine",
+        "elite_anti_torpedo": "AntiTorp"
+}
+abilities = {
 
-    "elite_cloak",
-    "elite_jump_back",
-    "elite_jump_forward",
-    "elite_warp",
-    "elite_het_turn",
+    "elite_cloak": "Cloak",
+    "elite_jump_back": "Back",
+    "elite_jump_forward": "Forward",
+    "elite_warp": "Warp",
+    "elite_het_turn": "HET",
     # Blob Flags Randomize
-    "elite_tractor",  # also needs to set tractor_target_uid
-    "elite_shield_drain",
-    "elite_shield_vamp", # Drain is also assumed
-    "elite_shield_scramble",
-]
+    "elite_tractor": "Tractor",  # also needs to set tractor_target_uid
+    "elite_shield_drain": "ShldDrain",
+    "elite_shield_vamp": "ShldVamp", # Drain is also assumed
+    "elite_shield_scramble": "Scram",
+}
+all_abilities = abilities | engine_abilities
 
 siege_kralien_fleet = [
     # Difficulty 1
@@ -489,24 +490,28 @@ siege_pirate_fleet = [
 
 
 def elite_is_engine_ability(ab):
-    return ab in engine_abilities
+    return ab in engine_abilities.keys()
 
 def elite_get_non_engine():
-    script_abilities = get_shared_variable("elite_script_abilities", [])
-    all_abilities = []
-    all_abilities.extend(abilities)
-    all_abilities.extend(script_abilities)
-    return all_abilities
+    script_abilities = get_shared_variable("elite_script_abilities", {})
+    return abilities | script_abilities
 
 def elite_get_all_abilities():
-    script_abilities = get_shared_variable("elite_script_abilities", [])
-    all_abilities = []
-    all_abilities.extend(abilities)
-    all_abilities.extend(engine_abilities)
-    all_abilities.extend(script_abilities)
-    return all_abilities
+    script_abilities = get_shared_variable("elite_script_abilities", {})
+    return all_abilities | script_abilities
 
-
+def elite_get_abilities_scan(id_or_obj):
+    ship_obj = to_object(id_or_obj)
+    if ship_obj is None:
+        return ""
+    abi = ""
+    roles = ship_obj.get_roles()
+    for role in roles:
+        #print(role)
+        ab = all_abilities.get(role, None)
+        if ab is not None:
+            abi += "," + ab
+    return abi
 
 def fleet_remove_ship(id_or_obj):
     ship_id = to_id(id_or_obj)
@@ -515,90 +520,104 @@ def fleet_remove_ship(id_or_obj):
     fleet_id = get_inventory_value(ship_id, "my_fleet_id")
     unlink(fleet_id,"ship_list", ship_id)
 
+all_bits = [2**x for x in range(len(all_abilities))]
+all_bits.insert(0,1)
+def random_bits(bits, count):
+    pick = list(all_bits[:bits])
+    ret = 0
+    random.shuffle(pick)
+    #print(pick)
+    p = pick[:count]
+    #print(p)
+    for b in p:
+        ret |= b
+        
+    return ret
 
+
+# Noone using this and too much overlap with seige_fleet delete later
 #--------------------------------------------------------------------------------------
-def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, fleet_roles = "RaiderFleet", ship_roles=None):
-    """Create a new fleet and add the appropriate amount of ships
+# def create_npc_fleet_and_ships(race, num_ships, max_carriers, posx, posy, posz, fleet_roles = "RaiderFleet", ship_roles=None):
+#     """Create a new fleet and add the appropriate amount of ships
 
-    Args:
-        race (str): 
-        num_ships (int): The Number of ships in the fleet
-        max_carriers (int): Maximum number of ships
-        posx (float): location
-        posy (float): location
-        posz (float): location
-        fleet_roles (str, optional): Role for the fleet. Defaults to "RaiderFleet".
-        ship_roles (str, optional): Roles for the ships. Defaults to None.
+#     Args:
+#         race (str): 
+#         num_ships (int): The Number of ships in the fleet
+#         max_carriers (int): Maximum number of ships
+#         posx (float): location
+#         posy (float): location
+#         posz (float): location
+#         fleet_roles (str, optional): Role for the fleet. Defaults to "RaiderFleet".
+#         ship_roles (str, optional): Roles for the ships. Defaults to None.
 
-    Returns:
-        fleet (Fleet): The created fleet
-    """
-    race = race.strip().lower()
-    num_ships = int(num_ships)
-    max_carriers = int(max_carriers)
-    fleet_obj = fleet_spawn(Vec3(posx, posy, posz), fleet_roles)
+#     Returns:
+#         fleet (Fleet): The created fleet
+#     """
+#     race = race.strip().lower()
+#     num_ships = int(num_ships)
+#     max_carriers = int(max_carriers)
+#     fleet_obj = fleet_spawn(Vec3(posx, posy, posz), fleet_roles)
 
-    ship_key_list = filter_ship_data_by_side(None, race, "ship", True)
+#     ship_key_list = filter_ship_data_by_side(None, race, "ship", True)
 
-    # Allow the script to extend abilities
-    script_abilities = get_shared_variable("elite_script_abilities", [])
-    all_abilities = []
-    all_abilities.extend(abilities)
-    all_abilities.extend(engine_abilities)
-    all_abilities.extend(script_abilities)
+#     # Allow the script to extend abilities
+#     script_abilities = get_shared_variable("elite_script_abilities", [])
+#     all_abilities = []
+#     all_abilities.extend(abilities)
+#     all_abilities.extend(engine_abilities)
+#     all_abilities.extend(script_abilities)
 
     
-    carrier_count = 0
-    for b in range(num_ships):
-        done_ae = False
-        while not done_ae:
-            art_id = random.choice(ship_key_list)
-            ship_data_ae = get_ship_data_for(art_id)
+#     carrier_count = 0
+#     for b in range(num_ships):
+#         done_ae = False
+#         while not done_ae:
+#             art_id = random.choice(ship_key_list)
+#             ship_data_ae = get_ship_data_for(art_id)
 
-            # is this shis gonna be a carrier?
-            d_roles = ship_data_ae.get("roles", "")
-            if "carrier" in d_roles and carrier_count >= max_carriers:
-                continue
-            if "carrier" in d_roles:
-                carrier_count += 1
-            done_ae = True
+#             # is this shis gonna be a carrier?
+#             d_roles = ship_data_ae.get("roles", "")
+#             if "carrier" in d_roles and carrier_count >= max_carriers:
+#                 continue
+#             if "carrier" in d_roles:
+#                 carrier_count += 1
+#             done_ae = True
 
-        roles = f"{race}, raider,{ship_roles}" if ship_roles is not None else f"{race}, raider"
+#         roles = f"{race}, raider,{ship_roles}" if ship_roles is not None else f"{race}, raider"
         
-        r_name = get_random_npc_call_sign(race)                           #  f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
+#         r_name = get_random_npc_call_sign(race)                           #  f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
 
-        spawn_data = npc_spawn(posx, posy, posz, r_name, roles, art_id, "behav_npcship")
-        raider = spawn_data.py_object
-        set_inventory_value(raider.id, "my_fleet_id", fleet_obj.id)
-        link(fleet_obj.id,"ship_list", raider.id)
+#         spawn_data = npc_spawn(posx, posy, posz, r_name, roles, art_id, "behav_npcship")
+#         raider = spawn_data.py_object
+#         set_inventory_value(raider.id, "my_fleet_id", fleet_obj.id)
+#         link(fleet_obj.id,"ship_list", raider.id)
 
-        chances = get_shared_variable("elite_chance_non_skaraan", 50)
-        if ship_roles is None:
-            ship_roles = ""
-        if "elite" in ship_roles or (race == "skaraan" and random.randint(1,10) == 4) or random.randint(1,chances) == 23:
-            add_role(raider.id, "elite")
-            max_abi = len(all_abilities)
-            abits = random.randint(0,pow(2,max_abi))
-            # set_inventory_value(raider.id, "elite_abilities", abits)
-            # bit field
-            # & 0x1 == Cloak  
-            # & 0x2 == Jump Back
-            # & 0x4 == Jump forward
-            # & 0x8 == Jump Back
-            for count, ab in enumerate(all_abilities):
-                bit = count * 2
-                if (abits & bit)  == bit:
-                    #
-                    # Set the flag in engine for always on 
-                    #
-                    if elite_is_engine_ability(ab):
-                        raider.data_set.set(ab, 1,0)
-                    add_role(raider.id, ab)
+#         if ship_roles is None:
+#             ship_roles = ""
+#         if "elite" in ship_roles or (race == "skaraan" and random.randint(1,10) == 4):
+#             add_role(raider.id, "elite")
+#             max_abi = len(all_abilities)
+#             abits = random_bits(max_abi, 3)  # random.randint(0,pow(2,max_abi))
+#             # set_inventory_value(raider.id, "elite_abilities", abits)
+#             # bit field
+#             # & 0x1 == Cloak  
+#             # & 0x2 == Jump Back
+#             # & 0x4 == Jump forward
+#             # & 0x8 == Jump Back
+#             for count, ab in enumerate(all_abilities):
+#                 bit = count * 2
+#                 if (abits & bit)  == bit:
+#                     #
+#                     # Set the flag in engine for always on 
+#                     #
+#                     if elite_is_engine_ability(ab):
+#                         raider.data_set.set(ab, 1,0)
+#                     add_role(raider.id, ab)
 
 
-        # Should add a common function to call to get the face based on race
-        set_face(raider.id, random_face(race))
-    return fleet_obj
+#         # Should add a common function to call to get the face based on race
+#         set_face(raider.id, random_face(race))
+#     return fleet_obj
 
 #--------------------------------------------------------------------------------------
 def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet", ship_roles=None):
@@ -676,13 +695,14 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
         set_inventory_value(raider.id, "my_fleet_id", fleet_obj.id)
         link(fleet_obj.id,"ship_list", raider.id)
 
-        chances = get_shared_variable("elite_chance_non_skaraan", 50)
         if ship_roles is None:
             ship_roles = ""
-        if "elite" in ship_roles or (race == "skaraan" and random.randint(1,10) == 4) or random.randint(1,chances) == 23:
+        skar_chance = 1 # max(int((10 - fleet_diff)*0.5), 1)
+        if "elite" in ship_roles or (race == "skaraan" and random.randint(1,skar_chance) == 1):
+            
             add_role(raider.id, "elite")
             max_abi = len(all_abilities)
-            abits = random.randint(0,pow(2,max_abi))
+            abits = random_bits(max_abi, max(1, (fleet_diff+2)//2))  #random.randint(0,pow(2,max_abi))
             # set_inventory_value(raider.id, "elite_abilities", abits)
             # bit field
             # & 0x1 == Cloak  
@@ -690,7 +710,7 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
             # & 0x4 == Jump forward
             # & 0x8 == Jump Back
             for count, ab in enumerate(all_abilities):
-                bit = count * 2
+                bit = 2**count
                 if (abits & bit)  == bit:
                     #
                     # Set the flag in engine for always on 
@@ -698,6 +718,7 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
                     if elite_is_engine_ability(ab):
                         raider.data_set.set(ab, 1,0)
                     add_role(raider.id, ab)
+            print("Elite "+ elite_get_abilities_scan(raider.id))
 
 
         # Should add a common function to call to get the face based on race

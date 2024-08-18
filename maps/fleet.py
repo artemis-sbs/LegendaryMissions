@@ -135,6 +135,8 @@ class Fleet(Agent):
         # This should include fighters and or friendlies as well as players
         #
         the_target = None
+        
+
         if the_target is None and len(anger_as_set)>0:
             if best_anger in local_arena:
                 the_target = best_anger
@@ -157,8 +159,16 @@ class Fleet(Agent):
         if the_target is not None:
             self.destination = Vec3(to_object(the_target).engine_object.pos)
 
+        difference = Vec3(self.destination) - Vec3(self.position)
+        lengthA = difference.length()
+        throttle = 1.0
+        if lengthA > 50000:
+            throttle = 2.0
+        elif lengthA > 30000:
+            throttle = 1.5
+            
         # Set the target position, optionally shot at something
-        target_pos(ship_set, *self.position.xyz, 1.0, the_target, stop_dist=500)
+        target_pos(ship_set, *self.position.xyz, throttle, the_target, stop_dist=500)
         
 
         yield AWAIT(delay_sim(seconds=10))

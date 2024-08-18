@@ -191,7 +191,7 @@ _pos = _pos_eo + (_forward * 300)
 
 # spawn_data = npc_spawn(_pos.x, _pos.y, _pos.z+400, "Clay Pigeon", "ximni, raider", "xim_light_cruiser", "behav_npcship")
 
-fleet_obj = create_npc_fleet_and_ships("ximni", 1,0, _pos.x, _pos.y, _pos.z+400, ship_roles=abi)
+fleet_obj = create_siege_fleet("ximni", 1, _pos.x, _pos.y, _pos.z+400, ship_roles=abi)
 
 for e in linked_to(fleet_obj.id,"ship_list"):
     r_blob = to_blob(e)
