@@ -520,9 +520,11 @@ def fleet_remove_ship(id_or_obj):
     fleet_id = get_inventory_value(ship_id, "my_fleet_id")
     unlink(fleet_id,"ship_list", ship_id)
 
-all_bits = [2**x for x in range(len(all_abilities))]
-all_bits.insert(0,1)
+#all_bits = [2**x for x in range(len(all_abilities))]
+# Adding extra for script created elite
+all_bits = [2**x for x in range(32)]
 def random_bits(bits, count):
+    bits = min(bits, len(all_bits))
     pick = list(all_bits[:bits])
     ret = 0
     random.shuffle(pick)

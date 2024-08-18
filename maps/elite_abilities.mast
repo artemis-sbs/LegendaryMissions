@@ -59,6 +59,8 @@ elif ab == "elite_shield_scramble":
 else:
     await delay_sim(seconds=30)
 
+# Add at least on delay
+await delay_sim(seconds=1)
 -> handle_elite_abilities
 
 
@@ -71,7 +73,7 @@ set_inventory_value(BT_ID, "visible_art_id", so.art_id) # remember art id that's
 so.set_art_id("invisible") # cloaking!
 sim.force_update_to_clients(BT_ID,0)
 sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
-
+--- wait
 await delay_sim(30)
 
 ==== elite_cloak_clear ======
