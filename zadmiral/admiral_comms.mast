@@ -85,13 +85,13 @@ for race in races:
 + "Back" //comms/admiral/area
 + "Grow":
     pos = Vec3(COMMS_ORIGIN.pos)
-    admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, 1000, "Admiral", "lmb", "#040")
+    admiral_show_nav_area(COMMS_ORIGIN_ID, pos, 1000, "Admiral", "lmb", "#040")
 + "Shrink":
     pos = Vec3(COMMS_ORIGIN.pos)
-    admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, 1000, "Admiral", "lmb", "#040")
+    admiral_show_nav_area(COMMS_ORIGIN_ID, pos, -1000, "Admiral", "lmb", "#040")
 + "Reset":
     pos = Vec3(COMMS_ORIGIN.pos)
-    admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, -1, "Admiral", "lmb", "#040")
+    admiral_show_nav_area(COMMS_ORIGIN_ID, pos, -1, "Admiral", "lmb", "#040")
 
 
 //comms/admiral/area/delete if has_roles(COMMS_ORIGIN_ID, 'admiral')
