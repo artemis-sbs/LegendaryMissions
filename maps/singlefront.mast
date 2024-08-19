@@ -173,6 +173,7 @@ for station in spawn_points:
             mine_obj = terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
             mine_obj.blob.set("damage_done", 5)
             mine_obj.blob.set("blast_radius", 1000)
+            mine_obj.engine_object.blink_state = -5
 
     num += 1
 
