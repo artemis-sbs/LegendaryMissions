@@ -58,11 +58,8 @@ await gui():
         game_paused = False
         sbs.resume_sim()
     + "end game":
-        r = list(role("raider")) # copy
-        for i in r:
-            remove_role(i, "raider")
-
-        jump operator_stats
+        start_text = "Mission ended."
+        signal_emit("show_game_results", None)
 jump operator_stats
 
 ==== update_raider_count =====

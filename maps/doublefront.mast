@@ -361,6 +361,6 @@ for v in spawn_points:
     typhon_classic_spawn(*v.xyz)
 
 
-
+task_schedule(task_end_game)
 #------------------------------------------------------------------------------------------------------------
 

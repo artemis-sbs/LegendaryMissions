@@ -336,7 +336,7 @@ spawn_points = scatter.box(monster_value, 0,0,0, 75000, 1000, 75000, centered=Tr
 for v in spawn_points:
     typhon_classic_spawn(*v.xyz)
 
-
+task_schedule(task_end_game)
 
 #------------------------------------------------------------------------------------------------------------
 

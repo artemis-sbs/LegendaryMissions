@@ -91,11 +91,17 @@ gui_row()
 on gui_message(gui_button("weapons jump to")):
     ship = sbs.get_ship_of_client(client_id)
     task_schedule(debug_jump_to, data={"_focus": "weapons", "_ship_id": ship})
-
+gui_row()
 on gui_message(gui_button("science jump to")):
     ship = sbs.get_ship_of_client(client_id)
     task_schedule(debug_jump_to, data={"_focus": "science", "_ship_id": ship})
 
+gui_row()
+gui_blank()
+gui_row()
+on gui_message(gui_button("Trigger end game")):
+    start_text = "Debug ended mission."
+    signal_emit("show_game_results", None)
 
 
 gui_section(style="area:50,15,80,15+35px;row-height:35px;")

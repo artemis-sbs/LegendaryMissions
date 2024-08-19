@@ -418,7 +418,7 @@ if war_declared == 2:
         comms_receive_internal(f"""NEUTRAL ZONE VIOLATION - Mission Failed!""", p, "TSN Command", title="NETURAL ZONE VIOLATION", title_color="red")
     await delay_sim(seconds=6)
     war_declared = 3
-    jump task_end_game
+    task_schedule(task_end_game)
     ->END
 
 await delay_sim(seconds=5)

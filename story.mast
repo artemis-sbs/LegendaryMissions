@@ -4,6 +4,9 @@ import story.py
 @map/__overview__ "Legendary Missions"
 "A set of customizable scenarios reimagined from the original Artemis: Spaceship Bridge Simulator missions.Perfect for both new and experienced players, and a good reference for those writing their own missions.
 
+//damage/internal if has_role(DAMAGE_ORIGIN_ID, "__player__") and EVENT.sub_tag == "maelstrom"
+explode_player_ship(DAMAGE_ORIGIN_ID)
+
 
 #
 #
@@ -13,6 +16,7 @@ import story.py
 #
 //shared/signal/player_ship_destroyed
 
+print("story: Exploded Deleting player_ship")
 if get_shared_inventory_value("game_ended", False):
     yield success
 
@@ -23,6 +27,7 @@ await delay_sim(1)
 
 so = to_object(DESTROYED_ID)
 if so is not None:
+    print("story: Exploded Deleting player_ship")
     sbs.delete_object(DESTROYED_ID)
 
 #

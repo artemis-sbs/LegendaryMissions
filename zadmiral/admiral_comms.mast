@@ -5,6 +5,7 @@
 + "Spawn" //comms/admiral/spawn
 + "Selected" //comms/admiral/selected
 + "Area" //comms/admiral/area
++ "Commands" //comms/admiral/commands
 
 
 //comms/admiral/spawn if has_roles(COMMS_ORIGIN_ID, 'admiral')
@@ -125,6 +126,17 @@ for race in races:
 #    id_set = broad_test(100,200,300, 400) & role("Asteroid")
 #    for id in id_set:
 #	    sbs.delete_object(id)
+
+
+//comms/admiral/commands if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
++ "End Game" //comms/admiral/commands/end_game
+
+//comms/admiral/commands/end_game if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "No don't end the game" //comms
++ "Yes end the game":
+    start_text = "Mission ended."
+    signal_emit("show_game_results", None)
 
 
 

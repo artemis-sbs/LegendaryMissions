@@ -8,3 +8,4 @@ import map_common.mast
 import fleet.py
 import elite_abilities.mast
 import map_common.py
+import watch_for_end.mast

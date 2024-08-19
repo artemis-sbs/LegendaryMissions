@@ -43,6 +43,8 @@ for x in range(random.randint(1,3)):
 jump show_hangar # This could be replaced with a new command gui_navigate("//console/hangar")
 
 === show_hangar
+# This is need for black hole, need to clear any ship assigned
+sbs.assign_client_to_ship(client_id, 0)
 call_sign = get_inventory_value(client_id, "call_sign", None)
 if call_sign is None:
     call_sign = call_signs[next_call_sign]

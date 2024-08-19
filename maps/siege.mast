@@ -341,5 +341,7 @@ spawn_points = scatter.box(lethal_value, 0,0,0, 75000, 500, 75000, centered=True
 for v in spawn_points:
     terrain_spawn_black_hole(*v.xyz)
 
+task_schedule(task_end_game)
+
 #------------------------------------------------------------------------------------------------------------
 
