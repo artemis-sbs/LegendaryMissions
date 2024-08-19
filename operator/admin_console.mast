@@ -1,5 +1,9 @@
 shared game_paused = False
-====== operator_login ===== 
+
+
+@console/admin "Operator Admin" if operator_mode_enabled
+" A console for the game operator
+
 
 gui_section( style=f"area: 20, 40, 80, 40+40px;")
 pin = ""
@@ -17,10 +21,10 @@ jump operator_login
 
 ====== operator_admin_console ===== 
 
-jump operator_stats if game_started
-
 watch_end_game_task = None
 shared watch_raider_count = None
+jump operator_stats if game_started
+
 jump show_server_menu
 
 

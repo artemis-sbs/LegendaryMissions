@@ -127,9 +127,6 @@ elif console_select_item.path == "helm" and not game_started:
     
 
 
-
-
-
 #
 # List of available ships
 # ship_sec2 = gui_region(style="area: 1,110px,500px,520px")
@@ -160,11 +157,6 @@ else:
         console_ready = True
         jump console_selected
 
-if operator_mode_enabled:
-    gui_row(style="padding:0,15px,0,0;")
-    on gui_message(gui_button("admin")):
-        jump operator_login
-
 
 on change player_count:
     client_selected_index = min(client_selected_index, int(player_count)-1)
@@ -189,6 +181,8 @@ on change console_select_lb.get_value():
         gui_hide(ship_sec_not)
         spick.read_only = False
         gui_represent(ship_sec2)
+    elif operator_mode_enabled and console_select_item.path == "admin":
+        jump(console_select_item.label)
     else:
         #print("hiding 1")
         gui_hide(ship_sec)

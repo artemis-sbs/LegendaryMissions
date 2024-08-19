@@ -61,10 +61,10 @@ watch_end_game_task = None
 shared skybox = skybox_get_random()
 
 sbs.set_sky_box_all(skybox)
-mission_index = 0
-mission_list = maps_get_list()
-mission_overview = maps_get_init()
-world_select_path  = settings.get("world_select")
+shared mission_index = 0
+shared mission_list = maps_get_list()
+shared mission_overview = maps_get_init()
+shared world_select_path  = settings.get("world_select")
 i = 0
 for m in mission_list:
     if m.path == world_select_path:
@@ -198,21 +198,6 @@ if tl >0:
 sbs.set_beam_damages(0, 7.0, difficulty)
 
 
-#match world_select.lower():
-#    case "siege": 
-#        task_schedule(siege_build_world)
-#    case "single front": 
-#        task_schedule(single_front_build_world)
-#    case "double front": 
-#        task_schedule(double_front_build_world)
-#    case "deep strike": 
-#        task_schedule(deep_strike_build_world)
-#    case "peacetime": 
-#        task_schedule(peacetime_build_world)
-#    case "border war": 
-#        task_schedule(border_war_build_world)
-
-
 if world_select is not None:
     task_schedule(world_select)
 
@@ -227,6 +212,13 @@ shared SIM_STATE = "sim_running"
 
 
 gui_reroute_clients(game_started_console, exclude={client_id})
+#
+# This is very coupled to operator mode
+#
+# This is a remote
+if client_id != 0:
+    gui_reroute_server(show_main_game_screen)
+    gui_reroute_client(client_id, operator_stats)
 
 
 === show_main_game_screen === 

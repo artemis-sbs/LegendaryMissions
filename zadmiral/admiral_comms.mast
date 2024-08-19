@@ -19,15 +19,26 @@
 + "Back" //comms
 + "Asteroids":
     pos = Vec3(COMMS_ORIGIN.pos)
+    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+    # This should be a property setting
+    map_asteroid_scatter(9, 21, *pos, size, 1000, size)
 + "Nebulas":
     pos = Vec3(COMMS_ORIGIN.pos)
+    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+    # This should be a property setting
+    map_nebula_scatter(4, 12, *pos, size, 1000, size)
 + "Black hole":
     pos = Vec3(COMMS_ORIGIN.pos)
+    terrain_spawn_black_hole(*pos.xyz)
+
 + "Monster":
     pos = Vec3(COMMS_ORIGIN.pos)
     typhon_classic_spawn(*pos.xyz)
 + "Minefield":
     pos = Vec3(COMMS_ORIGIN.pos)
+    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+    map_mine_scatter(4, 10, *pos, size, 1000, size)
+    
 
 
 //comms/admiral/spawn/station if has_roles(COMMS_ORIGIN_ID, 'admiral')
@@ -68,6 +79,7 @@ for race in races:
 //comms/admiral/area if has_roles(COMMS_ORIGIN_ID, 'admiral')
 + "Back" //comms
 + "Change admiral size" //comms/admiral/area/size
++ "Delete" //comms/admiral/area/delete
 
 //comms/admiral/area/size if has_roles(COMMS_ORIGIN_ID, 'admiral')
 + "Back" //comms/admiral/area
@@ -82,9 +94,31 @@ for race in races:
     admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, -1, "Admiral", "lmb", "#040")
 
 
+//comms/admiral/area/delete if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
++ "Terrain":
+    pos = Vec3(COMMS_ORIGIN.pos)
+    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+    # & role("Asteroid")
+    ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x01)
+    for id in ids:
+        sbs.delete_object(id)
 
 
++ "Npc":
+    pos = Vec3(COMMS_ORIGIN.pos)
+    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+    ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x10)
+    for id in ids:
+        sbs.delete_object(id)
 
++ "Player":
+    pos = Vec3(COMMS_ORIGIN.pos)
+    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+    ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x20)
+    for id in ids:
+        continue if id == COMMS_ORIGIN_ID
+        sbs.delete_object(id)
 
 
 

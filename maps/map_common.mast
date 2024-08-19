@@ -31,6 +31,9 @@ tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "defender", ret_
 # pick a random tsn ship
 count = 1
 
+
+jump civilians if tsn_ship_data is None
+
 spawn_pos = Vec3(0,0,0)
 stations_friendly = to_object_list(role("tsn")  & role("station"))
 for x while total_hull_points<max_hull_points:
@@ -60,6 +63,8 @@ for x while total_hull_points<max_hull_points:
     count += 1
     total_hull_points += hull_points
     set_face(friend, random_terran())
+
+---- civilians
 
 civilian_count = 0
 match friendly_select:
