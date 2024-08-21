@@ -17,17 +17,19 @@ explode_player_ship(DAMAGE_ORIGIN_ID)
 //shared/signal/player_ship_destroyed
 
 print("story: Exploded Deleting player_ship")
-if get_shared_inventory_value("game_ended", False):
-    yield success
+yield success if get_shared_inventory_value("game_ended", False)
 
-#     for cid in linked_to(ship_id, "consoles") -  role("mainscreen"):
-#         gui_reroute_client(cid, "show_hangar")
+so = to_object(DESTROYED_ID)
+if so is not None:
+    <all>
+       % {so.name} has perished
+       % {so.name} has blown up
+       % lost contact with {so.name} 
 
 await delay_sim(1)
 
 so = to_object(DESTROYED_ID)
 if so is not None:
-    print("story: Exploded Deleting player_ship")
     sbs.delete_object(DESTROYED_ID)
 
 #

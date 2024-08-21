@@ -30,6 +30,7 @@
     map_nebula_scatter(4, 12, *pos, size, 1000, size)
 + "Black hole":
     pos = Vec3(COMMS_ORIGIN.pos)
+    pos.x = pos.x + 100
     terrain_spawn_black_hole(*pos.xyz)
 
 + "Monster":

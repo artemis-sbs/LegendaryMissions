@@ -5,7 +5,7 @@ from sbs_utils.procedural.query import set_science_selection, to_object, to_id, 
 from sbs_utils.procedural.links import link, unlink, get_dedicated_link, set_dedicated_link, linked_to
 from sbs_utils.procedural.roles import has_role, remove_role, any_role, role
 from sbs_utils.procedural.space_objects import broad_test_around, closest, get_pos, set_pos
-from sbs_utils.procedural.routes import RouteDestroy
+from sbs_utils.procedural.routes import RouteDamageDestroy
 from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished
 from sbs_utils.procedural.execution import set_shared_variable, get_shared_variable, get_variable
 from sbs_utils.agent import Agent
@@ -22,7 +22,7 @@ def hangar_bump_version():
     hangar_version = get_shared_variable("hangar_version", 0)
     set_shared_variable("hangar_version", hangar_version+1)
 
-@RouteDestroy
+@RouteDamageDestroy
 def hagar_handle_destroy():
     so = to_object(get_variable("DESTROYED_ID"))
     if so is None:

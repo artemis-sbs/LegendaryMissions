@@ -14,7 +14,7 @@ shared game_stats = ~~{
 }~~
 
 
-//destroy
+//damage/destroy
 ##
 ## Called via route destroy
 ##

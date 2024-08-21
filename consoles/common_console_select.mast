@@ -148,14 +148,15 @@ console_select_lb.set_value(console_select_item)
 # Ready state
 #
 gui_section( style="area: 80,100-60px, 99,100;row-height: 50px;")
-
-
 if not game_started and not console_ready:
     gui_checkbox("ready", var="console_ready")
 else:
     on gui_message(gui_button("ready")):
         console_ready = True
         jump console_selected
+
+gui_section(style="area: 0,100-50px, 35,100;")
+gui_layout_widget("text_waterfall")
 
 
 on change player_count:

@@ -59,31 +59,31 @@ crafts = to_object_list(all_roles("cockpit,tsn,standby"))
 briefing = "Select a craft to pilot. If you accept the mission hit launch."
 
 
-gui_section(style="area: 0,0, 36,97;background: #fff1;")
+gui_section(style="area: 0,0, 36,100-50px;background: #fff1;")
 
 call_sign = get_inventory_value(client_id, "call_sign", "Selene")
-gui_section(style="area: 5,6,35,10;")
+gui_section(style="area: 20px,6,35,10;")
 gui_input("desc:Call sign", var="call_sign")
 on change call_sign:
     set_inventory_value(client_id, "call_sign", call_sign)
 
-gui_section(style="area: 5,10+20px, 35, 49;")
+gui_section(style="area: 20px,10+20px, 35, 49;")
 
 ride_choice = None
 ride_picker = gui_list_box(crafts,"row-height: 2em; background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)
 # ride_picker.title_background = "#1578"
 
-gui_section(style="area: 5,50, 35,50+20px;")
+gui_section(style="area: 20px,50, 35,50+20px;")
 gui_row(style="row-height:20px;")
 gui_text("text:Mission Briefing;color: white;justify: center;", style="background: #1578;")
-gui_section(style="area: 5,50+20px, 35,90;background: #1572;")
+gui_section(style="area: 20px,50+20px, 35,94;background: #1572;")
 """""
 {briefing}
 """""" style="tag:briefing-text;padding: 10px,15px,10px,0;"
 
 
 gui_activate_console("hangar")
-gui_section(style="area: 36,0, 100,97;")
+gui_section(style="area: 36,0, 100,100-50px;")
 
 gui_layout_widget("2dview")
 
@@ -102,7 +102,7 @@ on change ride_picker.get_value():
             briefing = get_inventory_value(fighter, "briefing", defa)
             gui_update("briefing-text", "text: {briefing}")
 
-gui_section(style="area: 75,92, 100,97;background: #002;")
+gui_section(style="area: 75,100-80px, 100,100-50px;background: #002;")
 gui_text("select ship", style="tag:refit-text")
 
 # Set a counter to allow timed refresh
@@ -128,8 +128,20 @@ on change fighter_change:
 on change hangar_version:
     jump show_hangar
 
+gui_section(style="area: 0,100-50px, 35,100;")
+gui_layout_widget("text_waterfall")
 
-await gui():
+gui_section(style="area: 75,100-50px, 100,100;")
+on gui_message(gui_button("Launch")):
+    if ride_choice is not None:
+        ride_select = ride_choice
+        link(ride_select , "consoles", client_id)
+        jump launch_to_cockpit
+    jump show_hangar
+
+
+
+await gui()
 #    + "Head to Bar":
 #        print("Bar")
 #        jump bar_enter
@@ -139,13 +151,6 @@ await gui():
 #    + "Quarters":
 #        print("Quarters")
 #        #jump show_hangar
-    + "Launch":
-        if ride_choice is not None:
-            ride_select = ride_choice
-            #Dock ID replaced this? ###set_inventory_value(client_id, "assigned_ship", ride_select)
-            link(ride_select , "consoles", client_id)
-            jump launch_to_cockpit
-        jump show_hangar
 
 # print("Out of await")
 jump show_hangar
@@ -167,7 +172,7 @@ await gui()
 
 
 
-//dock if has_roles(EVENT.parent_id, "cockpit")
+//dock/hangar if has_roles(EVENT.parent_id, "cockpit")
 
 fighter_so = to_object(EVENT.parent_id)
 fighter = fighter_so.engine_object
