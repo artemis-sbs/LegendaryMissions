@@ -190,7 +190,8 @@ if tl >0:
     set_timer(SHARED, "time_limit", minutes=tl)
 
 #------------------------------------------------------------------------------------------------------------
-sbs.set_beam_damages(0, 7.0, difficulty)
+# Player = 7 points of damage, npc = a range 3.5 - 8.5 
+sbs.set_beam_damages(0, 7.0, (difficulty/2.0) + 3.0)
 
 
 if world_select is not None:

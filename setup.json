@@ -1,9 +1,9 @@
 {
     "auto_start": false,
     "operator_mode": {
-        "enable": false,
+        "enable": true,
         "logo": "media/operator",
-        "remote_console_select": true,
+        "remote_console_select": false,
         "pin": "000000"
     },
     "players_count": 1,

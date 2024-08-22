@@ -3,7 +3,8 @@
 -- ai_loop
 ->END if  not object_exists(SPAWNED_ID)
 
-_target = closest(SPAWNED_ID, broad_test_around(SPAWNED_ID, 6000,6000, 0xf0)-role("__terrain__")-role("monster"))
+# The role "#" is an invisible e.g. admiral, operator
+_target = closest(SPAWNED_ID, broad_test_around(SPAWNED_ID, 6000,6000, 0xf0)-role("__terrain__")-role("monster")-role("#"))
 if _target is None:
     clear_target(SPAWNED_ID)
 else:

@@ -63,10 +63,6 @@ with gui_sub_section("col-width:25;"):
 await gui()
 
 
-//select/comms if has_roles(COMMS_ORIGIN_ID, "admiral")
-
-
-
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "admiral")
 
 rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)
