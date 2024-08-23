@@ -141,8 +141,8 @@ def hangar_launch_craft(craft_id, client_id):
     craft.set_inventory_value("craft_name", craft.name)
     call_sign = get_inventory_value(client_id, "call_sign", None)
     if call_sign is not None and len(call_sign)>0:
-        print(f"hangarpy {call_sign}")
-        craft.name = call_sign
+        # print(f"hangarpy {call_sign}")
+        craft.name = f"{call_sign} / {craft.name}"
 
     if hm is None: return False
     grid_rebuild_grid_objects(craft.id)

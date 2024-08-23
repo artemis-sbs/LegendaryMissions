@@ -26,7 +26,7 @@ if so is not None:
        % {so.name} has blown up
        % lost contact with {so.name} 
 
-await delay_sim(1)
+# await delay_sim(1)
 
 so = to_object(DESTROYED_ID)
 if so is not None:
@@ -59,6 +59,7 @@ yield success if ship_id == 0 or ship_id != DESTROYED_ID
 jump reassign_to_main if has_role(client_id, "mainscreen")
 
 jump reassign_to_main if client_id == 0
+jump reassign_to_hangar if has_role(DESTROYED_ID,"cockpit")
 
 players = to_object_list(role("__player__") - role("exploded"))
 
