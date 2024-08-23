@@ -4,8 +4,11 @@
 #
 //spawn if has_role(SPAWNED_ID, "__player__")
 
-schedule_player_docking(SPAWNED_ID, difficulty, "station", player_docking_station_docked)
-schedule_player_docking(SPAWNED_ID, difficulty, "resupply_tanker", player_docking_resupply_docked)
+if world_select.path == "deep_strike":
+    schedule_player_docking(SPAWNED_ID, difficulty, "resupply_tanker", player_docking_resupply_docked)
+else:
+    schedule_player_docking(SPAWNED_ID, difficulty, "station", player_docking_station_docked)
+
 
 #
 # Can only select weapons when undocked
