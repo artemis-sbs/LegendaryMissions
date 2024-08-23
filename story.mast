@@ -32,6 +32,20 @@ so = to_object(DESTROYED_ID)
 if so is not None:
     sbs.delete_object(DESTROYED_ID)
 
+await delay_sim(1)
+
+players = role('__player__')
+if len(players)==0:
+    start_text = "Mission is list!  All the player ships have been destroyed."
+    game_started = False
+    game_ended = True
+    sbs.play_music_file(0, "music/default/failure")
+    signal_emit("show_game_results", None)
+    ->END
+
+
+
+
 #
 # This gives GUIs a chance to for clients to 
 # Redirect

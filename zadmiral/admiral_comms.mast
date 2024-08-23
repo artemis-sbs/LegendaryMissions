@@ -32,7 +32,6 @@
     pos = Vec3(COMMS_ORIGIN.pos)
     pos.x = pos.x + 100
     terrain_spawn_black_hole(*pos.xyz)
-
 + "Monster":
     pos = Vec3(COMMS_ORIGIN.pos)
     typhon_classic_spawn(*pos.xyz)
@@ -45,6 +44,7 @@
 
 //comms/admiral/spawn/station if has_roles(COMMS_ORIGIN_ID, 'admiral')
 station_data = filter_ship_data_by_side(None, None, "station", False)
+
 + "Back" //comms
 for station in station_data:
     side = station.get("side", "tsn")
@@ -84,6 +84,17 @@ for race in races:
 + "Delete" //comms/admiral/area/delete
 
 //comms/admiral/area/size if has_roles(COMMS_ORIGIN_ID, 'admiral')
+## PROPS
+#gui_int_slider("text:int;low: 1.0;high:8.0",  var="player_count")
+#props_lb = get_inventory_value(client_id, "__PROPS_LB__")
+#if props_lb:
+#    p = [{"label": "Admiral size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"},{"label": "Order size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"}]
+#    props_lb.items = p
+#    gui_represent(props_lb)
+
+# gui_activate_properties([{"label": "Admiral size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"},{"label": "Order size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"}])
+
+# Back would clear properties
 + "Back" //comms/admiral/area
 + "Grow":
     pos = Vec3(COMMS_ORIGIN.pos)
@@ -93,7 +104,7 @@ for race in races:
     admiral_show_nav_area(COMMS_ORIGIN_ID, pos, -1000, "Admiral", "lmb", "#040")
 + "Reset":
     pos = Vec3(COMMS_ORIGIN.pos)
-    admiral_show_nav_area(COMMS_ORIGIN_ID, pos, -1, "Admiral", "lmb", "#040")
+    admiral_show_nav_area(COMMS_ORIGIN_ID, pos, 0, "Admiral", "lmb", "#040")
 
 
 //comms/admiral/area/delete if has_roles(COMMS_ORIGIN_ID, 'admiral')

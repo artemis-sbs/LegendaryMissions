@@ -11,7 +11,7 @@ def admiral_show_nav_area(ORIGIN_ID, pos, size_delta, text, selection_type, colo
     size = get_inventory_value(ORIGIN_ID, f"ADMIRAL_{selection_type}_SIZE", 5000)
     size += size_delta
     size = max(min(50000, size), 2000)
-    if size_delta < 0:
+    if size_delta == 0:
         size = 5000
 
     set_inventory_value(ORIGIN_ID, f"ADMIRAL_{selection_type}_SIZE", size)
@@ -25,4 +25,24 @@ def admiral_show_nav_area(ORIGIN_ID, pos, size_delta, text, selection_type, colo
 
     nav.visibleToShip = ORIGIN_ID
     set_inventory_value(ORIGIN_ID, f"ADMIRAL_{selection_type}_SELECT_ID", nav_id)
+
+
+from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text
+
+def property_lb(item):
+    gui_row("row-height: 1.2em;padding:13px;")
+    gui_text(f"text:{item['label']};justify: left;")
+    gui_row("row-height: 1.5em;padding:13px;")
+    gui_c = item['control']
+    # print(f"admiral py property {gui_c}")
+    gui_c = FrameContext.task.get_variable(gui_c)
+    if gui_c:
+        gui_c(item['props'])
+        
+
+
+
+
+    
+    
 

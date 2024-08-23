@@ -35,12 +35,19 @@ follow_route_select_comms(camera_id, camera_id)
 #comms_navigate("//comms/admiral")
 
 
-# Left
+# Whole screen
 gui_section(style="area:0,45px,100,100;")
+# Left
+
 
 with gui_sub_section("col-width:20;"):
     gui_row("row-height: 50;")
     gui_layout_widget("3dview")
+    gui_row()
+    props_lb = gui_list_box([],"row-height: 4em; background:#1572;", item_template=property_lb, title_template="Properties")
+    ~~props_lb.title_section_style += "background:#1578;"~~
+    set_inventory_value(client_id, "__PROPS_LB__", props_lb)
+
 
 # Middle
 with gui_sub_section():
@@ -60,15 +67,17 @@ with gui_sub_section("col-width:25;"):
     gui_layout_widget("text_waterfall")
 
 
+
+
 await gui()
 
 
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "admiral")
 
-rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)
-print("RANGE Adrmiral {rang}")
-print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
-print("IDs Adrmiral {EVENT.origin_id}, {EVENT.selected_id},{EVENT.parent_id} {EVENT.extra_extra_tag}")
+#rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)
+#print("RANGE Adrmiral {rang}")
+#print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
+#print("IDs Adrmiral {EVENT.origin_id}, {EVENT.selected_id},{EVENT.parent_id} {EVENT.extra_extra_tag}")
 
 # extra_extra_tag has lmb, rmb
 if EVENT.extra_extra_tag != "rmb":
