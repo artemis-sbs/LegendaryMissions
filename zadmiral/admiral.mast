@@ -21,6 +21,8 @@ camera_id = to_id(cambot)
 # Should have a way to get all factions/side
 #
 cambot.blob.set("ally_list","tsn,raider",0)
+cambot.blob.set("ship_base_scan_range", 35000,0)
+
 
 await delay_sim(1)
 #
@@ -33,18 +35,25 @@ follow_route_select_comms(camera_id, camera_id)
 #comms_navigate("//comms/admiral")
 
 
-# Left
+# Whole screen
 gui_section(style="area:0,45px,100,100;")
+# Left
+
 
 with gui_sub_section("col-width:20;"):
     gui_row("row-height: 50;")
     gui_layout_widget("3dview")
+    gui_row()
+    props_lb = gui_list_box([],"row-height: 4em; background:#1572;", item_template=property_lb, title_template="Properties")
+    ~~props_lb.title_section_style += "background:#1578;"~~
+    set_inventory_value(client_id, "__PROPS_LB__", props_lb)
+
 
 # Middle
 with gui_sub_section():
     gui_row()
     #gui_layout_widget("science_2d_view")
-    gui_layout_widget("2dview")
+    gui_layout_widget("science_2d_view")
     gui_row()
     gui_layout_widget("comms_control")
 
@@ -58,26 +67,27 @@ with gui_sub_section("col-width:25;"):
     gui_layout_widget("text_waterfall")
 
 
+
+
 await gui()
-
-
-//select/comms if has_roles(COMMS_ORIGIN_ID, "admiral")
-
 
 
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "admiral")
 
-print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
-print("IDs Adrmiral {EVENT.origin_id}, {EVENT.selected_id},{EVENT.parent_id}")
+#rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)
+#print("RANGE Adrmiral {rang}")
+#print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
+#print("IDs Adrmiral {EVENT.origin_id}, {EVENT.selected_id},{EVENT.parent_id} {EVENT.extra_extra_tag}")
 
-if EVENT.extra_tag != "rmb":
+# extra_extra_tag has lmb, rmb
+if EVENT.extra_extra_tag != "rmb":
     # if no selection then use point
     pos = Vec3(EVENT.source_point)
     if SCIENCE_SELECTED_ID!=0:
         pos = Vec3(SCIENCE_SELECTED.pos)
     SCIENCE_ORIGIN.pos = pos
     admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Admiral", "lmb", "#040")
-elif EVENT.extra_tag == "rmb":
+elif EVENT.extra_extra_tag == "rmb":
     # Need to reset scince to the right value????
     # But when, Next tick?
     prev_sci = get_inventory_value(SCIENCE_ORIGIN_ID, "prev_selection", SCIENCE_SELECTED_ID)

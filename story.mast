@@ -17,18 +17,34 @@ explode_player_ship(DAMAGE_ORIGIN_ID)
 //shared/signal/player_ship_destroyed
 
 print("story: Exploded Deleting player_ship")
-if get_shared_inventory_value("game_ended", False):
-    yield success
-
-#     for cid in linked_to(ship_id, "consoles") -  role("mainscreen"):
-#         gui_reroute_client(cid, "show_hangar")
-
-await delay_sim(1)
+yield success if get_shared_inventory_value("game_ended", False)
 
 so = to_object(DESTROYED_ID)
 if so is not None:
-    print("story: Exploded Deleting player_ship")
+    <all>
+       % {so.name} has perished
+       % {so.name} has blown up
+       % lost contact with {so.name} 
+
+# await delay_sim(1)
+
+so = to_object(DESTROYED_ID)
+if so is not None:
     sbs.delete_object(DESTROYED_ID)
+
+await delay_sim(1)
+
+players = role('__player__')
+if len(players)==0:
+    start_text = "Mission is list!  All the player ships have been destroyed."
+    game_started = False
+    game_ended = True
+    sbs.play_music_file(0, "music/default/failure")
+    signal_emit("show_game_results", None)
+    ->END
+
+
+
 
 #
 # This gives GUIs a chance to for clients to 
@@ -43,6 +59,7 @@ yield success if ship_id == 0 or ship_id != DESTROYED_ID
 jump reassign_to_main if has_role(client_id, "mainscreen")
 
 jump reassign_to_main if client_id == 0
+jump reassign_to_hangar if has_role(DESTROYED_ID,"cockpit")
 
 players = to_object_list(role("__player__") - role("exploded"))
 

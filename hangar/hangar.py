@@ -5,7 +5,7 @@ from sbs_utils.procedural.query import set_science_selection, to_object, to_id, 
 from sbs_utils.procedural.links import link, unlink, get_dedicated_link, set_dedicated_link, linked_to
 from sbs_utils.procedural.roles import has_role, remove_role, any_role, role
 from sbs_utils.procedural.space_objects import broad_test_around, closest, get_pos, set_pos
-from sbs_utils.procedural.routes import RouteDestroy
+from sbs_utils.procedural.routes import RouteDamageDestroy
 from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished
 from sbs_utils.procedural.execution import set_shared_variable, get_shared_variable, get_variable
 from sbs_utils.agent import Agent
@@ -22,7 +22,7 @@ def hangar_bump_version():
     hangar_version = get_shared_variable("hangar_version", 0)
     set_shared_variable("hangar_version", hangar_version+1)
 
-@RouteDestroy
+@RouteDamageDestroy
 def hagar_handle_destroy():
     so = to_object(get_variable("DESTROYED_ID"))
     if so is None:
@@ -141,8 +141,8 @@ def hangar_launch_craft(craft_id, client_id):
     craft.set_inventory_value("craft_name", craft.name)
     call_sign = get_inventory_value(client_id, "call_sign", None)
     if call_sign is not None and len(call_sign)>0:
-        print(f"hangarpy {call_sign}")
-        craft.name = call_sign
+        # print(f"hangarpy {call_sign}")
+        craft.name = f"{call_sign} / {craft.name}"
 
     if hm is None: return False
     grid_rebuild_grid_objects(craft.id)

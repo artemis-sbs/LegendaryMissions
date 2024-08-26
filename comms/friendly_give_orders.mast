@@ -160,7 +160,7 @@ set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", nav_id)
 
 
 
-//focus/comms if not COMMS_SELECTED.has_role('admiral')
+//focus/comms if not has_role(COMMS_SELECTED_ID, 'admiral')
 #
 #
 # Something else selected get out of give orders

@@ -1,5 +1,5 @@
 
-//destroy if has_role(DESTROYED_ID, "tsn")
+//damage/destroy if has_role(DESTROYED_ID, "tsn")
 
 
 for player in role("__player__"):
@@ -17,21 +17,22 @@ for player in role("__player__"):
 
 
 
-//destroy if has_role(DESTROYED_ID, "raider")or has_role(DESTROYED_ID, "wreck")
-# Old code reference a label that does not exist
+//damage/killed if has_role(DAMAGE_TARGET_ID, "raider")
 
-
-//destroy if has_role(DESTROYED_ID, "raider")
+#
+# Don't spawn a wreck in a black hole
+#
+->END if EVENT.sub_tag == "maelstrom"
 
 # When an enemy ship is destroyed, we want to replace it with a wreck. Before we delete the enemy, we need to 
 # grab a few things from it: the x/y/z position, and the side value, so we can determine later what type of 
 # upgrade it might drop. 
 
-dest_obj = to_object(DESTROYED_ID)
+dest_obj = to_object(DAMAGE_TARGET_ID)
 if dest_obj is not None:
     dest_side = dest_obj.side
     dest_key = dest_obj.art_id
-dest_eobj = to_engine_object(DESTROYED_ID)
+dest_eobj = to_engine_object(DAMAGE_TARGET_ID)
 dest_posx = int(dest_eobj.pos.x)
 dest_posy = int(dest_eobj.pos.y)
 dest_posz = int(dest_eobj.pos.z)

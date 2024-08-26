@@ -30,36 +30,79 @@ jump show_server_menu
 
 ====== operator_stats ===== 
 
+
+_ship_id = sbs.get_ship_of_client(client_id) 
+faction_ship = to_object(_ship_id)
+
+cambot = player_spawn(0,0,0, "Operator", "#,operator, Admiral", "invisible") #, "behav_player")
+remove_role(cambot, "__player__")
+camera_id = to_id(cambot)
+#
+# Should have a way to get all factions/side
+#
+cambot.blob.set("ally_list","tsn,raider",0)
+cambot.blob.set("ship_base_scan_range", 135000,0)
+
+await delay_sim(1)
+#
+# Assign before setting comms up
+#
+sbs.assign_client_to_ship(client_id, camera_id)
+science_set_scan_data(camera_id, camera_id, {"scan": "Operator"})
+set_comms_selection(camera_id, camera_id)
+follow_route_select_comms(camera_id, camera_id)
+
 if watch_raider_count is None:
     watch_raider_count = task_schedule(update_raider_count)
 
-gui_section(style=f"area: 20, 40, 80, 60;row-height:45px")
 #
-# Show time remaining
+# report as a science
 #
-if is_timer_set(SHARED, "time_limit"):
-    gui_text("text: time remaining;justify: right;")
-    t = format_time_remaining(SHARED, "time_limit")
-    gui_text(f"text: {t};justify:left;", style="tag: sh_game_time;padding:20px;")    
+gui_activate_console("operator")
+
+# Left
+gui_section(style="area:0,45px,100,100;")
+
+with gui_sub_section("col-width:20;"):
+    gui_row("row-height: 50;")
+    gui_layout_widget("3dview")
+
+# Middle
+with gui_sub_section():
+    #
+    # Show time remaining
+    #
+    if is_timer_set(SHARED, "time_limit"):
+        gui_row("row-height: 45px")
+        gui_text("text: time remaining;justify: right;font:gui-5;")
+        t = format_time_remaining(SHARED, "time_limit")
+        gui_text(f"text: {t};justify:left;font:gui-5;", style="tag: sh_game_time;padding:20px;")    
+
     gui_row("row-height: 45px")
+    # Show remaining enemy count
+    r = role("raider") 
+    count=len(r)
+
+    gui_text("text: remaining raiders;justify: right;font:gui-5;")
+    gui_text(f"text: {count};justify:left;font:gui-5;", style="tag: sh_raider_count;padding:20px;")
+
+    gui_row()
+    #gui_layout_widget("science_2d_view")
+    gui_layout_widget("science_2d_view")
+    gui_row()
+    gui_layout_widget("comms_control")
+
+# Right
+with gui_sub_section("col-width:25;"):
+    gui_row("row-height:35;margin:0,0,0,10px;")
+    gui_layout_widget("science_data")
+    gui_row()
+    gui_layout_widget("science_sorted_list")
+    gui_row("row-height: 10;")
+    gui_layout_widget("text_waterfall")
 
 
-r = role("raider") 
-count=len(r)
-
-gui_text("text: remaining raiders;justify: right;")
-gui_text(f"text: {count};justify:left;", style="tag: sh_raider_count;padding:20px;")
-
-await gui():
-    + "pause game" if not game_paused:
-        game_paused = True
-        sbs.pause_sim()
-    + "resume game" if game_paused:
-        game_paused = False
-        sbs.resume_sim()
-    + "end game":
-        start_text = "Mission ended."
-        signal_emit("show_game_results", None)
+await gui()
 jump operator_stats
 
 ==== update_raider_count =====
@@ -68,11 +111,95 @@ await delay_sim(seconds=10)
 
 r = role("raider")
 count = len(r)
-gui_update_shared("sh_raider_count", f"text:{count};justify:left;")
+gui_update_shared("sh_raider_count", f"text:{count};justify:left;font:gui-5;")
 
 if is_timer_set(SHARED, "time_limit"):
     t = format_time_remaining(SHARED, "time_limit")
-    gui_update_shared("sh_game_time",f"text: {t};justify:left;")
+    gui_update_shared("sh_game_time",f"text: {t};justify:left;font:gui-5;")
 
 
 jump update_raider_count
+
+
+
+
+
+
+#
+# If the operator is also an admiral, then let admiral handle it
+#
+//focus/science if has_roles(SCIENCE_ORIGIN_ID, "operator") and not has_roles(SCIENCE_ORIGIN_ID, "admiral")
+
+rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)
+
+# extra_extra_tag has lmb, rmb
+if EVENT.extra_extra_tag != "rmb":
+    # if no selection then use point
+    pos = Vec3(EVENT.source_point)
+    if SCIENCE_SELECTED_ID!=0:
+        pos = Vec3(SCIENCE_SELECTED.pos)
+    SCIENCE_ORIGIN.pos = pos
+    #
+    # This is a copy of the admiral stuff to avoid needing admiral
+    #
+    operator_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Operator", "lmb", "#040")
+
+->END
+#
+# Unreachable
+#
+if EVENT.extra_extra_tag == "rmb":
+    # Need to reset scince to the right value????
+    # But when, Next tick?
+    prev_sci = get_inventory_value(SCIENCE_ORIGIN_ID, "prev_selection", SCIENCE_SELECTED_ID)
+    set_weapons_selection(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+    set_science_selection(SCIENCE_ORIGIN_ID, prev_sci)
+    
+    pos = Vec3(EVENT.source_point)
+    if SCIENCE_SELECTED_ID!=0:
+        pos = Vec3(SCIENCE_SELECTED.pos)
+
+    # The selection point for the admiral is the pos of the Admiral ship
+    # But this selection we need to remmber
+    set_inventory_value(SCIENCE_ORIGIN_ID, "ADMIRAL_ORDERS_POINT", pos)
+
+    admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Orders", "rmb", "#400")
+    
+
+
+//enable/comms if has_roles(COMMS_ORIGIN_ID, 'operator')
+//comms if has_roles(COMMS_ORIGIN_ID, "operator")
++ "Game" //comms/operator/game
++ "Game time" //comms/operator/time
+
+//comms/operator/game if has_roles(COMMS_ORIGIN_ID, "operator")
++ "back" //comms
++ "pause game" if not game_paused:
+    game_paused = True
+    sbs.pause_sim()
++ "resume game" if game_paused:
+    game_paused = False
+    sbs.resume_sim()
++ "end game"  //comms/operator/game/end
+
+//comms/operator/time if has_roles(COMMS_ORIGIN_ID, "operator")
++ "back" //comms
++ "Add 1 minute":
+    print("")
++ "Add 10 minutes":
+    print("")
++ "Subtract 1 minute":
+    print("")
++ "Subtract 10 minutes":
+    print("")
+
+
+
+//comms/operator/game/end if has_roles(COMMS_ORIGIN_ID, "operator")
++ "No do not end game":
+    comms_navigate("//comms")
++ "Yes I am sure end the game":
+    start_text = "Mission ended."
+    signal_emit("show_game_results", None)
+
+
