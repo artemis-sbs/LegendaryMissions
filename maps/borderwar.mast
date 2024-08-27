@@ -190,6 +190,10 @@ if enemy1 == "Arvonian":
 
 enemy_spawn_points = scatter.box(10000, -25000,1000,50000, -50000, -1000, -50000, centered=False)
 
+enemy_station_list = []
+navpoint_list = []
+enemy_station_dict = {}
+
 for enemy_station in enemy_spawn_points:
     name = "{station_prefix} {num}"
     #
@@ -211,14 +215,17 @@ for enemy_station in enemy_spawn_points:
     _enemy_spawned_pos.append(_enpos)
 
     if enemy1 == "Kralien":
-        enemy_station_object = npc_spawn(*_enpos, name, "kralien, station", station_type, "behav_station")
+        enemy_station_object = npc_spawn(*_enpos, name, "kralien, enemy, station", station_type, "behav_station")
     if enemy1 == "Torgoth":
-        enemy_station_object = npc_spawn(*_enpos, name, "torgoth, station", station_type, "behav_station")
+        enemy_station_object = npc_spawn(*_enpos, name, "torgoth, enemy, station", station_type, "behav_station")
     if enemy1 == "Arvonian":
-        enemy_station_object = npc_spawn(*_enpos, name, "arvonian, station", station_type, "behav_station")
-    sim.add_navpoint(*_enpos, name, "#A44")
+        enemy_station_object = npc_spawn(*_enpos, name, "arvonian, enemy, station", station_type, "behav_station")
+    nav_id = sim.add_navpoint(*_enpos, name, "#A44")
+    enemy_station_list.append(to_id(enemy_station_object))
+    navpoint_list.append(nav_id)
+    enemy_station_dict[to_id(enemy_station_object)] = nav_id
     
-    print(f"{enemy1} Station created {int(_enpos.x)} {int(_enpos.y)} {int(_enpos.z)}")
+    print(f"{enemy1} Station created: {int(_enpos.x)}, {int(_enpos.y)}, {int(_enpos.z)}")
     
     ds = to_id(enemy_station_object)
     apos = enemy_station_object.engine_object.pos
@@ -233,8 +240,6 @@ for enemy_station in enemy_spawn_points:
         set_face(ds, random_arvonian())
     
     create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
-
-    print(f"{enemy1} Fleet created {apos.x} {apos.y} {apos.z}")
 
     break if num == num_enemy_stations
     num += 1
@@ -343,21 +348,9 @@ for v in spawn_points:
         pickup_spawn(v.x, v.y, v.z, "haplix_overcharger")
         log("Haplix Overcharger spawned {v.x},{v.y},{v.z}","upgrades")
 
-
-#wr = terrain_spawn(200, 0, 600, "Wreck", "wreck", "wreck", "behav_asteroid")
-#temp_yaw = random.uniform(0.001, 0.003)
-#temp_pitch = random.uniform(0.002, 0.004)
-#wr.engine_object.steer_yaw = temp_yaw
-#wr.engine_object.steer_pitch = temp_pitch
-#wr.blob.set("radar_color_override", "#f0c")
-
-
-
 spawn_points = scatter.box(monster_value, 0,0,0, 75000, 1000, 75000, centered=True)
 for v in spawn_points:
     typhon_classic_spawn(*v.xyz)
-
-
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -374,6 +367,7 @@ if war_delay == 0:
 shared war_declared = 0
 task_schedule(war_timer_loop)
 task_schedule(check_neutral_zone)
+task_schedule(task_borderwar_end_game)
 ->END
 
 ======= war_timer_loop =========
@@ -385,6 +379,12 @@ if war_delay == int(war_time_delay):
     comms_broadcast(players, f"""WAR STARTS IN {war_delay} MINUTES!""", "yellow")
     for p in players:
         comms_receive_internal(f"""WAR STARTS IN {war_delay} MINUTES!""", p, "TSN Command", title="PREPARE FOR WAR", title_color="yellow")
+
+if war_delay == 5:
+    # Send 5-minute warning.
+    comms_broadcast(players, "WAR STARTS IN 5 MINUTES!", "yellow")
+    for p in players:
+        comms_receive_internal(f"""WAR STARTS IN 5 MINUTES!""", p, "TSN Command", title="WAR 5 MIN", title_color="yellow")
 
 if war_delay == 1:
     # Send 1-minute warning.
@@ -419,7 +419,7 @@ if war_declared == 2:
         comms_receive_internal(f"""NEUTRAL ZONE VIOLATION - Mission Failed!""", p, "TSN Command", title="NETURAL ZONE VIOLATION", title_color="red")
     await delay_sim(seconds=6)
     war_declared = 3
-    task_schedule(task_end_game)
+#    task_schedule(task_end_game)
     ->END
 
 await delay_sim(seconds=5)

@@ -206,8 +206,8 @@ elif has_roles(SCIENCE_SELECTED_ID, "upgrade, haplix_overcharger"):
 
 + "scan":
     <scan>
-        % It's a Black hole Son
-        % That place really sucks you in
-        % If you go into you may come out, or not
-        % Pretty colors, but lethal
+        % Black hole - 'What seest thou else in the dark backward and abysm of time?'
+        % Micro-singularity - smaller than a stellar black hole, but still very deadly.  
+        % Lethal hazard - the extreme gravity of a black hole will rip the ship apart.  
+        % Black hole - 'A rip in the very fabric of space and time.' 
 
