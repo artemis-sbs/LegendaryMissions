@@ -27,15 +27,6 @@ if len(stations) ==0 and world_select.path != "deep_strike":
 
     ->END
 
-# Used for Border War, game ends if a player ship enters the Neutral Zone
-if world_select.path == "border_war" and war_declared == 3:
-    start_text = "Mission Failed! TSN entered Neutral Zone before war declared."
-    game_started = False
-    game_ended = True
-    sbs.play_music_file(0, "music/default/failure")
-    signal_emit("show_game_results", None)
-    ->END
-
 raiders = role('Raider')
 # print (f"raiders {len(raiders)}")
 if len(raiders)==0 and world_select.path !="peacetime":
@@ -47,4 +38,107 @@ if len(raiders)==0 and world_select.path !="peacetime":
     ->END
 
 -> task_end_game
+
+
+============ task_deepstrike_end_game ======= 
+
+await delay_sim(4)
+
+# Check if time limit has expired.
+
+if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"):
+    left = role("raider")
+    c = len(left)
+    # End attack
+    remove_role(left, "raider")
+    start_text = "Mission time has run out! {c} enemies left."
+    game_started = False
+    game_ended = True
+    sbs.play_music_file(0, "music/default/victory")
+    #gui_reroute_clients(show_game_results)
+    #gui_reroute_server(show_game_results)
+    signal_emit("show_game_results", None)
+    ->END
+
+# Count the remaining enemy stations and raiders
+
+stations = role('enemy') & role('station')
+raiders = role('Raider')
+
+# Check to see if any stations no longer exist. If so, delete the navpoint associated with that station.
+
+if len(stations) >= 1:
+    for i in range(len(enemy_station_dict)):
+        station_id = enemy_station_list[i]
+        nav_id = enemy_station_dict[station_id]
+        if not object_exists(station_id) and nav_id in navpoint_list:
+            sim.delete_navpoint_by_id(nav_id)
+
+# If all enemies and enemy stations have been destroyed, mission succeeds and game ends.
+
+if len(stations) == 0 and len(raiders) == 0:
+    start_text = "Mission is won!  All the enemies have been destroyed."
+    game_started = False
+    game_ended = True
+    sbs.play_music_file(0, "music/default/victory")
+    signal_emit("show_game_results", None)
+    ->END
+
+-> task_deepstrike_end_game
+
+============ task_borderwar_end_game ======= 
+
+await delay_sim(4)
+
+# Check if time limit has expired.
+
+if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"):
+    left = role("raider")
+    c = len(left)
+    # End attack
+    remove_role(left, "raider")
+    start_text = "Mission time has run out! {c} enemies left."
+    game_started = False
+    game_ended = True
+    sbs.play_music_file(0, "music/default/victory")
+    #gui_reroute_clients(show_game_results)
+    #gui_reroute_server(show_game_results)
+    signal_emit("show_game_results", None)
+    ->END
+
+# For Border War, game ends if a player ship enters the Neutral Zone
+if world_select.path == "border_war" and war_declared == 3:
+    start_text = "Mission Failed! TSN entered Neutral Zone before war declared."
+    game_started = False
+    game_ended = True
+    sbs.play_music_file(0, "music/default/failure")
+    signal_emit("show_game_results", None)
+    ->END
+
+# Count the remaining enemy stations and raiders
+
+stations = role('enemy') & role('station')
+raiders = role('Raider')
+
+# Check to see if any stations no longer exist. If so, delete the navpoint associated with that station.
+
+if len(stations) >= 1:
+    for i in range(len(enemy_station_dict)):
+        station_id = enemy_station_list[i]
+        nav_id = enemy_station_dict[station_id]
+        if not object_exists(station_id) and nav_id in navpoint_list:
+            sim.delete_navpoint_by_id(nav_id)
+            navpoint_list.remove(nav_id)
+
+# If all enemy raiders and enemy stations have been destroyed, mission succeeds and game ends.
+
+if len(stations) == 0 and len(raiders) == 0:
+    start_text = "Mission is won!  All the enemies have been destroyed."
+    game_started = False
+    game_ended = True
+    sbs.play_music_file(0, "music/default/victory")
+    signal_emit("show_game_results", None)
+    ->END
+
+-> task_borderwar_end_game
 
