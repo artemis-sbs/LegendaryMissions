@@ -236,8 +236,8 @@ if la_count > 0 and ctype == "science" and not la_timer > 0:
         gui_update_shared("sh-la-count", "color:#0f0; text: {la_count};")
         gui_update_shared("sh-la-txt", "color:#0f0; text: Lateral Array;")
         gui_update_shared("sh-la-timer", "color:#0f0; text: {la_timer} seconds remaining.;")
-        jump upgrade_screen   
-
+        jump upgrade_screen
+   
 else:
     if la_timer > 0:
         """color:#0f0; text: Lateral Array;""" style="tag:sh-la-txt;"
@@ -287,10 +287,10 @@ if ho_count > 0 and (ctype == "engineering" or ctype == "weapons"):
                     print(f"Haplix NO Shield Damage dmgcheck = {dmgcheck} dmgrand = {dmgrand}")
 
                 dmgcheck -= 25
-    
-    
+
+
         jump upgrade_screen
-    
+
 else:
     """text: Haplix Overcharger;""" style="tag:sh-ho-txt;"
 
