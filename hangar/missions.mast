@@ -175,7 +175,7 @@ jump hangar_schedule_mission
 =====  story_mission_investigate =====
 # SPAWNED_ID assumed
 
-so = to_object(SPAWNED_ID)
+so = to_object(COMMS_ORIGIN_ID)
 ->END if so is None
 side = so.side
 
@@ -187,22 +187,48 @@ mission_type = random.choice(range(len(mission_types)))
 COMMS_ORIGIN_ID = SPAWNED_ID
 COMMS_SELECTED_ID = random_id(role(get_side(SPAWNED_ID)) & role("__player__") - to_set(SPAWNED_ID))
 
-stations = role("station")
+stations = set(role("station"))
 station = random.choice(list(stations))
 set_inventory_value(SPAWNED_ID, "briefing", f"Mission patrol stations. Visit all of the stations then dock.")
+
+---- wait_for_launch
+so = to_object(COMMS_ORIGIN_ID)
+if has_role(COMMS_ORIGIN_ID, "standby"):
+    await delay_sim(3)
+    jump wait_for_launch
+
+
+--- rebuild
+
+so = to_object(COMMS_ORIGIN_ID)
+->END if so is None
+
+
 idx = 0
+visit = ""
 for st in stations:
     st_obj = to_object(st)
     continue if st_obj is None
+    visit += st_obj.name
+    visit += "+"
     pos= st_obj.engine_object.pos
     so.data_set.set("waypoint_x_array", pos.x, idx)
     so.data_set.set("waypoint_y_array", pos.y, idx)
     so.data_set.set("waypoint_z_array", pos.z, idx)
     so.data_set.set("waypoint_name_array", st_obj.name, idx)
     idx += 1
-
 so.data_set.set("waypoint_count", idx, 0)
-print(f"start waypoint count {idx}")
+
+if len(stations)!=0:
+    client_id = get_inventory_value(COMMS_ORIGIN_ID, "client_id", client_id)
+    comms_broadcast(client_id, f"waypoints: {visit}")
+else:
+    # Get the current load
+    client_id = get_inventory_value(COMMS_ORIGIN_ID, "client_id", client_id)
+    comms_broadcast(client_id, "Objective complete")
+    comms_broadcast(client_id, "All patrol points have been visited")
+    ->END
+
 
 so = None # no longer needed
 
@@ -210,30 +236,20 @@ so = None # no longer needed
 
 await delay_sim(seconds=5)
 
-so = to_object(SPAWNED_ID)
+so = to_object(COMMS_ORIGIN_ID)
 ->END if so is None
-jump loop if has_role(SPAWNED_ID, "standby")
+jump loop if has_role(COMMS_ORIGIN_ID, "standby")
 
-near_station = broad_test_around(COMMS_ORIGIN_ID, 1000, 1000, 1) & stations
+near_station = broad_test_around(COMMS_ORIGIN_ID, 1000, 1000, 0xF0) & stations
 jump loop if len(near_station) == 0
 
 for st in near_station:
     stations.discard(st)
-    print("discarded station")
+    sto = to_object(st)
+    if sto:
+        client_id = get_inventory_value(COMMS_ORIGIN_ID, "client_id", client_id)
+        comms_broadcast(client_id, f"waypoint reached: {sto.name}")
 
-idx = 0
-for st in stations:
-    st_obj = to_object(st)
-    continue if st_obj is None
-    pos= st_obj.engine_object.pos
-    so.data_set.set("waypoint_x_array", pos.x, idx)
-    so.data_set.set("waypoint_y_array", pos.y, idx)
-    so.data_set.set("waypoint_z_array", pos.z, idx)
-    so.data_set.set("waypoint_name_array", st_obj.name, idx)
-    idx += 1
-so.data_set.set("waypoint_count", idx, 0)
-print(f"waypoint count {idx}")
 
-jump  loop if len(stations)!=0
-so = None
+jump rebuild
 ->END
