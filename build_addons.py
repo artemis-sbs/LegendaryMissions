@@ -14,7 +14,7 @@ def zipdir(path):
     finally:
         pass
 
-    with zipfile.ZipFile(f".addons/{path}.zip", "w") as zf:
+    with zipfile.ZipFile(f".addons/{path}.mastlib", "w") as zf:
         
 
         for dirname, subdirs, files in os.walk(path):
@@ -33,11 +33,14 @@ def zipdir(path):
 
 zipdir("ai")
 zipdir("comms")
+zipdir("commerce")
 zipdir("consoles")
 zipdir("damage")
 zipdir("docking")
+zipdir("fleets")
 zipdir("grid_comms")
 zipdir("hangar")
+### Don't copy Legendary maps
 # zipdir("maps")
 zipdir("operator")
 zipdir("science_scans")

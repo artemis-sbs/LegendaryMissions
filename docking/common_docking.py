@@ -1,7 +1,7 @@
 import sbs
 from sbs_utils.procedural.query import to_id, to_object, to_blob, object_exists, to_engine_object, to_list, set_weapons_selection
 from sbs_utils.procedural.roles import role
-from sbs_utils.procedural.comms import comms_message
+from sbs_utils.procedural.comms import comms_message, comms_broadcast
 from sbs_utils.procedural.execution import get_shared_variable, task_cancel, task_schedule
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.timers import is_timer_finished, set_timer
@@ -105,14 +105,16 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
     dock_state_string = player_blob.get("dock_state", 0)
 
     if "undocked" == dock_state_string:
-        player_blob.set("dock_base_id", 0)
-        _too_close = 300+(difficulty+1)*200
-        raider = closest(player_id_or_obj, role("raider"), _too_close)
-        if raider is None:
-            station = closest(player_id_or_obj, role(dock_roles), docking_range)
-            if station is not None:
-                player_blob.set("dock_base_id", to_id(station))
-    #
+        # player_blob.set("dock_base_id", 0)
+        # _too_close = 300+(difficulty+1)*200
+        # raider = closest(player_id_or_obj, role("raider"), _too_close)
+
+        # if raider is None:
+        station = closest(player_id_or_obj, role(dock_roles), docking_range)
+        if station is not None:
+            player_blob.set("dock_base_id", to_id(station))
+            return RATE_FAST
+#
     # 
     #
     set_inventory_value(player_id, "dock_state", dock_state_string)
@@ -158,8 +160,17 @@ def player_docking_docking(player_id_or_obj, dock_station):
         # Station died
         player_blob.set("dock_state", "undocked")
         return RATE_SLOW
-
     
+    difficulty = get_shared_variable("difficulty", 5)
+    _too_close = 300+(difficulty+1)*200
+    raider = closest(player_id_or_obj, role("raider"), _too_close)
+    if raider is not None:
+        comms_message("Attempting dock when enemies is ill advised.", player_id, player_id,  "Enemies near", None, "white", "red", from_name="Docking")
+        comms_broadcast(player_id, "docking disable, enenmy near")
+        player_blob.set("dock_state", "undocked")
+        player_blob.set("dock_base_id", 0)
+        return RATE_SLOW
+    #
 
     # check to see if the player ship is close enough to be docked
     distanceValue = sbs.distance_id(dock_station_id, player_id)
@@ -222,6 +233,7 @@ def player_docking_station_docked(player_id_or_obj, dock_station):
     if throttle >1.0:
         player_blob.set("playerThrottle",0.5, 0)
         comms_message("Attempting to warp while docked can hurt our systems.", dock_station_id, player_id,  "GEEZ! YOU'RE STILL DOCKED", None, "white", "red")
+        comms_broadcast(player_id, "Docking moors active")
         return RATE_SLOW
 
 
