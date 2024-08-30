@@ -183,6 +183,7 @@ on change console_select_lb.get_value():
         spick.read_only = False
         gui_represent(ship_sec2)
     elif operator_mode_enabled and console_select_item.path == "admin":
+        console_ready = True
         jump(console_select_item.label)
     else:
         #print("hiding 1")

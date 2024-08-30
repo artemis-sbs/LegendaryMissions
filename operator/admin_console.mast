@@ -25,7 +25,7 @@ watch_end_game_task = None
 shared watch_raider_count = None
 jump operator_stats if game_started
 
-jump show_server_menu
+jump show_server_menu 
 
 
 ====== operator_stats ===== 
@@ -56,9 +56,9 @@ if watch_raider_count is None:
     watch_raider_count = task_schedule(update_raider_count)
 
 #
-# report as a science
+# report as a science to see more
 #
-gui_activate_console("operator")
+gui_activate_console("operator_sci")
 
 # Left
 gui_section(style="area:0,45px,100,100;")
