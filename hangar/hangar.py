@@ -31,7 +31,7 @@ def hagar_handle_destroy():
     # This is an example use of a Python function as a route
     #
     if has_role(so, "cockpit"):
-        print(f"A craft was deleted {so.id&0xffff}")
+        #print(f"A craft was deleted {so.id&0xffff}")
         return
 
            
@@ -44,7 +44,7 @@ def hagar_handle_destroy():
     docked_crafts = linked_to(so, "hangar_craft") & role("standby")
 
     for id in docked_crafts:
-        print(f"deleting docked craft {id&0xffff}")
+        #print(f"deleting docked craft {id&0xffff}")
         # restore it so delete message goes out
         #
         # TODO: The engine is nor deleting the object properly

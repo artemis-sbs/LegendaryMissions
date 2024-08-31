@@ -149,7 +149,7 @@ class Fleet(Agent):
 
         # Look for a player near 
         if the_target is None:
-            the_target = closest(lead_ship_id, local_arena & role("PlayerShip") - role(get_side(lead_ship_id)))
+            the_target = closest(lead_ship_id, local_arena & role("__player__") & role("cockpit") - role(get_side(lead_ship_id)))
 
         # Otherwise look for a tsn station
         if the_target is None:
@@ -168,7 +168,11 @@ class Fleet(Agent):
             throttle = 1.5
             
         # Set the target position, optionally shot at something
-        target_pos(ship_set, *self.position.xyz, throttle, the_target, stop_dist=500)
+        #target_pos(ship_set, *self.position.xyz, throttle, the_target, stop_dist=500)
+        for _id in ship_set:
+            pos = Vec3(self.position)
+            pos = pos.rand_offset(300, 600, ring=True)
+            target_pos(_id, *self.position.xyz, throttle, the_target, stop_dist=500)
         
 
         yield AWAIT(delay_sim(seconds=10))
