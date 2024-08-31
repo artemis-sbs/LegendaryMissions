@@ -54,6 +54,7 @@ shared auto_start = settings.get("auto_start", False)
 
 shared operator_mode = settings.get("operator_mode", {"enable: False"})
 shared operator_mode_enabled = operator_mode.get("enable", False)
+shared operator_show_logo_on_main = operator_mode.get("show_logo_on_main", False)
 
 start_npc_cag()
 
@@ -72,7 +73,7 @@ for m in mission_list:
     i += 1
 shared world_select = mission_list[mission_index]
 
-jump operator_main_screen if operator_mode_enabled
+jump operator_main_screen if operator_mode_enabled and operator_show_logo_on_main
 
 
 #

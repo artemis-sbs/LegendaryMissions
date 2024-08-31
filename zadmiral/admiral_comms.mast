@@ -34,6 +34,7 @@
     terrain_spawn_black_hole(*pos.xyz)
 + "Monster":
     pos = Vec3(COMMS_ORIGIN.pos)
+    pos.x = pos.x + 100
     typhon_classic_spawn(*pos.xyz)
 + "Minefield":
     pos = Vec3(COMMS_ORIGIN.pos)
@@ -75,7 +76,7 @@ for race in races:
 + "Back" //comms
 + "Delete":
     _other = get_science_selection(COMMS_SELECTED_ID)
-    if _other:
+    if _other and COMMS_ORIGIN_ID != _other:
         sbs.delete_object(_other)
 
 //comms/admiral/area if has_roles(COMMS_ORIGIN_ID, 'admiral')
@@ -135,13 +136,10 @@ for race in races:
 
 
 
-#    id_set = broad_test(100,200,300, 400) & role("Asteroid")
-#    for id in id_set:
-#	    sbs.delete_object(id)
-
-
 //comms/admiral/commands if has_roles(COMMS_ORIGIN_ID, 'admiral')
 + "Back" //comms
++ "Jump to" //comms/admiral/commands/jump
++ "Count" //comms/admiral/commands/count
 + "End Game" //comms/admiral/commands/end_game
 
 //comms/admiral/commands/end_game if has_roles(COMMS_ORIGIN_ID, 'admiral')
@@ -150,8 +148,44 @@ for race in races:
     start_text = "Mission ended."
     signal_emit("show_game_results", None)
 
+//comms/admiral/commands/count if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
++ "Raider":
+    count = len(role("raider"))
+    comms_broadcast(client_id, f"Raiders remaining {count}")    
++ "Stations":
+    count = len(role("station"))
+    comms_broadcast(client_id, f"Station remaining {count}")    
++ "Players":
+    count = len(role("__player__"))
+    comms_broadcast(client_id, f"Players remaining {count}")    
+
+
+
+//comms/admiral/commands/jump if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
++ "Raider":
+    raider = closest(COMMS_ORIGIN_ID, role("raider"))
+    if raider:
+        raider = to_object(raider)
+        COMMS_ORIGIN.pos = raider.pos
+        admiral_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
++ "Stations":
+    raider = closest(COMMS_ORIGIN_ID, role("station"))
+    if raider:
+        raider = to_object(raider)
+        COMMS_ORIGIN.pos = raider.pos
+        admiral_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
++ "Players":
+    raider = closest(COMMS_ORIGIN_ID, role("__player__"))
+    if raider:
+        raider = to_object(raider)
+        COMMS_ORIGIN.pos = raider.pos
+        admiral_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
+    
 
 
 
 ==== test_admiral
 print("POC works")
+

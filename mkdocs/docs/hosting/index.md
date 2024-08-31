@@ -49,7 +49,7 @@ With operator mode turned on, a client console can act as the mission startup se
 "operator_mode": {
         "enable": true,
         "logo": "media/operator",
-        "remote_console_select": true,
+        "show_logo_on_main": true,
         "pin": "000000"
     },
 ```

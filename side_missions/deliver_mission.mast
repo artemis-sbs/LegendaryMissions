@@ -3,8 +3,9 @@
 # dream of what it will look like
 #
 
-//mission/deliver "Deliver Munitions" if has_role(SPAWNED_ID, "tsn, fighter")
+//mission/deliver "Deliver Munitions" if has_role(AGENT_ID, "tsn, fighter")
 " Pick up {torp_type} torpedoes at {station.name} and deliver them to {player.name}
+
 
 init:
     " This is called when the mission is created 
@@ -12,7 +13,7 @@ init:
 
     station = to_object(random.choice(role("tsn, station")))
     player = to_object(random.choice(role("tsn, __player__")))
-    fighter = to_object(SPAWNED_ID)
+    fighter = to_object(AGENT_ID)
     torp_type = random.choice(get_torp_types_for(player.id))
 
 start:

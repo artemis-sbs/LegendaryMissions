@@ -3,7 +3,7 @@
     "operator_mode": {
         "enable": false,
         "logo": "media/operator",
-        "remote_console_select": false,
+        "show_logo_on_main": true,
         "pin": "000000"
     },
     "players_count": 1,

@@ -12,8 +12,9 @@ set "true" to enable the operator mode. "false" to disable
 ### logo
 You can set an image file to display one the server screen. Useful for operators.
 
-### remote_console_select
-For future use
+### show_logo_on_main
+Set this to show the operator  logo on the server instead of the star options.
+Start options will be in the admin console.
 
 ### pin
 string needed to be typed to gain access to the operator and startup screen.

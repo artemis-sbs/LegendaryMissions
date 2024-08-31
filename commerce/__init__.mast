@@ -1,1 +1,1 @@
-import commerce/resource_gather.py
+import resource_gather.py

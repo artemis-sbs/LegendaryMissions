@@ -19,17 +19,6 @@ import give_orders.py
 + "Cancel"  //comms/
 
     
-=== test_random
-COMMS_ORIGIN.set_inventory_value("test", "HELLO")
-<<[$xmas] "Trouble"
-    % {COMMS_ORIGIN.name} we are desperate need of help
-    " Our engines are offline {COMMS_ORIGIN["test"]}
-    " we need your help fast
-    % Engine trouble here
-    " {COMMS_ORIGIN.name} Can you come and gives us a Jump
-    " Jump drive that is eh he {COMMS_ORIGIN["test"]}
-comms_navigate("")    
-yield success
 
 #
 # Common way to back out of give orders
@@ -161,6 +150,7 @@ set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", nav_id)
 
 
 //focus/comms if not has_role(COMMS_SELECTED_ID, 'admiral')
+->END if COMMS_SELECTED is None
 #
 #
 # Something else selected get out of give orders
@@ -180,157 +170,3 @@ elif COMMS_SELECTED.has_role('raider'):
         % You shall perish
         % You gonna die
 
-
-
-#############################################################
-## Pay no attention below this
-## its basically notes when I refactored comms 
-## Needs to be removed after more RouteLabels are added
-
-
-/*
-comms_client_id = EVENT.client_id
-alt_ship = get_inventory_value(comms_client_id, "2dview_alt_ship", 0)
-jump friendly_cancel_give_orders if not alt_ship
-jump friendly_cancel_give_orders if not has_role(alt_ship, "friendly")
-
-
-alt_ship_target = get_weapons_selection(alt_ship)
-jump friendly_cancel_give_orders if not alt_ship_target
-
-t_obj = to_object(alt_ship_target)
-if t_obj is not None:
-    comms_receive(f"We will go and attack {t_obj.name}", title="Orders to attack", title_color="cyan")
-    
-    set_inventory_value(alt_ship, "BRAIN_ATTACK_ID", alt_ship_target)
-    set_inventory_value(alt_ship, "BRAIN_LABEL", "brain_attack")
-    await task_schedule(brain_assure_task, data={"brain_id": alt_ship})
-else:
-    comms_receive(f"Nothing to attack {alt_ship_target}", title="Orders to attack", title_color="cyan")
-
-jump friendly_cancel_give_orders
-*/
-
-
-
-#
-# This is mast now, but consider putting the library
-# for a general purpose 'brain'
-#
-#
-# Keep thinking
-# Script can change the label that
-# has the current thinking process
-#
-=== brain_assure_task
-brain_task = get_inventory_value(brain_id, "BRAIN_TASK", None)
-# Already has a brain
-yield success  if brain_task
-brain_task = task_schedule(brain_start)
-set_inventory_value(brain_id, "BRAIN_TASK", brain_task)
-set_inventory_value(brain_id, "BRAIN_LABEL", "brain_nop")
-yield success
-
-=== brain_start
-brain_sub_task = sub_task_schedule(brain_nop)
-last_thought = "brain_nop"
-==== brain_loop
-# Expect brain_id to be set
--> END if brain_id is None
-noggin = to_object(brain_id)
--> END if noggin is None
-# OK object still exists
-
-brain_label = get_inventory_value(brain_id, "BRAIN_LABEL", None)
-print(f"BRAIN {brain_label}")
-brain_sub_task.jump(brain_label)
-brain_sub_task.tick_in_context()
-
-=== brain_next
-await delay_sim(1)
-jump brain_loop
-
-
-=== brain_attack
-atk_id = get_inventory_value(brain_id, "BRAIN_ATTACK_ID", None)
-yield idle  if atk_id is None
-yield idle  if atk_id ==0
-atk = to_object(atk_id)
-yield idle  if atk is None
-
-# Set the target position, optionally shot at something
-target_pos(brain_id, atk.pos.x, atk.pos.y, atk.pos.z, 1.0, atk_id, stop_dist=500)
-
-yield idle
-#
-# Think nothing but happy thoughts
-#
-=== brain_nop
-yield idle
-
-
-
-
-
-
-/*
-
-+ "Random inline":
-    <<[$alert] "Trouble"
-        % {COMMS_ORIGIN.name} we are desperate need of help
-        " Are engines are offline 
-        " we need your help fast
-        % Engine trouble here
-        " {COMMS_ORIGIN.name} Can you come and gives us a Jump
-        " Jump drive that is eh he
-
-# define a comms style
-
-
-//comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
-+ "Give Orders":
-    <<[$alert] "Under attack"
-        % Option one 
-        "  
-        "
-        % Second line
-        "
-        "
-    <<[$alert]33% "Under attack"
-        " Option 2
-    <<[$alert]33% "Under attack"
-        " Option 2
-
-    >>[blue,white] "Info"
-        "
-        "
-        "
-*/
-
-        
-
-
-
-
-/*
-
-# Transition labels?
-#
-=== //comms/give_orders/ //comms/
-#
-# Other routes
-#
-
-//spawn/
-//spawn/grid
-//focus/comms/
-//focus/weapons/
-//select/comms/
-//select/weapons/
-
-//signal/end_game/
-//damage/object/
-
-//listbox/name/item/
-
-*/

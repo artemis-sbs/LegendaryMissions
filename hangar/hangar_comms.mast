@@ -40,3 +40,10 @@ for d in dockable:
     set_engineering_value(COMMS_ORIGIN_ID, "front shield", 0.0)
     set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 2.0)
 
+//comms if has_role(COMMS_ORIGIN_ID, "bomber") and has_roles(COMMS_SELECTED_ID,"system,weapon,torpedo")
++ "Homing":
+    COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Homing",0)
++ "Nuke":
+    COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Nuke",0)
++ "Mine":
+    COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Mine",0)

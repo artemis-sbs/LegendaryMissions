@@ -5,13 +5,14 @@ from sbs_utils.tickdispatcher import TickDispatcher
 from sbs_utils.procedural.execution import task_schedule, jump, AWAIT, get_variable
 from sbs_utils.procedural.timers import delay_sim, is_timer_set_and_finished, is_timer_finished, set_timer, is_timer_set, clear_timer
 from sbs_utils.procedural.query import to_object, to_id, object_exists, to_object_list, get_side
-from sbs_utils.procedural.space_objects import target, closest, broad_test_around
+from sbs_utils.procedural.space_objects import target, closest, broad_test_around, target_pos
 from sbs_utils.procedural.roles import role, all_roles, get_race
 from sbs_utils.procedural.science import science_set_scan_data
 from sbs_utils.procedural.spawn import npc_spawn
 from sbs_utils.procedural.links import get_dedicated_link, set_dedicated_link, unlink, link
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils import faces
+from sbs_utils.scatter import sphere
 from sbs_utils.vec import Vec3
 
 
@@ -45,13 +46,13 @@ class NpcCAG(Agent):
 
         match race:
             case "tsn":
-                return "tsn_fighter";
+                return "tsn_fighter"
             case "pirate":
-                return "pirate_fighter";
+                return "pirate_fighter"
             case "ximni":
-                return "xim_avenger";
+                return "xim_avenger"
 
-        return "arvonian_fighter";
+        return "arvonian_fighter"
 
     #--------------------------------------------------------------------------------------
     def find_fighter_target_id(self, fighter_id):
@@ -60,7 +61,7 @@ class NpcCAG(Agent):
 
         # Look for a player near 
         if None is the_target:
-            the_target = closest(fighter_id, local_arena & role("PlayerShip") - role(get_side(fighter_id)))
+            the_target = closest(fighter_id, local_arena & role("__player__") & role("cockpit") - role(get_side(fighter_id)))
 
         # Look for a station near 
         if None == the_target:
@@ -148,8 +149,17 @@ class NpcCAG(Agent):
             if not is_timer_finished(fighter_id, "bingo"):
                 # find a target to direct them to
                 t_id = self.find_fighter_target_id(fighter_id)
-                if None is not t_id:
-                    target(fighter_id, t_id)
+                t_obj = to_object(t_id)
+                if None is not t_id and None is not t_obj:
+                    pos = Vec3(t_obj.pos)
+                    difference = Vec3(pos) - Vec3(craft.pos)
+                    if difference.length() < 2500:
+                        #print("CAG: scattering")
+                        pos = pos.rand_offset(300, 600)
+                        target_pos(fighter_id, *pos, target_id=t_id)
+                    else:
+                        #print("CAG: targeting")
+                        target(fighter_id, t_id)
                 continue
 
             # Bingo timer is finished

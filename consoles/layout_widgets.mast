@@ -65,18 +65,20 @@ yield idle
 //gui/normal_engi
 
 # Ship Data, 
-gui_section(style="area:0,45px,100,100;")
+gui_section(style="area:0,45px,100-300px,100;")
 gui_row("row-height: 350px;col-width:280px;")
 gui_layout_widget("ship_data")
 
  
 gui_section(style="area:30,45px,100,100;")
 with gui_sub_section():
-    gui_row("row-height:75;")
+    # gui_row("row-height:100-100px;")
     gui_layout_widget("ship_internal_view")
 
+
+
 # Right
-with gui_sub_section("col-width:25;"):
+with gui_sub_section("col-width:300px;"):
     gui_row("row-height:200px;margin:0,0,0,10px;")
     gui_layout_widget("grid_face")
     gui_row()
@@ -86,11 +88,17 @@ with gui_sub_section("col-width:25;"):
     gui_row("row-height: 5;")
     gui_layout_widget("text_waterfall")
 
-gui_section(style="area:0,80,75,100;")
+
+gui_section(style="area:15px,40,30,40+35px;")
+gui_layout_widget("eng_presets")
+
+
+gui_section(style="area:15px,48,30,70;")
+gui_layout_widget("eng_heat_controls")
+
+gui_section(style="area:15px,75,30,100;")
 gui_layout_widget("eng_power_controls")
 
-gui_section(style="area:0,50,35,70;")
-gui_layout_widget("eng_heat_controls")
 
 yield idle
 

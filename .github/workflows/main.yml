@@ -30,6 +30,15 @@ jobs:
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "commerce"
 
+    - name: Archive comms addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'comms_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "comms"
+
     - name: Archive consoles addon
       uses: thedoctor0/zip-release@main
       with:
@@ -56,6 +65,15 @@ jobs:
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "docking"
+
+    - name: Archive fleet addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'fleets_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "fleets"
 
     - name: Archive grid_comms addon
       uses: thedoctor0/zip-release@main
