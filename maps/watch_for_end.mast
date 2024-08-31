@@ -17,7 +17,7 @@ if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"
     ->END
 
 stations = role('tsn') & role('station')
-if len(stations) ==0 and world_select.path != "deep_strike":
+if len(stations) ==0:
     start_text = "Mission is lost!  All yer base are belong to us, dammit."
     game_started = False
     game_ended = True
@@ -120,7 +120,7 @@ if world_select.path == "border_war" and war_declared == 3:
 stations = role('enemy') & role('station')
 raiders = role('Raider')
 
-# Check to see if any stations no longer exist. If so, delete the navpoint associated with that station.
+# Check to see if any enemy stations no longer exist. If so, delete the navpoint associated with that station.
 
 if len(stations) >= 1:
     for i in range(len(enemy_station_dict)):
