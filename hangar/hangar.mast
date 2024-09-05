@@ -98,7 +98,7 @@ ride_picker = gui_list_box(crafts,"row-height: 1.3em; background:#1572;", item_t
 
 gui_section(style="area: 20px,50, 35,50+20px;")
 gui_row(style="row-height:20px;")
-gui_text("text:Mission Briefing;color: white;justify: center;", style="background: #1578;")
+gui_text("$text:Mission Briefing;color: white;justify: center;", style="background: #1578;")
 gui_section(style="area: 20px,50+20px, 35,100-160px;background: #1572;")
 """""
 {briefing}
@@ -122,7 +122,7 @@ on change ride_picker.get_value():
             sbs.assign_client_to_ship(client_id, dock.id)
             defa = f"Protect {dock.name}"
             briefing = get_inventory_value(fighter, "briefing", defa)
-            gui_update("briefing-text", "text: {briefing}")
+            gui_update("briefing-text", "$text: {briefing}")
 
 gui_section(style="area: 75,100-80px, 100,100-50px;background: #002;")
 gui_text("select ship", style="tag:refit-text")
@@ -137,13 +137,13 @@ on change update_ticker < get_counter_elapsed_seconds(client_id, "refresh_status
     update_ticker = get_counter_elapsed_seconds(client_id, "refresh_status")+5
 
 on change fighter_change:
-    gui_update("refit-text", "text: select ship")
+    gui_update("refit-text", "$text: select ship")
     fighter = ride_choice
     if is_timer_finished(fighter, "refit"):
-        gui_update("refit-text", "text: ready to launch")
+        gui_update("refit-text", "$text: ready to launch")
     else:
         refit_time = format_time_remaining(fighter, "refit")
-        gui_update("refit-text", "text: refit - launch in {refit_time}")
+        gui_update("refit-text", "$text: refit - launch in {refit_time}")
 
 
 # If a thing launches or docks things need to refresh

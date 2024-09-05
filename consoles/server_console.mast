@@ -94,7 +94,7 @@ gui_text_area(start_text)
 
 # For using a seed value when randomly generating terrain, not currently implemented
 #row style="row-height:65px;"
-#"""justify:right;text:Seed (Optional)"""
+#"""justify:right;$text:Seed (Optional)"""
 #gui_input("""desc: Integer""", var="seed_value")
 
 rs= "row-height: 45px;margin:5px,5px,0,0;"
@@ -102,12 +102,12 @@ ts= "row-height: 45px;col-width: 7em;margin:0,2px, 0,0;"
 
 gui_section(style="area: 50, 95-500px, 100, 95;row-height:45px;margin:30px,0px,10px,0;padding:0,10px,10px,0;background:#1578;")
 gui_row(style=rs)
-gui_text("justify:right;text:Player ships", style=ts)
+gui_text("justify:right;$text:Player ships", style=ts)
 gui_blank(style="col-width:15px")
 gui_int_slider("text:int;low: 1.0;high:8.0",  var="player_count")
 
 gui_row(style=rs)
-gui_text(" justify:right;text:Difficulty", style=ts)
+gui_text(" justify:right;$text:Difficulty", style=ts)
 gui_blank(style="col-width:15px")
 gui_int_slider("text:int;low: 1.0;high:11.0", var="difficulty")
 gui_row(style=rs)
@@ -115,39 +115,39 @@ gui_row(style=rs)
 gui_blank()
 gui_row(style=rs)
 
-gui_text("justify:right;text:Terrain", style=ts)
+gui_text("justify:right;$text:Terrain", style=ts)
 gui_blank(style="col-width:15px")
-gui_drop_down("text: {terrain_select};list: none, few, some, lots, many", var="terrain_select")
+gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many", var="terrain_select")
 gui_row(style=rs)
 
-gui_text("justify:right;text:Lethal Terrain", style=ts)
+gui_text("justify:right;$text:Lethal Terrain", style=ts)
 gui_blank(style="col-width:15px")
-gui_drop_down("text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")
+gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")
 gui_row(style=rs)
 
-gui_text("justify:right;text:Friendly Ships", style=ts)
+gui_text("justify:right;$text:Friendly Ships", style=ts)
 gui_blank(style="col-width:15px")
-gui_drop_down("text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")
+gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")
 gui_row(style=rs)
 
-gui_text("justify:right;text:Monsters", style=ts)
+gui_text("justify:right;$text:Monsters", style=ts)
 gui_blank(style="col-width:15px")
-gui_drop_down("text: {monster_select};list: none, few, some, lots, many", var="monster_select")
+gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")
 gui_row(style=rs)
 
-gui_text("justify:right;text:Upgrades", style=ts)
+gui_text("justify:right;$text:Upgrades", style=ts)
 gui_blank(style="col-width:15px")
-gui_drop_down("text:{upgrade_select};list:none, few,some, lots, many", var="upgrade_select")
+gui_drop_down("$text:{upgrade_select};list:none, few,some, lots, many", var="upgrade_select")
 
 gui_row(style=rs)
 
-gui_text("justify:right;text:Time limit", style=ts)
+gui_text("justify:right;$text:Time limit", style=ts)
 gui_blank(style="col-width:15px")
 gui_input("desc: Minutes;", var="game_time_limit")
 
 gui_row(style=rs)
 if world_select.path == "border_war":
-    gui_text("justify:right;text:Minutes to War", style=ts)
+    gui_text("justify:right;$text:Minutes to War", style=ts)
     gui_blank(style="col-width:15px")
     gui_input("desc: Minutes;", var="war_time_delay")
 else:
@@ -205,7 +205,7 @@ game_started = True
 
 
 # Temp set this when first running
-shared SIM_STATE = "sim_running"
+shared SIM_STATE = "sim_unknown"
 
 
 gui_reroute_clients(game_started_console, exclude={client_id})
@@ -242,7 +242,7 @@ add_role(client_id, "console, mainscreen")
 resume_controls = gui_region("area: 5, 75, 95, 90;")
 
 with resume_controls:
-    gui_text("text: Simulation paused;font:gui-6;justify:center;")
+    gui_text("$text: Simulation paused;font:gui-6;justify:center;")
     gui_row()
 
     mission = get_mission_name()
@@ -258,7 +258,7 @@ with resume_controls:
     if same:
         gui_blank()
 
-    b = gui_button("text:Resume;justify:center;", style="padding:0,0,5px;")
+    b = gui_button("$text:Resume;justify:center;", style="padding:0,0,5px;")
     on gui_message(b):
         sim_resume()
         
@@ -267,12 +267,12 @@ with resume_controls:
 
     # start_mission
     if mission:
-        b2 = gui_button("text:restart {mission};justify:center;", style="padding:0,0,5px;")
+        b2 = gui_button("$text:restart {mission};justify:center;", style="padding:0,0,5px;")
         on gui_message(b2):
             sbs.run_next_mission(mission)
 
-    if start_mission is not None and start_mission != mission:
-        b3 = gui_button("text:mission_select;justify:center;") # , style="padding:0,0,5px;")
+    if start_mission is not None and start_mission != mission and len(start_mission)>0:
+        b3 = gui_button("$text:mission_select;justify:center;") # , style="padding:0,0,5px;")
         on gui_message(b3):
             sbs.run_next_mission(start_mission)
 
@@ -280,6 +280,7 @@ with resume_controls:
     if same:
         gui_blank()
 
+print("SERVER: {SIM_STATE}")
 if SIM_STATE == "sim_running":
     gui_hide(resume_controls)
 

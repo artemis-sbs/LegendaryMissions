@@ -290,13 +290,13 @@ def hangar_get_call_signs():
 
 def hangar_console_ship_template(item):
     gui_row("row-height: 1.2em;padding:13px;")
-    gui_text(f"text:{item.name};justify: left;")
-    gui_text(f"text:{get_dock_name(item)};justify: left;")
+    gui_text(f"$text:{item.name};justify: left;")
+    gui_text(f"$text:{get_dock_name(item)};justify: left;")
     
 
 def hangar_console_title_template():
     gui_row("row-height: 1.2em;padding:13px;background:#1578;")
-    gui_text(f"text:SHIP;justify: left;")
-    gui_text(f"text:DOCK;justify: left;")
+    gui_text(f"$text:SHIP;justify: left;")
+    gui_text(f"$text:DOCK;justify: left;")
 
 

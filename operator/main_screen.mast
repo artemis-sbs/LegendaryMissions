@@ -16,7 +16,7 @@ gui_image_keep_aspect_ratio_center("data/graphics/CosmosLogo")
 x += 128 + g
 h -= 50
 gui_section( style=f"area: 0, 100-{y+h+g}px,100-{x+g}px,100-{y+g}px;")
-gui_text("text:BUY THIS GAME;font:gui-6;justify:right;")
+gui_text("$text:BUY THIS GAME;font:gui-6;justify:right;")
 
 # """ Show a Logo and say waiting for game to start """
 gui_section( style=f"area: 0, 0, 100, 76;")

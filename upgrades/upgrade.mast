@@ -50,44 +50,44 @@ gui_row()
 gui_blank()
 gui_row()
 if cc_timer > 0:
-    """color:#0f0; text: {cc_count};""" style="tag:sh-cc-count;"
+    """color:#0f0;$text: {cc_count};""" style="tag:sh-cc-count;"
 else:
-    """text: {cc_count};""" style="tag:sh-cc-count;"
+    """$text: {cc_count};""" style="tag:sh-cc-count;"
 
 gui_row()
 if ip_timer > 0:
-    """color:#0f0; text: {ip_count};""" style="tag:sh-ip-count;"
+    """color:#0f0;$text: {ip_count};""" style="tag:sh-ip-count;"
 else:
-    """text: {ip_count};""" style="tag:sh-ip-count;"
+    """$text: {ip_count};""" style="tag:sh-ip-count;"
 
 gui_row()
 if tf_timer > 0:
-    """color:#0f0; text: {tf_count};""" style="tag:sh-tf-count;"
+    """color:#0f0;$text: {tf_count};""" style="tag:sh-tf-count;"
 else:
-    """text: {tf_count};""" style="tag:sh-tf-count;"
+    """$text: {tf_count};""" style="tag:sh-tf-count;"
 
 gui_row()
 if sc_timer > 0:
-    """color:#0f0; text: {sc_count};""" style="tag:sh-sc-count;"
+    """color:#0f0;$text: {sc_count};""" style="tag:sh-sc-count;"
 else:
-    """text: {sc_count};""" style="tag:sh-sc-count;"
+    """$text: {sc_count};""" style="tag:sh-sc-count;"
 
 gui_row()
-"""text: {vn_count};""" style="tag:sh-vn-count;"
+"""$text: {vn_count};""" style="tag:sh-vn-count;"
 gui_row()
 if cl_timer > 0:
-    """color:#0f0; text: {cl_count};""" style="tag:sh-cl-count;"
+    """color:#0f0;$text: {cl_count};""" style="tag:sh-cl-count;"
 else:
-    """text: {cl_count};""" style="tag:sh-cl-count;"
+    """$text: {cl_count};""" style="tag:sh-cl-count;"
 
 gui_row()
 if la_timer > 0:
-    """color:#0f0; text: {la_count};""" style="tag:sh-la-count;"
+    """color:#0f0;$text: {la_count};""" style="tag:sh-la-count;"
 else:
-    """text: {la_count};""" style="tag:sh-la-count;"
+    """$text: {la_count};""" style="tag:sh-la-count;"
 
 gui_row()
-"""text: {ho_count};""" style="tag:sh-ho-count;"
+"""$text: {ho_count};""" style="tag:sh-ho-count;"
 
 
 # Second Column, show the name of the upgrade, or show a button to activate it.
@@ -98,7 +98,7 @@ gui_row()
 
 gui_section( style="area:10,15,35,100;row-height:35px;")
 
-"""justify:center;text:SOOPER SEKRET UPGRADE SCREEN!"""
+"""justify:center;$text:UPGRADE SCREEN"""
 gui_row()
 gui_blank()
 gui_row()
@@ -110,16 +110,16 @@ if cc_count > 0 and (ctype == "weapons" or ctype == "engineering") and not cc_ti
         cc_timer = get_inventory_value(ship_id, "cc_timer" )
         comms_broadcast(ship_id, "Carapaction Coil Activated", "#FF0")
         task_schedule(cc_countdown)
-        gui_update_shared("sh-cc-count", "color:#0f0; text: {cc_count};")
-        gui_update_shared("sh-cc-txt", "color:#0f0; text: Carapaction Coil;")
-        gui_update_shared("sh-cc-timer", "color:#0f0; text: {cc_timer} seconds remaining.;")
+        gui_update_shared("sh-cc-count", "color:#0f0;$text: {cc_count};")
+        gui_update_shared("sh-cc-txt", "color:#0f0;$text: Carapaction Coil;")
+        gui_update_shared("sh-cc-timer", "color:#0f0;$text: {cc_timer} seconds remaining.;")
         jump upgrade_screen
 
 else:
     if cc_timer > 0:
-        """color:#0f0; text: Carapaction Coil;""" style="tag:sh-cc-txt;"
+        """color:#0f0;$text: Carapaction Coil;""" style="tag:sh-cc-txt;"
     else:
-        """text: Carapaction Coil;""" style="tag:sh-cc-txt;"
+        """$text: Carapaction Coil;""" style="tag:sh-cc-txt;"
 gui_row()
 if ip_count > 0 and ctype == "helm" and not ip_timer > 0:
     on gui_message(gui_button("Infusion P-Coils")):
@@ -129,15 +129,15 @@ if ip_count > 0 and ctype == "helm" and not ip_timer > 0:
         ip_timer = get_inventory_value(ship_id, "ip_timer" )
         comms_broadcast(ship_id, "Infusion P-Coils Activated", "#FF0")
         task_schedule(ip_countdown)
-        gui_update_shared("sh-ip-count", "color:#0f0; text: {ip_count};")
-        gui_update_shared("sh-ip-txt", "color:#0f0; text: Infusion P-Coils;")
-        gui_update_shared("sh-ip-timer", "color:#0f0; text: {ip_timer} seconds remaining.;")
+        gui_update_shared("sh-ip-count", "color:#0f0;$text: {ip_count};")
+        gui_update_shared("sh-ip-txt", "color:#0f0;$text: Infusion P-Coils;")
+        gui_update_shared("sh-ip-timer", "color:#0f0;$text: {ip_timer} seconds remaining.;")
         jump upgrade_screen
 else:
     if ip_timer > 0:
-        """color:#0f0; text: Infusion P-Coils;""" style="tag:sh-ip-txt;"
+        """color:#0f0;$text: Infusion P-Coils;""" style="tag:sh-ip-txt;"
     else:
-        """text: Infusion P-Coils;""" style="tag:sh-ip-txt;"
+        """$text: Infusion P-Coils;""" style="tag:sh-ip-txt;"
 gui_row()
 if tf_count > 0 and ctype == "weapons" and not tf_timer > 0:
     on gui_message(gui_button("Tauron Focuser")):
@@ -148,16 +148,16 @@ if tf_count > 0 and ctype == "weapons" and not tf_timer > 0:
         tf_timer = get_inventory_value(ship_id, "tf_timer" )
         comms_broadcast(ship_id, "Tauron Focuser Activated", "#FF0")
         task_schedule(tf_countdown)
-        gui_update_shared("sh-tf-count", "color:#0f0; text: {tf_count};")
-        gui_update_shared("sh-tf-txt", "color:#0f0; text: Tauron Focuser;")
-        gui_update_shared("sh-tf-timer", "color:#0f0; text: {tf_timer} seconds remaining.;")
+        gui_update_shared("sh-tf-count", "color:#0f0;$text: {tf_count};")
+        gui_update_shared("sh-tf-txt", "color:#0f0;$text: Tauron Focuser;")
+        gui_update_shared("sh-tf-timer", "color:#0f0;$text: {tf_timer} seconds remaining.;")
         jump upgrade_screen
 
 else:
     if tf_timer > 0:
-        """color:#0f0; text: Tauron Focuser;""" style="tag:sh-tf-txt;"
+        """color:#0f0;$text: Tauron Focuser;""" style="tag:sh-tf-txt;"
     else:
-        """text: Tauron Focuser;""" style="tag:sh-tf-txt;"
+        """$text: Tauron Focuser;""" style="tag:sh-tf-txt;"
 gui_row()
 if sc_count > 0 and ctype == "comms" and not sc_timer > 0:
     on gui_message(gui_button("Secret Codecase")):
@@ -167,16 +167,16 @@ if sc_count > 0 and ctype == "comms" and not sc_timer > 0:
         sc_timer = get_inventory_value(ship_id, "sc_timer" )
         comms_broadcast(ship_id, "Secret Codecase Activated", "#FF0")
         task_schedule(sc_countdown)
-        gui_update_shared("sh-sc-count", "color:#0f0; text: {sc_count};")
-        gui_update_shared("sh-sc-txt", "color:#0f0; text: Secret Codecase;")
-        gui_update_shared("sh-sc-timer", "color:#0f0; text: {sc_timer} seconds remaining.;")
+        gui_update_shared("sh-sc-count", "color:#0f0;$text: {sc_count};")
+        gui_update_shared("sh-sc-txt", "color:#0f0;$text: Secret Codecase;")
+        gui_update_shared("sh-sc-timer", "color:#0f0;$text: {sc_timer} seconds remaining.;")
         jump upgrade_screen
 
 else:
     if sc_timer > 0:
-        """color:#0f0; text: Secret Codecase;""" style="tag:sh-sc-txt;"
+        """color:#0f0;$text: Secret Codecase;""" style="tag:sh-sc-txt;"
     else:
-        """text: Secret Codecase;""" style="tag:sh-sc-txt;"
+        """$text: Secret Codecase;""" style="tag:sh-sc-txt;"
 
 gui_row()
 if vn_count > 0 and ctype == "engineering":
@@ -192,7 +192,7 @@ if vn_count > 0 and ctype == "engineering":
             set_inventory_value(ship_id, "vn_timer", 5)
             vn_timer = get_inventory_value(ship_id, "vn_timer" )
             task_schedule(vn_countdown)
-            gui_update_shared("sh-vn-timer", "color:#ff0; text: Damage Control Teams already at full strength;")
+            gui_update_shared("sh-vn-timer", "color:#ff0;$text: Damage Control Teams already at full strength;")
         else: 
             grid_restore_damcons(ship_id)
             vn_count -= 1
@@ -202,7 +202,7 @@ if vn_count > 0 and ctype == "engineering":
         jump upgrade_screen
 
 else:
-    """text: Vigoranium Nodule;""" style="tag:sh-vn-txt;"
+    """$text: Vigoranium Nodule;""" style="tag:sh-vn-txt;"
 
 gui_row()
 if cl_count > 0 and ctype == "engineering" and not cl_timer > 0:
@@ -213,16 +213,16 @@ if cl_count > 0 and ctype == "engineering" and not cl_timer > 0:
         cl_timer = get_inventory_value(ship_id, "cl_timer" )
         comms_broadcast(ship_id, "Cetrocite Crystal Activated", "#FF0")
         task_schedule(cl_countdown)
-        gui_update_shared("sh-cl-count", "color:#0f0; text: {cl_count};")
-        gui_update_shared("sh-cl-txt", "color:#0f0; text: Cetrocite Crystal;")
-        gui_update_shared("sh-cl-timer", "color:#0f0; text: {cl_timer} seconds remaining.;")
+        gui_update_shared("sh-cl-count", "color:#0f0;$text: {cl_count};")
+        gui_update_shared("sh-cl-txt", "color:#0f0;$text: Cetrocite Crystal;")
+        gui_update_shared("sh-cl-timer", "color:#0f0;$text: {cl_timer} seconds remaining.;")
         jump upgrade_screen
 
 else:
     if cl_timer > 0:
-        """color:#0f0; text: Cetrocite Crystal;""" style="tag:sh-cl-txt;"
+        """color:#0f0;$text: Cetrocite Crystal;""" style="tag:sh-cl-txt;"
     else:
-        """text: Cetrocite Crystal;""" style="tag:sh-cl-txt;"
+        """$text: Cetrocite Crystal;""" style="tag:sh-cl-txt;"
 
 gui_row()
 if la_count > 0 and ctype == "science" and not la_timer > 0:
@@ -233,16 +233,16 @@ if la_count > 0 and ctype == "science" and not la_timer > 0:
         la_timer = get_inventory_value(ship_id, "la_timer" )
         comms_broadcast(ship_id, "Lateral Array Activated", "#FF0")
         task_schedule(la_countdown)
-        gui_update_shared("sh-la-count", "color:#0f0; text: {la_count};")
-        gui_update_shared("sh-la-txt", "color:#0f0; text: Lateral Array;")
-        gui_update_shared("sh-la-timer", "color:#0f0; text: {la_timer} seconds remaining.;")
+        gui_update_shared("sh-la-count", "color:#0f0;$text: {la_count};")
+        gui_update_shared("sh-la-txt", "color:#0f0;$text: Lateral Array;")
+        gui_update_shared("sh-la-timer", "color:#0f0;$text: {la_timer} seconds remaining.;")
         jump upgrade_screen
    
 else:
     if la_timer > 0:
-        """color:#0f0; text: Lateral Array;""" style="tag:sh-la-txt;"
+        """color:#0f0;$text: Lateral Array;""" style="tag:sh-la-txt;"
     else:
-        """text: Lateral Array;""" style="tag:sh-la-txt;"
+        """$text: Lateral Array;""" style="tag:sh-la-txt;"
 
 
 gui_row()
@@ -261,7 +261,7 @@ if ho_count > 0 and (ctype == "engineering" or ctype == "weapons"):
             set_inventory_value(ship_id, "ho_timer", 5)
             ho_timer = get_inventory_value(ship_id, "ho_timer" )
             task_schedule(ho_countdown)
-            gui_update_shared("sh-ho-timer", "color:#ff0; text: Shields already overcharged;")
+            gui_update_shared("sh-ho-timer", "color:#ff0;$text: Shields already overcharged;")
         else: 
             fshield += 300.0
             rshield += 300.0
@@ -292,7 +292,7 @@ if ho_count > 0 and (ctype == "engineering" or ctype == "weapons"):
         jump upgrade_screen
 
 else:
-    """text: Haplix Overcharger;""" style="tag:sh-ho-txt;"
+    """$text: Haplix Overcharger;""" style="tag:sh-ho-txt;"
 
 
 # Third Column, displays short description if inactive, or timer countdown (in green) if active.
@@ -306,51 +306,51 @@ gui_row()
 gui_blank()
 gui_row()
 if cc_timer > 0:
-    """color:#0f0; text: {cc_timer} seconds remaining.""" style="tag:sh-cc-timer;"
+    """color:#0f0;$text: {cc_timer} seconds remaining.""" style="tag:sh-cc-timer;"
 else:
-    """text: 5 Minute 300% Shield Recharge Boost""" style="tag:sh-cc-timer;"
+    """$text: 5 Minute 300% Shield Recharge Boost""" style="tag:sh-cc-timer;"
 
 gui_row()
 if ip_timer > 0:
-    """color:#0f0; text: {ip_timer} seconds remaining.""" style="tag:sh-ip-timer;"
+    """color:#0f0;$text: {ip_timer} seconds remaining.""" style="tag:sh-ip-timer;"
 else:
-    """text: 5 Minute 300% Impulse and Maneuver Speed Boost""" style="tag:sh-ip-timer;"
+    """$text: 5 Minute 300% Impulse and Maneuver Speed Boost""" style="tag:sh-ip-timer;"
 
 gui_row()
 if tf_timer > 0:
-    """color:#0f0; text: {tf_timer} seconds remaining.""" style="tag:sh-tf-timer;"
+    """color:#0f0;$text: {tf_timer} seconds remaining.""" style="tag:sh-tf-timer;"
 else:
-    """text: 5 Minute 100% Beam and Reload Speed Boost""" style="tag:sh-tf-timer;"
+    """$text: 5 Minute 100% Beam and Reload Speed Boost""" style="tag:sh-tf-timer;"
 
 gui_row()
 if sc_timer > 0:
-    """color:#0f0; text: {sc_timer} seconds remaining.""" style="tag:sh-sc-timer;"
+    """color:#0f0;$text: {sc_timer} seconds remaining.""" style="tag:sh-sc-timer;"
 else:
-    """text: Force one enemy ship to auto-surrender""" style="tag:sh-sc-timer;"
+    """$text: Force one enemy ship to auto-surrender""" style="tag:sh-sc-timer;"
 
 gui_row()
 if vn_timer > 0:
-    """color:#ff0; text: Damage Control Teams already at full strength""" style="tag:sh-vn-timer;"
+    """color:#ff0;$text: Damage Control Teams already at full strength""" style="tag:sh-vn-timer;"
 else:
-    """text: Restore Damage Control Teams.""" style="tag:sh-vn-timer;"
+    """$text: Restore Damage Control Teams.""" style="tag:sh-vn-timer;"
 
 gui_row()
 if cl_timer > 0:
-    """color:#0f0; text: {cl_timer} seconds remaining.""" style="tag:sh-cl-timer;"
+    """color:#0f0;$text: {cl_timer} seconds remaining.""" style="tag:sh-cl-timer;"
 else:
-    """text: 5 Minute 100% Faster Heat Reduction""" style="tag:sh-cl-timer;"
+    """$text: 5 Minute 100% Faster Heat Reduction""" style="tag:sh-cl-timer;"
 
 gui_row()
 if la_timer > 0:
-    """color:#0f0; text: {la_timer} seconds remaining.""" style="tag:sh-la-timer;"
+    """color:#0f0;$text: {la_timer} seconds remaining.""" style="tag:sh-la-timer;"
 else:
-    """text: 5 Minute Target Scan Triple Speed""" style="tag:sh-la-timer;"
+    """$text: 5 Minute Target Scan Triple Speed""" style="tag:sh-la-timer;"
 
 gui_row()
 if ho_timer > 0:
-    """color:#ff0; text: Shields already overcharged""" style="tag:sh-ho-timer;"
+    """color:#ff0;$text: Shields already overcharged""" style="tag:sh-ho-timer;"
 else:
-    """text: +300 to shields but may damage shield generators""" style="tag:sh-ho-timer;"
+    """$text: +300 to shields but may damage shield generators""" style="tag:sh-ho-timer;"
 
 await gui()
 
@@ -371,7 +371,7 @@ set_data_set_value(player_blob, "all_shield_ugprade_coeff", shieldrate)
 print(f"New Shield Repair Rate: {shieldrate}")
 for x in range(300):
     cc_timer = get_inventory_value(ship_id, "cc_timer" )
-    gui_update_shared("sh-cc-timer", "color:#0f0; text: {cc_timer} seconds remaining.;")
+    gui_update_shared("sh-cc-timer", "color:#0f0;$text: {cc_timer} seconds remaining.;")
     cc_timer -= 1
     set_inventory_value(ship_id, "cc_timer", cc_timer )
     await delay_app(1)
@@ -379,9 +379,9 @@ for x in range(300):
 shieldrate /= 3.0
 print(f"Reset Shield Repair Rate: {shieldrate}")
 set_data_set_value(player_blob, "all_shield_upgrade_coeff", shieldrate)
-gui_update_shared("sh-cc-count", "text: {cc_count};")
-gui_update_shared("sh-cc-txt", "text: Carapaction Coil;")
-gui_update_shared("sh-cc-timer", "text: 5 Minute 300% Shield Recharge Boost;")
+gui_update_shared("sh-cc-count", "$text: {cc_count};")
+gui_update_shared("sh-cc-txt", "$text: Carapaction Coil;")
+gui_update_shared("sh-cc-timer", "$text: 5 Minute 300% Shield Recharge Boost;")
 ->END
 
 ===== ip_countdown ===== 
@@ -404,7 +404,7 @@ print(f"New Turn Coefficient: {turnfaster}")
 #print(f"New Warp Coefficient: {warpfaster}")
 for x in range(300):
     ip_timer = get_inventory_value(ship_id, "ip_timer" )
-    gui_update_shared("sh-ip-timer", "color:#0f0; text: {ip_timer} seconds remaining.;")
+    gui_update_shared("sh-ip-timer", "color:#0f0;$text: {ip_timer} seconds remaining.;")
     ip_timer -= 1
     set_inventory_value(ship_id, "ip_timer", ip_timer )
     await delay_app(1)
@@ -418,9 +418,9 @@ print(f"Reset Turn Coefficient: {turnfaster}")
 set_data_set_value(player_blob, "impulse_upgrade_oeff", impfaster)
 set_data_set_value(player_blob, "turn_upgrade_coeff", turnfaster)
 #set_data_set_value(player_blob, "warp_upgrade_coeff", warpfaster)
-gui_update_shared("sh-ip-count", "text: {ip_count};")
-gui_update_shared("sh-ip-txt", "text: Infusion P-Coils;")
-gui_update_shared("sh-ip-timer", "text: 5 Minute 300% Impulse and Maneuver Speed Boost;")
+gui_update_shared("sh-ip-count", "$text: {ip_count};")
+gui_update_shared("sh-ip-txt", "$text: Infusion P-Coils;")
+gui_update_shared("sh-ip-timer", "$text: 5 Minute 300% Impulse and Maneuver Speed Boost;")
 ->END
 
 ===== tf_countdown ===== 
@@ -441,7 +441,7 @@ print(f"New Beam Speed Coefficient: {beamfaster}")
 print(f"New TorpeTube Coefficient: {tubefaster}")
 for x in range(300):
     tf_timer = get_inventory_value(ship_id, "tf_timer" )
-    gui_update_shared("sh-tf-timer", "color:#0f0; text: {tf_timer} seconds remaining.;")
+    gui_update_shared("sh-tf-timer", "color:#0f0;$text: {tf_timer} seconds remaining.;")
     tf_timer -= 1
     set_inventory_value(ship_id, "tf_timer", tf_timer )
     await delay_app(1)
@@ -452,35 +452,35 @@ print(f"Reset Beam Damage Coefficient: {beamfaster}")
 print(f"Reset TorpeTube Coefficient: {tubefaster}")
 set_data_set_value(player_blob, "all_beam_upgrade_coeff", beamfaster)
 set_data_set_value(player_blob, "all_tube_upgrade_coeff", tubefaster)
-gui_update_shared("sh-tf-count", "text: {tf_count};")
-gui_update_shared("sh-tf-txt", "text: Tauron Focuser;")
-gui_update_shared("sh-tf-timer", "text: 5 Minute 100% Beam and Reload Speed Boost;")
+gui_update_shared("sh-tf-count", "$text: {tf_count};")
+gui_update_shared("sh-tf-txt", "$text: Tauron Focuser;")
+gui_update_shared("sh-tf-timer", "$text: 5 Minute 100% Beam and Reload Speed Boost;")
 ->END
 
 ===== sc_countdown ===== # Code for using Secred Codecase in comms.mast
 for x in range(300):
     sc_timer = get_inventory_value(ship_id, "sc_timer" )
-    gui_update_shared("sh-sc-timer", "color:#0f0; text: {sc_timer} seconds remaining.;")
+    gui_update_shared("sh-sc-timer", "color:#0f0;$text: {sc_timer} seconds remaining.;")
     break if sc_timer == 0
     sc_timer -= 1
     set_inventory_value(ship_id, "sc_timer", sc_timer )
     await delay_app(1)
 
-gui_update_shared("sh-sc-count", "text: {sc_count};")
-gui_update_shared("sh-sc-txt", "text: Secret Codecase;")
-gui_update_shared("sh-sc-timer", "text: Force one enemy ship to auto-surrender;")
+gui_update_shared("sh-sc-count", "$text: {sc_count};")
+gui_update_shared("sh-sc-txt", "$text: Secret Codecase;")
+gui_update_shared("sh-sc-timer", "$text: Force one enemy ship to auto-surrender;")
 ->END
 
 ===== vn_countdown ===== 
 for x in range(5):
     vn_timer = get_inventory_value(ship_id, "vn_timer" )
-    gui_update_shared("sh-vn-timer", "color:#ff0; text: Damage Control Teams already at full strength;")
+    gui_update_shared("sh-vn-timer", "color:#ff0;$text: Damage Control Teams already at full strength;")
     vn_timer -= 1
     set_inventory_value(ship_id, "vn_timer", vn_timer )
     print(f"VN Timer: {vn_timer}")
     await delay_app(1)
 
-gui_update_shared("sh-vn-timer", "text: Restore Damage Control Teams;")
+gui_update_shared("sh-vn-timer", "$text: Restore Damage Control Teams;")
 ->END
 
 ===== cl_countdown ===== 
@@ -496,7 +496,7 @@ set_data_set_value(player_blob, "coolant_upgrade_coeff", stayfrosty)
 print(f"New Coolant Coefficient: {stayfrosty}")
 for x in range(300):
     cl_timer = get_inventory_value(ship_id, "cl_timer" )
-    gui_update_shared("sh-cl-timer", "color:#0f0; text: {cl_timer} seconds remaining.;")
+    gui_update_shared("sh-cl-timer", "color:#0f0;$text: {cl_timer} seconds remaining.;")
     cl_timer -= 1
     set_inventory_value(ship_id, "cl_timer", cl_timer )
     await delay_app(1)
@@ -504,9 +504,9 @@ for x in range(300):
 stayfrosty /= 2.0
 print(f"Reset Coolant Coefficient: {stayfrosty}")
 set_data_set_value(player_blob, "coolant_upgrade_coeff", stayfrosty)
-gui_update_shared("sh-cl-count", "text: {cl_count};")
-gui_update_shared("sh-cl-txt", "text: Cetrocite Crystal;")
-gui_update_shared("sh-cl-timer", "text: 5 Minute 100% Faster Heat Reduction;")
+gui_update_shared("sh-cl-count", "$text: {cl_count};")
+gui_update_shared("sh-cl-txt", "$text: Cetrocite Crystal;")
+gui_update_shared("sh-cl-timer", "$text: 5 Minute 100% Faster Heat Reduction;")
 ->END
 
 ===== la_countdown ===== 
@@ -522,7 +522,7 @@ set_data_set_value(player_blob, "sensor_upgrade_coeff", scanrate)
 print(f"New Scan Speed: {scanrate}")
 for x in range(300):
     la_timer = get_inventory_value(ship_id, "la_timer" )
-    gui_update_shared("sh-la-timer", "color:#0f0; text: {la_timer} seconds remaining.;")
+    gui_update_shared("sh-la-timer", "color:#0f0;$text: {la_timer} seconds remaining.;")
     la_timer -= 1
     set_inventory_value(ship_id, "la_timer", la_timer )
     await delay_app(1)
@@ -530,20 +530,20 @@ for x in range(300):
 scanrate /= 3.0
 print(f"Reset Scan Speed: {scanrate}")
 set_data_set_value(player_blob, "sensor_upgrade_coeff", scanrate)
-gui_update_shared("sh-la-count", "text: {la_count};")
-gui_update_shared("sh-la-txt", "text: Lateral Array;")
-gui_update_shared("sh-la-timer", "text: 5 Minute Target Scan Triple Speed;")
+gui_update_shared("sh-la-count", "$text: {la_count};")
+gui_update_shared("sh-la-txt", "$text: Lateral Array;")
+gui_update_shared("sh-la-timer", "$text: 5 Minute Target Scan Triple Speed;")
 ->END
 
 ===== ho_countdown ===== 
 for x in range(5):
     ho_timer = get_inventory_value(ship_id, "ho_timer" )
-    gui_update_shared("sh-ho-timer", "color:#ff0; text: Shields already overcharged;")
+    gui_update_shared("sh-ho-timer", "color:#ff0;$text: Shields already overcharged;")
     ho_timer -= 1
     set_inventory_value(ship_id, "ho_timer", ho_timer )
     print(f"HO Timer: {ho_timer}")
     await delay_app(1)
 
-gui_update_shared("sh-ho-timer", "text: +300 to shields but may damage shield generators")
+gui_update_shared("sh-ho-timer", "$text: +300 to shields but may damage shield generators")
 ->END
 
