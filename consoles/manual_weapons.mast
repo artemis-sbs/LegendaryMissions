@@ -44,7 +44,7 @@ with gui_rebuild(manual):
     gui_row("row-height: 3em;")
     #ib = gui_icon("icon_index:112;color:yellow;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:manual_beams")
     #on gui_click(ib):
-    cb = gui_checkbox("text:Manual;state:True")
+    cb = gui_checkbox("$text:Manual;state:True")
     cb.value = ship.get_inventory_value("MANUAL_BEAMS_ON", False)
     on gui_message(cb):
         ship_id = sbs.get_ship_of_client(client_id)
@@ -97,7 +97,7 @@ with gui_rebuild(manual):
     # Bottom row 
     # ib = gui_icon("icon_index:112;color:green;", style="click_color: blue; click_text:_; click_font:gui-5; click_tag:min_manual_beams")
     # on gui_click(ib):
-    cb = gui_checkbox("text:Manual;state:True")
+    cb = gui_checkbox("$text:Manual;state:True")
     cb.value = ship.get_inventory_value("MANUAL_BEAMS_ON", False)
     on gui_message(cb):
         ship_id = sbs.get_ship_of_client(client_id)

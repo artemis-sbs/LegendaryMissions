@@ -74,17 +74,17 @@ with gui_sub_section():
     #
     if is_timer_set(SHARED, "time_limit"):
         gui_row("row-height: 45px")
-        gui_text("text: time remaining;justify: right;font:gui-5;")
+        gui_text("$text: time remaining;justify: right;font:gui-5;")
         t = format_time_remaining(SHARED, "time_limit")
-        gui_text(f"text: {t};justify:left;font:gui-5;", style="tag: sh_game_time;padding:20px;")    
+        gui_text(f"$text: {t};justify:left;font:gui-5;", style="tag: sh_game_time;padding:20px;")    
 
     gui_row("row-height: 45px")
     # Show remaining enemy count
     r = role("raider") 
     count=len(r)
 
-    gui_text("text: remaining raiders;justify: right;font:gui-5;")
-    gui_text(f"text: {count};justify:left;font:gui-5;", style="tag: sh_raider_count;padding:20px;")
+    gui_text("$text: remaining raiders;justify: right;font:gui-5;")
+    gui_text(f"$text: {count};justify:left;font:gui-5;", style="tag: sh_raider_count;padding:20px;")
 
     gui_row()
     #gui_layout_widget("science_2d_view")
@@ -111,11 +111,11 @@ await delay_sim(seconds=10)
 
 r = role("raider")
 count = len(r)
-gui_update_shared("sh_raider_count", f"text:{count};justify:left;font:gui-5;")
+gui_update_shared("sh_raider_count", f"$text:{count};justify:left;font:gui-5;")
 
 if is_timer_set(SHARED, "time_limit"):
     t = format_time_remaining(SHARED, "time_limit")
-    gui_update_shared("sh_game_time",f"text: {t};justify:left;font:gui-5;")
+    gui_update_shared("sh_game_time",f"$text: {t};justify:left;font:gui-5;")
 
 
 jump update_raider_count

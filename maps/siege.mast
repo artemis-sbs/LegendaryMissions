@@ -9,14 +9,14 @@
 # and this just just beyond the dedent
 #properties:
 #    gui_property_tab("Main", 12)
-#    gui_property("player_count", "Player Ships", gui_int_slider("text:int;low: 1.0;high:8.0"))
-#    gui_property("difficulty", "Difficulty", gui_int_slider("text:int;low: 1.0;high:11.0"))
+#    gui_property("player_count", "Player Ships", gui_int_slider("$text:int;low: 1.0;high:8.0"))
+#    gui_property("difficulty", "Difficulty", gui_int_slider("$text:int;low: 1.0;high:11.0"))
 #    gui_separator()
-#    gui_property("terrain_select", "Terrain", gui_drop_down("text: {terrain_select};list: none, few, some, lots, many"))
-#    gui_property("lethal_select", "Lethal Terrain", gui_drop_down("text: {lethal_select};list: none, few, some, lots, many"))
-#    gui_property("friendly_select", "Friendly Ships", gui_drop_down("text: {friendly_select};list: none, few, some, lots, many"))
-#    gui_property("monster_select", "Monsters", gui_drop_down("text: {monster_select};list: none, few, some, lots, many"))
-#    gui_property("upgrade_select", "Upgrades", gui_drop_down("text:{upgrade_select};list:none, few,some, lots, many"))
+#    gui_property("terrain_select", "Terrain", gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many"))
+#    gui_property("lethal_select", "Lethal Terrain", gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many"))
+#    gui_property("friendly_select", "Friendly Ships", gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many"))
+#    gui_property("monster_select", "Monsters", gui_drop_down("$text: {monster_select};list: none, few, some, lots, many"))
+#    gui_property("upgrade_select", "Upgrades", gui_drop_down("$text:{upgrade_select};list:none, few,some, lots, many"))
 #    gui_property("game_time_limit", "Time Limit", gui_input("desc: Minutes;"))
 
 

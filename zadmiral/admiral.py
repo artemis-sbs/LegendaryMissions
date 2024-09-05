@@ -31,7 +31,7 @@ from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text
 
 def property_lb(item):
     gui_row("row-height: 1.2em;padding:13px;")
-    gui_text(f"text:{item['label']};justify: left;")
+    gui_text(f"$text:{item['label']};justify: left;")
     gui_row("row-height: 1.5em;padding:13px;")
     gui_c = item['control']
     # print(f"admiral py property {gui_c}")

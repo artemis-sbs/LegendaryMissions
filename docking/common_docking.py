@@ -11,6 +11,7 @@ from sbs_utils.tickdispatcher import TickDispatcher
 from sbs_utils.procedural.internal_damage import grid_restore_damcons, grid_repair_grid_objects
 from sbs_utils.faces import get_face
 from sbs_utils.procedural.signal import signal_emit
+from sbs_utils.helpers import FrameContext
 
 
 
@@ -166,9 +167,15 @@ def player_docking_docking(player_id_or_obj, dock_station):
     raider = closest(player_id_or_obj, role("raider"), _too_close)
     if raider is not None:
         comms_message("Attempting dock when enemies is ill advised.", player_id, player_id,  "Enemies near", None, "white", "red", from_name="Docking")
-        comms_broadcast(player_id, "docking disable, enenmy near")
+        comms_broadcast(player_id, "docking disable, enemy near")
         player_blob.set("dock_state", "undocked")
         player_blob.set("dock_base_id", 0)
+        sim = FrameContext.context.sim
+        #
+        # Need to remove the tractor, engine typical does this
+        # but we are forcing the state change
+        #
+        sim.DeleteTractorConnection(dock_station_id, player_id)
         return RATE_SLOW
     #
 
