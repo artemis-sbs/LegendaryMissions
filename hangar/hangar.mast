@@ -190,7 +190,8 @@ set_dedicated_link(client_id, "craft_id", ride_select)
 
 mission_objective = get_inventory_value(ride_select, "current_objective")
 if mission_objective:
-    comms_broadcast(client_id, mission_objective)
+    comms_broadcast(client_id, f"Objective", "#B90")
+    comms_broadcast(client_id, f"{mission_objective}", "#B90")
 
 
 gui_console("cockpit")

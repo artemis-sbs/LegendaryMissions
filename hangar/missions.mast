@@ -68,7 +68,13 @@ _torp_types = sel_o.data_set.get("torpedo_types_available",0)
 if  _torp_types is None:
      print("torpedo mission not needed")
      ->END
+
+
+
 _torp_types = _torp_types.split(",")
+# remove blanks
+_torp_types = [x for x in _torp_types if x]
+# print(f"Mission Torp types {_torp_types}")
 torp_type = random.randint(0,len(_torp_types)-1)
 amount = random.randint(2, max(3, 6-torp_type))
 torp_name = _torp_types[torp_type].strip()
@@ -77,6 +83,7 @@ torp_name = _torp_types[torp_type].strip()
 set_inventory_value(SPAWNED_ID, "briefing", f"Deliver {torp_name} to {sel_o.name}^Take the {amount} {torp_name} and delivery them to {sel_o.name}.")
 mission_objective = f"Deliver {torp_name} to {sel_o.name}"
 set_inventory_value(COMMS_ORIGIN_ID, "current_objective", f"Deliver {torp_name} to {sel_o.name}")
+mission_objective = f"delivered {amount} {torp_name} to {sel_o.name}"
 
 sel_o = None # free
 
@@ -101,9 +108,15 @@ if current_load is None:
 set_data_set_value(COMMS_SELECTED_ID, f"{torp_name}_NUM", amount + current_load, 0)
 
 # Get the current load
+origin_o = to_object(COMMS_ORIGIN_ID)
+pilot = "A craft "
+if origin_o is not None:
+    pilot = origin_o.name
+
 client_id = get_inventory_value(COMMS_ORIGIN_ID, "client_id", client_id)
-comms_broadcast(client_id, "Objective complete")
-comms_broadcast(client_id, mission_objective)
+comms_broadcast(client_id, "Objective complete", "#090")
+comms_broadcast(client_id, f"   \x02 {mission_objective}", "#090")
+comms_broadcast(COMMS_SELECTED_ID, f"{pilot} {mission_objective}",  "#090")
 
 
 
@@ -164,8 +177,9 @@ jump travel if get_dedicated_link(COMMS_ORIGIN_ID, "home_dock") != COMMS_SELECTE
 
 # Get the current load
 client_id = get_inventory_value(COMMS_ORIGIN_ID, "client_id", client_id)
-comms_broadcast(client_id, "Objective complete")
-comms_broadcast(client_id, mission_objective)
+comms_broadcast(client_id, "Objective complete", "#090")
+comms_broadcast(client_id, f"   \x02 {mission_objective}", "#090")
+
 
 jump hangar_schedule_mission
 
@@ -225,8 +239,8 @@ if len(stations)!=0:
 else:
     # Get the current load
     client_id = get_inventory_value(COMMS_ORIGIN_ID, "client_id", client_id)
-    comms_broadcast(client_id, "Objective complete")
-    comms_broadcast(client_id, "All patrol points have been visited")
+    comms_broadcast(client_id, "Objective complete", "#090")
+    comms_broadcast(client_id, "   \x02 All patrol points have been visited", "#090")
     ->END
 
 

@@ -340,13 +340,24 @@ siege_skaraan_fleet = [
      ["skaraan_executor"],
      ["skaraan_executor"],
      ["skaraan_executor"],
-     ["skaraan_executor", "skaraan_executor"]],
+     ["skaraan_executor"]],
+    #  [["skaraan_executor"],
+    #  ["skaraan_executor"],
+    #  ["skaraan_executor"],
+    #  ["skaraan_executor"],
+    #  ["skaraan_executor", "skaraan_executor"]],
      # Difficulty 11
-     [["skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor"],
-     ["skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor"],
-     ["skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor"],
-     ["skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor"],
-     ["skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor"]]
+     [["skaraan_executor"],
+     ["skaraan_executor"],
+     ["skaraan_executor"],
+     ["skaraan_executor"],
+     ["skaraan_executor"]],
+
+    #  [["skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor"],
+    #  ["skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor"],
+    #  ["skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor"],
+    #  ["skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor"],
+    #  ["skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor", "skaraan_executor"]]
 ]
 
 siege_ximni_fleet = [
@@ -651,12 +662,12 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
     if race == "ximni":
         siege_fleet = siege_ximni_fleet[fleet_diff][fleet_rand]
     if race == "pirate":
-        siege_fleet = siege_ximni_fleet[fleet_diff][fleet_rand]
+        siege_fleet = siege_pirate_fleet[fleet_diff][fleet_rand]
     if race == None:
         race = "kralien"
         siege_fleet = siege_kralien_fleet[fleet_diff][fleet_rand]
 
-    print(f"Create Fleet, Race: {race}, Ships: {siege_fleet}, Pos: {int(posx)}, {int(posy)}, {int(posz)}")
+    #print(f"Create Fleet, Race: {race}, Ships: {siege_fleet}, Pos: {int(posx)}, {int(posy)}, {int(posz)}")
 
     
     num_ships = len(siege_fleet)
@@ -720,7 +731,7 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
                     if elite_is_engine_ability(ab):
                         raider.data_set.set(ab, 1,0)
                     add_role(raider.id, ab)
-            print("Elite "+ elite_get_abilities_scan(raider.id))
+            #print("Elite "+ elite_get_abilities_scan(raider.id))
 
 
         # Should add a common function to call to get the face based on race

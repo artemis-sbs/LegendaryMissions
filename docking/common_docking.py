@@ -115,6 +115,8 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
         if station is not None:
             player_blob.set("dock_base_id", to_id(station))
             return RATE_FAST
+        else:
+            player_blob.set("dock_base_id", 0)
 #
     # 
     #
