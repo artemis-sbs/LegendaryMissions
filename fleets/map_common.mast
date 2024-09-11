@@ -118,22 +118,11 @@ for player_ship_data in player_list:
         # make sure the id is cleared dry docked ships
         player_ship_data["id"] = None
         continue
-
-    
-
     
     if len(stations_friendly) > 0:
         so = random.choice(stations_friendly)
         spawn_pos = so.pos
         spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
-
-    if world_select.path == "deep_strike":
-        pickup_spawn(20000, 0, 700, "cetrocite_crystal")
-        spawn_pos = Vec3(20000, 0, 0)
-        print(f"Deep Strike, Spawn Player at 20000, 0, 0")
-
-    
-    
 
     player_ship = to_id(player_spawn(*spawn_pos, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
     
@@ -145,8 +134,6 @@ for player_ship_data in player_list:
     if first:
         assign_client_to_ship(0,player_ship)
         first = False
-
-
 
 my_players = role("__player__") & role("tsn")
 for player in my_players:
@@ -160,7 +147,6 @@ for player in my_players:
         follow_route_select_science(player, friend)
 
     blob.set("num_extra_scan_sources",num_ids,0)
-
 
 ->END
     
