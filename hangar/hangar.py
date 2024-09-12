@@ -182,12 +182,12 @@ def hangar_launch_craft(craft_id, client_id):
     home_id = get_dedicated_link(craft.id, "home_dock")
     set_science_selection(craft_id, home_id)
     home = to_object(home_id)
-    # set the position on launch, because if home
-    # is a ship it could have moved
-    pos = get_pos(home_id)
-    # pos is none if no ship found
-    if pos:
-        set_pos(craft.id, pos)
+    if home is not None:
+        # set the position on launch, because if home
+        # is a ship it could have moved
+        craft.pos = home.pos
+        craft.engine_object.rot_quat = home.engine_object.rot_quat
+        
     return True
 
 

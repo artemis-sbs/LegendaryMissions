@@ -222,42 +222,7 @@ for v in spawn_points:
 #------------------------------------------------------------------------------------------------------------
 # make a few random clusters of Asteroids
 
-t_min = terrain_value * 7
-t_max = t_min * 3
-spawn_points = scatter.box(random.randint(t_min,t_max), 0,0,0, 100000, 1000, 100000, centered=True)
-
-asteroid_types = ship_data_plain_asteroid_keys()
-for v in spawn_points:
-    
-    amount = random.randint(t_min+10,t_max+10)
-    # the more you have give a bit more space
-    ax = random.randint(-20,20)
-    ay = random.randint(-150,150)
-    az = random.randint(-20,20)
-    #cluster_spawn_points = scatter_box(amount, v.x, 0,v.z, amount*50, amount*20,amount*200, centered=True, ax, ay, az )
-    cluster_spawn_points = scatter_box(amount,  v.x, 0,v.z, amount*50, amount*5,amount*200, True, 0, ay, 0 )
-
-    for v2 in cluster_spawn_points:
-        a_type = random.choice(asteroid_types)
-
-        asteroid = terrain_spawn(v2.x, v2.y, v2.z,None, "#,asteroid", a_type, "behav_asteroid")
-        asteroid.engine_object.steer_yaw = random.uniform(0.0001, 0.003)
-        asteroid.engine_object.steer_pitch = -random.uniform(0.0001, 0.003)
-        asteroid.engine_object.steer_roll = random.uniform(0.0001, 0.003)
-
-        sx = random.uniform(0.8, 3.5)
-        sy = random.uniform(0.8, 3.5)
-        sz = random.uniform(0.8, 3.5)
-        sm = max(sx, sy)
-        sm = max(sm, sz)
-        #er = asteroid.blob.get("exclusionradius",0)
-        #er *= sm
-
-        asteroid.blob.set("local_scale_x_coeff", sx)
-        asteroid.blob.set("local_scale_y_coeff", sy)
-        asteroid.blob.set("local_scale_z_coeff", sz)
-        #asteroid.blob.set("exclusionradius", er)
-        
+terrain_asteroid_clusters(terrain_value)                
 
 #------------------------------------------------------------------------------------------------------------
 # I want candy
