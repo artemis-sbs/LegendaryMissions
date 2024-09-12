@@ -5,7 +5,7 @@ import siege.mast
 import singlefront.mast
 import doublefront.mast
 import deepstrike.mast
-# import peacetime.mast
+import peacetime.mast
 import borderwar.mast
 import watch_for_end.mast
 
