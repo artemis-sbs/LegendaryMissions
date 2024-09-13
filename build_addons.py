@@ -4,6 +4,7 @@ import zipfile
 import pathlib
 
 skip =  {"__pycache__"}
+version = "v3.9.34"
 
 
 def zipdir(path):
@@ -14,7 +15,7 @@ def zipdir(path):
     finally:
         pass
 
-    with zipfile.ZipFile(f".addons/{path}.mastlib", "w") as zf:
+    with zipfile.ZipFile(f"../__lib__/artemis-sbs.LegendaryMissions.{path}.{version}.mastlib", "w") as zf:
         
 
         for dirname, subdirs, files in os.walk(path):

@@ -239,9 +239,9 @@ def player_docking_station_docked(player_id_or_obj, dock_station):
     
         
     throttle = player_blob.get("playerThrottle",0)
-    if throttle >1.0:
+    if throttle >0.6:
         player_blob.set("playerThrottle",0.5, 0)
-        comms_message("Attempting to warp while docked can hurt our systems.", dock_station_id, player_id,  "GEEZ! YOU'RE STILL DOCKED", None, "white", "red")
+        comms_message("Engines running when attempting to docked can hurt our systems.", dock_station_id, player_id,  "GEEZ! YOU'RE STILL DOCKED", None, "white", "red")
         comms_broadcast(player_id, "Docking moors active")
         return RATE_SLOW
 

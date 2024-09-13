@@ -8,7 +8,7 @@
 
 + "status":
     <scan> 
-        " Space station system status cannot be scanned in this beta version of the software.
+        " Space station system status cannot be scanned in this version of the software.
 
 + "intel":
     <scan> 
@@ -35,7 +35,7 @@
         % This ship is on our side.
 + "status":
     <scan>
-        " Friendly ship systems cannot be scanned in this beta version of the software.
+        " Friendly ship systems cannot be scanned in this version of the software.
 + "intel":
     <scan>
         % The ship is ready for battle.
@@ -159,7 +159,7 @@ if taunt_trait is not None and intel_list is not None:
         " Enemy vessel. Exercise caution.
 + "status":
     <scan>
-        " Dynamic properties of enemy vessels cannot be scanned in this beta software.
+        " Dynamic properties of enemy vessels cannot be scanned in this software.
 
 + "intel" {"taunt_intel": taunt_intel, "elite_intel": elite_intel}:
     <scan>
