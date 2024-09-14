@@ -65,7 +65,7 @@ _torp_types = sel_o.data_set.get("torpedo_types_available",0)
 # 
 # 
 #
-if  _torp_types is None:
+if  _torp_types is None or _torp_types == "":
      print("torpedo mission not needed")
      ->END
 

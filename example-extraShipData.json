@@ -1,0 +1,126 @@
+// game data file for Artemis Cosmos (Artemis 3), a multiplayer space game
+//
+// the raw format of this file is HJSON, which is a more human-usable variant of JSON.
+//
+// this is a comment line
+//
+// JSON is a key-value pair format, so you naturally see lines that look like:
+// "key": "value",  or sometimes "key": [ 8, 8, 8, 8 ], or a more complex nested set of data that starts with "key": [
+//
+
+{
+    //------------------------------------------------------------------
+    "#credits-text": "Designed and programmed by^^Thom Robertson",
+  
+    // major cleanup and rebuild by Mike Substelny, 6/29/23
+  
+    //------------------------------------------------------------------
+    "#ship-list": [
+        {
+          //---------------------------------- ship data --------------------------------
+          "key": "tsn_legendary",
+          "name": "Legendary",
+          "side": "TSN",
+          "artfileroot": "tsn_light_cruiser",
+          "meshscale": 0.171711415052414,
+          "radarscale": 1.0,
+          "exclusionradius": 50.0,
+          "meshrotate": 0,
+          "long_desc": "TSN Light Cruiser^Standard long patrol vessel of the TSN.^2 forward beams^2 Torpedo tubes^Stores for 2 nukes, 8 homing, 6 mines, 4 EMP, 2 PShock.",
+          "tubecount": 2,
+          "torpedostart": [ { "Homing": 8 }, { "Nuke": 2 }, {  "EMP": 4}, {  "Mine": 6}, {  "BingBang": 6} ],
+    //      "torpedostart": {"Homing": 8, "Nuke": 2, "EMP": 4, "Mine": 6 },
+          
+          "internalmapscale": 1.0,
+          "internalmapw": 10,
+          "internalmaph": 17,
+          "internalsymmetry": 1,
+          "turn_rate": 1,
+          "speed_coeff": 1.0,
+          "scan_strength_coeff": 1,
+          "ship_energy_cost": 1,
+          "warp_energy_cost": 1,
+          "jump_energy_cost": 2,
+          "roles": "ship,warship,patrol,heavy,exploration",
+          "shields": [
+            120,
+            120
+          ],
+          "hullpoints": 3,
+          "hull_port_sets": {
+            "beam Primary Beams": [
+              {
+                "position": [
+                  -101.286544799805,
+                  8.28022956848145,
+                  256.578033447266
+                ],
+                "color": "green",
+                "arccolor": "#090",
+                "cycle_time": 6,
+                "damage_coeff": 1,
+                "range": 1000,
+                "arcwidth": 144,
+                "barrel_angle": 342
+              },
+              {
+                "position": [
+                  101.286544799805,
+                  8.28022956848145,
+                  256.578033447266
+                ],
+                "color": "green",
+                "arccolor": "#090",
+                "cycle_time": 6,
+                "damage_coeff": 1,
+                "range": 1000,
+                "arcwidth": 144,
+                "barrel_angle": 18
+              }
+            ],
+            "exhaust": [
+              {
+                "position": [
+                  -82.237060546875,
+                  21.95822143554688,
+                  -243.877197265625
+                ],
+                "color": "blue"
+              },
+              {
+                "position": [
+                  82.237060546875,
+                  21.95822143554688,
+                  -243.877197265625
+                ],
+                "color": "blue"
+              },
+              {
+                "position": [
+                  0.0,
+                  -9.14296054840088,
+                  -278.493286132812
+                ],
+                "color": "blue"
+              },
+              {
+                "position": [
+                  0.0,
+                  29.4022521972656,
+                  -288.493286132812
+                ],
+                "color": "blue"
+              }
+            ]
+          }
+        }
+    ]
+  
+  
+  }
+  // keep this end-of-file line, for parsing safety
+  
+  
+  
+  
+  

@@ -4,7 +4,7 @@ import zipfile
 import pathlib
 
 skip =  {"__pycache__"}
-version = "v3.9.34"
+version = "v3.9.35a"
 
 
 def zipdir(path):
