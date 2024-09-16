@@ -110,6 +110,9 @@ nav:
       - Raider: script/science/raider.md
       - Station: script/science/station.md
 
+    - Maps:
+      - script/maps/index.md
+
     - Contributing:
       - script/contribute/index.md
 
