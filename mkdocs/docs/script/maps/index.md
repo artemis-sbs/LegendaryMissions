@@ -1,28 +1,52 @@
 ## New Map system post 1.0
 This will use a system of grids and tiles.
 
-- galaxy systems pesudo endless grid of 1Mx1M system tiles
+- galaxy systems pesudo endless grid of sub grid of system tiles
     - star tiles
     - planetary tiles
 
-- planetary systems are 100kx100k with 10kx10k tiles
-    - map tiles
+- planetary systems are 1Mx1M with 100kx100k tiles
+    - moon tiles
+    - settlements
+    - dead space
+
+
+- settlement  are 100kx100k with 10kx10k tiles
+    - sector tiles
         - terrain tiles
         - station 
 
+    
+- sectors systems are 10kx10k (1kx1k tiles ?)
+    - station actual placement
+    - mines
+    - terrain
     - ship tiles
         - fleet tiles
         - npc tiles
         - player tiles
 
 
-
 ### Galaxy level
-The galaxy is a grid representing 'tiles' of star systems that are 1Mx1M
+The galaxy is a grid representing 'tiles' of star systems that are 1Mx1M.
 
-## Galaxy tiles
+Other levels are set to 10x10 grids, but a galaxy can
+be any size 10x10 10x20 etc.
+
+
+## Galaxy tiles generation rules
 The star system  is 1Mx1M and a planetary system is 100kx100k
-making a galaxy tile a 10x10 tile grid
+But a galaxy can be size differently 
+
+is sized based on the number of stars an the max number of planets.
+
+2*max_planet x (number_of suns+1)/2
+
+so if you have 3 suns, with 8, 11, 15 planets
+the grid is 30 x 4
+
+Conceptually this ia a 30Mm x 4Mm, but orbit diameters can be depicted differently as the grids are ,ore about the count than actual distance. 
+
 
 A Galaxy Tile specifies the number of star section tiles . Think of it a as deck of cards with:
     - one-3 stars tiles are star being 500k - 1M in diameter cards
@@ -41,18 +65,20 @@ You can not travel to a star it is sure death.
 digits specify stars
 alpha specifies planetary systems
 
+this is a 15x10 example for simplicity, but  galaxies can be sized in a rectangular grid
+
 ```
-//tile/galaxy/lambda
-"..c.......
-"..1..a....
-"..b.......
-"..........
-".....d....
-"...g..2.e.
-"....f.....
-".h........
-"..3.i.....
-"..........
+//tile/galaxy/milk
+"..c............
+"..1..a.........
+"..b............
+"...............
+"..........d....
+"........g..2.e.
+".........f.....
+".h.............
+"..3.i..........
+"...............
 
 match TILE.code:
     case "a":
@@ -64,21 +90,92 @@ match TILE.code:
 ```
 
 
+
+
+## A planetary system
+A planetary system is 1Mmx1Mm or 100 satellite tiles 100kx100k
+
+A generated planetary system is randomized in the follow manner.
+
+A orbital system Tile specifies the type of tile to place. 
+    - m+M one-4 moon tiles,  moons being 50k - 100k in diameter 
+    - e+E one-7 celestial event tiles, black hole etc. 50k - 100k in diameter
+    - c+C - 7 - 15 colonies
+    - The rest are terrain cards, dead space, asteroids, pickups, etc
+    - digit means a user defined tile
+    - it is not meant to make orbital sense
+
+### User defined planetary system
+
+```
+
+//tile/planet "Keplar"
+"....m..e..
+".s..f.....
+"..T.::.T..
+"....::T.s.
+"...1......
+"..e.:..T..
+"..TT.m....
+"..s.T..T..
+"...F.T.s..
+"...::::...
+"1=tile/sector/beachwood
+
+#
+# 
+#
+
+```
+
+
 ## A planetary system
 A planetary system is 100kx100k or 100 10kx10k grid of 10K orbital system tiles
 
+A generated planetary system is randomized in the follow manner.
+
 A orbital system Tile specifies the type of tile to place. 
-    - one-4 moon tiles,  moons being 5k - 10k in diameter 
-    - one-7 celestial event tiles, black hole etc. 5k - 10k in diameter
-    - 7-15 station cards
-    - 1-3 FTL tiles JUmp gates and other FTL constructs
+    - m+M one-4 moon tiles,  moons being 5k - 10k in diameter 
+    - e+E one-7 celestial event tiles, black hole etc. 5k - 10k in diameter
+    - s+S 7-15 station cards
+    - f+F 1-3 FTL tiles JUmp gates and other FTL constructs
     - with 71 - 90 terrain cards, dead space, asteroids, pickups, etc
+    - digit means a user defined tile
     - it is not meant to make orbital sense
 
 A star system contains the number of 'planets' and the number of stations and moons around a planet
 
+### User defined planetary system
+
+
 ```
-//tile/station/command1 "Command Station" if tile_opts.is_friendly
+
+//tile/satelite "Keplar"
+"....m..e..
+".s..f.....
+"..T.::.T..
+"....::T.s.
+"...1......
+"..e.:..T..
+"..TT.m....
+"..s.T..T..
+"...F.T.s..
+"...::::...
+"1=tile/sector/beachwood
+
+#
+# 
+#
+
+```
+
+
+
+### Sector tiles
+
+
+```
+//tile/sector "Command Station" if tile_opts.is_friendly
 ":aA.A.:...
 "A:...:....
 ".a........
@@ -96,6 +193,9 @@ A star system contains the number of 'planets' and the number of stations and mo
 #
 
 ```
+
+//tile/code/galaxy/c
+
 
 ### Scripted tiles
 
@@ -155,14 +255,20 @@ an update to the current tables
 "..........
 "..........
 "..........
-"*side=tsn;
-"*artid:tsn_escort;
-"a=artid:tsn_destroyer;
-"d=name:intrepid;artid:tsn_lightcrusier;
-"e=tile=npc/wolf_spider;
+"e=tile:npc/wolf_spider;
 #
 # * denotes defaults if not specified
 #
+TILE.OBJ.side=tsn
+TILE.OBJ.artid = "tsn_escort"
+if TILE.code == "a":
+    TITLE.OBJ.artid = "tsn_destroyer"
+
+if TILE.code == "a":
+    TITLE.OBJ.artid = "tsn_destroyer"
+
+if TILE.code == "a":
+    TITLE.OBJ.artid = "tsn_lightcrusier"
 
 #
 # These are still labels and 
@@ -195,3 +301,15 @@ some_value = 5
 ... etc ...
 
 ```
+
+# Tiles al the way down
+
+
+```
+#
+# The default label for a planetary code s
+# 
+#
+//tile/sector/s 
+
+````

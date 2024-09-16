@@ -155,6 +155,7 @@ def hangar_launch_craft(craft_id, client_id):
 
     if hm is None: return False
     grid_rebuild_grid_objects(craft.id)
+    
 
     blob = to_data_set(craft.id)
     if blob is not None and has_role(craft.id, "fighter"):
@@ -225,6 +226,7 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
         
     
     set_science_selection(craft.id, dock_target)
+    sbs.send_grid_selection_info(craft.id, "", "", "")
     # Not counted for end game
     craft.add_role("standby")
     craft.data_set.set("fighter_thrust_flag", 0,0)
