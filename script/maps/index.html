@@ -2331,11 +2331,15 @@ label grid =&quot;&quot;&quot;
 the grid is 30 x 4</p>
 <p>Conceptually this ia a 30Mm x 4Mm, but orbit diameters can be depicted differently as the grids are ,ore about the count than actual distance. </p>
 <p><img alt="galaxy" src="../../media/starsystem.png" title="starsystem" /></p>
-<p>A star system indicators specifies the number of star section tiles . Think of it a as deck of cards with:
-    - one-3 stars tiles are star being 500k - 1M in diameter cards
-    - 7-15 planetary systems cards
-    - with 83 - 93 dead space cards
-    - it is not meant to make orbital sense</p>
+<ul>
+<li>A star system indicators specifies the number of star section tiles . Think of it a as deck of cards with:<ul>
+<li>one-3 stars tiles are star being 500k - 1M in diameter cards</li>
+<li>7-15 planetary systems cards</li>
+<li>with 83 - 93 dead space cards</li>
+<li>it is not meant to make orbital sense</li>
+</ul>
+</li>
+</ul>
 <p>These cards are 'shuffled' and fill in the grid.
 This can be done is a seeded pseudo random fashion so random, but repeatable if desired</p>
 <p>It would be nice if the stars where visible in the sky box.
@@ -2369,13 +2373,17 @@ match TILE.code:
 <h2 id="a-planetary-system">A planetary system</h2>
 <p>A planetary system is 1Mmx1Mm or 100 satellite tiles 100kx100k</p>
 <p>A generated planetary system is randomized in the follow manner.</p>
-<p>A satellite system Tile specifies the type of tile to place. 
-    - m+M one-4 moon tiles,  moons being 50k - 100k in diameter 
-    - e+E one-7 celestial event tiles, black hole etc. 50k - 100k in diameter
-    - c+C - 7 - 15 colonies
-    - The rest are terrain cards, dead space, asteroids, pickups, etc
-    - digit means a user defined tile
-    - it is not meant to make orbital sense</p>
+<ul>
+<li>A satellite system Tile specifies the type of tile to place. <ul>
+<li>m+M one-4 moon tiles,  moons being 50k - 100k in diameter </li>
+<li>e+E one-7 celestial event tiles, black hole etc. 50k - 100k in diameter</li>
+<li>c+C - 7 - 15 colonies</li>
+<li>The rest are terrain cards, dead space, asteroids, pickups, etc</li>
+<li>digit means a user defined tile</li>
+<li>it is not meant to make orbital sense</li>
+</ul>
+</li>
+</ul>
 <h3 id="user-defined-planetary-system">User defined planetary system</h3>
 <div class="highlight"><pre><span></span><code>//tile/planet &quot;Keplar&quot;
 
@@ -2400,13 +2408,17 @@ label grid =&quot;&quot;&quot;
 <h2 id="a-satellite-system">A satellite system</h2>
 <p>A satellite system is 100kx100k or 100 10kx10k grid of 10K orbital system tiles</p>
 <p>A generated satellite system is randomized in the follow manner.</p>
-<p>A orbital system Tile specifies the type of tile to place. 
-    - e+E one-7 celestial event tiles, black hole etc. 5k - 10k in diameter
-    - s+S 7-15 station cards
-    - f+F 1-3 FTL tiles JUmp gates and other FTL constructs
-    - with 71 - 90 terrain cards, dead space, asteroids, pickups, etc
-    - digit means a user defined tile
-    - it is not meant to make orbital sense</p>
+<ul>
+<li>A orbital system Tile specifies the type of tile to place. <ul>
+<li>e+E one-7 celestial event tiles, black hole etc. 5k - 10k in diameter</li>
+<li>s+S 7-15 station cards</li>
+<li>f+F 1-3 FTL tiles JUmp gates and other FTL constructs</li>
+<li>with 71 - 90 terrain cards, dead space, asteroids, pickups, etc</li>
+<li>digit means a user defined tile</li>
+<li>it is not meant to make orbital sense</li>
+</ul>
+</li>
+</ul>
 <p>A star system contains the number of 'planets' and the number of stations and moons around a planet</p>
 <h3 id="user-defined-planetary-system_1">User defined planetary system</h3>
 <div class="highlight"><pre><span></span><code>//tile/satelite &quot;Keplar&quot;
