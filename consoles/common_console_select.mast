@@ -35,6 +35,7 @@ for key in grid_data:
 
 
 mode = await gui_request_client_string(client_id, "console_mode")
+previous_console = await gui_request_client_string(client_id, "console_previous")
 
 if mode is not None and len(mode) > 0:
     jump operator_admin_console if mode=='admin'
@@ -64,6 +65,11 @@ if mode is not None and len(mode) > 0:
     #    mode = modes[2]
     #    # console_select = mode
     #    jump operator_admin_console if mode=='admin'
+elif previous_console is not None and len(previous_console) > 0:
+    for i in range(len(consoles)):
+        continue if previous_console != consoles[i].path
+        console_select = consoles[i].path
+        console_select_item = consoles[i]
     
 
 
@@ -269,9 +275,8 @@ set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
 for k in consoles:
     remove_role(client_id, k.path)
 add_role(client_id, "console, {console_select}")
-# jump show_hangar if console_select == "hangar"
-#jump show_main_game_screen if console_select == "mainscreen"
-#jump show_cinematic_screen if console_select == "cinematic"
+print("storing {console_select}")
+sbs.set_client_string(client_id, "console_previous", console_select)
 
 # Retrieve the item by string (because might have navigator here via tab)
 console = gui_get_console_type(console_select)
