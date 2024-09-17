@@ -74,6 +74,7 @@ for race in races:
 
 //comms/admiral/selected if has_roles(COMMS_ORIGIN_ID, 'admiral')
 + "Back" //comms
++ "Set attribute" //comms/admiral/selected/set
 + "Delete":
     _other = get_science_selection(COMMS_SELECTED_ID)
     if _other and COMMS_ORIGIN_ID != _other:
@@ -86,6 +87,27 @@ for race in races:
         _other = to_object(_other)
         if _other is not None:
             _other.pos = pos
+
+//comms/admiral/selected/set if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
++ "Fuel" //comms/admiral/selected/set/fuel
+
+//comms/admiral/selected/set/fuel if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
++ "Add Fuel":
+    _other = get_science_selection(COMMS_SELECTED_ID)
+    if _other and COMMS_ORIGIN_ID != _other:
+        _blob = to_blob(_other)
+        if _blob is not None:
+            energy = _blob.get("energy",0)
+            _blob.set("energy", energy+20)
++ "Remove Fuel":
+    _other = get_science_selection(COMMS_SELECTED_ID)
+    if _other and COMMS_ORIGIN_ID != _other:
+        _blob = to_blob(_other)
+        if _blob is not None:
+            energy = _blob.get("energy",0)
+            _blob.set("energy", energy-20)
 
 
 //comms/admiral/area if has_roles(COMMS_ORIGIN_ID, 'admiral')
