@@ -115,13 +115,20 @@ for player in my_players:
 #------------------------------------------------------------------------------------------------------------
 # Build enemy stations, generate fleets
 
+
+enemy_station_list = []
+navpoint_list = []
+enemy_station_dict = {}
+
+pos = Vec3()
+startZ = -50000
+
 fleet_index = int(difficulty) - 1
 
 num_enemy_stations = int(difficulty)
 if num_enemy_stations < 3:
     num_enemy_stations = 3
-num = 1
-_enemy_spawned_pos = []
+station_step = 100000/num_enemy_stations
 
 if enemy1 == "Kralien":
     station_prefix = "KB"
@@ -133,61 +140,44 @@ if enemy1 == "Arvonian":
     station_prefix = "AB"
     station_type = "starbase_arvonian"
 
-enemy_spawn_points = scatter.box(10000, -100,1000,50000, -50000, -1000, -50000, centered=False)
+# for each station
+for index in range(num_enemy_stations):
 
-enemy_station_list = []
-navpoint_list = []
-enemy_station_dict = {}
+    pos.x = -(random.random()*25000+25000)
+    pos.y = random.random()*2000-1000
+    pos.z = startZ + random.random()*station_step/3  -   station_step/6
+#    _spawned_pos.append(pos)
+    startZ += station_step
 
-for enemy_station in enemy_spawn_points:
-    name = "{station_prefix} {num}"
-    #
-    # Space stations
-    #
-    _enpos = enemy_station
-    dist = 15000 * 15000
-    move = True
-    for x while move:
-        move = False
-        for _enprev in _enemy_spawned_pos:
-            distv = _enpos - _enprev
-            _dist_test = distv.dot(distv)
-            if _dist_test < dist:
-                move = True
-                #print("Move Station")
-                _enpos = next(enemy_spawn_points)
-                break
-    _enemy_spawned_pos.append(_enpos)
+    #make the station ----------------------------------
+    name = "{station_prefix} {index+1}"
 
     if enemy1 == "Kralien":
-        enemy_station_object = npc_spawn(*_enpos, name, "kralien, enemy, station", station_type, "behav_station")
+        enemy_station_object = npc_spawn(*pos, name, "kralien, enemy, station", station_type, "behav_station")
     if enemy1 == "Torgoth":
-        enemy_station_object = npc_spawn(*_enpos, name, "torgoth, enemy, station", station_type, "behav_station")
+        enemy_station_object = npc_spawn(*pos, name, "torgoth, enemy, station", station_type, "behav_station")
     if enemy1 == "Arvonian":
-        enemy_station_object = npc_spawn(*_enpos, name, "arvonian, enemy, station", station_type, "behav_station")
-    nav_id = sim.add_navpoint(*_enpos, name, "#A44")
+        enemy_station_object = npc_spawn(*pos, name, "arvonian, enemy, station", station_type, "behav_station")
+    nav_id = sim.add_navpoint(*pos, name, "#A44")
     enemy_station_list.append(to_id(enemy_station_object))
     navpoint_list.append(nav_id)
     enemy_station_dict[to_id(enemy_station_object)] = nav_id
-    
-    print(f"{enemy1} Station created: {int(_enpos.x)}, {int(_enpos.y)}, {int(_enpos.z)}")
-    
-    ds = to_id(enemy_station_object)
-    apos = enemy_station_object.engine_object.pos
-    apos.x = apos.x + 50.0
-    apos.z = apos.z + 50.0
 
     if enemy1 == "Kralien":
-        set_face(ds, random_kralien())
+        set_face(to_id(enemy_station_object), random_kralien())
     if enemy1 == "Torgoth":
-        set_face(ds, random_torgoth())
+        set_face(to_id(enemy_station_object), random_torgoth())
     if enemy1 == "Arvonian":
-        set_face(ds, random_arvonian())
-    
+        set_face(to_id(enemy_station_object), random_arvonian())
+
+    print(f"{enemy1} Station created: {int(pos.x)}, {int(pos.y)}, {int(pos.z)}")
+
+    apos = Vec3()
+    apos.x = pos.x + 50.0
+    apos.z = pos.z + 50.0
+
     create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
 
-    break if num == num_enemy_stations
-    num += 1
 
 
 #------------------------------------------------------------------------------------------------------------

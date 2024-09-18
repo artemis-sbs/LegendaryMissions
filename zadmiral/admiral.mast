@@ -14,14 +14,20 @@ gui_activate_console("admiral_sci")
 _ship_id = sbs.get_ship_of_client(client_id) 
 faction_ship = to_object(_ship_id)
 
-cambot = player_spawn(0,0,0, "Admiral", "#,admiral", "invisible") #, "behav_player")
-remove_role(cambot, "__player__")
-camera_id = to_id(cambot)
+cambot_id = get_inventory_value(client_id, "ADMIRAL_COMBOT", None)
+camera_id = cambot_id
+cambot = to_object(cambot_id)
+if cambot_id is None or cambot is None:
+    cambot = to_object(player_spawn(0,0,0, "Admiral", "#,admiral", "invisible")) 
+    remove_role(cambot, "__player__")
+    camera_id = to_id(cambot)
+    set_inventory_value(client_id, "ADMIRAL_COMBOT", camera_id)
+
 #
 # Should have a way to get all factions/side
 #
-cambot.blob.set("ally_list","tsn,raider",0)
-cambot.blob.set("ship_base_scan_range", 35000,0)
+cambot.data_set.set("ally_list","tsn,raider",0)
+cambot.data_set.set("ship_base_scan_range", 35000,0)
 
 
 await delay_sim(1)

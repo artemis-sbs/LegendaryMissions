@@ -4,16 +4,16 @@ import zipfile
 import pathlib
 
 skip =  {"__pycache__"}
-version = "v3.9.35b"
+version = "v3.9.36"
 
 
 def zipdir(path):
-    try: 
-        os.mkdir('.addons')
-    except Exception:
-        pass
-    finally:
-        pass
+    # try: 
+    #     os.mkdir('.addons')
+    # except Exception:
+    #     pass
+    # finally:
+    #     pass
 
     with zipfile.ZipFile(f"../__lib__/artemis-sbs.LegendaryMissions.{path}.{version}.mastlib", "w") as zf:
         

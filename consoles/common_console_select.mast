@@ -1,6 +1,12 @@
 import common_console_selection.py
 
-route_change_console(select_console)
+route_change_console(on_change_console)
+
+==== on_change_console
+
+jump select_console if not game_ended
+->END
+
 #
 # Expects shared data 
 #    player_list that has the list of player ships
@@ -89,7 +95,7 @@ ship_type_def = player_list[client_selected_index]["ship"]
 ship_name = player_list[client_selected_index]["name"]
 client_select_ship = ship_name.lower()
 
-
+#gui_activate_console("select_console")
 
 ship_sec = gui_region(style="area: 10px,60px,400px,105px")
 with ship_sec:

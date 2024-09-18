@@ -37,7 +37,7 @@ marker_blob.set("cury", EVENT.source_point.y)
 found_id = None
 
 damcons = go_set_at_loc & role("damcons")
-rooms = go_set_at_loc & any_role("system, room, access")
+rooms = go_set_at_loc & any_role("system, room, access,hallway")
 #
 # Pick damcons over rooms
 #
@@ -45,7 +45,6 @@ if len(damcons)!=0:
     found_id = next(iter(damcons))
 elif len(rooms)!=0:
     found_id = next(iter(rooms))
-
 
 if found_id is not None:
     ship_blob.set("grid_selected_UID", found_id , 0)

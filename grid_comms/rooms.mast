@@ -1,7 +1,7 @@
     
-//enable/grid/comms if has_roles(COMMS_ORIGIN_ID, "__player__") and len(to_set(COMMS_SELECTED_ID) & any_role("room,system,access"))
+//enable/grid/comms if has_roles(COMMS_ORIGIN_ID, "__player__") and len(to_set(COMMS_SELECTED_ID) & any_role("room,system,access,hallway"))
 
-//comms if has_roles(COMMS_ORIGIN_ID, "__player__") and len(to_set(COMMS_SELECTED_ID) & any_role("room,system,access"))
+//comms if has_roles(COMMS_ORIGIN_ID, "__player__") and len(to_set(COMMS_SELECTED_ID) & any_role("room,system,access,hallway"))
 
 + "set rally point" //comms/room/rally
 
