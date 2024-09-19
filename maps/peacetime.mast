@@ -107,6 +107,10 @@ for station in spawn_points:
     #
     # Pick a type of station
     #
+    if total_weight <= 0 and num <= 5:
+        total_weight = 1
+        _station_weights = {"starbase_civil": 1}
+
     break if total_weight <= 0
 
     station_type = random.choice(list(_station_weights.keys()))
@@ -175,6 +179,27 @@ for station in spawn_points:
     #                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
             terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
     num += 1
+
+#if num <= 3:
+#    for station in spawn_points:
+#        break if num >= 6
+#        name = "DS {num}"
+#        _pos = station
+#        dist = 15000 * 15000
+#        move = True
+#        for x while move:
+#            move = False
+#            for _prev in _spawned_pos:
+#                distv = _pos - _prev
+#                _dist_test = distv.dot(distv)
+#                if _dist_test < dist:
+#                    move = True
+#                    #print("Move Station")
+#                    _pos = next(spawn_points)
+#                    break
+#        _spawned_pos.append(_pos)
+#
+#        station_object = npc_spawn(*_pos, name, "tsn, station", "starbase_civil", "behav_station")
 
 await task_schedule(spawn_friendly_npc)
 
@@ -270,21 +295,33 @@ for v in spawn_points:
         pickup_spawn(v.x, v.y, v.z, "haplix_overcharger")
         log("Haplix Overcharger spawned {v.x},{v.y},{v.z}","upgrades")
 
-
-#wr = terrain_spawn(200, 0, 600, "Wreck", "wreck", "wreck", "behav_asteroid")
-#temp_yaw = random.uniform(0.001, 0.003)
-#temp_pitch = random.uniform(0.002, 0.004)
-#wr.engine_object.steer_yaw = temp_yaw
-#wr.engine_object.steer_pitch = temp_pitch
-#wr.blob.set("radar_color_override", "#f0c")
-
-
-
 spawn_points = scatter.box(monster_value, 0,0,0, 75000, 1000, 75000, centered=True)
 for v in spawn_points:
     typhon_classic_spawn(*v.xyz)
 
+if friendly_select != "none":
+    jump kidnap_caper
 
+====== kidnap_caper ======
+
+alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
+cargo_list = shipname_data.get("peacetime")
+civname_list = shipname_data.get("civilian")
+suspect = []
+
+count = 1
+spawn_points = scatter.box(5, 0, 0, 0, 50000, 1000, 50000, centered=True)
+for c in spawn_points:
+    if count >= 1 and count <= 3:    
+        cargo_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + cargo_list.pop(random.randrange(len(cargo_list)))
+    else:
+        cargo_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
+    cargo = to_id(npc_spawn(*c, cargo_name, "tsn, friendly, civilian", "cargo_ship", "behav_npcship"))
+    set_face(cargo, random_terran(civilian=True))
+    suspect.append(cargo)
+    count += 1
+
+print(f"Suspect IDs: {suspect}")
 
 #------------------------------------------------------------------------------------------------------------
 
