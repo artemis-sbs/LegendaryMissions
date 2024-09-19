@@ -1,0 +1,146 @@
+@console/autoplay "Auto Play" if SETTINGS["auto_play"]["enable"]
+" A Player ship driven by script
+#
+# Get side from selected ship
+#
+
+# Need Sci in the name for science selection
+gui_activate_console("autoplay_sci")
+
+_ship_id = sbs.get_ship_of_client(client_id) 
+faction_ship = to_object(_ship_id)
+
+singularity = get_inventory_value(client_id, "THE_SINGULARITY", None)
+if singularity is None:
+    #
+    # A sub task can go idle
+    #
+    singularity = await sub_task_schedule(automated_player_ai)
+    set_inventory_value(client_id, "THE_SINGULARITY", singularity)
+
+
+
+# Whole screen
+gui_section(style="area:0,45px,100,100;")
+# Left
+
+
+with gui_sub_section("col-width:35;"):
+    gui_row("row-height: 50;")
+    gui_layout_widget("3dview")
+    gui_row()
+    props_lb = gui_list_box([],"row-height: 4em; background:#1572;", item_template=property_lb, title_template="Properties")
+    ~~props_lb.title_section_style += "background:#1578;"~~
+    set_inventory_value(client_id, "__PROPS_LB__", props_lb)
+
+
+# Middle
+with gui_sub_section():
+    gui_row()
+    #gui_layout_widget("science_2d_view")
+    gui_layout_widget("science_2d_view")
+    gui_row()
+    gui_layout_widget("comms_control")
+
+# Right
+with gui_sub_section("col-width:25;"):
+    gui_row("row-height:35;margin:0,0,0,10px;")
+    gui_layout_widget("science_data")
+    gui_row()
+    gui_layout_widget("science_sorted_list")
+    gui_row("row-height: 10;")
+    gui_layout_widget("text_waterfall")
+
+
+await gui()
+
+
+
+===== automated_player_ai
+#
+# Can you schedule sub_labels?
+#
+await task_schedule(automated_player_respawn)
+
+task_schedule(automated_player_helm_ai)
+task_schedule(automated_player_science_ai)
+task_schedule(automated_player_weapons_ai)
+->END
+
+
+=== automated_player_respawn
+cambot_id = get_inventory_value(client_id, "AUTO_PLAY_SHIP", None)
+camera_id = cambot_id
+cambot = to_object(cambot_id)
+if cambot_id is None or cambot is None:
+    cambot = to_object(player_spawn(0,0,0, "Colossus", "tsn,auot_play", "tsn_light_cruiser")) 
+    camera_id = to_id(cambot)
+    await delay_sim(1)
+    set_inventory_value(client_id, "AUTO_PLAY_SHIP", cambot_id)
+    sbs.assign_client_to_ship(client_id, camera_id)
+    sbs.assign_client_to_ship(0, camera_id)
+#
+# This is run by schedule, so end task
+#
+->END
+
+
+=== automated_player_helm_ai
+# Re get ship if respawn occured
+_ship_id = sbs.get_ship_of_client(client_id) 
+ship = to_object(_ship_id)
+#
+# 
+#
+if ship is None:
+    await task_schedule(automated_player_respawn)
+
+raider = closest(_ship_id, role("raider"), 15000)
+station = closest(_ship_id, all_roles("tsn,station"))
+
+# playerSPitch
+# playerSRoll
+# playerSYaw
+# playerThrottle
+speed = 2.0
+ship.data_set.set("playerThrottle", speed,0) 
+
+await delay_sim(10)
+jump automated_player_helm_ai
+
+=== automated_player_science_ai
+#
+# Look for closest thing and select it
+#
+_ship_id = sbs.get_ship_of_client(client_id) 
+ship = to_object(_ship_id)
+jump automated_player_science_ai_loop if ship is None
+
+# set_science_selection
+raider = closest(_ship_id, role("raider"), 25000)
+if raider is not None:
+    set_science_selection(_ship_id, raider)
+
+=== automated_player_science_ai_loop
+await delay_sim(10)
+jump automated_player_science_ai
+
+=== automated_player_weapons_ai
+#
+# Look for closest enemy and select it
+#
+_ship_id = sbs.get_ship_of_client(client_id) 
+ship = to_object(_ship_id)
+jump automated_player_weapons_ai_loop if ship is None
+
+raider = closest(_ship_id, role("raider"), 10000)
+if raider is not None:
+    set_weapons_selection(_ship_id, raider)
+
+
+# set_weapons_selection
+=== automated_player_weapons_ai_loop
+await delay_sim(10)
+jump automated_player_weapons_ai
+
+

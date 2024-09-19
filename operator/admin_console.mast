@@ -63,7 +63,7 @@ gui_activate_console("operator_sci")
 # Left
 gui_section(style="area:0,45px,100,100;")
 
-with gui_sub_section("col-width:20;"):
+with gui_sub_section("col-width:30;"):
     gui_row("row-height: 50;")
     gui_layout_widget("3dview")
 
