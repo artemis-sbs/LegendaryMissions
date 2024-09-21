@@ -27,11 +27,24 @@ gui_section(style="area:0,45px,100,100;")
 
 with gui_sub_section("col-width:35;"):
     gui_row("row-height: 50;")
+    dl = gui_slider("low: 0; high:300.0;", style="col-width:20px;", var="dolly")
     gui_layout_widget("3dview")
+    gui_row("row-height: 20px;")
+    ob = gui_slider("low: 10; high:360.0;", var="orbit")
     gui_row()
     props_lb = gui_list_box([],"row-height: 4em; background:#1572;", item_template=property_lb, title_template="Properties")
     ~~props_lb.title_section_style += "background:#1578;"~~
     set_inventory_value(client_id, "__PROPS_LB__", props_lb)
+
+# if either dolly or orbit changes
+on gui_message(ob): # + orbit:
+    set_inventory_value(client_id, "orbit", orbit)
+    await task_schedule(automated_player_move_camera)
+
+
+on gui_message(dl): # + orbit:
+    set_inventory_value(client_id, "dolly", dolly)
+    await task_schedule(automated_player_move_camera)
 
 
 # Middle
@@ -51,8 +64,29 @@ with gui_sub_section("col-width:25;"):
     gui_row("row-height: 10;")
     gui_layout_widget("text_waterfall")
 
+await task_schedule(automated_player_move_camera)
 
 await gui()
+
+==== automated_player_move_camera_sync
+await delay_sim(3)
+await task_schedule(automated_player_move_camera)
+jump automated_player_move_camera_sync
+
+
+==== automated_player_move_camera
+dolly = get_inventory_value(client_id, "dolly", 10)
+orbit = get_inventory_value(client_id, "orbit", 0)
+
+_ship_id = sbs.get_ship_of_client(client_id) 
+_ship_obj = to_object(_ship_id)
+jump automated_player_move_camera if _ship_obj is None
+
+source = Vec3(0,0, dolly * 10)
+source = source.rotate_around(Vec3(0,0,0), 0, orbit, 0)
+d_source = _ship_obj.pos
+gui_cinematic_full_control(client_id, _ship_id, source, _ship_id, Vec3())
+->END
 
 
 
@@ -65,6 +99,7 @@ await task_schedule(automated_player_respawn)
 task_schedule(automated_player_helm_ai)
 task_schedule(automated_player_science_ai)
 task_schedule(automated_player_weapons_ai)
+# task_schedule(automated_player_move_camera_sync)
 ->END
 
 
@@ -75,10 +110,13 @@ cambot = to_object(cambot_id)
 if cambot_id is None or cambot is None:
     cambot = to_object(player_spawn(0,0,0, "Colossus", "tsn,auot_play", "tsn_light_cruiser")) 
     camera_id = to_id(cambot)
+    cambot.data_set.set("ally_list","tsn,raider",0)
+    cambot.data_set.set("ship_base_scan_range", 35000,0)
     await delay_sim(1)
     set_inventory_value(client_id, "AUTO_PLAY_SHIP", cambot_id)
     sbs.assign_client_to_ship(client_id, camera_id)
     sbs.assign_client_to_ship(0, camera_id)
+    
 #
 # This is run by schedule, so end task
 #
@@ -86,6 +124,7 @@ if cambot_id is None or cambot is None:
 
 
 === automated_player_helm_ai
+last = get_variable("last", None)
 # Re get ship if respawn occured
 _ship_id = sbs.get_ship_of_client(client_id) 
 ship = to_object(_ship_id)
@@ -95,15 +134,33 @@ ship = to_object(_ship_id)
 if ship is None:
     await task_schedule(automated_player_respawn)
 
-raider = closest(_ship_id, role("raider"), 15000)
-station = closest(_ship_id, all_roles("tsn,station"))
+raider = to_object(closest(_ship_id, role("raider"), 15000))
+station = to_object(closest(_ship_id, all_roles("tsn,station")))
 
 # playerSPitch
 # playerSRoll
 # playerSYaw
 # playerThrottle
-speed = 2.0
-ship.data_set.set("playerThrottle", speed,0) 
+speed = 1.0
+
+t = raider
+if t is None:
+    t = station    
+
+if t is not None:
+    diff = ship.pos - t.pos
+    l = diff.length()
+    speed = max(min((l // 500), 5), 0.5)
+    diff = diff.unit()
+    ship.data_set.set("playerThrottle", speed,0) 
+    playerSPitch = diff.x
+    playerSYaw = diff.y
+    playerSRoll = diff.z
+    ship.data_set.set("playerSPitch", playerSPitch,0) 
+    ship.data_set.set("playerSYaw", playerSYaw,0) 
+    ship.data_set.set("playerSRoll", playerSRoll,0)
+    if last != t:
+        comms_broadcast(client_id, "Now targeting {t.name} at {speed}") 
 
 await delay_sim(10)
 jump automated_player_helm_ai
@@ -120,6 +177,7 @@ jump automated_player_science_ai_loop if ship is None
 raider = closest(_ship_id, role("raider"), 25000)
 if raider is not None:
     set_science_selection(_ship_id, raider)
+await task_schedule(automated_player_move_camera)
 
 === automated_player_science_ai_loop
 await delay_sim(10)
@@ -144,3 +202,6 @@ await delay_sim(10)
 jump automated_player_weapons_ai
 
 
+//focus/science if has_roles(SCIENCE_ORIGIN_ID, "auto_play")
+set_science_selection(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+await task_schedule(automated_player_move_camera)
