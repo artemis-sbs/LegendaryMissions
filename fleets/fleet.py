@@ -9,6 +9,7 @@ from sbs_utils.procedural.roles import role
 from sbs_utils.procedural.inventory import get_inventory_value
 from sbs_utils import faces
 from sbs_utils.vec import Vec3
+from sbs_utils.scatter import rect_fill
 
 
 import sbs
@@ -82,7 +83,7 @@ class Fleet(Agent):
 #        if lengthA > 3000:
 #            use_path = True
         difference = difference.unit()
-        pushA = min(lengthA, 1000)
+        pushA = min(lengthA, 2000)
         difference *= pushA
         self.position += difference
 
@@ -169,10 +170,18 @@ class Fleet(Agent):
             
         # Set the target position, optionally shot at something
         #target_pos(ship_set, *self.position.xyz, throttle, the_target, stop_dist=500)
-        for _id in ship_set:
+        # count = len(ship_set)
+        # pos = Vec3(self.position)
+        # points = rect_fill(count, 2, pos.x, pos.y, pos.z, 2000, 2000, random=False, ax=0,ay=0,az=0, degrees=True)
+        points = ship_set
+        
+        for _id in points:
             pos = Vec3(self.position)
-            pos = pos.rand_offset(300, 600, ring=True)
-            target_pos(_id, *self.position.xyz, throttle, the_target, stop_dist=500)
+            pos = pos.rand_offset(300, 500, ring=True)
+            target_pos(_id, *pos.xyz, throttle, the_target, stop_dist=500)
+            # count -= 1
+            # if count <=0:
+            #     break
         
 
         yield AWAIT(delay_sim(seconds=10))

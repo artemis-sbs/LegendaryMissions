@@ -19,6 +19,15 @@ def skybox_get_random():
 def story_get_mission_setup():
 
     defaults = {
+            "auto_play": {
+            "enable": True
+        },
+            "operator_mode": {
+            "enable": False,
+            "logo": "media/operator",
+            "show_logo_on_main": True,
+            "pin": "000000"
+        },
         "auto_start": False,
         "world_select": "siege",
         "terrain_select": "some",

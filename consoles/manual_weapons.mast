@@ -199,10 +199,10 @@ system = get_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_SYSTEM")
 target_id = get_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_CRITICAL_HIT")
 ->END if target_id == 0
 
-->END if target_id != DAMAGE_TARGET_ID
-
 set_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_SYSTEM", None)
 set_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_CRITICAL_HIT", None)
+
+->END if target_id != DAMAGE_TARGET_ID
 
 ->END if system is None
 ->END if target_id is None

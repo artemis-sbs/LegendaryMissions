@@ -130,11 +130,10 @@ with ship_sec2:
 
 if console_select_item.path != "helm" or game_started:
     gui_hide(ship_sec)
-    gui_hide(ship_sec2)
     gui_show(ship_sec_not)
     spick.read_only = True
 elif console_select_item.path == "helm" and not game_started:
-    gui_hide(ship_sec_not)
+    gui_show(ship_sec_not)
     spick.read_only = False
     
 
