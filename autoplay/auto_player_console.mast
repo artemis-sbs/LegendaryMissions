@@ -148,21 +148,29 @@ if t is None:
     t = station    
 
 if t is not None:
-    diff = ship.pos - t.pos
-    l = diff.length()
-    speed = max(min((l // 500), 5), 0.5)
+    # Desired direction
+    diff1 =  t.pos - ship.pos 
+    l = diff1.length()
+    diff = diff1.unit()
+    forward = Vec3(ship.engine_object.forward_vector())
+    diff = forward - diff
     diff = diff.unit()
-    ship.data_set.set("playerThrottle", speed,0) 
-    playerSPitch = diff.x
+    #
+    #
+    speed = min(l / 10000, 5)
+    #ship.data_set.set("playerThrottle", speed,0) 
+
+
+    playerSPitch = 0 #diff.x #* 2 -1
     playerSYaw = diff.y
-    playerSRoll = diff.z
+    playerSRoll = 0 # diff.z
     ship.data_set.set("playerSPitch", playerSPitch,0) 
-    ship.data_set.set("playerSYaw", playerSYaw,0) 
+    # ship.data_set.set("playerSYaw", playerSYaw,0) 
     ship.data_set.set("playerSRoll", playerSRoll,0)
     if last != t:
         comms_broadcast(client_id, "Now targeting {t.name} at {speed}") 
 
-await delay_sim(10)
+await delay_sim(4)
 jump automated_player_helm_ai
 
 === automated_player_science_ai
