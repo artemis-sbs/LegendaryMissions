@@ -14,7 +14,7 @@ shared game_stats = ~~{
 }~~
 
 
-//damage/destroy
+//damage/destroy if not has_role(DESTROYED_ID, "standby")
 ##
 ## Called via route destroy
 ##

@@ -35,6 +35,7 @@ gui_reroute_clients("client_main")
 ========== start_server ===============
 
 settings = story_get_mission_setup()
+shared SETTINGS = settings
 shared world_select  = settings.get("world_select")
 shared terrain_select  = settings.get("terrain_select")
 shared lethal_select  = settings.get("lethal_select")

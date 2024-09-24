@@ -130,11 +130,10 @@ with ship_sec2:
 
 if console_select_item.path != "helm" or game_started:
     gui_hide(ship_sec)
-    gui_hide(ship_sec2)
     gui_show(ship_sec_not)
     spick.read_only = True
 elif console_select_item.path == "helm" and not game_started:
-    gui_hide(ship_sec_not)
+    gui_show(ship_sec_not)
     spick.read_only = False
     
 
@@ -281,7 +280,7 @@ set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
 for k in consoles:
     remove_role(client_id, k.path)
 add_role(client_id, "console, {console_select}")
-print("storing {console_select}")
+# print("storing {console_select}")
 sbs.set_client_string(client_id, "console_previous", console_select)
 
 # Retrieve the item by string (because might have navigator here via tab)

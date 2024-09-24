@@ -1,5 +1,8 @@
 {
     "auto_start": false,
+    "auto_play": {
+        "enable": false
+    },
     "operator_mode": {
         "enable": false,
         "logo": "media/operator",

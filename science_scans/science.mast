@@ -145,7 +145,7 @@ if race is None:
 
 elite_intel = ""
 if has_role(SCIENCE_SELECTED_ID, "elite"):
-    elite_intel = "Warning: Elite abilities" + elite_get_abilities_scan(SCIENCE_SELECTED_ID)
+    elite_intel = "Warning: Elite abilities " + elite_get_abilities_scan(SCIENCE_SELECTED_ID)
 
     
 taunt_intel = "The captain cannot be taunted {race}."
