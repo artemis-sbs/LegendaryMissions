@@ -28,7 +28,7 @@ def get_random_npc_call_sign(race):
     enemy_prefix = "KLMNQ"
     if race == "skaraan":
         enemy_prefix = "TR"
-    r_name = f"{random.choice(enemy_prefix)}{str(call_signs[enemy_name_number]).zfill(2)}"
+    r_name = f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
     enemy_name_number = (enemy_name_number+1)%99
     return r_name
 
@@ -36,7 +36,7 @@ def terrain_spawn_black_hole(x,y,z, gravity_radius= 1500, gravity_strength=1.0, 
     global enemy_name_number
 
     _prefix = "XEA"
-    r_name = f"{random.choice(_prefix)}{str(call_signs[enemy_name_number]).zfill(2)}"
+    r_name = f"{random.choice(_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
     enemy_name_number = (enemy_name_number+1)%99
 
     bh = to_object(terrain_spawn(x,y,z, r_name, "#,black_hole", "maelstrom", "behav_maelstrom"))
