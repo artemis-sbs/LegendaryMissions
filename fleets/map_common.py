@@ -61,15 +61,15 @@ engine_abilities = {
 abilities = {
 
     "elite_cloak": "Cloak",
-    "elite_jump_back": "Back",
-    "elite_jump_forward": "Forward",
+    "elite_jump_back": "Teleport Back",
+    "elite_jump_forward": "Teleport Forward",
     "elite_warp": "Warp",
     "elite_het_turn": "HET",
     # Blob Flags Randomize
     "elite_tractor": "Tractor",  # also needs to set tractor_target_uid
-    "elite_shield_drain": "ShldDrain",
-    "elite_shield_vamp": "ShldVamp", # Drain is also assumed
-    "elite_shield_scramble": "Scram",
+    "elite_shield_drain": "Shield Drain",
+    "elite_shield_vamp": "Shield Vamp", # Drain is also assumed
+    "elite_shield_scramble": "Sensor Scramble",
 }
 all_abilities = abilities | engine_abilities
 
@@ -515,14 +515,14 @@ def elite_get_abilities_scan(id_or_obj):
     ship_obj = to_object(id_or_obj)
     if ship_obj is None:
         return ""
-    abi = ""
+    abi = []
     roles = ship_obj.get_roles()
     for role in roles:
         #print(role)
         ab = all_abilities.get(role, None)
         if ab is not None:
-            abi += "," + ab
-    return abi
+            abi.append(ab)
+    return ",".join(abi)
 
 def fleet_remove_ship(id_or_obj):
     ship_id = to_id(id_or_obj)
@@ -678,10 +678,18 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
 
     # Allow the script to extend abilities
     script_abilities = get_shared_variable("elite_script_abilities", [])
-    all_abilities = []
-    all_abilities.extend(abilities)
-    all_abilities.extend(engine_abilities)
-    all_abilities.extend(script_abilities)
+    #all_abilities = []
+    #all_abilities.extend(abilities)
+    #all_abilities.extend(engine_abilities)
+    #all_abilities.extend(script_abilities)
+    all_abilities_copy = elite_get_all_abilities().copy()
+    hard = ["elite_cloak", "elite_low_vis", "elite_jump_back"]
+    # remove more difficult abilities
+    if fleet_diff <5:
+        for h in hard:
+            all_abilities_copy.pop(h, None)
+    #print(f"ABIL COUNT {len( all_abilities_copy)}")
+
 
     
 #    carrier_count = 0
@@ -714,7 +722,7 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
         if "elite" in ship_roles or (race == "skaraan" and random.randint(1,skar_chance) == 1):
             
             add_role(raider.id, "elite")
-            max_abi = len(all_abilities)
+            max_abi = len(all_abilities_copy)
             abits = random_bits(max_abi, max(1, (fleet_diff+2)//2))  #random.randint(0,pow(2,max_abi))
             # set_inventory_value(raider.id, "elite_abilities", abits)
             # bit field
@@ -722,7 +730,7 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
             # & 0x2 == Jump Back
             # & 0x4 == Jump forward
             # & 0x8 == Jump Back
-            for count, ab in enumerate(all_abilities):
+            for count, ab in enumerate(all_abilities_copy):
                 bit = 2**count
                 if (abits & bit)  == bit:
                     #
@@ -731,7 +739,7 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
                     if elite_is_engine_ability(ab):
                         raider.data_set.set(ab, 1,0)
                     add_role(raider.id, ab)
-            #print("Elite "+ elite_get_abilities_scan(raider.id))
+            print("Elite "+ elite_get_abilities_scan(raider.id))
 
 
         # Should add a common function to call to get the face based on race
