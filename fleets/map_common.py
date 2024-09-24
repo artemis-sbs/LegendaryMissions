@@ -739,7 +739,7 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
                     if elite_is_engine_ability(ab):
                         raider.data_set.set(ab, 1,0)
                     add_role(raider.id, ab)
-            print("Elite "+ elite_get_abilities_scan(raider.id))
+            #print("Elite "+ elite_get_abilities_scan(raider.id))
 
 
         # Should add a common function to call to get the face based on race
