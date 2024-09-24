@@ -11,6 +11,7 @@ surrender_color = "yellow"
 //enable/comms if has_roles(COMMS_SELECTED_ID, "tsn, Station")
 
 
+
 //comms if has_roles(COMMS_SELECTED_ID, 'Station')
 + "Hail"  handle_comms_station_hail
 + "Build Weapons" //comms/station/build

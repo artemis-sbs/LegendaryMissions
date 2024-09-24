@@ -280,7 +280,7 @@ set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
 for k in consoles:
     remove_role(client_id, k.path)
 add_role(client_id, "console, {console_select}")
-print("storing {console_select}")
+# print("storing {console_select}")
 sbs.set_client_string(client_id, "console_previous", console_select)
 
 # Retrieve the item by string (because might have navigator here via tab)
