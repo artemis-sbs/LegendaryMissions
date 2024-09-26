@@ -34,7 +34,7 @@ gui_reroute_clients("client_main")
 #
 ========== start_server ===============
 
-settings = story_get_mission_setup()
+settings = settings_get_defaults()
 shared SETTINGS = settings
 shared world_select  = settings.get("world_select")
 shared terrain_select  = settings.get("terrain_select")
@@ -59,9 +59,8 @@ shared operator_show_logo_on_main = operator_mode.get("show_logo_on_main", False
 
 start_npc_cag()
 
-shared skybox = skybox_get_random()
+shared skybox = skybox_schedule_random()
 
-sbs.set_sky_box_all(skybox)
 shared mission_index = 0
 shared mission_list = maps_get_list()
 shared mission_overview = maps_get_init()

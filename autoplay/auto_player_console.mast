@@ -1,3 +1,9 @@
+#
+# This assure the settings are there
+#
+settings_add_defaults({"auto_play": {"enable": False}})
+
+
 @console/autoplay "Auto Play" if SETTINGS["auto_play"]["enable"]
 " A Player ship driven by script
 #

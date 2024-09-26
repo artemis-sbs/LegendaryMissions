@@ -261,9 +261,10 @@ jump select_console if _ship_id is None
 # This should get a skybox with client overriding, shp, overriding shared
 #
 sky_box = get_shared_variable("skybox", "sky1")
+# print(f"select console {sky_box.path}" )
 sky_box = get_inventory_value(_ship_id, "skybox", sky_box)
 sky_box = get_inventory_value(client_id, "skybox", sky_box)
-sbs.set_sky_box(client_id, sky_box)
+skybox_schedule(sky_box, client_id)
 
 ====== show_console_selected ====
 #

@@ -10,7 +10,8 @@ from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finish
 from sbs_utils.procedural.execution import set_shared_variable, get_shared_variable, get_variable
 from sbs_utils.agent import Agent
 from sbs_utils.procedural.query import get_science_selection, to_object
-from sbs_utils.procedural.inventory import get_inventory_value
+from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+from sbs_utils.procedural.comms import comms_broadcast
 import random
 
 from sbs_utils.procedural.internal_damage import grid_rebuild_grid_objects
@@ -23,7 +24,7 @@ def hangar_bump_version():
     set_shared_variable("hangar_version", hangar_version+1)
 
 @RouteDamageDestroy
-def hagar_handle_destroy():
+def hangar_handle_destroy():
     so = to_object(get_variable("DESTROYED_ID"))
     if so is None:
         return
@@ -51,7 +52,30 @@ def hagar_handle_destroy():
         # For know forcing the script to forget about it
         sbs.delete_object(id)
     hangar_bump_version()    
-        
+
+def hangar_get_stats(client_id, fighter):
+    fighter = to_object(fighter)
+    if fighter is None:
+        return ["", ""]
+    
+    front_shield_max_val = fighter.data_set.get("shield_max_val", 0)
+    rear_shield_max_val = fighter.data_set.get("shield_max_val", 1)
+    bs = fighter.data_set.get("beamDamage", 0)
+    f = fighter.name
+    t = "No"
+    if has_role(fighter, "shuttle"):
+        t = "No"
+    else:
+        t = "Yes"
+
+    
+    s = get_inventory_value(client_id, "sortie", 0)
+    c = get_inventory_value(client_id, "completed_objectives", 0)
+    call_sign = get_inventory_value(client_id, "call_sign", "pilot")
+    line1 = f"{f}: TORP {t} BEAM {bs:.2f} SHLDS {front_shield_max_val}" # | {rear_shield_max_val}"
+    line2 = f"{call_sign}: sorties {s} objectives {c}"
+    return [line1, line2]
+    
     
 def hangar_set_dock(craft_id, docked_id):
     craft_id = to_id(craft_id)
@@ -100,7 +124,29 @@ def hangar_craft_spawn(docked_id, art, roles, prefix):
     sbs.push_to_standby_list(craft.engine_object)
     set_science_selection(craft.id, docked_id)
     return craft
-    
+
+def hangar_objective_started(CRAFT_ID, OBJECTIVE_ID, objective):
+    client_id = get_inventory_value(CRAFT_ID, "client_id", 0)
+    comms_broadcast(client_id, f"Objective", "#B90")
+    comms_broadcast(client_id, f"{objective}", "#B90")
+
+def hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, objective):
+    # Get the current load
+    origin_o = to_object(CRAFT_ID)
+    pilot = "A craft "
+    if origin_o is not None:
+        pilot = origin_o.name
+
+    client_id = get_inventory_value(CRAFT_ID, "client_id", 0)
+    if client_id!=0:
+        c = get_inventory_value(client_id, "completed_objectives", 0)
+        c += 1
+        set_inventory_value(client_id, "completed_objectives", c)
+
+    comms_broadcast(client_id, "Objective complete", "#090")
+    comms_broadcast(client_id, f"   \x02 {objective}", "#090")
+    comms_broadcast(OBJECTIVE_ID, f"{pilot} {objective}",  "#090")
+
 
 def hangar_random_craft_spawn(docked_id, roles):
     if randint(0,3) == 1:
@@ -149,6 +195,9 @@ def hangar_launch_craft(craft_id, client_id):
     hm = sbs.get_hull_map(craft.id, True)
     craft.set_inventory_value("craft_name", craft.name)
     call_sign = get_inventory_value(client_id, "call_sign", None)
+    sortie = get_inventory_value(client_id, "sortie", 0)
+    sortie += 1
+    set_inventory_value(client_id, "sortie", sortie)
     if call_sign is not None and len(call_sign)>0:
         # print(f"hangarpy {call_sign}")
         craft.name = f"{call_sign} / {craft.name}"
