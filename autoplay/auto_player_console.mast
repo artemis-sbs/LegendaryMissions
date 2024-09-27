@@ -3,6 +3,13 @@
 #
 settings_add_defaults({"auto_play": {"enable": False}})
 
+//signal/show_game_results if SETTINGS["auto_play"]["enable"]
+mission = get_mission_name()
+sbs.run_next_mission(mission)
+
+//signal/game_started if SETTINGS["auto_play"]["enable"]
+jump automated_player_ai
+
 
 @console/autoplay "Auto Play" if SETTINGS["auto_play"]["enable"]
 " A Player ship driven by script
@@ -131,6 +138,9 @@ if cambot_id is None or cambot is None:
 
 === automated_player_helm_ai
 last = get_variable("last", None)
+# default go_dock = False
+last_go_dock = get_variable("go_dock", False)
+
 # Re get ship if respawn occured
 _ship_id = sbs.get_ship_of_client(client_id) 
 ship = to_object(_ship_id)
@@ -140,39 +150,70 @@ ship = to_object(_ship_id)
 if ship is None:
     await task_schedule(automated_player_respawn)
 
-raider = to_object(closest(_ship_id, role("raider"), 15000))
+raider = to_object(closest(_ship_id, role("raider")))
 station = to_object(closest(_ship_id, all_roles("tsn,station")))
+energy = ship.data_set.get("energy", 0)
+f_shld = ship.data_set.get("shield_val", 0)
+f_shld_max = ship.data_set.get("shield_max_val", 0)
+r_shld = ship.data_set.get("shield_val", 0)
+r_shld_max = ship.data_set.get("shield_max_val", 1)
 
-# playerSPitch
-# playerSRoll
-# playerSYaw
-# playerThrottle
-speed = 1.0
+if not last_go_dock:
+    go_dock = ((f_shld/f_shld_max)< 0.3)
+    go_dock |= ((r_shld/r_shld_max)< 0.3)
+    go_dock |= energy < 300
+    last_go_dock = True
 
-t = raider
-if t is None:
-    t = station    
+if last_go_dock:
+    un_dock = f_shld>= f_shld_max
+    un_dock &= f_shld>= f_shld_max
+    un_dock &= energy >= 1000
+    if un_dock:
+        ship.data_set.set("dock_state", "undocked",0)
+    go_dock = False
+
+# go_dock
+#    either shield < 50
+#    or energy < 300 
+if go_dock:
+    t = station
+else:    
+    t = raider
+
 
 if t is not None:
     # Desired direction
-    diff1 =  t.pos - ship.pos 
-    l = diff1.length()
-    diff = diff1.unit()
-    forward = Vec3(ship.engine_object.forward_vector())
-    diff = forward - diff
-    diff = diff.unit()
+    diff =  t.pos - ship.pos 
+    l = diff.length()
     #
     #
-    speed = min(l / 10000, 5)
-    #ship.data_set.set("playerThrottle", speed,0) 
+    if l < 300:
+        if has_roles(t, "tsn, station"):
+            ship.data_set.set("dock_state", "docked",0)
+            last_go_dock = False
+        ship.data_set.set("playerThrottle", 0,0)
+        speed = 0
+    elif 1 < 5000:
+        ship.data_set.set("playerThrottle", 1.0,0)
+        speed = 1.0
+    elif 1 < 10000:
+        ship.data_set.set("playerThrottle", 2.0,0)
+        speed = 2.0
+    elif 1 < 20000:
+        ship.data_set.set("playerThrottle", 3.0,0)
+        speed = 3
+    elif 1 < 30000:
+        ship.data_set.set("playerThrottle", 4.0,0)
+        speed = 4
+    else:
+        ship.data_set.set("playerThrottle", 5.0,0)
+        speed = 5
 
 
-    playerSPitch = 0 #diff.x #* 2 -1
-    playerSYaw = diff.y
-    playerSRoll = 0 # diff.z
-    ship.data_set.set("playerSPitch", playerSPitch,0) 
-    # ship.data_set.set("playerSYaw", playerSYaw,0) 
-    ship.data_set.set("playerSRoll", playerSRoll,0)
+    ship.data_set.set("steerToDirDX", diff.x,0) 
+    ship.data_set.set("steerToDirDY", diff.y,0) 
+    ship.data_set.set("steerToDirDZ", diff.z,0)
+    ship.data_set.set("steeringToDirFlag", 1,0)
     if last != t:
         comms_broadcast(client_id, "Now targeting {t.name} at {speed}") 
 

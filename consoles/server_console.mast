@@ -202,6 +202,7 @@ if world_select is not None:
 # Consoles are waiting to be started 
 #
 game_started = True
+signal_emit("game_started", {})
 
 
 # Temp set this when first running
