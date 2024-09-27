@@ -1,7 +1,7 @@
 {
-    "auto_start": true,
+    "auto_start": false,
     "auto_play": {
-        "enable": true
+        "enable": false
     },
     "operator_mode": {
         "enable": false,
@@ -9,7 +9,7 @@
         "show_logo_on_main": true,
         "pin": "000000"
     },
-    "players_count": 1,
+    "player_count": 1,
     "grid_theme": 0,
     "difficulty": 5,
     "world_select": "siege",

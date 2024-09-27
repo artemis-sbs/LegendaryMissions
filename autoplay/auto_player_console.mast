@@ -47,7 +47,7 @@ await task_schedule(automated_player_hook)
 ->END
 
 === automated_player_hook
-print(f"AUTO PLAY {_ship_id}")
+#print(f"AUTO PLAY {_ship_id}")
 task_schedule(automated_player_helm_ai, {"_ship_id": _ship_id})
 task_schedule(automated_player_science_ai, {"_ship_id": _ship_id})
 task_schedule(automated_player_weapons_ai, {"_ship_id": _ship_id})
@@ -139,6 +139,9 @@ if t is not None:
             ship.data_set.set("dock_state", "docked",0)
         ship.data_set.set("playerThrottle", 0,0)
         speed = 0
+    elif ln < 1000:
+        speed = ln/1000
+        ship.data_set.set("playerThrottle", speed,0)
     elif ln < 5000:
         ship.data_set.set("playerThrottle", 1.0,0)
         speed = 1.0
