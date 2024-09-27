@@ -130,6 +130,7 @@ if sel is None or sel==0:
     sel = weap_sel
 if sel is None or sel==0:
     sel = _ship_id
+->END if sel is None or sel==0
 
 _sel_obj = to_object(sel)
 if _sel_obj is not None:
