@@ -243,7 +243,14 @@ jump do_target
 # Attack and follow
 #
 if the_target is None:
-    the_target = closest(SPAWNED_ID, broad_test_around(SPAWNED_ID, 5000,5000, 0xf0)&role("raider"))
+    in_rect = broad_test(target_point.x-5000, target_point.z-5000,target_point.x+5000, target_point.z+5000, 0xf0)
+    c = len(in_rect&role("raider"))
+    #print(f"In Rect {c}" )
+    close_to_friend = broad_test_around(SPAWNED_ID, 5000,5000, 0xf0)
+    the_target = closest(SPAWNED_ID,(in_rect | close_to_friend) &role("raider"))
+    #if the_target is not None:
+    #    t = to_object(the_target)
+    #    print(f"target {t.name}")
 
 --- do_target
 #

@@ -339,6 +339,7 @@ if _focus == "weapons":
 if _focus == "science":
     other = get_science_selection(_ship_id)
 
+yield fail if other == 0
 other = to_object(other)
 yield fail if other is None
 _ship = to_object(_ship_id)
