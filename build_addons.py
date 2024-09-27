@@ -32,6 +32,7 @@ def zipdir(path):
             for filename in files:
                 zf.write(os.path.join(dirname, filename), arcname=os.path.join(arc_dirname, filename))
 
+zipdir("autoplay")
 zipdir("ai")
 zipdir("comms")
 zipdir("commerce")
