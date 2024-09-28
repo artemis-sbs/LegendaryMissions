@@ -31,7 +31,7 @@ if manual_beams_version_task is None:
 ship_id = sbs.get_ship_of_client(client_id)
 # mast_scheduler.page.add_console_widget("3dview")
 gui_update_widget_list("3dview")
-gui_section("area: 0,70,50,90;")
+gui_section("area: 0,70,500px,90;")
 with gui_sub_section():
     gui_layout_widget("3dview")
     source = Vec3(0,0, 0)
@@ -49,7 +49,7 @@ on change get_weapons_selection(ship_id):
 
 on change manual_beams_version:
     cc= sbs.get_type_of_client(client_id)
-    print("check manual weapons show {cc}")
+    # print("check manual weapons show {cc}")
     jump manual_weapons_show if "weap" in cc
     ->END
 

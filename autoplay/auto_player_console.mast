@@ -4,10 +4,12 @@
 settings_add_defaults({"auto_play": {"enable": False}})
 
 //signal/show_game_results if SETTINGS["auto_play"]["enable"]
+await delay_app(2)
 mission = get_mission_name()
 sbs.run_next_mission(mission)
 
 //signal/game_started if SETTINGS["auto_play"]["enable"]
+await delay_sim(2)
 jump automated_player_ai
 
 
@@ -21,13 +23,17 @@ jump automated_player_move_camera_sync
 dolly = get_inventory_value(client_id, "dolly", 10)
 orbit = get_inventory_value(client_id, "orbit", 0)
 
-_ship_id = sbs.get_ship_of_client(client_id) 
+
+_ship_id = sbs.get_ship_of_client(client_id)
+->END if _ship_id==0
 _ship_obj = to_object(_ship_id)
-jump automated_player_move_camera if _ship_obj is None
+->END if _ship_obj is None
+
 
 source = Vec3(0,0, dolly * 10)
 source = source.rotate_around(Vec3(0,0,0), 0, orbit, 0)
 d_source = _ship_obj.pos
+
 gui_cinematic_full_control(client_id, _ship_id, source, _ship_id, Vec3())
 ->END
 
@@ -51,6 +57,8 @@ await task_schedule(automated_player_hook)
 task_schedule(automated_player_helm_ai, {"_ship_id": _ship_id})
 task_schedule(automated_player_science_ai, {"_ship_id": _ship_id})
 task_schedule(automated_player_weapons_ai, {"_ship_id": _ship_id})
+set_inventory_value(_ship_id, "MANUAL_BEAMS_ON", True)
+task_schedule(automated_player_comms_ai, {"_ship_id": _ship_id})
 ->END
 
 
@@ -181,7 +189,10 @@ jump automated_player_science_ai_loop if ship is None
 # set_science_selection
 raider = closest(_ship_id, role("raider"), 25000)
 if raider is not None:
-    set_science_selection(_ship_id, raider)
+    current = get_science_selection(_ship_id)
+    if current!= raider:
+        set_science_selection(_ship_id, raider)
+        follow_route_select_science(_ship_id, raider)
 await task_schedule(automated_player_move_camera)
 
 === automated_player_science_ai_loop
@@ -198,13 +209,38 @@ jump automated_player_weapons_ai_loop if ship is None
 
 raider = closest(_ship_id, role("raider"), 10000)
 if raider is not None:
-    set_weapons_selection(_ship_id, raider)
+    current = get_weapons_selection(_ship_id)
+    if current!= raider:
+        set_weapons_selection(_ship_id, raider)
+        # follow_route_select_weapon(_ship_id, raider)
 
 
 # set_weapons_selection
 === automated_player_weapons_ai_loop
 await delay_sim(10)
 jump automated_player_weapons_ai
+
+
+=== automated_player_comms_ai
+#
+# Look for closest enemy and select it
+#
+###_ship_id = sbs.get_ship_of_client(client_id) 
+ship = to_object(_ship_id)
+jump automated_player_comms_ai_loop if ship is None
+
+raider = closest(_ship_id, role("raider"), 10000)
+if raider is not None:
+    current = get_comms_selection(_ship_id)
+    if current!= raider:
+        set_comms_selection(_ship_id, raider)
+        follow_route_select_comms(_ship_id, raider)
+
+
+# set_weapons_selection
+=== automated_player_comms_ai_loop
+await delay_sim(10)
+jump automated_player_comms_ai
 
 /*
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "auto_play")

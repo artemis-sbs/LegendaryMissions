@@ -76,6 +76,9 @@ elif previous_console is not None and len(previous_console) > 0:
         continue if previous_console != consoles[i].path
         console_select = consoles[i].path
         console_select_item = consoles[i]
+
+if auto_start and console_select_item:
+    jump(console_selected)
     
 
 
