@@ -193,7 +193,7 @@ if raider is not None:
     if current!= raider:
         set_science_selection(_ship_id, raider)
         follow_route_select_science(_ship_id, raider)
-await task_schedule(automated_player_move_camera)
+# await task_schedule(automated_player_move_camera)
 
 === automated_player_science_ai_loop
 await delay_sim(10)
