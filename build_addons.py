@@ -4,7 +4,7 @@ import zipfile
 import pathlib
 
 skip =  {"__pycache__"}
-version = "v3.9.37"
+version = "v3.9.38"
 
 
 def zipdir(path):
@@ -32,6 +32,7 @@ def zipdir(path):
             for filename in files:
                 zf.write(os.path.join(dirname, filename), arcname=os.path.join(arc_dirname, filename))
 
+zipdir("autoplay")
 zipdir("ai")
 zipdir("comms")
 zipdir("commerce")

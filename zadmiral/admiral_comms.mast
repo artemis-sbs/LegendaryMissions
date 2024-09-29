@@ -10,7 +10,8 @@
 
 //comms/admiral/spawn if has_roles(COMMS_ORIGIN_ID, 'admiral')
 + "Back" //comms
-+ "Ship" //comms/admiral/spawn/ship
++ "Enemy" //comms/admiral/spawn/ship
++ "Friendly" //comms/admiral/spawn/friend
 + "Station" //comms/admiral/spawn/station
 + "Terrain" //comms/admiral/spawn/terrain
 
@@ -60,6 +61,28 @@ for station in station_data:
         npc_spawn(*pos, f"DS {num}", roles, station_type, "behav_station")
 
 
+//comms/admiral/spawn/friend if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
++ "Defender":
+    tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "defender", ret_key_only=False)
+    ->END if tsn_ship_data is None
+
+    ship = random.choice(tsn_ship_data)
+    spawn_pos = Vec3(COMMS_ORIGIN.pos)
+    count = random.randint(25,99)
+    friend = to_id(npc_spawn(*spawn_pos, f"tsn {str(count).zfill(2)}", "tsn, friendly", ship["key"], "behav_npcship"))
+    set_face(friend, random_terran())
+
++ "Civilian":
+    civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
+    ->END if civilian_data is None
+
+    ship = random.choice(civilian_data)
+    spawn_pos = Vec3(COMMS_ORIGIN.pos)
+    count = random.randint(25,99)
+    friend = to_id(npc_spawn(*spawn_pos, f"civ {str(count).zfill(2)}", "tsn, friendly, civilian", ship["key"], "behav_npcship"))
+    set_face(friend, random_terran(civilian=True))
+
 
 
 //comms/admiral/spawn/ship if has_roles(COMMS_ORIGIN_ID, 'admiral')
@@ -92,7 +115,7 @@ for race in races:
 //comms/admiral/selected/set if has_roles(COMMS_ORIGIN_ID, 'admiral') 
 + "Back" //comms
 
-//comms/admiral/selected/set if has_roles(COMMS_ORIGIN_ID, 'admiral') and has_roles(COMMS_SELECTED_ID, '__player__')
+//comms/admiral/selected/set if has_roles(COMMS_ORIGIN_ID, 'admiral') and has_role(get_science_selection(COMMS_ORIGIN),"__player__")
 + "Fuel" //comms/admiral/selected/set/fuel
 
 //comms/admiral/selected/damage if has_roles(COMMS_ORIGIN_ID, 'admiral') 

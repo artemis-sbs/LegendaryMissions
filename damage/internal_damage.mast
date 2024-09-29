@@ -1,5 +1,5 @@
 
-settings = story_get_mission_setup()
+settings = settings_get_defaults()
 shared GRID_THEME_INDEX = settings.get("grid_theme",0) 
 grid_set_grid_current_theme(GRID_THEME_INDEX )
 

@@ -124,6 +124,11 @@ on change ride_picker.get_value():
             briefing = get_inventory_value(fighter, "briefing", defa)
             gui_update("briefing-text", "$text: {briefing}")
 
+        stats = hangar_get_stats(client_id, fighter)
+        gui_update("stats-1", "$text: {stats[0]}")
+        gui_update("stats-2", "$text: {stats[1]}")
+
+
 gui_section(style="area: 75,100-80px, 100,100-50px;background: #002;")
 gui_text("select ship", style="tag:refit-text")
 
@@ -146,12 +151,21 @@ on change fighter_change:
         gui_update("refit-text", "$text: refit - launch in {refit_time}")
 
 
+
 # If a thing launches or docks things need to refresh
 on change hangar_version:
     jump show_hangar
 
 gui_section(style="area: 0,100-150px, 35,100;")
 gui_layout_widget("text_waterfall")
+#
+# Fighter stats
+#
+gui_section(style="area: 35,100-50px, 75,100;")
+gui_text(f"stat-1", style="tag:stats-1")
+gui_row()
+gui_text(f"stat-2", style="tag:stats-2")
+
 
 gui_section(style="area: 75,100-50px, 100,100;")
 on gui_message(gui_button("Launch")):
@@ -190,8 +204,8 @@ set_dedicated_link(client_id, "craft_id", ride_select)
 
 mission_objective = get_inventory_value(ride_select, "current_objective")
 if mission_objective:
-    comms_broadcast(client_id, f"Objective", "#B90")
-    comms_broadcast(client_id, f"{mission_objective}", "#B90")
+    home_id = get_dedicated_link(ride_select, "home_dock")
+    hangar_objective_started(ride_select, home_id, mission_objective)
 
 
 gui_console("cockpit")
@@ -247,3 +261,8 @@ for craft in launched_crafts:
         print("redocked FAILED")
         
 jump find_stray_craft_loop
+
+
+### //damage/killed # if has_role(DAMAGE_SOURCE_ID, "cockpit")
+
+

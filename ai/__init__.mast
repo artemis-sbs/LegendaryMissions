@@ -1,5 +1,3 @@
-import basic_ai.mast
 import grid_ai.mast
 import monster.mast
-import npc_cag.py
 import monster.py
