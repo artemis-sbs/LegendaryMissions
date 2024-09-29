@@ -113,15 +113,13 @@ r_shld = ship.data_set.get("shield_val", 0)
 r_shld_max = ship.data_set.get("shield_max_val", 1)
 
 if not last_go_dock:
-    go_dock = ((f_shld/f_shld_max)< 0.3)
-    go_dock |= ((r_shld/r_shld_max)< 0.3)
-    go_dock |= energy < 300
+    go_dock = ((f_shld/f_shld_max)< 0.3) 
+    go_dock = go_dock or ((r_shld/r_shld_max)< 0.3)
+    go_dock =  go_dock or energy < 300
     if go_dock:
         last_go_dock = True
 else:
-    un_dock = f_shld>= f_shld_max
-    un_dock &= f_shld>= f_shld_max
-    un_dock &= energy >= 1000
+    un_dock = f_shld>= f_shld_max and f_shld>= f_shld_max and energy >= 1000
     if un_dock:
         ship.data_set.set("dock_state", "undocked",0)
         go_dock = False
@@ -140,11 +138,22 @@ if t is not None:
     # Desired direction
     diff =  t.pos - ship.pos 
     ln = diff.length()
+    if abs(t.pos.x - ship.pos.x) < 500  and abs(t.pos.z - ship.pos.z) < 500:
+        if abs(t.pos.y - ship.pos.y) > 100:
+            v = Vec3(ship.pos)
+            y = v.y - (ship.pos.y-t.pos.y) * 0.3
+            v.y = y
+            ship.pos = v
+
+
     #
     #
-    if ln < 300:
-        if has_roles(t, "tsn, station"):
-            ship.data_set.set("dock_state", "docked",0)
+    if ln < 700 and has_roles(t, "tsn, station") and last_go_dock:
+        ship.data_set.set("dock_base_id", to_id(t))
+        ship.data_set.set("dock_state", "docked",0)
+        ship.data_set.set("playerThrottle", 0,0)
+        speed = 0
+    elif ln < 500 and has_roles(t, "raider"):
         ship.data_set.set("playerThrottle", 0,0)
         speed = 0
     elif ln < 1000:
@@ -172,7 +181,7 @@ if t is not None:
     ship.data_set.set("steerToDirDZ", diff.z,0)
     ship.data_set.set("steeringToDirFlag", 1,0)
     if last != t:
-        comms_broadcast(client_id, "Now targeting {t.name} at {speed}") 
+        comms_broadcast(client_id, "{ship.name} > {t.name} at {speed:.1f} Dock {last_go_dock} {ln:.0f}") 
 
 await delay_sim(4)
 jump automated_player_helm_ai
