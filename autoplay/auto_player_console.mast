@@ -47,9 +47,9 @@ for player in role("__player__"):
     _ship_id = player    
     await task_schedule(automated_player_hook)
 
-await task_schedule(automated_player_respawn)
-_ship_id = get_inventory_value(client_id, "AUTO_PLAY_SHIP", None)
-await task_schedule(automated_player_hook)
+#await task_schedule(automated_player_respawn)
+#_ship_id = get_inventory_value(client_id, "AUTO_PLAY_SHIP", None)
+#await task_schedule(automated_player_hook)
 ->END
 
 === automated_player_hook

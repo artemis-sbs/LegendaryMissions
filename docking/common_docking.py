@@ -102,6 +102,8 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
     
     player_id = to_id(player_id_or_obj)
     player_blob = to_blob(player_id_or_obj)
+    if player_blob is None:
+        return None
 
     dock_state_string = player_blob.get("dock_state", 0)
 

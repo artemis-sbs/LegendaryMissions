@@ -15,11 +15,6 @@ shared find_stray = task_schedule(find_stray_crafts)
 # jump to another label proper for that item
 # or END which stops running this task/flow 
 #
-
-
-
-
-
 //spawn if has_role(SPAWNED_ID, "__player__")
 #
 # For now put on a fighter on the player ship
@@ -29,8 +24,20 @@ shared find_stray = task_schedule(find_stray_crafts)
 # ship
 # await delay_sim(2)
 #
+---- wait_for_game_started
+#if not game_started:
+await delay_sim(1)
+#    jump wait_for_game_started
+
+#
+# Player ships can be removed ate start
+#
+->END if to_object(SPAWNED_ID) is None
+
 shuttle_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
-fighter_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
+fighter_count = grid_count_grid_data(SPAWNED.art_id, "fighter", 0)
+if fighter_count == 0:
+    fighter_count = shuttle_count
 
 set_inventory_value(SPAWNED_ID, "MAX_SHUTTLE", shuttle_count)
 set_inventory_value(SPAWNED_ID, "MAX_FIGHTER", fighter_count)
@@ -44,7 +51,8 @@ for x in range(0,shuttle_count):
 
 //spawn if has_roles(SPAWNED_ID, "tsn, station")
 # Minor hack to hope player fighters spawn first
-await delay_sim(4)
+await delay_sim(1)
+->END if to_object(SPAWNED_ID) is None
 
 shuttle_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
 fighter_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
@@ -67,6 +75,13 @@ jump show_hangar # This could be replaced with a new command gui_navigate("//con
 
 === show_hangar
 # This is need for black hole, need to clear any ship assigned
+_original =  sbs.get_ship_of_client(client_id)
+side = "tsn"
+if _original:
+    _obj = to_object(_original)
+    if _obj is not None:
+        side = _obj.side
+
 sbs.assign_client_to_ship(client_id, 0)
 call_sign = get_inventory_value(client_id, "call_sign", None)
 if call_sign is None:
@@ -78,7 +93,7 @@ if call_sign is None:
 # Get all the available rides 
 #
 
-crafts = to_object_list(all_roles("cockpit,tsn,standby"))
+crafts = to_object_list(all_roles(f"cockpit,standby,{side}"))
 briefing = "Select a craft to pilot. If you accept the mission hit launch."
 
 
@@ -235,7 +250,7 @@ if hangar_attempt_dock_craft(fighter_so.id):
 
 
 ==== find_stray_crafts ====
-await delay_sim(seconds=1) # hack for task_schedule in main
+await delay_sim(seconds=5) # hack for task_schedule in main
 
 print("finding stray fighters start")
 

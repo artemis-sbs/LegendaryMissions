@@ -14,6 +14,7 @@
 + "Friendly" //comms/admiral/spawn/friend
 + "Station" //comms/admiral/spawn/station
 + "Terrain" //comms/admiral/spawn/terrain
++ "Player" //comms/admiral/spawn/player
 
 
 
@@ -94,6 +95,59 @@ for race in races:
         fleet_diff = get_shared_variable("difficulty", 5)
         create_siege_fleet(race, fleet_diff, *pos.xyz)
 
+//comms/admiral/spawn/player if has_roles(COMMS_ORIGIN_ID, 'admiral')
++ "Back" //comms
+
+valid = map(lambda s: ship_data_get_ship_data_for(s),get_shared_variable("valid_interiors") )
+valid = sorted(valid, key=lambda s: s.get("side",""))
+
+names = ~~["Exarch",
+"Pyrrhus",
+"Devastator",
+"Celina",
+"Pegasus",
+"Blossom",
+"Commissioner",
+"Dark",
+"Avius",
+"Pathfinder",
+"Courage",
+"Untouchable",
+"Invictus",
+"Amanda",
+"Cromwell",
+"Mace",
+"Victory",
+"Ingenuity",
+"Saragossa",
+]~~
+for ship_data in valid:
+    
+    continue if ship_data is None
+    continue if "ship" not in ship_data.get("roles", "")
+    ship = ship_data.get("key", None)
+    continue if ship is None
+
+
+    side = ship_data.get("side", "tsn")
+    model = ship_data.get("name", "ship")
+    
+    name = random.choice(names)
+    art_id = ship
+
+    + "{side} {model}" {"side": side.lower(), "art_id": art_id, "name": name}:
+        pos = Vec3(COMMS_ORIGIN.pos)
+        player_ship = to_id(player_spawn(*pos, name, side, art_id))
+        set_face(player_ship, get_face_from_data(side))
+
+        stations_friendly = role(side) & role("station")
+        player_ship_update_friendly(player_ship, stations_friendly, True)
+
+
+
+
+
+
 
 //comms/admiral/selected if has_roles(COMMS_ORIGIN_ID, 'admiral')
 + "Back" //comms
@@ -102,7 +156,7 @@ for race in races:
     _other = get_science_selection(COMMS_SELECTED_ID)
     if _other and COMMS_ORIGIN_ID != _other:
         sbs.delete_object(_other)
-+ "Damage" ////comms/admiral/selected/damage
++ "Damage" //comms/admiral/selected/damage
 + "Move to Orders area":
     pos = admiral_get_pos(COMMS_ORIGIN_ID, "rmb")
     

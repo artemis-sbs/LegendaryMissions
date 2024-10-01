@@ -99,56 +99,48 @@ for count in range(civilian_count):
 
 
 ====== spawn_players =======
+#
+# No longer "Spawn" but move an remove
+#
 c=0
 first = True
 
 #test_func(3)
 
-stations_friendly = to_object_list(role("tsn")  & role("station"))
+
 
 spawn_pos = Vec3(0,0,0)
-
+player_ships = to_object_list(role("default_player_ship"))
 #------------------------------------------------------------------------------------------------------------
-for player_ship_data in player_list:
-
-    if player_ship_data["id"] is not None:
-        print("WARNING: player ship {player_ship_data['name]} may have been spawned twice" )
+for player_ship in player_ships:
+    side = player_ship.side
+    stations_friendly = to_object_list(role(side)  & role("station"))
 
     if c>= player_count:
         # make sure the id is cleared dry docked ships
-        player_ship_data["id"] = None
+        player_ship.art_id = "invisible"
+        player_ship.remove_role("__player__")
+        task_schedule(player_ships_remove_unused, {"_ship_id": player_ship.id})
         continue
-    
+
     if len(stations_friendly) > 0:
         so = random.choice(stations_friendly)
         spawn_pos = so.pos
         spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
-
-    player_ship = to_id(player_spawn(*spawn_pos, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
-    
+        player_ship.pos = spawn_pos
     c+=1
-    player_ship_data["id"] = player_ship
-
-    set_face(player_ship, get_face_from_data(player_ship_data["face"]))
-    set_inventory_value(player_ship, "respawn_time", 5)
     if first:
-        assign_client_to_ship(0,player_ship)
+        assign_client_to_ship(0,to_id(player_ship))
         first = False
 
-my_players = role("__player__") & role("tsn")
-for player in my_players:
-    ship_id = player
-    blob = to_blob(player)
-    num_ids = blob.get("num_extra_scan_sources",0)
-
-    for friend in any_role("friendly, station"):
-        blob.set("extra_scan_source", friend, num_ids)
-        num_ids += 1
-        follow_route_select_science(player, friend)
-
-    blob.set("num_extra_scan_sources",num_ids,0)
+    player_ship_update_friendly(player_ship, stations_friendly, True)
+    
 
 ->END
     
     
+==== player_ships_remove_unused
+sbs.delete_object(_ship_id)
+->END
+
         
