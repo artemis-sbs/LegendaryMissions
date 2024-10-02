@@ -31,6 +31,9 @@ tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "defender", ret_
 # pick a random tsn ship
 count = 1
 
+shared shipname_data = load_json_data(get_mission_dir_filename("shipnames.json"))
+tsnname_list = shipname_data.get("tsn")
+canuck_list = shipname_data.get("canadian")
 
 jump civilians if tsn_ship_data is None
 
@@ -58,8 +61,10 @@ for x while total_hull_points<max_hull_points:
         so = random.choice(stations_friendly)
         spawn_pos = so.pos
         spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
-
-    friend = to_id(npc_spawn(*spawn_pos, f"tsn {str(count).zfill(2)}", "tsn, friendly", ship["key"], "behav_npcship"))
+    if random.randint(1,1867) == 1867: ### This is an inside joke for our Canadian players. 
+        friend = to_id(npc_spawn(*spawn_pos, f"TSN {canuck_list.pop(random.randrange(len(canuck_list)))}", "tsn, friendly", ship["key"], "behav_npcship"))
+    else:
+        friend = to_id(npc_spawn(*spawn_pos, f"TSN {tsnname_list.pop(random.randrange(len(tsnname_list)))}", "tsn, friendly", ship["key"], "behav_npcship"))
     count += 1
     total_hull_points += hull_points
     set_face(friend, random_terran())
@@ -84,6 +89,9 @@ civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_k
 ->END if len(civilian_data)==0
 count = 1
 
+alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
+civname_list = shipname_data.get("civilian")
+
 for count in range(civilian_count):
     #
     ship = random.choice(civilian_data)
@@ -92,8 +100,10 @@ for count in range(civilian_count):
         so = random.choice(stations_friendly)
         spawn_pos = so.pos
         spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
+    
+    civ_name = random.choice(alpha) + " " + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
 
-    friend = to_id(npc_spawn(*spawn_pos, f"civ {str(count).zfill(2)}", "tsn, friendly, civilian", ship["key"], "behav_npcship"))
+    friend = to_id(npc_spawn(*spawn_pos, civ_name, "tsn, friendly, civilian", ship["key"], "behav_npcship"))
     set_face(friend, random_terran(civilian=True))
     count += 1
 

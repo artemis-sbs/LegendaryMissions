@@ -93,6 +93,7 @@ else:
 
 
 #------------------------------------------------------------------------------------------------------------
+
 terrain_spawn_stations(difficulty, lethal_value)
 await task_schedule(spawn_friendly_npc)
 
@@ -188,21 +189,104 @@ for v in spawn_points:
         pickup_spawn(v.x, v.y, v.z, "haplix_overcharger")
         log("Haplix Overcharger spawned {v.x},{v.y},{v.z}","upgrades")
 
-
-#wr = terrain_spawn(200, 0, 600, "Wreck", "wreck", "wreck", "behav_asteroid")
-#temp_yaw = random.uniform(0.001, 0.003)
-#temp_pitch = random.uniform(0.002, 0.004)
-#wr.engine_object.steer_yaw = temp_yaw
-#wr.engine_object.steer_pitch = temp_pitch
-#wr.blob.set("radar_color_override", "#f0c")
-
-
-
 spawn_points = scatter.box(monster_value, 0,0,0, 75000, 1000, 75000, centered=True)
 for v in spawn_points:
     typhon_classic_spawn(*v.xyz)
 
+if friendly_select != "none":
+    jump kidnap_caper
 
+====== kidnap_caper ======
+
+alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
+cargo_list = shipname_data.get("peacetime")
+civname_list = shipname_data.get("civilian")
+suspect = []
+
+count = 1
+spawn_points = scatter.box(5, 0, 0, 0, 50000, 1000, 50000, centered=True)
+for c in spawn_points:
+    if count >= 1 and count <= 3:    
+        cargo_name = random.choice(alpha) + " " + str(random.randint(1,99)).zfill(2) + " " + cargo_list.pop(random.randrange(len(cargo_list)))
+        cargo = to_id(npc_spawn(*c, cargo_name, "tsn, friendly, civilian, primary, suspect", "cargo_ship", "behav_npcship"))
+    else:
+        cargo_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
+        cargo = to_id(npc_spawn(*c, cargo_name, "tsn, friendly, civilian, secondary, suspect", "cargo_ship", "behav_npcship"))
+    set_face(cargo, random_terran(civilian=True))
+    suspect.append(cargo)
+    count += 1
+
+suspect_list = to_object_list(role('suspect'))
+suspect_list1 = to_object_list(all_roles('primary, suspect'))
+suspect_list2 = to_object_list(all_roles('secondary, suspect'))
+sus_count = len(suspect_list1)
+-> END if sus_count == 0
+# jump kidnap_lost if sus_count == 0
+
+#shared sus_names = [s.name for s in suspect_list]
+#if sus_count==1:
+#    sus_names = sus_names[0]
+#if sus_count==2:
+#    sus_names = ", and ".join(sus_names)
+#elif sus_count > 2:
+#    sus_names = ",".join(sus_names[:-1])
+#    sus_names += f", and {sus_names[-1]}" 
+
+capnames = [ "Ashton Marlin", "Barclay Barnes", "Clancy Moreno", "Dash Hardpike", "Ernesto Camacho" ]
+
+for s in suspect_list:
+    set_inventory_value(s, "capname", capnames.pop(0))
+    _container_list = []
+    _tempdict = {}
+    _cargo = {}
+    for x in range(4):
+        alpha = ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "X", "Y", "Z"]
+        _sku = alpha.pop(random.randrange(len(alpha)))
+        _sku += alpha.pop(random.randrange(len(alpha)))
+        _sku += alpha.pop(random.randrange(len(alpha)))
+        _tempdict = {'sku': _sku, 'contents': 'Cerulean Oysters'}
+        _container_list.append(_tempdict)
+    _cargo = {"containers" : _container_list}
+    set_inventory_value(s, "cargo_hold", _cargo)
+    temp0 = get_inventory_value(s, "cargo_hold")
+    print(temp0)
+
+print(f"Contents of Ship1")
+temp1 = get_inventory_value(suspect_list[0], "cargo_hold")
+print(f"Container {temp1['containers'][0]['sku']}: {temp1['containers'][0]['contents']}")
+print(f"Container {temp1['containers'][1]['sku']}: {temp1['containers'][1]['contents']}")
+print(f"Container {temp1['containers'][2]['sku']}: {temp1['containers'][2]['contents']}")
+print(f"Container {temp1['containers'][3]['sku']}: {temp1['containers'][3]['contents']}")
+
+#test1 = get_inventory_value(suspect_list[0], "capname")
+#test2 = get_inventory_value(suspect_list[0], "cargo_hold")
+#print(f"Ship1 Captain {test1} Cargo {test2}")
+
+shared cargo1nm = "FirstName"
+shared cargo2nm = "SecondName"
+shared cargo3nm = "ThirdName"
+
+//comms if has_roles(COMMS_SELECTED_ID, "tsn, station, ds1") 
++ "Investigate Kidnapping" //comms/investigate_kidnapping
+
+//comms/investigate_kidnapping  
+comms_receive(f"""Ambassador Florbin has been kidnapped! We believe they were smuggled out in a cargo container. The last three ships to leave were {cargo1nm}, {cargo2nm}, and {cargo3nm}. If you hurry, you might be able to catch them!^""", title="Ambassador Kidnapped", title_color=station_color)
++ "Cargo Manifest {cargo1nm}" cargo_manifest_ship1 
++ "Cargo Manifest {cargo2nm}" cargo_manifest_ship2 
++ "Cargo Manifest {cargo3nm}" cargo_manifest_ship3 
+
+
+===== cargo_manifest_ship1 =====
+comms_receive(f"""Our records indicate {cargo1nm} docked at this station at 08:34. It loaded^Container ABC: {cargo1c1}^Container DEF: {cargo1c2}^Container GHI: {cargo1c3}^Container JKL: {cargo1c4}^""", title="Cargo Manifest", title_color=station_color)
+yield success
+
+===== cargo_manifest_ship2 =====
+comms_receive(f"""Our records indicate{cargo2nm} docked at this station at 09:16. It loaded {cargo2c1}, {cargo2c2}, {cargo2c3}, and {cargo2c4}.^""", title="Cargo Manifest", title_color=station_color)
+yield success
+
+===== cargo_manifest_ship3 =====
+comms_receive(f"""Our records indicate{cargo3nm} docked at this station at 10:28. It loaded {cargo3c1}, {cargo3c2}, {cargo3c3}, and {cargo3c4}.^""", title="Cargo Manifest", title_color=station_color)
+yield success
 
 #------------------------------------------------------------------------------------------------------------
 
