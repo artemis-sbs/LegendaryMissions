@@ -65,6 +65,18 @@ shared mission_index = 0
 shared mission_list = maps_get_list()
 shared mission_overview = maps_get_init()
 shared world_select_path  = settings.get("world_select")
+sim_create()
+#
+# Create all the player ships
+# 
+
+for player_ship_data in player_list:
+    player_ship = to_id(player_spawn(0,0,0, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
+    add_role(player_ship, "default_player_ship")
+    set_face(player_ship, get_face_from_data(player_ship_data["face"]))
+    set_inventory_value(player_ship, "respawn_time", 5)
+
+# sim_pause()
 i = 0
 for m in mission_list:
     if m.path == world_select_path:
@@ -179,7 +191,7 @@ await gui():
 
 
 ===== start ======
-sim_create()
+# sim_create()
 sim_resume()
 #
 # Based on the game type call the right 

@@ -16,15 +16,16 @@ gui_activate_console("admiral_sci")
 
 _ship_id = sbs.get_ship_of_client(client_id) 
 faction_ship = to_object(_ship_id)
-
 cambot_id = get_inventory_value(client_id, "ADMIRAL_COMBOT", None)
 camera_id = cambot_id
 cambot = to_object(cambot_id)
 if cambot_id is None or cambot is None:
-    cambot = to_object(player_spawn(0,0,0, "Admiral", "#,admiral", "invisible")) 
+    cambot = to_object(player_spawn(0,0,10, "Admiral", "#,admiral", "invisible")) 
     remove_role(cambot, "__player__")
     camera_id = to_id(cambot)
     set_inventory_value(client_id, "ADMIRAL_COMBOT", camera_id)
+    cambot_id = cambot_id
+    #print("Creating ADMIRAL {cambot}")
 
 last_sci = cambot_id
 #
@@ -33,11 +34,11 @@ last_sci = cambot_id
 cambot.data_set.set("ally_list","tsn,raider",0)
 cambot.data_set.set("ship_base_scan_range", 35000,0)
 
-
 await delay_sim(1)
 #
 # Assign before setting comms up
 #
+#print(f"admiral {camera_id}")
 sbs.assign_client_to_ship(client_id, camera_id)
 science_set_scan_data(camera_id, camera_id, {"scan": "Admiral"})
 set_comms_selection(camera_id, camera_id)
@@ -137,7 +138,7 @@ if sel is None or sel==0:
 #    source = _sel_obj.pos + source
 #else:
 #    source = _ship_obj.pos + source
-gui_cinematic_full_control(client_id, sel, source, sel, Vec3())
+#gui_cinematic_full_control(client_id, sel, source, sel, Vec3())
 ->END
 
 

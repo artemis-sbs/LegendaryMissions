@@ -47,9 +47,9 @@ for player in role("__player__"):
     _ship_id = player    
     await task_schedule(automated_player_hook)
 
-await task_schedule(automated_player_respawn)
-_ship_id = get_inventory_value(client_id, "AUTO_PLAY_SHIP", None)
-await task_schedule(automated_player_hook)
+#await task_schedule(automated_player_respawn)
+#_ship_id = get_inventory_value(client_id, "AUTO_PLAY_SHIP", None)
+#await task_schedule(automated_player_hook)
 ->END
 
 === automated_player_hook
@@ -101,7 +101,13 @@ if ship is None:
     ->END
     
 raider = to_object(closest(_ship_id, role("raider")))
+close_raider = to_object(closest(_ship_id, role("raider"), 10000))
 station = to_object(closest(_ship_id, all_roles("tsn,station")))
+danger = to_object(closest(_ship_id, any_role("mine,maelstrom"), 2500))
+upgrade = to_object(closest(_ship_id, all_roles("upgrade"), 5000))
+wreck = to_object(closest(_ship_id, all_roles("wreck"), 7500))
+
+
 energy = ship.data_set.get("energy", 0)
 if energy < 30:
     energy = 300
@@ -128,24 +134,42 @@ else:
 # go_dock
 #    either shield < 50
 #    or energy < 300 
+
 if go_dock:
     t = station
+elif close_raider is not None:
+    t = close_raider
+elif upgrade is not None:
+    t = upgrade
+elif wreck is not None: 
+    t = wreck
 else:    
     t = raider
 
 
 if t is not None:
-    # Desired direction
     diff =  t.pos - ship.pos 
     ln = diff.length()
-    if abs(t.pos.x - ship.pos.x) < 500  and abs(t.pos.z - ship.pos.z) < 500:
-        if abs(t.pos.y - ship.pos.y) > 100:
-            v = Vec3(ship.pos)
-            y = v.y - (ship.pos.y-t.pos.y) * 0.3
-            v.y = y
-            ship.pos = v
 
-
+    if danger is not None:
+        danger_diff =  danger.pos - ship.pos
+        danger_ln = danger_diff.length()
+        if ln > danger_ln:
+            move = Vec3(ship.pos)
+            old = move.y
+            move.y = danger.pos.y
+            if t.pos.y > danger.pos.y:
+                ~~move.y += 1200~~
+            else:
+                ~~move.y -= 1200~~
+            if move.y != old:
+                ship.pos = move
+        elif ln < 2000:
+            move = Vec3(ship.pos)
+            old = move.y
+            move.y = t.pos.y
+            if move.y != old:
+                ship.pos = move
     #
     #
     if ln < 700 and has_roles(t, "tsn, station") and last_go_dock:
@@ -153,7 +177,7 @@ if t is not None:
         ship.data_set.set("dock_state", "docked",0)
         ship.data_set.set("playerThrottle", 0,0)
         speed = 0
-    elif ln < 500 and has_roles(t, "raider"):
+    elif ln < 700 and has_roles(t, "raider"):
         ship.data_set.set("playerThrottle", 0,0)
         speed = 0
     elif ln < 1000:
@@ -183,7 +207,7 @@ if t is not None:
     if last != t:
         comms_broadcast(client_id, "{ship.name} > {t.name} at {speed:.1f} Dock {last_go_dock} {ln:.0f}") 
 
-await delay_sim(4)
+await delay_sim(1)
 jump automated_player_helm_ai
 
 === automated_player_science_ai
@@ -217,11 +241,17 @@ ship = to_object(_ship_id)
 jump automated_player_weapons_ai_loop if ship is None
 
 raider = closest(_ship_id, role("raider"), 10000)
+wreck = closest(_ship_id, role("wreck"), 10000)
 if raider is not None:
     current = get_weapons_selection(_ship_id)
     if current!= raider:
         set_weapons_selection(_ship_id, raider)
         # follow_route_select_weapon(_ship_id, raider)
+elif wreck is not None:
+    current = get_weapons_selection(_ship_id)
+    if current!= wreck:
+        set_weapons_selection(_ship_id, wreck)
+        # follow_route_select_weapon(_ship_id, wreck)
 
 
 # set_weapons_selection

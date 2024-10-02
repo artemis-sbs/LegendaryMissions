@@ -4,8 +4,6 @@
 set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a fighter mission")
 CRAFT_ID = SPAWNED_ID
 jump hangar_schedule_mission
-
-
 ->END
 
 
@@ -14,7 +12,13 @@ set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a shuttle miss
 CRAFT_ID = SPAWNED_ID
 jump hangar_schedule_mission
 
-======== hangar_schedule_mission 
+======== hangar_schedule_mission
+
+---- wait_for_game_started
+if not game_started:
+    await delay_sim(3)
+    jump wait_for_game_started
+->END if to_object(SPAWNED_ID) is None
 
 docked_with = get_dedicated_link(CRAFT_ID, "home_dock")
 

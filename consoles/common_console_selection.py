@@ -16,11 +16,11 @@ def console_select_title_template():
 
 def console_ship_select_template(item):
     gui_row("row-height:3em;padding:13px;")
-    gui_ship(f"{item['ship']}", style="col-width:50px;")
+    gui_ship(f"{item.art_id}", style="col-width:50px;")
     with gui_sub_section():
-        gui_text(f"$text:{item['name']};justify: left;font:gui-3;")
+        gui_text(f"$text:{item.name};justify: left;font:gui-3;")
         gui_row()
-        gui_text(f"$text:{item['name']};justify: left;font:gui-2;color:#bbb;")
+        gui_text(f"$text:{item.name};justify: left;font:gui-2;color:#bbb;")
     # gui_text(f"$text:Hello;justify: left;font:gui-2;")
     
 
