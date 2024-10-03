@@ -1,6 +1,10 @@
 {
     "sbslib": [
+<<<<<<< HEAD
         "artemis-sbs.sbs_utils.v3.9.38.sbslib"
+=======
+        "artemis-sbs.sbs_utils.v3.9.39.sbslib"
+>>>>>>> ad02db3df800285d647636b85321f27b2e042fe7
     ]
 }
 

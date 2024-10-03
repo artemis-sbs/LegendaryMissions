@@ -20,12 +20,18 @@ console_select_item = consoles[0]
 console_select = consoles[0].path
 
 
+# Assuming Id is in creation order
+player_list = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
+player_list_all = player_list.copy()
+
+
 console_ready = False
 console_read_only = False
-ship_name = player_list[0]["name"] 
+ship_name = player_list[0].name
 client_select_ship = ship_name.lower()
-ship_type = player_list[0]["ship"] 
-ship_type_def = player_list[0]["ship"]
+ship_type = player_list[0].art_id
+ship_type_def = ship_type
+
 shared ship_list = ""
 client_selected_index = 0
 shared valid_interiors = set()
@@ -76,6 +82,9 @@ elif previous_console is not None and len(previous_console) > 0:
         continue if previous_console != consoles[i].path
         console_select = consoles[i].path
         console_select_item = consoles[i]
+
+if auto_start and console_select_item:
+    jump(console_selected)
     
 
 
@@ -86,13 +95,20 @@ elif previous_console is not None and len(previous_console) > 0:
 #print("CHNAGE CONSOLE EVENT?")
 # default console_select = "helm"
 # default client_select_ship = "artemis"
+player_list = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
+player_list_all = player_list.copy()
+#
+if game_started:
+    player_count = len(player_list)
+
+
 
 # Clamp selected index
 client_selected_index = min(int(player_count), client_selected_index )
 
 
-ship_type_def = player_list[client_selected_index]["ship"]
-ship_name = player_list[client_selected_index]["name"]
+ship_type_def = player_list[client_selected_index].art_id
+ship_name = player_list[client_selected_index].name
 client_select_ship = ship_name.lower()
 
 #gui_activate_console("select_console")
@@ -103,16 +119,15 @@ with ship_sec:
 
     _input = gui_input("desc:Ship Name", var="ship_name")
     on gui_message(_input):
-        player_list[client_selected_index]["name"] = ship_name
+        player_list[client_selected_index].name = ship_name
+        #print(f"NAME CHANGE {_input.value} {ship_name}")
         client_select_ship = ship_name
-        player_list[client_selected_index]["ship"] = ship_type
-        gui_update_shared("sh_ship_list", None)
+        #gui_update_shared("sh_ship_list", None)
 
 ship_sec_not = gui_region(style="area: 10px,60px,400px,105px")
 with ship_sec_not:
     gui_row(style="row-height: 45px;")
-
-    _input = gui_text(ship_name)
+    _display = gui_text(ship_name, style="tag:sh_ship_name")
 
 ship_sec2 = gui_region(style="area: 10px,110px,500px,520px")
 with ship_sec2:
@@ -124,8 +139,7 @@ with ship_sec2:
     spick = ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors)
     gui_content(spick, style="tag:sh_ship_picker", var="ship_type")
     on change ship_type:
-        player_list[client_selected_index]["ship"] = ship_type
-        gui_update_shared("sh_ship_picker", ship_type, {"client_select_ship": client_select_ship})
+        player_list[client_selected_index].art_id = ship_type
         gui_update_shared("sh_ship_list", None)
 
 if console_select_item.path != "helm" or game_started:
@@ -142,7 +156,7 @@ elif console_select_item.path == "helm" and not game_started:
 # List of available ships
 # ship_sec2 = gui_region(style="area: 1,110px,500px,520px")
 gui_section( style="area: 10px,550px,500px,100-60px;")
-ship_list = player_list[:player_count]
+ship_list = player_list_all[:player_count]
 ship_select_lb = gui_list_box(ship_list,"row-height: 3em; background:#1572;tag:sh_ship_list;", item_template=console_ship_select_template, title_template=console_ship_select_title_template, select=True)
 ship_select_lb.set_selected_index(client_selected_index)
 
@@ -175,10 +189,9 @@ on change player_count:
     # Just refresh if reduce ship count for now
     # jump select_console if len(lb_ships.items)>player_count
     # Otherwise can refresh faster if adding ships
-    ship_list = player_list[:player_count]
+    ship_list = player_list_all[:player_count]
     ship_select_lb.items = ship_list
     ship_select_lb.set_selected_index(min(client_selected_index, len(ship_list)))
-    #gui_update_shared("sh_ship_list", None)
     gui_represent(ship_select_lb)
     
 
@@ -207,17 +220,31 @@ on change console_select_lb.get_value():
 
 on change ship_select_lb.get_value():
     client_select_ship_item = ship_select_lb.get_value()
+    client_selected_index = ship_select_lb.get_selected_index()
     if client_select_ship_item is not None:
-        client_select_ship = client_select_ship_item['name']
-
-        if client_select_ship is not None:
-            _input.value = client_select_ship
-            gui_represent(ship_sec)
-            client_select_ship = client_select_ship.lower()
-            for i in range(player_count):
-                client_selected_index = i
-                break if player_list[i]["name"].strip().lower() == client_select_ship
-
+        print("SHIP LIST {i} {client_select_ship_item} ")
+        client_select_ship = client_select_ship_item.name
+        ship_name = client_select_ship
+        ship_type = client_select_ship_item.art_id
+        gui_update("sh_ship_picker", ship_type)
+        gui_update("sh_ship_name", ship_name)
+        
+        
+on change ship_select_lb.get_value().art_id:
+    ship_type = ship_select_lb.get_value().art_id
+    gui_update("sh_ship_picker", ship_type)
+    gui_update("sh_ship_list", None)
+        
+on change ship_select_lb.get_value().name:
+    ship_name = ship_select_lb.get_value().name
+    _input.value = ship_name
+    _display.value = ship_name
+    gui_represent(ship_sec_not)
+    gui_represent(ship_sec)
+    gui_update("sh_ship_list", None)
+    
+    
+        
 await gui()
 
 
@@ -261,9 +288,10 @@ jump select_console if _ship_id is None
 # This should get a skybox with client overriding, shp, overriding shared
 #
 sky_box = get_shared_variable("skybox", "sky1")
+# print(f"select console {sky_box.path}" )
 sky_box = get_inventory_value(_ship_id, "skybox", sky_box)
 sky_box = get_inventory_value(client_id, "skybox", sky_box)
-sbs.set_sky_box(client_id, sky_box)
+skybox_schedule(sky_box, client_id)
 
 ====== show_console_selected ====
 #

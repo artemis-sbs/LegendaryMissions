@@ -2,21 +2,25 @@
 
 //spawn if has_roles(SPAWNED_ID, "tsn,fighter")
 set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a fighter mission")
-COMMS_ORIGIN_ID = SPAWNED_ID
+CRAFT_ID = SPAWNED_ID
 jump hangar_schedule_mission
-
-
 ->END
 
 
 //spawn if has_roles(SPAWNED_ID, "tsn,shuttle")
 set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a shuttle mission")
-COMMS_ORIGIN_ID = SPAWNED_ID
+CRAFT_ID = SPAWNED_ID
 jump hangar_schedule_mission
 
-======== hangar_schedule_mission 
+======== hangar_schedule_mission
 
-docked_with = get_dedicated_link(COMMS_ORIGIN_ID, "home_dock")
+---- wait_for_game_started
+if not game_started:
+    await delay_sim(3)
+    jump wait_for_game_started
+->END if to_object(SPAWNED_ID) is None
+
+docked_with = get_dedicated_link(CRAFT_ID, "home_dock")
 
 if random.randint(0,4) == 2:
     jump story_mission_investigate
@@ -24,7 +28,7 @@ else:
     jump story_mission_deliver_to_player if has_role(docked_with, "station")
     jump story_mission_deliver_to_station if has_role(docked_with, "__player__")
 
-set_inventory_value(COMMS_ORIGIN_ID, "briefing", "No missions set")
+set_inventory_value(CRAFT_ID, "briefing", "No missions set")
 
 ->END
 
@@ -32,7 +36,7 @@ set_inventory_value(COMMS_ORIGIN_ID, "briefing", "No missions set")
 =====  story_mission_deliver_to_player =====
 # SPAWNED_ID assumed
 
-so = to_object(COMMS_ORIGIN_ID)
+so = to_object(CRAFT_ID)
 ->END if so is None
 side = so.side
 so = None # no longer needed
@@ -41,7 +45,7 @@ mission_types = ["ammunition"] #, "upgrade"]
 mission_type = random.choice(range(len(mission_types)))
 
 # get player on my side, and exclude me
-COMMS_SELECTED_ID = random_id(role(get_side(COMMS_ORIGIN_ID)) & role("__player__") - to_set(COMMS_ORIGIN_ID))
+OBJECTIVE_ID = random_id(role(get_side(CRAFT_ID)) & role("__player__") - to_set(CRAFT_ID))
 
 jump story_mission_deliver_ammo if mission_type ==0
 
@@ -49,15 +53,15 @@ jump story_mission_deliver_ammo if mission_type ==0
 
 
 =====  story_mission_deliver_ammo =====
-# Expects COMMS_ORIGIN_ID and COMMS_SELECTED_ID
+# Expects CRAFT_ID and OBJECTIVE_ID
 #
 # The remaining AI for the player is docking
 #
-sel_o = to_object(COMMS_SELECTED_ID)
+sel_o = to_object(OBJECTIVE_ID)
 ->END if sel_o is None
 
 
-origin_o = to_object(COMMS_ORIGIN_ID)
+origin_o = to_object(CRAFT_ID)
 ->END if origin_o is None
 
 _torp_types = sel_o.data_set.get("torpedo_types_available",0)
@@ -82,7 +86,7 @@ torp_name = _torp_types[torp_type].strip()
 
 set_inventory_value(SPAWNED_ID, "briefing", f"Deliver {torp_name} to {sel_o.name}^Take the {amount} {torp_name} and delivery them to {sel_o.name}.")
 mission_objective = f"Deliver {torp_name} to {sel_o.name}"
-set_inventory_value(COMMS_ORIGIN_ID, "current_objective", f"Deliver {torp_name} to {sel_o.name}")
+set_inventory_value(CRAFT_ID, "current_objective", f"Deliver {torp_name} to {sel_o.name}")
 mission_objective = f"delivered {amount} {torp_name} to {sel_o.name}"
 
 sel_o = None # free
@@ -91,32 +95,23 @@ sel_o = None # free
 
 await delay_sim(seconds=5)
 # END tesk if things no longer exist
-->END if to_object(COMMS_ORIGIN_ID) is None # If in standby it won't 'exist'
-->END if not object_exists(COMMS_SELECTED_ID)
+->END if to_object(CRAFT_ID) is None # If in standby it won't 'exist'
+->END if not object_exists(OBJECTIVE_ID)
 
 # Must be docked
-jump travel if not has_role(COMMS_ORIGIN_ID, "standby")
+jump travel if not has_role(CRAFT_ID, "standby")
 # must be docked at expected location
-jump travel if get_dedicated_link(COMMS_ORIGIN_ID, "home_dock") != COMMS_SELECTED_ID
+jump travel if get_dedicated_link(CRAFT_ID, "home_dock") != OBJECTIVE_ID
 
 # Get the current load
-current_load = get_data_set_value(COMMS_SELECTED_ID, f"{torp_name}_NUM", 0)
+current_load = get_data_set_value(OBJECTIVE_ID, f"{torp_name}_NUM", 0)
 if current_load is None:
     current_load = 0
 
 # Add the torps
-set_data_set_value(COMMS_SELECTED_ID, f"{torp_name}_NUM", amount + current_load, 0)
+set_data_set_value(OBJECTIVE_ID, f"{torp_name}_NUM", amount + current_load, 0)
 
-# Get the current load
-origin_o = to_object(COMMS_ORIGIN_ID)
-pilot = "A craft "
-if origin_o is not None:
-    pilot = origin_o.name
-
-client_id = get_inventory_value(COMMS_ORIGIN_ID, "client_id", client_id)
-comms_broadcast(client_id, "Objective complete", "#090")
-comms_broadcast(client_id, f"   \x02 {mission_objective}", "#090")
-comms_broadcast(COMMS_SELECTED_ID, f"{pilot} {mission_objective}",  "#090")
+hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, mission_objective)
 
 
 
@@ -136,8 +131,8 @@ mission_types = ["ammunition"] #, "upgrade"]
 mission_type = random.choice(range(len(mission_types)))
 
 # get player on my side, and exclude me
-COMMS_ORIGIN_ID = SPAWNED_ID
-COMMS_SELECTED_ID = random_id(role(get_side(SPAWNED_ID)) & role("station") - to_set(SPAWNED_ID))
+CRAFT_ID = SPAWNED_ID
+OBJECTIVE_ID = random_id(role(get_side(SPAWNED_ID)) & role("station") - to_set(SPAWNED_ID))
 
 jump story_mission_deliver_life_form if mission_type ==0
 
@@ -146,18 +141,18 @@ jump story_mission_deliver_life_form if mission_type ==0
 
 
 =====  story_mission_deliver_life_form =====
-# Expects COMMS_ORIGIN_ID and COMMS_SELECTED_ID
+# Expects CRAFT_ID and OBJECTIVE_ID
 
-sel_o = to_object(COMMS_SELECTED_ID)
+sel_o = to_object(OBJECTIVE_ID)
 ->END if sel_o is None
 
 life_forms = ["Admiral Xeno Nakada", "Prince Zayne Alcantar", "Admiral Tharay sh'Firri", "Skarran delegate", "Torgoth delegate"]
 
 life_form_name = random.choice(life_forms)
 
-set_inventory_value(COMMS_ORIGIN_ID, "briefing", f"Deliver {life_form_name} to {sel_o.name}^Take the {life_form_name} and delivery them to {sel_o.name}.")
+set_inventory_value(CRAFT_ID, "briefing", f"Deliver {life_form_name} to {sel_o.name}^Take the {life_form_name} and delivery them to {sel_o.name}.")
 mission_objective =  f"Deliver {life_form_name} to {sel_o.name}"
-set_inventory_value(COMMS_ORIGIN_ID, "current_objective", f"Deliver {life_form_name} to {sel_o.name}")
+set_inventory_value(CRAFT_ID, "current_objective", f"Deliver {life_form_name} to {sel_o.name}")
 
 sel_o = None # free
 
@@ -166,19 +161,17 @@ sel_o = None # free
 await delay_sim(seconds=5)
 
 # END task if things no longer exist
-->END if to_object(COMMS_ORIGIN_ID) is None # If in standby it won't 'exist'
-->END if not object_exists(COMMS_SELECTED_ID)
+->END if to_object(CRAFT_ID) is None # If in standby it won't 'exist'
+->END if not object_exists(OBJECTIVE_ID)
 
 
 # Must be docked
-jump travel if not has_role(COMMS_ORIGIN_ID, "standby")
+jump travel if not has_role(CRAFT_ID, "standby")
 # must be docked at expected location
-jump travel if get_dedicated_link(COMMS_ORIGIN_ID, "home_dock") != COMMS_SELECTED_ID
+jump travel if get_dedicated_link(CRAFT_ID, "home_dock") != OBJECTIVE_ID
 
 # Get the current load
-client_id = get_inventory_value(COMMS_ORIGIN_ID, "client_id", client_id)
-comms_broadcast(client_id, "Objective complete", "#090")
-comms_broadcast(client_id, f"   \x02 {mission_objective}", "#090")
+hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, mission_objective)
 
 
 jump hangar_schedule_mission
@@ -189,7 +182,7 @@ jump hangar_schedule_mission
 =====  story_mission_investigate =====
 # SPAWNED_ID assumed
 
-so = to_object(COMMS_ORIGIN_ID)
+so = to_object(CRAFT_ID)
 ->END if so is None
 side = so.side
 
@@ -198,23 +191,23 @@ mission_types = ["ammunition"] #, "upgrade"]
 mission_type = random.choice(range(len(mission_types)))
 
 # get player on my side, and exclude me
-COMMS_ORIGIN_ID = SPAWNED_ID
-COMMS_SELECTED_ID = random_id(role(get_side(SPAWNED_ID)) & role("__player__") - to_set(SPAWNED_ID))
+CRAFT_ID = SPAWNED_ID
+OBJECTIVE_ID = random_id(role(get_side(SPAWNED_ID)) & role("__player__") - to_set(SPAWNED_ID))
 
 stations = set(role("station"))
 station = random.choice(list(stations))
 set_inventory_value(SPAWNED_ID, "briefing", f"Mission patrol stations. Visit all of the stations then dock.")
 
 ---- wait_for_launch
-so = to_object(COMMS_ORIGIN_ID)
-if has_role(COMMS_ORIGIN_ID, "standby"):
+so = to_object(CRAFT_ID)
+if has_role(CRAFT_ID, "standby"):
     await delay_sim(3)
     jump wait_for_launch
 
 
 --- rebuild
 
-so = to_object(COMMS_ORIGIN_ID)
+so = to_object(CRAFT_ID)
 ->END if so is None
 
 
@@ -234,13 +227,11 @@ for st in stations:
 so.data_set.set("waypoint_count", idx, 0)
 
 if len(stations)!=0:
-    client_id = get_inventory_value(COMMS_ORIGIN_ID, "client_id", client_id)
+    client_id = get_inventory_value(CRAFT_ID, "client_id", client_id)
     comms_broadcast(client_id, f"waypoints: {visit}")
 else:
     # Get the current load
-    client_id = get_inventory_value(COMMS_ORIGIN_ID, "client_id", client_id)
-    comms_broadcast(client_id, "Objective complete", "#090")
-    comms_broadcast(client_id, "   \x02 All patrol points have been visited", "#090")
+    hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, "All patrol points have been visited")
     ->END
 
 
@@ -250,18 +241,18 @@ so = None # no longer needed
 
 await delay_sim(seconds=5)
 
-so = to_object(COMMS_ORIGIN_ID)
+so = to_object(CRAFT_ID)
 ->END if so is None
-jump loop if has_role(COMMS_ORIGIN_ID, "standby")
+jump loop if has_role(CRAFT_ID, "standby")
 
-near_station = broad_test_around(COMMS_ORIGIN_ID, 1000, 1000, 0xF0) & stations
+near_station = broad_test_around(CRAFT_ID, 1000, 1000, 0xF0) & stations
 jump loop if len(near_station) == 0
 
 for st in near_station:
     stations.discard(st)
     sto = to_object(st)
     if sto:
-        client_id = get_inventory_value(COMMS_ORIGIN_ID, "client_id", client_id)
+        client_id = get_inventory_value(CRAFT_ID, "client_id", client_id)
         comms_broadcast(client_id, f"waypoint reached: {sto.name}")
 
 

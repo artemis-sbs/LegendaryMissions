@@ -31,7 +31,7 @@ if manual_beams_version_task is None:
 ship_id = sbs.get_ship_of_client(client_id)
 # mast_scheduler.page.add_console_widget("3dview")
 gui_update_widget_list("3dview")
-gui_section("area: 0,70,50,90;")
+gui_section("area: 0,70,600px,90;")
 with gui_sub_section():
     gui_layout_widget("3dview")
     source = Vec3(0,0, 0)
@@ -39,7 +39,7 @@ with gui_sub_section():
 #    gui_cinematic_full_control(client_id, ship_id, source, ship_id, source)
     gui_cinematic_full_control(client_id, 0, source, 0, source)
 
-manual =  gui_region("area: 0,90,50,100;orientation:BT;")
+manual =  gui_region("area: 0,90,600px,100;orientation:BT;")
 
 
 latest_target = None
@@ -49,7 +49,7 @@ on change get_weapons_selection(ship_id):
 
 on change manual_beams_version:
     cc= sbs.get_type_of_client(client_id)
-    print("check manual weapons show {cc}")
+    # print("check manual weapons show {cc}")
     jump manual_weapons_show if "weap" in cc
     ->END
 
@@ -109,13 +109,13 @@ jump manual_weapons_minimize if dist > 2000
 
 s_pos = Vec3(ship.pos)
 t_pos = Vec3(_target.pos)
-diff = s_pos -t_pos
+diff = t_pos - s_pos
 n = diff.unit()
-source = n *dist - 150
+source = n * 100
 
 t = Vec3(0,0, 0)
 
-gui_cinematic_full_control(client_id, ship_id, source, target_id, t)
+gui_cinematic_full_control(client_id, target_id, source, target_id, t)
 
 name = _target.comms_id
 # Drawing is bottom to top set in region style

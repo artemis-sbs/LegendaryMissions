@@ -1,7 +1,8 @@
 
 from sbs_utils.procedural.execution import get_shared_variable
-from sbs_utils.procedural.query import to_id, to_object #, object_exists, to_object_list, get_side
+from sbs_utils.procedural.query import to_id, to_object, to_blob #, object_exists, to_object_list, get_side
 from sbs_utils.procedural.roles import add_role
+from sbs_utils.procedural.routes import follow_route_select_science
 from sbs_utils.procedural.spawn import npc_spawn, terrain_spawn
 from sbs_utils.procedural.links import link, unlink
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
@@ -13,6 +14,18 @@ import random
 from fleet import fleet_spawn
 
 
+
+def player_ship_update_friendly(player_id, friends, initial_scan = False):
+    blob = to_blob(player_id)
+    num_ids = blob.get("num_extra_scan_sources",0)
+
+    for friend in friends:
+        blob.set("extra_scan_source", to_id(friend), num_ids)
+        num_ids += 1
+        if initial_scan:
+            follow_route_select_science(to_id(player_id), to_id(friend))
+
+    blob.set("num_extra_scan_sources",num_ids,0)
 
 
 call_signs = []

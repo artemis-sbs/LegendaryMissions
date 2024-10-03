@@ -16,6 +16,7 @@ side = so.side
 stuff = broad_test_around(so, 18000,18000, 0xF0)
 nearest_target = closest(so, stuff - role(side) )
 if nearest_target is None:
+    # print("skipping elite")
     await delay_sim(seconds=20)
     jump handle_elite_abilities
 
@@ -101,6 +102,7 @@ distance = get_variable("distance")
 
 _forward = Vec3(eo.forward_vector())
 _pos = Vec3(_pos_eo) + (_forward * distance)
+_pos.y = _pos_eo.y
 so.pos = _pos
 
 await delay_sim(30)

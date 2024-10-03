@@ -15,11 +15,6 @@ shared find_stray = task_schedule(find_stray_crafts)
 # jump to another label proper for that item
 # or END which stops running this task/flow 
 #
-
-
-
-
-
 //spawn if has_role(SPAWNED_ID, "__player__")
 #
 # For now put on a fighter on the player ship
@@ -29,8 +24,20 @@ shared find_stray = task_schedule(find_stray_crafts)
 # ship
 # await delay_sim(2)
 #
+---- wait_for_game_started
+#if not game_started:
+await delay_sim(1)
+#    jump wait_for_game_started
+
+#
+# Player ships can be removed ate start
+#
+->END if to_object(SPAWNED_ID) is None
+
 shuttle_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
-fighter_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
+fighter_count = grid_count_grid_data(SPAWNED.art_id, "fighter", 0)
+if fighter_count == 0:
+    fighter_count = shuttle_count
 
 set_inventory_value(SPAWNED_ID, "MAX_SHUTTLE", shuttle_count)
 set_inventory_value(SPAWNED_ID, "MAX_FIGHTER", fighter_count)
@@ -44,7 +51,8 @@ for x in range(0,shuttle_count):
 
 //spawn if has_roles(SPAWNED_ID, "tsn, station")
 # Minor hack to hope player fighters spawn first
-await delay_sim(4)
+await delay_sim(1)
+->END if to_object(SPAWNED_ID) is None
 
 shuttle_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
 fighter_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
@@ -67,6 +75,13 @@ jump show_hangar # This could be replaced with a new command gui_navigate("//con
 
 === show_hangar
 # This is need for black hole, need to clear any ship assigned
+_original =  sbs.get_ship_of_client(client_id)
+side = "tsn"
+if _original:
+    _obj = to_object(_original)
+    if _obj is not None:
+        side = _obj.side
+
 sbs.assign_client_to_ship(client_id, 0)
 call_sign = get_inventory_value(client_id, "call_sign", None)
 if call_sign is None:
@@ -78,7 +93,7 @@ if call_sign is None:
 # Get all the available rides 
 #
 
-crafts = to_object_list(all_roles("cockpit,tsn,standby"))
+crafts = to_object_list(all_roles(f"cockpit,standby,{side}"))
 briefing = "Select a craft to pilot. If you accept the mission hit launch."
 
 
@@ -124,6 +139,11 @@ on change ride_picker.get_value():
             briefing = get_inventory_value(fighter, "briefing", defa)
             gui_update("briefing-text", "$text: {briefing}")
 
+        stats = hangar_get_stats(client_id, fighter)
+        gui_update("stats-1", "$text: {stats[0]}")
+        gui_update("stats-2", "$text: {stats[1]}")
+
+
 gui_section(style="area: 75,100-80px, 100,100-50px;background: #002;")
 gui_text("select ship", style="tag:refit-text")
 
@@ -146,12 +166,21 @@ on change fighter_change:
         gui_update("refit-text", "$text: refit - launch in {refit_time}")
 
 
+
 # If a thing launches or docks things need to refresh
 on change hangar_version:
     jump show_hangar
 
 gui_section(style="area: 0,100-150px, 35,100;")
 gui_layout_widget("text_waterfall")
+#
+# Fighter stats
+#
+gui_section(style="area: 35,100-50px, 75,100;")
+gui_text(f"stat-1", style="tag:stats-1")
+gui_row()
+gui_text(f"stat-2", style="tag:stats-2")
+
 
 gui_section(style="area: 75,100-50px, 100,100;")
 on gui_message(gui_button("Launch")):
@@ -190,8 +219,8 @@ set_dedicated_link(client_id, "craft_id", ride_select)
 
 mission_objective = get_inventory_value(ride_select, "current_objective")
 if mission_objective:
-    comms_broadcast(client_id, f"Objective", "#B90")
-    comms_broadcast(client_id, f"{mission_objective}", "#B90")
+    home_id = get_dedicated_link(ride_select, "home_dock")
+    hangar_objective_started(ride_select, home_id, mission_objective)
 
 
 gui_console("cockpit")
@@ -221,7 +250,7 @@ if hangar_attempt_dock_craft(fighter_so.id):
 
 
 ==== find_stray_crafts ====
-await delay_sim(seconds=1) # hack for task_schedule in main
+await delay_sim(seconds=5) # hack for task_schedule in main
 
 print("finding stray fighters start")
 
@@ -247,3 +276,8 @@ for craft in launched_crafts:
         print("redocked FAILED")
         
 jump find_stray_craft_loop
+
+
+### //damage/killed # if has_role(DAMAGE_SOURCE_ID, "cockpit")
+
+
