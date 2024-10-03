@@ -280,6 +280,9 @@ if friendly_select != "none":
 alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
 cargo_list = shipname_data.get("peacetime")
 civname_list = shipname_data.get("civilian")
+capname_list = shipname_data.get("captain")
+clue_list = shipname_data.get("clue_list")
+goods_list = shipname_data.get("tradegoods")
 suspect = []
 
 count = 1
@@ -287,10 +290,10 @@ spawn_points = scatter.box(5, 0, 0, 0, 50000, 1000, 50000, centered=True)
 for c in spawn_points:
     if count >= 1 and count <= 3:    
         cargo_name = random.choice(alpha) + " " + str(random.randint(1,99)).zfill(2) + " " + cargo_list.pop(random.randrange(len(cargo_list)))
-        cargo = to_id(npc_spawn(*c, cargo_name, "tsn, friendly, civilian, primary, suspect", "cargo_ship", "behav_npcship"))
+        cargo = to_id(npc_spawn(*c, cargo_name, "tsn, civilian, primary, suspect", "cargo_ship", "behav_npcship"))
     else:
-        cargo_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
-        cargo = to_id(npc_spawn(*c, cargo_name, "tsn, friendly, civilian, secondary, suspect", "cargo_ship", "behav_npcship"))
+        cargo_name = random.choice(alpha) + " " + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
+        cargo = to_id(npc_spawn(*c, cargo_name, "tsn, civilian, secondary, suspect", "cargo_ship", "behav_npcship"))
     set_face(cargo, random_terran(civilian=True))
     suspect.append(cargo)
     count += 1
@@ -311,61 +314,147 @@ sus_count = len(suspect_list1)
 #    sus_names = ",".join(sus_names[:-1])
 #    sus_names += f", and {sus_names[-1]}" 
 
-capnames = [ "Ashton Marlin", "Barclay Barnes", "Clancy Moreno", "Dash Hardpike", "Ernesto Camacho" ]
-
 for s in suspect_list:
-    set_inventory_value(s, "capname", capnames.pop(0))
-    _container_list = []
-    _tempdict = {}
-    _cargo = {}
+    _captain = capname_list.pop(random.randrange(len(capname_list)))
+    cargo1 = [s.name, _captain]
+    cargo2 = [s.name, _captain]
+    cargo3 = [s.name, _captain]
     for x in range(4):
         alpha = ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "X", "Y", "Z"]
-        _sku = alpha.pop(random.randrange(len(alpha)))
-        _sku += alpha.pop(random.randrange(len(alpha)))
-        _sku += alpha.pop(random.randrange(len(alpha)))
-        _tempdict = {'sku': _sku, 'contents': 'Cerulean Oysters'}
-        _container_list.append(_tempdict)
-    _cargo = {"containers" : _container_list}
-    set_inventory_value(s, "cargo_hold", _cargo)
-    temp0 = get_inventory_value(s, "cargo_hold")
+        _alpha = alpha.pop(random.randrange(len(alpha)))
+        _alpha += alpha.pop(random.randrange(len(alpha)))
+        _alpha += alpha.pop(random.randrange(len(alpha)))
+        _contents = goods_list.pop(random.randrange(len(goods_list)))
+        cargo1.append(_alpha)
+        cargo1.append(_contents)
+        cargo2.append(_alpha)
+        cargo2.append(_contents)
+        cargo3.append(_alpha)
+        cargo3.append(_contents)
+    set_inventory_value(s, "cargo1", cargo1)
+    set_inventory_value(s, "cargo2", cargo2)
+    set_inventory_value(s, "cargo3", cargo3)
+
+shared ship1_cargo1 = get_inventory_value(suspect_list[0], "cargo1")
+shared ship1_cargo2 = get_inventory_value(suspect_list[0], "cargo2")
+shared ship1_cargo3 = get_inventory_value(suspect_list[0], "cargo3")
+
+shared ship2_cargo1 = get_inventory_value(suspect_list[1], "cargo1")
+shared ship2_cargo2 = get_inventory_value(suspect_list[1], "cargo2")
+shared ship2_cargo3 = get_inventory_value(suspect_list[1], "cargo3")
+
+shared ship3_cargo1 = get_inventory_value(suspect_list[2], "cargo1")
+shared ship3_cargo2 = get_inventory_value(suspect_list[2], "cargo2")
+shared ship3_cargo3 = get_inventory_value(suspect_list[2], "cargo3")
+
+print(f"Ship 1 Cargo")
+print(ship1_cargo1)
+print(ship1_cargo2)
+print(ship1_cargo3)
+
+print(f"Ship 2 Cargo")
+print(ship2_cargo1)
+print(ship2_cargo2)
+print(ship2_cargo3)
+
+print(f"Ship 3 Cargo")
+print(ship3_cargo1)
+print(ship3_cargo2)
+print(ship3_cargo3)
+
+rand1 = random.randint(0,2)
+rand2 = random.randint(1,4)
+kidnapper_id = suspect_list[rand1]
+kidnap_clue = {}
+kidnap_clue = clue_list.pop(random.randrange(len(clue_list)))
+clue1 = kidnap_clue['clue']
+clue2 = kidnap_clue['container']
+print(f"Clue: {clue1} Container: {clue2}")
+
+if rand1 == 0:
+    add_role(suspect_list[0], "kidnapper")
+    ship1_cargo1[3] = clue2
+    ship1_cargo2[3] = clue2
+    ship1_cargo3[3] = clue2
+    temp0 = [ship1_cargo1, ship1_cargo2, ship1_cargo3]
+    print(f"Ship 1 New Contents")
     print(temp0)
-
-print(f"Contents of Ship1")
-temp1 = get_inventory_value(suspect_list[0], "cargo_hold")
-print(f"Container {temp1['containers'][0]['sku']}: {temp1['containers'][0]['contents']}")
-print(f"Container {temp1['containers'][1]['sku']}: {temp1['containers'][1]['contents']}")
-print(f"Container {temp1['containers'][2]['sku']}: {temp1['containers'][2]['contents']}")
-print(f"Container {temp1['containers'][3]['sku']}: {temp1['containers'][3]['contents']}")
-
-#test1 = get_inventory_value(suspect_list[0], "capname")
-#test2 = get_inventory_value(suspect_list[0], "cargo_hold")
-#print(f"Ship1 Captain {test1} Cargo {test2}")
-
-shared cargo1nm = "FirstName"
-shared cargo2nm = "SecondName"
-shared cargo3nm = "ThirdName"
+    set_inventory_value(suspect_list[0], "cargo1", ship1_cargo1)
+if rand1 == 1:
+    add_role(suspect_list[1], "kidnapper")
+    ship2_cargo1[3] = clue2
+    ship2_cargo2[3] = clue2
+    ship2_cargo3[3] = clue2
+    temp0 = [ship2_cargo1, ship2_cargo2, ship2_cargo3]
+    print(f"Ship 2 New Contents")
+    print(temp0)
+    set_inventory_value(suspect_list[1], "cargo1", ship2_cargo1)
+if rand1 == 2:
+    add_role(suspect_list[2], "kidnapper")
+    ship3_cargo1[3] = clue2
+    ship3_cargo2[3] = clue2
+    ship3_cargo3[3] = clue2
+    temp0 = [ship3_cargo1, ship3_cargo2, ship3_cargo3]
+    print(f"Ship 3 New Contents")
+    print(temp0)
+    set_inventory_value(suspect_list[2], "cargo1", ship3_cargo1)
 
 //comms if has_roles(COMMS_SELECTED_ID, "tsn, station, ds1") 
-+ "Investigate Kidnapping" //comms/investigate_kidnapping
++ "Investigate Kidnapping" //comms/investigate_kidnapping 
 
 //comms/investigate_kidnapping  
-comms_receive(f"""Ambassador Florbin has been kidnapped! We believe they were smuggled out in a cargo container. The last three ships to leave were {cargo1nm}, {cargo2nm}, and {cargo3nm}. If you hurry, you might be able to catch them!^""", title="Ambassador Kidnapped", title_color=station_color)
-+ "Cargo Manifest {cargo1nm}" cargo_manifest_ship1 
-+ "Cargo Manifest {cargo2nm}" cargo_manifest_ship2 
-+ "Cargo Manifest {cargo3nm}" cargo_manifest_ship3 
-
+comms_receive(f"""Ambassador Florbin has been kidnapped! We believe they were smuggled out in a cargo container. The last three ships to leave were {ship1_cargo1[0]}, {ship2_cargo1[0]}, and {ship3_cargo1[0]}. If you hurry, you might be able to catch them!^""", title="Ambassador Kidnapped", title_color=station_color)
++ "Cargo Manifest {ship1_cargo1[0]}" cargo_manifest_ship1 
++ "Cargo Manifest {ship2_cargo1[0]}" cargo_manifest_ship2 
++ "Cargo Manifest {ship3_cargo1[0]}" cargo_manifest_ship3 
 
 ===== cargo_manifest_ship1 =====
-comms_receive(f"""Our records indicate {cargo1nm} docked at this station at 08:34. It loaded^Container ABC: {cargo1c1}^Container DEF: {cargo1c2}^Container GHI: {cargo1c3}^Container JKL: {cargo1c4}^""", title="Cargo Manifest", title_color=station_color)
+comms_receive(f"""Our records indicate {ship1_cargo1[0]} docked at this station at 08:34. It loaded^Container {ship1_cargo1[2]}: {ship1_cargo1[3]}^Container {ship1_cargo1[4]}: {ship1_cargo1[5]}^Container {ship1_cargo1[6]}: {ship1_cargo1[7]}^Container {ship1_cargo1[8]}: {ship1_cargo1[9]}^""", title="Cargo Manifest", title_color=station_color)
 yield success
 
 ===== cargo_manifest_ship2 =====
-comms_receive(f"""Our records indicate{cargo2nm} docked at this station at 09:16. It loaded {cargo2c1}, {cargo2c2}, {cargo2c3}, and {cargo2c4}.^""", title="Cargo Manifest", title_color=station_color)
+comms_receive(f"""Our records indicate {ship2_cargo1[0]} docked at this station at 08:34. It loaded^Container {ship2_cargo1[2]}: {ship2_cargo1[3]}^Container {ship2_cargo1[4]}: {ship2_cargo1[5]}^Container {ship2_cargo1[6]}: {ship2_cargo1[7]}^Container {ship2_cargo1[8]}: {ship2_cargo1[9]}^""", title="Cargo Manifest", title_color=station_color)
 yield success
 
 ===== cargo_manifest_ship3 =====
-comms_receive(f"""Our records indicate{cargo3nm} docked at this station at 10:28. It loaded {cargo3c1}, {cargo3c2}, {cargo3c3}, and {cargo3c4}.^""", title="Cargo Manifest", title_color=station_color)
+comms_receive(f"""Our records indicate {ship3_cargo1[0]} docked at this station at 08:34. It loaded^Container {ship3_cargo1[2]}: {ship3_cargo1[3]}^Container {ship3_cargo1[4]}: {ship3_cargo1[5]}^Container {ship3_cargo1[6]}: {ship3_cargo1[7]}^Container {ship3_cargo1[8]}: {ship3_cargo1[9]}^""", title="Cargo Manifest", title_color=station_color)
 yield success
+
+//enable/comms if has_roles(COMMS_SELECTED_ID, "tsn, suspect")
+
+//comms if has_roles(COMMS_SELECTED_ID, "tsn, suspect") 
++ "Hail"  handle_suspect_hail
+
+===== handle_suspect_hail ======
+suspect_id = COMMS_SELECTED_ID
+ship_id = COMMS_ORIGIN_ID
+suspect_obj = to_object(COMMS_SELECTED_ID)
+->END if suspect_obj is None
+
+<<[green] "Hail"
+    " Hello, {ship_id}.  We're moving cargo between the stations in this sector.
+
+yield success
+
+//enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, suspect")
+//science if has_roles(SCIENCE_SELECTED_ID, "tsn, suspect")
+tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
+capname = tempcargo[1]
+
++ "scan":
+    <scan>
+        % This is a friendly merchant cargo ship.
++ "status":
+    <scan>
+        " No additional data available.
++ "intel":
+    <scan>
+        % The ship is registered to Captain {capname}.
+
++ "bio":
+    <scan>
+        % The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
+
 
 #------------------------------------------------------------------------------------------------------------
 
