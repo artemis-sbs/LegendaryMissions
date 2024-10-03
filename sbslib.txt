@@ -1,6 +1,2 @@
-<<<<<<< HEAD
-artemis-sbs sbs_utils v3.9.38
-=======
 artemis-sbs sbs_utils v3.9.39
->>>>>>> ad02db3df800285d647636b85321f27b2e042fe7
 
