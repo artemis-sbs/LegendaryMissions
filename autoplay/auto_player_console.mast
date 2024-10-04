@@ -85,9 +85,9 @@ if cambot_id is None or cambot is None:
 
 
 === automated_player_helm_ai
-last = get_variable("last", None)
-# default go_dock = False
-last_go_dock = get_variable("last_go_dock", False)
+# default assignment  
+default last = None
+default last_go_dock = False
 
 # Re get ship if respawn occured
 ship = to_object(_ship_id)
