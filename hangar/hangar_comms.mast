@@ -2,48 +2,48 @@
 
 //comms if has_role(COMMS_ORIGIN_ID, "cockpit") and has_role(COMMS_SELECTED_ID,"computer")
 
-+ "set dock" //comms/set_dock
-+ "eject":
-    COMMS_ORIGIN.data_set.set("fighter_thrust_flag", 0,0)
-    COMMS_ORIGIN.data_set.set("fighter_shoot_flag", 0,0)
-    COMMS_ORIGIN.data_set.set("fighter_boost_flag", 0,0)
-    COMMS_ORIGIN.data_set.set("throttle", 0.0,0)
+    + "set dock" //comms/set_dock
+    + "eject":
+        COMMS_ORIGIN.data_set.set("fighter_thrust_flag", 0,0)
+        COMMS_ORIGIN.data_set.set("fighter_shoot_flag", 0,0)
+        COMMS_ORIGIN.data_set.set("fighter_boost_flag", 0,0)
+        COMMS_ORIGIN.data_set.set("throttle", 0.0,0)
 
-    fighter_client = get_inventory_value(COMMS_ORIGIN_ID, "client_id")
-    if fighter_client is not None:
-        set_dedicated_link(fighter_client, "craft_id", None)    
-        gui_reroute_client(fighter_client, show_hangar)
+        fighter_client = get_inventory_value(COMMS_ORIGIN_ID, "client_id")
+        if fighter_client is not None:
+            set_dedicated_link(fighter_client, "craft_id", None)    
+            gui_reroute_client(fighter_client, show_hangar)
 
 
 //comms/set_dock if has_role(COMMS_ORIGIN_ID, "cockpit")
 
-side = COMMS_ORIGIN.side
-dockable = to_object_list(role(side) & any_role("__player__, station"))
-+ "back" //comms
-for d in dockable:
-    + "{d.name} as dock" {"dock": d.id}: 
-        hangar_set_dock(COMMS_ORIGIN_ID, dock)
-        comms_navigate("//comms")
+    side = COMMS_ORIGIN.side
+    dockable = to_object_list(role(side) & any_role("__player__, station"))
+    + "back" //comms
+    for d in dockable:
+        + "{d.name} as dock" {"dock": d.id}: 
+            hangar_set_dock(COMMS_ORIGIN_ID, dock)
+            comms_navigate("//comms")
 
 
 
 //comms if has_role(COMMS_ORIGIN_ID, "cockpit") and has_role(COMMS_SELECTED_ID,"shield")
-+ "Balanced":
-    set_engineering_value(COMMS_ORIGIN_ID, "front shield", 1.0)
-    set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 1.0)
+    + "Balanced":
+        set_engineering_value(COMMS_ORIGIN_ID, "front shield", 1.0)
+        set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 1.0)
 
-+ "All Fwd":
-    set_engineering_value(COMMS_ORIGIN_ID, "front shield", 2.0)
-    set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 0.0)
+    + "All Fwd":
+        set_engineering_value(COMMS_ORIGIN_ID, "front shield", 2.0)
+        set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 0.0)
 
-+ "All Aft":
-    set_engineering_value(COMMS_ORIGIN_ID, "front shield", 0.0)
-    set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 2.0)
+    + "All Aft":
+        set_engineering_value(COMMS_ORIGIN_ID, "front shield", 0.0)
+        set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 2.0)
 
 //comms if has_role(COMMS_ORIGIN_ID, "bomber") and has_roles(COMMS_SELECTED_ID,"system,weapon,torpedo")
-+ "Homing":
-    COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Homing",0)
-+ "Nuke":
-    COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Nuke",0)
-+ "Mine":
-    COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Mine",0)
+    + "Homing":
+        COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Homing",0)
+    + "Nuke":
+        COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Nuke",0)
+    + "Mine":
+        COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Mine",0)

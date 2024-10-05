@@ -2,57 +2,58 @@
 
 
 //comms if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Spawn" //comms/admiral/spawn
-+ "Selected" //comms/admiral/selected
-+ "Area" //comms/admiral/area
-+ "Commands" //comms/admiral/commands
+    + "Spawn" //comms/admiral/spawn
+    + "Selected" //comms/admiral/selected
+    + "Area" //comms/admiral/area
+    + "Commands" //comms/admiral/commands
 
 
 //comms/admiral/spawn if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
-+ "Enemy" //comms/admiral/spawn/ship
-+ "Friendly" //comms/admiral/spawn/friend
-+ "Station" //comms/admiral/spawn/station
-+ "Terrain" //comms/admiral/spawn/terrain
-+ "Player" //comms/admiral/spawn/player
+    + "Back" //comms
+    + "Enemy" //comms/admiral/spawn/ship
+    + "Friendly" //comms/admiral/spawn/friend
+    + "Station" //comms/admiral/spawn/station
+    + "Terrain" //comms/admiral/spawn/terrain
+    + "Player" //comms/admiral/spawn/player
 
 
 
 //comms/admiral/spawn/terrain if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
-+ "Asteroids":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
-    # This should be a property setting
-    map_asteroid_scatter(9, 21, *pos, size, 1000, size)
-+ "Nebulas":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
-    # This should be a property setting
-    map_nebula_scatter(4, 12, *pos, size, 1000, size)
-+ "Black hole":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    pos.x = pos.x + 100
-    terrain_spawn_black_hole(*pos.xyz)
-+ "Monster":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    pos.x = pos.x + 100
-    typhon_classic_spawn(*pos.xyz)
-+ "Minefield":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
-    map_mine_scatter(4, 10, *pos, size, 1000, size)
+    + "Back" //comms
+    + "Asteroids":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+        # This should be a property setting
+        map_asteroid_scatter(9, 21, *pos, size, 1000, size)
+    + "Nebulas":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+        # This should be a property setting
+        map_nebula_scatter(4, 12, *pos, size, 1000, size)
+    + "Black hole":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        pos.x = pos.x + 100
+        terrain_spawn_black_hole(*pos.xyz)
+    + "Monster":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        pos.x = pos.x + 100
+        typhon_classic_spawn(*pos.xyz)
+    + "Minefield":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+        map_mine_scatter(4, 10, *pos, size, 1000, size)
     
 
 
 //comms/admiral/spawn/station if has_roles(COMMS_ORIGIN_ID, 'admiral')
-station_data = filter_ship_data_by_side(None, None, "station", False)
+    station_data = filter_ship_data_by_side(None, None, "station", False)
 
-+ "Back" //comms
-for station in station_data:
-    side = station.get("side", "tsn")
-    if side == "USFP":
-        side = "tsn, usfp"
+    + "Back" //comms
+
+    for station in station_data:
+        side = station.get("side", "tsn")
+        if side == "USFP":
+            side = "tsn, usfp"
 
     roles =  side +"," + station.get("roles", "station")
     + "{station['name']}" {"station_type": station["key"], "roles": roles}:
@@ -63,127 +64,124 @@ for station in station_data:
 
 
 //comms/admiral/spawn/friend if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
-+ "Defender":
-    tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "defender", ret_key_only=False)
-    ->END if tsn_ship_data is None
+    + "Back" //comms
+    + "Defender":
+        tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "defender", ret_key_only=False)
+        ->END if tsn_ship_data is None
 
-    ship = random.choice(tsn_ship_data)
-    spawn_pos = Vec3(COMMS_ORIGIN.pos)
-    count = random.randint(25,99)
-    friend = to_id(npc_spawn(*spawn_pos, f"tsn {str(count).zfill(2)}", "tsn, friendly", ship["key"], "behav_npcship"))
-    set_face(friend, random_terran())
+        ship = random.choice(tsn_ship_data)
+        spawn_pos = Vec3(COMMS_ORIGIN.pos)
+        count = random.randint(25,99)
+        friend = to_id(npc_spawn(*spawn_pos, f"tsn {str(count).zfill(2)}", "tsn, friendly", ship["key"], "behav_npcship"))
+        set_face(friend, random_terran())
 
-+ "Civilian":
-    civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
-    ->END if civilian_data is None
+    + "Civilian":
+        civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
+        ->END if civilian_data is None
 
-    ship = random.choice(civilian_data)
-    spawn_pos = Vec3(COMMS_ORIGIN.pos)
-    count = random.randint(25,99)
-    friend = to_id(npc_spawn(*spawn_pos, f"civ {str(count).zfill(2)}", "tsn, friendly, civilian", ship["key"], "behav_npcship"))
-    set_face(friend, random_terran(civilian=True))
+        ship = random.choice(civilian_data)
+        spawn_pos = Vec3(COMMS_ORIGIN.pos)
+        count = random.randint(25,99)
+        friend = to_id(npc_spawn(*spawn_pos, f"civ {str(count).zfill(2)}", "tsn, friendly, civilian", ship["key"], "behav_npcship"))
+        set_face(friend, random_terran(civilian=True))
 
 
 
 //comms/admiral/spawn/ship if has_roles(COMMS_ORIGIN_ID, 'admiral')
-races = ["Arvonian", "Kralien", "Torgoth","Skaraan","Ximni", "Pirate" ]
-+ "Back" //comms
-for race in races:
-    + "{race}" {"race": race.lower()}:
-        pos = Vec3(COMMS_ORIGIN.pos)
-        fleet_diff = get_shared_variable("difficulty", 5)
-        create_siege_fleet(race, fleet_diff, *pos.xyz)
+    races = ["Arvonian", "Kralien", "Torgoth","Skaraan","Ximni", "Pirate" ]
+    + "Back" //comms
+    
+    for race in races:
+        + "{race}" {"race": race.lower()}:
+            pos = Vec3(COMMS_ORIGIN.pos)
+            fleet_diff = get_shared_variable("difficulty", 5)
+            create_siege_fleet(race, fleet_diff, *pos.xyz)
 
 //comms/admiral/spawn/player if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
+    + "Back" //comms
 
-valid = map(lambda s: ship_data_get_ship_data_for(s),get_shared_variable("valid_interiors") )
-valid = sorted(valid, key=lambda s: s.get("side",""))
+    valid = map(lambda s: ship_data_get_ship_data_for(s),get_shared_variable("valid_interiors") )
+    valid = sorted(valid, key=lambda s: s.get("side",""))
 
-names = ~~["Exarch",
-"Pyrrhus",
-"Devastator",
-"Celina",
-"Pegasus",
-"Blossom",
-"Commissioner",
-"Dark",
-"Avius",
-"Pathfinder",
-"Courage",
-"Untouchable",
-"Invictus",
-"Amanda",
-"Cromwell",
-"Mace",
-"Victory",
-"Ingenuity",
-"Saragossa",
-]~~
-for ship_data in valid:
-    
-    continue if ship_data is None
-    continue if "ship" not in ship_data.get("roles", "")
-    ship = ship_data.get("key", None)
-    continue if ship is None
-
-
-    side = ship_data.get("side", "tsn")
-    model = ship_data.get("name", "ship")
-    
-    name = random.choice(names)
-    art_id = ship
-
-    + "{side} {model}" {"side": side.lower(), "art_id": art_id, "name": name}:
-        pos = Vec3(COMMS_ORIGIN.pos)
-        player_ship = to_id(player_spawn(*pos, name, side, art_id))
-        set_face(player_ship, get_face_from_data(side))
-
-        stations_friendly = role(side) & role("station")
-        player_ship_update_friendly(player_ship, stations_friendly, True)
+    names = ~~["Exarch",
+    "Pyrrhus",
+    "Devastator",
+    "Celina",
+    "Pegasus",
+    "Blossom",
+    "Commissioner",
+    "Dark",
+    "Avius",
+    "Pathfinder",
+    "Courage",
+    "Untouchable",
+    "Invictus",
+    "Amanda",
+    "Cromwell",
+    "Mace",
+    "Victory",
+    "Ingenuity",
+    "Saragossa",
+    ]~~
+    for ship_data in valid:
+        
+        continue if ship_data is None
+        continue if "ship" not in ship_data.get("roles", "")
+        ship = ship_data.get("key", None)
+        continue if ship is None
 
 
+        side = ship_data.get("side", "tsn")
+        model = ship_data.get("name", "ship")
+        
+        name = random.choice(names)
+        art_id = ship
 
+        + "{side} {model}" {"side": side.lower(), "art_id": art_id, "name": name}:
+            pos = Vec3(COMMS_ORIGIN.pos)
+            player_ship = to_id(player_spawn(*pos, name, side, art_id))
+            set_face(player_ship, get_face_from_data(side))
 
+            stations_friendly = role(side) & role("station")
+            player_ship_update_friendly(player_ship, stations_friendly, True)
 
 
 
 //comms/admiral/selected if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
-+ "Set attribute" //comms/admiral/selected/set
-+ "Delete":
-    _other = get_science_selection(COMMS_SELECTED_ID)
-    if _other and COMMS_ORIGIN_ID != _other:
-        sbs.delete_object(_other)
-+ "Damage" //comms/admiral/selected/damage
-+ "Move to Orders area":
-    pos = admiral_get_pos(COMMS_ORIGIN_ID, "rmb")
-    
-    _other = get_science_selection(COMMS_ORIGIN_ID)
-    if COMMS_ORIGIN_ID != _other:
-        _other = to_object(_other)
-        if _other is not None:
-            _other.pos = pos
+    + "Back" //comms
+    + "Set attribute" //comms/admiral/selected/set
+    + "Delete":
+        _other = get_science_selection(COMMS_SELECTED_ID)
+        if _other and COMMS_ORIGIN_ID != _other:
+            sbs.delete_object(_other)
+    + "Damage" //comms/admiral/selected/damage
+    + "Move to Orders area":
+        pos = admiral_get_pos(COMMS_ORIGIN_ID, "rmb")
+        
+        _other = get_science_selection(COMMS_ORIGIN_ID)
+        if COMMS_ORIGIN_ID != _other:
+            _other = to_object(_other)
+            if _other is not None:
+                _other.pos = pos
 
 //comms/admiral/selected/set if has_roles(COMMS_ORIGIN_ID, 'admiral') 
-+ "Back" //comms
+    + "Back" //comms
 
 //comms/admiral/selected/set if has_roles(COMMS_ORIGIN_ID, 'admiral') and has_role(get_science_selection(COMMS_ORIGIN),"__player__")
-+ "Fuel" //comms/admiral/selected/set/fuel
+    + "Fuel" //comms/admiral/selected/set/fuel
 
 //comms/admiral/selected/damage if has_roles(COMMS_ORIGIN_ID, 'admiral') 
-+ "Back" //comms
+    + "Back" //comms
 
 //comms/admiral/selected/damage if has_roles(COMMS_ORIGIN_ID, 'admiral') and has_role(get_science_selection(COMMS_ORIGIN),"__player__")
-_systems =  ["Beam", "torpedo","Impulse", "Warp", "Jump", "Maneuver",  "front shield", "rear shield"]
-_roles = ["beam", "torpedo", "impulse", "warp","jump", "maneuver", "fwd", "aft"]
-did = get_science_selection(COMMS_ORIGIN)
-i = 0
-for a in _systems:
-    + "{a}" {"did":did, "_roles":_roles[i]}:
-        grid_damage_system(did, _roles)
-    i+=1
+    _systems =  ["Beam", "torpedo","Impulse", "Warp", "Jump", "Maneuver",  "front shield", "rear shield"]
+    _roles = ["beam", "torpedo", "impulse", "warp","jump", "maneuver", "fwd", "aft"]
+    did = get_science_selection(COMMS_ORIGIN)
+    i = 0
+    for a in _systems:
+        + "{a}" {"did":did, "_roles":_roles[i]}:
+            grid_damage_system(did, _roles)
+        i+=1
 
 
 
@@ -192,165 +190,165 @@ for a in _systems:
 //comms/admiral/selected if has_roles(COMMS_ORIGIN_ID, 'admiral')
 
 //comms/admiral/selected/set/fuel if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
-+ "Add Fuel":
-    _other = get_science_selection(COMMS_SELECTED_ID)
-    if _other and COMMS_ORIGIN_ID != _other:
-        _blob = to_blob(_other)
-        if _blob is not None:
-            energy = _blob.get("energy",0)
-            _blob.set("energy", energy+20)
-+ "Remove Fuel":
-    _other = get_science_selection(COMMS_SELECTED_ID)
-    if _other and COMMS_ORIGIN_ID != _other:
-        _blob = to_blob(_other)
-        if _blob is not None:
-            energy = _blob.get("energy",0)
-            _blob.set("energy", energy-20)
+    + "Back" //comms
+    + "Add Fuel":
+        _other = get_science_selection(COMMS_SELECTED_ID)
+        if _other and COMMS_ORIGIN_ID != _other:
+            _blob = to_blob(_other)
+            if _blob is not None:
+                energy = _blob.get("energy",0)
+                _blob.set("energy", energy+20)
+    + "Remove Fuel":
+        _other = get_science_selection(COMMS_SELECTED_ID)
+        if _other and COMMS_ORIGIN_ID != _other:
+            _blob = to_blob(_other)
+            if _blob is not None:
+                energy = _blob.get("energy",0)
+                _blob.set("energy", energy-20)
 
 
 //comms/admiral/area if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
-+ "Change admiral size" //comms/admiral/area/size
-+ "Delete" //comms/admiral/area/delete
-+ "Move to orders area" //comms/admiral/area/move
+    + "Back" //comms
+    + "Change admiral size" //comms/admiral/area/size
+    + "Delete" //comms/admiral/area/delete
+    + "Move to orders area" //comms/admiral/area/move
 
 //comms/admiral/area/size if has_roles(COMMS_ORIGIN_ID, 'admiral')
-## PROPS
-#gui_int_slider("$text:int;low: 1.0;high:8.0",  var="player_count")
-#props_lb = get_inventory_value(client_id, "__PROPS_LB__")
-#if props_lb:
-#    p = [{"label": "Admiral size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"},{"label": "Order size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"}]
-#    props_lb.items = p
-#    gui_represent(props_lb)
+    ## PROPS
+    #gui_int_slider("$text:int;low: 1.0;high:8.0",  var="player_count")
+    #props_lb = get_inventory_value(client_id, "__PROPS_LB__")
+    #if props_lb:
+    #    p = [{"label": "Admiral size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"},{"label": "Order size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"}]
+    #    props_lb.items = p
+    #    gui_represent(props_lb)
 
-# gui_activate_properties([{"label": "Admiral size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"},{"label": "Order size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"}])
+    # gui_activate_properties([{"label": "Admiral size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"},{"label": "Order size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"}])
 
-# Back would clear properties
-+ "Back" //comms/admiral/area
-+ "Grow":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    admiral_show_nav_area(COMMS_ORIGIN_ID, pos, 1000, "Admiral", "lmb", "#040")
-+ "Shrink":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    admiral_show_nav_area(COMMS_ORIGIN_ID, pos, -1000, "Admiral", "lmb", "#040")
-+ "Reset":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    admiral_show_nav_area(COMMS_ORIGIN_ID, pos, 0, "Admiral", "lmb", "#040")
+    # Back would clear properties
+    + "Back" //comms/admiral/area
+    + "Grow":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        admiral_show_nav_area(COMMS_ORIGIN_ID, pos, 1000, "Admiral", "lmb", "#040")
+    + "Shrink":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        admiral_show_nav_area(COMMS_ORIGIN_ID, pos, -1000, "Admiral", "lmb", "#040")
+    + "Reset":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        admiral_show_nav_area(COMMS_ORIGIN_ID, pos, 0, "Admiral", "lmb", "#040")
 
 
 //comms/admiral/area/move if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
-+ "Terrain":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
-    # & role("Asteroid")
-    ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x01)
+    + "Back" //comms
+    + "Terrain":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+        # & role("Asteroid")
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x01)
 
-    pos = admiral_get_pos(COMMS_ORIGIN_ID, "rmb")
-    for _other in to_object_list(ids):
-        if COMMS_ORIGIN_ID != _other.id:
-            _other.pos = pos
+        pos = admiral_get_pos(COMMS_ORIGIN_ID, "rmb")
+        for _other in to_object_list(ids):
+            if COMMS_ORIGIN_ID != _other.id:
+                _other.pos = pos
 
 
 
-+ "Npc":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
-    ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x10)
-    pos = admiral_get_pos(COMMS_ORIGIN_ID, "rmb")
-    for _other in to_object_list(ids):
-        if COMMS_ORIGIN_ID != _other.id:
-            _other.pos = pos
+    + "Npc":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x10)
+        pos = admiral_get_pos(COMMS_ORIGIN_ID, "rmb")
+        for _other in to_object_list(ids):
+            if COMMS_ORIGIN_ID != _other.id:
+                _other.pos = pos
 
-+ "Player":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
-    ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x20)
-    pos = admiral_get_pos(COMMS_ORIGIN_ID, "rmb")
-    for _other in to_object_list(ids):
-        if COMMS_ORIGIN_ID != _other.id:
-            _other.pos = pos
+    + "Player":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x20)
+        pos = admiral_get_pos(COMMS_ORIGIN_ID, "rmb")
+        for _other in to_object_list(ids):
+            if COMMS_ORIGIN_ID != _other.id:
+                _other.pos = pos
 
 
 //comms/admiral/area/delete if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
-+ "Terrain":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
-    # & role("Asteroid")
-    ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x01)
-    for id in ids:
-        sbs.delete_object(id)
+    + "Back" //comms
+    + "Terrain":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+        # & role("Asteroid")
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x01)
+        for id in ids:
+            sbs.delete_object(id)
 
 
-+ "Npc":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
-    ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x10)
-    for id in ids:
-        sbs.delete_object(id)
+    + "Npc":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x10)
+        for id in ids:
+            sbs.delete_object(id)
 
-+ "Player":
-    pos = Vec3(COMMS_ORIGIN.pos)
-    size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
-    ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x20)
-    for id in ids:
-        continue if id == COMMS_ORIGIN_ID
-        sbs.delete_object(id)
+    + "Player":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x20)
+        for id in ids:
+            continue if id == COMMS_ORIGIN_ID
+            sbs.delete_object(id)
 
 
 
 //comms/admiral/commands if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
-+ "Jump to" //comms/admiral/commands/jump
-+ "Count" //comms/admiral/commands/count
-+ "End Game" //comms/admiral/commands/end_game
+    + "Back" //comms
+    + "Jump to" //comms/admiral/commands/jump
+    + "Count" //comms/admiral/commands/count
+    + "End Game" //comms/admiral/commands/end_game
 
 //comms/admiral/commands/end_game if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "No don't end the game" //comms
-+ "Yes end the game":
-    start_text = "Mission ended."
-    signal_emit("show_game_results", None)
+    + "No don't end the game" //comms
+    + "Yes end the game":
+        start_text = "Mission ended."
+        signal_emit("show_game_results", None)
 
 //comms/admiral/commands/count if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
-+ "Raider":
-    count = len(role("raider"))
-    comms_broadcast(client_id, f"Raiders remaining {count}")    
-+ "Stations":
-    count = len(role("station"))
-    comms_broadcast(client_id, f"Station remaining {count}")    
-+ "Players":
-    count = len(role("__player__"))
-    comms_broadcast(client_id, f"Players remaining {count}")    
+    + "Back" //comms
+    + "Raider":
+        count = len(role("raider"))
+        comms_broadcast(client_id, f"Raiders remaining {count}")    
+    + "Stations":
+        count = len(role("station"))
+        comms_broadcast(client_id, f"Station remaining {count}")    
+    + "Players":
+        count = len(role("__player__"))
+        comms_broadcast(client_id, f"Players remaining {count}")    
 
 
 
 //comms/admiral/commands/jump if has_roles(COMMS_ORIGIN_ID, 'admiral')
-+ "Back" //comms
-+ "Raider":
-    raider = closest(COMMS_ORIGIN_ID, role("raider"))
-    if raider:
-        raider = to_object(raider)
-        COMMS_ORIGIN.pos = raider.pos
-        admiral_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
-+ "Stations":
-    raider = closest(COMMS_ORIGIN_ID, role("station"))
-    if raider:
-        raider = to_object(raider)
-        COMMS_ORIGIN.pos = raider.pos
-        admiral_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
-+ "Players":
-    raider = closest(COMMS_ORIGIN_ID, role("__player__"))
-    if raider:
-        raider = to_object(raider)
-        COMMS_ORIGIN.pos = raider.pos
-        admiral_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
+    + "Back" //comms
+    + "Raider":
+        raider = closest(COMMS_ORIGIN_ID, role("raider"))
+        if raider:
+            raider = to_object(raider)
+            COMMS_ORIGIN.pos = raider.pos
+            admiral_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
+    + "Stations":
+        raider = closest(COMMS_ORIGIN_ID, role("station"))
+        if raider:
+            raider = to_object(raider)
+            COMMS_ORIGIN.pos = raider.pos
+            admiral_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
+    + "Players":
+        raider = closest(COMMS_ORIGIN_ID, role("__player__"))
+        if raider:
+            raider = to_object(raider)
+            COMMS_ORIGIN.pos = raider.pos
+            admiral_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
     
 
 
 
 ==== test_admiral
-print("POC works")
+    print("POC works")
 
