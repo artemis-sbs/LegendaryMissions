@@ -129,13 +129,8 @@ do_move = 0
     if sel is None or sel==0:
         sel = _ship_id
     ->END if sel is None or sel==0
-
-    #_sel_obj = to_object(sel)
-    #if _sel_obj is not None:
-    #    source = _sel_obj.pos + source
-    #else:
-    #    source = _ship_obj.pos + source
-    #gui_cinematic_full_control(client_id, sel, source, sel, Vec3())
+    
+    gui_cinematic_full_control(client_id, sel, source, sel, Vec3())
     ->END
 
 

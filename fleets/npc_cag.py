@@ -6,7 +6,7 @@ from sbs_utils.procedural.execution import task_schedule, jump, AWAIT, get_varia
 from sbs_utils.procedural.timers import delay_sim, is_timer_set_and_finished, is_timer_finished, set_timer, is_timer_set, clear_timer
 from sbs_utils.procedural.query import to_object, to_id, object_exists, to_object_list, get_side
 from sbs_utils.procedural.space_objects import target, closest, broad_test_around, target_pos
-from sbs_utils.procedural.roles import role, all_roles, get_race
+from sbs_utils.procedural.roles import role, all_roles, get_race, add_role, remove_role
 from sbs_utils.procedural.science import science_set_scan_data
 from sbs_utils.procedural.spawn import npc_spawn
 from sbs_utils.procedural.links import get_dedicated_link, set_dedicated_link, unlink, link
@@ -106,13 +106,14 @@ class NpcCAG(Agent):
                         self.remove_link("inactive_fighter_list", f)
                         craft = to_object(f)
                         sbs.retrieve_from_standby_list(craft.engine_object)
+                        add_role(f, "raider")
                         set_timer(f, "bingo", seconds=120)
                         target(f, target_id)
                 else:
                     for g in range(fighter_count):
                         # launch an npc fighter
                         nam = f"{e.name} {str(random.randint(0,99)).zfill(2)}"
-                        spawn_data = npc_spawn(start_pos.x, start_pos.y, start_pos.z, nam, "fighter", fighter_key, "behav_npcship")
+                        spawn_data = npc_spawn(start_pos.x, start_pos.y, start_pos.z, nam, "raider,fighter", fighter_key, "behav_npcship")
                         spawn_id = to_id(spawn_data)
                         # link them to me
                         self.add_link("active_fighter_list", spawn_id)
@@ -177,6 +178,7 @@ class NpcCAG(Agent):
                 # destroy them and reset the carrier's launch timer
                 fv = get_inventory_value(carrier, "fighters_in_bay",0)
                 set_inventory_value(carrier, "fighters_in_bay", fv+1)
+                remove_role(fighter_id, "raider")
 
                 set_timer(carrier, "fighter_refit",seconds=60)
                 carrier.remove_link("active_fighter_list", fighter_id)

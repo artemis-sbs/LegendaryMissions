@@ -33,7 +33,7 @@ await delay_sim(1)
 
 players = role('__player__')
 if len(players)==0:
-    start_text = "Mission is list!  All the player ships have been destroyed."
+    start_text = "Mission is lost!  All the player ships have been destroyed."
     game_started = False
     game_ended = True
     sbs.play_music_file(0, "music/default/failure")

@@ -115,7 +115,7 @@ settings_add_defaults({"auto_play": {"enable": False}})
 
     f_shld = ship.data_set.get("shield_val", 0)
     f_shld_max = ship.data_set.get("shield_max_val", 0)
-    r_shld = ship.data_set.get("shield_val", 0)
+    r_shld = ship.data_set.get("shield_val", 1)
     r_shld_max = ship.data_set.get("shield_max_val", 1)
 
     if not last_go_dock:
