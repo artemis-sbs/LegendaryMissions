@@ -16,266 +16,266 @@ shared find_stray = task_schedule(find_stray_crafts)
 # or END which stops running this task/flow 
 #
 //spawn if has_role(SPAWNED_ID, "__player__")
-#
-# For now put on a fighter on the player ship
-#
-# If you want it on based on grid objects,
-# wait to be sure grid objects are one the 
-# ship
-# await delay_sim(2)
-#
+    #
+    # For now put on a fighter on the player ship
+    #
+    # If you want it on based on grid objects,
+    # wait to be sure grid objects are one the 
+    # ship
+    # await delay_sim(2)
+    #
 ---- wait_for_game_started
-#if not game_started:
-await delay_sim(1)
-#    jump wait_for_game_started
+    #if not game_started:
+    await delay_sim(1)
+    #    jump wait_for_game_started
 
-#
-# Player ships can be removed ate start
-#
-->END if to_object(SPAWNED_ID) is None
+    #
+    # Player ships can be removed ate start
+    #
+    ->END if to_object(SPAWNED_ID) is None
 
-shuttle_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
-fighter_count = grid_count_grid_data(SPAWNED.art_id, "fighter", 0)
-if fighter_count == 0:
-    fighter_count = shuttle_count
+    shuttle_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
+    fighter_count = grid_count_grid_data(SPAWNED.art_id, "fighter", 0)
+    if fighter_count == 0:
+        fighter_count = shuttle_count
 
-set_inventory_value(SPAWNED_ID, "MAX_SHUTTLE", shuttle_count)
-set_inventory_value(SPAWNED_ID, "MAX_FIGHTER", fighter_count)
+    set_inventory_value(SPAWNED_ID, "MAX_SHUTTLE", shuttle_count)
+    set_inventory_value(SPAWNED_ID, "MAX_FIGHTER", fighter_count)
 
-for x in range(0,fighter_count):
-    hangar_fighter_spawn(SPAWNED_ID, SPAWNED.side)
+    for x in range(0,fighter_count):
+        hangar_fighter_spawn(SPAWNED_ID, SPAWNED.side)
 
-for x in range(0,shuttle_count):
-    hangar_shuttle_spawn(SPAWNED_ID, SPAWNED.side)
+    for x in range(0,shuttle_count):
+        hangar_shuttle_spawn(SPAWNED_ID, SPAWNED.side)
 
 
 //spawn if has_roles(SPAWNED_ID, "tsn, station")
-# Minor hack to hope player fighters spawn first
-await delay_sim(1)
-->END if to_object(SPAWNED_ID) is None
+    # Minor hack to hope player fighters spawn first
+    await delay_sim(1)
+    ->END if to_object(SPAWNED_ID) is None
 
-shuttle_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
-fighter_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
-set_inventory_value(SPAWNED_ID, "MAX_SHUTTLE", shuttle_count)
-set_inventory_value(SPAWNED_ID, "MAX_FIGHTER", fighter_count)
+    shuttle_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
+    fighter_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
+    set_inventory_value(SPAWNED_ID, "MAX_SHUTTLE", shuttle_count)
+    set_inventory_value(SPAWNED_ID, "MAX_FIGHTER", fighter_count)
 
-am = max(1,random.randint(0,fighter_count+shuttle_count))
-for x in range(0,am):
-    hangar_random_craft_spawn(SPAWNED_ID, "tsn")
+    am = max(1,random.randint(0,fighter_count+shuttle_count))
+    for x in range(0,am):
+        hangar_random_craft_spawn(SPAWNED_ID, "tsn")
 
-#for x in range(0,shuttle_count):
-#    hangar_shuttle_spawn(SPAWNED_ID, "tsn")
+    #for x in range(0,shuttle_count):
+    #    hangar_shuttle_spawn(SPAWNED_ID, "tsn")
 
 
 
 
 @console/hangar "Flight Hangar"
-" Fly fighter- shuttle and cargo missions
-jump show_hangar # This could be replaced with a new command gui_navigate("//console/hangar")
+    " Fly fighter- shuttle and cargo missions
+    jump show_hangar # This could be replaced with a new command gui_navigate("//console/hangar")
 
 === show_hangar
-# This is need for black hole, need to clear any ship assigned
-_original =  sbs.get_ship_of_client(client_id)
-side = "tsn"
-if _original:
-    _obj = to_object(_original)
-    if _obj is not None:
-        side = _obj.side
+    # This is need for black hole, need to clear any ship assigned
+    _original =  sbs.get_ship_of_client(client_id)
+    side = "tsn"
+    if _original:
+        _obj = to_object(_original)
+        if _obj is not None:
+            side = _obj.side
 
-sbs.assign_client_to_ship(client_id, 0)
-call_sign = get_inventory_value(client_id, "call_sign", None)
-if call_sign is None:
-    call_sign = call_signs[next_call_sign]
-    next_call_sign = (next_call_sign +1) % len(call_signs)
-    set_inventory_value(client_id, "call_sign", call_sign)
+    sbs.assign_client_to_ship(client_id, 0)
+    call_sign = get_inventory_value(client_id, "call_sign", None)
+    if call_sign is None:
+        call_sign = call_signs[next_call_sign]
+        next_call_sign = (next_call_sign +1) % len(call_signs)
+        set_inventory_value(client_id, "call_sign", call_sign)
 
-#
-# Get all the available rides 
-#
+    #
+    # Get all the available rides 
+    #
 
-crafts = to_object_list(all_roles(f"cockpit,standby,{side}"))
-briefing = "Select a craft to pilot. If you accept the mission hit launch."
-
-
-gui_section(style="area: 0,0, 36,100-150px;background: #fff1;")
-
-call_sign = get_inventory_value(client_id, "call_sign", "Selene")
-gui_section(style="area: 20px,6,35,10;")
-gui_input("desc:Call sign", var="call_sign")
-on change call_sign:
-    set_inventory_value(client_id, "call_sign", call_sign)
-
-gui_section(style="area: 20px,10+20px, 35, 49;")
-
-ride_choice = None
-ride_picker = gui_list_box(crafts,"row-height: 1.3em; background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)
-# ride_picker.title_background = "#1578"
-
-gui_section(style="area: 20px,50, 35,50+20px;")
-gui_row(style="row-height:20px;")
-gui_text("$text:Mission Briefing;color: white;justify: center;", style="background: #1578;")
-gui_section(style="area: 20px,50+20px, 35,100-160px;background: #1572;")
-"""""
-{briefing}
-"""""" style="tag:briefing-text;padding: 10px,15px,10px,0;"
+    crafts = to_object_list(all_roles(f"cockpit,standby,{side}"))
+    briefing = "Select a craft to pilot. If you accept the mission hit launch."
 
 
-gui_activate_console("hangar")
-gui_section(style="area: 36,0, 100,100-50px;")
-gui_layout_widget("2dview")
+    gui_section(style="area: 0,0, 36,100-150px;background: #fff1;")
 
-fighter_change = 0
-on change ride_picker.get_value():
-    ride_choice = ride_picker.get_value()
-    if ride_choice is not None:
-        fighter = ride_choice
-        dock = get_science_selection(fighter)
-        dock = to_object(dock)
+    call_sign = get_inventory_value(client_id, "call_sign", "Selene")
+    gui_section(style="area: 20px,6,35,10;")
+    gui_input("desc:Call sign", var="call_sign")
+    on change call_sign:
+        set_inventory_value(client_id, "call_sign", call_sign)
+
+    gui_section(style="area: 20px,10+20px, 35, 49;")
+
+    ride_choice = None
+    ride_picker = gui_list_box(crafts,"row-height: 1.3em; background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)
+    # ride_picker.title_background = "#1578"
+
+    gui_section(style="area: 20px,50, 35,50+20px;")
+    gui_row(style="row-height:20px;")
+    gui_text("$text:Mission Briefing;color: white;justify: center;", style="background: #1578;")
+    gui_section(style="area: 20px,50+20px, 35,100-160px;background: #1572;")
+    """""
+    {briefing}
+    """""" style="tag:briefing-text;padding: 10px,15px,10px,0;"
+
+
+    gui_activate_console("hangar")
+    gui_section(style="area: 36,0, 100,100-50px;")
+    gui_layout_widget("2dview")
+
+    fighter_change = 0
+    on change ride_picker.get_value():
+        ride_choice = ride_picker.get_value()
+        if ride_choice is not None:
+            fighter = ride_choice
+            dock = get_science_selection(fighter)
+            dock = to_object(dock)
+            fighter_change += 1
+    
+            if dock is not None:
+                sbs.assign_client_to_ship(client_id, dock.id)
+                defa = f"Protect {dock.name}"
+                briefing = get_inventory_value(fighter, "briefing", defa)
+                gui_update("briefing-text", "$text: {briefing}")
+
+            stats = hangar_get_stats(client_id, fighter)
+            gui_update("stats-1", "$text: {stats[0]}")
+            gui_update("stats-2", "$text: {stats[1]}")
+
+
+    gui_section(style="area: 75,100-80px, 100,100-50px;background: #002;")
+    gui_text("select ship", style="tag:refit-text")
+
+    # Set a counter to allow timed refresh
+    # elegant or pure hack
+    start_counter(client_id, "refresh_status")
+    update_ticker = get_counter_elapsed_seconds(client_id, "refresh_status")+2
+
+    on change update_ticker < get_counter_elapsed_seconds(client_id, "refresh_status"):
         fighter_change += 1
- 
-        if dock is not None:
-            sbs.assign_client_to_ship(client_id, dock.id)
-            defa = f"Protect {dock.name}"
-            briefing = get_inventory_value(fighter, "briefing", defa)
-            gui_update("briefing-text", "$text: {briefing}")
+        update_ticker = get_counter_elapsed_seconds(client_id, "refresh_status")+5
 
-        stats = hangar_get_stats(client_id, fighter)
-        gui_update("stats-1", "$text: {stats[0]}")
-        gui_update("stats-2", "$text: {stats[1]}")
-
-
-gui_section(style="area: 75,100-80px, 100,100-50px;background: #002;")
-gui_text("select ship", style="tag:refit-text")
-
-# Set a counter to allow timed refresh
-# elegant or pure hack
-start_counter(client_id, "refresh_status")
-update_ticker = get_counter_elapsed_seconds(client_id, "refresh_status")+2
-
-on change update_ticker < get_counter_elapsed_seconds(client_id, "refresh_status"):
-    fighter_change += 1
-    update_ticker = get_counter_elapsed_seconds(client_id, "refresh_status")+5
-
-on change fighter_change:
-    gui_update("refit-text", "$text: select ship")
-    fighter = ride_choice
-    if is_timer_finished(fighter, "refit"):
-        gui_update("refit-text", "$text: ready to launch")
-    else:
-        refit_time = format_time_remaining(fighter, "refit")
-        gui_update("refit-text", "$text: refit - launch in {refit_time}")
+    on change fighter_change:
+        gui_update("refit-text", "$text: select ship")
+        fighter = ride_choice
+        if is_timer_finished(fighter, "refit"):
+            gui_update("refit-text", "$text: ready to launch")
+        else:
+            refit_time = format_time_remaining(fighter, "refit")
+            gui_update("refit-text", "$text: refit - launch in {refit_time}")
 
 
 
-# If a thing launches or docks things need to refresh
-on change hangar_version:
+    # If a thing launches or docks things need to refresh
+    on change hangar_version:
+        jump show_hangar
+
+    gui_section(style="area: 0,100-150px, 35,100;")
+    gui_layout_widget("text_waterfall")
+    #
+    # Fighter stats
+    #
+    gui_section(style="area: 35,100-50px, 75,100;")
+    gui_text(f"stat-1", style="tag:stats-1")
+    gui_row()
+    gui_text(f"stat-2", style="tag:stats-2")
+
+
+    gui_section(style="area: 75,100-50px, 100,100;")
+    on gui_message(gui_button("Launch")):
+        if ride_choice is not None:
+            ride_select = ride_choice
+            link(ride_select , "consoles", client_id)
+            jump launch_to_cockpit
+        jump show_hangar
+
+
+
+    await gui()
+    #    + "Head to Bar":
+    #        print("Bar")
+    #        jump bar_enter
+    #    + "Casino":
+    #        print("Casino")
+    #        #jump show_hangar
+    #    + "Quarters":
+    #        print("Quarters")
+    #        #jump show_hangar
+
+    # print("Out of await")
     jump show_hangar
-
-gui_section(style="area: 0,100-150px, 35,100;")
-gui_layout_widget("text_waterfall")
-#
-# Fighter stats
-#
-gui_section(style="area: 35,100-50px, 75,100;")
-gui_text(f"stat-1", style="tag:stats-1")
-gui_row()
-gui_text(f"stat-2", style="tag:stats-2")
-
-
-gui_section(style="area: 75,100-50px, 100,100;")
-on gui_message(gui_button("Launch")):
-    if ride_choice is not None:
-        ride_select = ride_choice
-        link(ride_select , "consoles", client_id)
-        jump launch_to_cockpit
-    jump show_hangar
-
-
-
-await gui()
-#    + "Head to Bar":
-#        print("Bar")
-#        jump bar_enter
-#    + "Casino":
-#        print("Casino")
-#        #jump show_hangar
-#    + "Quarters":
-#        print("Quarters")
-#        #jump show_hangar
-
-# print("Out of await")
-jump show_hangar
 
 ==== launch_to_cockpit ======
 
-jump show_hangar if ride_select is None
-jump show_hangar if not has_role(ride_select, "standby")
+    jump show_hangar if ride_select is None
+    jump show_hangar if not has_role(ride_select, "standby")
 
-jump show_hangar if not hangar_launch_craft(to_id(ride_select), client_id)
+    jump show_hangar if not hangar_launch_craft(to_id(ride_select), client_id)
 
-sbs.assign_client_to_ship(client_id,to_id(ride_select))
-set_inventory_value(ride_select, "client_id", client_id)
-set_dedicated_link(client_id, "craft_id", ride_select)
+    sbs.assign_client_to_ship(client_id,to_id(ride_select))
+    set_inventory_value(ride_select, "client_id", client_id)
+    set_dedicated_link(client_id, "craft_id", ride_select)
 
-mission_objective = get_inventory_value(ride_select, "current_objective")
-if mission_objective:
-    home_id = get_dedicated_link(ride_select, "home_dock")
-    hangar_objective_started(ride_select, home_id, mission_objective)
+    mission_objective = get_inventory_value(ride_select, "current_objective")
+    if mission_objective:
+        home_id = get_dedicated_link(ride_select, "home_dock")
+        hangar_objective_started(ride_select, home_id, mission_objective)
 
 
-gui_console("cockpit")
+    gui_console("cockpit")
 
-await gui()
+    await gui()
 
 
 
 //dock/hangar if has_roles(EVENT.parent_id, "cockpit")
 
-fighter_so = to_object(EVENT.parent_id)
-->END if fighter_so is None
-name = fighter_so.name
+    fighter_so = to_object(EVENT.parent_id)
+    ->END if fighter_so is None
+    name = fighter_so.name
 
-if hangar_attempt_dock_craft(fighter_so.id):
-    fighter_client = get_inventory_value(fighter_so.id, "client_id")
-    new_home = to_object(get_science_selection(fighter_so.id))
-    if new_home:
-        comms_broadcast(0,f"pilot {name} docked at {new_home.name}")
+    if hangar_attempt_dock_craft(fighter_so.id):
+        fighter_client = get_inventory_value(fighter_so.id, "client_id")
+        new_home = to_object(get_science_selection(fighter_so.id))
+        if new_home:
+            comms_broadcast(0,f"pilot {name} docked at {new_home.name}")
 
-    if fighter_client is not None:
-        set_dedicated_link(fighter_client, "craft_id", None)    
-        gui_reroute_client(fighter_client, show_hangar)
-    
+        if fighter_client is not None:
+            set_dedicated_link(fighter_client, "craft_id", None)    
+            gui_reroute_client(fighter_client, show_hangar)
+        
 
-->END
+    ->END
 
 
 ==== find_stray_crafts ====
-await delay_sim(seconds=5) # hack for task_schedule in main
+    await delay_sim(seconds=5) # hack for task_schedule in main
 
-print("finding stray fighters start")
+    print("finding stray fighters start")
 
 ==== find_stray_craft_loop ====
-await delay_sim(seconds=3) # Run every 23 seconds
-launched_crafts = role("cockpit") & role("tsn") - role("standby")
-for craft in launched_crafts:
-    cid = get_inventory_value(craft, "client_id")
-    cid_obj = to_object(cid)
-    if cid_obj is None:
-        print("Client disconnected")
-    #
-    # check if this is the correct fighter
-    #
-    continue if craft == get_dedicated_link(cid, "craft_id") and get_inventory_value(cid, "CONSOLE_TYPE") == "cockpit"
-    so = to_object(craft)
-    continue if so is None
-    # print("Return craft {so.name}")
-    redocked = hangar_attempt_dock_craft(craft, None)
-    if redocked:
-        print("redocked")
-    else:
-        print("redocked FAILED")
-        
-jump find_stray_craft_loop
+    await delay_sim(seconds=3) # Run every 23 seconds
+    launched_crafts = role("cockpit") & role("tsn") - role("standby")
+    for craft in launched_crafts:
+        cid = get_inventory_value(craft, "client_id")
+        cid_obj = to_object(cid)
+        if cid_obj is None:
+            print("Client disconnected")
+        #
+        # check if this is the correct fighter
+        #
+        continue if craft == get_dedicated_link(cid, "craft_id") and get_inventory_value(cid, "CONSOLE_TYPE") == "cockpit"
+        so = to_object(craft)
+        continue if so is None
+        # print("Return craft {so.name}")
+        redocked = hangar_attempt_dock_craft(craft, None)
+        if redocked:
+            print("redocked")
+        else:
+            print("redocked FAILED")
+            
+    jump find_stray_craft_loop
 
 
 ### //damage/killed # if has_role(DAMAGE_SOURCE_ID, "cockpit")

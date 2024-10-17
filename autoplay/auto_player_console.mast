@@ -4,254 +4,254 @@
 settings_add_defaults({"auto_play": {"enable": False}})
 
 //signal/show_game_results if SETTINGS["auto_play"]["enable"]
-await delay_app(2)
-mission = get_mission_name()
-sbs.run_next_mission(mission)
+    await delay_app(2)
+    mission = get_mission_name()
+    sbs.run_next_mission(mission)
 
 //signal/game_started if SETTINGS["auto_play"]["enable"]
-await delay_sim(2)
-jump automated_player_ai
+    await delay_sim(2)
+    jump automated_player_ai
 
 
 ==== automated_player_move_camera_sync
-await delay_sim(3)
-await task_schedule(automated_player_move_camera)
-jump automated_player_move_camera_sync
+    await delay_sim(3)
+    await task_schedule(automated_player_move_camera)
+    jump automated_player_move_camera_sync
 
 
 ==== automated_player_move_camera
-dolly = get_inventory_value(client_id, "dolly", 10)
-orbit = get_inventory_value(client_id, "orbit", 0)
+    dolly = get_inventory_value(client_id, "dolly", 10)
+    orbit = get_inventory_value(client_id, "orbit", 0)
 
 
-_ship_id = sbs.get_ship_of_client(client_id)
-->END if _ship_id==0
-_ship_obj = to_object(_ship_id)
-->END if _ship_obj is None
+    _ship_id = sbs.get_ship_of_client(client_id)
+    ->END if _ship_id==0
+    _ship_obj = to_object(_ship_id)
+    ->END if _ship_obj is None
 
 
-source = Vec3(0,0, dolly * 10)
-source = source.rotate_around(Vec3(0,0,0), 0, orbit, 0)
-d_source = _ship_obj.pos
+    source = Vec3(0,0, dolly * 10)
+    source = source.rotate_around(Vec3(0,0,0), 0, orbit, 0)
+    d_source = _ship_obj.pos
 
-gui_cinematic_full_control(client_id, _ship_id, source, _ship_id, Vec3())
-->END
+    gui_cinematic_full_control(client_id, _ship_id, source, _ship_id, Vec3())
+    ->END
 
 
 
 ===== automated_player_ai
-#
-# Can you schedule sub_labels?
-#
-for player in role("__player__"):
-    _ship_id = player    
-    await task_schedule(automated_player_hook)
+    #
+    # Can you schedule sub_labels?
+    #
+    for player in role("__player__"):
+        _ship_id = player    
+        await task_schedule(automated_player_hook)
 
-#await task_schedule(automated_player_respawn)
-#_ship_id = get_inventory_value(client_id, "AUTO_PLAY_SHIP", None)
-#await task_schedule(automated_player_hook)
-->END
+    #await task_schedule(automated_player_respawn)
+    #_ship_id = get_inventory_value(client_id, "AUTO_PLAY_SHIP", None)
+    #await task_schedule(automated_player_hook)
+    ->END
 
 === automated_player_hook
-#print(f"AUTO PLAY {_ship_id}")
-task_schedule(automated_player_helm_ai, {"_ship_id": _ship_id})
-task_schedule(automated_player_science_ai, {"_ship_id": _ship_id})
-task_schedule(automated_player_weapons_ai, {"_ship_id": _ship_id})
-set_inventory_value(_ship_id, "MANUAL_BEAMS_ON", True)
-task_schedule(automated_player_comms_ai, {"_ship_id": _ship_id})
-->END
+    #print(f"AUTO PLAY {_ship_id}")
+    task_schedule(automated_player_helm_ai, {"_ship_id": _ship_id})
+    task_schedule(automated_player_science_ai, {"_ship_id": _ship_id})
+    task_schedule(automated_player_weapons_ai, {"_ship_id": _ship_id})
+    set_inventory_value(_ship_id, "MANUAL_BEAMS_ON", True)
+    task_schedule(automated_player_comms_ai, {"_ship_id": _ship_id})
+    ->END
 
 
 === automated_player_respawn
-cambot_id = get_inventory_value(client_id, "AUTO_PLAY_SHIP", None)
-camera_id = cambot_id
-cambot = to_object(cambot_id)
-if cambot_id is None or cambot is None:
-    cambot = to_object(player_spawn(0,0,0, "Colossus", "tsn,auto_play", "tsn_light_cruiser")) 
-    camera_id = to_id(cambot)
-    cambot_id = camera_id
-    cambot.data_set.set("ally_list","tsn,raider",0)
-    cambot.data_set.set("ship_base_scan_range", 35000,0)
-    
-    await delay_sim(1)
-    set_inventory_value(client_id, "AUTO_PLAY_SHIP", cambot_id)
-    sbs.assign_client_to_ship(client_id, camera_id)
-    sbs.assign_client_to_ship(0, camera_id)
-    
-#
-# This is run by schedule, so end task
-#
-->END
+    cambot_id = get_inventory_value(client_id, "AUTO_PLAY_SHIP", None)
+    camera_id = cambot_id
+    cambot = to_object(cambot_id)
+    if cambot_id is None or cambot is None:
+        cambot = to_object(player_spawn(0,0,0, "Colossus", "tsn,auto_play", "tsn_light_cruiser")) 
+        camera_id = to_id(cambot)
+        cambot_id = camera_id
+        cambot.data_set.set("ally_list","tsn,raider",0)
+        cambot.data_set.set("ship_base_scan_range", 35000,0)
+        
+        await delay_sim(1)
+        set_inventory_value(client_id, "AUTO_PLAY_SHIP", cambot_id)
+        sbs.assign_client_to_ship(client_id, camera_id)
+        sbs.assign_client_to_ship(0, camera_id)
+        
+    #
+    # This is run by schedule, so end task
+    #
+    ->END
 
 
 === automated_player_helm_ai
-last = get_variable("last", None)
-# default go_dock = False
-last_go_dock = get_variable("last_go_dock", False)
+    # default assignment  
+    default last = None
+    default last_go_dock = False
 
-# Re get ship if respawn occured
-ship = to_object(_ship_id)
-#
-# 
-#
-#if ship is None:
-#    await task_schedule(automated_player_respawn)
-if ship is None:
-    print("Autoplayer is no more")
-    ->END
-    
-raider = to_object(closest(_ship_id, role("raider")))
-close_raider = to_object(closest(_ship_id, role("raider"), 10000))
-station = to_object(closest(_ship_id, all_roles("tsn,station")))
-danger = to_object(closest(_ship_id, any_role("mine,maelstrom"), 2500))
-upgrade = to_object(closest(_ship_id, all_roles("upgrade"), 5000))
-wreck = to_object(closest(_ship_id, all_roles("wreck"), 7500))
-
-
-energy = ship.data_set.get("energy", 0)
-if energy < 30:
-    energy = 300
-    ship.data_set.set("energy", energy, 0)
-
-f_shld = ship.data_set.get("shield_val", 0)
-f_shld_max = ship.data_set.get("shield_max_val", 0)
-r_shld = ship.data_set.get("shield_val", 0)
-r_shld_max = ship.data_set.get("shield_max_val", 1)
-
-if not last_go_dock:
-    go_dock = ((f_shld/f_shld_max)< 0.3) 
-    go_dock = go_dock or ((r_shld/r_shld_max)< 0.3)
-    go_dock =  go_dock or energy < 300
-    if go_dock:
-        last_go_dock = True
-else:
-    un_dock = f_shld>= f_shld_max and f_shld>= f_shld_max and energy >= 1000
-    if un_dock:
-        ship.data_set.set("dock_state", "undocked",0)
-        go_dock = False
-        last_go_dock = False
-
-# go_dock
-#    either shield < 50
-#    or energy < 300 
-
-if go_dock:
-    t = station
-elif close_raider is not None:
-    t = close_raider
-elif upgrade is not None:
-    t = upgrade
-elif wreck is not None: 
-    t = wreck
-else:    
-    t = raider
-
-
-if t is not None:
-    diff =  t.pos - ship.pos 
-    ln = diff.length()
-
-    if danger is not None:
-        danger_diff =  danger.pos - ship.pos
-        danger_ln = danger_diff.length()
-        if ln > danger_ln:
-            move = Vec3(ship.pos)
-            old = move.y
-            move.y = danger.pos.y
-            if t.pos.y > danger.pos.y:
-                ~~move.y += 1200~~
-            else:
-                ~~move.y -= 1200~~
-            if move.y != old:
-                ship.pos = move
-        elif ln < 2000:
-            move = Vec3(ship.pos)
-            old = move.y
-            move.y = t.pos.y
-            if move.y != old:
-                ship.pos = move
+    # Re get ship if respawn occured
+    ship = to_object(_ship_id)
     #
+    # 
     #
-    if ln < 700 and has_roles(t, "tsn, station") and last_go_dock:
-        ship.data_set.set("dock_base_id", to_id(t))
-        ship.data_set.set("dock_state", "docked",0)
-        ship.data_set.set("playerThrottle", 0,0)
-        speed = 0
-    elif ln < 700 and has_roles(t, "raider"):
-        ship.data_set.set("playerThrottle", 0,0)
-        speed = 0
-    elif ln < 1000:
-        speed = ln/1000
-        ship.data_set.set("playerThrottle", speed,0)
-    elif ln < 5000:
-        ship.data_set.set("playerThrottle", 1.0,0)
-        speed = 1.0
-    elif ln < 10000:
-        ship.data_set.set("playerThrottle", 2.0,0)
-        speed = 2.0
-    elif ln < 20000:
-        ship.data_set.set("playerThrottle", 3.0,0)
-        speed = 3
-    elif ln < 30000:
-        ship.data_set.set("playerThrottle", 4.0,0)
-        speed = 4
+    #if ship is None:
+    #    await task_schedule(automated_player_respawn)
+    if ship is None:
+        print("Autoplayer is no more")
+        ->END
+        
+    raider = to_object(closest(_ship_id, role("raider")))
+    close_raider = to_object(closest(_ship_id, role("raider"), 10000))
+    station = to_object(closest(_ship_id, all_roles("tsn,station")))
+    danger = to_object(closest(_ship_id, any_role("mine,maelstrom"), 2500))
+    upgrade = to_object(closest(_ship_id, all_roles("upgrade"), 5000))
+    wreck = to_object(closest(_ship_id, all_roles("wreck"), 7500))
+
+
+    energy = ship.data_set.get("energy", 0)
+    if energy < 30:
+        energy = 300
+        ship.data_set.set("energy", energy, 0)
+
+    f_shld = ship.data_set.get("shield_val", 0)
+    f_shld_max = ship.data_set.get("shield_max_val", 0)
+    r_shld = ship.data_set.get("shield_val", 1)
+    r_shld_max = ship.data_set.get("shield_max_val", 1)
+
+    if not last_go_dock:
+        go_dock = ((f_shld/f_shld_max)< 0.3) 
+        go_dock = go_dock or ((r_shld/r_shld_max)< 0.3)
+        go_dock =  go_dock or energy < 300
+        if go_dock:
+            last_go_dock = True
     else:
-        ship.data_set.set("playerThrottle", 5.0,0)
-        speed = 5
+        un_dock = f_shld>= f_shld_max and f_shld>= f_shld_max and energy >= 1000
+        if un_dock:
+            ship.data_set.set("dock_state", "undocked",0)
+            go_dock = False
+            last_go_dock = False
+
+    # go_dock
+    #    either shield < 50
+    #    or energy < 300 
+
+    if go_dock:
+        t = station
+    elif close_raider is not None:
+        t = close_raider
+    elif upgrade is not None:
+        t = upgrade
+    elif wreck is not None: 
+        t = wreck
+    else:    
+        t = raider
 
 
-    ship.data_set.set("steerToDirDX", diff.x,0) 
-    ship.data_set.set("steerToDirDY", diff.y,0) 
-    ship.data_set.set("steerToDirDZ", diff.z,0)
-    ship.data_set.set("steeringToDirFlag", 1,0)
-    if last != t:
-        comms_broadcast(client_id, "{ship.name} > {t.name} at {speed:.1f} Dock {last_go_dock} {ln:.0f}") 
+    if t is not None:
+        diff =  t.pos - ship.pos 
+        ln = diff.length()
 
-await delay_sim(1)
-jump automated_player_helm_ai
+        if danger is not None:
+            danger_diff =  danger.pos - ship.pos
+            danger_ln = danger_diff.length()
+            if ln > danger_ln:
+                move = Vec3(ship.pos)
+                old = move.y
+                move.y = danger.pos.y
+                if t.pos.y > danger.pos.y:
+                    ~~move.y += 1200~~
+                else:
+                    ~~move.y -= 1200~~
+                if move.y != old:
+                    ship.pos = move
+            elif ln < 2000:
+                move = Vec3(ship.pos)
+                old = move.y
+                move.y = t.pos.y
+                if move.y != old:
+                    ship.pos = move
+        #
+        #
+        if ln < 700 and has_roles(t, "tsn, station") and last_go_dock:
+            ship.data_set.set("dock_base_id", to_id(t))
+            ship.data_set.set("dock_state", "dock_start",0)
+            ship.data_set.set("playerThrottle", 0,0)
+            speed = 0
+        elif ln < 700 and has_roles(t, "raider"):
+            ship.data_set.set("playerThrottle", 0,0)
+            speed = 0
+        elif ln < 1000:
+            speed = ln/1000
+            ship.data_set.set("playerThrottle", speed,0)
+        elif ln < 5000:
+            ship.data_set.set("playerThrottle", 1.0,0)
+            speed = 1.0
+        elif ln < 10000:
+            ship.data_set.set("playerThrottle", 2.0,0)
+            speed = 2.0
+        elif ln < 20000:
+            ship.data_set.set("playerThrottle", 3.0,0)
+            speed = 3
+        elif ln < 30000:
+            ship.data_set.set("playerThrottle", 4.0,0)
+            speed = 4
+        else:
+            ship.data_set.set("playerThrottle", 5.0,0)
+            speed = 5
+
+
+        ship.data_set.set("steerToDirDX", diff.x,0) 
+        ship.data_set.set("steerToDirDY", diff.y,0) 
+        ship.data_set.set("steerToDirDZ", diff.z,0)
+        ship.data_set.set("steeringToDirFlag", 1,0)
+        if last != t:
+            comms_broadcast(client_id, "{ship.name} > {t.name} at {speed:.1f} Dock {last_go_dock} {ln:.0f}") 
+
+    await delay_sim(1)
+    jump automated_player_helm_ai
 
 === automated_player_science_ai
-#
-# Look for closest thing and select it
-#
-##### _ship_id = sbs.get_ship_of_client(client_id) 
-# _ship_id is passed in
-ship = to_object(_ship_id)
-jump automated_player_science_ai_loop if ship is None
+    #
+    # Look for closest thing and select it
+    #
+    ##### _ship_id = sbs.get_ship_of_client(client_id) 
+    # _ship_id is passed in
+    ship = to_object(_ship_id)
+    jump automated_player_science_ai_loop if ship is None
 
-# set_science_selection
-raider = closest(_ship_id, role("raider"), 25000)
-if raider is not None:
-    current = get_science_selection(_ship_id)
-    if current!= raider:
-        set_science_selection(_ship_id, raider)
-        follow_route_select_science(_ship_id, raider)
-# await task_schedule(automated_player_move_camera)
+    # set_science_selection
+    raider = closest(_ship_id, role("raider"), 25000)
+    if raider is not None:
+        current = get_science_selection(_ship_id)
+        if current!= raider:
+            set_science_selection(_ship_id, raider)
+            follow_route_select_science(_ship_id, raider)
+    # await task_schedule(automated_player_move_camera)
 
 === automated_player_science_ai_loop
-await delay_sim(10)
-jump automated_player_science_ai
+    await delay_sim(10)
+    jump automated_player_science_ai
 
 === automated_player_weapons_ai
-#
-# Look for closest enemy and select it
-#
-###_ship_id = sbs.get_ship_of_client(client_id) 
-ship = to_object(_ship_id)
-jump automated_player_weapons_ai_loop if ship is None
+    #
+    # Look for closest enemy and select it
+    #
+    ###_ship_id = sbs.get_ship_of_client(client_id) 
+    ship = to_object(_ship_id)
+    jump automated_player_weapons_ai_loop if ship is None
 
-raider = closest(_ship_id, role("raider"), 10000)
-wreck = closest(_ship_id, role("wreck"), 10000)
-if raider is not None:
-    current = get_weapons_selection(_ship_id)
-    if current!= raider:
-        set_weapons_selection(_ship_id, raider)
-        # follow_route_select_weapon(_ship_id, raider)
-elif wreck is not None:
-    current = get_weapons_selection(_ship_id)
-    if current!= wreck:
-        set_weapons_selection(_ship_id, wreck)
-        # follow_route_select_weapon(_ship_id, wreck)
+    raider = closest(_ship_id, role("raider"), 10000)
+    wreck = closest(_ship_id, role("wreck"), 10000)
+    if raider is not None:
+        current = get_weapons_selection(_ship_id)
+        if current!= raider:
+            set_weapons_selection(_ship_id, raider)
+            # follow_route_select_weapon(_ship_id, raider)
+    elif wreck is not None:
+        current = get_weapons_selection(_ship_id)
+        if current!= wreck:
+            set_weapons_selection(_ship_id, wreck)
+            # follow_route_select_weapon(_ship_id, wreck)
 
 
 # set_weapons_selection
@@ -261,25 +261,26 @@ jump automated_player_weapons_ai
 
 
 === automated_player_comms_ai
-#
-# Look for closest enemy and select it
-#
-###_ship_id = sbs.get_ship_of_client(client_id) 
-ship = to_object(_ship_id)
-jump automated_player_comms_ai_loop if ship is None
+    #
+    # Look for closest enemy and select it
+    #
+    ###_ship_id = sbs.get_ship_of_client(client_id) 
+    ship = to_object(_ship_id)
+    jump automated_player_comms_ai_loop if ship is None
 
-raider = closest(_ship_id, role("raider"), 10000)
-if raider is not None:
-    current = get_comms_selection(_ship_id)
-    if current!= raider:
-        set_comms_selection(_ship_id, raider)
-        follow_route_select_comms(_ship_id, raider)
+    raider = closest(_ship_id, role("raider"), 10000)
+    if raider is not None:
+        current = get_comms_selection(_ship_id)
+        if current!= raider:
+            set_comms_selection(_ship_id, raider)
+            follow_route_select_comms(_ship_id, raider)
 
 
-# set_weapons_selection
+    # set_weapons_selection
+
 === automated_player_comms_ai_loop
-await delay_sim(10)
-jump automated_player_comms_ai
+    await delay_sim(10)
+    jump automated_player_comms_ai
 
 /*
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "auto_play")

@@ -11,7 +11,7 @@ from sbs_utils.vec import Vec3
 import math
 
 
-def terrain_spawn_stations(difficulty, lethal_value, x_min=-35000, x_max=35000):
+def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500):
     _station_weights  = {"starbase_industry": 5,"starbase_command": 3,"starbase_civil": 1,"starbase_science": 1}
     # make the list of stations we will create -----------------------------------------------
     station_type_list = []

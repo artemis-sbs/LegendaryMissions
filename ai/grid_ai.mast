@@ -14,9 +14,38 @@ shared grid_data = grid_get_grid_data()
 
 //spawn if has_role(SPAWNED_ID, "__player__")
 #
+# This waits until the game is started
+# Ship type could be changed by helm
+#
+await delay_sim(1)
+#
 # Create the interior for the ship, defined in grid_ai
 #
 grid_rebuild_grid_objects(SPAWNED_ID, grid_data)
+still_around = to_object(SPAWNED_ID)
+->END if still_around is None
+#
+# Handle jump vs Warp drive
+#
+is_warp = False
+is_jump = False
+warp_nodes = to_object_list(grid_objects(SPAWNED_ID) & role("warp"))
+#
+_jump_nodes = to_object_list(grid_objects(SPAWNED_ID) & role("jump"))
+_jump_nodes = role("jump")
+
+is_warp = len(warp_nodes) > 0
+is_jump = len(_jump_nodes) > 0
+
+_warp = 1 if is_warp else 0
+_jump = 1 if is_jump else 0
+_label = "JUMP" if is_jump else "WARP"
+
+blob = to_blob(SPAWNED_ID)
+blob.set("warp_drive_active",_warp,0)
+blob.set("jump_drive_active", _jump,0)
+blob.set("eng_control_label", _label, 3)
+
 
 ->END
 
