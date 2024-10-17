@@ -194,6 +194,8 @@ elif has_roles(SCIENCE_SELECTED_ID, "upgrade, lateral_array"):
     upg_desc = "Lateral Array. 5 Minute Target Scan Triple Speed."
 elif has_roles(SCIENCE_SELECTED_ID, "upgrade, haplix_overcharger"):
     upg_desc = "Haplix Overcharger. +300 to shields but may damage shield generators."
+elif has_roles(SCIENCE_SELECTED_ID, "upgrade, escape-pod"):
+    upg_desc = "Escape Pod. Life-support capsule used in emergency situations."
 
 + "scan" {"upg_desc": upg_desc}:
     <scan>
