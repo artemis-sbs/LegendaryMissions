@@ -189,7 +189,7 @@ elif COMMS_SELECTED.has_role('raider'):
         % You gonna die
 
 #
-# AI for friendly tsn ships (not citizen ships)
+# AI for friendly tsn ships (Defender and citizen ships)
 #
 //spawn if has_roles(SPAWNED_ID, "tsn, friendly")
 #
@@ -207,7 +207,10 @@ me = to_object(SPAWNED_ID)
 # Comms can give orders to attack a target (or approach another friendly) 
 #
 target_point = get_inventory_value(SPAWNED_ID, "ORDERS_POINT", None)
-order = get_inventory_value(SPAWNED_ID, "ORDER", "")
+#
+# Default orders is protect
+#
+order = get_inventory_value(SPAWNED_ID, "ORDER", "default")
 if order=="":
     clear_target(SPAWNED_ID)
     jump ai_loop
@@ -225,7 +228,13 @@ jump do_target if the_target is not None
 #
 jump ai_loop if order == "explore" or order.startswith("await further")
 jump attack if order == "attack"
-## jump patrol if order == "protect"
+
+#
+# Defenders default to patrol/protect others nothing
+#
+jump ai_loop if order == "default" and not has_role(SPAWNED_ID, "defender")
+if order == "default":
+    target_point = Vec3(me.pos)
 
 --- patrol
 #

@@ -39,10 +39,12 @@ class NpcCAG(Agent):
     def get_fighter_key(self, carrier_race):
         race = ""
         r_type = carrier_race
-        race = r_type[0].split("_")
+        race = r_type.split("_")
         race = race[0]
         if race=="xim":
             race = "ximni"
+
+        # print(f"FIGHTER RACE {race}")
 
         match race:
             case "tsn":
