@@ -41,7 +41,7 @@ def get_random_npc_call_sign(race):
     enemy_prefix = "KLMNQ"
     if race == "skaraan":
         enemy_prefix = "TR"
-    r_name = f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
+    r_name = f"{random.choice(enemy_prefix)}{str(call_signs[enemy_name_number]).zfill(2)}"
     enemy_name_number = (enemy_name_number+1)%99
     return r_name
 

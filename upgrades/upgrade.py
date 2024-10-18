@@ -14,6 +14,7 @@ anom_data = {
     "cetrocite_crystal": {"art_id":"container_small_6a"},
     "lateral_array": {"art_id":"danger_5a"},
     "haplix_overcharger": {"art_id":"alien_5a"},
+    "escape-pod": {"art_id":"escape-pod"}
 }
 
 

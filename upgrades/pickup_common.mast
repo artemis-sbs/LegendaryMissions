@@ -98,4 +98,15 @@ elif has_roles(COLLISION_ORIGIN_ID, "upgrade, haplix_overcharger"):
     sbs.delete_object(COLLISION_ORIGIN_ID)
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
 
+if has_roles(COLLISION_ORIGIN_ID, "upgrade, escape-pod"):
+    print("Pickup: Escape Pod")
+    comms_broadcast(COLLISION_SELECTED_ID, "Pickup: Escape Pod", "#E3F")
+    addinv = get_inventory_value(COLLISION_SELECTED_ID, "escape-pod", 0)
+    addinv += 1
+    set_inventory_value(COLLISION_SELECTED_ID, "escape-pod", addinv)
+    tobj = sim.get_space_object(COLLISION_ORIGIN_ID)
+    tpos = tobj.pos
+    sbs.delete_object(COLLISION_ORIGIN_ID)
+    sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
+
 ->END

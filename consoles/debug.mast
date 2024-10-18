@@ -155,15 +155,16 @@ _forward = eo.forward_vector()
 _pos = _pos_eo + (_forward * 300)
 
 
-pickup_spawn(125+_pos.x, _pos.y, _pos.z+250, "carapaction_coil")
-pickup_spawn(200+_pos.x, _pos.y, _pos.z+250, "infusion_pcoils")
-pickup_spawn(275+_pos.x, _pos.y, _pos.z+250, "tauron_focuser")
-pickup_spawn(125+_pos.x, _pos.y, _pos.z+325, "secret_codecase")
-pickup_spawn(200+_pos.x, _pos.y, _pos.z+325, "hidens_powercell")
-pickup_spawn(275+_pos.x, _pos.y, _pos.z+325, "vigoranium_nodule")
-pickup_spawn(125+_pos.x, _pos.y, _pos.z+400, "cetrocite_crystal")
-pickup_spawn(200+_pos.x, _pos.y, _pos.z+400, "lateral_array")
-pickup_spawn(275+_pos.x, _pos.y, _pos.z+400, "haplix_overcharger")
+pickup_spawn(125+_pos.x, _pos.y, _pos.z+450, "carapaction_coil")
+pickup_spawn(200+_pos.x, _pos.y, _pos.z+450, "infusion_pcoils")
+pickup_spawn(275+_pos.x, _pos.y, _pos.z+450, "tauron_focuser")
+pickup_spawn(125+_pos.x, _pos.y, _pos.z+525, "secret_codecase")
+pickup_spawn(200+_pos.x, _pos.y, _pos.z+525, "hidens_powercell")
+pickup_spawn(275+_pos.x, _pos.y, _pos.z+525, "vigoranium_nodule")
+pickup_spawn(125+_pos.x, _pos.y, _pos.z+600, "cetrocite_crystal")
+pickup_spawn(200+_pos.x, _pos.y, _pos.z+600, "lateral_array")
+pickup_spawn(275+_pos.x, _pos.y, _pos.z+600, "haplix_overcharger")
+pickup_spawn(_pos.x, _pos.y, _pos.z+400, "escape-pod")
 
 ->END
 
