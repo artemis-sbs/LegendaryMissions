@@ -11,7 +11,10 @@ from sbs_utils.vec import Vec3
 import math
 
 
-def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500):
+def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500, center=None):
+    if center is None:
+        center = Vec3(0,0,0)
+
     _station_weights  = {"starbase_industry": 5,"starbase_command": 3,"starbase_civil": 1,"starbase_science": 1}
     # make the list of stations we will create -----------------------------------------------
     station_type_list = []
@@ -28,22 +31,23 @@ def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500):
         total_weight -= station_weight
         station_type_list.append(station_type)
 
-    pos = Vec3()
+    pos = Vec3(center)
     startZ = -50000
     num_stations = len(station_type_list)
     station_step = 100000/num_stations
 
-
+    #print(f"Station Center at: {pos.x} {pos.y} {pos.z}")
     # for each station
     for index in range(num_stations):
         stat_type = station_type_list[index]
-        pos.x = random.uniform(x_min, x_max)
-        pos.y = random.random()*2000-1000
-        pos.z = startZ + random.random()*station_step/3  -   station_step/6
+        pos.x = center.x + random.uniform(x_min, x_max)
+        pos.y = center.y + random.random()*2000-1000
+        pos.z = center.z + startZ #+ random.random()*station_step/3  -   station_step/6
     #    _spawned_pos.append(pos)
         startZ += station_step
 
         #make the station ----------------------------------
+        #print(f"Station at: {pos.x} {pos.y} {pos.z} - {startZ} {station_step}")
         name = f"DS {index+1}"
         station_object = npc_spawn(*pos, name, "tsn, station", stat_type, "behav_station")
         ds = to_id(station_object)
@@ -74,13 +78,16 @@ def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500):
 
 
 # make a few random clusters of Asteroids
-def terrain_asteroid_clusters(terrain_value):
+def terrain_asteroid_clusters(terrain_value, center=None):
+    if center is None:
+        center = Vec3(0,0,0)
+
     #t_min = terrain_value * 7
     #t_max = t_min * 3
     t_max_pick = [0,8,10, 12,16]
     t_min = t_max_pick[terrain_value]
     t_max = t_min * 2
-    spawn_points = scatter.box(random.randint(t_min,t_max), 0,0,0, 100000, 1000, 100000, centered=True)
+    spawn_points = scatter.box(random.randint(t_min,t_max), center.x, center.y, center.z, 100000, 1000, 100000, centered=True)
 
     asteroid_types = plain_asteroid_keys()
     for v in spawn_points:
@@ -163,6 +170,39 @@ def terrain_asteroid_clusters(terrain_value):
                 asteroid.blob.set("local_scale_x_coeff", sx1)
                 asteroid.blob.set("local_scale_y_coeff", sy1)
                 asteroid.blob.set("local_scale_z_coeff", sz1)
+
+def terrain_to_value(dropdown_select, default=0):
+    if "few" == dropdown_select:
+        return 1
+
+    if "some" == dropdown_select:
+        return 2
+
+    if "lots" == dropdown_select:
+        return 3
+
+    if "many" == dropdown_select:
+        return 4
+    return default
+
+
+def terrain_spawn_nebula_clusters(terrain_value, center=None):
+    if center is None:
+        center = Vec3(0,0,0)
+
+    t_min = terrain_value * 6
+    t_max = t_min * 2
+    spawn_points = scatter.box(random.randint(t_min,t_max), center.x, center.y, center.z, 100000, 1000, 100000, centered=True)
+    for v in spawn_points:
+        cluster_spawn_points = scatter.sphere(random.randint(terrain_value*2,terrain_value*4), v.x, 0,v.z, 1000, 10000, ring=False)
+        for v2 in cluster_spawn_points:
+            v2.y = v2.y % 500.0
+            nebula = terrain_spawn(v2.x, v2.y, v2.z,None, "#, nebula", "nebula", "behav_nebula")
+            nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
+            nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
+            nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
+
+
 
 #
 # Original

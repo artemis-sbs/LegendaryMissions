@@ -24,8 +24,10 @@ do_move = 0
         remove_role(cambot, "__player__")
         camera_id = to_id(cambot)
         set_inventory_value(client_id, "ADMIRAL_COMBOT", camera_id)
-        cambot_id = cambot_id
+        cambot_id = camera_id
         #print("Creating ADMIRAL {cambot}")
+        stations_friendly = to_object_list(role("station"))
+        player_ship_update_friendly(cambot, stations_friendly, True)
 
     last_sci = cambot_id
     #
@@ -140,8 +142,8 @@ do_move = 0
     #print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
     #print("IDs Adrmiral {EVENT.origin_id}, {EVENT.selected_id},{EVENT.parent_id} {EVENT.extra_extra_tag}")
 
-    # extra_extra_tag has lmb, rmb
-    if EVENT.extra_extra_tag != "rmb":
+    # extra_extra_tag has lmb, rmb, blank is fake event
+    if EVENT.extra_extra_tag == "lmb":
         # if no selection then use point
         pos = Vec3(EVENT.source_point)
         if SCIENCE_SELECTED_ID!=0:

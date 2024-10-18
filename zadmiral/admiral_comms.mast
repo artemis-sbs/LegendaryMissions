@@ -144,6 +144,11 @@
 
             stations_friendly = role(side) & role("station")
             player_ship_update_friendly(player_ship, stations_friendly, True)
+            #
+            # Update Admiral
+            #
+            stations_friendly = to_object_list(role("station"))
+            player_ship_update_friendly(COMMS_ORIGIN_ID, stations_friendly, True)
 
 
 

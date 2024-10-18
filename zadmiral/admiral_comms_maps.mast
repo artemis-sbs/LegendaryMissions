@@ -1,0 +1,62 @@
+//enable/comms if has_roles(COMMS_ORIGIN_ID, 'admiral')
+
+
+//comms if has_roles(COMMS_ORIGIN_ID, 'admiral')
+    + "Maps" //comms/admiral/maps
+
+
+//comms/admiral/maps if has_roles(COMMS_ORIGIN_ID, 'admiral')
+    + "Back" //comms
+    + "Scatter Stations":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        terrain_spawn_stations(difficulty, terrain_to_value(lethal_select), center=pos)
+        player_ships = to_object_list(role("__player__"))
+        for player_ship in player_ships:
+            side = player_ship.side
+            stations_friendly = to_object_list(role(side)  & role("station"))
+            player_ship_update_friendly(player_ship, stations_friendly, True)
+
+        # Let the Admiral see ALL stations for now
+        # stations_friendly = to_object_list(role(side)  & role("station"))
+        stations_friendly = to_object_list(role("station"))
+        player_ship_update_friendly(COMMS_ORIGIN_ID, stations_friendly, True)
+
+    + "Scatter Friendly":
+        # A bit of a hack, but figure our which friendlies are new
+        # When creating them
+        pre_friendly = role("friendly")
+        await task_schedule(spawn_friendly_npc)
+        post_friendly = role("friendly")
+        new_friendly = post_friendly - pre_friendly
+        #
+        # Move new friendly around near stations
+        #
+        stations_friendly = to_object_list(role("tsn")  & role("station") & broad_test_around(COMMS_ORIGIN_ID, 50000,50000))
+        ->END if len(stations_friendly) == 0
+        for friendly in to_object_list(new_friendly):
+            so = random.choice(stations_friendly)
+            spawn_pos = so.pos
+            spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
+            friendly.pos = spawn_pos
+        
+    + "Scatter Asteroid Clusters":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        terrain_asteroid_clusters(terrain_to_value(terrain_select, 2), pos)
+
+    + "Scatter Nebular Clusters":
+        terrain_spawn_nebula_clusters(terrain_to_value(terrain_select, 2), pos)
+
+
+    + "Scatter Monsters":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        spawn_points = scatter.box(terrain_to_value(monster_select, 2), *pos.xyz, 75000, 1000, 75000, centered=True)
+        for v in spawn_points:
+            typhon_classic_spawn(*v.xyz)
+
+    + "Scatter Black holes":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        spawn_points = scatter.box(terrain_to_value(lethal_select, 2), *pos.xyz, 75000, 500, 75000, centered=True)
+        for v in spawn_points:
+            terrain_spawn_black_hole(*v.xyz)
+
+

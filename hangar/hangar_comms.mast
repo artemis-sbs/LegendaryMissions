@@ -8,6 +8,8 @@
         COMMS_ORIGIN.data_set.set("fighter_shoot_flag", 0,0)
         COMMS_ORIGIN.data_set.set("fighter_boost_flag", 0,0)
         COMMS_ORIGIN.data_set.set("throttle", 0.0,0)
+        # Reset to just the craft name
+        COMMS_ORIGIN.name = COMMS_ORIGIN.get_inventory_value("craft_name", COMMS_ORIGIN.name)
 
         fighter_client = get_inventory_value(COMMS_ORIGIN_ID, "client_id")
         if fighter_client is not None:
