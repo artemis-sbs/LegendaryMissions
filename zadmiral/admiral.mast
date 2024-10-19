@@ -144,7 +144,7 @@ property_pane = None
     #print("IDs Adrmiral {EVENT.origin_id}, {EVENT.selected_id},{EVENT.parent_id} {EVENT.extra_extra_tag}")
 
     # extra_extra_tag has lmb, rmb, blank is fake event
-    if EVENT.extra_extra_tag == "lmb":
+    if EVENT.extra_extra_tag != "rmb":
         # if no selection then use point
         pos = Vec3(EVENT.source_point)
         if SCIENCE_SELECTED_ID!=0:
