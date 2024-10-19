@@ -252,9 +252,9 @@ shared find_stray = task_schedule(find_stray_crafts)
 ==== find_stray_crafts ====
     await delay_sim(seconds=5) # hack for task_schedule in main
 
-    print("finding stray fighters start")
+    # print("finding stray fighters start")
 
-==== find_stray_craft_loop ====
+--- find_stray_craft_loop
     await delay_sim(seconds=3) # Run every 23 seconds
     launched_crafts = role("cockpit") & role("tsn") - role("standby")
     for craft in launched_crafts:
@@ -270,10 +270,10 @@ shared find_stray = task_schedule(find_stray_crafts)
         continue if so is None
         # print("Return craft {so.name}")
         redocked = hangar_attempt_dock_craft(craft, None)
-        if redocked:
-            print("redocked")
-        else:
-            print("redocked FAILED")
+        #if redocked:
+        #    print("redocked")
+        #else:
+        #    print("redocked FAILED")
             
     jump find_stray_craft_loop
 

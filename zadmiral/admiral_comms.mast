@@ -2,6 +2,7 @@
 
 
 //comms if has_roles(COMMS_ORIGIN_ID, 'admiral')
+    gui_properties_set()
     + "Spawn" //comms/admiral/spawn
     + "Selected" //comms/admiral/selected
     + "Area" //comms/admiral/area

@@ -48,6 +48,7 @@ for key in grid_data:
 
 mode = await gui_request_client_string(client_id, "console_mode")
 previous_console = await gui_request_client_string(client_id, "console_previous")
+crew_name = await gui_request_client_string(client_id, "crew_name")
 
 if mode is not None and len(mode) > 0:
     jump operator_admin_console if mode=='admin'
@@ -165,6 +166,12 @@ ship_select_lb.set_selected_index(client_selected_index)
 # List of available consoles
 #
 gui_section( style="area: 510px, 2, 99,100-60px;")
+gui_row(style="row-height: 45px;")
+
+crew_input = gui_input("desc:Crew person Name", var="crew_name")
+gui_row(style="row-height: 45px;")
+gui_blank()
+gui_row()
 
 console_select_lb = gui_list_box(consoles,"row-height: 3em; background:#1572;", item_template=console_select_template, title_template=console_select_title_template, select=True, read_only=console_read_only)
 console_select_lb.set_value(console_select_item)
@@ -310,6 +317,9 @@ for k in consoles:
 add_role(client_id, "console, {console_select}")
 # print("storing {console_select}")
 sbs.set_client_string(client_id, "console_previous", console_select)
+#print("storing {crew_name}")
+sbs.set_client_string(client_id, "crew_name", crew_name)
+set_inventory_value(client_id, "CREW_NAME", crew_name)
 
 # Retrieve the item by string (because might have navigator here via tab)
 console = gui_get_console_type(console_select)

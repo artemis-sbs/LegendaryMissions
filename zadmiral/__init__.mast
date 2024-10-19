@@ -1,6 +1,7 @@
 import admiral.mast
 import admiral_comms.mast
 import admiral_comms_maps.mast
+import admiral_comms_messages.mast
 import admiral.py
 
 import move_to_lib.py
