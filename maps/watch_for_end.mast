@@ -86,6 +86,16 @@ if len(stations) == 0 and len(raiders) == 0:
 
 -> task_deepstrike_end_game
 
+============ peacetime_ambassador_killed =======
+
+start_text = "Mission Failed! The ship carrying Ambassador Florbin was destroyed."
+game_started = False
+game_ended = True
+sbs.play_music_file(0, "music/default/failure")
+signal_emit("show_game_results", None)
+->END
+
+
 ============ task_borderwar_end_game ======= 
 
 await delay_sim(4)

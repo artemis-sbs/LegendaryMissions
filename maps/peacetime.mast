@@ -231,7 +231,6 @@ for c in spawn_points:
         add_role(role("ds4"), temp_role)
     elif stop1 == 5:
         add_role(role("ds5"), temp_role)
-#    print(f"Ship {s_count}, Stop1 is {stop1}. Adding role {temp_role}")
     stop2 = temp_stop.pop(random.randint(0, len(temp_stop)-1))
     temp_role = "clue" + str(s_count) + "B"
     if stop2 == 2:
@@ -242,7 +241,6 @@ for c in spawn_points:
         add_role(role("ds4"), temp_role)
     elif stop2 == 5:
         add_role(role("ds5"), temp_role)
-#    print(f"Ship {s_count}, Stop2 is {stop2}. Adding role {temp_role}")
     stop3 = temp_stop.pop(random.randint(0,len(temp_stop)-1))
     # Populates the Ship Name, Captain Name, and then the contents of the four cargo holds into a list object.
     # There are three different list objects to show the contents at the start (DS1), the first stop, and the second stop.  
@@ -308,23 +306,25 @@ shared s_clue2 = kidnap_clue['clue']
 print(f"Kidnap Clue: {k_clue1} Container: {k_clue2}")
 
 add_role(suspect_list[0], "kidnapper")
-#print(f"Kidnapper Ship Contents")
+
 for index in range(3):
     tempval = "cargo" + str(index+1)
     tempcargo = get_inventory_value(suspect_list[0], tempval)
     tempcargo[rand1] = k_clue2
     set_inventory_value(suspect_list[0], tempval, tempcargo)
-#    print(tempcargo)
 
 for x in range(5):
     ds_role = "ds" + str(x+1)
     temp_rand = random.randint(1, 3)
     set_inventory_value(role(ds_role), "records_status", temp_rand)
-#    print(f"{ds_role} Records Status {temp_rand}")
 
-rand2 = random.randint(1,3)
+rand2 = random.randint(2,3)
+#rand2 = 2
 if rand2 == 1:
-    # There are four different 'scenarios' for the Ambassador. The first is two stops where the Kidnapper ship transfers cargo and leaves a clue.
+    # There are three different 'scenarios' for the Ambassador. The first is two stops where the Kidnapper ship transfers cargo and leaves a clue.
+    # Note: the first scenario was disabled. It was too easy to track down the three ships and scan them. 
+    # Playtesters weren't flying around looking for clues. So the two possible scenarios are #2 "Transfer cargo to new ship"
+    # and #3 "Ship changes name". 
     # First ship, first stop, transfers two containers. This section updates the cargo containers and updates message1C.
     tmp_cargo = [6, 8, 10, 12]
     tmp_cargo.remove(rand1)
@@ -334,13 +334,20 @@ if rand2 == 1:
     new_cont1 = ship1_cargo2.pop()
     new_good2 = ship1_cargo2.pop()
     new_cont2 = ship1_cargo2.pop()
+    ship1_cargo3.remove(new_good1)
+    ship1_cargo3_remove(new_cont1)
+    ship1_cargo3.remove(new_good2)
+    ship1_cargo3_remove(new_cont2)
     tmpmsg1 = "Container " + ship1_cargo2[xfer_idx1 - 1] + ": " + ship1_cargo2[xfer_idx1] + " and Container " + ship1_cargo2[xfer_idx2 - 1] + ": " + ship1_cargo2[xfer_idx2]
     tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
     ship1_cargo2[xfer_idx1 - 1] = new_cont1
     ship1_cargo2[xfer_idx1] = new_good1
     ship1_cargo2[xfer_idx2 - 1] = new_cont2
     ship1_cargo2[xfer_idx2] = new_good2
-    ship1_cargo3 = ship1_cargo2
+    ship1_cargo3[xfer_idx1 - 1] = new_cont1
+    ship1_cargo3[xfer_idx1] = new_good1
+    ship1_cargo3[xfer_idx2 - 1] = new_cont2
+    ship1_cargo3[xfer_idx2] = new_good2
     shared message1C = "Yes, " + ship1_cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship1_cargo2[5]}: {ship1_cargo2[6]}^Hold 2 - Container {ship1_cargo2[7]}: {ship1_cargo2[8]}^Hold 3 - Container {ship1_cargo2[9]}: {ship1_cargo2[10]}^Hold 4 - Container {ship1_cargo2[11]}: {ship1_cargo2[12]}"  
     print(f"message1C: {message1C}")
     # First ship, second stop, transfers one container. Adds a "clue" to message1D.
@@ -362,11 +369,14 @@ elif rand2 == 2:
     xfer_idx1 = tmp_cargo.pop(random.randint(0,len(tmp_cargo)-1))
     new_good1 = ship1_cargo2.pop()
     new_cont1 = ship1_cargo2.pop()
+    ship1_cargo3.remove(new_good1)
+    ship1_cargo3.remove(new_cont1)
     tmpmsg1 = "Container " + ship1_cargo2[xfer_idx1 - 1] + ": " + ship1_cargo2[xfer_idx1] 
     tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
+    ship1_cargo2[xfer_idx1 - 1] = new_cont1
     ship1_cargo3[xfer_idx1 - 1] = new_cont1
+    ship1_cargo2[xfer_idx1] = new_good1
     ship1_cargo3[xfer_idx1] = new_good1
-    ship1_cargo3 = ship1_cargo2
     shared message1C = "Yes, " + ship1_cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship1_cargo2[5]}: {ship1_cargo2[6]}^Hold 2 - Container {ship1_cargo2[7]}: {ship1_cargo2[8]}^Hold 3 - Container {ship1_cargo2[9]}: {ship1_cargo2[10]}^Hold 4 - Container {ship1_cargo2[11]}: {ship1_cargo2[12]}^^Oh, and something else I noticed. " + k_clue1  
     print(f"message1C: {message1C}")
     # First ship, second stop, transfers three containers and a captain to a different ship. 
@@ -381,18 +391,24 @@ elif rand2 == 2:
     xfer_idx2 = tmp_cargo.pop(random.randint(0,len(tmp_cargo)-1))
     ship1_cargo3[1] = xfer_cap2
     ship4_cargo3[1] = xfer_cap1
-    new_good1 = ship4_cargo3.pop(rand1)
-    new_cont1 = ship4_cargo3.pop(rand1 - 1)
-    new_good2 = ship4_cargo3.pop(xfer_idx1)
-    new_cont2 = ship4_cargo3.pop(xfer_idx1 - 1)
-    new_good3 = ship4_cargo3.pop(xfer_idx2)
-    new_cont3 = ship4_cargo3.pop(xfer_idx2 - 1)
-    ship4_cargo3[rand1 - 1] = ship1_cargo3[rand1 - 1]
-    ship4_cargo3[rand1] = ship1_cargo3[rand1]
-    ship4_cargo3[xfer_idx1 - 1] = ship1_cargo3[xfer_idx1 - 1]
-    ship4_cargo3[xfer_idx1] = ship1_cargo3[xfer_idx1]
-    ship4_cargo3[xfer_idx2 - 1] = ship1_cargo3[xfer_idx2 - 1]
-    ship4_cargo3[xfer_idx2] = ship1_cargo3[xfer_idx2]
+    new_good1 = ship1_cargo3[rand1]
+    new_cont1 = ship1_cargo3[rand1 - 1]
+    new_good2 = ship1_cargo3[xfer_idx1]
+    new_cont2 = ship1_cargo3[xfer_idx1 - 1]
+    new_good3 = ship1_cargo3[xfer_idx2]
+    new_cont3 = ship1_cargo3[xfer_idx2 - 1]
+    ship4_cargo3[rand1 - 1] = new_cont1
+    ship4_cargo3[rand1] = new_good1
+    ship4_cargo3[xfer_idx1 - 1] = new_cont2
+    ship4_cargo3[xfer_idx1] = new_good2
+    ship4_cargo3[xfer_idx2 - 1] = new_cont3
+    ship4_cargo3[xfer_idx2] = new_good3
+    new_good1 = ship4_cargo3.pop()
+    new_cont1 = ship4_cargo3.pop()
+    new_good2 = ship4_cargo3.pop()
+    new_cont2 = ship4_cargo3.pop()
+    new_good3 = ship4_cargo3.pop()
+    new_cont3 = ship4_cargo3.pop()
     ship1_cargo3[rand1 - 1] = new_cont1
     ship1_cargo3[rand1] = new_good1
     ship1_cargo3[xfer_idx1 - 1] = new_cont2
@@ -400,11 +416,6 @@ elif rand2 == 2:
     ship1_cargo3[xfer_idx2 - 1] = new_cont3
     ship1_cargo3[xfer_idx2] = new_good3
     tmpmsg1 = "Container " + ship4_cargo3[xfer_idx1 - 1] + ": " + ship4_cargo3[xfer_idx1] + ", Container " + ship4_cargo3[rand1 - 1] + ": " + ship4_cargo3[rand1] + ", and Container " + ship4_cargo3[xfer_idx2 - 1] + ": " + ship4_cargo3[xfer_idx2]
-    ship1_cargo2[xfer_idx1 - 1] = new_cont1
-    ship1_cargo2[xfer_idx1] = new_good1
-    ship1_cargo2[xfer_idx2 - 1] = new_cont2
-    ship1_cargo2[xfer_idx2] = new_good2
-    ship1_cargo3 = ship1_cargo2
     shared message1D = "You're looking for the " + ship1_cargo3[0] + "? Well, actually, Captain " + ship4_cargo3[1] + " transferred three cargo containers and left on a different ship. They loaded " + tmpmsg1 + " onto the " + ship4_cargo3[0] + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship4_cargo3[5]}: {ship4_cargo3[6]}^Hold 2 - Container {ship4_cargo3[7]}: {ship4_cargo3[8]}^Hold 3 - Container {ship4_cargo3[9]}: {ship4_cargo3[10]}^Hold 4 - Container {ship4_cargo3[11]}: {ship4_cargo3[12]}"  
     print(f"message1D: {message1D}")
 elif rand2 == 3:
@@ -414,11 +425,14 @@ elif rand2 == 3:
     xfer_idx1 = tmp_cargo.pop(random.randint(0,len(tmp_cargo)-1))
     new_good1 = ship1_cargo2.pop()
     new_cont1 = ship1_cargo2.pop()
+    ship1_cargo3.remove(new_good1)
+    ship1_cargo3.remove(new_cont1)
     tmpmsg1 = "Container " + ship1_cargo2[xfer_idx1 - 1] + ": " + ship1_cargo2[xfer_idx1] 
     tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
+    ship1_cargo2[xfer_idx1 - 1] = new_cont1
+    ship1_cargo2[xfer_idx1] = new_good1
     ship1_cargo3[xfer_idx1 - 1] = new_cont1
     ship1_cargo3[xfer_idx1] = new_good1
-    ship1_cargo3 = ship1_cargo2
     shared message1C = "Yes, " + ship1_cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship1_cargo2[5]}: {ship1_cargo2[6]}^Hold 2 - Container {ship1_cargo2[7]}: {ship1_cargo2[8]}^Hold 3 - Container {ship1_cargo2[9]}: {ship1_cargo2[10]}^Hold 4 - Container {ship1_cargo2[11]}: {ship1_cargo2[12]}^^Oh, and something else I noticed. " + k_clue1  
     print(f"message1C: {message1C}")
     # First ship, second stop, transfers two containers and then changes the ship registry to a new name. 
@@ -439,11 +453,12 @@ elif rand2 == 3:
     old_name = ship1_cargo2[0]
     alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
     new_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randint(0,len(civname_list)-1))
-    ship1_cargo3[0] = new_name
     s_obj = to_object(suspect_list[0])
     s_obj.name = new_name
-    shared message1D = "Yes, " + old_name + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship1_cargo2[5]}: {ship1_cargo2[6]}^Hold 2 - Container {ship1_cargo2[7]}: {ship1_cargo2[8]}^Hold 3 - Container {ship1_cargo2[9]}: {ship1_cargo2[10]}^Hold 4 - Container {ship1_cargo2[11]}: {ship1_cargo2[12]}^^Oh, and the captain also changed the ship registry. The new name is {ship1_cargo3[0]}."  
+    ship1_cargo3[0] = new_name
+    shared message1D = "Yes, " + old_name + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship1_cargo3[5]}: {ship1_cargo3[6]}^Hold 2 - Container {ship1_cargo3[7]}: {ship1_cargo3[8]}^Hold 3 - Container {ship1_cargo3[9]}: {ship1_cargo3[10]}^Hold 4 - Container {ship1_cargo3[11]}: {ship1_cargo3[12]}^^Oh, and the captain also changed the ship registry. The new name is {ship1_cargo3[0]}."  
     print(f"message1D: {message1D}")
+    print(ship1_cargo3)
 
 # Second and third suspect ships also transfer cargo and leave decoy clues.
 # Second ship (non-kidnapper), first stop. Transfers a container and leaves a clue.
@@ -451,13 +466,15 @@ tmp_cargo = [6, 8, 10, 12]
 xfer_idx1 = tmp_cargo.pop(random.randint(0,len(tmp_cargo)-1))
 new_good1 = ship2_cargo2.pop()
 new_cont1 = ship2_cargo2.pop()
+ship2_cargo3.remove(new_good1)
+ship2_cargo3.remove(new_cont1)
 tmpmsg1 = "Container " + ship2_cargo2[xfer_idx1 - 1] + ": " + ship2_cargo2[xfer_idx1] 
 tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
 ship2_cargo2[xfer_idx1 - 1] = new_cont1
 ship2_cargo2[xfer_idx1] = new_good1
-ship2_cargo3 = ship2_cargo2
+ship2_cargo3[xfer_idx1 - 1] = new_cont1
+ship2_cargo3[xfer_idx1] = new_good1
 shared message2C = "Yes, " + ship2_cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship2_cargo2[5]}: {ship2_cargo2[6]}^Hold 2 - Container {ship2_cargo2[7]}: {ship2_cargo2[8]}^Hold 3 - Container {ship2_cargo2[9]}: {ship2_cargo2[10]}^Hold 4 - Container {ship2_cargo2[11]}: {ship2_cargo2[12]}^^Oh, and something else I noticed. " + s_clue1  
-print(f"message2C: {message2C}")
 # Second ship (non-kidnapper), second stop. Transfers two containers.
 tmp_cargo = [6, 8, 10, 12]
 xfer_idx1 = tmp_cargo.pop(random.randint(0,len(tmp_cargo)-1))
@@ -473,59 +490,94 @@ ship2_cargo3[xfer_idx1] = new_good1
 ship2_cargo3[xfer_idx2 - 1] = new_cont2
 ship2_cargo3[xfer_idx2] = new_good2
 shared message2D = "Yes, " + ship2_cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship2_cargo3[5]}: {ship2_cargo3[6]}^Hold 2 - Container {ship2_cargo3[7]}: {ship2_cargo3[8]}^Hold 3 - Container {ship2_cargo3[9]}: {ship2_cargo3[10]}^Hold 4 - Container {ship2_cargo3[11]}: {ship2_cargo3[12]}"  
-print(f"message2D: {message2D}")
-# Third ship (non-kidnapper), first stop. Transfers two containers.
+# Third ship (non-kidnapper), first stop. Transfers one container, and leaves a clue.
+tmp_cargo = [6, 8, 10, 12]
+xfer_idx1 = tmp_cargo.pop(random.randint(0,len(tmp_cargo)-1))
+new_good1 = ship3_cargo2.pop()
+new_cont1 = ship3_cargo2.pop()
+ship3_cargo3.remove(new_good1)
+ship3_cargo3.remove(new_cont1)
+tmpmsg1 = "Container " + ship3_cargo2[xfer_idx1 - 1] + ": " + ship3_cargo2[xfer_idx1] 
+tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
+ship3_cargo2[xfer_idx1 - 1] = new_cont1
+ship3_cargo2[xfer_idx1] = new_good1
+ship3_cargo3[xfer_idx1 - 1] = new_cont1
+ship3_cargo3[xfer_idx1] = new_good1
+shared message3C = "Yes, " + ship3_cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship3_cargo2[5]}: {ship3_cargo2[6]}^Hold 2 - Container {ship3_cargo2[7]}: {ship3_cargo2[8]}^Hold 3 - Container {ship3_cargo2[9]}: {ship3_cargo2[10]}^Hold 4 - Container {ship3_cargo2[11]}: {ship3_cargo2[12]}^^Oh, and something else I noticed. " + s_clue2  
+# Third ship (non-kidnapper), second stop. Transfers two containers.
 tmp_cargo = [6, 8, 10, 12]
 xfer_idx1 = tmp_cargo.pop(random.randint(0,len(tmp_cargo)-1))
 xfer_idx2 = tmp_cargo.pop(random.randint(0,len(tmp_cargo)-1))
-new_good1 = ship3_cargo2.pop()
-new_cont1 = ship3_cargo2.pop()
-new_good2 = ship3_cargo2.pop()
-new_cont2 = ship3_cargo2.pop()
-tmpmsg1 = "Container " + ship3_cargo2[xfer_idx1 - 1] + ": " + ship3_cargo2[xfer_idx1] + " and Container " + ship3_cargo2[xfer_idx2 - 1] + ": " + ship3_cargo2[xfer_idx2]
-tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
-ship3_cargo2[xfer_idx1 - 1] = new_cont1
-ship3_cargo2[xfer_idx1] = new_good1
-ship3_cargo2[xfer_idx2 - 1] = new_cont2
-ship3_cargo2[xfer_idx2] = new_good2
-ship3_cargo3 = ship3_cargo2
-shared message3C = "Yes, " + ship3_cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship3_cargo2[5]}: {ship3_cargo2[6]}^Hold 2 - Container {ship3_cargo2[7]}: {ship3_cargo2[8]}^Hold 3 - Container {ship3_cargo2[9]}: {ship3_cargo2[10]}^Hold 4 - Container {ship3_cargo2[11]}: {ship3_cargo2[12]}"  
-print(f"message3C: {message3C}")
-# Third ship (non-kidnapper), second stop. Transfers one container, and leaves a clue.
-tmp_cargo = [6, 8, 10, 12]
-xfer_idx1 = tmp_cargo.pop(random.randint(0,len(tmp_cargo)-1))
 new_good1 = ship3_cargo3.pop()
 new_cont1 = ship3_cargo3.pop()
-tmpmsg1 = "Container " + ship3_cargo3[xfer_idx1 - 1] + ": " + ship3_cargo3[xfer_idx1] 
-tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
+new_good2 = ship3_cargo3.pop()
+new_cont2 = ship3_cargo3.pop()
+tmpmsg1 = "Container " + ship3_cargo3[xfer_idx1 - 1] + ": " + ship3_cargo3[xfer_idx1] + " and Container " + ship3_cargo3[xfer_idx2 - 1] + ": " + ship3_cargo3[xfer_idx2]
+tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
 ship3_cargo3[xfer_idx1 - 1] = new_cont1
 ship3_cargo3[xfer_idx1] = new_good1
-shared message3D = "Yes, " + ship3_cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship3_cargo3[5]}: {ship3_cargo3[6]}^Hold 2 - Container {ship3_cargo3[7]}: {ship3_cargo3[8]}^Hold 3 - Container {ship3_cargo3[9]}: {ship3_cargo3[10]}^Hold 4 - Container {ship3_cargo3[11]}: {ship3_cargo3[12]}^^Oh, and something else I noticed. " + s_clue2  
-print(f"message3D: {message3D}")
+ship3_cargo3[xfer_idx2 - 1] = new_cont2
+ship3_cargo3[xfer_idx2] = new_good2
+shared message3D = "Yes, " + ship3_cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {ship3_cargo3[5]}: {ship3_cargo3[6]}^Hold 2 - Container {ship3_cargo3[7]}: {ship3_cargo3[8]}^Hold 3 - Container {ship3_cargo3[9]}: {ship3_cargo3[10]}^Hold 4 - Container {ship3_cargo3[11]}: {ship3_cargo3[12]}"  
+
+rand3 = random.randint(1, 3)
+if rand3 == 1:
+    shared investigate_msg = ship1_cargo1[0] + "^" + ship2_cargo1[0] + "^" + ship3_cargo1[0]
+elif rand3 == 2:
+    shared investigate_msg = ship2_cargo3[0] + "^" + ship1_cargo1[0] + "^" + ship3_cargo1[0]
+elif rand3 == 3:
+    shared investigate_msg = ship3_cargo3[0] + "^" + ship2_cargo1[0] + "^" + ship1_cargo1[0]
+
+# Drop a secret codecase near DS1
+ds1_list = to_object_list(role("ds1"))
+ds1_obj = to_object(ds1_list[0])
+ds1_pos = ds1_obj.pos
+pickup_spawn(ds1_pos.x, ds1_pos.y, ds1_pos.z - 500, "secret_codecase")
 
 task_schedule(scanning_cargo_containers)
 
-#task_schedule(check_ambassador_rescued)
+task_schedule(check_ambassador_rescued)
+
+shared ambassador_face = "ter #523b3f 0 0;ter #523b3f 2 0;ter #523b3f 5 2;ter #5d0463 7 4 6 -2;ter #5d0463 9 3 12 -2;ter #5d0463 6 4 6 -2;ter #fff 0 7;ter #33ff33 14 1 16 4;"
+shared admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 1 2;ter #fff 4 4;ter #964b00 8 4;"
+
+task_schedule(kidnap_message)
+
+#p_list = to_object_list(role("__player__"))
+#p_obj = to_object(p_list[0])
+#p_pos = p_obj.pos
+#pickup_spawn(p_pos.x, p_pos.y, p_pos.z + 700, "escape-pod")
+
+//collision/interactive if has_roles(COLLISION_ORIGIN_ID, "escape-pod")
+    kidnap_status = 3
+    send_general_message("Ambassador Florbin", "Thank you for rescuing me! I'll make sure you get a commendation for this. Now, if you could just drop be off back at DS 1, there's a new episode of 'Zed Star Five' I need to get back to.", ambassador_face, COLLISION_SELECTED_ID)
+    pest_id = COLLISION_SELECTED_ID
+    pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    pest_list = shipname_data.get("complaints")
+    task_schedule(pest_messages)
 
 //comms if has_roles(COMMS_SELECTED_ID, "tsn, station, ds1") 
 + "Investigate Kidnapping" //comms/investigate_kidnapping 
 
 //comms/investigate_kidnapping  
-comms_receive(f"""Ambassador Florbin has been kidnapped! We believe they were smuggled out in a cargo container. The last three ships to leave were:^^{ship1_cargo1[0]}^{ship2_cargo1[0]}^{ship3_cargo1[0]}^^If you hurry, you might be able to catch them!^""", title="Ambassador Kidnapped", title_color=station_color)
+comms_receive(f"""Ambassador Florbin has been kidnapped! We believe they were smuggled out in a cargo container. The last three ships to leave were:^^{investigate_msg}^^If you hurry, you might be able to catch them!^^The cargo ships travel from station to station, transferring cargo at each stop, so you may have to follow their flight plan, visit different stations, and interview people to get clues. Someone may have noticed something odd or suspicious.^^When you find the Ambassador, bring him back to DS 1.^""", title="Ambassador Kidnapped", title_color="orange")
 + "Cargo Manifest {ship1_cargo1[0]}" cargo_manifest_ship1 
 + "Cargo Manifest {ship2_cargo1[0]}" cargo_manifest_ship2 
-+ "Cargo Manifest {ship3_cargo1[0]}" cargo_manifest_ship3 
++ "Cargo Manifest {ship3_cargo1[0]}" cargo_manifest_ship3
 
 ===== cargo_manifest_ship1 =====
-comms_receive(f"""Our records indicate {ship1_cargo1[0]} docked at this station at 08:34. It loaded^^Hold 1 - Container {ship1_cargo1[5]}: {ship1_cargo1[6]}^Hold 2 - Container {ship1_cargo1[7]}: {ship1_cargo1[8]}^Hold 3 - Container {ship1_cargo1[9]}: {ship1_cargo1[10]}^Hold 4 - Container {ship1_cargo1[11]}: {ship1_cargo1[12]}^^Their flight plan said they were headed for DS {ship1_cargo1[2]}.^""", title="Cargo Manifest", title_color=station_color)
+temp_msg = "Cargo Manifest " + ship1_cargo1[0]
+comms_receive(f"""Our records indicate {ship1_cargo1[0]} docked at this station at 08:34. It loaded^^Hold 1 - Container {ship1_cargo1[5]}: {ship1_cargo1[6]}^Hold 2 - Container {ship1_cargo1[7]}: {ship1_cargo1[8]}^Hold 3 - Container {ship1_cargo1[9]}: {ship1_cargo1[10]}^Hold 4 - Container {ship1_cargo1[11]}: {ship1_cargo1[12]}^^Their flight plan said they were headed for DS {ship1_cargo1[2]}.^""", title=temp_msg, title_color="orange")
 yield success
 
 ===== cargo_manifest_ship2 =====
-comms_receive(f"""Our records indicate {ship2_cargo1[0]} docked at this station at 09:18. It loaded^^Hold 1 - Container {ship2_cargo1[5]}: {ship2_cargo1[6]}^Hold 2 - Container {ship2_cargo1[7]}: {ship2_cargo1[8]}^Hold 3 - Container {ship2_cargo1[9]}: {ship2_cargo1[10]}^Hold 4 - Container {ship2_cargo1[11]}: {ship2_cargo1[12]}^^Their flight plan said they were headed for DS {ship2_cargo1[2]}.^""", title="Cargo Manifest", title_color=station_color)
+temp_msg = "Cargo Manifest " + ship2_cargo1[0]
+comms_receive(f"""Our records indicate {ship2_cargo1[0]} docked at this station at 09:18. It loaded^^Hold 1 - Container {ship2_cargo1[5]}: {ship2_cargo1[6]}^Hold 2 - Container {ship2_cargo1[7]}: {ship2_cargo1[8]}^Hold 3 - Container {ship2_cargo1[9]}: {ship2_cargo1[10]}^Hold 4 - Container {ship2_cargo1[11]}: {ship2_cargo1[12]}^^Their flight plan said they were headed for DS {ship2_cargo1[2]}.^""", title=temp_msg, title_color="orange")
 yield success
 
 ===== cargo_manifest_ship3 =====
-comms_receive(f"""Our records indicate {ship3_cargo1[0]} docked at this station at 10:22. It loaded^^Hold 1 - Container {ship3_cargo1[5]}: {ship3_cargo1[6]}^Hold 2 - Container {ship3_cargo1[7]}: {ship3_cargo1[8]}^Hold 3 - Container {ship3_cargo1[9]}: {ship3_cargo1[10]}^Hold 4 - Container {ship3_cargo1[11]}: {ship3_cargo1[12]}^^Their flight plan said they were headed for DS {ship3_cargo1[2]}.^""", title="Cargo Manifest", title_color=station_color)
+temp_msg = "Cargo Manifest " + ship3_cargo1[0]
+comms_receive(f"""Our records indicate {ship3_cargo1[0]} docked at this station at 10:22. It loaded^^Hold 1 - Container {ship3_cargo1[5]}: {ship3_cargo1[6]}^Hold 2 - Container {ship3_cargo1[7]}: {ship3_cargo1[8]}^Hold 3 - Container {ship3_cargo1[9]}: {ship3_cargo1[10]}^Hold 4 - Container {ship3_cargo1[11]}: {ship3_cargo1[12]}^^Their flight plan said they were headed for DS {ship3_cargo1[2]}.^""", title=temp_msg, title_color="orange")
 yield success
 
 
@@ -643,88 +695,94 @@ if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5
 
 ===== investigate_message_1A =====
 rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+temp_msg = "Info on " + ship1_cargo2[0]
 if rec_status == 1:
-    comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. At the time they left, their cargo manifest said they were carrying^^Container {ship1_cargo2[5]}: {ship1_cargo2[6]}^Container {ship1_cargo2[7]}: {ship1_cargo2[8]}^Container {ship1_cargo2[9]}: {ship1_cargo2[10]}^Container {ship1_cargo2[11]}: {ship1_cargo2[12]}""")
+    comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. At the time they left, their cargo manifest said they were carrying^^Container {ship1_cargo2[5]}: {ship1_cargo2[6]}^Container {ship1_cargo2[7]}: {ship1_cargo2[8]}^Container {ship1_cargo2[9]}: {ship1_cargo2[10]}^Container {ship1_cargo2[11]}: {ship1_cargo2[12]}""", title=temp_msg, title_color="orange")
 elif rec_status == 2:
-    comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Deck Chief about that.""")
+    comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
 elif rec_status == 3:
-    comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Deck Chief about that.""")
+    comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
 yield success
 
 ===== investigate_message_1B =====
 rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+temp_msg = "Info on " + ship1_cargo2[0]
 if rec_status == 1:
-    comms_receive(f"""{ship1_cargo3[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. At the time they left, their cargo manifest said they were carrying^^Container {ship1_cargo3[5]}: {ship1_cargo3[6]}^Container {ship1_cargo3[7]}: {ship1_cargo3[8]}^Container {ship1_cargo3[9]}: {ship1_cargo3[10]}^Container {ship1_cargo3[11]}: {ship1_cargo3[12]}""")
+    comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. At the time they left, their cargo manifest said they were carrying^^Container {ship1_cargo3[5]}: {ship1_cargo3[6]}^Container {ship1_cargo3[7]}: {ship1_cargo3[8]}^Container {ship1_cargo3[9]}: {ship1_cargo3[10]}^Container {ship1_cargo3[11]}: {ship1_cargo3[12]}""", title=temp_msg, title_color="orange")
 elif rec_status == 2:
-    comms_receive(f"""{ship1_cargo3[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Deck Chief about that.""")
+    comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
 elif rec_status == 3:
-    comms_receive(f"""{ship1_cargo3[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Deck Chief about that.""")
+    comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
 yield success
 
 ===== investigate_message_1C =====
-comms_receive(f"""{message1C}""")
+comms_receive(f"""{message1C}""", title="Deck Chief Report", title_color="orange")
 yield success
 
 ===== investigate_message_1D =====
-comms_receive(f"""{message1D}""")
+comms_receive(f"""{message1D}""", title="Deck Chief Report", title_color="orange")
 yield success
 
 
 ===== investigate_message_2A =====
 rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+temp_msg = "Info on " + ship2_cargo2[0]
 if rec_status == 1:
-    comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. At the time they left, their cargo manifest said they were carrying^^Container {ship2_cargo2[5]}: {ship2_cargo2[6]}^Container {ship2_cargo2[7]}: {ship2_cargo2[8]}^Container {ship2_cargo2[9]}: {ship2_cargo2[10]}^Container {ship2_cargo2[11]}: {ship2_cargo2[12]}""")
+    comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. At the time they left, their cargo manifest said they were carrying^^Container {ship2_cargo2[5]}: {ship2_cargo2[6]}^Container {ship2_cargo2[7]}: {ship2_cargo2[8]}^Container {ship2_cargo2[9]}: {ship2_cargo2[10]}^Container {ship2_cargo2[11]}: {ship2_cargo2[12]}""", title=temp_msg, title_color="orange")
 elif rec_status == 2:
-    comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Maintenance Crew about that.""")
+    comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
 elif rec_status == 3:
-    comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Maintenance Crew about that.""")
+    comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
 yield success
 
 ===== investigate_message_2B =====
 rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+temp_msg = "Info on " + ship2_cargo3[0]
 if rec_status == 1:
-    comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. At the time they left, their cargo manifest said they were carrying^^Container {ship2_cargo3[5]}: {ship2_cargo3[6]}^Container {ship2_cargo3[7]}: {ship2_cargo3[8]}^Container {ship2_cargo3[9]}: {ship2_cargo3[10]}^Container {ship2_cargo3[11]}: {ship2_cargo3[12]}""")
+    comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. At the time they left, their cargo manifest said they were carrying^^Container {ship2_cargo3[5]}: {ship2_cargo3[6]}^Container {ship2_cargo3[7]}: {ship2_cargo3[8]}^Container {ship2_cargo3[9]}: {ship2_cargo3[10]}^Container {ship2_cargo3[11]}: {ship2_cargo3[12]}""", title=temp_msg, title_color="orange")
 elif rec_status == 2:
-    comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Maintenance Cew about that.""")
+    comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Maintenance Cew about that.""", title=temp_msg, title_color="orange")
 elif rec_status == 3:
-    comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Maintenance Crew about that.""")
+    comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
 yield success
 
 ===== investigate_message_2C =====
-comms_receive(f"""{message2C}""")
+comms_receive(f"""{message2C}""", title="Maintenance Crew Report", title_color="orange")
 yield success
 
 ===== investigate_message_2D =====
-comms_receive(f"""{message2D}""")
+comms_receive(f"""{message2D}""", title="Maintenance Crew Report", title_color="orange")
 yield success
 
 
 ===== investigate_message_3A =====
 rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+temp_msg = "Info on " + ship3_cargo2[0]
 if rec_status == 1:
-    comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. At the time the left, their cargo manifest said they were carrying^^Container {ship3_cargo2[5]}: {ship3_cargo2[6]}^Container {ship3_cargo2[7]}: {ship3_cargo2[8]}^Container {ship3_cargo2[9]}: {ship3_cargo2[10]}^Container {ship2_cargo3[11]}: {ship3_cargo2[12]}""")
+    comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. At the time the left, their cargo manifest said they were carrying^^Container {ship3_cargo2[5]}: {ship3_cargo2[6]}^Container {ship3_cargo2[7]}: {ship3_cargo2[8]}^Container {ship3_cargo2[9]}: {ship3_cargo2[10]}^Container {ship2_cargo3[11]}: {ship3_cargo2[12]}""", title=temp_msg, title_color="orange")
 elif rec_status == 2:
-    comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Cargo Master about that.""")
+    comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
 elif rec_status == 3:
-    comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Cargo Master about that.""")
+    comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
 yield success
 
 ===== investigate_message_3B =====
 rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+temp_msg = "Info on " + ship3_cargo3[0]
 if rec_status == 1:
-    comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. At the time the left, their cargo manifest said they were carrying^^Container {ship3_cargo3[5]}: {ship3_cargo3[6]}^Container {ship3_cargo3[7]}: {ship3_cargo3[8]}^Container {ship3_cargo3[9]}: {ship3_cargo3[10]}^Container {ship3_cargo3[11]}: {ship3_cargo3[12]}""")
+    comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. At the time the left, their cargo manifest said they were carrying^^Container {ship3_cargo3[5]}: {ship3_cargo3[6]}^Container {ship3_cargo3[7]}: {ship3_cargo3[8]}^Container {ship3_cargo3[9]}: {ship3_cargo3[10]}^Container {ship3_cargo3[11]}: {ship3_cargo3[12]}""", title=temp_msg, title_color="orange")
 elif rec_status == 2:
-    comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Cargo Master about that.""")
+    comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
 elif rec_status == 3:
-    comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Cargo Master about that.""")
+    comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
 yield success
 
 ===== investigate_message_3C =====
-comms_receive(f"""{message3C}""")
+comms_receive(f"""{message3C}""", title="Cargo Master's Report", title_color="orange")
 yield success
 
 ===== investigate_message_3D =====
-comms_receive(f"""{message3D}""")
+comms_receive(f"""{message3D}""", title="Cargo Master's Report", title_color="orange")
 yield success
 
 
@@ -809,6 +867,17 @@ tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
         <scan>
             % Container {tempcargo[11]}: {tempcargo[12]}. Contents verified.
 
+===== kidnap_message =====
+await delay_sim(15)
+
+for p in role("__player__"):
+    if p is not None:
+        send_general_message("Admiral Harkin", "Ambassador Florbin has been kidnapped! Contact DS1 for details.", admiral_face, p)
+
+->END
+
+
+
 ===== scanning_cargo_containers ======
 
 for p in role("__player__"):
@@ -872,8 +941,11 @@ target_pos(kidnapper_id, 90000, 0, 90000, throttle=1.5, target_id=0)
 //enable/comms if has_roles(COMMS_SELECTED_ID, "discovered")
 //comms if has_role(COMMS_SELECTED_ID, "discovered")
 
-yield fail if has_role(COMMS_SELECTED_ID, "surrendered")
-+ "Surrender now"  handle_kidnapper_surrender
+check_surrender = get_data_set_value(COMMS_SELECTED_ID, "surrender_flag")
+if check_surrender == 1:
+    yield fail
+else:
+    + "Surrender now"  handle_kidnapper_surrender
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "discovered")
 //science if has_roles(SCIENCE_SELECTED_ID, "discovered")
@@ -909,7 +981,7 @@ for s in range(shield_count):
     s_cur = blob.get("shield_val", s )
     s_ratio = min(s_cur/s_max, s_ratio)
 
-# Secret Codecase, force surrender if active, otherwise check shield ratio
+# Ship surrenders if Secret Codecase active or if shields < 50%
 if sc_timer > 0 or s_ratio < 0.5:
     kidnap_status = 2
     sc_timer = 0
@@ -923,38 +995,47 @@ if sc_timer > 0 or s_ratio < 0.5:
     comms_receive(f"""Escape Pod Deployed.""", title="Escape Pod", title_color=surrender_color)
     pickup_spawn(drop_pos.x, drop_pos.y, drop_pos.z, "escape-pod")
     await task_schedule(comms_do_surrender)
-#if s_ratio < 0.5:
-#    kidnap_status = 2
-#    e_obj = to_engine_object(COMMS_SELECTED_ID)
-#    _pos_eo = e_obj.pos
-#    _offset = e_obj.forward_vector()
-#    stop_pos = _pos_eo + (_offset * 500)
-#    target_pos(kidnapper_id, stop_pos.x, stop_pos.y, stop_pos.z, throttle=0.0, target_id=0, stop_dist=500)
-#    drop_pos = _pos_eo + (_offset * -100)
-#    comms_receive(f"""Escape Pod Deployed.""", title="Escape Pod", title_color=surrender_color)
-#    pickup_spawn(drop_pos.x, drop_pos.y, drop_pos.z, "escape-pod")
-#    await task_schedule(comms_do_surrender)
+    remove_role(kidnapper_id, "surrendered")
+    clear_target(kidnapper_id)
 else:
     comms_receive(f"""What are you talking about, {name}? We don't know anything about the ambassador!""", title="failed surrender", title_color=raider_color)
 
 yield success
 
-#===== check_ambassador_rescued ======
-#for p in role("__player__"):
-#    station = []
-#    station = all_roles("ds1")
-#    print(p)
-#    print(station)
-#    dist = sbs.distance_id(p, station)
-#    dock_status = p.data_set.get("dock_state", 0)
-#    check_pod = get_inventory_value(p, "escape-pod", 0)
-#    if dock_status == "docked" and dist <= 600 and check_pod > 0 and kidnap_status >= 2:
-#        p_obj = to_object(p)
-#        comms_receive(f"""Ambassador Florbin has been safely delivered back to DS 1. Well done, {p_obj.name}!""", title="Ambassador Rescued", title_color=green)
-#        ->END
-#
-#await delay_sim(5)
-#jump check_ambassador_rescued
+===== pest_messages =====
+await delay_sim(random.randint(180,300))
+if kidnap_status >= 4:
+    ->END
+if len(pest_idx) < 1:
+    pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+temp_idx = pest_idx.pop(random.randint(0,len(pest_idx) - 1))
+pest_message = pest_list[temp_idx]
+temp_face = get_face(pest_id)
+set_face(pest_id, ambassador_face)
+comms_receive_internal(f"""{pest_message}""", pest_id, "Ambassador Florbin", title="Passenger Request", title_color="green")
+set_face(pest_id, temp_face)
+jump pest_messages
+
+
+===== check_ambassador_rescued ======
+
+for p in role("__player__"):
+    ds1_list = to_object_list(role("ds1"))
+    ds1_id = to_id(ds1_list[0])
+    dist = sbs.distance_id(p, ds1_id)
+    p_obj = to_object(p)
+    dock_status = p_obj.data_set.get("dock_state", 0)
+    check_pod = get_inventory_value(p, "escape-pod", 0)
+    #if dock_status == "docked" and dist <= 600 and check_pod > 0 and kidnap_status >= 2:
+    if dock_status == "docked" and dist <= 600 and check_pod > 0:
+        admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 4 4;ter #964b00 8 4;"
+        send_general_message("Admiral Harkin", "Ambassador Florbin has been safely delivered back to DS 1! Well done, " + p_obj.name + "!", admiral_face, p)
+        #comms_message(f"Ambassador Florbin has been safely delivered back to DS 1. Well done, {p_obj.name}!", ds1_id, p, title="Ambassador Rescued", title_color="green")
+        kidnap_status = 4
+        ->END
+
+await delay_sim(5)
+jump check_ambassador_rescued
 
 
 #------------------------------------------------------------------------------------------------------------

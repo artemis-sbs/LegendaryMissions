@@ -82,3 +82,7 @@
     #print(f"Wreck created {dest_posx},{dest_posy},{dest_posz} HP: {wr_hp} Side: {wr_side} Name: {wr_hull}")
 
     ->END
+
+//damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby")
+    if kidnap_status < 2:
+        jump peacetime_ambassador_killed
