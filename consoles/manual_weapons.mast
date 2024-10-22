@@ -180,7 +180,7 @@ latest_target = _manual_system
 yield idle if critical
 
 target_id = get_weapons_selection(ship_id)
-yield = target_id==0
+jump manual_weapons_show if target_id==0
 t = to_object(target_id)
 jump manual_weapons_show if t is None
 

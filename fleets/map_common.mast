@@ -107,6 +107,8 @@ for count in range(civilian_count):
     set_face(friend, random_terran(civilian=True))
     count += 1
 
+->END if world_select.path == "sandbox"
+
 
 ====== spawn_players =======
 #

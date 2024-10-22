@@ -4,7 +4,7 @@
 #
 
 //mission/deliver "Deliver Munitions" if has_role(AGENT_ID, "tsn, fighter")
-" Pick up {torp_type} torpedoes at {station.name} and deliver them to {player.name}
+    " Pick up {torp_type} torpedoes at {station.name} and deliver them to {player.name}
 
     # This is called when the mission is created 
     # Data created here can be used in the mission description text

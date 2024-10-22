@@ -186,16 +186,10 @@ set_inventory_value(CRAFT_ID, "briefing", "No missions set")
     ->END if so is None
     side = so.side
 
-
-    mission_types = ["ammunition"] #, "upgrade"]
-    mission_type = random.choice(range(len(mission_types)))
-
     # get player on my side, and exclude me
     CRAFT_ID = SPAWNED_ID
     OBJECTIVE_ID = random_id(role(get_side(SPAWNED_ID)) & role("__player__") - to_set(SPAWNED_ID))
-
-    stations = set(role("station"))
-    station = random.choice(list(stations))
+    
     set_inventory_value(SPAWNED_ID, "briefing", f"Mission patrol stations. Visit all of the stations then dock.")
 
 ---- wait_for_launch
@@ -206,11 +200,12 @@ set_inventory_value(CRAFT_ID, "briefing", "No missions set")
 
 
 --- rebuild
-
+    
     so = to_object(CRAFT_ID)
     ->END if so is None
 
 
+    stations = set(role("station"))
     idx = 0
     visit = ""
     for st in stations:
