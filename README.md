@@ -1,4 +1,4 @@
-# Legendary  issions
+# Legendary  Missions
 A Missions from Artemis Space Ship Bridge simulator reeimagined for Artemis: Cosmos.
 
 Written written using MAST (Multi-agent story telling).
