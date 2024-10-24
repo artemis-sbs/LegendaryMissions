@@ -1040,3 +1040,7 @@ jump check_ambassador_rescued
 
 #------------------------------------------------------------------------------------------------------------
 
+
+//damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby")
+    if kidnap_status < 2:
+        jump peacetime_ambassador_killed
