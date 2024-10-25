@@ -2,17 +2,27 @@
 
 
 //comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-+"Sickbay" //comms/internal/sickbay
-+"Security" //comms/internal/security
-+"Exobiology" //comms/internal/exobiology
-+"Counselor" //comms/internal/counselor 
+
+default sickbay_face = random_terran()
+=$sickbay blue,white,sickbay_face
+default security_face = random_terran()
+=$security red,white,security_face
+default biology_face = random_terran()
+=$biology cyan,white,biology_face
+default counselor_face = random_terran()
+=$counselor gold,white,counselor_face
+
++[$sickbay] "Sickbay" //comms/internal/sickbay
++[$security] "Security" //comms/internal/security
++[$biology] "Exobiology" //comms/internal/exobiology
++[$counselor]"Counselor" //comms/internal/counselor 
     
 
 //comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
 +"Back" //comms
 
 +"Status":
-    <<[blue,white] "Sickbay status"
+    <<[$sickbay] "Sickbay status"
         % No serious injuries currently 
         % Sickbay is ready when needed
         % 
@@ -20,32 +30,42 @@
 //comms/internal/security if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
 +"Back" //comms
 +"Status":
-    <<[red,white] "Security update"
+    <<[$security] "Security update"
         % All secure
         % All quiet on the port bow
         % Times like this boring is good
 
 //comms/internal/exobiology if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
 +"Back" //comms
-
-+"Exobiology":
-    <<[green] "exobiology Potential biohazard"
+default pathogen_test = None
++"Test for pathogen" if pathogen_test is None:
+    <<[$biology] "exobiology Potential biohazard"
         "Testing running, one moment
 
     # It is best to schedule delayed responses so the comms buttons are not stalled
-    task_schedule(test_finished)
+    pathogen_test = sub_task_schedule(test_finished)
+
++"Cancel pathogen test" if pathogen_test is not None:
+    task_cancel(pathogen_test)
+    pathogen_test  = None
+    <<[$biology] "exobiology Potential biohazard"
+        "pathogen test aborted, per request
+
++"Status of pathogen test" if pathogen_test is not None:
+    <<[$biology] "exobiology Potential biohazard"
+        "Testing still running, one moment
 
 //comms/internal/counselor if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
 +"Back" //comms
 
 + "Status":
-    <<[purple, white] "counselor crew update"
+    <<[$counselor] "counselor crew update"
         "Something is disturbing the crew
     #
     # but you can delay comms, There will be no buttons during this delay
     #
     await delay_sim(seconds=3)
-    <<[purple, white] "counselor crew update"
+    <<[$counselor] "counselor crew update"
         "Things feel like they are getting worse
     
 
@@ -56,10 +76,10 @@
 # This is a new task to delay the response of the test results
 # COMMS variables should migrate to this task
 
-await delay_sim(seconds=2)
-<<[green,white]  "exobiology biohazard test results"
+await delay_sim(seconds=10)
+<<[$biology]  "exobiology biohazard test results"
     "test results finished. Tell the captain we do not have a pathogen.
-
+pathogen_test = None
 ->END
 
 

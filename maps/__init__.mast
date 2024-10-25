@@ -1,5 +1,4 @@
 import mission_story.mast
-import terrain_common.py
 import mission_helper_functions.py
 
 import siege.mast

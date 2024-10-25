@@ -17,8 +17,8 @@ set_inventory_value(SPAWNED_ID, "max_crew_size", crew_size)
 #
 # This is duplicated in player_internal, but should resolve to one
 #
-//comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-+"Sickbay" //comms/internal/sickbay
+#//comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
+#+"Sickbay" //comms/internal/sickbay
 
 
 #
@@ -30,7 +30,7 @@ set_inventory_value(SPAWNED_ID, "max_crew_size", crew_size)
 +"Crew status":
     crew_size = COMMS_ORIGIN["crew_size"] #| 0
     dead = COMMS_ORIGIN["casulaty_count"] # | 0
-    <<[blue,white] "sickbay crew health"
+    <<[$sickbay] "sickbay crew health"
         " Currently we have {crew_size} healthy crew members and {dead} casualties
 
 
