@@ -22,7 +22,7 @@ property_pane = None
     camera_id = cambot_id
     cambot = to_object(cambot_id)
     if cambot_id is None or cambot is None:
-        cambot = to_object(player_spawn(0,0,10, "Admiral", "#,admiral", "invisible")) 
+        cambot = to_object(player_spawn(0,0,10, "", "tsn,admiral", "invisible")) 
         remove_role(cambot, "__player__")
         camera_id = to_id(cambot)
         set_inventory_value(client_id, "ADMIRAL_COMBOT", camera_id)
@@ -35,7 +35,7 @@ property_pane = None
     #
     # Should have a way to get all factions/side
     #
-    cambot.data_set.set("ally_list","tsn,raider",0)
+    #cambot.data_set.set("ally_list","tsn,civ,raider",0)
     cambot.data_set.set("ship_base_scan_range", 35000,0)
 
     await delay_sim(1)
