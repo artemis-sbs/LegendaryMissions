@@ -103,7 +103,7 @@ for count in range(civilian_count):
     
     civ_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
 
-    friend = to_id(npc_spawn(*spawn_pos, civ_name, "tsn, friendly, civilian", ship["key"], "behav_npcship"))
+    friend = to_id(npc_spawn(*spawn_pos, civ_name, "civ, tsn, friendly, civilian", ship["key"], "behav_npcship"))
     set_face(friend, random_terran(civilian=True))
     count += 1
 

@@ -17,7 +17,7 @@ from fleet import fleet_spawn
 
 def player_ship_update_friendly(player_id, friends, initial_scan = False):
     blob = to_blob(player_id)
-    num_ids = blob.get("num_extra_scan_sources",0)
+    num_ids = 0 # blob.get("num_extra_scan_sources",0)
 
     for friend in friends:
         blob.set("extra_scan_source", to_id(friend), num_ids)
