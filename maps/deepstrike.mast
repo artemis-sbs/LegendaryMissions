@@ -5,79 +5,12 @@
 " an assault into enemy territory, which is defended by enemy bases.
 
 
-terrain_value = 0
-if "few" == terrain_select:
-    terrain_value = 1
+terrain_value = terrain_to_value(terrain_select)
+lethal_value =  terrain_to_value(lethal_select)
+friendly_value = 0 # No friendlies
+monster_value = terrain_to_value(monster_select)
+upgrade_value = terrain_to_value(upgrade_select)
 
-if "some" == terrain_select:
-    terrain_value = 2
-
-if "lots" == terrain_select:
-    terrain_value = 3
-
-if "many" == terrain_select:
-    terrain_value = 4
-
-
-lethal_value = 0
-if "few" == lethal_select:
-    lethal_value = 1
-
-if "some" == lethal_select:
-    lethal_value = 2
-
-if "lots" == lethal_select:
-    lethal_value = 3
-
-if "many" == lethal_select:
-    lethal_value = 4
-
-
-friendly_value = 0
-#if "few" == friendly_select:
-#    friendly_value = 1
-#
-#if "some" == friendly_select:
-#    friendly_value = 2
-#
-#if "lots" == friendly_select:
-#    friendly_value = 3
-#
-#if "many" == friendly_select:
-#    friendly_value = 4
-
-
-monster_value = 0
-if "few" == monster_select:
-    monster_value = 1
-
-if "some" == monster_select:
-    monster_value = 2
-
-if "lots" == monster_select:
-    monster_value = 3
-
-if "many" == monster_select:
-    monster_value = 4
-
-
-upgrade_value = 0
-num_upgrade = 0
-if "few" == upgrade_select:
-    upgrade_value = 1
-    num_upgrade = random.randint(1,3)
-
-if "some" == upgrade_select:
-    upgrade_value = 2
-    num_upgrade = random.randint(3,5)
-
-if "lots" == upgrade_select:
-    upgrade_value = 3
-    num_upgrade = random.randint(5,10)
-
-if "many" == upgrade_select:
-    upgrade_value = 4
-    num_upgrade = random.randint(10,15)
 
 if seed_value != 0:
     random.seed(seed_value)
@@ -86,6 +19,8 @@ else:
     seed_value = random.randint(1,99999)
     random.seed(seed_value)
     print(f"Random Seed Value: {seed_value}")
+
+
 
 #------------------------------------------------------------------------------------------------------------
 # Determine Enemy Antagonists
@@ -110,6 +45,16 @@ new_pos = Vec3(20000,0,1500)
 my_players = to_object_list(role("__player__"))
 for player in my_players:
     player.pos = new_pos
+
+########################
+# Build out terrain etc.
+# No stations
+# No Friendlies`
+terrain_asteroid_clusters(terrain_value)
+terrain_spawn_nebula_clusters(terrain_value)
+terrain_spawn_pickups(upgrade_value)
+terrain_spawn_monsters(monster_value)
+terrain_spawn_black_holes(lethal_value)
 
 
 #------------------------------------------------------------------------------------------------------------
@@ -178,78 +123,6 @@ for index in range(num_enemy_stations):
 
     create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
 
-
-
-#------------------------------------------------------------------------------------------------------------
-#
-## make a few random clusters of nebula
-#
-t_min = terrain_value * 6
-t_max = t_min * 2
-spawn_points = scatter.box(random.randint(t_min,t_max), 0,0,0, 100000, 1000, 100000, centered=True)
-for v in spawn_points:
-    cluster_spawn_points = scatter_sphere(random.randint(terrain_value*2,terrain_value*4), v.x, 0,v.z, 1000, 10000, ring=False)
-    for v2 in cluster_spawn_points:
-        v2.y = v2.y % 500.0
-        nebula = terrain_spawn(v2.x, v2.y, v2.z,None, "#, nebula", "nebula", "behav_nebula")
-        nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
-        nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
-        nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
-
-
-#------------------------------------------------------------------------------------------------------------
-# make a few random clusters of Asteroids
-terrain_asteroid_clusters(terrain_value)                
-
-#------------------------------------------------------------------------------------------------------------
-# I want candy
-
-#Uncomment to see upgrade debug logs
-#logger("upgrades")
-log(f"Number of Upgrades: {num_upgrade}", "upgrades")
-
-spawn_points = scatter.box(num_upgrade, 0,0,0, 75000, 1000, 75000, centered=True)
-for v in spawn_points:
-    upg = random.randint(1,9)
-    if upg == 1:
-        pickup_spawn(v.x, v.y, v.z, "carapaction_coil")
-        log(f"Carapaction Coil spawned {v.x},{v.y},{v.z}", "upgrades")
-
-    if upg == 2:
-        pickup_spawn(v.x, v.y, v.z,  "infusion_pcoils")
-        log(f"Infusion P-Coil spawned {v.x},{v.y},{v.z}", "upgrades")
-
-    if upg == 3:
-        pickup_spawn(v.x, v.y, v.z, "tauron_focuser")
-        log(f"Tauron Focuser spawned {v.x},{v.y},{v.z}","upgrades")
-
-    if upg == 4:
-        pickup_spawn(v.x, v.y, v.z, "secret_codecase")
-        log("Secret Codecase spawned {v.x},{v.y},{v.z}","upgrades")
-
-    if upg == 5:
-        pickup_spawn(v.x, v.y, v.z, "hidens_powercell")
-        log(f"HiDens Powercell spawned {v.x},{v.y},{v.z}","upgrades")
-
-    if upg == 6:
-        pickup_spawn(v.x, v.y, v.z, "vigoranium_nodule")
-        log(f"Vigoranium Nodule spawned {v.x},{v.y},{v.z}","upgrades")
-
-    if upg == 7:
-        pickup_spawn(v.x, v.y, v.z, "cetrocite_crystal")
-        log(f"Cetrocite Crystal spawned {v.x},{v.y},{v.z}","upgrades")
-
-    if upg == 8:
-        pickup_spawn(v.x, v.y, v.z, "lateral_array")
-        log("Lateral Array spawned {v.x},{v.y},{v.z}", "upgrades")
-
-    if upg == 9:
-        pickup_spawn(v.x, v.y, v.z, "haplix_overcharger")
-        log("Haplix Overcharger spawned {v.x},{v.y},{v.z}","upgrades")
-
-spawn_points = scatter.box(monster_value, 0,0,0, 75000, 1000, 75000, centered=True)
-for v in spawn_points:
-    typhon_classic_spawn(*v.xyz)
 
 task_schedule(task_deepstrike_end_game)
 

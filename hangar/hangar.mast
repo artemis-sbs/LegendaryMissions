@@ -93,7 +93,16 @@ shared find_stray = task_schedule(find_stray_crafts)
     # Get all the available rides 
     #
 
-    crafts = to_object_list(all_roles(f"cockpit,standby,{side}"))
+    crafts =[]
+    docks = to_object_list(has_link("hangar_craft"))
+    ride_choice = None
+    dock_choice = None
+
+    if len(docks)>0:
+        crafts = hangar_get_crafts_at(docks[0])
+
+
+
     briefing = "Select a craft to pilot. If you accept the mission hit launch."
 
 
@@ -107,10 +116,11 @@ shared find_stray = task_schedule(find_stray_crafts)
 
     gui_section(style="area: 20px,10+20px, 35, 49;")
 
-    ride_choice = None
+    
+    dock_picker = gui_list_box(docks,"row-height: 1.3em; background:#1572;", item_template=hangar_console_dock_template, title_template=hangar_console_dock_title_template, select=True)
     ride_picker = gui_list_box(crafts,"row-height: 1.3em; background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)
     # ride_picker.title_background = "#1578"
-
+    
     gui_section(style="area: 20px,50, 35,50+20px;")
     gui_row(style="row-height:20px;")
     gui_text("$text:Mission Briefing;color: white;justify: center;", style="background: #1578;")
@@ -125,7 +135,8 @@ shared find_stray = task_schedule(find_stray_crafts)
     gui_layout_widget("2dview")
 
     fighter_change = 0
-    on change ride_picker.get_value():
+    ship_change_count = 0
+    on change ride_picker.get_value() or ship_change_count:
         ride_choice = ride_picker.get_value()
         if ride_choice is not None:
             fighter = ride_choice
@@ -144,6 +155,22 @@ shared find_stray = task_schedule(find_stray_crafts)
             gui_update("stats-2", "$text: {stats[1]}")
 
 
+    
+    on change dock_picker.get_value():
+        dock_choice = dock_picker.get_value()
+        if dock_choice is not None:
+            crafts = hangar_get_crafts_at(dock_choice)
+            ride_picker.items = crafts
+            gui_represent(ride_picker)
+            # set twice to make sure it catches a changes
+            sbs.assign_client_to_ship(client_id, to_id(dock_choice))
+            ride_picker.set_selected_index(0)
+            ship_change_count += 1
+
+
+    
+
+
     gui_section(style="area: 75,100-80px, 100,100-50px;background: #002;")
     gui_text("select ship", style="tag:refit-text")
 
@@ -158,12 +185,13 @@ shared find_stray = task_schedule(find_stray_crafts)
 
     on change fighter_change:
         gui_update("refit-text", "$text: select ship")
-        fighter = ride_choice
-        if is_timer_finished(fighter, "refit"):
-            gui_update("refit-text", "$text: ready to launch")
-        else:
-            refit_time = format_time_remaining(fighter, "refit")
-            gui_update("refit-text", "$text: refit - launch in {refit_time}")
+        if ride_choice is not None:
+            fighter = ride_choice
+            if is_timer_finished(fighter, "refit"):
+                gui_update("refit-text", "$text: ready to launch")
+            else:
+                refit_time = format_time_remaining(fighter, "refit")
+                gui_update("refit-text", "$text: refit - launch in {refit_time}")
 
 
 
@@ -192,6 +220,8 @@ shared find_stray = task_schedule(find_stray_crafts)
 
 
 
+    dock_picker.set_selected_index(0)
+    
     await gui()
     #    + "Head to Bar":
     #        print("Bar")
@@ -205,6 +235,8 @@ shared find_stray = task_schedule(find_stray_crafts)
 
     # print("Out of await")
     jump show_hangar
+
+    
 
 ==== launch_to_cockpit ======
 

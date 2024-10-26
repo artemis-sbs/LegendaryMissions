@@ -1,11 +1,12 @@
 from sbs_utils.fs import load_json_data, get_mission_dir_filename
 from random import randint
 from sbs_utils.procedural.spawn import player_spawn
-from sbs_utils.procedural.query import set_science_selection, to_object, to_id, object_exists, to_data_set
-from sbs_utils.procedural.links import link, unlink, get_dedicated_link, set_dedicated_link, linked_to
-from sbs_utils.procedural.roles import has_role, remove_role, any_role, role
+from sbs_utils.procedural.query import set_science_selection, to_object, to_id, object_exists, to_data_set, to_object_list
+from sbs_utils.procedural.links import link, unlink, get_dedicated_link, set_dedicated_link, linked_to, has_link
+from sbs_utils.procedural.roles import has_role, remove_role, any_role, role, all_roles
 from sbs_utils.procedural.space_objects import broad_test_around, closest, get_pos, set_pos
 from sbs_utils.procedural.routes import RouteDamageDestroy
+
 from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished
 from sbs_utils.procedural.execution import set_shared_variable, get_shared_variable, get_variable
 from sbs_utils.agent import Agent
@@ -342,12 +343,43 @@ def hangar_get_call_signs():
 def hangar_console_ship_template(item):
     gui_row("row-height: 1.2em;padding:13px;")
     gui_text(f"$text:{item.name};justify: left;")
-    gui_text(f"$text:{get_dock_name(item)};justify: left;")
     
 
 def hangar_console_title_template():
     gui_row("row-height: 1.2em;padding:13px;background:#1578;")
     gui_text(f"$text:SHIP;justify: left;")
+
+
+def hangar_get_docks(side):
+    docks = has_link("hangar_craft")
+    # crafts = all_roles(f"cockpit,standby,{side}")
+    # docks = set()
+    # for c in crafts:
+    #     dock = get_science_selection(c)
+    #     if dock is not None:
+    #         docks.add(dock)
+    return to_object_list(docks)
+
+def hangar_get_crafts_at(dock_id):
+    dock_id = to_id(dock_id)
+    if dock_id is None:
+        return
+    crafts = []
+    all_crafts = all_roles(f"cockpit,standby")
+    for c in all_crafts:
+        dock = get_science_selection(c)
+        if dock == dock_id:
+            crafts.append(to_object(c))
+    return crafts
+    
+
+def hangar_console_dock_template(item):
+    gui_row("row-height: 1.2em;padding:13px;")
+    gui_text(f"$text:{item.name};justify: left;")
+    
+
+def hangar_console_dock_title_template():
+    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
     gui_text(f"$text:DOCK;justify: left;")
 
 

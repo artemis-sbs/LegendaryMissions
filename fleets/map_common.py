@@ -17,7 +17,7 @@ from fleet import fleet_spawn
 
 def player_ship_update_friendly(player_id, friends, initial_scan = False):
     blob = to_blob(player_id)
-    num_ids = blob.get("num_extra_scan_sources",0)
+    num_ids = 0 # blob.get("num_extra_scan_sources",0)
 
     for friend in friends:
         blob.set("extra_scan_source", to_id(friend), num_ids)
@@ -45,22 +45,6 @@ def get_random_npc_call_sign(race):
     enemy_name_number = (enemy_name_number+1)%99
     return r_name
 
-def terrain_spawn_black_hole(x,y,z, gravity_radius= 1500, gravity_strength=1.0, turbulence_strength= 1.0, collision_damage=200):
-    global enemy_name_number
-
-    _prefix = "XEA"
-    r_name = f"{random.choice(_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
-    enemy_name_number = (enemy_name_number+1)%99
-
-    bh = to_object(terrain_spawn(x,y,z, r_name, "#,black_hole", "maelstrom", "behav_maelstrom"))
-    bh.engine_object.exclusion_radius = 100 # event horizon
-    blob = bh.data_set
-    blob.set("gravity_radius", gravity_radius, 0)
-    blob.set("gravity_strength", gravity_strength, 0)
-    blob.set("turbulence_strength", turbulence_strength, 0)
-    blob.set("collision_damage", collision_damage, 0)
-    # Note this returns the object, not spawn data. SpawnData is deprecated 
-    return bh
 
 
 engine_abilities = {
