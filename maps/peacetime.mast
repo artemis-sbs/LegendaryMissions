@@ -1,3 +1,7 @@
+shared ambassador_face = "ter #523b3f 0 0;ter #523b3f 2 0;ter #523b3f 5 2;ter #5d0463 7 4 6 -2;ter #5d0463 9 3 12 -2;ter #5d0463 6 4 6 -2;ter #fff 0 7;ter #33ff33 14 1 16 4;"
+shared admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 1 2;ter #fff 4 4;ter #964b00 8 4;"
+shared kidnap_status = 0
+
 @map/peacetime "Peacetime"
 " This scenario appears to still be in development.
 " There are very few enemy ships (none below difficulty 4,
@@ -198,7 +202,7 @@ if friendly_select != "none":
 
 ====== kidnap_caper ======
 
-shared kidnap_status = 0
+
 alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
 peacetime_list = shipname_data.get("peacetime")
 civname_list = shipname_data.get("civilian")
@@ -296,7 +300,8 @@ shared ship4_cargo3 = get_inventory_value(suspect_list[3], "cargo3")
 rand1 = 4 + (2 * random.randint(1,4))
 kidnap_clue = {}
 kidnap_clue = clue_list.pop(random.randint(0,19))
-shared kidnapper_id = suspect_list[0]
+#shared kidnapper_id = suspect_list[0]
+kidnapper_id = suspect_list[0]
 shared k_clue1 = kidnap_clue['clue']
 shared k_clue2 = kidnap_clue['container']
 kidnap_clue = clue_list.pop(random.randint(0,len(clue_list)-1))
@@ -538,9 +543,6 @@ task_schedule(scanning_cargo_containers)
 
 task_schedule(check_ambassador_rescued)
 
-shared ambassador_face = "ter #523b3f 0 0;ter #523b3f 2 0;ter #523b3f 5 2;ter #5d0463 7 4 6 -2;ter #5d0463 9 3 12 -2;ter #5d0463 6 4 6 -2;ter #fff 0 7;ter #33ff33 14 1 16 4;"
-shared admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 1 2;ter #fff 4 4;ter #964b00 8 4;"
-
 task_schedule(kidnap_message)
 
 #p_list = to_object_list(role("__player__"))
@@ -556,7 +558,7 @@ task_schedule(kidnap_message)
     pest_list = shipname_data.get("complaints")
     task_schedule(pest_messages)
 
-//comms if has_roles(COMMS_SELECTED_ID, "tsn, station, ds1") 
+//comms if has_roles(COMMS_SELECTED_ID, "tsn, station, ds1") and kidnap_status >= 1 
 + "Investigate Kidnapping" //comms/investigate_kidnapping 
 
 //comms/investigate_kidnapping  
@@ -1010,10 +1012,10 @@ if len(pest_idx) < 1:
     pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
 temp_idx = pest_idx.pop(random.randint(0,len(pest_idx) - 1))
 pest_message = pest_list[temp_idx]
-temp_face = get_face(pest_id)
-set_face(pest_id, ambassador_face)
-comms_receive_internal(f"""{pest_message}""", pest_id, "Ambassador Florbin", title="Passenger Request", title_color="green")
-set_face(pest_id, temp_face)
+#temp_face = get_face(pest_id)
+#set_face(pest_id, ambassador_face)
+comms_receive_internal(f"""{pest_message}""", pest_id, "Ambassador Florbin", title="Passenger Request", face=ambassador_face, title_color="green")
+#set_face(pest_id, temp_face)
 jump pest_messages
 
 

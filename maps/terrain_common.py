@@ -49,7 +49,7 @@ def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500, 
         #make the station ----------------------------------
         #print(f"Station at: {pos.x} {pos.y} {pos.z} - {startZ} {station_step}")
         name = f"DS {index+1}"
-        s_roles = f"tsn, station, ds{index+1}"
+        s_roles = f"tsn, station"
         station_object = npc_spawn(*pos, name, s_roles, stat_type, "behav_station")
         ds = to_id(station_object)
         set_face(ds, random_terran(civilian=True))
