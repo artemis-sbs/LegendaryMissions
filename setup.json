@@ -1,7 +1,7 @@
 {
-    "auto_start": false,
+    "auto_start": true,
     "auto_play": {
-        "enable": false
+        "enable": true
     },
     "operator_mode": {
         "enable": false,

@@ -380,6 +380,6 @@ def hangar_console_dock_template(item):
 
 def hangar_console_dock_title_template():
     gui_row("row-height: 1.2em;padding:13px;background:#1578;")
-    gui_text(f"$text:DOCK;justify: left;")
+    gui_text(f"$text:HANGAR LOCATION;justify: left;")
 
 
