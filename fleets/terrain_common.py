@@ -13,7 +13,7 @@ from monster import typhon_classic_spawn
 import math
 
 
-def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500, center=None):
+def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500, center=None, min_num=0):
     if center is None:
         center = Vec3(0,0,0)
 
@@ -32,6 +32,9 @@ def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500, 
 
         total_weight -= station_weight
         station_type_list.append(station_type)
+    
+    while len(station_type_list) < min_num:
+        station_type_list.append("starbase_civil")
 
     pos = Vec3(center)
     startZ = -50000
@@ -116,7 +119,8 @@ def peacetime_spawn_stations(difficulty, lethal_value, x_min=-35000, x_max=35000
 
         #make the station ----------------------------------
         name = f"DS {index+1}"
-        s_roles = f"tsn, station, ds{index+1}"
+        #s_roles = f"tsn, station, ds{index+1}"
+        s_roles = f"tsn, station"
         station_object = npc_spawn(*pos, name, s_roles, stat_type, "behav_station")
         ds = to_id(station_object)
         set_face(ds, random_terran(civilian=True))
