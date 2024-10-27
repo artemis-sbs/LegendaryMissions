@@ -95,6 +95,21 @@ sbs.play_music_file(0, "music/default/failure")
 signal_emit("show_game_results", None)
 ->END
 
+============ task_peacetime_end_game ======= 
+
+await delay_sim(4)
+
+# Check if time limit has expired.
+
+if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"):
+    start_text = "Mission time has run out!"
+    game_started = False
+    game_ended = True
+    sbs.play_music_file(0, "music/default/victory")
+    signal_emit("show_game_results", None)
+    ->END
+
+-> task_peacetime_end_game
 
 ============ task_borderwar_end_game ======= 
 

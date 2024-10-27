@@ -15,130 +15,24 @@ friendly_value = terrain_to_value(friendly_select)
 monster_value = terrain_to_value(monster_select)
 upgrade_value = terrain_to_value(upgrade_select)
 
-num_upgrade = 0
-if upgrade_value is not "none":
-    if upgrade_value == 1:
-        num_upgrade = random.randint(1,3)
-    elif upgrade_value == 2:
-        num_upgrade = random.randint(3,5)
-    elif upgrade_value == 3:
-        num_upgrade = random.randint(5,10)
-    elif upgrade_value == 4:
-        num_upgrade = random.randint(10,15)
-print("Number of Upgrades: {num_upgrade}")
-
-if seed_value != 0:
-    random.seed(seed_value)
-    print(f"Seed Value: {seed_value}")
-else:
-    seed_value = random.randint(1,99999)
-    random.seed(seed_value)
-    print(f"Random Seed Value: {seed_value}")
-
-#------------------------------------------------------------------------------------------------------------
-
-#peacetime_spawn_stations(difficulty, lethal_value)
 terrain_spawn_stations(difficulty, lethal_value, min_num=5)
 await task_schedule(spawn_friendly_npc)
+terrain_asteroid_clusters(terrain_value)
+terrain_spawn_nebula_clusters(terrain_value)
+terrain_spawn_pickups(upgrade_value)
+terrain_spawn_monsters(monster_value)
+terrain_spawn_black_holes(lethal_value)
 
 #------------------------------------------------------------------------------------------------------------
 # No enemy fleets in Peacetime
-# Generate Siege Fleets - These fleets are weighted towards Kraliens (based on difficulty), from 94% Kralien at Difficulty 1 
-# to 40% Kralien at Difficulty 10. The fleet lists can be found in 'map_common.py'. Skaraans are generated separately, as these 
-# 'independent contractors' tend to operate better on their own. The idea is to hopefully match the 'feel' of Artemis 2.x. 
-#
-#enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
-#
-# 
-#fleet_count = 3 + int(difficulty/2)
-#fleet_index = int(difficulty - 1)
-#
-#for a in range(fleet_count):
-#    enemy_temp = random.choices(enemyTypeNameList, weights=(100-6*difficulty, difficulty*2, difficulty*2, difficulty*2))
-#    enemy = enemy_temp[0]
-#    fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
-#    create_npc_fleet_and_ships(enemy, fleet_quality, fleet_quality/3, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-#    create_siege_fleet(enemy, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-#    if a > 1 and difficulty > 2:
-#        fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
-#        create_npc_fleet_and_ships("skaraan", 1,0, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-#        create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-
 
 #------------------------------------------------------------------------------------------------------------
-#
-## make a few random clusters of nebula
-#
-t_min = terrain_value * 6
-t_max = t_min * 2
-spawn_points = scatter.box(random.randint(t_min,t_max), 0,0,0, 100000, 1000, 100000, centered=True)
-for v in spawn_points:
-    cluster_spawn_points = scatter_sphere(random.randint(terrain_value*2,terrain_value*4), v.x, 0,v.z, 1000, 10000, ring=False)
-    for v2 in cluster_spawn_points:
-        v2.y = v2.y % 500.0
-        nebula = terrain_spawn(v2.x, v2.y, v2.z,None, "#, nebula", "nebula", "behav_nebula")
-        nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
-        nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
-        nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
+# "Find the kidnapped Abassador" mission starts if any friendly ships were selected. 
 
-
-#------------------------------------------------------------------------------------------------------------
-# make a few random clusters of Asteroids
-
-terrain_asteroid_clusters(terrain_value)                
-
-#------------------------------------------------------------------------------------------------------------
-# I want candy
-
-#Uncomment to see upgrade debug logs
-#logger("upgrades")
-log(f"Number of Upgrades: {num_upgrade}", "upgrades")
-
-spawn_points = scatter.box(num_upgrade, 0,0,0, 75000, 1000, 75000, centered=True)
-for v in spawn_points:
-    upg = random.randint(1,9)
-    if upg == 1:
-        pickup_spawn(v.x, v.y, v.z, "carapaction_coil")
-        log(f"Carapaction Coil spawned {v.x},{v.y},{v.z}", "upgrades")
-
-    if upg == 2:
-        pickup_spawn(v.x, v.y, v.z,  "infusion_pcoils")
-        log(f"Infusion P-Coil spawned {v.x},{v.y},{v.z}", "upgrades")
-
-    if upg == 3:
-        pickup_spawn(v.x, v.y, v.z, "tauron_focuser")
-        log(f"Tauron Focuser spawned {v.x},{v.y},{v.z}","upgrades")
-
-    if upg == 4:
-        pickup_spawn(v.x, v.y, v.z, "secret_codecase")
-        log("Secret Codecase spawned {v.x},{v.y},{v.z}","upgrades")
-
-    if upg == 5:
-        pickup_spawn(v.x, v.y, v.z, "hidens_powercell")
-        log(f"HiDens Powercell spawned {v.x},{v.y},{v.z}","upgrades")
-
-    if upg == 6:
-        pickup_spawn(v.x, v.y, v.z, "vigoranium_nodule")
-        log(f"Vigoranium Nodule spawned {v.x},{v.y},{v.z}","upgrades")
-
-    if upg == 7:
-        pickup_spawn(v.x, v.y, v.z, "cetrocite_crystal")
-        log(f"Cetrocite Crystal spawned {v.x},{v.y},{v.z}","upgrades")
-
-    if upg == 8:
-        pickup_spawn(v.x, v.y, v.z, "lateral_array")
-        log("Lateral Array spawned {v.x},{v.y},{v.z}", "upgrades")
-
-    if upg == 9:
-        pickup_spawn(v.x, v.y, v.z, "haplix_overcharger")
-        log("Haplix Overcharger spawned {v.x},{v.y},{v.z}","upgrades")
-
-spawn_points = scatter.box(monster_value, 0,0,0, 75000, 1000, 75000, centered=True)
-for v in spawn_points:
-    typhon_classic_spawn(*v.xyz)
-
-if friendly_select != "none":
+if friendly_value >= 1:
     jump kidnap_caper
+else:
+    ->END
 
 ====== kidnap_caper ======
 
@@ -146,6 +40,7 @@ kidnap_status = 1
 
 # Add roles to first five stations, makes them easier to identify.
 # Add a 'record_status' to inventory, 1 = station has cargo manifest, 2 = missing cargo manifest, 3 = computers down
+
 ds_list = []
 for s in to_object_list(role("station")):
     temp_rand = random.randint(1, 3)
@@ -179,6 +74,11 @@ clue_list = shipname_data.get("clue_list")
 goods_list = shipname_data.get("tradegoods")
 suspect = []
 
+# Kidnapper ship (first suspect) hides the ambassador in a suspicious container, randomized as list index 6, 8, 10, or 12.
+# The first three suspect ships have a "clue" about the captain/ship. The first one is where the ambassador is hidden, so the 
+# Clue/Container are loaded as a pair (clue0/clue1). The other two suspects have a clue about the captain/ship 
+# (clue2 and clue3), but aren't paired to a particular container, since the ambassador isn't hiding on board.
+
 kidnap_clue = {}
 kidnap_clue = clue_list.pop(random.randint(0,19))
 clue0 = kidnap_clue['container']
@@ -187,7 +87,9 @@ kidnap_clue = clue_list.pop(random.randint(0,len(clue_list)-1))
 clue2 = kidnap_clue['clue']
 kidnap_clue = clue_list.pop(random.randint(0,len(clue_list)-1))
 clue3 = kidnap_clue['clue']
-print(f"Kidnap Clues: {clue0} {clue1} {clue2} {clue3}")
+
+# Generate five cargo ships as suspects. The first three are given to the player by DS 1. 
+# The fourth suspect may wind up as the kidnapper. The fifth is just a decoy. 
 
 s_count = 1
 spawn_points = scatter.box(5, 0, 0, 0, 50000, 1000, 50000, centered=True)
@@ -225,7 +127,7 @@ for c in spawn_points:
         add_role(role("ds5"), temp_role)
     stop3 = temp_stop.pop(random.randint(0,len(temp_stop)-1))
     # Populates the Ship Name, Captain Name, and then the contents of the four cargo holds into a list object.
-    # There are three different list objects to show the contents at the start (DS1), the first stop, and the second stop.  
+    # There are three different cargo lists to show the contents at the start (DS1), the first stop, and the second stop.  
     _captain = capname_list.pop(random.randint(0, len(capname_list)-1))
     s_obj = to_object(c_ship)
     cargo1 = [s_obj.name, _captain, stop1, stop2, stop3]
@@ -250,31 +152,15 @@ for c in spawn_points:
     
     set_face(c_ship, random_terran(civilian=True))
     suspect.append(c_ship)
+    s_obj.data_set.set("ally_list","tsn",0)
     s_count += 1
 
 suspect_list = to_object_list(role('suspect'))
 sus_count = len(suspect_list)
 -> END if sus_count == 0
-# jump kidnap_lost if sus_count == 0
 
-#shared ship1_cargo1 = get_inventory_value(suspect_list[0], "cargo1")
-#shared ship1_cargo2 = get_inventory_value(suspect_list[0], "cargo2")
-#shared ship1_cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-
-#shared ship2_cargo1 = get_inventory_value(suspect_list[1], "cargo1")
-#shared ship2_cargo2 = get_inventory_value(suspect_list[1], "cargo2")
-#shared ship2_cargo3 = get_inventory_value(suspect_list[1], "cargo3")
-
-#shared ship3_cargo1 = get_inventory_value(suspect_list[2], "cargo1")
-#shared ship3_cargo2 = get_inventory_value(suspect_list[2], "cargo2")
-#shared ship3_cargo3 = get_inventory_value(suspect_list[2], "cargo3")
-
-#shared ship4_cargo3 = get_inventory_value(suspect_list[3], "cargo3")
-
-# Kidnapper ship (first suspect) hides the ambassador is a suspicious container, randomized as list index 5, 7, 9, or 11.
-# The first three suspect ships have a "clue" about the captain/ship. The first one is where the ambassador is hidden, so the 
-# Clue/Container are loaded as a pair (k_clue1/k_clue2). The other two suspects have a clue about the captain/ship (s_clue1 and s_clue2), 
-# but aren't paired to a particular container, since the ambassador isn't hiding on board.
+# Add the cargo contents to the first five stations as inventory, so that the Comms buttons can get cargo/ship information
+# when the player talks to the stations. 
 
 for ds in ds_list:
     for x in range(3):
@@ -288,6 +174,7 @@ for ds in ds_list:
         set_inventory_value(ds, temp_inv1, temp_cargo1)
         set_inventory_value(ds, temp_inv2, temp_cargo2)
         set_inventory_value(ds, temp_inv3, temp_cargo3)
+        # Randomize the three suspect ships so that the first ship listed isn't automatically the kidnapper.
         if x == 0:
             rand3 = random.randint(1, 3)
             if rand3 == 1:
@@ -298,6 +185,9 @@ for ds in ds_list:
                 investigate_msg = temp_cargo2[0] + "^" + temp_cargo3[0] + "^" + temp_cargo1[0]
             set_inventory_value(ds, "investigate_message", investigate_msg)
 
+# This code picks a random container on ship 1 and replaces it with the "suspicious" container chosen earlier.
+# Then it resets the three different cargo states on the kidnapper ship.  
+
 rand1 = 4 + (2 * random.randint(1,4))
 kidnapper_id = suspect_list[0]
 add_role(suspect_list[0], "kidnapper")
@@ -307,13 +197,13 @@ for index in range(3):
     tempcargo[rand1] = clue0
     set_inventory_value(suspect_list[0], tempval, tempcargo)
 
+# There are three different 'scenarios' for the Ambassador. The first is two stops where the Kidnapper ship transfers cargo and leaves a clue.
+# Note: the first scenario was disabled. It was too easy to track down the three ships and scan them. 
+# Playtesters weren't flying around looking for clues. So the two possible scenarios are #2 "Transfer cargo to new ship"
+# and #3 "Ship changes name". 
+
 rand2 = random.randint(2,3)
-#rand2 = 2
 if rand2 == 1:
-    # There are three different 'scenarios' for the Ambassador. The first is two stops where the Kidnapper ship transfers cargo and leaves a clue.
-    # Note: the first scenario was disabled. It was too easy to track down the three ships and scan them. 
-    # Playtesters weren't flying around looking for clues. So the two possible scenarios are #2 "Transfer cargo to new ship"
-    # and #3 "Ship changes name". 
     # First ship, first stop, transfers two containers. This section updates the cargo containers and updates message1C.
     _idx = [6, 8, 10, 12]
     _cargo2 = get_inventory_value(suspect_list[0], "cargo2")
@@ -540,26 +430,20 @@ _cargo3[xfer_idx2] = new_good2
 set_inventory_value(suspect_list[2], "cargo3", _cargo3)
 shared message3D = "Yes, " + _cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}"  
 
+# Drop a secret codecase near DS1. This allows the scenario to be completed without a Weapons Officer.
+if upgrade_value >= 1:
+    ds1_obj = to_object(ds_list[0])
+    ds1_pos = ds1_obj.pos
+    pickup_spawn(ds1_pos.x, ds1_pos.y, ds1_pos.z - 500, "secret_codecase")
 
-
-# Drop a secret codecase near DS1
-ds1_obj = to_object(ds_list[0])
-ds1_pos = ds1_obj.pos
-pickup_spawn(ds1_pos.x, ds1_pos.y, ds1_pos.z - 500, "secret_codecase")
 
 task_schedule(scanning_cargo_containers)
-
 task_schedule(check_ambassador_rescued)
-
 task_schedule(kidnap_message)
+task_schedule(task_peacetime_end_game)
 
-//collision/interactive if has_roles(COLLISION_ORIGIN_ID, "escape-pod") and kidnap_status == 2
-    kidnap_status = 3
-    send_general_message("Ambassador Florbin", "Thank you for rescuing me! I'll make sure you get a commendation for this. Now, if you could just drop be off back at DS 1, there's a new episode of 'Zed Star Five' I need to get back to.", ambassador_face, COLLISION_SELECTED_ID)
-    pest_id = COLLISION_SELECTED_ID
-    pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-    pest_list = shipname_data.get("complaints")
-    task_schedule(pest_messages)
+#-----------------------------------------------------------------------------------------------------------------------------
+# Comms Section - Adds comms buttons for talking to stations. Some buttons only work if the player is docked with the station.
 
 //comms if has_roles(COMMS_SELECTED_ID, "tsn, station, ds1") and kidnap_status >= 1 
 + "Investigate Kidnapping" //comms/investigate_kidnapping 
@@ -762,7 +646,6 @@ yield success
 comms_receive(f"""{message1D}""", title="Deck Chief Report", title_color="orange")
 yield success
 
-
 ===== investigate_message_2A =====
 ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")
 rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
@@ -794,7 +677,6 @@ yield success
 ===== investigate_message_2D =====
 comms_receive(f"""{message2D}""", title="Maintenance Crew Report", title_color="orange")
 yield success
-
 
 ===== investigate_message_3A =====
 ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")
@@ -828,10 +710,8 @@ yield success
 comms_receive(f"""{message3D}""", title="Cargo Master's Report", title_color="orange")
 yield success
 
-
-//enable/comms if has_roles(COMMS_SELECTED_ID, "civ, suspect")
-
-//comms if has_roles(COMMS_SELECTED_ID, "civ, suspect") 
+//enable/comms if has_roles(COMMS_SELECTED_ID, "civ, suspect") and kidnap_status >= 1
+//comms if has_roles(COMMS_SELECTED_ID, "civ, suspect") and kidnap_status >= 1
 + "Hail" handle_suspect_hail
 + "Cargo" handle_suspect_cargo
 + "Itinerary" handle_suspect_itinerary
@@ -853,6 +733,8 @@ tempcargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
     " We last docked at DS {tempcargo[3]}. Now heading for DS {tempcargo[4]}.
 yield success
 
+#-----------------------------------------------------------------------------------------------------------------------------
+# Science Section - Adds "Hold 1", "Hold 2", "Hold 3" and "Hold 4" scans to the suspect ships.
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "suspect") and kidnap_status >= 1
 //science if has_roles(SCIENCE_SELECTED_ID, "suspect") and kidnap_status >= 1
@@ -875,7 +757,7 @@ capname = tempcargo[1]
 
 //science if has_roles(SCIENCE_SELECTED_ID, "suspect") and kidnap_status >= 1
 ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 600
-k_clue = get_inventory_value(SCIENCE_SELECTID_ID, "kclue")
+k_clue = get_inventory_value(SCIENCE_SELECTED_ID, "kclue")
 tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
 
 + "Hold 1":
@@ -911,15 +793,15 @@ tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
         <scan>
             % Container {tempcargo[11]}: {tempcargo[12]}. Contents verified.
 
+#-----------------------------------------------------------------------------------------------------------------------------
+# Miscellanous notification and upkeep tasks.
+
 ===== kidnap_message =====
 await delay_sim(15)
-
 for p in role("__player__"):
     if p is not None:
         send_general_message("Admiral Harkin", "Ambassador Florbin has been kidnapped! Contact DS1 for details.", admiral_face, p)
-
 ->END
-
 
 
 ===== scanning_cargo_containers ======
@@ -968,18 +850,27 @@ for p in role("__player__"):
 await delay_sim(1)
 jump scanning_cargo_containers
 
+
 ===== kidnapper_discovered =====
 print(f"Kidnapper Discovered")
 kidnap_status = 2
 temp_list = to_list(role("kidnapper"))
 kidnapper_id = temp_list[0]
 remove_role(kidnapper_id, "suspect")
+remove_role(kidnapper_id, "civ")
+remove_role(kidnapper_id, "civilian")
 add_role(kidnapper_id, "pirate")
 add_role(kidnapper_id, "discovered")
+side = "tsn"
 _obj = to_object(kidnapper_id)
 _obj.spawn_pos = Vec3(90000,0,90000)
 _obj.side = "pirate"
 _obj.race = "pirate"
+allies = _obj.data_set.get("ally_list",0)
+items = allies.split(",")
+items.remove(side)
+allies = ",".join(items)
+_obj.data_set.set("ally_list", allies, 0)
 target_pos(kidnapper_id, 90000, 0, 90000, throttle=1.5, target_id=0)
 
 //enable/comms if has_roles(COMMS_SELECTED_ID, "discovered")
@@ -1034,21 +925,22 @@ if sc_timer > 0 or s_ratio < 0.5:
     _pos_eo = e_obj.pos
     _offset = e_obj.forward_vector()
     stop_pos = _pos_eo + (_offset * 500)
-    target_pos(kidnapper_id, stop_pos.x, stop_pos.y, stop_pos.z, throttle=0.0, target_id=0, stop_dist=500)
+    target_pos(COMMS_SELECTED_ID, stop_pos.x, stop_pos.y, stop_pos.z, throttle=0.0, target_id=0, stop_dist=500)
     drop_pos = _pos_eo + (_offset * -100)
     comms_receive(f"""Escape Pod Deployed.""", title="Escape Pod", title_color=surrender_color)
     pickup_spawn(drop_pos.x, drop_pos.y, drop_pos.z, "escape-pod")
     await task_schedule(comms_do_surrender)
-    remove_role(kidnapper_id, "surrendered")
-    clear_target(kidnapper_id)
+    remove_role(COMMS_SELECTED_ID, "surrendered")
+    clear_target(COMMS_SELECTED_ID)
 else:
     comms_receive(f"""What are you talking about, {name}? We don't know anything about the ambassador!""", title="failed surrender", title_color=raider_color)
 
 yield success
 
 ===== pest_messages =====
+
 await delay_sim(random.randint(180,300))
-if kidnap_status >= 4:
+if kidnap_status >= 5:
     ->END
 if len(pest_idx) < 1:
     pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
@@ -1073,16 +965,23 @@ for p in role("__player__"):
         #admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 4 4;ter #964b00 8 4;"
         send_general_message("Admiral Harkin", "Ambassador Florbin has been safely delivered back to DS 1! Well done, " + p_obj.name + "!", admiral_face, p)
         #comms_message(f"Ambassador Florbin has been safely delivered back to DS 1. Well done, {p_obj.name}!", ds1_id, p, title="Ambassador Rescued", title_color="green")
-        kidnap_status = 4
+        kidnap_status = 5
         ->END
-
 await delay_sim(5)
 jump check_ambassador_rescued
 
 
 #------------------------------------------------------------------------------------------------------------
+# Some Collision/Destroyed trigger stuff. 
 
+//collision/interactive if has_roles(COLLISION_ORIGIN_ID, "escape-pod") and kidnap_status == 3
+    kidnap_status = 4
+    send_general_message("Ambassador Florbin", "Thank you for rescuing me! I'll make sure you get a commendation for this. Now, if you could just drop be off back at DS 1, there's a new episode of 'Zed Star Five' I need to get back to.", ambassador_face, COLLISION_SELECTED_ID)
+    pest_id = COLLISION_SELECTED_ID
+    pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    pest_list = shipname_data.get("complaints")
+    task_schedule(pest_messages)
 
 //damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby")
-    if kidnap_status < 2:
+    if kidnap_status < 3:
         jump peacetime_ambassador_killed
