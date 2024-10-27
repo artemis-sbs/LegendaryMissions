@@ -134,6 +134,8 @@ for player_ship in player_ships:
         player_ship.art_id = "invisible"
         player_ship.remove_role("__player__")
         player_ship.remove_role("tsn")
+        player_ship.side = "unused"
+        # Delay the delete
         task_schedule(player_ships_remove_unused, {"_ship_id": player_ship.id})
         continue
 
