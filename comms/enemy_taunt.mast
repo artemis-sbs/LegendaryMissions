@@ -11,6 +11,7 @@ shared taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
 
 
 //spawn if has_role(SPAWNED_ID, "raider")
+yield fail if taunt_data is None
 #
 # Select 3 taunts
 #
