@@ -139,6 +139,10 @@ for player_ship in player_ships:
         task_schedule(player_ships_remove_unused, {"_ship_id": player_ship.id})
         continue
 
+    # Reset to default blob in case art work changed
+    sbs.player_ship_setup_defaults(player_ship.engine_object)
+    sbs.player_ship_setup_from_data(player_ship.engine_object)
+
     if len(stations_friendly) > 0:
         so = random.choice(stations_friendly)
         spawn_pos = so.pos

@@ -114,10 +114,12 @@ rs= "row-height: 45px;margin:5px,5px,0,0;"
 ts= "row-height: 45px;col-width: 7em;margin:0,2px, 0,0;"
 
 gui_section(style="area: 50, 95-500px, 100, 95;row-height:45px;margin:30px,0px,10px,0;padding:0,10px,10px,0;background:#1578;")
-gui_row(style=rs)
-gui_text("justify:right;$text:Player ships", style=ts)
-gui_blank(style="col-width:15px")
-gui_int_slider("text:int;low: 1.0;high:8.0",  var="player_count")
+if not sbs.is_demo():
+    gui_row(style=rs)
+    gui_text("justify:right;$text:Player ships", style=ts)
+
+    gui_blank(style="col-width:15px")
+    gui_int_slider("text:int;low: 1.0;high:8.0",  var="player_count")
 
 gui_row(style=rs)
 gui_text(" justify:right;$text:Difficulty", style=ts)
@@ -126,31 +128,34 @@ gui_int_slider("text:int;low: 1.0;high:11.0", var="difficulty")
 gui_row(style=rs)
 
 gui_blank()
+
 gui_row(style=rs)
 
 gui_text("justify:right;$text:Terrain", style=ts)
 gui_blank(style="col-width:15px")
 gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many", var="terrain_select")
-gui_row(style=rs)
 
-gui_text("justify:right;$text:Lethal Terrain", style=ts)
-gui_blank(style="col-width:15px")
-gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")
-gui_row(style=rs)
+if not sbs.is_demo():
+    gui_row(style=rs)
 
-gui_text("justify:right;$text:Friendly Ships", style=ts)
-gui_blank(style="col-width:15px")
-gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")
-gui_row(style=rs)
+    gui_text("justify:right;$text:Lethal Terrain", style=ts)
+    gui_blank(style="col-width:15px")
+    gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")
+    gui_row(style=rs)
 
-gui_text("justify:right;$text:Monsters", style=ts)
-gui_blank(style="col-width:15px")
-gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")
-gui_row(style=rs)
+    gui_text("justify:right;$text:Friendly Ships", style=ts)
+    gui_blank(style="col-width:15px")
+    gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")
+    gui_row(style=rs)
 
-gui_text("justify:right;$text:Upgrades", style=ts)
-gui_blank(style="col-width:15px")
-gui_drop_down("$text:{upgrade_select};list:none, few,some, lots, many", var="upgrade_select")
+    gui_text("justify:right;$text:Monsters", style=ts)
+    gui_blank(style="col-width:15px")
+    gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")
+    gui_row(style=rs)
+
+    gui_text("justify:right;$text:Upgrades", style=ts)
+    gui_blank(style="col-width:15px")
+    gui_drop_down("$text:{upgrade_select};list:none, few,some, lots, many", var="upgrade_select")
 
 gui_row(style=rs)
 

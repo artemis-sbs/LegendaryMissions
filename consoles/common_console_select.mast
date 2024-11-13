@@ -143,7 +143,7 @@ with ship_sec2:
         player_list[client_selected_index].art_id = ship_type
         gui_update_shared("sh_ship_list", None)
 
-if console_select_item.path != "helm" or game_started:
+if sbs.is_demo() or console_select_item.path != "helm" or game_started:
     gui_hide(ship_sec)
     gui_show(ship_sec_not)
     spick.read_only = True
