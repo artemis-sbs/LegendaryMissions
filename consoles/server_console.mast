@@ -72,6 +72,7 @@ sim_create()
 
 for player_ship_data in player_list:
     player_ship = to_id(player_spawn(0,0,0, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
+    player_ship_data["id"] = player_ship
     add_role(player_ship, "default_player_ship")
     set_face(player_ship, get_face_from_data(player_ship_data["face"]))
     set_inventory_value(player_ship, "respawn_time", 5)
