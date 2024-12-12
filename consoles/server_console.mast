@@ -226,7 +226,10 @@ signal_emit("game_started", {})
 # Temp set this when first running
 shared SIM_STATE = "sim_unknown"
 
-
+player_list = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
+if len(player_list)>0:
+    sbs.assign_client_to_ship(0, player_list[0].id)
+    
 gui_reroute_clients(game_started_console, exclude={client_id})
 #
 # This is very coupled to operator mode
@@ -247,9 +250,8 @@ if client_id != 0:
 
 
 # Find a valid ship
-# for p in player_list:
-#    i
-ship_id = player_list[0]["id"]
+
+ship_id = sbs.get_ship_of_client(client_id)
 
 gui_console("mainscreen")
 link(ship_id,"consoles", client_id)
@@ -312,7 +314,6 @@ on change SIM_STATE:
 view = get_variable("MAIN_SCREEN_VIEW", "3d_view")
 facing = get_variable("MAIN_SCREEN_FACING", "front")
 mode = get_variable("MAIN_SCREEN_MODE", "chase")
-
 
 sbs.set_main_view_modes(client_id, view, facing, mode)
 
