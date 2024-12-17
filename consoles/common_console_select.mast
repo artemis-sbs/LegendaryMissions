@@ -229,7 +229,7 @@ on change ship_select_lb.get_value():
     client_select_ship_item = ship_select_lb.get_value()
     client_selected_index = ship_select_lb.get_selected_index()
     if client_select_ship_item is not None:
-        print("SHIP LIST {i} {client_select_ship_item} ")
+        #print("SHIP LIST {client_selected_index} {client_select_ship_item} ")
         client_select_ship = client_select_ship_item.name
         ship_name = client_select_ship
         ship_type = client_select_ship_item.art_id
