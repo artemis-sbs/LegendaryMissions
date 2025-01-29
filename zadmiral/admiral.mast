@@ -77,6 +77,10 @@ property_pane = None
         await task_schedule(admiral_move_camera)
 
     task_schedule(admiral_move_camera_sync)
+    default shared admiral_already_scheduled_eyes = False
+    -> END if admiral_already_scheduled_eyes 
+    admiral_already_scheduled_eyes = True
+
 
     # Middle
     with gui_sub_section():
@@ -135,6 +139,22 @@ property_pane = None
     
     gui_cinematic_full_control(client_id, sel, source, sel, Vec3())
     ->END
+
+
+=== admiral_update_lookouts ==
+    await delay_sim(10)
+
+    my_players = to_object_list(role("admiral"))
+    for player in my_players:
+        blob = to_blob(player)
+        num_ids = blob.get("num_extra_scan_sources",0)
+
+        for friend in any_role("friendly, station, __player__"):
+            blob.set("extra_scan_source", friend, num_ids)
+            num_ids += 1
+        blob.set("num_extra_scan_sources",num_ids,0)
+    -> admiral_update_lookouts
+
 
 
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "admiral")

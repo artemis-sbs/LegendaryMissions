@@ -1,0 +1,139 @@
+
+=== card_no_op ===
+
+->END
+
+=== card_station_fancy ==
+    asteroid_deck = maps_deck_create()
+    asteroid_deck.add_card("card_terrain_asteroid")
+    station_deck = maps_deck_create()
+    station_deck.add_card("card_station_command")
+
+    tile_map = maps_tile_map_create(START_X, START_Z, 1_000)
+    tile_map.map_deck("a", asteroid_deck)
+    tile_map.map_deck("s", station_deck)
+    fill = """..........
+        .a........
+        .a........
+        ..........
+        ..........
+        ...a......
+        ......a...
+        .....a....
+        ..a.asa...
+        .....a....
+        """
+    tile_map.fill(fill, x_count=10)
+    ->END
+
+
+=== card_station_common ===
+    default shared station_count = 1
+    
+    s_roles = f"tsn, station"
+    name = f"DS {station_count}"
+    station_count += 1
+
+    #default shared colors = ["orange", "blue", "green"]
+    #nav_id = sim.add_navarea(START_X, START_Z, START_X+SIZE_X, START_Z,START_X, START_Z+SIZE_Z,START_X+SIZE_X, START_Z+SIZE_Z, name, colors[station_count%3])
+
+    w = SIZE_X/2
+    d = SIZE_Z/2
+
+    st_x = START_X+w + ((random.random()*2)-1) * w/2
+    st_z = START_Z+d + ((random.random()*2)-1) * d/2
+
+    remove_objects_sphere(st_x, START_Y, st_z, 600)
+
+    station_object = npc_spawn(st_x, START_Y, st_z, name, s_roles, STATION_TYPE, "behav_station")
+    ds = to_id(station_object)
+    set_face(ds, random_terran(civilian=True))
+    ->END
+
+=== card_station_command ===
+    STATION_TYPE = "starbase_command"
+    jump card_station_common 
+
+=== card_station_civil ===
+    STATION_TYPE = "starbase_civil"
+    jump card_station_common 
+
+=== card_station_industry ===
+    STATION_TYPE = "starbase_industry"
+    jump card_station_common 
+
+=== card_station_science ===
+    STATION_TYPE = "starbase_science"
+    jump card_station_common 
+
+    
+
+
+
+
+=== card_terrain_asteroid ===
+    terrain_value = terrain_to_value(terrain_select)
+    test_spawn_asteroid_box(START_X, START_Y, START_Z, amount=terrain_value*5)
+    #nav_id = sim.add_navarea(START_X, START_Z, START_X+SIZE_X, START_Z,START_X, START_Z+SIZE_Z,START_X+SIZE_X, START_Z+SIZE_Z, "ast", "cyan")
+    ->END
+
+=== card_terrain_nebula ===
+    terrain_value = terrain_to_value(terrain_select)
+    test_spawn_nebula_box(START_X, START_Y, START_Z, amount=terrain_value*2)
+    ->END
+
+=== card_raider_spawn ===
+    test_spawn_nebula_box(START_X, START_Y, START_Z)
+    ->END
+
+
+@map/tiles "Tile map test"
+" This is a test map for the tilemap based map creation
+" 
+" 
+    asteroid_deck = maps_deck_create()
+    asteroid_deck.add_card("card_terrain_asteroid")
+
+    nebula_deck = maps_deck_create()
+    nebula_deck.add_card("card_terrain_nebula")
+
+    station_deck = maps_deck_create()
+#    station_deck.add_card("card_station_command")
+    station_deck.add_card("card_station_command")
+    station_deck.add_card("card_station_industry")
+    station_deck.add_card("card_station_science")
+    station_deck.add_card("card_station_civil")
+    station_deck.always_shuffle = True
+    station_deck.discard_deals = False
+    station_deck.shuffle()
+        
+#    station_deck.add_card("card_station_command")
+    
+
+    tile_map = maps_tile_map_create(-50_000, -50_000, 10_000)
+    tile_map.map_deck("a", asteroid_deck)
+    tile_map.map_deck("n", nebula_deck)
+    tile_map.map_deck("s", station_deck)
+
+    #tile_map.fill(fill, x_count=10)
+    #fill = shuffle_string("a"*45 + "s"*5 +"." * 50)
+    terrain_value = terrain_to_value(terrain_select)
+    if terrain_value>0:
+        fill = shuffle_string("."*(50-5*terrain_value) +"a" * (50+5*terrain_value))
+        tile_map.fill(fill, x_count=10)
+
+    # A 25 by 25 grid on the same area
+    # This should deal 5 stations 10 asteroids and 10 noops 
+    fill = shuffle_string("s"*5 + "a" * 5 + "."*5 )
+    #
+    tile_map.fill(fill, x_count=4, scale_tile=2, x_offset=10_000)
+
+
+    # Nebula
+    fill = shuffle_string("."*50 +"n" * 50)
+    tile_map.fill(fill, x_count=10)
+    # Raider spawn 
+    
+
+    await task_schedule(spawn_players)
+

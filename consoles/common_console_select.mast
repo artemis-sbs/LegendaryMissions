@@ -99,7 +99,13 @@ if auto_start and console_select_item:
 player_list = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
 player_list_all = player_list.copy()
 #
-if game_started:
+
+#
+# players_cleaned should set by spawn_players
+# It must occur after the 
+#
+default shared players_cleaned = False
+if players_cleaned:
     player_count = len(player_list)
 
 

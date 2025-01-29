@@ -121,7 +121,7 @@ first = True
 #test_func(3)
 
 
-
+await delay_sim(0)
 spawn_pos = Vec3(0,0,0)
 player_ships = to_object_list(role("default_player_ship"))
 #------------------------------------------------------------------------------------------------------------
@@ -156,8 +156,8 @@ for player_ship in player_ships:
         first = False
 
     player_ship_update_friendly(player_ship, stations_friendly, True)
-    
 
+shared players_cleaned = True
 ->END
     
     
