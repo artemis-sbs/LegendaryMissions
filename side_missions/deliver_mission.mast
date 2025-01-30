@@ -72,5 +72,3 @@
     if are_objectives_complete("pickup/bonus"):
         fighter["XP"] += 50
 
-    
-

@@ -108,8 +108,6 @@ default shared players_cleaned = False
 if players_cleaned:
     player_count = len(player_list)
 
-
-
 # Clamp selected index
 client_selected_index = min(int(player_count), client_selected_index )
 
