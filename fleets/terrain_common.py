@@ -118,21 +118,24 @@ def terrain_asteroid_clusters(terrain_value, center=None):
             # Some big, some small
             # big are more spherical
             # 1 in 4 big
+            er = asteroid.engine_object.exclusion_radius
+            moons = False
             if scatter_pass%4 != 0:
                 sx = random.uniform(7.0, 15.0)
                 sy = sx + random.uniform(-1.2, 1.2)
                 sz = sx + random.uniform(-1.2, 1.2)
                 sm = min(sx, sy)
                 sm = min(sm, sz)
-                er = asteroid.engine_object.exclusion_radius
                 er *= sm/2
                 asteroid.engine_object.exclusion_radius = er
+                moons = True
             else:
                 sx = random.uniform(2.5, 5)
                 sy = random.uniform(2.5, 5)
                 sz = random.uniform(2.5, 5)
                 sm = min(sx, sy)
                 sm = min(sm, sz)
+                moons = random.randint(0,4)!=2
             scatter_pass += 1
             #er = asteroid.blob.get("exclusionradius",0)
             #er *= sm
@@ -142,16 +145,14 @@ def terrain_asteroid_clusters(terrain_value, center=None):
             asteroid.blob.set("local_scale_z_coeff", sz)
             
 
-            # if scatter_pass==0:
-            #     continue
-            # # else:
-            # #     continue
-
+              # Big asteroids or some random
+            if not moons:
+                continue
             # #
             # # Sphere od smaller asteroids
             # #
-            this_amount = random.randint(7,12)
-            little = scatter.box(this_amount,  v2.x, 0,v2.z, amount*150, amount*50,amount*200, True)
+            this_amount = random.randint(4,8)
+            little = scatter.sphere(this_amount,  v2.x, 0,v2.z, er + 50, er + 100 )
             #little = scatter.sphere(random.randint(2,6), v2.x, v2.y, v2.z, 300, 800)
             # little = scatter.sphere(random.randint(12,26), v2.x, v2.y, v2.z, 800)
             
@@ -169,7 +170,7 @@ def terrain_asteroid_clusters(terrain_value, center=None):
                 sm1 = max(sm, sz)
                 er = asteroid.engine_object.exclusion_radius
                 er *= sm1
-                asteroid.engine_object.exclusion_radius = 0
+                asteroid.engine_object.exclusion_radius = er
                 
 
                 asteroid.blob.set("local_scale_x_coeff", sx1)
