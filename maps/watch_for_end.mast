@@ -28,7 +28,6 @@ if len(stations) ==0:
     ->END
 
 raiders = role('Raider')
-# print (f"raiders {len(raiders)}")
 if len(raiders)==0 and world_select.path !="peacetime":
     start_text = "Mission is won!  All the enemies have been destroyed."
     game_started = False

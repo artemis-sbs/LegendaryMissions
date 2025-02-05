@@ -90,7 +90,6 @@ yield success
 # Player ships can die now
 set_timer(station_id, "build_time", seconds = build_time)
 await is_timer_finished(station_id, "build_time")
-#print(f"finished {torpedo_build_type}")
 
 clear_timer(station_id, "build_time")
 station = to_object(station_id)
@@ -100,7 +99,7 @@ station = to_object(station_id)
 #
 ->END if station is None
 torpedo_build_type = get_inventory_value(station_id, "build_type", "Homing")
-# print(f"build time = {build_time} inv {torpedo_build_type}")
+
 
 cur_count = get_data_set_value(station_id, f"{torpedo_build_type}_NUM", 0)
 set_data_set_value(station_id, f"{torpedo_build_type}_NUM", cur_count+1, 0)
@@ -108,7 +107,7 @@ set_data_set_value(station_id, f"{torpedo_build_type}_NUM", cur_count+1, 0)
 side = station.side
 COMMS_SELECTED_ID = station_id
 ps = all_roles(f"__player__, {side}" )
-# print(f"Players to tell about building stuff {len(ps)}")
+
 
 # torp_names =["homing","nuke", "EMP", "mine"]
 torp_name = torpedo_build_type

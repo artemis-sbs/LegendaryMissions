@@ -94,9 +94,7 @@ class Fleet(Agent):
         best_anger = 0
         anger_as_set = set()
         for e in self.anger_dict:
-            #print(f"fleet anger at {e}!")
             if 0 == e:
-                #print(f"0 is in anger_dict.     WTF!")
                 return
             anger_as_set.add(e)
             that_anger = self.anger_dict[e]
@@ -218,7 +216,6 @@ def ship_takes_damage():#event):
 
     if 0 == attacker_id:
          # Probably a mine
-        # print(f"if damage origin and parent are 0  WTF!   {event.tag} {event.sub_tag}")
         return
     victim_id = event.selected_id
     my_fleet = to_object(get_inventory_value(victim_id, "my_fleet_id"))

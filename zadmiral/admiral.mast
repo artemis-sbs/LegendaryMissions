@@ -27,7 +27,7 @@ property_pane = None
         camera_id = to_id(cambot)
         set_inventory_value(client_id, "ADMIRAL_COMBOT", camera_id)
         cambot_id = camera_id
-        #print("Creating ADMIRAL {cambot}")
+
         stations_friendly = to_object_list(role("station"))
         player_ship_update_friendly(cambot, stations_friendly, True)
 
@@ -42,7 +42,7 @@ property_pane = None
     #
     # Assign before setting comms up
     #
-    #print(f"admiral {camera_id}")
+    
     sbs.assign_client_to_ship(client_id, camera_id)
     science_set_scan_data(camera_id, camera_id, {"scan": "Admiral"})
     set_comms_selection(camera_id, camera_id)
@@ -159,10 +159,7 @@ property_pane = None
 
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "admiral")
     #rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)
-    #print("RANGE Adrmiral {rang}")
-    #print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
-    #print("IDs Adrmiral {EVENT.origin_id}, {EVENT.selected_id},{EVENT.parent_id} {EVENT.extra_extra_tag}")
-
+    
     # extra_extra_tag has lmb, rmb, blank is fake event
     if EVENT.extra_extra_tag != "rmb":
         # if no selection then use point

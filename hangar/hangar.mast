@@ -245,7 +245,7 @@ shared find_stray = task_schedule(find_stray_crafts)
     #        print("Quarters")
     #        #jump show_hangar
 
-    # print("Out of await")
+
     jump show_hangar
 
     
@@ -296,7 +296,7 @@ shared find_stray = task_schedule(find_stray_crafts)
 ==== find_stray_crafts ====
     await delay_sim(seconds=5) # hack for task_schedule in main
 
-    # print("finding stray fighters start")
+
 
 --- find_stray_craft_loop  --
     await delay_sim(seconds=3) # Run every 23 seconds
@@ -312,7 +312,7 @@ shared find_stray = task_schedule(find_stray_crafts)
         continue if craft == get_dedicated_link(cid, "craft_id") and get_inventory_value(cid, "CONSOLE_TYPE") == "cockpit"
         so = to_object(craft)
         continue if so is None
-        # print("Return craft {so.name}")
+
         redocked = hangar_attempt_dock_craft(craft, None)
         #if redocked:
         #    print("redocked")

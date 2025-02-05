@@ -15,7 +15,7 @@ monster_value = terrain_to_value(monster_select)
 upgrade_value = terrain_to_value(upgrade_select)
 
 num_upgrade = 0
-if upgrade_value is not "none":
+if upgrade_value != "none":
     if upgrade_value == 1:
         num_upgrade = random.randint(1,3)
     elif upgrade_value == 2:

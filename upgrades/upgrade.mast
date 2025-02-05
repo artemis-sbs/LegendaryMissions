@@ -392,7 +392,7 @@ turnfaster = player_blob.get("turn_upgrade_coeff", 0)
 #warpfaster = player_blob.get("warp_upgrade_coeff", 0)
 print(f"Current Impulse Coefficent: {impfaster}")
 print(f"Current Turn Coefficent: {turnfaster}")
-#print(f"Current Warp Coefficent: {warpfaster}")
+
 impfaster *= 3.0
 turnfaster *= 3.0
 #warpfaster *= 3.0
@@ -401,7 +401,7 @@ set_data_set_value(player_blob, "turn_upgrade_coeff", turnfaster)
 #set_data_set_value(player_blob, "warp_upgrade_coeff", warpfaster)
 print(f"New Impulse Coefficient: {impfaster}")
 print(f"New Turn Coefficient: {turnfaster}")
-#print(f"New Warp Coefficient: {warpfaster}")
+
 for x in range(300):
     ip_timer = get_inventory_value(ship_id, "ip_timer" )
     gui_update_shared("sh-ip-timer", "color:#0f0;$text: {ip_timer} seconds remaining.;")
@@ -414,7 +414,7 @@ turnfaster /= 3.0
 #warpfaster /= 3.0
 print(f"Reset Impulse Coefficient: {impfaster}")
 print(f"Reset Turn Coefficient: {turnfaster}")
-#print(f"Reset Warp Coefficient: {warpfaster}")
+
 set_data_set_value(player_blob, "impulse_upgrade_oeff", impfaster)
 set_data_set_value(player_blob, "turn_upgrade_coeff", turnfaster)
 #set_data_set_value(player_blob, "warp_upgrade_coeff", warpfaster)

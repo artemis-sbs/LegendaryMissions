@@ -57,7 +57,7 @@ def property_lb(item):
     gui_text(f"$text:{item['label']};justify: left;")
     gui_row("row-height: 1.5em;padding:13px;")
     gui_c = item['control']
-    # print(f"admiral py property {gui_c}")
+    
     gui_c = FrameContext.task.get_variable(gui_c)
     if gui_c:
         gui_c(item['props'], var=item['var'])

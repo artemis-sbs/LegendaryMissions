@@ -269,7 +269,7 @@ jump loop_damcons_ai if _state != "start"
 speed = grid_calc_speed(SPAWNED_ID)
 _pos = get_inventory_value(SPAWNED_ID, "idle_pos")
 jump loop_damcons_ai if _pos is None
-# print(f"Moving Idle {_pos[0]} {_pos[1]}")
+
 grid_target_pos(SPAWNED_ID, _pos[0], _pos[1], speed)
 set_inventory_value(SPAWNED_ID, "idle_state", "moving" )
 
@@ -383,7 +383,7 @@ for coeff in coeffs:
     for dc in damcons:
         _total += get_inventory_value(dc, coeff, 1.0)
 
-    # print(f"{coeff} {_total} {i}" )
+    
     continue if _total > 3.0
 
     #

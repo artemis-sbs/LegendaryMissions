@@ -15,6 +15,39 @@ else:
     schedule_player_docking(SPAWNED_ID, difficulty, "station", player_docking_station_docked)
 
 
+# Docking only on player ships
+# this adds a sub task to the docking task
+# //enable/docking
+# " Standard docking
+# "
+# ---
+# any_role:
+# all_role: station
+# side: True
+# distance: 600
+# cycle: 10
+# ...
+
+
+
+
+
+# //enable_docking if world_select.path == "deep_strike"
+# " Docking with the resupply tanker
+# ---
+# all_role: resupply_tanker
+# side: True
+# distance: 600
+# cycle: 10
+# ...
+
+
+
+
+
+
+
+
 #
 # Can only select weapons when undocked
 #

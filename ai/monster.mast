@@ -8,7 +8,6 @@ _target = closest(SPAWNED_ID, broad_test_around(SPAWNED_ID, 6000,6000, 0xf0)-rol
 if _target is None:
     clear_target(SPAWNED_ID)
 else:
-    #print("Typhon hunting")
     target(SPAWNED_ID, _target, True, 1.2)
 
 await delay_sim(seconds=5)

@@ -16,7 +16,6 @@ side = so.side
 stuff = broad_test_around(so, 18000,18000, 0xF0)
 nearest_target = closest(so, stuff - role(side) )
 if nearest_target is None:
-    # print("skipping elite")
     await delay_sim(seconds=20)
     jump handle_elite_abilities
 

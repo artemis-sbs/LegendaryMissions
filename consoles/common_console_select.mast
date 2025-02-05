@@ -93,7 +93,6 @@ if auto_start and console_select_item:
 
 
 ========== select_console ==========
-#print("CHNAGE CONSOLE EVENT?")
 # default console_select = "helm"
 # default client_select_ship = "artemis"
 player_list = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
@@ -125,7 +124,6 @@ with ship_sec:
     _input = gui_input("desc:Ship Name", var="ship_name")
     on gui_message(_input):
         player_list[client_selected_index].name = ship_name
-        #print(f"NAME CHANGE {_input.value} {ship_name}")
         client_select_ship = ship_name
         #gui_update_shared("sh_ship_list", None)
 
@@ -221,7 +219,6 @@ on change console_select_lb.get_value():
         console_ready = True
         jump(console_select_item.label)
     else:
-        #print("hiding 1")
         gui_hide(ship_sec)
         gui_show(ship_sec_not)
         spick.read_only = True
@@ -233,7 +230,6 @@ on change ship_select_lb.get_value():
     client_select_ship_item = ship_select_lb.get_value()
     client_selected_index = ship_select_lb.get_selected_index()
     if client_select_ship_item is not None:
-        #print("SHIP LIST {client_selected_index} {client_select_ship_item} ")
         client_select_ship = client_select_ship_item.name
         ship_name = client_select_ship
         ship_type = client_select_ship_item.art_id
@@ -299,7 +295,7 @@ jump select_console if _ship_id is None
 # This should get a skybox with client overriding, shp, overriding shared
 #
 sky_box = get_shared_variable("skybox", "sky1")
-# print(f"select console {sky_box.path}" )
+
 sky_box = get_inventory_value(_ship_id, "skybox", sky_box)
 sky_box = get_inventory_value(client_id, "skybox", sky_box)
 skybox_schedule(sky_box, client_id)
@@ -319,9 +315,9 @@ set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
 for k in consoles:
     remove_role(client_id, k.path)
 add_role(client_id, "console, {console_select}")
-# print("storing {console_select}")
+
 sbs.set_client_string(client_id, "console_previous", console_select)
-#print("storing {crew_name}")
+
 sbs.set_client_string(client_id, "crew_name", crew_name)
 set_inventory_value(client_id, "CREW_NAME", crew_name)
 

@@ -53,7 +53,6 @@ settings_add_defaults({"auto_play": {"enable": False}})
     ->END
 
 === automated_player_hook
-    #print(f"AUTO PLAY {_ship_id}")
     task_schedule(automated_player_helm_ai, {"_ship_id": _ship_id})
     task_schedule(automated_player_science_ai, {"_ship_id": _ship_id})
     task_schedule(automated_player_weapons_ai, {"_ship_id": _ship_id})

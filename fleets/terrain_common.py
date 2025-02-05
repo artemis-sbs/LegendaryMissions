@@ -41,7 +41,7 @@ def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500, 
     num_stations = len(station_type_list)
     station_step = 100000/num_stations
 
-    #print(f"Station Center at: {pos.x} {pos.y} {pos.z}")
+    
     # for each station
     for index in range(num_stations):
         stat_type = station_type_list[index]
@@ -52,7 +52,6 @@ def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500, 
         startZ += station_step
 
         #make the station ----------------------------------
-        #print(f"Station at: {pos.x} {pos.y} {pos.z} - {startZ} {station_step}")
         name = f"DS {index+1}"
         s_roles = f"tsn, station"
         station_object = npc_spawn(*pos, name, s_roles, stat_type, "behav_station")
@@ -219,7 +218,7 @@ def terrain_spawn_monsters(monster_value, center=None):
 call_signs = []
 enemy_name_number = 0
 call_signs.extend(range(1,100))
-#print(f"call_signs size = {len(call_signs)}")
+
 random.shuffle(call_signs)
 
 
@@ -294,7 +293,6 @@ def terrain_spawn_stations_old(difficulty, lethal_value):
                 _dist_test = distv.dot(distv)
                 if _dist_test < dist:
                     move = True
-                    #print("Move Station")
                     _pos = next(spawn_points)
                     break
         _spawned_pos.append(_pos)

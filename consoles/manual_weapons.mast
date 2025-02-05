@@ -49,7 +49,7 @@ on change get_weapons_selection(ship_id):
 
 on change manual_beams_version:
     cc= sbs.get_type_of_client(client_id)
-    # print("check manual weapons show {cc}")
+
     jump manual_weapons_show if "weap" in cc
     ->END
 

@@ -132,7 +132,6 @@ alt_ship_obj = to_object(alt_ship)
 # clear existing pending
 nav_id = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
 if nav_id:
-    #print(f"NAV ID {nav_id}" )
     sim.delete_navpoint_by_id(nav_id)
     set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
 
@@ -155,7 +154,7 @@ size = 5000
 nav_name = "Select Orders^for {alt_ship_obj.name}"
 
 nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, "#444")
-# print(f"NAV ID {nav_id}" )
+
 nav = sim.get_navpoint_by_id(nav_id)
 
 nav.visibleToShip = alt_ship
@@ -240,10 +239,8 @@ if order == "default":
 #
 # Only target things in patrol area
 #
-#print("patrol {target_point}")
 jump ai_loop if target_point is None
 the_target = closest(SPAWNED_ID, broad_test(target_point.x-5000, target_point.z-5000,target_point.x+5000, target_point.z+5000, 0xf0)&role("raider"))
-#print("patrol")
 jump do_target 
     
 
@@ -254,12 +251,8 @@ jump do_target
 if the_target is None:
     in_rect = broad_test(target_point.x-5000, target_point.z-5000,target_point.x+5000, target_point.z+5000, 0xf0)
     c = len(in_rect&role("raider"))
-    #print(f"In Rect {c}" )
     close_to_friend = broad_test_around(SPAWNED_ID, 5000,5000, 0xf0)
     the_target = closest(SPAWNED_ID,(in_rect | close_to_friend) &role("raider"))
-    #if the_target is not None:
-    #    t = to_object(the_target)
-    #    print(f"target {t.name}")
 
 --- do_target
 #
