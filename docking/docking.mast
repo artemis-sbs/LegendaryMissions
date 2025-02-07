@@ -3,7 +3,6 @@
 # When a player spawns, enable docking
 #
 //spawn if has_role(SPAWNED_ID, "__player__")
-
 ---- wait_for_game_started
     if not game_started:
         await delay_sim(1)
@@ -13,7 +12,8 @@
         schedule_player_docking(SPAWNED_ID, difficulty, "resupply_tanker", player_docking_resupply_docked)
     else:
         schedule_player_docking(SPAWNED_ID, difficulty, "station", player_docking_station_docked)
-
+---- wait_for_game_started
+    print()
 
 # Docking only on player ships
 # this adds a sub task to the docking task

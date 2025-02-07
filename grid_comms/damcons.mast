@@ -15,18 +15,18 @@
     orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
     + "Back" //comms
 
-for d in orders:
-    + "Fix now {d.name}" {"target_room": d.id}:
-        set_inventory_value(COMMS_SELECTED_ID, "target_room", target_room)
+    for d in orders:
+        + "Fix now {d.name}" {"target_room": d.id}:
+            set_inventory_value(COMMS_SELECTED_ID, "target_room", target_room)
 
 
 //comms/dc/work/cancel
     orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
     + "Back" //comms
 
-for d in orders:
-    + "Cancel {d.name}" {"target_room": d.id}:
-        unlink(COMMS_SELECTED_ID, "work-order", target_room)
+    for d in orders:
+        + "Cancel {d.name}" {"target_room": d.id}:
+            unlink(COMMS_SELECTED_ID, "work-order", target_room)
 
 
 ===== comms_damcons_goto_work =======

@@ -712,14 +712,14 @@ shared kidnap_status = 0
 
 //enable/comms if has_roles(COMMS_SELECTED_ID, "civ, suspect") and kidnap_status >= 1
 //comms if has_roles(COMMS_SELECTED_ID, "civ, suspect") and kidnap_status >= 1
-    + "Hail" handle_suspect_hail
-    + "Cargo" handle_suspect_cargo
-    + "Itinerary" handle_suspect_itinerary
++ "Hail" handle_suspect_hail
++ "Cargo" handle_suspect_cargo
++ "Itinerary" handle_suspect_itinerary
 
 ===== handle_suspect_hail ======
-    <<[green] "Hail"
-        " Hello, {COMMS_ORIGIN.name}.  We're moving cargo between the stations in this sector.
-    yield success
+<<[green] "Hail"
+    " Hello, {COMMS_ORIGIN.name}.  We're moving cargo between the stations in this sector.
+yield success
 
 ===== handle_suspect_cargo ======
     tempcargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
