@@ -1,10 +1,10 @@
 ====== operator_console =====
 
-gui_section( style="area: 5, 10, 50, 90;")
-""" Show a help image and say waiting for game to start """
+    gui_section( style="area: 5, 10, 50, 90;")
+    """ Show a help image and say waiting for game to start """
 
-CID = client_id & 0xffffffff
-gui_text("Client ID {CID}")
+    CID = client_id & 0xffffffff
+    gui_text("Client ID {CID}")
 
 
-await gui()
+    await gui()

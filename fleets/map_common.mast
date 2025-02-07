@@ -3,166 +3,166 @@
 
 =========== spawn_friendly_npc ===========
 
-print(f"World Select: {world_select.path}")
-if world_select.path == "deep_strike":
-    friendly_select = "none"
+    print(f"World Select: {world_select.path}")
+    if world_select.path == "deep_strike":
+        friendly_select = "none"
 
-match friendly_select:
-    case "many":
-        max_hull_points=10
-    case "lots":
-        max_hull_points=8
-    case "some":
-        max_hull_points=5
-    case "few":
-        max_hull_points=3
-    case "none":
-        # no civilian or friendly npcs
-        # But added eyes
-        jump spawn_players
+    match friendly_select:
+        case "many":
+            max_hull_points=10
+        case "lots":
+            max_hull_points=8
+        case "some":
+            max_hull_points=5
+        case "few":
+            max_hull_points=3
+        case "none":
+            # no civilian or friendly npcs
+            # But added eyes
+            jump spawn_players
 
 
-total_hull_points = 0
+    total_hull_points = 0
 
-attempts = 0
-
-# grab the ship data for all ships on TSN side
-tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "defender", ret_key_only=False)
-# pick a random tsn ship
-count = 1
-
-shared shipname_data = load_json_data(get_mission_dir_filename("shipnames.json"))
-tsnname_list = shipname_data.get("tsn")
-canuck_list = shipname_data.get("canadian")
-
-jump civilians if tsn_ship_data is None
-
-spawn_pos = Vec3(0,0,0)
-stations_friendly = to_object_list(role("tsn")  & role("station"))
-for x while total_hull_points<max_hull_points:
-    #
-    ship = random.choice(tsn_ship_data)
-
-    hull_points = ship["hullpoints"]
-
-    if hull_points+total_hull_points > max_hull_points:
-        attempts += 1
-        # failed to find a small enough ship
-        if attempts > 20:
-            break
-        #
-        # try again
-        continue
-
-    # reset attempts
     attempts = 0
-    # OK add this ship
-    if len(stations_friendly) > 0:
-        so = random.choice(stations_friendly)
-        spawn_pos = so.pos
-        spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
-    if random.randint(1,1867) == 1867: ### This is an inside joke for our Canadian players. 
-        friend = to_id(npc_spawn(*spawn_pos, f"TSN {canuck_list.pop(random.randrange(len(canuck_list)))}", "tsn, friendly", ship["key"], "behav_npcship"))
-    else:
-        friend = to_id(npc_spawn(*spawn_pos, f"TSN {tsnname_list.pop(random.randrange(len(tsnname_list)))}", "tsn, friendly", ship["key"], "behav_npcship"))
-    count += 1
-    total_hull_points += hull_points
-    set_face(friend, random_terran())
+
+    # grab the ship data for all ships on TSN side
+    tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "defender", ret_key_only=False)
+    # pick a random tsn ship
+    count = 1
+
+    shared shipname_data = load_json_data(get_mission_dir_filename("shipnames.json"))
+    tsnname_list = shipname_data.get("tsn")
+    canuck_list = shipname_data.get("canadian")
+
+    jump civilians if tsn_ship_data is None
+
+    spawn_pos = Vec3(0,0,0)
+    stations_friendly = to_object_list(role("tsn")  & role("station"))
+    for x while total_hull_points<max_hull_points:
+        #
+        ship = random.choice(tsn_ship_data)
+
+        hull_points = ship["hullpoints"]
+
+        if hull_points+total_hull_points > max_hull_points:
+            attempts += 1
+            # failed to find a small enough ship
+            if attempts > 20:
+                break
+            #
+            # try again
+            continue
+
+        # reset attempts
+        attempts = 0
+        # OK add this ship
+        if len(stations_friendly) > 0:
+            so = random.choice(stations_friendly)
+            spawn_pos = so.pos
+            spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
+        if random.randint(1,1867) == 1867: ### This is an inside joke for our Canadian players. 
+            friend = to_id(npc_spawn(*spawn_pos, f"TSN {canuck_list.pop(random.randrange(len(canuck_list)))}", "tsn, friendly", ship["key"], "behav_npcship"))
+        else:
+            friend = to_id(npc_spawn(*spawn_pos, f"TSN {tsnname_list.pop(random.randrange(len(tsnname_list)))}", "tsn, friendly", ship["key"], "behav_npcship"))
+        count += 1
+        total_hull_points += hull_points
+        set_face(friend, random_terran())
 
 ---- civilians
 
-civilian_count = 0
-match friendly_select:
-    case "many":
-        civilian_count = 4
-    case "lots":
-        civilian_count = 3
-    case "some":
-        civilian_count = 2
-    case "few":
-        civilian_count = 1
-    case "none":
-        jump spawn_players
+    civilian_count = 0
+    match friendly_select:
+        case "many":
+            civilian_count = 4
+        case "lots":
+            civilian_count = 3
+        case "some":
+            civilian_count = 2
+        case "few":
+            civilian_count = 1
+        case "none":
+            jump spawn_players
 
-# grab the ship data for all ships on TSN side
-civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
-->END if len(civilian_data)==0
-count = 1
+    # grab the ship data for all ships on TSN side
+    civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
+    ->END if len(civilian_data)==0
+    count = 1
 
-alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
-civname_list = shipname_data.get("civilian")
+    alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
+    civname_list = shipname_data.get("civilian")
 
-for count in range(civilian_count):
-    #
-    ship = random.choice(civilian_data)
-    #
-    if len(stations_friendly) > 0:
-        so = random.choice(stations_friendly)
-        spawn_pos = so.pos
-        spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
-    
-    civ_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
+    for count in range(civilian_count):
+        #
+        ship = random.choice(civilian_data)
+        #
+        if len(stations_friendly) > 0:
+            so = random.choice(stations_friendly)
+            spawn_pos = so.pos
+            spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
+        
+        civ_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
 
-    friend = to_object(npc_spawn(*spawn_pos, civ_name, "civ, tsn, friendly, civilian", ship["key"], "behav_npcship"))
-    set_face(friend.id, random_terran(civilian=True))
-    friend.data_set.set("ally_list","tsn",0)
-    count += 1
+        friend = to_object(npc_spawn(*spawn_pos, civ_name, "civ, tsn, friendly, civilian", ship["key"], "behav_npcship"))
+        set_face(friend.id, random_terran(civilian=True))
+        friend.data_set.set("ally_list","tsn",0)
+        count += 1
 
-->END if world_select.path == "sandbox"
+    ->END if world_select.path == "sandbox"
 
 
 ====== spawn_players =======
-#
-# No longer "Spawn" but move an remove
-#
-c=0
-first = True
+    #
+    # No longer "Spawn" but move an remove
+    #
+    c=0
+    first = True
 
-#test_func(3)
+    #test_func(3)
 
 
-await delay_sim(0)
-spawn_pos = Vec3(0,0,0)
-player_ships = to_object_list(role("default_player_ship"))
-#------------------------------------------------------------------------------------------------------------
-for player_ship in player_ships:
-    side = player_ship.side
-    stations_friendly = to_object_list(role(side)  & role("station"))
+    await delay_sim(0)
+    spawn_pos = Vec3(0,0,0)
+    player_ships = to_object_list(role("default_player_ship"))
+    #------------------------------------------------------------------------------------------------------------
+    for player_ship in player_ships:
+        side = player_ship.side
+        stations_friendly = to_object_list(role(side)  & role("station"))
 
-    if c>= player_count:
-        # make sure the id is cleared dry docked ships
-        player_ship.art_id = "invisible"
-        player_ship.remove_role("__player__")
-        player_ship.remove_role("tsn")
-        player_ship.side = "unused"
-        # Delay the delete
-        task_schedule(player_ships_remove_unused, {"_ship_id": player_ship.id})
-        continue
+        if c>= player_count:
+            # make sure the id is cleared dry docked ships
+            player_ship.art_id = "invisible"
+            player_ship.remove_role("__player__")
+            player_ship.remove_role("tsn")
+            player_ship.side = "unused"
+            # Delay the delete
+            task_schedule(player_ships_remove_unused, {"_ship_id": player_ship.id})
+            continue
 
-    # Reset to default blob in case art work changed
-    name = player_ship.name
-    sbs.player_ship_setup_defaults(player_ship.engine_object)
-    sbs.player_ship_setup_from_data(player_ship.engine_object)
-    player_ship.name = name
+        # Reset to default blob in case art work changed
+        name = player_ship.name
+        sbs.player_ship_setup_defaults(player_ship.engine_object)
+        sbs.player_ship_setup_from_data(player_ship.engine_object)
+        player_ship.name = name
 
-    if len(stations_friendly) > 0:
-        so = random.choice(stations_friendly)
-        spawn_pos = so.pos
-        spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
-        player_ship.pos = spawn_pos
-    c+=1
-    if first:
-        assign_client_to_ship(0,to_id(player_ship))
-        first = False
+        if len(stations_friendly) > 0:
+            so = random.choice(stations_friendly)
+            spawn_pos = so.pos
+            spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
+            player_ship.pos = spawn_pos
+        c+=1
+        if first:
+            assign_client_to_ship(0,to_id(player_ship))
+            first = False
 
-    player_ship_update_friendly(player_ship, stations_friendly, True)
+        player_ship_update_friendly(player_ship, stations_friendly, True)
 
-shared players_cleaned = True
-->END
+    shared players_cleaned = True
+    ->END
     
     
 ==== player_ships_remove_unused
-sbs.delete_object(_ship_id)
-->END
+    sbs.delete_object(_ship_id)
+    ->END
 
         

@@ -5,14 +5,14 @@
 //spawn if has_role(SPAWNED_ID, "__player__")
 
 ---- wait_for_game_started
-if not game_started:
-    await delay_sim(1)
-    jump wait_for_game_started
+    if not game_started:
+        await delay_sim(1)
+        jump wait_for_game_started
 
-if world_select.path == "deep_strike":
-    schedule_player_docking(SPAWNED_ID, difficulty, "resupply_tanker", player_docking_resupply_docked)
-else:
-    schedule_player_docking(SPAWNED_ID, difficulty, "station", player_docking_station_docked)
+    if world_select.path == "deep_strike":
+        schedule_player_docking(SPAWNED_ID, difficulty, "resupply_tanker", player_docking_resupply_docked)
+    else:
+        schedule_player_docking(SPAWNED_ID, difficulty, "station", player_docking_station_docked)
 
 
 # Docking only on player ships

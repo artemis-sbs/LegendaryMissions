@@ -4,22 +4,22 @@
 " To end the game, use the Admiral command end game 
 
 
-terrain_value = terrain_to_value(terrain_select)
-lethal_value =  terrain_to_value(lethal_select)
-friendly_value = terrain_to_value(friendly_select)
-monster_value = terrain_to_value(monster_select)
-upgrade_value = terrain_to_value(upgrade_select)
+    terrain_value = terrain_to_value(terrain_select)
+    lethal_value =  terrain_to_value(lethal_select)
+    friendly_value = terrain_to_value(friendly_select)
+    monster_value = terrain_to_value(monster_select)
+    upgrade_value = terrain_to_value(upgrade_select)
+        
     
- 
 
-#------------------------------------------------------------------------------------------------------------
-# terrain_spawn_stations(difficulty, lethal_value)
-# await task_schedule(spawn_friendly_npc)
-# terrain_asteroid_clusters(terrain_value)
-# terrain_spawn_nebula_clusters(terrain_value)
-# terrain_spawn_pickups(upgrade_value)
+    #------------------------------------------------------------------------------------------------------------
+    # terrain_spawn_stations(difficulty, lethal_value)
+    # await task_schedule(spawn_friendly_npc)
+    # terrain_asteroid_clusters(terrain_value)
+    # terrain_spawn_nebula_clusters(terrain_value)
+    # terrain_spawn_pickups(upgrade_value)
 
-await task_schedule(spawn_players)
+    await task_schedule(spawn_players)
 
-#------------------------------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------------------------
 

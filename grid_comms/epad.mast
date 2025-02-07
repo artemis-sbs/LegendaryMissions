@@ -1,44 +1,44 @@
 //enable/grid/comms if has_roles(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "epad")
 
 //comms if has_roles(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "epad")
-grid_detailed_status(COMMS_SELECTED_ID, "Engineering Personal Assistant Device", "#DDF")
-+ "display" //comms/epad/display
+    grid_detailed_status(COMMS_SELECTED_ID, "Engineering Personal Assistant Device", "#DDF")
+    + "display" //comms/epad/display
 
 
 //comms/epad/display if has_role(COMMS_SELECTED_ID, "epad")
-+ "Back" //comms
-+ "Room icons" epad_room_icons
-+ "Room circles" epad_room_simple
-+ "System icons" epad_system_icons
-+ "Systems diamonds" epad_system_simple
+    + "Back" //comms
+    + "Room icons" epad_room_icons
+    + "Room circles" epad_room_simple
+    + "System icons" epad_system_icons
+    + "Systems diamonds" epad_system_simple
 
 
 
 === epad_room_icons
-rooms = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("room"))
-for room in rooms:
-    room.data_set.set("icon_index", get_inventory_value(room, "icon_index", 97),0)
-    room.data_set.set("icon_scale", get_inventory_value(room, "icon_scale", 1)/2.0,0)
-yield success
+    rooms = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("room"))
+    for room in rooms:
+        room.data_set.set("icon_index", get_inventory_value(room, "icon_index", 97),0)
+        room.data_set.set("icon_scale", get_inventory_value(room, "icon_scale", 1)/2.0,0)
+    yield success
 
 === epad_room_simple
-rooms = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("room"))
-for room in rooms:
-    room.data_set.set("icon_index", get_inventory_value(room, "simple_icon_index", 97),0)
-    room.data_set.set("icon_scale", get_inventory_value(room, "icon_scale", 1)/4.0,0)
-yield success
+    rooms = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("room"))
+    for room in rooms:
+        room.data_set.set("icon_index", get_inventory_value(room, "simple_icon_index", 97),0)
+        room.data_set.set("icon_scale", get_inventory_value(room, "icon_scale", 1)/4.0,0)
+    yield success
 
 === epad_system_icons
-rooms = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("system"))
-for room in rooms:
-    room.data_set.set("icon_index", get_inventory_value(room, "icon_index", 12), 0)
-    room.data_set.set("icon_scale", get_inventory_value(room, "icon_scale", 1)/2.0,0)
-yield success
+    rooms = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("system"))
+    for room in rooms:
+        room.data_set.set("icon_index", get_inventory_value(room, "icon_index", 12), 0)
+        room.data_set.set("icon_scale", get_inventory_value(room, "icon_scale", 1)/2.0,0)
+    yield success
 
 === epad_system_simple
-rooms = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("system"))
-for room in rooms:
-    room.data_set.set("icon_index", get_inventory_value(room, "simple_icon_index", 12),0)
-    room.data_set.set("icon_scale", get_inventory_value(room, "icon_scale", 1)/4.0,0)
-yield success
+    rooms = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("system"))
+    for room in rooms:
+        room.data_set.set("icon_index", get_inventory_value(room, "simple_icon_index", 12),0)
+        room.data_set.set("icon_scale", get_inventory_value(room, "icon_scale", 1)/4.0,0)
+    yield success
 

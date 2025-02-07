@@ -5,20 +5,20 @@ grid_set_grid_current_theme(GRID_THEME_INDEX )
 
 
 //damage/heat
-grid_damage_system(DAMAGE_ORIGIN_ID, int(EVENT.sub_tag))
+    grid_damage_system(DAMAGE_ORIGIN_ID, int(EVENT.sub_tag))
 
 
 
 //damage/internal
-# This called when there is damage being taken internally
-#
-# The DAMAGE_ORIGIN_ID is the ship being damaged
-# EVENT has the event data sub_float has the amount, source_point has the point
-#
-system_hit = int(EVENT.sub_float)
-source_point = EVENT.source_point
-damage_amount = EVENT.sub_float
-grid_take_internal_damage_at(DAMAGE_ORIGIN_ID, source_point, system_hit, damage_amount)
+    # This called when there is damage being taken internally
+    #
+    # The DAMAGE_ORIGIN_ID is the ship being damaged
+    # EVENT has the event data sub_float has the amount, source_point has the point
+    #
+    system_hit = int(EVENT.sub_float)
+    source_point = EVENT.source_point
+    damage_amount = EVENT.sub_float
+    grid_take_internal_damage_at(DAMAGE_ORIGIN_ID, source_point, system_hit, damage_amount)
 
 
 
