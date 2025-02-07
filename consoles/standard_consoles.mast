@@ -7,84 +7,84 @@
 
 
 @console/helm "Helm"
-" Pilot the ship
+    " Pilot the ship
 
-# get_type_of_client
-console_select = "helm"
+    # get_type_of_client
+    console_select = "helm"
 
-_ship_id = sbs.get_ship_of_client(client_id) 
-#
-# Handle jump vs Warp drive
-#
-blob = to_blob(_ship_id)
-is_jump = blob.get("jump_drive_active", 0) == 1
+    _ship_id = sbs.get_ship_of_client(client_id) 
+    #
+    # Handle jump vs Warp drive
+    #
+    blob = to_blob(_ship_id)
+    is_jump = blob.get("jump_drive_active", 0) == 1
 
-gui_add_console_tab(_ship_id, console_select, console_select, None)
-gui_console(console_select, is_jump)
+    gui_add_console_tab(_ship_id, console_select, console_select, None)
+    gui_console(console_select, is_jump)
 
-await gui()
+    await gui()
 
 
 @console/weapons "Weapons"
-" Protect the ship from enemies
-console_select = "weapons"
-jump common_console_show
+    " Protect the ship from enemies
+    console_select = "weapons"
+    jump common_console_show
 
 @console/engineering "Engineering"
-" Keep the ship running optimally
-console_select = "engineering"
-jump common_console_show
+    " Keep the ship running optimally
+    console_select = "engineering"
+    jump common_console_show
 
 @console/comms "Communication"
-" Interact with other ships and stations
+    " Interact with other ships and stations
 
-# Clear Comms Info
-console_select = "comms"
-comms_info("static")
-jump common_console_show
+    # Clear Comms Info
+    console_select = "comms"
+    comms_info("static")
+    jump common_console_show
 
 @console/science "Science"
-" Discover and provide vital information
-console_select = "science"
-jump common_console_show
+    " Discover and provide vital information
+    console_select = "science"
+    jump common_console_show
 
 
 ===== common_console_show ====
-_ship_id = sbs.get_ship_of_client(client_id) 
-gui_add_console_tab(_ship_id, "helm", console_select, None)
-gui_console(console_select)
+    _ship_id = sbs.get_ship_of_client(client_id) 
+    gui_add_console_tab(_ship_id, "helm", console_select, None)
+    gui_console(console_select)
 
-await gui()
+    await gui()
 
 @console/mainscreen "Mainscreen"
-" The main viewscreen
+    " The main viewscreen
 
-#
-# Current this reuses the main screen view from the server
-#
-jump show_main_game_screen
+    #
+    # Current this reuses the main screen view from the server
+    #
+    jump show_main_game_screen
 
 
 @console/cinematic "Cinematic"
-" The cinematic view of the action
+    " The cinematic view of the action
 
-# Layout to assure it takes up full screen 
+    # Layout to assure it takes up full screen 
 
-gui_section("area:0,0,100,100;")
-gui_activate_console("cinematic")
-gui_layout_widget("3dview")
-set_inventory_value(_ship_id, "cinema_focus", _ship_id)
+    gui_section("area:0,0,100,100;")
+    gui_activate_console("cinematic")
+    gui_layout_widget("3dview")
+    set_inventory_value(_ship_id, "cinema_focus", _ship_id)
 
-if _ship_id is None:
-    print("WARNING: cinematic on None player ship")
+    if _ship_id is None:
+        print("WARNING: cinematic on None player ship")
 
-sbs.assign_client_to_ship(client_id, _ship_id)
-gui_cinematic_auto(client_id)
+    sbs.assign_client_to_ship(client_id, _ship_id)
+    gui_cinematic_auto(client_id)
 
-on change get_inventory_value(_ship_id, "cinema_focus"):
-    focus_id = get_inventory_value(_ship_id, "cinema_focus", _ship_id)
-    if focus_id is not None:
-        sbs.assign_client_to_ship(client_id, focus_id)
-        gui_cinematic_auto(client_id)
+    on change get_inventory_value(_ship_id, "cinema_focus"):
+        focus_id = get_inventory_value(_ship_id, "cinema_focus", _ship_id)
+        if focus_id is not None:
+            sbs.assign_client_to_ship(client_id, focus_id)
+            gui_cinematic_auto(client_id)
 
-await gui()
+    await gui()

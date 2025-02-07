@@ -7,345 +7,345 @@ shared allow_debug = True
 #  gui_active_path("console/helm, console/comms, console/engineering, console/science, console/weapons" )
 
 //gui/tab/helm if is_dev_build()
-console_select= "helm"
-jump console_selected 
+    console_select= "helm"
+    jump console_selected 
 
 //gui/tab/comms if is_dev_build()
-console_select= "comms"
-jump console_selected 
+    console_select= "comms"
+    jump console_selected 
 
 //gui/tab/engineering if is_dev_build()
-console_select= "engineering"
-jump console_selected 
+    console_select= "engineering"
+    jump console_selected 
 
 //gui/tab/science if is_dev_build()
-console_select= "science"
-jump console_selected 
+    console_select= "science"
+    jump console_selected 
 
 //gui/tab/weapons if is_dev_build()
-console_select= "weapons"
-jump console_selected 
+    console_select= "weapons"
+    jump console_selected 
 
 
 //gui/tab/debug if is_dev_build()
-jump debug_screen
+    jump debug_screen
 
 === debug_screen
-items = [{"icon": 12, "text": "file"}, {"icon": 13, "text": "edit"}]
+    items = [{"icon": 12, "text": "file"}, {"icon": 13, "text": "edit"}]
 
-gui_section("area:0,10,5em,78;background: #fff1;")
+    gui_section("area:0,10,5em,78;background: #fff1;")
 
-# Area needs late binding
-# Need a section style instead of item_width and height: should choose row-height, col-width
+    # Area needs late binding
+    # Need a section style instead of item_width and height: should choose row-height, col-width
 
-lb_horz = gui_list_box(items,"row-height: 70px", item_template=debug_menu_template, title_template="$text:menu;justify:center;color:white;", select=True)
-gui_section( style="area: 10,10,90,90;")
+    lb_horz = gui_list_box(items,"row-height: 70px", item_template=debug_menu_template, title_template="$text:menu;justify:center;color:white;", select=True)
+    gui_section( style="area: 10,10,90,90;")
 
-"""
-Under construction
-"""
+    """
+    Under construction
+    """
 
-gui_section(style="area:10,15,35,100;row-height:35px;")
-gui_row()
-on gui_message(gui_button("Test Upgrades")):
-    task_schedule(spawn_test_upgrades)
+    gui_section(style="area:10,15,35,100;row-height:35px;")
+    gui_row()
+    on gui_message(gui_button("Test Upgrades")):
+        task_schedule(spawn_test_upgrades)
 
-gui_row()
-on gui_message(gui_button("Test Wreck")):
-    task_schedule(spawn_test_wreck)
+    gui_row()
+    on gui_message(gui_button("Test Wreck")):
+        task_schedule(spawn_test_wreck)
 
 
 
-gui_row()
-on gui_message(gui_button("Test Shapes")):
-    print("Why is this triggering")
-    # jump spawn_test_shapes
+    gui_row()
+    on gui_message(gui_button("Test Shapes")):
+        print("Why is this triggering")
+        # jump spawn_test_shapes
 
-gui_row()
-on gui_message(gui_button("Test list consoles")):
-    jump debug_show_list_consoles
+    gui_row()
+    on gui_message(gui_button("Test list consoles")):
+        jump debug_show_list_consoles
 
-gui_row()
-on gui_message(gui_button("Fake scan all")):
-    await task_schedule(debug_fake_scan_all)
-    
-gui_row()
-on gui_message(gui_button("Kill enemy shields")):
-    for e in role("raider"):
+    gui_row()
+    on gui_message(gui_button("Fake scan all")):
+        await task_schedule(debug_fake_scan_all)
+        
+    gui_row()
+    on gui_message(gui_button("Kill enemy shields")):
+        for e in role("raider"):
+            r_blob = to_blob(e)
+            continue if r_blob is None
+            r_blob.set("shield_val", 0, 0)
+            r_blob.set("shield_val", 0, 1)
+
+    gui_row()
+    on gui_message(gui_button("science cinema focus")):
+        await task_schedule(debug_cinema_focus, data={"_focus": "science"})
+
+    on gui_message(gui_button("weapons cinema focus")):
+        await task_schedule(debug_cinema_focus, data={"_focus": "weapons"})
+
+    on gui_message(gui_button("player cinema focus")):
+        task_schedule(debug_cinema_focus, data={"_focus": "player"})
+        
+    gui_row()
+    on gui_message(gui_button("weapons jump to")):
+        ship = sbs.get_ship_of_client(client_id)
+        task_schedule(debug_jump_to, data={"_focus": "weapons", "_ship_id": ship})
+    gui_row()
+    on gui_message(gui_button("science jump to")):
+        ship = sbs.get_ship_of_client(client_id)
+        task_schedule(debug_jump_to, data={"_focus": "science", "_ship_id": ship})
+    gui_row()
+    on gui_message(gui_button("Force error")):
+        fred = None
+        x = fred.fred
+        
+
+    gui_row()
+    gui_blank()
+    gui_row()
+    on gui_message(gui_button("Trigger end game")):
+        start_text = "Debug ended mission."
+        signal_emit("show_game_results", None)
+
+
+    gui_section(style="area:50,15,80,15+35px;row-height:35px;")
+    gui_row()
+    on gui_message(gui_button("Test Enemy")):
+        abis = lb_abilities.get_value()
+        if len(abis)>0:
+            abis = "elite,"+",".join(abis)
+        else:
+            abis = None
+        await task_schedule(spawn_test_enemy,data={"abi": abis})
+
+    abilities = elite_get_all_abilities()
+    lb_abilities = ~~list_box_control(list(abilities), 
+                                text=lambda item: f"$text:{item};justify: center;",
+                                title = lambda: "$text:Elite Abilities;justify:center;",
+                                background= "#1572", title_background="#1578",
+                                multi=True,
+                                item_height=4)~~
+
+    gui_section(style="area:50,25,80,75;")
+    gui_content(lb_abilities, var="abils")
+
+    gui_section(style="area:50,76,80,76+35px;")
+    on gui_message(gui_button("clear")):
+        lb_abilities.select_none()
+    on gui_message(gui_button("all")):
+        lb_abilities.select_all()
+
+
+    gui_activate_console("debug")
+
+    await gui()
+
+
+===== spawn_test_upgrades === 
+    # For testing upgrades, load some candy up front
+    _ship_id = sbs.get_ship_of_client(client_id)
+    ->END if _ship_id is None
+
+    eo = to_engine_object(_ship_id)
+    _pos_eo = eo.pos
+    _forward = eo.forward_vector()
+    #_vpos = Vec3(_pos_eo.x, _pos_eo.y, _pos_eo.z)
+    #_vforward = Vec3(_forward.x, _forward.y, _forward.z)
+    _pos = _pos_eo + (_forward * 300)
+
+
+    pickup_spawn(125+_pos.x, _pos.y, _pos.z+450, "carapaction_coil")
+    pickup_spawn(200+_pos.x, _pos.y, _pos.z+450, "infusion_pcoils")
+    pickup_spawn(275+_pos.x, _pos.y, _pos.z+450, "tauron_focuser")
+    pickup_spawn(125+_pos.x, _pos.y, _pos.z+525, "secret_codecase")
+    pickup_spawn(200+_pos.x, _pos.y, _pos.z+525, "hidens_powercell")
+    pickup_spawn(275+_pos.x, _pos.y, _pos.z+525, "vigoranium_nodule")
+    pickup_spawn(125+_pos.x, _pos.y, _pos.z+600, "cetrocite_crystal")
+    pickup_spawn(200+_pos.x, _pos.y, _pos.z+600, "lateral_array")
+    pickup_spawn(275+_pos.x, _pos.y, _pos.z+600, "haplix_overcharger")
+    pickup_spawn(_pos.x, _pos.y, _pos.z+400, "escape-pod")
+
+    ->END
+
+===== spawn_test_wreck ===== 
+    # For testing wrecks, load one up front
+
+    jump debug_screen if not _ship_id
+
+    eo = to_engine_object(_ship_id)
+    _pos_eo = eo.pos
+    _forward = eo.forward_vector()
+    _pos = _pos_eo + (_forward * 300)
+
+    wr = terrain_spawn(_pos.x, _pos.y, _pos.z+300, "Wreck", "wreck", "wreck", "behav_asteroid")
+    temp_yaw = random.uniform(0.001, 0.003)
+    temp_pitch = random.uniform(0.002, 0.004)
+    wr.engine_object.steer_yaw = temp_yaw
+    wr.engine_object.steer_pitch = temp_pitch
+    wr.blob.set("radar_color_override", "#f0c")
+    set_inventory_value(wr.id, "hp", 150)
+    set_inventory_value(wr.id, "hull_side", "skaraan")
+    set_inventory_value(wr.id, "hull_type", "cruiser")
+
+    ->END
+
+
+===== spawn_test_enemy ===== 
+    # For testing wrecks, load one up front
+    _ship_id = sbs.get_ship_of_client(client_id)
+    jump debug_screen if not _ship_id
+
+    eo = to_engine_object(_ship_id)
+    _pos_eo = eo.pos
+    _forward = eo.forward_vector()
+    _pos = _pos_eo + (_forward * 300)
+
+    # spawn_data = npc_spawn(_pos.x, _pos.y, _pos.z+400, "Clay Pigeon", "ximni, raider", "xim_light_cruiser", "behav_npcship")
+
+    fleet_obj = create_siege_fleet("ximni", 1, _pos.x, _pos.y, _pos.z+400, ship_roles=abi)
+
+    for e in linked_to(fleet_obj.id,"ship_list"):
         r_blob = to_blob(e)
         continue if r_blob is None
         r_blob.set("shield_val", 0, 0)
         r_blob.set("shield_val", 0, 1)
 
-gui_row()
-on gui_message(gui_button("science cinema focus")):
-    await task_schedule(debug_cinema_focus, data={"_focus": "science"})
 
-on gui_message(gui_button("weapons cinema focus")):
-    await task_schedule(debug_cinema_focus, data={"_focus": "weapons"})
-
-on gui_message(gui_button("player cinema focus")):
-    task_schedule(debug_cinema_focus, data={"_focus": "player"})
-    
-gui_row()
-on gui_message(gui_button("weapons jump to")):
-    ship = sbs.get_ship_of_client(client_id)
-    task_schedule(debug_jump_to, data={"_focus": "weapons", "_ship_id": ship})
-gui_row()
-on gui_message(gui_button("science jump to")):
-    ship = sbs.get_ship_of_client(client_id)
-    task_schedule(debug_jump_to, data={"_focus": "science", "_ship_id": ship})
-gui_row()
-on gui_message(gui_button("Force error")):
-    fred = None
-    x = fred.fred
-    
-
-gui_row()
-gui_blank()
-gui_row()
-on gui_message(gui_button("Trigger end game")):
-    start_text = "Debug ended mission."
-    signal_emit("show_game_results", None)
-
-
-gui_section(style="area:50,15,80,15+35px;row-height:35px;")
-gui_row()
-on gui_message(gui_button("Test Enemy")):
-    abis = lb_abilities.get_value()
-    if len(abis)>0:
-        abis = "elite,"+",".join(abis)
-    else:
-        abis = None
-    await task_schedule(spawn_test_enemy,data={"abi": abis})
-
-abilities = elite_get_all_abilities()
-lb_abilities = ~~list_box_control(list(abilities), 
-                               text=lambda item: f"$text:{item};justify: center;",
-                               title = lambda: "$text:Elite Abilities;justify:center;",
-                               background= "#1572", title_background="#1578",
-                               multi=True,
-                               item_height=4)~~
-
-gui_section(style="area:50,25,80,75;")
-gui_content(lb_abilities, var="abils")
-
-gui_section(style="area:50,76,80,76+35px;")
-on gui_message(gui_button("clear")):
-    lb_abilities.select_none()
-on gui_message(gui_button("all")):
-    lb_abilities.select_all()
-
-
-gui_activate_console("debug")
-
-await gui()
-
-
-===== spawn_test_upgrades === 
-# For testing upgrades, load some candy up front
-_ship_id = sbs.get_ship_of_client(client_id)
-->END if _ship_id is None
-
-eo = to_engine_object(_ship_id)
-_pos_eo = eo.pos
-_forward = eo.forward_vector()
-#_vpos = Vec3(_pos_eo.x, _pos_eo.y, _pos_eo.z)
-#_vforward = Vec3(_forward.x, _forward.y, _forward.z)
-_pos = _pos_eo + (_forward * 300)
-
-
-pickup_spawn(125+_pos.x, _pos.y, _pos.z+450, "carapaction_coil")
-pickup_spawn(200+_pos.x, _pos.y, _pos.z+450, "infusion_pcoils")
-pickup_spawn(275+_pos.x, _pos.y, _pos.z+450, "tauron_focuser")
-pickup_spawn(125+_pos.x, _pos.y, _pos.z+525, "secret_codecase")
-pickup_spawn(200+_pos.x, _pos.y, _pos.z+525, "hidens_powercell")
-pickup_spawn(275+_pos.x, _pos.y, _pos.z+525, "vigoranium_nodule")
-pickup_spawn(125+_pos.x, _pos.y, _pos.z+600, "cetrocite_crystal")
-pickup_spawn(200+_pos.x, _pos.y, _pos.z+600, "lateral_array")
-pickup_spawn(275+_pos.x, _pos.y, _pos.z+600, "haplix_overcharger")
-pickup_spawn(_pos.x, _pos.y, _pos.z+400, "escape-pod")
-
-->END
-
-===== spawn_test_wreck ===== 
-# For testing wrecks, load one up front
-
-jump debug_screen if not _ship_id
-
-eo = to_engine_object(_ship_id)
-_pos_eo = eo.pos
-_forward = eo.forward_vector()
-_pos = _pos_eo + (_forward * 300)
-
-wr = terrain_spawn(_pos.x, _pos.y, _pos.z+300, "Wreck", "wreck", "wreck", "behav_asteroid")
-temp_yaw = random.uniform(0.001, 0.003)
-temp_pitch = random.uniform(0.002, 0.004)
-wr.engine_object.steer_yaw = temp_yaw
-wr.engine_object.steer_pitch = temp_pitch
-wr.blob.set("radar_color_override", "#f0c")
-set_inventory_value(wr.id, "hp", 150)
-set_inventory_value(wr.id, "hull_side", "skaraan")
-set_inventory_value(wr.id, "hull_type", "cruiser")
-
-->END
-
-
-===== spawn_test_enemy ===== 
-# For testing wrecks, load one up front
-_ship_id = sbs.get_ship_of_client(client_id)
-jump debug_screen if not _ship_id
-
-eo = to_engine_object(_ship_id)
-_pos_eo = eo.pos
-_forward = eo.forward_vector()
-_pos = _pos_eo + (_forward * 300)
-
-# spawn_data = npc_spawn(_pos.x, _pos.y, _pos.z+400, "Clay Pigeon", "ximni, raider", "xim_light_cruiser", "behav_npcship")
-
-fleet_obj = create_siege_fleet("ximni", 1, _pos.x, _pos.y, _pos.z+400, ship_roles=abi)
-
-for e in linked_to(fleet_obj.id,"ship_list"):
-    r_blob = to_blob(e)
-    continue if r_blob is None
-    r_blob.set("shield_val", 0, 0)
-    r_blob.set("shield_val", 0, 1)
-
-
-->END
+    ->END
 
 
 ===== spawn_test_shapes === 
 
-# For testing generic shapes
-_ship_id = sbs.get_ship_of_client(client_id)
-jump debug_screen if not _ship_id
+    # For testing generic shapes
+    _ship_id = sbs.get_ship_of_client(client_id)
+    jump debug_screen if not _ship_id
 
-eo = to_engine_object(_ship_id)
-_pos_eo = eo.pos
-_forward = eo.forward_vector()
-_pos = _pos_eo + (_forward * 300)
+    eo = to_engine_object(_ship_id)
+    _pos_eo = eo.pos
+    _forward = eo.forward_vector()
+    _pos = _pos_eo + (_forward * 300)
 
-shape1 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+300, "Shape 1", "shape", "generic-cube", "behav_asteroid")
-shape2 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+300, "Shape 2", "shape", "generic-cylinder", "behav_asteroid")
-shape3 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+300, "Shape 3", "shape", "generic-dodecahedron", "behav_asteroid")
-shape4 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+300, "Shape 4", "shape", "generic-disk", "behav_asteroid")
-shape5 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+700, "Shape 5", "shape", "generic-hexagon", "behav_asteroid")
-shape6 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+700, "Shape 6", "shape", "generic-icosahedron", "behav_asteroid")
-shape7 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+700, "Shape 7", "shape", "generic-cone", "behav_asteroid")
-shape8 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+700, "Shape 8", "shape", "generic-octohedron", "behav_asteroid")
-shape9 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+1100, "Shape 9", "shape", "generic-rectangle", "behav_asteroid")
-shape10 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+1100, "Shape 10", "shape", "generic-sphere", "behav_asteroid")
-shape11 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+1100, "Shape 11", "shape", "generic-tetrahedron", "behav_asteroid")
-shape12 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+1100, "Shape 12", "shape", "generic-torus", "behav_asteroid")
-
-
+    shape1 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+300, "Shape 1", "shape", "generic-cube", "behav_asteroid")
+    shape2 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+300, "Shape 2", "shape", "generic-cylinder", "behav_asteroid")
+    shape3 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+300, "Shape 3", "shape", "generic-dodecahedron", "behav_asteroid")
+    shape4 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+300, "Shape 4", "shape", "generic-disk", "behav_asteroid")
+    shape5 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+700, "Shape 5", "shape", "generic-hexagon", "behav_asteroid")
+    shape6 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+700, "Shape 6", "shape", "generic-icosahedron", "behav_asteroid")
+    shape7 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+700, "Shape 7", "shape", "generic-cone", "behav_asteroid")
+    shape8 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+700, "Shape 8", "shape", "generic-octohedron", "behav_asteroid")
+    shape9 = terrain_spawn(_pos.x-600, _pos.y, _pos.z+1100, "Shape 9", "shape", "generic-rectangle", "behav_asteroid")
+    shape10 = terrain_spawn(_pos.x-200, _pos.y, _pos.z+1100, "Shape 10", "shape", "generic-sphere", "behav_asteroid")
+    shape11 = terrain_spawn(_pos.x+200, _pos.y, _pos.z+1100, "Shape 11", "shape", "generic-tetrahedron", "behav_asteroid")
+    shape12 = terrain_spawn(_pos.x+600, _pos.y, _pos.z+1100, "Shape 12", "shape", "generic-torus", "behav_asteroid")
 
 
-jump debug_screen
+
+
+    jump debug_screen
 
 ===== mast_debug_screen ======
 
-gui_section(style="area: 10,10,90,90;")
+    gui_section(style="area: 10,10,90,90;")
 
-"""
-Under construction
-"""
+    """
+    Under construction
+    """
 
-gui_activate_console("mast")
+    gui_activate_console("mast")
 
-await gui()
+    await gui()
 
 
 ==== debug_show_list_consoles ====
 
-gui_section(style="area: 10,10,90,90;")
+    gui_section(style="area: 10,10,90,90;")
 
-## To get the ships this client is on
-####    _ship_id = sbs.get_ship_of_client(client_id)
-#
-## To get the things link to the player ship as a console
-####    linked_to( ....as set of things ...., "consoles")
-#
-## Everything that has a inventory_value CONSOLE_TYPE 
-## That has the value "helm"
-####         has_inventory_value("CONSOLE_TYPE", "helm")
-#
-#
-_ship_id = sbs.get_ship_of_client(client_id)
-consoles =  linked_to(_ship_id, "consoles") & has_inventory_value("CONSOLE_TYPE", "helm")
+    ## To get the ships this client is on
+    ####    _ship_id = sbs.get_ship_of_client(client_id)
+    #
+    ## To get the things link to the player ship as a console
+    ####    linked_to( ....as set of things ...., "consoles")
+    #
+    ## Everything that has a inventory_value CONSOLE_TYPE 
+    ## That has the value "helm"
+    ####         has_inventory_value("CONSOLE_TYPE", "helm")
+    #
+    #
+    _ship_id = sbs.get_ship_of_client(client_id)
+    consoles =  linked_to(_ship_id, "consoles") & has_inventory_value("CONSOLE_TYPE", "helm")
 
-#
-# 
-#
-all_helm_consoles =  role("__gui__") & has_inventory_value("CONSOLE_TYPE", "helm")
+    #
+    # 
+    #
+    all_helm_consoles =  role("__gui__") & has_inventory_value("CONSOLE_TYPE", "helm")
 
-"""
-My ships's Helm count {len(consoles)}
-All Helm count {len(all_helm_consoles)}
-"""
+    """
+    My ships's Helm count {len(consoles)}
+    All Helm count {len(all_helm_consoles)}
+    """
 
-for c in consoles:
-    comms_broadcast(c, f"my ship's Helm console", "green")
-
-
-for c in all_helm_consoles:
-    _ship_id = sbs.get_ship_of_client(c)
-    if _ship_id:
-        p = to_object(_ship_id)
-        comms_broadcast(c, f"{p.name}'s Helm console", "blue")
+    for c in consoles:
+        comms_broadcast(c, f"my ship's Helm console", "green")
 
 
-await gui():
-    + "refresh":
-        jump debug_show_list_consoles
-    + "back":
-        jump debug_screen
+    for c in all_helm_consoles:
+        _ship_id = sbs.get_ship_of_client(c)
+        if _ship_id:
+            p = to_object(_ship_id)
+            comms_broadcast(c, f"{p.name}'s Helm console", "blue")
+
+
+    await gui():
+        + "refresh":
+            jump debug_show_list_consoles
+        + "back":
+            jump debug_screen
     
 
 
 ==== debug_fake_scan_all =====
 
-for p in role("__player__"):
-    for r in role("raider"):
-        science_set_scan_data(p, r, "Debug Default scan")
+    for p in role("__player__"):
+        for r in role("raider"):
+            science_set_scan_data(p, r, "Debug Default scan")
 
-jump debug_screen
+    jump debug_screen
 
 
 ===== debug_cinema_focus ==== 
-# data: "_focus", "_ship_id"
-_ship_id = sbs.get_ship_of_client(client_id)
-->END if not _ship_id
-->END if _focus is None
+    # data: "_focus", "_ship_id"
+    _ship_id = sbs.get_ship_of_client(client_id)
+    ->END if not _ship_id
+    ->END if _focus is None
 
-other = _ship_id
-if _focus == "weapons":
-    other = get_weapons_selection(_ship_id)
-if _focus == "science":
-    other = get_science_selection(_ship_id)
+    other = _ship_id
+    if _focus == "weapons":
+        other = get_weapons_selection(_ship_id)
+    if _focus == "science":
+        other = get_science_selection(_ship_id)
 
-set_inventory_value(_ship_id, "cinema_focus", other)
-yield success
+    set_inventory_value(_ship_id, "cinema_focus", other)
+    yield success
 
 
 ===== debug_jump_to ==== 
-# data: "_focus", "_ship_id"
-yield fail if _ship_id is None
-yield fail if _focus is None
+    # data: "_focus", "_ship_id"
+    yield fail if _ship_id is None
+    yield fail if _focus is None
 
-other = _ship_id
-if _focus == "weapons":
-    other = get_weapons_selection(_ship_id)
-if _focus == "science":
-    other = get_science_selection(_ship_id)
+    other = _ship_id
+    if _focus == "weapons":
+        other = get_weapons_selection(_ship_id)
+    if _focus == "science":
+        other = get_science_selection(_ship_id)
 
-yield fail if other == 0
-other = to_object(other)
-yield fail if other is None
-_ship = to_object(_ship_id)
-yield fail if _ship is None
-_pos = other.pos
-_ship.pos = _pos 
+    yield fail if other == 0
+    other = to_object(other)
+    yield fail if other is None
+    _ship = to_object(_ship_id)
+    yield fail if _ship is None
+    _pos = other.pos
+    _ship.pos = _pos 
 
-yield success
+    yield success
