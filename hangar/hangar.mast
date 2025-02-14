@@ -123,8 +123,8 @@ shared find_stray = task_schedule(find_stray_crafts)
 
     gui_section(style="area: 20px,10+20px, 35, 49;")
     
-    dock_picker = gui_list_box(docks,"row-height: 1.3em; background:#1572;", item_template=hangar_console_dock_template, title_template=hangar_console_dock_title_template, select=True)
-    ride_picker = gui_list_box(crafts,"row-height: 1.3em; background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)
+    dock_picker = gui_list_box(docks,"background:#1572;padding:0,0,10px,0;", item_template=hangar_console_dock_template, title_template=hangar_console_dock_title_template, select=True)
+    ride_picker = gui_list_box(crafts,"background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)
     # Restore selection
     if dock_choice is not None:
         dock_picker.set_value(dock_choice)

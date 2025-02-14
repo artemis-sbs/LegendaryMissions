@@ -10,8 +10,18 @@
 
 //comms/admiral/message/crew if has_roles(COMMS_ORIGIN_ID, 'admiral')
     default prop_message = ""
+    default side_select = "tsn"
+    p = """
 
-    p = [{"label": "Message", "control": "gui_input", "props": "desc: Message", "var":"prop_message"}]
+    Side: 'gui_drop_down("$text: {side_select};list: none, tsn, raider",var="side_select")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0", var="difficulty")'
+    Abilities: 'gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")'
+    Upgrades: 'gui_drop_down("$text: {upgrade_select};list: none, few, some, lots, many", var= "upgrade_select")'
+    Delay Time: 'gui_input("desc: Minutes;", var="game_time_limit")'
+    Something else: 'gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")'
+    Another things: 'gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")'
+
+"""
     gui_properties_set(p)
 
     + "Back" //comms

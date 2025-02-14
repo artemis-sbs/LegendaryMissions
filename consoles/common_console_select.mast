@@ -160,7 +160,7 @@ route_change_console(on_change_console)
     # ship_sec2 = gui_region(style="area: 1,110px,500px,520px")
     gui_section( style="area: 10px,550px,500px,100-60px;")
     ship_list = player_list_all[:player_count]
-    ship_select_lb = gui_list_box(ship_list,"row-height: 3em; background:#1572;tag:sh_ship_list;", item_template=console_ship_select_template, title_template=console_ship_select_title_template, select=True)
+    ship_select_lb = gui_list_box(ship_list,"background:#1572;tag:sh_ship_list;", item_template=console_ship_select_template, title_template=console_ship_select_title_template, select=True)
     ship_select_lb.set_selected_index(client_selected_index)
 
 
@@ -175,7 +175,7 @@ route_change_console(on_change_console)
     gui_blank()
     gui_row()
 
-    console_select_lb = gui_list_box(consoles,"row-height: 3em; background:#1572;", item_template=console_select_template, title_template=console_select_title_template, select=True, read_only=console_read_only)
+    console_select_lb = gui_list_box(consoles,"row-height: 0.5em; background:#1572;", item_template=console_select_template, title_template=console_select_title_template, select=True, read_only=console_read_only)
     console_select_lb.set_value(console_select_item)
 
     #

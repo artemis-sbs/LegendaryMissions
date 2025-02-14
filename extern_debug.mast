@@ -7,6 +7,12 @@ task_schedule(debug_mission)
     mission_list = maps_get_list()
     map_to_run = 1
     print("Running map "+mission_list[map_to_run].path)
+    # p = map_get_properties(mission_list)
+    
+    # lb = gui_property_list_box(p)
+    # gui_properties_set(p)
+    # lb.present(None)
+
     task_schedule(mission_list[map_to_run])
     game_started = True
     signal_emit("game_started", {})

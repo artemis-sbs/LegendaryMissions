@@ -6,6 +6,20 @@
 " control will allow you to set how many minutes will
 " pass before war is declared. Obviously, this should be
 "  less than the Time Limit.
+meta_data:``` yaml
+Properties:
+  Main:
+    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "difficulty")'
+  Map:
+    Terrain: 'gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many",var="terrain_select")'
+    Lethal Terrain: 'gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")'
+    Friendly Ships: 'gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")'
+    Monsters: 'gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")'
+    Upgrades: 'gui_drop_down("$text: {upgrade_select};list: none, few, some, lots, many", var= "upgrade_select")'
+    Minutes to War: 'gui_input("desc: Minutes;", var="war_time_delay")'
+    Time Limit: 'gui_input("desc: Minutes;", var="game_time_limit")'
+```
 
 
     terrain_value = terrain_to_value(terrain_select)
