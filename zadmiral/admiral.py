@@ -51,7 +51,7 @@ def admiral_get_pos(ORIGIN_ID, selection_type):
 
     
 
-from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text, gui_represent
+from sbs_utils.procedural.gui import gui_row, gui_text
 
 def old_property_lb(item):
     gui_row("row-height: 1.2em;padding:13px;")
