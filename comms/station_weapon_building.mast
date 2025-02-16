@@ -37,6 +37,12 @@ surrender_color = "yellow"
     station_build_times = get_build_times(station_id)
     torpedo_build_type = get_inventory_value(station_id, "build_type", 0)
 
+    s_max = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 0))
+    s_cur = int(get_data_set_value(COMMS_SELECTED_ID, "shield_val", 0))
+    s_per = int(s_cur / s_max * 100)
+    a_max = int(get_data_set_value(COMMS_SELECTED_ID, "armorMax", 0))
+    a_cur = int(get_data_set_value(COMMS_SELECTED_ID, "armor", 0))
+    a_per = int(a_cur / a_max * 100)
 
     homing = get_data_set_value(COMMS_SELECTED_ID, "Homing_NUM", 0)
     nuke = get_data_set_value(COMMS_SELECTED_ID, "Nuke_NUM", 0)
@@ -46,8 +52,10 @@ surrender_color = "yellow"
 
     <<[green] "Hail"
         " Hello, {comms_id}.  We stand ready to assist.
-        " ^^You have full docking privileges.
-        " ^{torpedo_build_type} in production. Completion in {build_time}
+        " ^Our shields are at {s_cur} / {s_max} ({s_per} %).
+        " ^Structural integrity is {a_cur} / {a_max} ({a_per} %).
+        " ^You have full docking privileges.
+        " ^^{torpedo_build_type} in production. Completion in {build_time}
         " ^{"type":<10}{"ready": >5}{"time to produce": >20}
         " ^{"Homing": <10}{homing: >5}{"": >16}{station_build_times["Homing"]}:00 
         " ^{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times["Nuke"]}:00
