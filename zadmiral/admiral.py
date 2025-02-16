@@ -2,6 +2,7 @@ from sbs_utils.procedural.inventory import  get_inventory_value, set_inventory_v
 from sbs_utils.procedural.query import get_science_selection, get_weapons_selection, to_object
 from sbs_utils.helpers import FrameContext
 from sbs_utils.vec import Vec3
+from sbs_utils import yaml
 
 
 def admiral_show_nav_area(ORIGIN_ID, pos, size_delta, text, selection_type, color):
@@ -50,23 +51,16 @@ def admiral_get_pos(ORIGIN_ID, selection_type):
 
     
 
-from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text, gui_represent
+from sbs_utils.procedural.gui import gui_row, gui_text
 
-def property_lb(item):
+def old_property_lb(item):
     gui_row("row-height: 1.2em;padding:13px;")
     gui_text(f"$text:{item['label']};justify: left;")
     gui_row("row-height: 1.5em;padding:13px;")
     gui_c = item['control']
-    # print(f"admiral py property {gui_c}")
+
+    
     gui_c = FrameContext.task.get_variable(gui_c)
     if gui_c:
         gui_c(item['props'], var=item['var'])
-
-
-def gui_properties_set(p=None):
-    client_id = FrameContext.client_id
-    props_lb = get_inventory_value(client_id, "__PROPS_LB__")
-    if props_lb is not None:
-        props_lb.items = p if p is not None else []
-        gui_represent(props_lb)
 

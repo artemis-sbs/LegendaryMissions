@@ -20,46 +20,54 @@
     "upgrade_select": "lots",
     "game_time_limit": 0,
     "war_time_delay": 10,
-    "player_ships": [
+    "player_list": [
         {
             "name": "Artemis",
             "side": "tsn",
-            "ship": "tsn_battle_cruiser"
+            "ship": "tsn_light_cruiser",
+            "face": "terran"
         },
         {
             "name": "Intrepid",
             "side": "tsn",
-            "ship": "tsn_battle_cruiser"
+            "ship": "tsn_battle_cruiser",
+            "face": "terran"
         },
         {
             "name": "Aegis",
             "side": "tsn",
-            "ship": "tsn_battle_cruiser"
+            "ship": "tsn_battle_cruiser",
+            "face": "terran"
         },
         {
             "name": "Horatio",
             "side": "tsn",
-            "ship": "tsn_battle_cruiser"
+            "ship": "tsn_battle_cruiser",
+            "face": "terran"
         },
         {
             "name": "Excalibur",
             "side": "tsn",
-            "ship": "tsn_battle_cruiser"
+            "ship": "tsn_battle_cruiser",
+            "face": "terran"
         },
         {
             "name": "Hera",
             "side": "tsn",
-            "ship": "tsn_battle_cruiser"
+            "ship": "tsn_battle_cruiser",
+            "face": "terran"
         },
         {
             "name": "Ceres",
             "side": "tsn",
-            "ship": "tsn_battle_cruiser"
+            "ship": "tsn_battle_cruiser",
+            "face": "terran"
         },
         {
             "name": "Diana",
             "side": "tsn",
-            "ship": "tsn_battle_cruiser"
+            "ship": "tsn_battle_cruiser",
+            "face": "terran"
         }
     ]
 }

@@ -3,185 +3,198 @@
 " just a friendly bulk cargo ship that can resupply
 " the player ship(s). The player ship(s) are launching
 " an assault into enemy territory, which is defended by enemy bases.
+meta_data:``` yaml
+Properties:
+  Main:
+    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "difficulty")'
+  Map:
+    Terrain: 'gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many",var="terrain_select")'
+    Lethal Terrain: 'gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")'
+    Friendly Ships: 'gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")'
+    Monsters: 'gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")'
+    Upgrades: 'gui_drop_down("$text: {upgrade_select};list: none, few, some, lots, many", var= "upgrade_select")'
+    Time Limit: 'gui_input("desc: Minutes;", var="game_time_limit")'
+```
 
 
-terrain_value = terrain_to_value(terrain_select)
-lethal_value =  terrain_to_value(lethal_select)
-friendly_value = 0 # No friendlies
-monster_value = terrain_to_value(monster_select)
-upgrade_value = terrain_to_value(upgrade_select)
+    terrain_value = terrain_to_value(terrain_select)
+    lethal_value =  terrain_to_value(lethal_select)
+    friendly_value = 0 # No friendlies
+    monster_value = terrain_to_value(monster_select)
+    upgrade_value = terrain_to_value(upgrade_select)
 
 
-if seed_value != 0:
-    random.seed(seed_value)
-    print(f"Seed Value: {seed_value}")
-else:
-    seed_value = random.randint(1,99999)
-    random.seed(seed_value)
-    print(f"Random Seed Value: {seed_value}")
-
-
-
-#------------------------------------------------------------------------------------------------------------
-# Determine Enemy Antagonists
-
-enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian"]
-enemy_temp = []
-enemy_temp = random.choices(enemyTypeNameList, weights=(50, 25, 25))
-enemy1 = enemy_temp[0]
-
-#------------------------------------------------------------------------------------------------------------
-# Reposition Player Ship, spawn Cargo Tender
-
-new_pos = Vec3(20500,0,1800)
-tanker = to_id(npc_spawn(*new_pos, f"TSN Ganymede", "tsn, friendly, resupply_tanker", "transport_ship", "behav_npcship"))
-set_face(tanker, random_terran())
-
-await task_schedule(spawn_players)
-
-print(f"Deep Strike: Reposition Player")
-new_pos = Vec3(20000,0,1500)
-
-my_players = to_object_list(role("__player__"))
-for player in my_players:
-    player.pos = new_pos
-
-########################
-# Build out terrain etc.
-# No stations
-# No Friendlies`
-terrain_asteroid_clusters(terrain_value)
-terrain_spawn_nebula_clusters(terrain_value)
-terrain_spawn_pickups(upgrade_value)
-terrain_spawn_monsters(monster_value)
-terrain_spawn_black_holes(lethal_value)
-
-
-#------------------------------------------------------------------------------------------------------------
-# Build enemy stations, generate fleets
-
-
-enemy_station_list = []
-navpoint_list = []
-enemy_station_dict = {}
-
-pos = Vec3()
-startZ = -50000
-
-fleet_index = int(difficulty) - 1
-
-num_enemy_stations = int(difficulty)
-if num_enemy_stations < 3:
-    num_enemy_stations = 3
-station_step = 100000/num_enemy_stations
-
-if enemy1 == "Kralien":
-    station_prefix = "KB"
-    station_type = "starbase_kralien"
-if enemy1 == "Torgoth": 
-    station_prefix = "TB"
-    station_type = "starbase_torgoth"
-if enemy1 == "Arvonian":
-    station_prefix = "AB"
-    station_type = "starbase_arvonian"
-
-# for each station
-for index in range(num_enemy_stations):
-
-    pos.x = -(random.random()*25000+25000)
-    pos.y = random.random()*2000-1000
-    pos.z = startZ + random.random()*station_step/3  -   station_step/6
-#    _spawned_pos.append(pos)
-    startZ += station_step
-
-    #make the station ----------------------------------
-    name = "{station_prefix} {index+1}"
-
-    if enemy1 == "Kralien":
-        enemy_station_object = npc_spawn(*pos, name, "kralien, enemy, station", station_type, "behav_station")
-    if enemy1 == "Torgoth":
-        enemy_station_object = npc_spawn(*pos, name, "torgoth, enemy, station", station_type, "behav_station")
-    if enemy1 == "Arvonian":
-        enemy_station_object = npc_spawn(*pos, name, "arvonian, enemy, station", station_type, "behav_station")
-    nav_id = sim.add_navpoint(*pos, name, "#A44")
-    enemy_station_list.append(to_id(enemy_station_object))
-    navpoint_list.append(nav_id)
-    enemy_station_dict[to_id(enemy_station_object)] = nav_id
-
-    if enemy1 == "Kralien":
-        set_face(to_id(enemy_station_object), random_kralien())
-    if enemy1 == "Torgoth":
-        set_face(to_id(enemy_station_object), random_torgoth())
-    if enemy1 == "Arvonian":
-        set_face(to_id(enemy_station_object), random_arvonian())
-
-    print(f"{enemy1} Station created: {int(pos.x)}, {int(pos.y)}, {int(pos.z)}")
-
-    apos = Vec3()
-    apos.x = pos.x + 50.0
-    apos.z = pos.z + 50.0
-
-    create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
-
-
-task_schedule(task_deepstrike_end_game)
-
-#------------------------------------------------------------------------------------------------------------
-# At the start of the Deep Strike scenario, the player can request a HiDens Power Cell and an extra nuke from the Resupply Tanker.
-# Every five minutes, they can request another HiDens Power Cell and another nuke. The Tanker will drop the power cell behind it,
-# but to get the nuke, the player ship has to be within 600m. 
-
-
-shared resupply_energy = 0
-shared resupply_nuke = 0
--> END
-
-//comms if has_roles(COMMS_SELECTED_ID, 'resupply_tanker') 
-+ "Energy Cell":
-    if resupply_energy == 0:
-        eo = to_engine_object(COMMS_SELECTED_ID)
-        _pos_eo = eo.pos
-        _offset = eo.forward_vector()
-        _pos = _pos_eo + (_offset * -100)
-        comms_receive_internal(f"""HiDens Energy Cell deployed.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Energy Cell", title_color="green")
-        pickup_spawn(_pos.x, _pos.y, _pos.z, "hidens_powercell")
-        resupply_energy = 5
-        jump resupply_energy_delay
+    if seed_value != 0:
+        random.seed(seed_value)
+        print(f"Seed Value: {seed_value}")
     else:
-        comms_receive_internal(f"""We're working on it, {COMMS_ORIGIN.name}. Energy Cell will be ready in {resupply_energy} minutes.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Energy Cell Not Ready", title_color="green")
+        seed_value = random.randint(1,99999)
+        random.seed(seed_value)
+        print(f"Random Seed Value: {seed_value}")
+
+
+
+    #------------------------------------------------------------------------------------------------------------
+    # Determine Enemy Antagonists
+
+    enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian"]
+    enemy_temp = []
+    enemy_temp = random.choices(enemyTypeNameList, weights=(50, 25, 25))
+    enemy1 = enemy_temp[0]
+
+    #------------------------------------------------------------------------------------------------------------
+    # Reposition Player Ship, spawn Cargo Tender
+
+    new_pos = Vec3(20500,0,1800)
+    tanker = to_id(npc_spawn(*new_pos, f"TSN Ganymede", "tsn, friendly, resupply_tanker", "transport_ship", "behav_npcship"))
+    set_face(tanker, random_terran())
+
+    await task_schedule(spawn_players)
+
+    print(f"Deep Strike: Reposition Player")
+    new_pos = Vec3(20000,0,1500)
+
+    my_players = to_object_list(role("__player__"))
+    for player in my_players:
+        player.pos = new_pos
+
+    ########################
+    # Build out terrain etc.
+    # No stations
+    # No Friendlies`
+    terrain_asteroid_clusters(terrain_value)
+    terrain_spawn_nebula_clusters(terrain_value)
+    terrain_spawn_pickups(upgrade_value)
+    terrain_spawn_monsters(monster_value)
+    terrain_spawn_black_holes(lethal_value)
+
+
+    #------------------------------------------------------------------------------------------------------------
+    # Build enemy stations, generate fleets
+
+
+    enemy_station_list = []
+    navpoint_list = []
+    enemy_station_dict = {}
+
+    pos = Vec3()
+    startZ = -50000
+
+    fleet_index = int(difficulty) - 1
+
+    num_enemy_stations = int(difficulty)
+    if num_enemy_stations < 3:
+        num_enemy_stations = 3
+    station_step = 100000/num_enemy_stations
+
+    if enemy1 == "Kralien":
+        station_prefix = "KB"
+        station_type = "starbase_kralien"
+    if enemy1 == "Torgoth": 
+        station_prefix = "TB"
+        station_type = "starbase_torgoth"
+    if enemy1 == "Arvonian":
+        station_prefix = "AB"
+        station_type = "starbase_arvonian"
+
+    # for each station
+    for index in range(num_enemy_stations):
+
+        pos.x = -(random.random()*25000+25000)
+        pos.y = random.random()*2000-1000
+        pos.z = startZ + random.random()*station_step/3  -   station_step/6
+    #    _spawned_pos.append(pos)
+        startZ += station_step
+
+        #make the station ----------------------------------
+        name = "{station_prefix} {index+1}"
+
+        if enemy1 == "Kralien":
+            enemy_station_object = npc_spawn(*pos, name, "kralien, enemy, station", station_type, "behav_station")
+        if enemy1 == "Torgoth":
+            enemy_station_object = npc_spawn(*pos, name, "torgoth, enemy, station", station_type, "behav_station")
+        if enemy1 == "Arvonian":
+            enemy_station_object = npc_spawn(*pos, name, "arvonian, enemy, station", station_type, "behav_station")
+        nav_id = sim.add_navpoint(*pos, name, "#A44")
+        enemy_station_list.append(to_id(enemy_station_object))
+        navpoint_list.append(nav_id)
+        enemy_station_dict[to_id(enemy_station_object)] = nav_id
+
+        if enemy1 == "Kralien":
+            set_face(to_id(enemy_station_object), random_kralien())
+        if enemy1 == "Torgoth":
+            set_face(to_id(enemy_station_object), random_torgoth())
+        if enemy1 == "Arvonian":
+            set_face(to_id(enemy_station_object), random_arvonian())
+
+        print(f"{enemy1} Station created: {int(pos.x)}, {int(pos.y)}, {int(pos.z)}")
+
+        apos = Vec3()
+        apos.x = pos.x + 50.0
+        apos.z = pos.z + 50.0
+
+        create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
+
+
+    task_schedule(task_deepstrike_end_game)
+
+    #------------------------------------------------------------------------------------------------------------
+    # At the start of the Deep Strike scenario, the player can request a HiDens Power Cell and an extra nuke from the Resupply Tanker.
+    # Every five minutes, they can request another HiDens Power Cell and another nuke. The Tanker will drop the power cell behind it,
+    # but to get the nuke, the player ship has to be within 600m. 
+
+
+    shared resupply_energy = 0
+    shared resupply_nuke = 0
+    -> END
 
 //comms if has_roles(COMMS_SELECTED_ID, 'resupply_tanker') 
-+ "Transfer Nuke":
-    if resupply_nuke == 0:
-        dist = sbs.distance_id(COMMS_ORIGIN_ID,COMMS_SELECTED_ID)
-        if dist >= 600:
-            # Comms message, must be within 600m to transfer nuke
-            comms_receive_internal(f"""You're too far away, {COMMS_ORIGIN.name}. You need to be within 600m to transfer.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Too Far", title_color="green")
+    + "Energy Cell":
+        if resupply_energy == 0:
+            eo = to_engine_object(COMMS_SELECTED_ID)
+            _pos_eo = eo.pos
+            _offset = eo.forward_vector()
+            _pos = _pos_eo + (_offset * -100)
+            comms_receive_internal(f"""HiDens Energy Cell deployed.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Energy Cell", title_color="green")
+            pickup_spawn(_pos.x, _pos.y, _pos.z, "hidens_powercell")
+            resupply_energy = 5
+            jump resupply_energy_delay
         else:
-            # Add +1 nuke to player ship, Comms message to confirm transfer.
-            player_blob = to_blob(COMMS_ORIGIN_ID)
-            addtorp = player_blob.get(f"Nuke_NUM", 0)
-            addtorp += 1
-            player_blob.set(f"Nuke_NUM", addtorp, 0)
-            comms_receive_internal(f"""Nuclear torpedo transfer complete. Good luck, {COMMS_ORIGIN.name}!""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Nuke Transferred", title_color="green")
-            resupply_nuke = 5
-            jump resupply_nuke_delay
-    else:
-        comms_receive_internal(f"""We're working on it, {COMMS_ORIGIN.name}. Nuke will be ready in {resupply_nuke} minutes.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Nuke Not Ready", title_color="green")
+            comms_receive_internal(f"""We're working on it, {COMMS_ORIGIN.name}. Energy Cell will be ready in {resupply_energy} minutes.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Energy Cell Not Ready", title_color="green")
+
+//comms if has_roles(COMMS_SELECTED_ID, 'resupply_tanker') 
+    + "Transfer Nuke":
+        if resupply_nuke == 0:
+            dist = sbs.distance_id(COMMS_ORIGIN_ID,COMMS_SELECTED_ID)
+            if dist >= 600:
+                # Comms message, must be within 600m to transfer nuke
+                comms_receive_internal(f"""You're too far away, {COMMS_ORIGIN.name}. You need to be within 600m to transfer.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Too Far", title_color="green")
+            else:
+                # Add +1 nuke to player ship, Comms message to confirm transfer.
+                player_blob = to_blob(COMMS_ORIGIN_ID)
+                addtorp = player_blob.get(f"Nuke_NUM", 0)
+                addtorp += 1
+                player_blob.set(f"Nuke_NUM", addtorp, 0)
+                comms_receive_internal(f"""Nuclear torpedo transfer complete. Good luck, {COMMS_ORIGIN.name}!""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Nuke Transferred", title_color="green")
+                resupply_nuke = 5
+                jump resupply_nuke_delay
+        else:
+            comms_receive_internal(f"""We're working on it, {COMMS_ORIGIN.name}. Nuke will be ready in {resupply_nuke} minutes.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Nuke Not Ready", title_color="green")
  
 
 ====== resupply_energy_delay ======
-await delay_sim(seconds=60)
-resupply_energy -= 1
-if resupply_energy == 0:
-    ->END
-else:
-    jump resupply_energy_delay
+    await delay_sim(seconds=60)
+    resupply_energy -= 1
+    if resupply_energy == 0:
+        ->END
+    else:
+        jump resupply_energy_delay
 
 ====== resupply_nuke_delay ======
-await delay_sim(seconds=60)
-resupply_nuke -= 1
-if resupply_nuke == 0:
-    ->END
-else:
-    jump resupply_nuke_delay
+    await delay_sim(seconds=60)
+    resupply_nuke -= 1
+    if resupply_nuke == 0:
+        ->END
+    else:
+        jump resupply_nuke_delay

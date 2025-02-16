@@ -3,50 +3,50 @@
 
 
 //comms if has_roles(COMMS_ORIGIN_ID, "__player__") and has_roles(COMMS_SELECTED_ID, "damcons")
-#if COMMS_SELECTED["idle"]:
-#    + "Go to work"  comms_damcons_goto_work
-#else:
-#    + "go to rally point"  comms_damcons_goto_rally_point
-+ "do work order now" //comms/dc/work/order
-+ "cancel work order" //comms/dc/work/cancel
+    #if COMMS_SELECTED["idle"]:
+    #    + "Go to work"  comms_damcons_goto_work
+    #else:
+    #    + "go to rally point"  comms_damcons_goto_rally_point
+    + "do work order now" //comms/dc/work/order
+    + "cancel work order" //comms/dc/work/cancel
 
 
 //comms/dc/work/order
-orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
-+ "Back" //comms
+    orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
+    + "Back" //comms
 
-for d in orders:
-    + "Fix now {d.name}" {"target_room": d.id}:
-        set_inventory_value(COMMS_SELECTED_ID, "target_room", target_room)
+    for d in orders:
+        + "Fix now {d.name}" {"target_room": d.id}:
+            set_inventory_value(COMMS_SELECTED_ID, "target_room", target_room)
 
 
 //comms/dc/work/cancel
-orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
-+ "Back" //comms
+    orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
+    + "Back" //comms
 
-for d in orders:
-    + "Cancel {d.name}" {"target_room": d.id}:
-        unlink(COMMS_SELECTED_ID, "work-order", target_room)
+    for d in orders:
+        + "Cancel {d.name}" {"target_room": d.id}:
+            unlink(COMMS_SELECTED_ID, "work-order", target_room)
 
 
 ===== comms_damcons_goto_work =======
-#set_inventory_value(COMMS_SELECTED_ID, "idle", False )
-#set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
-set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
-set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
-yield success
+    #set_inventory_value(COMMS_SELECTED_ID, "idle", False )
+    #set_inventory_value(COMMS_SELECTED_ID, "idle_state", None )
+    set_inventory_value(COMMS_SELECTED_ID, "next_hp_time", 0)
+    set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
+    yield success
 
 
 ===== comms_damcons_goto_rally_point =======
-marker_go_id = get_inventory_value(COMMS_ORIGIN_ID, "marker_id")
-m_blob = to_blob(marker_go_id)
+    marker_go_id = get_inventory_value(COMMS_ORIGIN_ID, "marker_id")
+    m_blob = to_blob(marker_go_id)
 
-loc_x = m_blob.get("curx", 0)
-loc_y = m_blob.get("cury", 0)
-set_inventory_value(COMMS_SELECTED_ID, "idle", True )
-set_inventory_value(COMMS_SELECTED_ID, "idle_state", "start" )
-set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
+    loc_x = m_blob.get("curx", 0)
+    loc_y = m_blob.get("cury", 0)
+    set_inventory_value(COMMS_SELECTED_ID, "idle", True )
+    set_inventory_value(COMMS_SELECTED_ID, "idle_state", "start" )
+    set_inventory_value(COMMS_SELECTED_ID, "work_needed", None)
 
-yield success
+    yield success
 
 

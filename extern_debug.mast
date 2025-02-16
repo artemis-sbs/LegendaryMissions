@@ -1,0 +1,32 @@
+
+task_schedule(debug_mission)
+
+====== debug_mission
+    await delay_app(2)
+    # Run a map
+    mission_list = maps_get_list()
+    map_to_run = 1
+    print("Running map "+mission_list[map_to_run].path)
+    # p = map_get_properties(mission_list)
+    
+    # lb = gui_property_list_box(p)
+    # gui_properties_set(p)
+    # lb.present(None)
+
+    task_schedule(mission_list[map_to_run])
+    game_started = True
+    signal_emit("game_started", {})
+
+
+    sim_resume()
+    await delay_sim(2)
+    p = role("__player__")
+    print(f"Player count in poc {len(p)}")
+    p = role("terrain")
+    print(f"Terrain count in poc {len(p)}")
+    p = role("station")
+    print(f"Station count in poc {len(p)}")
+    p = role("cockpit")
+    print(f"Fighter and shuttles count in poc {len(p)}")
+    p = role("raider")
+    print(f"Raider count in poc {len(p)}")

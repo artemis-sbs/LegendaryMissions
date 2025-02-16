@@ -3,8 +3,6 @@ shared hangar_version = 1
 shared call_signs = hangar_get_call_signs()
 shared next_call_sign = 0
 
-
-
 #
 #  Background task to look for strays
 #
@@ -24,7 +22,7 @@ shared find_stray = task_schedule(find_stray_crafts)
     # ship
     # await delay_sim(2)
     #
----- wait_for_game_started
+---- wait_for_game_started ---
     #if not game_started:
     await delay_sim(1)
     #    jump wait_for_game_started
@@ -73,7 +71,7 @@ shared find_stray = task_schedule(find_stray_crafts)
     " Fly fighter- shuttle and cargo missions
     jump show_hangar # This could be replaced with a new command gui_navigate("//console/hangar")
 
-=== show_hangar
+=== show_hangar ==
     # This is need for black hole, need to clear any ship assigned
     _original =  sbs.get_ship_of_client(client_id)
     side = "tsn"
@@ -95,13 +93,22 @@ shared find_stray = task_schedule(find_stray_crafts)
 
     crafts =[]
     docks = to_object_list(has_link("hangar_craft"))
-    ride_choice = None
-    dock_choice = None
 
+    default ride_choice = None
+    default dock_choice = None
+
+    #
+    # Clear selections if they don't exist
+    #
     if len(docks)>0:
-        crafts = hangar_get_crafts_at(docks[0])
+        if dock_choice not in docks:
+            dock_choice = docks[0]
+            ride_choice = None
+        crafts = hangar_get_crafts_at(dock_choice)
 
-
+    if len(crafts)>0:
+        if ride_choice not in crafts:
+            ride_choice = crafts[0]
 
     briefing = "Select a craft to pilot. If you accept the mission hit launch."
 
@@ -115,19 +122,24 @@ shared find_stray = task_schedule(find_stray_crafts)
         set_inventory_value(client_id, "call_sign", call_sign)
 
     gui_section(style="area: 20px,10+20px, 35, 49;")
-
     
-    dock_picker = gui_list_box(docks,"row-height: 1.3em; background:#1572;", item_template=hangar_console_dock_template, title_template=hangar_console_dock_title_template, select=True)
-    ride_picker = gui_list_box(crafts,"row-height: 1.3em; background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)
+    dock_picker = gui_list_box(docks,"background:#1572;padding:0,0,10px,0;", item_template=hangar_console_dock_template, title_template=hangar_console_dock_title_template, select=True)
+    ride_picker = gui_list_box(crafts,"background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)
+    # Restore selection
+    if dock_choice is not None:
+        dock_picker.set_value(dock_choice)
+        sbs.assign_client_to_ship(client_id, to_id(dock_choice))
+    if ride_choice is not None:
+        ride_picker.set_value(ride_choice)
     # ride_picker.title_background = "#1578"
     
     gui_section(style="area: 20px,50, 35,50+20px;")
     gui_row(style="row-height:20px;")
     gui_text("$text:Mission Briefing;color: white;justify: center;", style="background: #1578;")
     gui_section(style="area: 20px,50+20px, 35,100-160px;background: #1572;")
-    """""
+    """
     {briefing}
-    """""" style="tag:briefing-text;padding: 10px,15px,10px,0;"
+    """ style="tag:briefing-text;padding: 10px,15px,10px,0;"
 
 
     gui_activate_console("hangar")
@@ -220,7 +232,7 @@ shared find_stray = task_schedule(find_stray_crafts)
 
 
 
-    dock_picker.set_selected_index(0)
+    #dock_picker.set_selected_index(0)
     
     await gui()
     #    + "Head to Bar":
@@ -233,7 +245,7 @@ shared find_stray = task_schedule(find_stray_crafts)
     #        print("Quarters")
     #        #jump show_hangar
 
-    # print("Out of await")
+
     jump show_hangar
 
     
@@ -284,9 +296,9 @@ shared find_stray = task_schedule(find_stray_crafts)
 ==== find_stray_crafts ====
     await delay_sim(seconds=5) # hack for task_schedule in main
 
-    # print("finding stray fighters start")
 
---- find_stray_craft_loop
+
+--- find_stray_craft_loop  --
     await delay_sim(seconds=3) # Run every 23 seconds
     launched_crafts = role("cockpit") & role("tsn") - role("standby")
     for craft in launched_crafts:
@@ -300,7 +312,7 @@ shared find_stray = task_schedule(find_stray_crafts)
         continue if craft == get_dedicated_link(cid, "craft_id") and get_inventory_value(cid, "CONSOLE_TYPE") == "cockpit"
         so = to_object(craft)
         continue if so is None
-        # print("Return craft {so.name}")
+
         redocked = hangar_attempt_dock_craft(craft, None)
         #if redocked:
         #    print("redocked")

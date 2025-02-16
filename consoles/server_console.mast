@@ -15,9 +15,6 @@ $t Mission Selection:
 Select a mission type below then select start mission.
 """
 
-# print(story_get_console_type())
-#print(get_mission_graphics_file("media/artemis_home_page"))
-
 #
 # This directs the script 
 # to the client and server GUI
@@ -34,299 +31,265 @@ gui_reroute_clients("client_main")
 #
 ========== start_server ===============
 
-settings = settings_get_defaults()
-shared SETTINGS = settings
-shared world_select  = settings.get("world_select")
-shared terrain_select  = settings.get("terrain_select")
-shared lethal_select  = settings.get("lethal_select")
-shared friendly_select  = settings.get("friendly_select")
-shared monster_select  = settings.get("monster_select")
-shared upgrade_select  = settings.get("upgrade_select")
-shared seed_value  = settings.get("seed_value")
-shared game_started  = settings.get("game_started")
-shared game_ended  = settings.get("game_ended")
-shared game_time_limit  = str(settings.get("game_time_limit", ""))
-shared war_time_delay  = str(settings.get("war_time_delay", ""))
-shared difficulty=   settings.get("difficulty")
-shared player_count  = settings.get("player_count")
-shared player_list  =  settings.get("player_list")
+    settings = settings_get_defaults()
+    shared SETTINGS = settings
+    shared world_select  = settings.get("world_select")
+    shared terrain_select  = settings.get("terrain_select")
+    shared lethal_select  = settings.get("lethal_select")
+    shared friendly_select  = settings.get("friendly_select")
+    shared monster_select  = settings.get("monster_select")
+    shared upgrade_select  = settings.get("upgrade_select")
+    shared seed_value  = settings.get("seed_value")
+    shared game_started  = settings.get("game_started")
+    shared game_ended  = settings.get("game_ended")
+    shared game_time_limit  = str(settings.get("game_time_limit", ""))
+    shared war_time_delay  = str(settings.get("war_time_delay", ""))
+    shared difficulty=   settings.get("difficulty")
+    shared player_count  = settings.get("player_count")
+    shared player_list  =  settings.get("player_list")
 
-shared auto_start = settings.get("auto_start", False)
+    shared auto_start = settings.get("auto_start", False)
 
-shared operator_mode = settings.get("operator_mode", {"enable: False"})
-shared operator_mode_enabled = operator_mode.get("enable", False)
-shared operator_show_logo_on_main = operator_mode.get("show_logo_on_main", False)
+    shared operator_mode = settings.get("operator_mode", {"enable: False"})
+    shared operator_mode_enabled = operator_mode.get("enable", False)
+    shared operator_show_logo_on_main = operator_mode.get("show_logo_on_main", False)
 
-start_npc_cag()
+    start_npc_cag()
 
-shared skybox = skybox_schedule_random()
+    shared skybox = skybox_schedule_random()
 
-shared mission_index = 0
-shared mission_list = maps_get_list()
-shared mission_overview = maps_get_init()
-shared world_select_path  = settings.get("world_select")
-sim_create()
-#
-# Create all the player ships
-# 
+    shared mission_index = 0
+    shared mission_list = maps_get_list()
+    shared mission_overview = maps_get_init()
+    shared world_select_path  = settings.get("world_select")
+    sim_create()
+    #
+    # Create all the player ships
+    # 
 
-for player_ship_data in player_list:
-    player_ship = to_id(player_spawn(0,0,0, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
-    add_role(player_ship, "default_player_ship")
-    set_face(player_ship, get_face_from_data(player_ship_data["face"]))
-    set_inventory_value(player_ship, "respawn_time", 5)
+    for player_ship_data in player_list:
+        player_ship = to_id(player_spawn(0,0,0, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
+        player_ship_data["id"] = player_ship
+        add_role(player_ship, "default_player_ship")
+        set_face(player_ship, get_face_from_data(player_ship_data["face"]))
+        set_inventory_value(player_ship, "respawn_time", 5)
 
-# sim_pause()
-i = 0
-for m in mission_list:
-    if m.path == world_select_path:
-        mission_index = i
-        break
-    i += 1
-shared world_select = mission_list[mission_index]
+    # sim_pause()
+    i = 0
+    for m in mission_list:
+        if m.path == world_select_path:
+            mission_index = i
+            break
+        i += 1
+    shared world_select = mission_list[mission_index]
 
-jump operator_main_screen if operator_mode_enabled and operator_show_logo_on_main
+    jump operator_main_screen if operator_mode_enabled and operator_show_logo_on_main
 
 
 #
 # The Server GUI
 #
 ====== show_server_menu =====
-#
-jump start if auto_start
+    #
+    jump start if auto_start
 
-#
-# if there is a single mission or a map/__init__
-# Use it for the start text
-if mission_overview is not None:
-    start_text = """$t {mission_overview.display_name}:\n\n{mission_overview.desc}"""
+    #
+    # if there is a single mission or a map/__init__
+    # Use it for the start text
+    if mission_overview is not None:
+        start_text = """$t {mission_overview.display_name}:\n\n{mission_overview.desc}"""
 
-gui_section( style="area: 20px, 20px, 100, 210px;margin:0,0,10px,0;padding:10px,0;background:#1578;")
-gui_text_area(start_text)
+    gui_section( style="area: 20px, 20px, 100, 210px;margin:0,0,10px,0;padding:10px,0;background:#1578;")
+    gui_text_area(start_text)
 
-# For using a seed value when randomly generating terrain, not currently implemented
-#row style="row-height:65px;"
-#"""justify:right;$text:Seed (Optional)"""
-#gui_input("""desc: Integer""", var="seed_value")
+    # For using a seed value when randomly generating terrain, not currently implemented
+    #row style="row-height:65px;"
+    #"""justify:right;$text:Seed (Optional)"""
+    #gui_input("""desc: Integer""", var="seed_value")
 
-rs= "row-height: 45px;margin:5px,5px,0,0;"
-ts= "row-height: 45px;col-width: 7em;margin:0,2px, 0,0;"
+    rs= "row-height: 45px;margin:5px,5px,0,0;"
+    ts= "row-height: 45px;col-width: 7em;margin:0,2px, 0,0;"
 
-gui_section(style="area: 50, 95-500px, 100, 95;row-height:45px;margin:30px,0px,10px,0;padding:0,10px,10px,0;background:#1578;")
-gui_row(style=rs)
-gui_text("justify:right;$text:Player ships", style=ts)
-gui_blank(style="col-width:15px")
-gui_int_slider("text:int;low: 1.0;high:8.0",  var="player_count")
+    gui_section(style="area: 50, 95-500px, 100, 95;margin:30px,0,10px,0;background:#1578;")
+    #
+    # Demo only has difficulty
+    #
+    #
+    gui_property_list_box(name="Options")
+    p = map_get_properties(world_select)
+    
+    if sbs.is_demo():
+        p = """
+Main:
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0", var="difficulty")'
+"""
 
-gui_row(style=rs)
-gui_text(" justify:right;$text:Difficulty", style=ts)
-gui_blank(style="col-width:15px")
-gui_int_slider("text:int;low: 1.0;high:11.0", var="difficulty")
-gui_row(style=rs)
+    gui_properties_set(p)
 
-gui_blank()
-gui_row(style=rs)
-
-gui_text("justify:right;$text:Terrain", style=ts)
-gui_blank(style="col-width:15px")
-gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many", var="terrain_select")
-gui_row(style=rs)
-
-gui_text("justify:right;$text:Lethal Terrain", style=ts)
-gui_blank(style="col-width:15px")
-gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")
-gui_row(style=rs)
-
-gui_text("justify:right;$text:Friendly Ships", style=ts)
-gui_blank(style="col-width:15px")
-gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")
-gui_row(style=rs)
-
-gui_text("justify:right;$text:Monsters", style=ts)
-gui_blank(style="col-width:15px")
-gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")
-gui_row(style=rs)
-
-gui_text("justify:right;$text:Upgrades", style=ts)
-gui_blank(style="col-width:15px")
-gui_drop_down("$text:{upgrade_select};list:none, few,some, lots, many", var="upgrade_select")
-
-gui_row(style=rs)
-
-gui_text("justify:right;$text:Time limit", style=ts)
-gui_blank(style="col-width:15px")
-gui_input("desc: Minutes;", var="game_time_limit")
-
-gui_row(style=rs)
-if world_select.path == "border_war":
-    gui_text("justify:right;$text:Minutes to War", style=ts)
-    gui_blank(style="col-width:15px")
-    gui_input("desc: Minutes;", var="war_time_delay")
-else:
-    gui_blank()
+ 
 
 
+    
 
-   
+    gui_section(style="area: 20px, 95-500px, 50, 95;")
+    mission_picker = gui_list_box(mission_list,"row-height: 7em; background:#1578;", item_template=main_mission_select_template, title_template=main_mission_select_title_template, select=True, carousel=True)
+    # Initialize the selection to account for if we already have one
+    mission_picker.set_selected_index(mission_index)
 
-gui_section(style="area: 20px, 95-500px, 50, 95;")
-mission_picker = gui_list_box(mission_list,"row-height: 7em; background:#1578;", item_template=main_mission_select_template, title_template=main_mission_select_title_template, select=True, carousel=True)
-# Initialize the selection to account for if we already have one
-mission_picker.set_selected_index(mission_index)
-# print(f"SERVER START {mission_index} {mission_picker.get_selected_index()}")
-world_select = mission_picker.get_value()
-
-on change mission_picker.get_selected_index():
-    # This should be one thing, or None
     world_select = mission_picker.get_value()
-    mission_index = mission_picker.get_selected_index()
-    jump show_server_menu
+
+    on change mission_picker.get_selected_index():
+        # This should be one thing, or None
+        world_select = mission_picker.get_value()
+        mission_index = mission_picker.get_selected_index()
+        jump show_server_menu
 
 
 
-await gui():
-    + "Start Mission":
-        -> start
+    await gui():
+        + "Start Mission":
+            -> start
 
 
 
 ===== start ======
-# sim_create()
-sim_resume()
-#
-# Based on the game type call the right 
-# label to build the world
-#
+    # sim_create()
+    sim_resume()
+    #
+    # Based on the game type call the right 
+    # label to build the world
+    #
 
-tl = safe_int(game_time_limit)
-if tl >0:
-    set_timer(SHARED, "time_limit", minutes=tl)
+    tl = safe_int(game_time_limit)
+    if tl >0:
+        set_timer(SHARED, "time_limit", minutes=tl)
 
-#------------------------------------------------------------------------------------------------------------
-# Player = 7 points of damage, npc = a range 3.5 - 8.5 
-sbs.set_beam_damages(0, 7.0, (difficulty/2.0) + 3.0)
-
-
-if world_select is not None:
-    task_schedule(world_select)
-
-#
-# Consoles are waiting to be started 
-#
-game_started = True
-signal_emit("game_started", {})
+    #------------------------------------------------------------------------------------------------------------
+    # Player = 7 points of damage, npc = a range 3.5 - 8.5 
+    sbs.set_beam_damages(0, 7.0, (difficulty/2.0) + 3.0)
 
 
-# Temp set this when first running
-shared SIM_STATE = "sim_unknown"
+    if world_select is not None:
+        task_schedule(world_select)
+
+    #
+    # Consoles are waiting to be started 
+    #
+    game_started = True
+    signal_emit("game_started", {})
 
 
-gui_reroute_clients(game_started_console, exclude={client_id})
-#
-# This is very coupled to operator mode
-#
-# This is a remote
-if client_id != 0:
-    gui_reroute_server(show_main_game_screen)
-    gui_reroute_client(client_id, operator_stats)
+    # Temp set this when first running
+    shared SIM_STATE = "sim_unknown"
+
+    player_list = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
+    if len(player_list)>0:
+        sbs.assign_client_to_ship(0, player_list[0].id)
+        
+    gui_reroute_clients(game_started_console, exclude={client_id})
+    #
+    # This is very coupled to operator mode
+    #
+    # This is a remote
+    if client_id != 0:
+        gui_reroute_server(show_main_game_screen)
+        gui_reroute_client(client_id, operator_stats)
 
 
 === show_main_game_screen === 
 
-# Just restate the console, it looks internally for the proper view
-# To override use gui_activate_console, and gui_widget_list
-# MAIN_SCREEN_VIEW variable has the view: 3d_view, info, data
-# MAIN_SCREEN_FACING has the facing right, left, front, back
-# MAIN_SCREEN_MODE is for 3d (first_person, chase, tracking) 2d (long, short)
+    # Just restate the console, it looks internally for the proper view
+    # To override use gui_activate_console, and gui_widget_list
+    # MAIN_SCREEN_VIEW variable has the view: 3d_view, info, data
+    # MAIN_SCREEN_FACING has the facing right, left, front, back
+    # MAIN_SCREEN_MODE is for 3d (first_person, chase, tracking) 2d (long, short)
 
 
-# Find a valid ship
-# for p in player_list:
-#    i
-ship_id = player_list[0]["id"]
+    # Find a valid ship
 
-gui_console("mainscreen")
-link(ship_id,"consoles", client_id)
-add_role(client_id, "console, mainscreen")
+    ship_id = sbs.get_ship_of_client(client_id)
 
+    gui_console("mainscreen")
+    link(ship_id,"consoles", client_id)
+    add_role(client_id, "console, mainscreen")
 
 
-######################################
-resume_controls = gui_region("area: 5, 75, 95, 90;")
 
-with resume_controls:
-    gui_text("$text: Simulation paused;font:gui-6;justify:center;")
-    gui_row()
+    ######################################
+    resume_controls = gui_region("area: 5, 75, 95, 90;")
 
-    mission = get_mission_name()
-    start_mission = get_startup_mission_name()
-    if start_mission is not None:
-        same = mission == start_mission
+    with resume_controls:
+        gui_text("$text: Simulation paused;font:gui-6;justify:center;")
+        gui_row()
 
-    if start_mission is None:
-        same = True
-        start_mission = mission
+        mission = get_mission_name()
+        start_mission = get_startup_mission_name()
+        if start_mission is not None:
+            same = mission == start_mission
 
-    # if same only two buttons
-    if same:
-        gui_blank()
+        if start_mission is None:
+            same = True
+            start_mission = mission
 
-    b = gui_button("$text:Resume;justify:center;", style="padding:0,0,5px;")
-    on gui_message(b):
-        sim_resume()
-        
+        # if same only two buttons
+        if same:
+            gui_blank()
 
-    mission = get_mission_name()
+        b = gui_button("$text:Resume;justify:center;", style="padding:0,0,5px;")
+        on gui_message(b):
+            sim_resume()
+            
 
-    # start_mission
-    if mission:
-        b2 = gui_button("$text:restart {mission};justify:center;", style="padding:0,0,5px;")
-        on gui_message(b2):
-            sbs.run_next_mission(mission)
+        mission = get_mission_name()
 
-    if start_mission is not None and start_mission != mission and len(start_mission)>0:
-        b3 = gui_button("$text:mission_select;justify:center;") # , style="padding:0,0,5px;")
-        on gui_message(b3):
-            sbs.run_next_mission(start_mission)
+        # start_mission
+        if mission:
+            b2 = gui_button("$text:restart {mission};justify:center;", style="padding:0,0,5px;")
+            on gui_message(b2):
+                sbs.run_next_mission(mission)
 
-    # if same only two buttons
-    if same:
-        gui_blank()
+        if start_mission is not None and start_mission != mission and len(start_mission)>0:
+            b3 = gui_button("$text:mission_select;justify:center;") # , style="padding:0,0,5px;")
+            on gui_message(b3):
+                sbs.run_next_mission(start_mission)
 
-print("SERVER: {SIM_STATE}")
-if SIM_STATE == "sim_running":
-    gui_hide(resume_controls)
+        # if same only two buttons
+        if same:
+            gui_blank()
 
-on change SIM_STATE:
+    print("SERVER: {SIM_STATE}")
     if SIM_STATE == "sim_running":
         gui_hide(resume_controls)
-    else:
-        gui_show(resume_controls)
-######################
-view = get_variable("MAIN_SCREEN_VIEW", "3d_view")
-facing = get_variable("MAIN_SCREEN_FACING", "front")
-mode = get_variable("MAIN_SCREEN_MODE", "chase")
 
+    on change SIM_STATE:
+        if SIM_STATE == "sim_running":
+            gui_hide(resume_controls)
+        else:
+            gui_show(resume_controls)
+    ######################
+    view = get_variable("MAIN_SCREEN_VIEW", "3d_view")
+    facing = get_variable("MAIN_SCREEN_FACING", "front")
+    mode = get_variable("MAIN_SCREEN_MODE", "chase")
 
-sbs.set_main_view_modes(client_id, view, facing, mode)
+    sbs.set_main_view_modes(client_id, view, facing, mode)
 
-await gui()
+    await gui()
 
 
 
 
 
 ====  pause_screen ====
-jump operator_stats if operator_mode_enabled
+    jump operator_stats if operator_mode_enabled
 
-gui_section( style="area: 5, 10, 50, 90;")
-"""""Simulation paused"""""
+    gui_section( style="area: 5, 10, 50, 90;")
+    """""Simulation paused"""""
 
-await gui():
-+ "Resume Mission":
-    sim_resume()
+    await gui():
+    + "Resume Mission":
+        sim_resume()
 
-jump pause_screen
-##############
+    jump pause_screen
+    ##############
 
 

@@ -5,120 +5,120 @@ shared game_paused = False
 " A console for the game operator
 
 
-gui_section( style=f"area: 20, 40, 80, 40+40px;")
-pin = ""
-"""operator pin"""
-_in = gui_input("""desc: Enter pin;password:True;""", var="pin")
-on gui_message(_in):
-   jump operator_admin_console if pin == operator_mode.get("pin")
+    gui_section( style=f"area: 20, 40, 80, 40+40px;")
+    pin = ""
+    """operator pin"""
+    _in = gui_input("""desc: Enter pin;password:True;""", var="pin")
+    on gui_message(_in):
+    jump operator_admin_console if pin == operator_mode.get("pin")
 
-await gui():
-    + "cancel":
-        jump select_console
+    await gui():
+        + "cancel":
+            jump select_console
 
 
-jump operator_login
+    jump operator_login
 
 ====== operator_admin_console ===== 
 
-watch_end_game_task = None
-shared watch_raider_count = None
-jump operator_stats if game_started
+    watch_end_game_task = None
+    shared watch_raider_count = None
+    jump operator_stats if game_started
 
-jump show_server_menu 
+    jump show_server_menu 
 
 
 ====== operator_stats ===== 
 
 
-_ship_id = sbs.get_ship_of_client(client_id) 
-faction_ship = to_object(_ship_id)
+    _ship_id = sbs.get_ship_of_client(client_id) 
+    faction_ship = to_object(_ship_id)
 
-cambot = player_spawn(0,0,0, "Operator", "#,operator, Admiral", "invisible") #, "behav_player")
-remove_role(cambot, "__player__")
-camera_id = to_id(cambot)
-#
-# Should have a way to get all factions/side
-#
-cambot.blob.set("ally_list","tsn,raider",0)
-cambot.blob.set("ship_base_scan_range", 135000,0)
-
-await delay_sim(1)
-#
-# Assign before setting comms up
-#
-sbs.assign_client_to_ship(client_id, camera_id)
-science_set_scan_data(camera_id, camera_id, {"scan": "Operator"})
-set_comms_selection(camera_id, camera_id)
-follow_route_select_comms(camera_id, camera_id)
-
-if watch_raider_count is None:
-    watch_raider_count = task_schedule(update_raider_count)
-
-#
-# report as a science to see more
-#
-gui_activate_console("operator_sci")
-
-# Left
-gui_section(style="area:0,45px,100,100;")
-
-with gui_sub_section("col-width:30;"):
-    gui_row("row-height: 50;")
-    gui_layout_widget("3dview")
-
-# Middle
-with gui_sub_section():
+    cambot = player_spawn(0,0,0, "Operator", "#,operator, Admiral", "invisible") #, "behav_player")
+    remove_role(cambot, "__player__")
+    camera_id = to_id(cambot)
     #
-    # Show time remaining
+    # Should have a way to get all factions/side
     #
-    if is_timer_set(SHARED, "time_limit"):
+    cambot.blob.set("ally_list","tsn,raider",0)
+    cambot.blob.set("ship_base_scan_range", 135000,0)
+
+    await delay_sim(1)
+    #
+    # Assign before setting comms up
+    #
+    sbs.assign_client_to_ship(client_id, camera_id)
+    science_set_scan_data(camera_id, camera_id, {"scan": "Operator"})
+    set_comms_selection(camera_id, camera_id)
+    follow_route_select_comms(camera_id, camera_id)
+
+    if watch_raider_count is None:
+        watch_raider_count = task_schedule(update_raider_count)
+
+    #
+    # report as a science to see more
+    #
+    gui_activate_console("operator_sci")
+
+    # Left
+    gui_section(style="area:0,45px,100,100;")
+
+    with gui_sub_section("col-width:30;"):
+        gui_row("row-height: 50;")
+        gui_layout_widget("3dview")
+
+    # Middle
+    with gui_sub_section():
+        #
+        # Show time remaining
+        #
+        if is_timer_set(SHARED, "time_limit"):
+            gui_row("row-height: 45px")
+            gui_text("$text: time remaining;justify: right;font:gui-5;")
+            t = format_time_remaining(SHARED, "time_limit")
+            gui_text(f"$text: {t};justify:left;font:gui-5;", style="tag: sh_game_time;padding:20px;")    
+
         gui_row("row-height: 45px")
-        gui_text("$text: time remaining;justify: right;font:gui-5;")
-        t = format_time_remaining(SHARED, "time_limit")
-        gui_text(f"$text: {t};justify:left;font:gui-5;", style="tag: sh_game_time;padding:20px;")    
+        # Show remaining enemy count
+        r = role("raider") 
+        count=len(r)
 
-    gui_row("row-height: 45px")
-    # Show remaining enemy count
-    r = role("raider") 
-    count=len(r)
+        gui_text("$text: remaining raiders;justify: right;font:gui-5;")
+        gui_text(f"$text: {count};justify:left;font:gui-5;", style="tag: sh_raider_count;padding:20px;")
 
-    gui_text("$text: remaining raiders;justify: right;font:gui-5;")
-    gui_text(f"$text: {count};justify:left;font:gui-5;", style="tag: sh_raider_count;padding:20px;")
+        gui_row()
+        #gui_layout_widget("science_2d_view")
+        gui_layout_widget("science_2d_view")
+        gui_row()
+        gui_layout_widget("comms_control")
 
-    gui_row()
-    #gui_layout_widget("science_2d_view")
-    gui_layout_widget("science_2d_view")
-    gui_row()
-    gui_layout_widget("comms_control")
-
-# Right
-with gui_sub_section("col-width:25;"):
-    gui_row("row-height:35;margin:0,0,0,10px;")
-    gui_layout_widget("science_data")
-    gui_row()
-    gui_layout_widget("science_sorted_list")
-    gui_row("row-height: 10;")
-    gui_layout_widget("text_waterfall")
+    # Right
+    with gui_sub_section("col-width:25;"):
+        gui_row("row-height:35;margin:0,0,0,10px;")
+        gui_layout_widget("science_data")
+        gui_row()
+        gui_layout_widget("science_sorted_list")
+        gui_row("row-height: 10;")
+        gui_layout_widget("text_waterfall")
 
 
-await gui()
-jump operator_stats
+    await gui()
+    jump operator_stats
 
 ==== update_raider_count =====
 
-await delay_sim(seconds=10)
+    await delay_sim(seconds=10)
 
-r = role("raider")
-count = len(r)
-gui_update_shared("sh_raider_count", f"$text:{count};justify:left;font:gui-5;")
+    r = role("raider")
+    count = len(r)
+    gui_update_shared("sh_raider_count", f"$text:{count};justify:left;font:gui-5;")
 
-if is_timer_set(SHARED, "time_limit"):
-    t = format_time_remaining(SHARED, "time_limit")
-    gui_update_shared("sh_game_time",f"$text: {t};justify:left;font:gui-5;")
+    if is_timer_set(SHARED, "time_limit"):
+        t = format_time_remaining(SHARED, "time_limit")
+        gui_update_shared("sh_game_time",f"$text: {t};justify:left;font:gui-5;")
 
 
-jump update_raider_count
+    jump update_raider_count
 
 
 

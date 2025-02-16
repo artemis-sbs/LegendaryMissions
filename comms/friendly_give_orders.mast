@@ -1,33 +1,34 @@
 
 import give_orders.py
 
-
-//enable/comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
-
 # Example defining a color theme
 # Which is just a list of colors
 =$xmas green,red
 
+
+//enable/comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
+
+
 //comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly") 
-+ "Give Orders" //comms/give_orders
+    + "Give Orders" //comms/give_orders
 
 
 //comms/give_orders if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
-order = get_inventory_value(COMMS_SELECTED_ID, "ORDER","")
-is_defender = has_roles(COMMS_SELECTED_ID, "defender")
+    order = get_inventory_value(COMMS_SELECTED_ID, "ORDER","")
+    is_defender = has_roles(COMMS_SELECTED_ID, "defender")
 
-+ "Back"  //comms/
-+ "Protect" friendly_give_orders_protect if is_defender
-+ "Attack"  friendly_give_orders_attack if is_defender
-+ "Explore"  friendly_give_orders_explore
-+ "Go to location"  friendly_give_orders_location
-+ "Cancel" if order!="":
-    set_inventory_value(COMMS_SELECTED_ID, "ORDER","")
-    # Clear nav
-    nav = get_inventory_value(alt_ship, "ORDERS_NAV", None)
-    if nav:
-        sim.delete_navpoint_by_id(nav)
-        set_inventory_value(alt_ship, "ORDERS_NAV", None)
+    + "Back"  //comms/
+    + "Protect" friendly_give_orders_protect if is_defender
+    + "Attack"  friendly_give_orders_attack if is_defender
+    + "Explore"  friendly_give_orders_explore
+    + "Go to location"  friendly_give_orders_location
+    + "Cancel" if order!="":
+        set_inventory_value(COMMS_SELECTED_ID, "ORDER","")
+        # Clear nav
+        nav = get_inventory_value(alt_ship, "ORDERS_NAV", None)
+        if nav:
+            sim.delete_navpoint_by_id(nav)
+            set_inventory_value(alt_ship, "ORDERS_NAV", None)
 
    
 
@@ -35,239 +36,232 @@ is_defender = has_roles(COMMS_SELECTED_ID, "defender")
 # Common way to back out of give orders
 #
 === friendly_cancel_give_orders
-comms_navigate("")
-yield success
+    comms_navigate("")
+    yield success
 
 === friendly_give_orders_location
-ORDER="await further orders"
-ORDER_COLOR = "#040"
-jump carry_out_orders
+    ORDER="await further orders"
+    ORDER_COLOR = "#040"
+    jump carry_out_orders
 
 === friendly_give_orders_protect
-ORDER="protect"
-ORDER_COLOR = "#040"
-jump carry_out_orders
+    ORDER="protect"
+    ORDER_COLOR = "#040"
+    jump carry_out_orders
 
 === friendly_give_orders_attack
-ORDER="attack"
-ORDER_COLOR = "#400"
-jump carry_out_orders
+    ORDER="attack"
+    ORDER_COLOR = "#400"
+    jump carry_out_orders
 
 === friendly_give_orders_explore
-ORDER="explore"
-ORDER_COLOR = "#004"
-jump carry_out_orders
+    ORDER="explore"
+    ORDER_COLOR = "#004"
+    jump carry_out_orders
 
 
 === carry_out_orders 
-#
-# The Alt ship should be the selected id at this point
-# But can get confused when disconnecting or new connection 
-#
-#
-alt_ship= COMMS_SELECTED_ID
+    #
+    # The Alt ship should be the selected id at this point
+    # But can get confused when disconnecting or new connection 
+    #
+    #
+    alt_ship= COMMS_SELECTED_ID
 
-->END if not alt_ship
-set_inventory_value(EVENT.client_id, "2dview_alt_ship", alt_ship)
-alt_ship_obj = to_object(alt_ship)
-->END if alt_ship_obj is None
-print("give orders on alta ship")
+    ->END if not alt_ship
+    set_inventory_value(EVENT.client_id, "2dview_alt_ship", alt_ship)
+    alt_ship_obj = to_object(alt_ship)
+    ->END if alt_ship_obj is None
+    print("give orders on alta ship")
 
-target_point = get_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
-message = "Your order were unclear {COMMS_ORIGIN.name} - please confirm. I didn't get the area for the order."
-title = "Orders unclear"
+    target_point = get_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
+    message = "Your order were unclear {COMMS_ORIGIN.name} - please confirm. I didn't get the area for the order."
+    title = "Orders unclear"
 
-# Clear things
+    # Clear things
 
-nav = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
-if nav:
-    sim.delete_navpoint_by_id(nav)
-    set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
+    nav = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
+    if nav:
+        sim.delete_navpoint_by_id(nav)
+        set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
 
-# For now only one order
-nav = get_inventory_value(alt_ship, "ORDERS_NAV", None)
-if nav:
-    sim.delete_navpoint_by_id(nav)
-    set_inventory_value(alt_ship, "ORDERS_NAV", None)
+    # For now only one order
+    nav = get_inventory_value(alt_ship, "ORDERS_NAV", None)
+    if nav:
+        sim.delete_navpoint_by_id(nav)
+        set_inventory_value(alt_ship, "ORDERS_NAV", None)
 
-# set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
-        
-if target_point is not None:
-    message = "Heading to designated waypoint to {ORDER}"
-    title = "Orders accepted"
-    set_inventory_value(COMMS_SELECTED_ID, "ORDER", ORDER)
-    target_pos(COMMS_SELECTED_ID, target_point.x, target_point.y, target_point.z )
-    size = 5000
-    x = target_point.x
-    y = target_point.z
-
-
-    nav_name = "{ORDER} Orders^for {alt_ship_obj.name}"
-    nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, ORDER_COLOR)
-    nav = sim.get_navpoint_by_id(nav_id)
-    nav.visibleToShip = alt_ship
-    set_inventory_value(alt_ship, "ORDERS_NAV", nav_id)
-    set_inventory_value(COMMS_SELECTED_ID, "ORDERS_POINT", target_point)
-
-    # A more advance version should allow multiple orders
-    # order = (order, target_point, nav)
+    # set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
+            
+    if target_point is not None:
+        message = "Heading to designated waypoint to {ORDER}"
+        title = "Orders accepted"
+        set_inventory_value(COMMS_SELECTED_ID, "ORDER", ORDER)
+        target_pos(COMMS_SELECTED_ID, target_point.x, target_point.y, target_point.z )
+        size = 5000
+        x = target_point.x
+        y = target_point.z
 
 
-if message is not None:
-    comms_receive(message, title, color="white", title_color="cyan")
+        nav_name = "{ORDER} Orders^for {alt_ship_obj.name}"
+        nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, ORDER_COLOR)
+        nav = sim.get_navpoint_by_id(nav_id)
+        nav.visibleToShip = alt_ship
+        set_inventory_value(alt_ship, "ORDERS_NAV", nav_id)
+        set_inventory_value(COMMS_SELECTED_ID, "ORDERS_POINT", target_point)
 
-comms_navigate("")
-yield success
+        # A more advance version should allow multiple orders
+        # order = (order, target_point, nav)
+
+
+    if message is not None:
+        comms_receive(message, title, color="white", title_color="cyan")
+
+    comms_navigate("")
+    yield success
 
 
 //focus/comms2d if has_role(COMMS2D_ORIGIN_ID, "__player__")
-alt_ship = get_inventory_value(EVENT.client_id, "2dview_alt_ship", 0)
-on_ship =  sbs.get_ship_of_client(client_id)
+    alt_ship = get_inventory_value(EVENT.client_id, "2dview_alt_ship", 0)
+    on_ship =  sbs.get_ship_of_client(client_id)
 
-->END if not alt_ship
-alt_ship_obj = to_object(alt_ship)
-->END if alt_ship_obj is None
-->END if not has_roles(alt_ship, "tsn, friendly")
+    ->END if not alt_ship
+    alt_ship_obj = to_object(alt_ship)
+    ->END if alt_ship_obj is None
+    ->END if not has_roles(alt_ship, "tsn, friendly")
 
-# clear existing pending
-nav_id = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
-if nav_id:
-    #print(f"NAV ID {nav_id}" )
-    sim.delete_navpoint_by_id(nav_id)
-    set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
+    # clear existing pending
+    nav_id = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
+    if nav_id:
+        sim.delete_navpoint_by_id(nav_id)
+        set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
 
-# Handle initial clicks
-if EVENT.selected_id != 0:
-    set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", None)
-    #set_inventory_value(alt_ship, "ORDERS_SELECTED_ID", EVENT.selected_id)
-    pos = Vec3(COMMS2D_SELECTED.pos)
-    set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", pos)
-    x = pos.x
-    y = pos.z
+    # Handle initial clicks
+    if EVENT.selected_id != 0:
+        set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", None)
+        #set_inventory_value(alt_ship, "ORDERS_SELECTED_ID", EVENT.selected_id)
+        pos = Vec3(COMMS2D_SELECTED.pos)
+        set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", pos)
+        x = pos.x
+        y = pos.z
 
-else:
-    set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", Vec3(EVENT.source_point))
-    x = EVENT.source_point.x
-    y = EVENT.source_point.z
+    else:
+        set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", Vec3(EVENT.source_point))
+        x = EVENT.source_point.x
+        y = EVENT.source_point.z
 
-size = 5000
+    size = 5000
 
-nav_name = "Select Orders^for {alt_ship_obj.name}"
+    nav_name = "Select Orders^for {alt_ship_obj.name}"
 
-nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, "#444")
-# print(f"NAV ID {nav_id}" )
-nav = sim.get_navpoint_by_id(nav_id)
+    nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, "#444")
 
-nav.visibleToShip = alt_ship
-set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", nav_id)
+    nav = sim.get_navpoint_by_id(nav_id)
+
+    nav.visibleToShip = alt_ship
+    set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", nav_id)
 
 
-#Done no point running more
-->END
+    #Done no point running more
+    ->END
 
 
 
 //focus/comms if not has_role(COMMS_SELECTED_ID, 'admiral')
-->END if COMMS_SELECTED is None
-#
-#
-# Something else selected get out of give orders
-#
-nav_focus_id = EVENT.client_id
-comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
-if COMMS_SELECTED.has_role('tsn'):
-    ()[blue] "Unused"
-        % ready
-        % How can I help
-        % Your orders
-        % Yes, sir
-elif COMMS_SELECTED.has_role('raider'):
-    ()[red] "Unused"
-        % Piss off
-        % Eat my beams
-        % You shall perish
-        % You gonna die
+    ->END if COMMS_SELECTED is None
+    #
+    #
+    # Something else selected get out of give orders
+    #
+    nav_focus_id = EVENT.client_id
+    comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
+    if COMMS_SELECTED.has_role('tsn'):
+        ()[blue] "Unused"
+            % ready
+            % How can I help
+            % Your orders
+            % Yes, sir
+    elif COMMS_SELECTED.has_role('raider'):
+        ()[red] "Unused"
+            % Piss off
+            % Eat my beams
+            % You shall perish
+            % You gonna die
 
-#
-# AI for friendly tsn ships (Defender and citizen ships)
-#
-//spawn if has_roles(SPAWNED_ID, "tsn, friendly")
-#
-# ai_loop is a inline label to allow rerunning the logic
-#
+    #
+    # AI for friendly tsn ships (Defender and citizen ships)
+    #
+    //spawn if has_roles(SPAWNED_ID, "tsn, friendly")
+    #
+    # ai_loop is a inline label to allow rerunning the logic
+    #
 --- ai_loop
-#
-# call this logic every 5 seconds
-#
-await delay_sim(seconds=5)
+    #
+    # call this logic every 5 seconds
+    #
+    await delay_sim(seconds=5)
 
-me = to_object(SPAWNED_ID)
-->END if me is None
-#
-# Comms can give orders to attack a target (or approach another friendly) 
-#
-target_point = get_inventory_value(SPAWNED_ID, "ORDERS_POINT", None)
-#
-# Default orders is protect
-#
-order = get_inventory_value(SPAWNED_ID, "ORDER", "default")
-if order=="":
-    clear_target(SPAWNED_ID)
-    jump ai_loop
+    me = to_object(SPAWNED_ID)
+    ->END if me is None
+    #
+    # Comms can give orders to attack a target (or approach another friendly) 
+    #
+    target_point = get_inventory_value(SPAWNED_ID, "ORDERS_POINT", None)
+    #
+    # Default orders is protect
+    #
+    order = get_inventory_value(SPAWNED_ID, "ORDER", "default")
+    if order=="":
+        clear_target(SPAWNED_ID)
+        jump ai_loop
 
-# Set a target point (clear target id)
-if target_point is not None:
-    target_pos(SPAWNED_ID, target_point.x, target_point.y, target_point.z, target_id=0, stop_dist=200)
+    # Set a target point (clear target id)
+    if target_point is not None:
+        target_pos(SPAWNED_ID, target_point.x, target_point.y, target_point.z, target_id=0, stop_dist=200)
 
-## Look for a specified target
-the_target = to_object(get_inventory_value(SPAWNED_ID, "TARGET_ID", None))
-jump do_target if the_target is not None
+    ## Look for a specified target
+    the_target = to_object(get_inventory_value(SPAWNED_ID, "TARGET_ID", None))
+    jump do_target if the_target is not None
 
-#
-# explore or location just go there
-#
-jump ai_loop if order == "explore" or order.startswith("await further")
-jump attack if order == "attack"
+    #
+    # explore or location just go there
+    #
+    jump ai_loop if order == "explore" or order.startswith("await further")
+    jump attack if order == "attack"
 
-#
-# Defenders default to patrol/protect others nothing
-#
-jump ai_loop if order == "default" and not has_role(SPAWNED_ID, "defender")
-if order == "default":
-    target_point = Vec3(me.pos)
+    #
+    # Defenders default to patrol/protect others nothing
+    #
+    jump ai_loop if order == "default" and not has_role(SPAWNED_ID, "defender")
+    if order == "default":
+        target_point = Vec3(me.pos)
 
 --- patrol
-#
-# Only target things in patrol area
-#
-#print("patrol {target_point}")
-jump ai_loop if target_point is None
-the_target = closest(SPAWNED_ID, broad_test(target_point.x-5000, target_point.z-5000,target_point.x+5000, target_point.z+5000, 0xf0)&role("raider"))
-#print("patrol")
-jump do_target 
-    
+    #
+    # Only target things in patrol area
+    #
+    jump ai_loop if target_point is None
+    the_target = closest(SPAWNED_ID, broad_test(target_point.x-5000, target_point.z-5000,target_point.x+5000, target_point.z+5000, 0xf0)&role("raider"))
+    jump do_target 
+        
 
 ---- attack
-#
-# Attack and follow
-#
-if the_target is None:
-    in_rect = broad_test(target_point.x-5000, target_point.z-5000,target_point.x+5000, target_point.z+5000, 0xf0)
-    c = len(in_rect&role("raider"))
-    #print(f"In Rect {c}" )
-    close_to_friend = broad_test_around(SPAWNED_ID, 5000,5000, 0xf0)
-    the_target = closest(SPAWNED_ID,(in_rect | close_to_friend) &role("raider"))
-    #if the_target is not None:
-    #    t = to_object(the_target)
-    #    print(f"target {t.name}")
+    #
+    # Attack and follow
+    #
+    if the_target is None:
+        in_rect = broad_test(target_point.x-5000, target_point.z-5000,target_point.x+5000, target_point.z+5000, 0xf0)
+        c = len(in_rect&role("raider"))
+        close_to_friend = broad_test_around(SPAWNED_ID, 5000,5000, 0xf0)
+        the_target = closest(SPAWNED_ID,(in_rect | close_to_friend) &role("raider"))
 
 --- do_target
-#
-# Only shoot raiders
-#            
-if the_target is not None:
-    shoot = has_role(the_target, "raider")
-    target(SPAWNED_ID, the_target, shoot, stop_dist=500)
-   
+    #
+    # Only shoot raiders
+    #            
+    if the_target is not None:
+        shoot = has_role(the_target, "raider")
+        target(SPAWNED_ID, the_target, shoot, stop_dist=500)
+    
 
-jump ai_loop
+    jump ai_loop

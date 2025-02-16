@@ -3,89 +3,102 @@
 " while the enemies advance from two sides. This layout
 " (especially with minefields) makes for a complex terrain
 " situation, but isn't as open as a one-front layout.
+meta_data:``` yaml
+Properties:
+  Main:
+    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "difficulty")'
+  Map:
+    Terrain: 'gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many",var="terrain_select")'
+    Lethal Terrain: 'gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")'
+    Friendly Ships: 'gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")'
+    Monsters: 'gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")'
+    Upgrades: 'gui_drop_down("$text: {upgrade_select};list: none, few, some, lots, many", var= "upgrade_select")'
+    Time Limit: 'gui_input("desc: Minutes;", var="game_time_limit")'
+```
 
 
-terrain_value = terrain_to_value(terrain_select)
-lethal_value =  terrain_to_value(lethal_select)
-friendly_value = terrain_to_value(friendly_select)
-monster_value = terrain_to_value(monster_select)
-upgrade_value = terrain_to_value(upgrade_select)
+    terrain_value = terrain_to_value(terrain_select)
+    lethal_value =  terrain_to_value(lethal_select)
+    friendly_value = terrain_to_value(friendly_select)
+    monster_value = terrain_to_value(monster_select)
+    upgrade_value = terrain_to_value(upgrade_select)
 
-#------------------------------------------------------------------------------------------------------------
-
-
-terrain_spawn_stations(difficulty, lethal_value)
-await task_schedule(spawn_friendly_npc)
-terrain_asteroid_clusters(terrain_value)
-terrain_spawn_nebula_clusters(terrain_value)
-terrain_spawn_pickups(upgrade_value)
-terrain_spawn_monsters(monster_value)
-terrain_spawn_black_holes(lethal_value)
-
-#------------------------------------------------------------------------------------------------------------
-# generate fleets
-# For Single Front, one enemy is randomly chosen as the attacker, so all fleets will be chosen from that enemy.
-# For Double Front, two enemies are randomly choseen, each attacking from a different direction. Same enemy may be chosen twice.
-
-enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
-enemy_temp = []
-enemy_temp = random.choices(enemyTypeNameList, weights=(40, 20, 20, 20))
-enemy1 = enemy_temp[0]
-enemy_temp = random.choices(enemyTypeNameList, weights=(40, 20, 20, 20))
-enemy2 = enemy_temp[0]
-
-# Pick a random direction for both attackers, 1 = North, 2 = East, 3 = South, 4 = West
-enemyDirectionList = [1, 2, 3, 4]
-direction1 = enemyDirectionList.pop(random.randint(0,3))
-print(f"Test Enemy Direction1: {direction1} Enemy List: {enemyDirectionList}")
-direction2 = enemyDirectionList.pop(random.randint(0,2))
-print(f"Test Enemy Direction2: {direction2} Enemy List: {enemyDirectionList}")
- 
-fleet_count1 = 1 + int(difficulty/2)
-fleet_count2 = 1 + int(difficulty/2)
-fleet_index = int(difficulty - 1)
-
-# Ximni fleets are typically only one ship, so double fleets to balance this out until we code some better Ximni AI.
-if enemy1 == "Ximni":
-    fleet_count1 = fleet_count1*2 
-if enemy2 == "Ximni":
-    fleet_count2 = fleet_count2*2 
-
-print(f"Fleet Count1: {fleet_count1} Enemy1: {enemy1} Direction1: {direction1} Fleet Count2: {fleet_count2} Enemy2: {enemy2} Direction2: {direction2}")
-
-for a in range(fleet_count1):
-    if direction1 == 1:
-        fleet_pos = next(scatter_box(1, -40000, -1000, 40000, 40000, 1000, 50000))
-    if direction1 == 2:
-        fleet_pos = next(scatter_box(1, 40000, -1000, 40000, 50000, 1000, -40000))
-    if direction1 == 3:
-        fleet_pos = next(scatter_box(1, 40000, -1000, -40000, -40000, 1000, -50000))
-    if direction1 == 4:
-        fleet_pos = next(scatter_box(1, -40000, -1000, 40000, -50000, 1000, -40000))
-    print(f"Fleet1 Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
-    create_siege_fleet(enemy1, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-
-for b in range(fleet_count2):
-    if direction2 == 1:
-        fleet_pos = next(scatter_box(1, -40000, -1000, 40000, 40000, 1000, 50000))
-    if direction2 == 2:
-        fleet_pos = next(scatter_box(1, 40000, -1000, 40000, 50000, 1000, -40000))
-    if direction2 == 3:
-        fleet_pos = next(scatter_box(1, 40000, -1000, -40000, -40000, 1000, -50000))
-    if direction2 == 4:
-        fleet_pos = next(scatter_box(1, -40000, -1000, 40000, -50000, 1000, -40000))
-    print(f"Fleet2 Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
-    create_siege_fleet(enemy2, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+    #------------------------------------------------------------------------------------------------------------
 
 
-# At this time, keep the Skaraans out of a Single Front mission
-#    if a > 1 and difficulty > 2:
-#        fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
-#        create_npc_fleet_and_ships("skaraan", 1,0, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-#        create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+    terrain_spawn_stations(difficulty, lethal_value)
+    await task_schedule(spawn_friendly_npc)
+    terrain_asteroid_clusters(terrain_value)
+    terrain_spawn_nebula_clusters(terrain_value)
+    terrain_spawn_pickups(upgrade_value)
+    terrain_spawn_monsters(monster_value)
+    terrain_spawn_black_holes(lethal_value)
+
+    #------------------------------------------------------------------------------------------------------------
+    # generate fleets
+    # For Single Front, one enemy is randomly chosen as the attacker, so all fleets will be chosen from that enemy.
+    # For Double Front, two enemies are randomly choseen, each attacking from a different direction. Same enemy may be chosen twice.
+
+    enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
+    enemy_temp = []
+    enemy_temp = random.choices(enemyTypeNameList, weights=(40, 20, 20, 20))
+    enemy1 = enemy_temp[0]
+    enemy_temp = random.choices(enemyTypeNameList, weights=(40, 20, 20, 20))
+    enemy2 = enemy_temp[0]
+
+    # Pick a random direction for both attackers, 1 = North, 2 = East, 3 = South, 4 = West
+    enemyDirectionList = [1, 2, 3, 4]
+    direction1 = enemyDirectionList.pop(random.randint(0,3))
+    print(f"Test Enemy Direction1: {direction1} Enemy List: {enemyDirectionList}")
+    direction2 = enemyDirectionList.pop(random.randint(0,2))
+    print(f"Test Enemy Direction2: {direction2} Enemy List: {enemyDirectionList}")
+    
+    fleet_count1 = 1 + int(difficulty/2)
+    fleet_count2 = 1 + int(difficulty/2)
+    fleet_index = int(difficulty - 1)
+
+    # Ximni fleets are typically only one ship, so double fleets to balance this out until we code some better Ximni AI.
+    if enemy1 == "Ximni":
+        fleet_count1 = fleet_count1*2 
+    if enemy2 == "Ximni":
+        fleet_count2 = fleet_count2*2 
+
+    print(f"Fleet Count1: {fleet_count1} Enemy1: {enemy1} Direction1: {direction1} Fleet Count2: {fleet_count2} Enemy2: {enemy2} Direction2: {direction2}")
+
+    for a in range(fleet_count1):
+        if direction1 == 1:
+            fleet_pos = next(scatter_box(1, -40000, -1000, 40000, 40000, 1000, 50000))
+        if direction1 == 2:
+            fleet_pos = next(scatter_box(1, 40000, -1000, 40000, 50000, 1000, -40000))
+        if direction1 == 3:
+            fleet_pos = next(scatter_box(1, 40000, -1000, -40000, -40000, 1000, -50000))
+        if direction1 == 4:
+            fleet_pos = next(scatter_box(1, -40000, -1000, 40000, -50000, 1000, -40000))
+        print(f"Fleet1 Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
+        create_siege_fleet(enemy1, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+
+    for b in range(fleet_count2):
+        if direction2 == 1:
+            fleet_pos = next(scatter_box(1, -40000, -1000, 40000, 40000, 1000, 50000))
+        if direction2 == 2:
+            fleet_pos = next(scatter_box(1, 40000, -1000, 40000, 50000, 1000, -40000))
+        if direction2 == 3:
+            fleet_pos = next(scatter_box(1, 40000, -1000, -40000, -40000, 1000, -50000))
+        if direction2 == 4:
+            fleet_pos = next(scatter_box(1, -40000, -1000, 40000, -50000, 1000, -40000))
+        print(f"Fleet2 Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
+        create_siege_fleet(enemy2, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+
+
+    # At this time, keep the Skaraans out of a Single Front mission
+    #    if a > 1 and difficulty > 2:
+    #        fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
+    #        create_npc_fleet_and_ships("skaraan", 1,0, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+    #        create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
 
 
 
-task_schedule(task_end_game)
-#------------------------------------------------------------------------------------------------------------
+    task_schedule(task_end_game)
+    #------------------------------------------------------------------------------------------------------------
 

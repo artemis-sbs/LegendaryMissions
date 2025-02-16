@@ -78,7 +78,6 @@ set_inventory_value(CRAFT_ID, "briefing", "No missions set")
     _torp_types = _torp_types.split(",")
     # remove blanks
     _torp_types = [x for x in _torp_types if x]
-    # print(f"Mission Torp types {_torp_types}")
     torp_type = random.randint(0,len(_torp_types)-1)
     amount = random.randint(2, max(3, 6-torp_type))
     torp_name = _torp_types[torp_type].strip()

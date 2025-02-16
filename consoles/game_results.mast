@@ -15,108 +15,108 @@ shared game_stats = ~~{
 
 
 //damage/destroy if not has_role(DESTROYED_ID, "standby")
-##
-## Called via route destroy
-##
-obj = to_object(DESTROYED_ID)
-if obj is not None:
-    side = "{obj.side.lower()}_destroyed"
-    count = game_stats.get(side, 0)
-    game_stats[side] = count + 1
+    ##
+    ## Called via route destroy
+    ##
+    obj = to_object(DESTROYED_ID)
+    if obj is not None:
+        side = "{obj.side.lower()}_destroyed"
+        count = game_stats.get(side, 0)
+        game_stats[side] = count + 1
 
-    race = obj.art_id
-    under = race.find("_")
-    if under>=0:
-        race = race[0:under]
-        if race=="xim":
-            race= "ximni"
-        
-        race = "{race.lower()}_ships_destroyed"
-        count = game_stats.get(race, 0)
-        game_stats[race] = count + 1
+        race = obj.art_id
+        under = race.find("_")
+        if under>=0:
+            race = race[0:under]
+            if race=="xim":
+                race= "ximni"
+            
+            race = "{race.lower()}_ships_destroyed"
+            count = game_stats.get(race, 0)
+            game_stats[race] = count + 1
 
-->END
+    ->END
 
 
 //signal/show_game_results
 
-sim_pause()
-game_ended = True
-gui_section(style="area: 10, 10, 90, 90;")
+    sim_pause()
+    game_ended = True
+    gui_section(style="area: 10, 10, 90, 90;")
 
-"""color:white;justify: center; font: gui-6;$text:Game results"""
-gui_row()
-"""""color:cyan;justify:center;font:gui-5;$text:{start_text}"""""
-gui_row()
-gui_hole(5)
-"""color:yellow;justify: right;$text:TSN Destroyed"""
-gui_blank(style="col-width: 1;")
-gui_hole(5)
-"""color:yellow;justify: left;$text:{game_stats["tsn_destroyed"]}"""
+    """color:white;justify: center; font: gui-6;$text:Game results"""
+    gui_row()
+    """""color:cyan;justify:center;font:gui-5;$text:{start_text}"""""
+    gui_row()
+    gui_hole(5)
+    """color:yellow;justify: right;$text:TSN Destroyed"""
+    gui_blank(style="col-width: 1;")
+    gui_hole(5)
+    """color:yellow;justify: left;$text:{game_stats["tsn_destroyed"]}"""
 
-gui_row()
-gui_hole(5)
-"""color:yellow; justify: right;$text:arvonian ships destroyed"""
-gui_blank(style="col-width: 1;")
-gui_hole(5)
-"""color:yellow;justify: left;$text:{game_stats["arvonian_ships_destroyed"]}"""
+    gui_row()
+    gui_hole(5)
+    """color:yellow; justify: right;$text:arvonian ships destroyed"""
+    gui_blank(style="col-width: 1;")
+    gui_hole(5)
+    """color:yellow;justify: left;$text:{game_stats["arvonian_ships_destroyed"]}"""
 
-gui_row()
-gui_hole(5)
-"""color:yellow; justify: right;$text:kralien ships destroyed"""
-gui_blank(style="col-width: 1;")
-gui_hole(5)
-"""color:yellow;justify: left;$text:{game_stats["kralien_ships_destroyed"]}"""
+    gui_row()
+    gui_hole(5)
+    """color:yellow; justify: right;$text:kralien ships destroyed"""
+    gui_blank(style="col-width: 1;")
+    gui_hole(5)
+    """color:yellow;justify: left;$text:{game_stats["kralien_ships_destroyed"]}"""
 
-gui_row()
-gui_hole(5)
-"""color:yellow; justify: right;$text:skaraan ships destroyed"""
-gui_blank(style="col-width: 1;")
-gui_hole(5)
-"""color:yellow;justify: left;$text:{game_stats["skaraan_ships_destroyed"]}"""
+    gui_row()
+    gui_hole(5)
+    """color:yellow; justify: right;$text:skaraan ships destroyed"""
+    gui_blank(style="col-width: 1;")
+    gui_hole(5)
+    """color:yellow;justify: left;$text:{game_stats["skaraan_ships_destroyed"]}"""
 
-gui_row()
-gui_hole(5)
-"""color:yellow; justify: right;$text:ximni ships destroyed"""
-gui_blank(style="col-width: 1;")
-gui_hole(5)
-"""color:yellow;justify: left;$text:{game_stats["ximni_ships_destroyed"]}"""
+    gui_row()
+    gui_hole(5)
+    """color:yellow; justify: right;$text:ximni ships destroyed"""
+    gui_blank(style="col-width: 1;")
+    gui_hole(5)
+    """color:yellow;justify: left;$text:{game_stats["ximni_ships_destroyed"]}"""
 
-gui_row()
-gui_hole(5)
-"""color:yellow; justify: right;$text:torgoth ships destroyed"""
-gui_blank(style="col-width: 1;")
-gui_hole(5)
-"""color:yellow;justify: left;$text:{game_stats["torgoth_ships_destroyed"]}"""
+    gui_row()
+    gui_hole(5)
+    """color:yellow; justify: right;$text:torgoth ships destroyed"""
+    gui_blank(style="col-width: 1;")
+    gui_hole(5)
+    """color:yellow;justify: left;$text:{game_stats["torgoth_ships_destroyed"]}"""
 
-gui_row()
-gui_hole(5)
-"""color:yellow; justify: right;$text:ships surrendered"""
-gui_blank(style="col-width: 1;")
-gui_hole(5)
-"""color:yellow;justify: left;$text:{game_stats["ships_surrender"]}"""
-gui_row()
-gui_hole(5)
-end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)
-"""color:yellow; justify: right;$text:Game Time"""
-gui_blank(style="col-width: 1;")
-gui_hole(5)
-"""color:yellow;justify: left;$text:{end_time} minutes"""
+    gui_row()
+    gui_hole(5)
+    """color:yellow; justify: right;$text:ships surrendered"""
+    gui_blank(style="col-width: 1;")
+    gui_hole(5)
+    """color:yellow;justify: left;$text:{game_stats["ships_surrender"]}"""
+    gui_row()
+    gui_hole(5)
+    end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)
+    """color:yellow; justify: right;$text:Game Time"""
+    gui_blank(style="col-width: 1;")
+    gui_hole(5)
+    """color:yellow;justify: left;$text:{end_time} minutes"""
 
 
-mission = get_mission_name()
-start_mission = get_startup_mission_name()
-if start_mission is not None:
-    same = mission == start_mission
+    mission = get_mission_name()
+    start_mission = get_startup_mission_name()
+    if start_mission is not None:
+        same = mission == start_mission
 
-if start_mission is None or start_mission=="":
-    same = True
-    start_mission = mission
+    if start_mission is None or start_mission=="":
+        same = True
+        start_mission = mission
 
-await gui():
-    + "replay":
-        sbs.run_next_mission(mission)
-    + "run startup" if not same:
-        sbs.run_next_mission(start_mission)
+    await gui():
+        + "replay":
+            sbs.run_next_mission(mission)
+        + "run startup" if not same:
+            sbs.run_next_mission(start_mission)
 
-# Kind of need to restart, which is good for now since cleanup is not guaranteed
+    # Kind of need to restart, which is good for now since cleanup is not guaranteed

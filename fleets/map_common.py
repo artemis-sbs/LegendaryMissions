@@ -31,7 +31,7 @@ def player_ship_update_friendly(player_id, friends, initial_scan = False):
 call_signs = []
 enemy_name_number = 0
 call_signs.extend(range(1,100))
-#print(f"call_signs size = {len(call_signs)}")
+
 random.shuffle(call_signs)
 
 #--------------------------------------------------------------------------------------
@@ -515,7 +515,6 @@ def elite_get_abilities_scan(id_or_obj):
     abi = []
     roles = ship_obj.get_roles()
     for role in roles:
-        #print(role)
         ab = all_abilities.get(role, None)
         if ab is not None:
             abi.append(ab)
@@ -536,9 +535,7 @@ def random_bits(bits, count):
     pick = list(all_bits[:bits])
     ret = 0
     random.shuffle(pick)
-    #print(pick)
     p = pick[:count]
-    #print(p)
     for b in p:
         ret |= b
         
@@ -664,7 +661,6 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
         race = "kralien"
         siege_fleet = siege_kralien_fleet[fleet_diff][fleet_rand]
 
-    #print(f"Create Fleet, Race: {race}, Ships: {siege_fleet}, Pos: {int(posx)}, {int(posy)}, {int(posz)}")
 
     
     num_ships = len(siege_fleet)
@@ -685,7 +681,6 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
     if fleet_diff <5:
         for h in hard:
             all_abilities_copy.pop(h, None)
-    #print(f"ABIL COUNT {len( all_abilities_copy)}")
 
 
     
@@ -736,7 +731,7 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
                     if elite_is_engine_ability(ab):
                         raider.data_set.set(ab, 1,0)
                     add_role(raider.id, ab)
-            #print("Elite "+ elite_get_abilities_scan(raider.id))
+            
 
 
         # Should add a common function to call to get the face based on race

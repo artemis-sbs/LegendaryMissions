@@ -3,16 +3,49 @@
 # When a player spawns, enable docking
 #
 //spawn if has_role(SPAWNED_ID, "__player__")
-
 ---- wait_for_game_started
-if not game_started:
-    await delay_sim(1)
-    jump wait_for_game_started
+    if not game_started:
+        await delay_sim(1)
+        jump wait_for_game_started
 
-if world_select.path == "deep_strike":
-    schedule_player_docking(SPAWNED_ID, difficulty, "resupply_tanker", player_docking_resupply_docked)
-else:
-    schedule_player_docking(SPAWNED_ID, difficulty, "station", player_docking_station_docked)
+    if world_select.path == "deep_strike":
+        schedule_player_docking(SPAWNED_ID, difficulty, "resupply_tanker", player_docking_resupply_docked)
+    else:
+        schedule_player_docking(SPAWNED_ID, difficulty, "station", player_docking_station_docked)
+---- wait_for_game_started
+    print()
+
+# Docking only on player ships
+# this adds a sub task to the docking task
+# //enable/docking
+# " Standard docking
+# "
+# ---
+# any_role:
+# all_role: station
+# side: True
+# distance: 600
+# cycle: 10
+# ...
+
+
+
+
+
+# //enable_docking if world_select.path == "deep_strike"
+# " Docking with the resupply tanker
+# ---
+# all_role: resupply_tanker
+# side: True
+# distance: 600
+# cycle: 10
+# ...
+
+
+
+
+
+
 
 
 #

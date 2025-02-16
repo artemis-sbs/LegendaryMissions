@@ -33,7 +33,6 @@ def hangar_handle_destroy():
     # This is an example use of a Python function as a route
     #
     if has_role(so, "cockpit"):
-        #print(f"A craft was deleted {so.id&0xffff}")
         return
 
            
@@ -46,7 +45,6 @@ def hangar_handle_destroy():
     docked_crafts = linked_to(so, "hangar_craft") & role("standby")
 
     for id in docked_crafts:
-        #print(f"deleting docked craft {id&0xffff}")
         # restore it so delete message goes out
         #
         # TODO: The engine is nor deleting the object properly
@@ -200,7 +198,6 @@ def hangar_launch_craft(craft_id, client_id):
     sortie += 1
     set_inventory_value(client_id, "sortie", sortie)
     if call_sign is not None and len(call_sign)>0:
-        # print(f"hangarpy {call_sign}")
         craft.name = f"{call_sign} / {craft.name}"
 
     if hm is None: return False
@@ -261,7 +258,6 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
         dock_target = home_id
     else:
         dockable = broad_test_around(craft.id, dock_rng, dock_rng, 0xF0)
-        # print(len(role("tsn") & any_role("station,__player__")))
         dock_target = closest(craft_id, dockable & role("tsn") & any_role("station, __player__"))
 
     if dock_target is None: return False
@@ -299,13 +295,11 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
         docked_crafts = linked_to(home_id, "hangar_craft") & role("standby") & role("shuttle")
         max_refit = get_inventory_value(home_id, "MAX_SHUTTLE", 1)
         refit_cooef = max(1,len(docked_crafts) - max_refit)
-        #print(f"{max_refit} {len(docked_crafts)} {refit_cooef}")
     else:
         """ Treat fighters and bomber same """
         docked_crafts = linked_to(home_id, "hangar_craft") & role("standby") & role("fighter") & role("bomber") 
         max_refit = get_inventory_value(home_id, "MAX_FIGHTER", 1)
         refit_cooef = max(1,len(docked_crafts) - max_refit)
-        #print(f"{max_refit} {len(docked_crafts)} {refit_cooef}")
 
     set_timer(craft.id, "refit", seconds=int(30*refit_cooef))
     return True

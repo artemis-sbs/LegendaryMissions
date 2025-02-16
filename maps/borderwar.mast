@@ -6,201 +6,215 @@
 " control will allow you to set how many minutes will
 " pass before war is declared. Obviously, this should be
 "  less than the Time Limit.
+meta_data:``` yaml
+Properties:
+  Main:
+    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "difficulty")'
+  Map:
+    Terrain: 'gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many",var="terrain_select")'
+    Lethal Terrain: 'gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")'
+    Friendly Ships: 'gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")'
+    Monsters: 'gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")'
+    Upgrades: 'gui_drop_down("$text: {upgrade_select};list: none, few, some, lots, many", var= "upgrade_select")'
+    Minutes to War: 'gui_input("desc: Minutes;", var="war_time_delay")'
+    Time Limit: 'gui_input("desc: Minutes;", var="game_time_limit")'
+```
 
 
-terrain_value = terrain_to_value(terrain_select)
-lethal_value =  terrain_to_value(lethal_select)
-friendly_value = terrain_to_value(friendly_select)
-monster_value = terrain_to_value(monster_select)
-upgrade_value = terrain_to_value(upgrade_select)
+    terrain_value = terrain_to_value(terrain_select)
+    lethal_value =  terrain_to_value(lethal_select)
+    friendly_value = terrain_to_value(friendly_select)
+    monster_value = terrain_to_value(monster_select)
+    upgrade_value = terrain_to_value(upgrade_select)
 
-num_upgrade = 0
-if upgrade_value is not "none":
-    if upgrade_value == 1:
-        num_upgrade = random.randint(1,3)
-    elif upgrade_value == 2:
-        num_upgrade = random.randint(3,5)
-    elif upgrade_value == 3:
-        num_upgrade = random.randint(5,10)
-    elif upgrade_value == 4:
-        num_upgrade = random.randint(10,15)
-print("Number of Upgrades: {num_upgrade}")
+    num_upgrade = 0
+    if upgrade_value != "none":
+        if upgrade_value == 1:
+            num_upgrade = random.randint(1,3)
+        elif upgrade_value == 2:
+            num_upgrade = random.randint(3,5)
+        elif upgrade_value == 3:
+            num_upgrade = random.randint(5,10)
+        elif upgrade_value == 4:
+            num_upgrade = random.randint(10,15)
+    print("Number of Upgrades: {num_upgrade}")
 
-if seed_value != 0:
-    random.seed(seed_value)
-    print(f"Seed Value: {seed_value}")
-else:
-    seed_value = random.randint(1,99999)
-    random.seed(seed_value)
-    print(f"Random Seed Value: {seed_value}")
+    if seed_value != 0:
+        random.seed(seed_value)
+        print(f"Seed Value: {seed_value}")
+    else:
+        seed_value = random.randint(1,99999)
+        random.seed(seed_value)
+        print(f"Random Seed Value: {seed_value}")
 
-#------------------------------------------------------------------------------------------------------------
-# Add the "Neutral Zone" 
+    #------------------------------------------------------------------------------------------------------------
+    # Add the "Neutral Zone" 
 
-sim.add_navarea(0, 500000, 20000, 500000, 0, -500000, 20000, -500000, "Neutral Zone", "#004")
-
-
-#------------------------------------------------------------------------------------------------------------
-# Determine Enemy Antagonists
-
-enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian"]
-enemy_temp = []
-enemy_temp = random.choices(enemyTypeNameList, weights=(50, 25, 25))
-enemy1 = enemy_temp[0]
-
-#------------------------------------------------------------------------------------------------------------
-# Build friendly stations
-terrain_spawn_stations(difficulty, lethal_value, 21000, 65000)
-
-#------------------------------------------------------------------------------------------------------------
-# wait for the creation of the player ships
-await task_schedule(spawn_friendly_npc)
-terrain_asteroid_clusters(terrain_value)
-terrain_spawn_nebula_clusters(terrain_value)
-terrain_spawn_pickups(upgrade_value)
-terrain_spawn_monsters(monster_value)
-terrain_spawn_black_holes(lethal_value)
+    sim.add_navarea(0, 500000, 20000, 500000, 0, -500000, 20000, -500000, "Neutral Zone", "#004")
 
 
-#------------------------------------------------------------------------------------------------------------
-# Build enemy stations, generate fleets
+    #------------------------------------------------------------------------------------------------------------
+    # Determine Enemy Antagonists
 
-enemy_station_list = []
-navpoint_list = []
-enemy_station_dict = {}
+    enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian"]
+    enemy_temp = []
+    enemy_temp = random.choices(enemyTypeNameList, weights=(50, 25, 25))
+    enemy1 = enemy_temp[0]
 
-pos = Vec3()
-startZ = -50000
+    #------------------------------------------------------------------------------------------------------------
+    # Build friendly stations
+    terrain_spawn_stations(difficulty, lethal_value, 21000, 65000)
 
-fleet_index = int(difficulty) - 1
+    #------------------------------------------------------------------------------------------------------------
+    # wait for the creation of the player ships
+    await task_schedule(spawn_friendly_npc)
+    terrain_asteroid_clusters(terrain_value)
+    terrain_spawn_nebula_clusters(terrain_value)
+    terrain_spawn_pickups(upgrade_value)
+    terrain_spawn_monsters(monster_value)
+    terrain_spawn_black_holes(lethal_value)
 
-num_enemy_stations = int(difficulty)
-if num_enemy_stations < 3:
-    num_enemy_stations = 3
-station_step = 100000/num_enemy_stations
 
-if enemy1 == "Kralien":
-    station_prefix = "KB"
-    station_type = "starbase_kralien"
-if enemy1 == "Torgoth": 
-    station_prefix = "TB"
-    station_type = "starbase_torgoth"
-if enemy1 == "Arvonian":
-    station_prefix = "AB"
-    station_type = "starbase_arvonian"
+    #------------------------------------------------------------------------------------------------------------
+    # Build enemy stations, generate fleets
 
-# for each station
-for index in range(num_enemy_stations):
+    enemy_station_list = []
+    navpoint_list = []
+    enemy_station_dict = {}
 
-    pos.x = -(random.random()*25000+25000)
-    pos.y = random.random()*2000-1000
-    pos.z = startZ + random.random()*station_step/3  -   station_step/6
-#    _spawned_pos.append(pos)
-    startZ += station_step
+    pos = Vec3()
+    startZ = -50000
 
-    #make the station ----------------------------------
-    name = "{station_prefix} {index+1}"
+    fleet_index = int(difficulty) - 1
+
+    num_enemy_stations = int(difficulty)
+    if num_enemy_stations < 3:
+        num_enemy_stations = 3
+    station_step = 100000/num_enemy_stations
 
     if enemy1 == "Kralien":
-        enemy_station_object = npc_spawn(*pos, name, "kralien, enemy, station", station_type, "behav_station")
-    if enemy1 == "Torgoth":
-        enemy_station_object = npc_spawn(*pos, name, "torgoth, enemy, station", station_type, "behav_station")
+        station_prefix = "KB"
+        station_type = "starbase_kralien"
+    if enemy1 == "Torgoth": 
+        station_prefix = "TB"
+        station_type = "starbase_torgoth"
     if enemy1 == "Arvonian":
-        enemy_station_object = npc_spawn(*pos, name, "arvonian, enemy, station", station_type, "behav_station")
-    nav_id = sim.add_navpoint(*pos, name, "#A44")
-    enemy_station_list.append(to_id(enemy_station_object))
-    navpoint_list.append(nav_id)
-    enemy_station_dict[to_id(enemy_station_object)] = nav_id
+        station_prefix = "AB"
+        station_type = "starbase_arvonian"
 
-    if enemy1 == "Kralien":
-        set_face(to_id(enemy_station_object), random_kralien())
-    if enemy1 == "Torgoth":
-        set_face(to_id(enemy_station_object), random_torgoth())
-    if enemy1 == "Arvonian":
-        set_face(to_id(enemy_station_object), random_arvonian())
+    # for each station
+    for index in range(num_enemy_stations):
 
-    print(f"{enemy1} Station created: {int(pos.x)}, {int(pos.y)}, {int(pos.z)}")
+        pos.x = -(random.random()*25000+25000)
+        pos.y = random.random()*2000-1000
+        pos.z = startZ + random.random()*station_step/3  -   station_step/6
+    #    _spawned_pos.append(pos)
+        startZ += station_step
 
-    apos = Vec3()
-    apos.x = pos.x + 50.0
-    apos.z = pos.z + 50.0
+        #make the station ----------------------------------
+        name = "{station_prefix} {index+1}"
 
-    create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
+        if enemy1 == "Kralien":
+            enemy_station_object = npc_spawn(*pos, name, "kralien, enemy, station", station_type, "behav_station")
+        if enemy1 == "Torgoth":
+            enemy_station_object = npc_spawn(*pos, name, "torgoth, enemy, station", station_type, "behav_station")
+        if enemy1 == "Arvonian":
+            enemy_station_object = npc_spawn(*pos, name, "arvonian, enemy, station", station_type, "behav_station")
+        nav_id = sim.add_navpoint(*pos, name, "#A44")
+        enemy_station_list.append(to_id(enemy_station_object))
+        navpoint_list.append(nav_id)
+        enemy_station_dict[to_id(enemy_station_object)] = nav_id
+
+        if enemy1 == "Kralien":
+            set_face(to_id(enemy_station_object), random_kralien())
+        if enemy1 == "Torgoth":
+            set_face(to_id(enemy_station_object), random_torgoth())
+        if enemy1 == "Arvonian":
+            set_face(to_id(enemy_station_object), random_arvonian())
+
+        print(f"{enemy1} Station created: {int(pos.x)}, {int(pos.y)}, {int(pos.z)}")
+
+        apos = Vec3()
+        apos.x = pos.x + 50.0
+        apos.z = pos.z + 50.0
+
+        create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
 
 
 
-#------------------------------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------------------------
 
-players = all_roles('__player__, tsn')
-war_delay = int(war_time_delay)
+    players = all_roles('__player__, tsn')
+    war_delay = int(war_time_delay)
 
-if war_delay == 0:
-    comms_broadcast(players, "WAR HAS BEEN DECLARED!", "yellow")
-    for p in players:
-        comms_receive_internal(f"""WAR HAS BEEN DECLARED!""", p, "TSN Command", title="WAR DECLARED", title_color="yellow")
-    war_declared = 1
+    if war_delay == 0:
+        comms_broadcast(players, "WAR HAS BEEN DECLARED!", "yellow")
+        for p in players:
+            comms_receive_internal(f"""WAR HAS BEEN DECLARED!""", p, "TSN Command", title="WAR DECLARED", title_color="yellow")
+        war_declared = 1
+        ->END
+
+    shared war_declared = 0
+    task_schedule(war_timer_loop)
+    task_schedule(check_neutral_zone)
+    task_schedule(task_borderwar_end_game)
     ->END
-
-shared war_declared = 0
-task_schedule(war_timer_loop)
-task_schedule(check_neutral_zone)
-task_schedule(task_borderwar_end_game)
-->END
 
 ======= war_timer_loop =========
-if war_declared >= 1:
-    ->END
+    if war_declared >= 1:
+        ->END
 
-if war_delay == int(war_time_delay):
-    # Send "WAR IN X MINUTES!" message to all player ships.
-    comms_broadcast(players, f"""WAR STARTS IN {war_delay} MINUTES!""", "yellow")
-    for p in players:
-        comms_receive_internal(f"""WAR STARTS IN {war_delay} MINUTES!""", p, "TSN Command", title="PREPARE FOR WAR", title_color="yellow")
+    if war_delay == int(war_time_delay):
+        # Send "WAR IN X MINUTES!" message to all player ships.
+        comms_broadcast(players, f"""WAR STARTS IN {war_delay} MINUTES!""", "yellow")
+        for p in players:
+            comms_receive_internal(f"""WAR STARTS IN {war_delay} MINUTES!""", p, "TSN Command", title="PREPARE FOR WAR", title_color="yellow")
 
-if war_delay == 5:
-    # Send 5-minute warning.
-    comms_broadcast(players, "WAR STARTS IN 5 MINUTES!", "yellow")
-    for p in players:
-        comms_receive_internal(f"""WAR STARTS IN 5 MINUTES!""", p, "TSN Command", title="WAR 5 MIN", title_color="yellow")
+    if war_delay == 5:
+        # Send 5-minute warning.
+        comms_broadcast(players, "WAR STARTS IN 5 MINUTES!", "yellow")
+        for p in players:
+            comms_receive_internal(f"""WAR STARTS IN 5 MINUTES!""", p, "TSN Command", title="WAR 5 MIN", title_color="yellow")
 
-if war_delay == 1:
-    # Send 1-minute warning.
-    comms_broadcast(players, "WAR IMMINENT!", "yellow")
-    for p in players:
-        comms_receive_internal(f"""WAR STARTS IN 1 MINUTE!""", p, "TSN Command", title="WAR IMMINENT", title_color="yellow")
+    if war_delay == 1:
+        # Send 1-minute warning.
+        comms_broadcast(players, "WAR IMMINENT!", "yellow")
+        for p in players:
+            comms_receive_internal(f"""WAR STARTS IN 1 MINUTE!""", p, "TSN Command", title="WAR IMMINENT", title_color="yellow")
 
-war_delay -= 1
-await delay_sim(seconds=60)
+    war_delay -= 1
+    await delay_sim(seconds=60)
 
-if war_delay == 0:
-    comms_broadcast(players, "WAR DECLARED!", "yellow")
-    for p in players:
-        comms_receive_internal(f"""WAR HAS BEEN DECLARED!""", p, "TSN Command", title="WAR DECLARED", title_color="yellow")
-    war_declared = 1
-    ->END
-else:   
-    jump war_timer_loop
+    if war_delay == 0:
+        comms_broadcast(players, "WAR DECLARED!", "yellow")
+        for p in players:
+            comms_receive_internal(f"""WAR HAS BEEN DECLARED!""", p, "TSN Command", title="WAR DECLARED", title_color="yellow")
+        war_declared = 1
+        ->END
+    else:   
+        jump war_timer_loop
 
 ====== check_neutral_zone =======
-if war_declared == 1:
-    ->END
-for p in players:
-    eo = to_engine_object(p)
-    print(f"Player Position: {int(eo.pos.x)}, {int(eo.pos.y)}, {int(eo.pos.z)}")
-    if eo.pos.x <= 20000:
-        war_declared = 2
-
-if war_declared == 2:
-    comms_broadcast(players, "NEUTRAL ZONE VIOLATION", "red")
+    if war_declared == 1:
+        ->END
     for p in players:
-        comms_receive_internal(f"""NEUTRAL ZONE VIOLATION - Mission Failed!""", p, "TSN Command", title="NETURAL ZONE VIOLATION", title_color="red")
-    await delay_sim(seconds=6)
-    war_declared = 3
-#    task_schedule(task_end_game)
-    ->END
+        eo = to_engine_object(p)
+        print(f"Player Position: {int(eo.pos.x)}, {int(eo.pos.y)}, {int(eo.pos.z)}")
+        if eo.pos.x <= 20000:
+            war_declared = 2
 
-await delay_sim(seconds=5)
-jump check_neutral_zone
+    if war_declared == 2:
+        comms_broadcast(players, "NEUTRAL ZONE VIOLATION", "red")
+        for p in players:
+            comms_receive_internal(f"""NEUTRAL ZONE VIOLATION - Mission Failed!""", p, "TSN Command", title="NETURAL ZONE VIOLATION", title_color="red")
+        await delay_sim(seconds=6)
+        war_declared = 3
+    #    task_schedule(task_end_game)
+        ->END
+
+    await delay_sim(seconds=5)
+    jump check_neutral_zone
 
 
 

@@ -8,251 +8,374 @@ shared kidnap_status = 0
 " one or two fleets or single Skaraans on higher difficulties)
 " in this scenario, although there may be monsters or quests
 " for the player to complete if the appropriate Sector Options are set.
+meta_data:``` yaml
+Properties:
+  Main:
+    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "difficulty")'
+  Map:
+    Terrain: 'gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many",var="terrain_select")'
+    Lethal Terrain: 'gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")'
+    Friendly Ships: 'gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")'
+    Monsters: 'gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")'
+    Upgrades: 'gui_drop_down("$text: {upgrade_select};list: none, few, some, lots, many", var= "upgrade_select")'
+    Time Limit: 'gui_input("desc: Minutes;", var="game_time_limit")'
+```
 
-terrain_value = terrain_to_value(terrain_select)
-lethal_value =  terrain_to_value(lethal_select)
-friendly_value = terrain_to_value(friendly_select)
-monster_value = terrain_to_value(monster_select)
-upgrade_value = terrain_to_value(upgrade_select)
+    terrain_value = terrain_to_value(terrain_select)
+    lethal_value =  terrain_to_value(lethal_select)
+    friendly_value = terrain_to_value(friendly_select)
+    monster_value = terrain_to_value(monster_select)
+    upgrade_value = terrain_to_value(upgrade_select)
 
-terrain_spawn_stations(difficulty, lethal_value, min_num=5)
-await task_schedule(spawn_friendly_npc)
-terrain_asteroid_clusters(terrain_value)
-terrain_spawn_nebula_clusters(terrain_value)
-terrain_spawn_pickups(upgrade_value)
-terrain_spawn_monsters(monster_value)
-terrain_spawn_black_holes(lethal_value)
+    terrain_spawn_stations(difficulty, lethal_value, min_num=5)
+    await task_schedule(spawn_friendly_npc)
+    terrain_asteroid_clusters(terrain_value)
+    terrain_spawn_nebula_clusters(terrain_value)
+    terrain_spawn_pickups(upgrade_value)
+    terrain_spawn_monsters(monster_value)
+    terrain_spawn_black_holes(lethal_value)
 
-#------------------------------------------------------------------------------------------------------------
-# No enemy fleets in Peacetime
+    #------------------------------------------------------------------------------------------------------------
+    # No enemy fleets in Peacetime
 
-#------------------------------------------------------------------------------------------------------------
-# "Find the kidnapped Abassador" mission starts if any friendly ships were selected. 
+    #------------------------------------------------------------------------------------------------------------
+    # "Find the kidnapped Abassador" mission starts if any friendly ships were selected. 
 
-if friendly_value >= 1:
-    jump kidnap_caper
-else:
-    ->END
+    if friendly_value >= 1:
+        jump kidnap_caper
+    else:
+        ->END
 
 ====== kidnap_caper ======
 
-kidnap_status = 1
+    kidnap_status = 1
 
-# Add roles to first five stations, makes them easier to identify.
-# Add a 'record_status' to inventory, 1 = station has cargo manifest, 2 = missing cargo manifest, 3 = computers down
+    # Add roles to first five stations, makes them easier to identify.
+    # Add a 'record_status' to inventory, 1 = station has cargo manifest, 2 = missing cargo manifest, 3 = computers down
 
-ds_list = []
-for s in to_object_list(role("station")):
-    temp_rand = random.randint(1, 3)
-    if s.name == "DS 1":
-        add_role(s.id, "ds1")
-        ds_list.append(s.id)
-        set_inventory_value(s, "records_status", temp_rand)
-    elif s.name == "DS 2":
-        add_role(s.id, "ds2")
-        ds_list.append(s.id)
-        set_inventory_value(s, "records_status", temp_rand)
-    elif s.name == "DS 3":
-        add_role(s.id, "ds3")
-        ds_list.append(s.id)
-        set_inventory_value(s, "records_status", temp_rand)
-    elif s.name == "DS 4":
-        add_role(s.id, "ds4")
-        ds_list.append(s.id)
-        set_inventory_value(s, "records_status", temp_rand)
-    elif s.name == "DS 5":
-        add_role(s.id, "ds5")
-        ds_list.append(s.id)
-        set_inventory_value(s, "records_status", temp_rand)
+    ds_list = []
+    for s in to_object_list(role("station")):
+        temp_rand = random.randint(1, 3)
+        if s.name == "DS 1":
+            add_role(s.id, "ds1")
+            ds_list.append(s.id)
+            set_inventory_value(s, "records_status", temp_rand)
+        elif s.name == "DS 2":
+            add_role(s.id, "ds2")
+            ds_list.append(s.id)
+            set_inventory_value(s, "records_status", temp_rand)
+        elif s.name == "DS 3":
+            add_role(s.id, "ds3")
+            ds_list.append(s.id)
+            set_inventory_value(s, "records_status", temp_rand)
+        elif s.name == "DS 4":
+            add_role(s.id, "ds4")
+            ds_list.append(s.id)
+            set_inventory_value(s, "records_status", temp_rand)
+        elif s.name == "DS 5":
+            add_role(s.id, "ds5")
+            ds_list.append(s.id)
+            set_inventory_value(s, "records_status", temp_rand)
 
-# The lists are loaded in from shipnames.json to help build a fleet of cargo ships with captains, containers, and goods
-alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
-peacetime_list = shipname_data.get("peacetime")
-civname_list = shipname_data.get("civilian")
-capname_list = shipname_data.get("captain")
-clue_list = shipname_data.get("clue_list")
-goods_list = shipname_data.get("tradegoods")
-suspect = []
+    # The lists are loaded in from shipnames.json to help build a fleet of cargo ships with captains, containers, and goods
+    alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
+    peacetime_list = shipname_data.get("peacetime")
+    civname_list = shipname_data.get("civilian")
+    capname_list = shipname_data.get("captain")
+    clue_list = shipname_data.get("clue_list")
+    goods_list = shipname_data.get("tradegoods")
+    suspect = []
 
-# Kidnapper ship (first suspect) hides the ambassador in a suspicious container, randomized as list index 6, 8, 10, or 12.
-# The first three suspect ships have a "clue" about the captain/ship. The first one is where the ambassador is hidden, so the 
-# Clue/Container are loaded as a pair (clue0/clue1). The other two suspects have a clue about the captain/ship 
-# (clue2 and clue3), but aren't paired to a particular container, since the ambassador isn't hiding on board.
+    # Kidnapper ship (first suspect) hides the ambassador in a suspicious container, randomized as list index 6, 8, 10, or 12.
+    # The first three suspect ships have a "clue" about the captain/ship. The first one is where the ambassador is hidden, so the 
+    # Clue/Container are loaded as a pair (clue0/clue1). The other two suspects have a clue about the captain/ship 
+    # (clue2 and clue3), but aren't paired to a particular container, since the ambassador isn't hiding on board.
 
-kidnap_clue = {}
-kidnap_clue = clue_list.pop(random.randint(0,19))
-clue0 = kidnap_clue['container']
-clue1 = kidnap_clue['clue']
-kidnap_clue = clue_list.pop(random.randint(0,len(clue_list)-1))
-clue2 = kidnap_clue['clue']
-kidnap_clue = clue_list.pop(random.randint(0,len(clue_list)-1))
-clue3 = kidnap_clue['clue']
+    kidnap_clue = {}
+    kidnap_clue = clue_list.pop(random.randint(0,19))
+    clue0 = kidnap_clue['container']
+    clue1 = kidnap_clue['clue']
+    kidnap_clue = clue_list.pop(random.randint(0,len(clue_list)-1))
+    clue2 = kidnap_clue['clue']
+    kidnap_clue = clue_list.pop(random.randint(0,len(clue_list)-1))
+    clue3 = kidnap_clue['clue']
 
-# Generate five cargo ships as suspects. The first three are given to the player by DS 1. 
-# The fourth suspect may wind up as the kidnapper. The fifth is just a decoy. 
+    # Generate five cargo ships as suspects. The first three are given to the player by DS 1. 
+    # The fourth suspect may wind up as the kidnapper. The fifth is just a decoy. 
 
-s_count = 1
-spawn_points = scatter.box(5, 0, 0, 0, 50000, 1000, 50000, centered=True)
-for c in spawn_points:
-    # First three suspects have "California" names
-    if s_count >= 1 and s_count <= 3:    
-        cargo_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + peacetime_list.pop(random.randint(0,len(peacetime_list)-1))
-        c_ship = to_id(npc_spawn(*c, cargo_name, "civ, civilian, suspect", "cargo_ship", "behav_npcship"))
-    # Last two suspects have "Civilian" names
-    else:
-        cargo_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randint(0,len(civname_list)-1))
-        c_ship = to_id(npc_spawn(*c, cargo_name, "civ, civilian, suspect", "cargo_ship", "behav_npcship"))
-    # Sets the last two stations the ship stopped at, and a third station they are heading towards.
-    # Also sets roles on the stations visited so comms messages can be added later.
-    temp_stop = [2, 3, 4, 5]
-    stop1 = temp_stop.pop(random.randint(0, len(temp_stop)-1))
-    temp_role = "clue" + str(s_count) + "A"
-    if stop1 == 2:
-        add_role(role("ds2"), temp_role)
-    elif stop1 == 3:
-        add_role(role("ds3"), temp_role)
-    elif stop1 == 4:
-        add_role(role("ds4"), temp_role)
-    elif stop1 == 5:
-        add_role(role("ds5"), temp_role)
-    stop2 = temp_stop.pop(random.randint(0, len(temp_stop)-1))
-    temp_role = "clue" + str(s_count) + "B"
-    if stop2 == 2:
-        add_role(role("ds2"), temp_role)
-    elif stop2 == 3:
-        add_role(role("ds3"), temp_role)
-    elif stop2 == 4:
-        add_role(role("ds4"), temp_role)
-    elif stop2 == 5:
-        add_role(role("ds5"), temp_role)
-    stop3 = temp_stop.pop(random.randint(0,len(temp_stop)-1))
-    # Populates the Ship Name, Captain Name, and then the contents of the four cargo holds into a list object.
-    # There are three different cargo lists to show the contents at the start (DS1), the first stop, and the second stop.  
-    _captain = capname_list.pop(random.randint(0, len(capname_list)-1))
-    s_obj = to_object(c_ship)
-    cargo1 = [s_obj.name, _captain, stop1, stop2, stop3]
-    cargo2 = [s_obj.name, _captain, stop1, stop2, stop3]
-    cargo3 = [s_obj.name, _captain, stop1, stop2, stop3]
-    for x in range(8):
-        alpha_container = [ "A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ]
-        _alpha = alpha_container.pop(random.randint(0,len(alpha_container)-1))
-        _alpha += alpha_container.pop(random.randint(0,len(alpha_container)-1))
-        _alpha += alpha_container.pop(random.randint(0,len(alpha_container)-1))
-        _contents = goods_list.pop(random.randint(0, len(goods_list)-1))
-        cargo1.append(_alpha)
-        cargo1.append(_contents)
-        cargo2.append(_alpha)
-        cargo2.append(_contents)
-        cargo3.append(_alpha)
-        cargo3.append(_contents)
-    set_inventory_value(c_ship, "cargo1", cargo1)
-    set_inventory_value(c_ship, "cargo2", cargo2)
-    set_inventory_value(c_ship, "cargo3", cargo3)
-    set_inventory_value(c_ship, "kclue", clue0)
-    
-    set_face(c_ship, random_terran(civilian=True))
-    suspect.append(c_ship)
-    s_obj.data_set.set("ally_list","tsn",0)
-    s_count += 1
+    s_count = 1
+    spawn_points = scatter.box(5, 0, 0, 0, 50000, 1000, 50000, centered=True)
+    for c in spawn_points:
+        # First three suspects have "California" names
+        if s_count >= 1 and s_count <= 3:    
+            cargo_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + peacetime_list.pop(random.randint(0,len(peacetime_list)-1))
+            c_ship = to_id(npc_spawn(*c, cargo_name, "civ, civilian, suspect", "cargo_ship", "behav_npcship"))
+        # Last two suspects have "Civilian" names
+        else:
+            cargo_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randint(0,len(civname_list)-1))
+            c_ship = to_id(npc_spawn(*c, cargo_name, "civ, civilian, suspect", "cargo_ship", "behav_npcship"))
+        # Sets the last two stations the ship stopped at, and a third station they are heading towards.
+        # Also sets roles on the stations visited so comms messages can be added later.
+        temp_stop = [2, 3, 4, 5]
+        stop1 = temp_stop.pop(random.randint(0, len(temp_stop)-1))
+        temp_role = "clue" + str(s_count) + "A"
+        if stop1 == 2:
+            add_role(role("ds2"), temp_role)
+        elif stop1 == 3:
+            add_role(role("ds3"), temp_role)
+        elif stop1 == 4:
+            add_role(role("ds4"), temp_role)
+        elif stop1 == 5:
+            add_role(role("ds5"), temp_role)
+        stop2 = temp_stop.pop(random.randint(0, len(temp_stop)-1))
+        temp_role = "clue" + str(s_count) + "B"
+        if stop2 == 2:
+            add_role(role("ds2"), temp_role)
+        elif stop2 == 3:
+            add_role(role("ds3"), temp_role)
+        elif stop2 == 4:
+            add_role(role("ds4"), temp_role)
+        elif stop2 == 5:
+            add_role(role("ds5"), temp_role)
+        stop3 = temp_stop.pop(random.randint(0,len(temp_stop)-1))
+        # Populates the Ship Name, Captain Name, and then the contents of the four cargo holds into a list object.
+        # There are three different cargo lists to show the contents at the start (DS1), the first stop, and the second stop.  
+        _captain = capname_list.pop(random.randint(0, len(capname_list)-1))
+        s_obj = to_object(c_ship)
+        cargo1 = [s_obj.name, _captain, stop1, stop2, stop3]
+        cargo2 = [s_obj.name, _captain, stop1, stop2, stop3]
+        cargo3 = [s_obj.name, _captain, stop1, stop2, stop3]
+        for x in range(8):
+            alpha_container = [ "A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ]
+            _alpha = alpha_container.pop(random.randint(0,len(alpha_container)-1))
+            _alpha += alpha_container.pop(random.randint(0,len(alpha_container)-1))
+            _alpha += alpha_container.pop(random.randint(0,len(alpha_container)-1))
+            _contents = goods_list.pop(random.randint(0, len(goods_list)-1))
+            cargo1.append(_alpha)
+            cargo1.append(_contents)
+            cargo2.append(_alpha)
+            cargo2.append(_contents)
+            cargo3.append(_alpha)
+            cargo3.append(_contents)
+        set_inventory_value(c_ship, "cargo1", cargo1)
+        set_inventory_value(c_ship, "cargo2", cargo2)
+        set_inventory_value(c_ship, "cargo3", cargo3)
+        set_inventory_value(c_ship, "kclue", clue0)
+        
+        set_face(c_ship, random_terran(civilian=True))
+        suspect.append(c_ship)
+        s_obj.data_set.set("ally_list","tsn",0)
+        s_count += 1
 
-suspect_list = to_object_list(role('suspect'))
-sus_count = len(suspect_list)
--> END if sus_count == 0
+    suspect_list = to_object_list(role('suspect'))
+    sus_count = len(suspect_list)
+    -> END if sus_count == 0
 
-# Add the cargo contents to the first five stations as inventory, so that the Comms buttons can get cargo/ship information
-# when the player talks to the stations. 
+    # Add the cargo contents to the first five stations as inventory, so that the Comms buttons can get cargo/ship information
+    # when the player talks to the stations. 
 
-for ds in ds_list:
-    for x in range(3):
-        temp_inv0 = "cargo" + str(x + 1)
-        temp_inv1 = "ship1_cargo" + str(x + 1)
-        temp_inv2 = "ship2_cargo" + str(x + 1)
-        temp_inv3 = "ship3_cargo" + str(x + 1)
-        temp_cargo1 = get_inventory_value(suspect_list[0], "cargo1")
-        temp_cargo2 = get_inventory_value(suspect_list[1], "cargo2")
-        temp_cargo3 = get_inventory_value(suspect_list[2], "cargo3")
-        set_inventory_value(ds, temp_inv1, temp_cargo1)
-        set_inventory_value(ds, temp_inv2, temp_cargo2)
-        set_inventory_value(ds, temp_inv3, temp_cargo3)
-        # Randomize the three suspect ships so that the first ship listed isn't automatically the kidnapper.
-        if x == 0:
-            rand3 = random.randint(1, 3)
-            if rand3 == 1:
-                investigate_msg = temp_cargo1[0] + "^" + temp_cargo2[0] + "^" + temp_cargo3[0]
-            elif rand3 == 2:
-                investigate_msg = temp_cargo3[0] + "^" + temp_cargo1[0] + "^" + temp_cargo2[0]
-            elif rand3 == 3:
-                investigate_msg = temp_cargo2[0] + "^" + temp_cargo3[0] + "^" + temp_cargo1[0]
-            set_inventory_value(ds, "investigate_message", investigate_msg)
+    for ds in ds_list:
+        for x in range(3):
+            temp_inv0 = "cargo" + str(x + 1)
+            temp_inv1 = "ship1_cargo" + str(x + 1)
+            temp_inv2 = "ship2_cargo" + str(x + 1)
+            temp_inv3 = "ship3_cargo" + str(x + 1)
+            temp_cargo1 = get_inventory_value(suspect_list[0], "cargo1")
+            temp_cargo2 = get_inventory_value(suspect_list[1], "cargo2")
+            temp_cargo3 = get_inventory_value(suspect_list[2], "cargo3")
+            set_inventory_value(ds, temp_inv1, temp_cargo1)
+            set_inventory_value(ds, temp_inv2, temp_cargo2)
+            set_inventory_value(ds, temp_inv3, temp_cargo3)
+            # Randomize the three suspect ships so that the first ship listed isn't automatically the kidnapper.
+            if x == 0:
+                rand3 = random.randint(1, 3)
+                if rand3 == 1:
+                    investigate_msg = temp_cargo1[0] + "^" + temp_cargo2[0] + "^" + temp_cargo3[0]
+                elif rand3 == 2:
+                    investigate_msg = temp_cargo3[0] + "^" + temp_cargo1[0] + "^" + temp_cargo2[0]
+                elif rand3 == 3:
+                    investigate_msg = temp_cargo2[0] + "^" + temp_cargo3[0] + "^" + temp_cargo1[0]
+                set_inventory_value(ds, "investigate_message", investigate_msg)
 
-# This code picks a random container on ship 1 and replaces it with the "suspicious" container chosen earlier.
-# Then it resets the three different cargo states on the kidnapper ship.  
+    # This code picks a random container on ship 1 and replaces it with the "suspicious" container chosen earlier.
+    # Then it resets the three different cargo states on the kidnapper ship.  
 
-rand1 = 4 + (2 * random.randint(1,4))
-kidnapper_id = suspect_list[0]
-add_role(suspect_list[0], "kidnapper")
-for index in range(3):
-    tempval = "cargo" + str(index+1)
-    tempcargo = get_inventory_value(suspect_list[0], tempval)
-    tempcargo[rand1] = clue0
-    set_inventory_value(suspect_list[0], tempval, tempcargo)
+    rand1 = 4 + (2 * random.randint(1,4))
+    kidnapper_id = suspect_list[0]
+    add_role(suspect_list[0], "kidnapper")
+    for index in range(3):
+        tempval = "cargo" + str(index+1)
+        tempcargo = get_inventory_value(suspect_list[0], tempval)
+        tempcargo[rand1] = clue0
+        set_inventory_value(suspect_list[0], tempval, tempcargo)
 
-# There are three different 'scenarios' for the Ambassador. The first is two stops where the Kidnapper ship transfers cargo and leaves a clue.
-# Note: the first scenario was disabled. It was too easy to track down the three ships and scan them. 
-# Playtesters weren't flying around looking for clues. So the two possible scenarios are #2 "Transfer cargo to new ship"
-# and #3 "Ship changes name". 
+    # There are three different 'scenarios' for the Ambassador. The first is two stops where the Kidnapper ship transfers cargo and leaves a clue.
+    # Note: the first scenario was disabled. It was too easy to track down the three ships and scan them. 
+    # Playtesters weren't flying around looking for clues. So the two possible scenarios are #2 "Transfer cargo to new ship"
+    # and #3 "Ship changes name". 
 
-rand2 = random.randint(2,3)
-if rand2 == 1:
-    # First ship, first stop, transfers two containers. This section updates the cargo containers and updates message1C.
+    rand2 = random.randint(2,3)
+    if rand2 == 1:
+        # First ship, first stop, transfers two containers. This section updates the cargo containers and updates message1C.
+        _idx = [6, 8, 10, 12]
+        _cargo2 = get_inventory_value(suspect_list[0], "cargo2")
+        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
+        _idx.remove(rand1)
+        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
+        xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
+        new_good1 = _cargo2.pop()
+        new_cont1 = _cargo2.pop()
+        new_good2 = _cargo2.pop()
+        new_cont2 = _cargo2.pop()
+        _cargo3.remove(new_good1)
+        _cargo3_remove(new_cont1)
+        _cargo3.remove(new_good2)
+        _cargo3_remove(new_cont2)
+        tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] + " and Container " + _cargo2[xfer_idx2 - 1] + ": " + _cargo2[xfer_idx2]
+        tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
+        _cargo2[xfer_idx1 - 1] = new_cont1
+        _cargo2[xfer_idx1] = new_good1
+        _cargo2[xfer_idx2 - 1] = new_cont2
+        _cargo2[xfer_idx2] = new_good2
+        _cargo3[xfer_idx1 - 1] = new_cont1
+        _cargo3[xfer_idx1] = new_good1
+        _cargo3[xfer_idx2 - 1] = new_cont2
+        _cargo3[xfer_idx2] = new_good2
+        set_inventory_value(suspect_list[0], "cargo2", _cargo2)
+        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
+        shared message1C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}"  
+        print(f"message1C: {message1C}")
+        # First ship, second stop, transfers one container. Adds a "clue" to message1D.
+        _idx = [6, 8, 10, 12]
+        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
+        _idx.remove(rand1)
+        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
+        new_good1 = _cargo3.pop()
+        new_cont1 = _cargo3.pop()
+        tmpmsg1 = "Container " + _cargo3[xfer_idx1 - 1] + ": " + _cargo3[xfer_idx1] 
+        tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
+        _cargo3[xfer_idx1 - 1] = new_cont1
+        _cargo3[xfer_idx1] = new_good1
+        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
+        shared message1D = "Yes, " + _cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}^^Oh, and something else I noticed. " + clue1  
+        print(f"message1D: {message1D}")
+    elif rand2 == 2:
+        # First ship, first stop, transfers one container. Adds a "clue" to message1C.
+        _idx = [6, 8, 10, 12]
+        _cargo2 = get_inventory_value(suspect_list[0], "cargo2")
+        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
+        _idx.remove(rand1)
+        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
+        new_good1 = _cargo2.pop()
+        new_cont1 = _cargo2.pop()
+        _cargo3.remove(new_good1)
+        _cargo3.remove(new_cont1)
+        tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] 
+        tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
+        _cargo2[xfer_idx1 - 1] = new_cont1
+        _cargo2[xfer_idx1] = new_good1
+        _cargo3[xfer_idx1 - 1] = new_cont1
+        _cargo3[xfer_idx1] = new_good1
+        set_inventory_value(suspect_list[0], "cargo2", _cargo2)
+        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
+        shared message1C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue1  
+        print(f"message1C: {message1C}")
+        # First ship, second stop, transfers three containers and a captain to a different ship. 
+        remove_role(suspect_list[0], "kidnapper")
+        add_role(suspect_list[3], "kidnapper")
+        kidnapper_id = suspect_list[3]
+        _idx = [6, 8, 10, 12]
+        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
+        _cargo4 = get_inventory_value(suspect_list[3], "cargo3")
+        _idx.remove(rand1)
+        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
+        xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
+        xfer_cap1 = _cargo3[1]
+        xfer_cap2 = _cargo4[1]
+        _cargo3[1] = xfer_cap2
+        _cargo4[1] = xfer_cap1
+        new_good1 = _cargo3[rand1]
+        new_cont1 = _cargo3[rand1 - 1]
+        new_good2 = _cargo3[xfer_idx1]
+        new_cont2 = _cargo3[xfer_idx1 - 1]
+        new_good3 = _cargo3[xfer_idx2]
+        new_cont3 = _cargo3[xfer_idx2 - 1]
+        _cargo4[rand1 - 1] = new_cont1
+        _cargo4[rand1] = new_good1
+        _cargo4[xfer_idx1 - 1] = new_cont2
+        _cargo4[xfer_idx1] = new_good2
+        _cargo4[xfer_idx2 - 1] = new_cont3
+        _cargo4[xfer_idx2] = new_good3
+        new_good1 = _cargo4.pop()
+        new_cont1 = _cargo4.pop()
+        new_good2 = _cargo4.pop()
+        new_cont2 = _cargo4.pop()
+        new_good3 = _cargo4.pop()
+        new_cont3 = _cargo4.pop()
+        _cargo3[rand1 - 1] = new_cont1
+        _cargo3[rand1] = new_good1
+        _cargo3[xfer_idx1 - 1] = new_cont2
+        _cargo3[xfer_idx1] = new_good2
+        _cargo3[xfer_idx2 - 1] = new_cont3
+        _cargo3[xfer_idx2] = new_good3
+        tmpmsg1 = "Container " + _cargo4[xfer_idx1 - 1] + ": " + _cargo4[xfer_idx1] + ", Container " + _cargo4[rand1 - 1] + ": " + _cargo4[rand1] + ", and Container " + _cargo4[xfer_idx2 - 1] + ": " + _cargo4[xfer_idx2]
+        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
+        set_inventory_value(suspect_list[3], "cargo3", _cargo4)
+        shared message1D = "You're looking for the " + _cargo3[0] + "? Well, actually, Captain " + _cargo4[1] + " transferred three cargo containers and left on a different ship. They loaded " + tmpmsg1 + " onto the " + _cargo4[0] + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo4[5]}: {_cargo4[6]}^Hold 2 - Container {_cargo4[7]}: {_cargo4[8]}^Hold 3 - Container {_cargo4[9]}: {_cargo4[10]}^Hold 4 - Container {_cargo4[11]}: {_cargo4[12]}"  
+        print(f"message1D: {message1D}")
+    elif rand2 == 3:
+        # First ship, first stop, transfers one container. Adds a "clue" to message1C.
+        _idx = [6, 8, 10, 12]
+        _cargo2 = get_inventory_value(suspect_list[0], "cargo2")
+        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
+        _idx.remove(rand1)
+        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
+        new_good1 = _cargo2.pop()
+        new_cont1 = _cargo2.pop()
+        _cargo3.remove(new_good1)
+        _cargo3.remove(new_cont1)
+        tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] 
+        tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
+        _cargo2[xfer_idx1 - 1] = new_cont1
+        _cargo2[xfer_idx1] = new_good1
+        _cargo3[xfer_idx1 - 1] = new_cont1
+        _cargo3[xfer_idx1] = new_good1
+        set_inventory_value(suspect_list[0], "cargo2", _cargo2)
+        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
+        shared message1C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue1  
+        print(f"message1C: {message1C}")
+        # First ship, second stop, transfers two containers and then changes the ship registry to a new name. 
+        _idx = [6, 8, 10, 12]
+        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
+        _idx.remove(rand1)
+        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
+        xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
+        new_good1 = _cargo3.pop()
+        new_cont1 = _cargo3.pop()
+        new_good2 = _cargo3.pop()
+        new_cont2 = _cargo3.pop()
+        tmpmsg1 = "Container " + _cargo3[xfer_idx1 - 1] + ": " + _cargo3[xfer_idx1] + " and Container " + _cargo3[xfer_idx2 - 1] + ": " + _cargo3[xfer_idx2]
+        tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
+        _cargo3[xfer_idx1 - 1] = new_cont1
+        _cargo3[xfer_idx1] = new_good1
+        _cargo3[xfer_idx2 - 1] = new_cont2
+        _cargo3[xfer_idx2] = new_good2
+        old_name = _cargo2[0]
+        alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
+        new_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randint(0,len(civname_list)-1))
+        s_obj = to_object(suspect_list[0])
+        s_obj.name = new_name
+        _cargo3[0] = new_name
+        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
+        shared message1D = "Yes, " + old_name + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}^^Oh, and the captain also changed the ship registry. The new name is {_cargo3[0]}."  
+        print(f"message1D: {message1D}")
+
+    # Second and third suspect ships also transfer cargo and leave decoy clues.
+    # Second ship (non-kidnapper), first stop. Transfers a container and leaves a clue.
     _idx = [6, 8, 10, 12]
-    _cargo2 = get_inventory_value(suspect_list[0], "cargo2")
-    _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-    _idx.remove(rand1)
-    xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-    xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
-    new_good1 = _cargo2.pop()
-    new_cont1 = _cargo2.pop()
-    new_good2 = _cargo2.pop()
-    new_cont2 = _cargo2.pop()
-    _cargo3.remove(new_good1)
-    _cargo3_remove(new_cont1)
-    _cargo3.remove(new_good2)
-    _cargo3_remove(new_cont2)
-    tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] + " and Container " + _cargo2[xfer_idx2 - 1] + ": " + _cargo2[xfer_idx2]
-    tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
-    _cargo2[xfer_idx1 - 1] = new_cont1
-    _cargo2[xfer_idx1] = new_good1
-    _cargo2[xfer_idx2 - 1] = new_cont2
-    _cargo2[xfer_idx2] = new_good2
-    _cargo3[xfer_idx1 - 1] = new_cont1
-    _cargo3[xfer_idx1] = new_good1
-    _cargo3[xfer_idx2 - 1] = new_cont2
-    _cargo3[xfer_idx2] = new_good2
-    set_inventory_value(suspect_list[0], "cargo2", _cargo2)
-    set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-    shared message1C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}"  
-    print(f"message1C: {message1C}")
-    # First ship, second stop, transfers one container. Adds a "clue" to message1D.
-    _idx = [6, 8, 10, 12]
-    _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-    _idx.remove(rand1)
-    xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-    new_good1 = _cargo3.pop()
-    new_cont1 = _cargo3.pop()
-    tmpmsg1 = "Container " + _cargo3[xfer_idx1 - 1] + ": " + _cargo3[xfer_idx1] 
-    tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
-    _cargo3[xfer_idx1 - 1] = new_cont1
-    _cargo3[xfer_idx1] = new_good1
-    set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-    shared message1D = "Yes, " + _cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}^^Oh, and something else I noticed. " + clue1  
-    print(f"message1D: {message1D}")
-elif rand2 == 2:
-    # First ship, first stop, transfers one container. Adds a "clue" to message1C.
-    _idx = [6, 8, 10, 12]
-    _cargo2 = get_inventory_value(suspect_list[0], "cargo2")
-    _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-    _idx.remove(rand1)
+    _cargo2 = get_inventory_value(suspect_list[1], "cargo2")
+    _cargo3 = get_inventory_value(suspect_list[1], "cargo3")
     xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
     new_good1 = _cargo2.pop()
     new_cont1 = _cargo2.pop()
@@ -264,78 +387,12 @@ elif rand2 == 2:
     _cargo2[xfer_idx1] = new_good1
     _cargo3[xfer_idx1 - 1] = new_cont1
     _cargo3[xfer_idx1] = new_good1
-    set_inventory_value(suspect_list[0], "cargo2", _cargo2)
-    set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-    shared message1C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue1  
-    print(f"message1C: {message1C}")
-    # First ship, second stop, transfers three containers and a captain to a different ship. 
-    remove_role(suspect_list[0], "kidnapper")
-    add_role(suspect_list[3], "kidnapper")
-    kidnapper_id = suspect_list[3]
+    set_inventory_value(suspect_list[1], "cargo2", _cargo2)
+    set_inventory_value(suspect_list[1], "cargo3", _cargo3)
+    shared message2C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue2  
+    # Second ship (non-kidnapper), second stop. Transfers two containers.
     _idx = [6, 8, 10, 12]
-    _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-    _cargo4 = get_inventory_value(suspect_list[3], "cargo3")
-    _idx.remove(rand1)
-    xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-    xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
-    xfer_cap1 = _cargo3[1]
-    xfer_cap2 = _cargo4[1]
-    _cargo3[1] = xfer_cap2
-    _cargo4[1] = xfer_cap1
-    new_good1 = _cargo3[rand1]
-    new_cont1 = _cargo3[rand1 - 1]
-    new_good2 = _cargo3[xfer_idx1]
-    new_cont2 = _cargo3[xfer_idx1 - 1]
-    new_good3 = _cargo3[xfer_idx2]
-    new_cont3 = _cargo3[xfer_idx2 - 1]
-    _cargo4[rand1 - 1] = new_cont1
-    _cargo4[rand1] = new_good1
-    _cargo4[xfer_idx1 - 1] = new_cont2
-    _cargo4[xfer_idx1] = new_good2
-    _cargo4[xfer_idx2 - 1] = new_cont3
-    _cargo4[xfer_idx2] = new_good3
-    new_good1 = _cargo4.pop()
-    new_cont1 = _cargo4.pop()
-    new_good2 = _cargo4.pop()
-    new_cont2 = _cargo4.pop()
-    new_good3 = _cargo4.pop()
-    new_cont3 = _cargo4.pop()
-    _cargo3[rand1 - 1] = new_cont1
-    _cargo3[rand1] = new_good1
-    _cargo3[xfer_idx1 - 1] = new_cont2
-    _cargo3[xfer_idx1] = new_good2
-    _cargo3[xfer_idx2 - 1] = new_cont3
-    _cargo3[xfer_idx2] = new_good3
-    tmpmsg1 = "Container " + _cargo4[xfer_idx1 - 1] + ": " + _cargo4[xfer_idx1] + ", Container " + _cargo4[rand1 - 1] + ": " + _cargo4[rand1] + ", and Container " + _cargo4[xfer_idx2 - 1] + ": " + _cargo4[xfer_idx2]
-    set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-    set_inventory_value(suspect_list[3], "cargo3", _cargo4)
-    shared message1D = "You're looking for the " + _cargo3[0] + "? Well, actually, Captain " + _cargo4[1] + " transferred three cargo containers and left on a different ship. They loaded " + tmpmsg1 + " onto the " + _cargo4[0] + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo4[5]}: {_cargo4[6]}^Hold 2 - Container {_cargo4[7]}: {_cargo4[8]}^Hold 3 - Container {_cargo4[9]}: {_cargo4[10]}^Hold 4 - Container {_cargo4[11]}: {_cargo4[12]}"  
-    print(f"message1D: {message1D}")
-elif rand2 == 3:
-    # First ship, first stop, transfers one container. Adds a "clue" to message1C.
-    _idx = [6, 8, 10, 12]
-    _cargo2 = get_inventory_value(suspect_list[0], "cargo2")
-    _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-    _idx.remove(rand1)
-    xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-    new_good1 = _cargo2.pop()
-    new_cont1 = _cargo2.pop()
-    _cargo3.remove(new_good1)
-    _cargo3.remove(new_cont1)
-    tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] 
-    tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
-    _cargo2[xfer_idx1 - 1] = new_cont1
-    _cargo2[xfer_idx1] = new_good1
-    _cargo3[xfer_idx1 - 1] = new_cont1
-    _cargo3[xfer_idx1] = new_good1
-    set_inventory_value(suspect_list[0], "cargo2", _cargo2)
-    set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-    shared message1C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue1  
-    print(f"message1C: {message1C}")
-    # First ship, second stop, transfers two containers and then changes the ship registry to a new name. 
-    _idx = [6, 8, 10, 12]
-    _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-    _idx.remove(rand1)
+    _cargo3 = get_inventory_value(suspect_list[1], "cargo3")
     xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
     xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
     new_good1 = _cargo3.pop()
@@ -348,367 +405,323 @@ elif rand2 == 3:
     _cargo3[xfer_idx1] = new_good1
     _cargo3[xfer_idx2 - 1] = new_cont2
     _cargo3[xfer_idx2] = new_good2
-    old_name = _cargo2[0]
-    alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
-    new_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randint(0,len(civname_list)-1))
-    s_obj = to_object(suspect_list[0])
-    s_obj.name = new_name
-    _cargo3[0] = new_name
-    set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-    shared message1D = "Yes, " + old_name + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}^^Oh, and the captain also changed the ship registry. The new name is {_cargo3[0]}."  
-    print(f"message1D: {message1D}")
+    set_inventory_value(suspect_list[1], "cargo3", _cargo3)
+    shared message2D = "Yes, " + _cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}"  
+    # Third ship (non-kidnapper), first stop. Transfers one container, and leaves a clue.
+    _idx = [6, 8, 10, 12]
+    _cargo2 = get_inventory_value(suspect_list[2], "cargo2")
+    _cargo3 = get_inventory_value(suspect_list[2], "cargo3")
+    xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
+    new_good1 = _cargo2.pop()
+    new_cont1 = _cargo2.pop()
+    _cargo3.remove(new_good1)
+    _cargo3.remove(new_cont1)
+    tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] 
+    tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
+    _cargo2[xfer_idx1 - 1] = new_cont1
+    _cargo2[xfer_idx1] = new_good1
+    _cargo3[xfer_idx1 - 1] = new_cont1
+    _cargo3[xfer_idx1] = new_good1
+    set_inventory_value(suspect_list[2], "cargo2", _cargo2)
+    set_inventory_value(suspect_list[2], "cargo3", _cargo3)
+    shared message3C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue2  
+    # Third ship (non-kidnapper), second stop. Transfers two containers.
+    _idx = [6, 8, 10, 12]
+    _cargo3 = get_inventory_value(suspect_list[2], "cargo3")
+    xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
+    xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
+    new_good1 = _cargo3.pop()
+    new_cont1 = _cargo3.pop()
+    new_good2 = _cargo3.pop()
+    new_cont2 = _cargo3.pop()
+    tmpmsg1 = "Container " + _cargo3[xfer_idx1 - 1] + ": " + _cargo3[xfer_idx1] + " and Container " + _cargo3[xfer_idx2 - 1] + ": " + _cargo3[xfer_idx2]
+    tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
+    _cargo3[xfer_idx1 - 1] = new_cont1
+    _cargo3[xfer_idx1] = new_good1
+    _cargo3[xfer_idx2 - 1] = new_cont2
+    _cargo3[xfer_idx2] = new_good2
+    set_inventory_value(suspect_list[2], "cargo3", _cargo3)
+    shared message3D = "Yes, " + _cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}"  
 
-# Second and third suspect ships also transfer cargo and leave decoy clues.
-# Second ship (non-kidnapper), first stop. Transfers a container and leaves a clue.
-_idx = [6, 8, 10, 12]
-_cargo2 = get_inventory_value(suspect_list[1], "cargo2")
-_cargo3 = get_inventory_value(suspect_list[1], "cargo3")
-xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-new_good1 = _cargo2.pop()
-new_cont1 = _cargo2.pop()
-_cargo3.remove(new_good1)
-_cargo3.remove(new_cont1)
-tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] 
-tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
-_cargo2[xfer_idx1 - 1] = new_cont1
-_cargo2[xfer_idx1] = new_good1
-_cargo3[xfer_idx1 - 1] = new_cont1
-_cargo3[xfer_idx1] = new_good1
-set_inventory_value(suspect_list[1], "cargo2", _cargo2)
-set_inventory_value(suspect_list[1], "cargo3", _cargo3)
-shared message2C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue2  
-# Second ship (non-kidnapper), second stop. Transfers two containers.
-_idx = [6, 8, 10, 12]
-_cargo3 = get_inventory_value(suspect_list[1], "cargo3")
-xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
-new_good1 = _cargo3.pop()
-new_cont1 = _cargo3.pop()
-new_good2 = _cargo3.pop()
-new_cont2 = _cargo3.pop()
-tmpmsg1 = "Container " + _cargo3[xfer_idx1 - 1] + ": " + _cargo3[xfer_idx1] + " and Container " + _cargo3[xfer_idx2 - 1] + ": " + _cargo3[xfer_idx2]
-tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
-_cargo3[xfer_idx1 - 1] = new_cont1
-_cargo3[xfer_idx1] = new_good1
-_cargo3[xfer_idx2 - 1] = new_cont2
-_cargo3[xfer_idx2] = new_good2
-set_inventory_value(suspect_list[1], "cargo3", _cargo3)
-shared message2D = "Yes, " + _cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}"  
-# Third ship (non-kidnapper), first stop. Transfers one container, and leaves a clue.
-_idx = [6, 8, 10, 12]
-_cargo2 = get_inventory_value(suspect_list[2], "cargo2")
-_cargo3 = get_inventory_value(suspect_list[2], "cargo3")
-xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-new_good1 = _cargo2.pop()
-new_cont1 = _cargo2.pop()
-_cargo3.remove(new_good1)
-_cargo3.remove(new_cont1)
-tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] 
-tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
-_cargo2[xfer_idx1 - 1] = new_cont1
-_cargo2[xfer_idx1] = new_good1
-_cargo3[xfer_idx1 - 1] = new_cont1
-_cargo3[xfer_idx1] = new_good1
-set_inventory_value(suspect_list[2], "cargo2", _cargo2)
-set_inventory_value(suspect_list[2], "cargo3", _cargo3)
-shared message3C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue2  
-# Third ship (non-kidnapper), second stop. Transfers two containers.
-_idx = [6, 8, 10, 12]
-_cargo3 = get_inventory_value(suspect_list[2], "cargo3")
-xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
-new_good1 = _cargo3.pop()
-new_cont1 = _cargo3.pop()
-new_good2 = _cargo3.pop()
-new_cont2 = _cargo3.pop()
-tmpmsg1 = "Container " + _cargo3[xfer_idx1 - 1] + ": " + _cargo3[xfer_idx1] + " and Container " + _cargo3[xfer_idx2 - 1] + ": " + _cargo3[xfer_idx2]
-tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
-_cargo3[xfer_idx1 - 1] = new_cont1
-_cargo3[xfer_idx1] = new_good1
-_cargo3[xfer_idx2 - 1] = new_cont2
-_cargo3[xfer_idx2] = new_good2
-set_inventory_value(suspect_list[2], "cargo3", _cargo3)
-shared message3D = "Yes, " + _cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}"  
-
-# Drop a secret codecase near DS1. This allows the scenario to be completed without a Weapons Officer.
-if upgrade_value >= 1:
-    ds1_obj = to_object(ds_list[0])
-    ds1_pos = ds1_obj.pos
-    pickup_spawn(ds1_pos.x, ds1_pos.y, ds1_pos.z - 500, "secret_codecase")
+    # Drop a secret codecase near DS1. This allows the scenario to be completed without a Weapons Officer.
+    if upgrade_value >= 1:
+        ds1_obj = to_object(ds_list[0])
+        ds1_pos = ds1_obj.pos
+        pickup_spawn(ds1_pos.x, ds1_pos.y, ds1_pos.z - 500, "secret_codecase")
 
 
-task_schedule(scanning_cargo_containers)
-task_schedule(check_ambassador_rescued)
-task_schedule(kidnap_message)
-task_schedule(task_peacetime_end_game)
+    task_schedule(scanning_cargo_containers)
+    task_schedule(check_ambassador_rescued)
+    task_schedule(kidnap_message)
+    task_schedule(task_peacetime_end_game)
 
-#-----------------------------------------------------------------------------------------------------------------------------
-# Comms Section - Adds comms buttons for talking to stations. Some buttons only work if the player is docked with the station.
+    #-----------------------------------------------------------------------------------------------------------------------------
+    # Comms Section - Adds comms buttons for talking to stations. Some buttons only work if the player is docked with the station.
 
 //comms if has_roles(COMMS_SELECTED_ID, "tsn, station, ds1") and kidnap_status >= 1 
-+ "Investigate Kidnapping" //comms/investigate_kidnapping 
+    + "Investigate Kidnapping" //comms/investigate_kidnapping 
 
 //comms/investigate_kidnapping
-investigate_msg = get_inventory_value(COMMS_SELECTED_ID, "investigate_message")
-ship1_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")  
-ship2_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")  
-ship3_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")  
-comms_receive(f"""Ambassador Florbin has been kidnapped! We believe they were smuggled out in a cargo container. The last three ships to leave were:^^{investigate_msg}^^If you hurry, you might be able to catch them!^^The cargo ships travel from station to station, transferring cargo at each stop, so you may have to follow their flight plan, visit different stations, and interview people to get clues. Someone may have noticed something odd or suspicious.^^When you find the Ambassador, bring him back to DS 1.^""", title="Ambassador Kidnapped", title_color="orange")
-+ "Cargo Manifest {ship1_cargo1[0]}" cargo_manifest_ship1 
-+ "Cargo Manifest {ship2_cargo1[0]}" cargo_manifest_ship2 
-+ "Cargo Manifest {ship3_cargo1[0]}" cargo_manifest_ship3
+    investigate_msg = get_inventory_value(COMMS_SELECTED_ID, "investigate_message")
+    ship1_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")  
+    ship2_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")  
+    ship3_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")  
+    comms_receive(f"""Ambassador Florbin has been kidnapped! We believe they were smuggled out in a cargo container. The last three ships to leave were:^^{investigate_msg}^^If you hurry, you might be able to catch them!^^The cargo ships travel from station to station, transferring cargo at each stop, so you may have to follow their flight plan, visit different stations, and interview people to get clues. Someone may have noticed something odd or suspicious.^^When you find the Ambassador, bring him back to DS 1.^""", title="Ambassador Kidnapped", title_color="orange")
+    + "Cargo Manifest {ship1_cargo1[0]}" cargo_manifest_ship1 
+    + "Cargo Manifest {ship2_cargo1[0]}" cargo_manifest_ship2 
+    + "Cargo Manifest {ship3_cargo1[0]}" cargo_manifest_ship3
 
 ===== cargo_manifest_ship1 =====
-ship1_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")  
-temp_msg = "Cargo Manifest " + ship1_cargo1[0]
-comms_receive(f"""Our records indicate {ship1_cargo1[0]} docked at this station at 08:34. It loaded^^Hold 1 - Container {ship1_cargo1[5]}: {ship1_cargo1[6]}^Hold 2 - Container {ship1_cargo1[7]}: {ship1_cargo1[8]}^Hold 3 - Container {ship1_cargo1[9]}: {ship1_cargo1[10]}^Hold 4 - Container {ship1_cargo1[11]}: {ship1_cargo1[12]}^^Their flight plan said they were headed for DS {ship1_cargo1[2]}.^""", title=temp_msg, title_color="orange")
-yield success
+    ship1_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")  
+    temp_msg = "Cargo Manifest " + ship1_cargo1[0]
+    comms_receive(f"""Our records indicate {ship1_cargo1[0]} docked at this station at 08:34. It loaded^^Hold 1 - Container {ship1_cargo1[5]}: {ship1_cargo1[6]}^Hold 2 - Container {ship1_cargo1[7]}: {ship1_cargo1[8]}^Hold 3 - Container {ship1_cargo1[9]}: {ship1_cargo1[10]}^Hold 4 - Container {ship1_cargo1[11]}: {ship1_cargo1[12]}^^Their flight plan said they were headed for DS {ship1_cargo1[2]}.^""", title=temp_msg, title_color="orange")
+    yield success
 
 ===== cargo_manifest_ship2 =====
-ship2_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")  
-temp_msg = "Cargo Manifest " + ship2_cargo1[0]
-comms_receive(f"""Our records indicate {ship2_cargo1[0]} docked at this station at 09:18. It loaded^^Hold 1 - Container {ship2_cargo1[5]}: {ship2_cargo1[6]}^Hold 2 - Container {ship2_cargo1[7]}: {ship2_cargo1[8]}^Hold 3 - Container {ship2_cargo1[9]}: {ship2_cargo1[10]}^Hold 4 - Container {ship2_cargo1[11]}: {ship2_cargo1[12]}^^Their flight plan said they were headed for DS {ship2_cargo1[2]}.^""", title=temp_msg, title_color="orange")
-yield success
+    ship2_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")  
+    temp_msg = "Cargo Manifest " + ship2_cargo1[0]
+    comms_receive(f"""Our records indicate {ship2_cargo1[0]} docked at this station at 09:18. It loaded^^Hold 1 - Container {ship2_cargo1[5]}: {ship2_cargo1[6]}^Hold 2 - Container {ship2_cargo1[7]}: {ship2_cargo1[8]}^Hold 3 - Container {ship2_cargo1[9]}: {ship2_cargo1[10]}^Hold 4 - Container {ship2_cargo1[11]}: {ship2_cargo1[12]}^^Their flight plan said they were headed for DS {ship2_cargo1[2]}.^""", title=temp_msg, title_color="orange")
+    yield success
 
 ===== cargo_manifest_ship3 =====
-ship3_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")  
-temp_msg = "Cargo Manifest " + ship3_cargo1[0]
-comms_receive(f"""Our records indicate {ship3_cargo1[0]} docked at this station at 10:22. It loaded^^Hold 1 - Container {ship3_cargo1[5]}: {ship3_cargo1[6]}^Hold 2 - Container {ship3_cargo1[7]}: {ship3_cargo1[8]}^Hold 3 - Container {ship3_cargo1[9]}: {ship3_cargo1[10]}^Hold 4 - Container {ship3_cargo1[11]}: {ship3_cargo1[12]}^^Their flight plan said they were headed for DS {ship3_cargo1[2]}.^""", title=temp_msg, title_color="orange")
-yield success
+    ship3_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")  
+    temp_msg = "Cargo Manifest " + ship3_cargo1[0]
+    comms_receive(f"""Our records indicate {ship3_cargo1[0]} docked at this station at 10:22. It loaded^^Hold 1 - Container {ship3_cargo1[5]}: {ship3_cargo1[6]}^Hold 2 - Container {ship3_cargo1[7]}: {ship3_cargo1[8]}^Hold 3 - Container {ship3_cargo1[9]}: {ship3_cargo1[10]}^Hold 4 - Container {ship3_cargo1[11]}: {ship3_cargo1[12]}^^Their flight plan said they were headed for DS {ship3_cargo1[2]}.^""", title=temp_msg, title_color="orange")
+    yield success
 
 
 //comms if has_roles(COMMS_SELECTED_ID, "ds2") and kidnap_status >= 1
-ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
-ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
-ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
-ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
-ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
-ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
-if has_roles(COMMS_SELECTED_ID, "ds2, clue1A"): 
-    + "Investigate {ship1_cargo2[0]}" investigate_message_1A
-if has_roles(COMMS_SELECTED_ID, "ds2, clue1B"):
-    + "Investigate {ship1_cargo3[0]}" investigate_message_1B
-if has_roles(COMMS_SELECTED_ID, "ds2, clue2A"): 
-    + "Investigate {ship2_cargo2[0]}" investigate_message_2A
-if has_roles(COMMS_SELECTED_ID, "ds2, clue2B"):
-    + "Investigate {ship2_cargo3[0]}" investigate_message_2B 
-if has_roles(COMMS_SELECTED_ID, "ds2, clue3A"): 
-    + "Investigate {ship3_cargo2[0]}" investigate_message_3A
-if has_roles(COMMS_SELECTED_ID, "ds2, clue3B"):
-    + "Investigate {ship3_cargo3[0]}" investigate_message_3B 
-dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
-dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue1A"):
-    + "Interview Deck Chief" investigate_message_1C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue1B"):
-    + "Interview Deck Chief" investigate_message_1D
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue2A"):
-    + "Interview Maintenance Crew" investigate_message_2C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue2B"):
-    + "Interview Maintenance Crew" investigate_message_2D
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue3A"):
-    + "Interview Cargo Master" investigate_message_3C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue3B"):
-    + "Interview Cargo Master" investigate_message_3D
+    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
+    ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
+    ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
+    ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
+    ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
+    ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
+    if has_roles(COMMS_SELECTED_ID, "ds2, clue1A"): 
+        + "Investigate {ship1_cargo2[0]}" investigate_message_1A
+    if has_roles(COMMS_SELECTED_ID, "ds2, clue1B"):
+        + "Investigate {ship1_cargo3[0]}" investigate_message_1B
+    if has_roles(COMMS_SELECTED_ID, "ds2, clue2A"): 
+        + "Investigate {ship2_cargo2[0]}" investigate_message_2A
+    if has_roles(COMMS_SELECTED_ID, "ds2, clue2B"):
+        + "Investigate {ship2_cargo3[0]}" investigate_message_2B 
+    if has_roles(COMMS_SELECTED_ID, "ds2, clue3A"): 
+        + "Investigate {ship3_cargo2[0]}" investigate_message_3A
+    if has_roles(COMMS_SELECTED_ID, "ds2, clue3B"):
+        + "Investigate {ship3_cargo3[0]}" investigate_message_3B 
+    dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
+    dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue1A"):
+        + "Interview Deck Chief" investigate_message_1C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue1B"):
+        + "Interview Deck Chief" investigate_message_1D
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue2A"):
+        + "Interview Maintenance Crew" investigate_message_2C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue2B"):
+        + "Interview Maintenance Crew" investigate_message_2D
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue3A"):
+        + "Interview Cargo Master" investigate_message_3C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue3B"):
+        + "Interview Cargo Master" investigate_message_3D
 
 //comms if has_roles(COMMS_SELECTED_ID, "ds3") and kidnap_status >= 1
-ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
-ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
-ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
-ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
-ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
-ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
-if has_roles(COMMS_SELECTED_ID, "ds3, clue1A"): 
-    + "Investigate {ship1_cargo2[0]}" investigate_message_1A
-if has_roles(COMMS_SELECTED_ID, "ds3, clue1B"):
-    + "Investigate {ship1_cargo3[0]}" investigate_message_1B 
-if has_roles(COMMS_SELECTED_ID, "ds3, clue2A"): 
-    + "Investigate {ship2_cargo2[0]}" investigate_message_2A
-if has_roles(COMMS_SELECTED_ID, "ds3, clue2B"):
-    + "Investigate {ship2_cargo3[0]}" investigate_message_2B 
-if has_roles(COMMS_SELECTED_ID, "ds3, clue3A"): 
-    + "Investigate {ship3_cargo2[0]}" investigate_message_3A
-if has_roles(COMMS_SELECTED_ID, "ds3, clue3B"):
-    + "Investigate {ship3_cargo3[0]}" investigate_message_3B 
-dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
-dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue1A"):
-    + "Interview Deck Chief" investigate_message_1C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue1B"):
-    + "Interview Deck Chief" investigate_message_1D
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue2A"):
-    + "Interview Maintenance Crew" investigate_message_2C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue2B"):
-    + "Interview Maintenance Crew" investigate_message_2D
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue3A"):
-    + "Interview Cargo Master" investigate_message_3C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue3B"):
-    + "Interview Cargo Master" investigate_message_3D
+    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
+    ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
+    ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
+    ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
+    ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
+    ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
+    if has_roles(COMMS_SELECTED_ID, "ds3, clue1A"): 
+        + "Investigate {ship1_cargo2[0]}" investigate_message_1A
+    if has_roles(COMMS_SELECTED_ID, "ds3, clue1B"):
+        + "Investigate {ship1_cargo3[0]}" investigate_message_1B 
+    if has_roles(COMMS_SELECTED_ID, "ds3, clue2A"): 
+        + "Investigate {ship2_cargo2[0]}" investigate_message_2A
+    if has_roles(COMMS_SELECTED_ID, "ds3, clue2B"):
+        + "Investigate {ship2_cargo3[0]}" investigate_message_2B 
+    if has_roles(COMMS_SELECTED_ID, "ds3, clue3A"): 
+        + "Investigate {ship3_cargo2[0]}" investigate_message_3A
+    if has_roles(COMMS_SELECTED_ID, "ds3, clue3B"):
+        + "Investigate {ship3_cargo3[0]}" investigate_message_3B 
+    dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
+    dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue1A"):
+        + "Interview Deck Chief" investigate_message_1C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue1B"):
+        + "Interview Deck Chief" investigate_message_1D
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue2A"):
+        + "Interview Maintenance Crew" investigate_message_2C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue2B"):
+        + "Interview Maintenance Crew" investigate_message_2D
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue3A"):
+        + "Interview Cargo Master" investigate_message_3C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue3B"):
+        + "Interview Cargo Master" investigate_message_3D
 
 //comms if has_roles(COMMS_SELECTED_ID, "ds4") and kidnap_status >= 1
-ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
-ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
-ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
-ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
-ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
-ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
-if has_roles(COMMS_SELECTED_ID, "ds4, clue1A"): 
-    + "Investigate {ship1_cargo2[0]}" investigate_message_1A
-if has_roles(COMMS_SELECTED_ID, "ds4, clue1B"):
-    + "Investigate {ship1_cargo3[0]}" investigate_message_1B 
-if has_roles(COMMS_SELECTED_ID, "ds4, clue2A"): 
-    + "Investigate {ship2_cargo2[0]}" investigate_message_2A
-if has_roles(COMMS_SELECTED_ID, "ds4, clue2B"):
-    + "Investigate {ship2_cargo3[0]}" investigate_message_2B 
-if has_roles(COMMS_SELECTED_ID, "ds4, clue3A"): 
-    + "Investigate {ship3_cargo2[0]}" investigate_message_3A
-if has_roles(COMMS_SELECTED_ID, "ds4, clue3B"):
-    + "Investigate {ship3_cargo3[0]}" investigate_message_3B 
-dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
-dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue1A"):
-    + "Interview Deck Chief" investigate_message_1C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue1B"):
-    + "Interview Deck Chief" investigate_message_1D
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue2A"):
-    + "Interview Maintenance Crew" investigate_message_2C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue2B"):
-    + "Interview Maintenance Crew" investigate_message_2D
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue3A"):
-    + "Interview Cargo Master" investigate_message_3C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue3B"):
-    + "Interview Cargo Master" investigate_message_3D
+    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
+    ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
+    ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
+    ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
+    ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
+    ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
+    if has_roles(COMMS_SELECTED_ID, "ds4, clue1A"): 
+        + "Investigate {ship1_cargo2[0]}" investigate_message_1A
+    if has_roles(COMMS_SELECTED_ID, "ds4, clue1B"):
+        + "Investigate {ship1_cargo3[0]}" investigate_message_1B 
+    if has_roles(COMMS_SELECTED_ID, "ds4, clue2A"): 
+        + "Investigate {ship2_cargo2[0]}" investigate_message_2A
+    if has_roles(COMMS_SELECTED_ID, "ds4, clue2B"):
+        + "Investigate {ship2_cargo3[0]}" investigate_message_2B 
+    if has_roles(COMMS_SELECTED_ID, "ds4, clue3A"): 
+        + "Investigate {ship3_cargo2[0]}" investigate_message_3A
+    if has_roles(COMMS_SELECTED_ID, "ds4, clue3B"):
+        + "Investigate {ship3_cargo3[0]}" investigate_message_3B 
+    dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
+    dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue1A"):
+        + "Interview Deck Chief" investigate_message_1C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue1B"):
+        + "Interview Deck Chief" investigate_message_1D
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue2A"):
+        + "Interview Maintenance Crew" investigate_message_2C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue2B"):
+        + "Interview Maintenance Crew" investigate_message_2D
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue3A"):
+        + "Interview Cargo Master" investigate_message_3C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue3B"):
+        + "Interview Cargo Master" investigate_message_3D
 
 //comms if has_roles(COMMS_SELECTED_ID, "ds5") and kidnap_status >= 1
-ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
-ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
-ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
-ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
-ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
-ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
-if has_roles(COMMS_SELECTED_ID, "ds5, clue1A"): 
-    + "Investigate {ship1_cargo2[0]}" investigate_message_1A
-if has_roles(COMMS_SELECTED_ID, "ds5, clue1B"):
-    + "Investigate {ship1_cargo3[0]}" investigate_message_1B 
-if has_roles(COMMS_SELECTED_ID, "ds5, clue2A"): 
-    + "Investigate {ship2_cargo2[0]}" investigate_message_2A
-if has_roles(COMMS_SELECTED_ID, "ds5, clue2B"):
-    + "Investigate {ship2_cargo3[0]}" investigate_message_2B 
-if has_roles(COMMS_SELECTED_ID, "ds5, clue3A"): 
-    + "Investigate {ship3_cargo2[0]}" investigate_message_3A
-if has_roles(COMMS_SELECTED_ID, "ds5, clue3B"):
-    + "Investigate {ship3_cargo3[0]}" investigate_message_3B 
-dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
-dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue1A"):
-    + "Interview Deck Chief" investigate_message_1C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue1B"):
-    + "Interview Deck Chief" investigate_message_1D
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue2A"):
-    + "Interview Maintenance Crew" investigate_message_2C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue2B"):
-    + "Interview Maintenance Crew" investigate_message_2D
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue3A"):
-    + "Interview Cargo Master" investigate_message_3C
-if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue3B"):
-    + "Interview Cargo Master" investigate_message_3D
+    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
+    ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
+    ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
+    ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
+    ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
+    ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
+    if has_roles(COMMS_SELECTED_ID, "ds5, clue1A"): 
+        + "Investigate {ship1_cargo2[0]}" investigate_message_1A
+    if has_roles(COMMS_SELECTED_ID, "ds5, clue1B"):
+        + "Investigate {ship1_cargo3[0]}" investigate_message_1B 
+    if has_roles(COMMS_SELECTED_ID, "ds5, clue2A"): 
+        + "Investigate {ship2_cargo2[0]}" investigate_message_2A
+    if has_roles(COMMS_SELECTED_ID, "ds5, clue2B"):
+        + "Investigate {ship2_cargo3[0]}" investigate_message_2B 
+    if has_roles(COMMS_SELECTED_ID, "ds5, clue3A"): 
+        + "Investigate {ship3_cargo2[0]}" investigate_message_3A
+    if has_roles(COMMS_SELECTED_ID, "ds5, clue3B"):
+        + "Investigate {ship3_cargo3[0]}" investigate_message_3B 
+    dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
+    dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue1A"):
+        + "Interview Deck Chief" investigate_message_1C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue1B"):
+        + "Interview Deck Chief" investigate_message_1D
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue2A"):
+        + "Interview Maintenance Crew" investigate_message_2C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue2B"):
+        + "Interview Maintenance Crew" investigate_message_2D
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue3A"):
+        + "Interview Cargo Master" investigate_message_3C
+    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue3B"):
+        + "Interview Cargo Master" investigate_message_3D
 
 ===== investigate_message_1A =====
-ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
-rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-temp_msg = "Info on " + ship1_cargo2[0]
-if rec_status == 1:
-    comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. At the time they left, their cargo manifest said they were carrying^^Container {ship1_cargo2[5]}: {ship1_cargo2[6]}^Container {ship1_cargo2[7]}: {ship1_cargo2[8]}^Container {ship1_cargo2[9]}: {ship1_cargo2[10]}^Container {ship1_cargo2[11]}: {ship1_cargo2[12]}""", title=temp_msg, title_color="orange")
-elif rec_status == 2:
-    comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
-elif rec_status == 3:
-    comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
-yield success
+    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
+    rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+    temp_msg = "Info on " + ship1_cargo2[0]
+    if rec_status == 1:
+        comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. At the time they left, their cargo manifest said they were carrying^^Container {ship1_cargo2[5]}: {ship1_cargo2[6]}^Container {ship1_cargo2[7]}: {ship1_cargo2[8]}^Container {ship1_cargo2[9]}: {ship1_cargo2[10]}^Container {ship1_cargo2[11]}: {ship1_cargo2[12]}""", title=temp_msg, title_color="orange")
+    elif rec_status == 2:
+        comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
+    elif rec_status == 3:
+        comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
+    yield success
 
 ===== investigate_message_1B =====
-ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")
-ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
-rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-temp_msg = "Info on " + ship1_cargo2[0]
-if rec_status == 1:
-    comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. At the time they left, their cargo manifest said they were carrying^^Container {ship1_cargo3[5]}: {ship1_cargo3[6]}^Container {ship1_cargo3[7]}: {ship1_cargo3[8]}^Container {ship1_cargo3[9]}: {ship1_cargo3[10]}^Container {ship1_cargo3[11]}: {ship1_cargo3[12]}""", title=temp_msg, title_color="orange")
-elif rec_status == 2:
-    comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
-elif rec_status == 3:
-    comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
-yield success
+    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")
+    ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
+    rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+    temp_msg = "Info on " + ship1_cargo2[0]
+    if rec_status == 1:
+        comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. At the time they left, their cargo manifest said they were carrying^^Container {ship1_cargo3[5]}: {ship1_cargo3[6]}^Container {ship1_cargo3[7]}: {ship1_cargo3[8]}^Container {ship1_cargo3[9]}: {ship1_cargo3[10]}^Container {ship1_cargo3[11]}: {ship1_cargo3[12]}""", title=temp_msg, title_color="orange")
+    elif rec_status == 2:
+        comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
+    elif rec_status == 3:
+        comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
+    yield success
 
 ===== investigate_message_1C =====
-comms_receive(f"""{message1C}""", title="Deck Chief Report", title_color="orange")
-yield success
+    comms_receive(f"""{message1C}""", title="Deck Chief Report", title_color="orange")
+    yield success
 
 ===== investigate_message_1D =====
-comms_receive(f"""{message1D}""", title="Deck Chief Report", title_color="orange")
-yield success
+    comms_receive(f"""{message1D}""", title="Deck Chief Report", title_color="orange")
+    yield success
 
 ===== investigate_message_2A =====
-ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")
-rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-temp_msg = "Info on " + ship2_cargo2[0]
-if rec_status == 1:
-    comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. At the time they left, their cargo manifest said they were carrying^^Container {ship2_cargo2[5]}: {ship2_cargo2[6]}^Container {ship2_cargo2[7]}: {ship2_cargo2[8]}^Container {ship2_cargo2[9]}: {ship2_cargo2[10]}^Container {ship2_cargo2[11]}: {ship2_cargo2[12]}""", title=temp_msg, title_color="orange")
-elif rec_status == 2:
-    comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
-elif rec_status == 3:
-    comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
-yield success
+    ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")
+    rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+    temp_msg = "Info on " + ship2_cargo2[0]
+    if rec_status == 1:
+        comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. At the time they left, their cargo manifest said they were carrying^^Container {ship2_cargo2[5]}: {ship2_cargo2[6]}^Container {ship2_cargo2[7]}: {ship2_cargo2[8]}^Container {ship2_cargo2[9]}: {ship2_cargo2[10]}^Container {ship2_cargo2[11]}: {ship2_cargo2[12]}""", title=temp_msg, title_color="orange")
+    elif rec_status == 2:
+        comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
+    elif rec_status == 3:
+        comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
+    yield success
 
 ===== investigate_message_2B =====
-ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")
-rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-temp_msg = "Info on " + ship2_cargo3[0]
-if rec_status == 1:
-    comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. At the time they left, their cargo manifest said they were carrying^^Container {ship2_cargo3[5]}: {ship2_cargo3[6]}^Container {ship2_cargo3[7]}: {ship2_cargo3[8]}^Container {ship2_cargo3[9]}: {ship2_cargo3[10]}^Container {ship2_cargo3[11]}: {ship2_cargo3[12]}""", title=temp_msg, title_color="orange")
-elif rec_status == 2:
-    comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Maintenance Cew about that.""", title=temp_msg, title_color="orange")
-elif rec_status == 3:
-    comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
-yield success
+    ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")
+    rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+    temp_msg = "Info on " + ship2_cargo3[0]
+    if rec_status == 1:
+        comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. At the time they left, their cargo manifest said they were carrying^^Container {ship2_cargo3[5]}: {ship2_cargo3[6]}^Container {ship2_cargo3[7]}: {ship2_cargo3[8]}^Container {ship2_cargo3[9]}: {ship2_cargo3[10]}^Container {ship2_cargo3[11]}: {ship2_cargo3[12]}""", title=temp_msg, title_color="orange")
+    elif rec_status == 2:
+        comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Maintenance Cew about that.""", title=temp_msg, title_color="orange")
+    elif rec_status == 3:
+        comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
+    yield success
 
 ===== investigate_message_2C =====
-comms_receive(f"""{message2C}""", title="Maintenance Crew Report", title_color="orange")
-yield success
+    comms_receive(f"""{message2C}""", title="Maintenance Crew Report", title_color="orange")
+    yield success
 
 ===== investigate_message_2D =====
-comms_receive(f"""{message2D}""", title="Maintenance Crew Report", title_color="orange")
-yield success
+    comms_receive(f"""{message2D}""", title="Maintenance Crew Report", title_color="orange")
+    yield success
 
 ===== investigate_message_3A =====
-ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")
-rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-temp_msg = "Info on " + ship3_cargo2[0]
-if rec_status == 1:
-    comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. At the time the left, their cargo manifest said they were carrying^^Container {ship3_cargo2[5]}: {ship3_cargo2[6]}^Container {ship3_cargo2[7]}: {ship3_cargo2[8]}^Container {ship3_cargo2[9]}: {ship3_cargo2[10]}^Container {ship2_cargo3[11]}: {ship3_cargo2[12]}""", title=temp_msg, title_color="orange")
-elif rec_status == 2:
-    comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
-elif rec_status == 3:
-    comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
-yield success
+    ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")
+    rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+    temp_msg = "Info on " + ship3_cargo2[0]
+    if rec_status == 1:
+        comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. At the time the left, their cargo manifest said they were carrying^^Container {ship3_cargo2[5]}: {ship3_cargo2[6]}^Container {ship3_cargo2[7]}: {ship3_cargo2[8]}^Container {ship3_cargo2[9]}: {ship3_cargo2[10]}^Container {ship2_cargo3[11]}: {ship3_cargo2[12]}""", title=temp_msg, title_color="orange")
+    elif rec_status == 2:
+        comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
+    elif rec_status == 3:
+        comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
+    yield success
 
 ===== investigate_message_3B =====
-ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")
-rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-temp_msg = "Info on " + ship3_cargo3[0]
-if rec_status == 1:
-    comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. At the time the left, their cargo manifest said they were carrying^^Container {ship3_cargo3[5]}: {ship3_cargo3[6]}^Container {ship3_cargo3[7]}: {ship3_cargo3[8]}^Container {ship3_cargo3[9]}: {ship3_cargo3[10]}^Container {ship3_cargo3[11]}: {ship3_cargo3[12]}""", title=temp_msg, title_color="orange")
-elif rec_status == 2:
-    comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
-elif rec_status == 3:
-    comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
-yield success
+    ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")
+    rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
+    temp_msg = "Info on " + ship3_cargo3[0]
+    if rec_status == 1:
+        comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. At the time the left, their cargo manifest said they were carrying^^Container {ship3_cargo3[5]}: {ship3_cargo3[6]}^Container {ship3_cargo3[7]}: {ship3_cargo3[8]}^Container {ship3_cargo3[9]}: {ship3_cargo3[10]}^Container {ship3_cargo3[11]}: {ship3_cargo3[12]}""", title=temp_msg, title_color="orange")
+    elif rec_status == 2:
+        comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
+    elif rec_status == 3:
+        comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
+    yield success
 
 ===== investigate_message_3C =====
-comms_receive(f"""{message3C}""", title="Cargo Master's Report", title_color="orange")
-yield success
+    comms_receive(f"""{message3C}""", title="Cargo Master's Report", title_color="orange")
+    yield success
 
 ===== investigate_message_3D =====
-comms_receive(f"""{message3D}""", title="Cargo Master's Report", title_color="orange")
-yield success
+    comms_receive(f"""{message3D}""", title="Cargo Master's Report", title_color="orange")
+    yield success
 
 //enable/comms if has_roles(COMMS_SELECTED_ID, "civ, suspect") and kidnap_status >= 1
 //comms if has_roles(COMMS_SELECTED_ID, "civ, suspect") and kidnap_status >= 1
@@ -722,253 +735,253 @@ yield success
 yield success
 
 ===== handle_suspect_cargo ======
-tempcargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
-<<[green] "Cargo Manifest"
-    " We are currently carrying:^Hold 1 - Container {tempcargo[5]}: {tempcargo[6]}^Hold 2 - Container {tempcargo[7]}: {tempcargo[8]}^Hold 3 - Container {tempcargo[9]}: {tempcargo[10]}^Hold 4 - Container {tempcargo[11]}: {tempcargo[12]}
-yield success
+    tempcargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
+    <<[green] "Cargo Manifest"
+        " We are currently carrying:^Hold 1 - Container {tempcargo[5]}: {tempcargo[6]}^Hold 2 - Container {tempcargo[7]}: {tempcargo[8]}^Hold 3 - Container {tempcargo[9]}: {tempcargo[10]}^Hold 4 - Container {tempcargo[11]}: {tempcargo[12]}
+    yield success
 
 ===== handle_suspect_itinerary ======
-tempcargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
-<<[green] "Itinerary"
-    " We last docked at DS {tempcargo[3]}. Now heading for DS {tempcargo[4]}.
-yield success
+    tempcargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
+    <<[green] "Itinerary"
+        " We last docked at DS {tempcargo[3]}. Now heading for DS {tempcargo[4]}.
+    yield success
 
 #-----------------------------------------------------------------------------------------------------------------------------
 # Science Section - Adds "Hold 1", "Hold 2", "Hold 3" and "Hold 4" scans to the suspect ships.
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "suspect") and kidnap_status >= 1
 //science if has_roles(SCIENCE_SELECTED_ID, "suspect") and kidnap_status >= 1
-tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
-capname = tempcargo[1]
+    tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
+    capname = tempcargo[1]
 
-+ "scan":
-    <scan>
-        % This is a friendly merchant cargo ship.
-+ "status":
-    <scan>
-        " No additional data available.
-+ "intel":
-    <scan>
-        % The ship is registered to Captain {capname}.
+    + "scan":
+        <scan>
+            % This is a friendly merchant cargo ship.
+    + "status":
+        <scan>
+            " No additional data available.
+    + "intel":
+        <scan>
+            % The ship is registered to Captain {capname}.
 
-+ "bio":
-    <scan>
-        % The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
+    + "bio":
+        <scan>
+            % The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
 
 //science if has_roles(SCIENCE_SELECTED_ID, "suspect") and kidnap_status >= 1
-->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 600
-k_clue = get_inventory_value(SCIENCE_SELECTED_ID, "kclue")
-tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
+    ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 600
+    k_clue = get_inventory_value(SCIENCE_SELECTED_ID, "kclue")
+    tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
 
-+ "Hold 1":
-    if tempcargo[6] == k_clue:
-        task_schedule(kidnapper_discovered)
-        <scan>
-            % Container {tempcargo[5]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
-    else:
-        <scan>
-            % Container {tempcargo[5]}: {tempcargo[6]}. Contents verified.
-+ "Hold 2":
-    if tempcargo[8] == k_clue:
-        task_schedule(kidnapper_discovered)
-        <scan>
-            % Container {tempcargo[7]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
-    else: 
-        <scan>
-            % Container {tempcargo[7]}: {tempcargo[8]}. Contents verified.
-+ "Hold 3":
-    if tempcargo[10] == k_clue:
-        task_schedule(kidnapper_discovered)
-        <scan>
-            % Container {tempcargo[9]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
-    else: 
-        <scan>
-            % Container {tempcargo[9]}: {tempcargo[10]}. Contents verified.
-+ "Hold 4":
-    if tempcargo[12] == k_clue:
-        task_schedule(kidnapper_discovered)
-        <scan>
-            % Container {tempcargo[11]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
-    else: 
-        <scan>
-            % Container {tempcargo[11]}: {tempcargo[12]}. Contents verified.
+    + "Hold 1":
+        if tempcargo[6] == k_clue:
+            task_schedule(kidnapper_discovered)
+            <scan>
+                % Container {tempcargo[5]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
+        else:
+            <scan>
+                % Container {tempcargo[5]}: {tempcargo[6]}. Contents verified.
+    + "Hold 2":
+        if tempcargo[8] == k_clue:
+            task_schedule(kidnapper_discovered)
+            <scan>
+                % Container {tempcargo[7]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
+        else: 
+            <scan>
+                % Container {tempcargo[7]}: {tempcargo[8]}. Contents verified.
+    + "Hold 3":
+        if tempcargo[10] == k_clue:
+            task_schedule(kidnapper_discovered)
+            <scan>
+                % Container {tempcargo[9]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
+        else: 
+            <scan>
+                % Container {tempcargo[9]}: {tempcargo[10]}. Contents verified.
+    + "Hold 4":
+        if tempcargo[12] == k_clue:
+            task_schedule(kidnapper_discovered)
+            <scan>
+                % Container {tempcargo[11]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
+        else: 
+            <scan>
+                % Container {tempcargo[11]}: {tempcargo[12]}. Contents verified.
 
-#-----------------------------------------------------------------------------------------------------------------------------
-# Miscellanous notification and upkeep tasks.
+    #-----------------------------------------------------------------------------------------------------------------------------
+    # Miscellanous notification and upkeep tasks.
 
 ===== kidnap_message =====
-await delay_sim(15)
-for p in role("__player__"):
-    if p is not None:
-        send_general_message("Admiral Harkin", "Ambassador Florbin has been kidnapped! Contact DS1 for details.", admiral_face, p)
-->END
+    await delay_sim(15)
+    for p in role("__player__"):
+        if p is not None:
+            send_general_message("Admiral Harkin", "Ambassador Florbin has been kidnapped! Contact DS1 for details.", admiral_face, p)
+    ->END
 
 
 ===== scanning_cargo_containers ======
 
-for p in role("__player__"):
-    n = get_science_selection(p)
-    sel_so = to_object(n)
-    #
-    # Is the current science selection
-    # what we're looking for
-    if sel_so is not None:
-        if n and has_roles(n, "suspect"):
-            #
-            # Check if the tab is already showing
-            scan_tabs = sel_so.data_set.get("scan_type_list",  0)
-            dist = scan_tabs and sbs.distance_id(p, n)
-            # Show if it is not there and should be
-            if "Hold 1" not in scan_tabs and dist <= 600:
-                # Reselect science
-                follow_route_select_science(p,n)
-            # Hide if it is there and should not be
-            elif "Hold 1"  in scan_tabs and dist > 600:
-                # hide again
-                follow_route_select_science(p,n)
-            if "Hold 2" not in scan_tabs and dist <= 600:
-                # Reselect science
-                follow_route_select_science(p,n)
-            # Hide if it is there and should not be
-            elif "Hold 2"  in scan_tabs and dist > 600:
-                # hide again
-                follow_route_select_science(p,n)
-            if "Hold 3" not in scan_tabs and dist <= 600:
-                # Reselect science
-                follow_route_select_science(p,n)
-            # Hide if it is there and should not be
-            elif "Hold 3"  in scan_tabs and dist > 600:
-                # hide again
-                follow_route_select_science(p,n)
-            if "Hold 4" not in scan_tabs and dist <= 600:
-                # Reselect science
-                follow_route_select_science(p,n)
-            # Hide if it is there and should not be
-            elif "Hold 4"  in scan_tabs and dist > 600:
-                # hide again
-                follow_route_select_science(p,n)
-await delay_sim(1)
-jump scanning_cargo_containers
+    for p in role("__player__"):
+        n = get_science_selection(p)
+        sel_so = to_object(n)
+        #
+        # Is the current science selection
+        # what we're looking for
+        if sel_so is not None:
+            if n and has_roles(n, "suspect"):
+                #
+                # Check if the tab is already showing
+                scan_tabs = sel_so.data_set.get("scan_type_list",  0)
+                dist = scan_tabs and sbs.distance_id(p, n)
+                # Show if it is not there and should be
+                if "Hold 1" not in scan_tabs and dist <= 600:
+                    # Reselect science
+                    follow_route_select_science(p,n)
+                # Hide if it is there and should not be
+                elif "Hold 1"  in scan_tabs and dist > 600:
+                    # hide again
+                    follow_route_select_science(p,n)
+                if "Hold 2" not in scan_tabs and dist <= 600:
+                    # Reselect science
+                    follow_route_select_science(p,n)
+                # Hide if it is there and should not be
+                elif "Hold 2"  in scan_tabs and dist > 600:
+                    # hide again
+                    follow_route_select_science(p,n)
+                if "Hold 3" not in scan_tabs and dist <= 600:
+                    # Reselect science
+                    follow_route_select_science(p,n)
+                # Hide if it is there and should not be
+                elif "Hold 3"  in scan_tabs and dist > 600:
+                    # hide again
+                    follow_route_select_science(p,n)
+                if "Hold 4" not in scan_tabs and dist <= 600:
+                    # Reselect science
+                    follow_route_select_science(p,n)
+                # Hide if it is there and should not be
+                elif "Hold 4"  in scan_tabs and dist > 600:
+                    # hide again
+                    follow_route_select_science(p,n)
+    await delay_sim(1)
+    jump scanning_cargo_containers
 
 
 ===== kidnapper_discovered =====
-print(f"Kidnapper Discovered")
-kidnap_status = 2
-temp_list = to_list(role("kidnapper"))
-kidnapper_id = temp_list[0]
-remove_role(kidnapper_id, "suspect")
-remove_role(kidnapper_id, "civ")
-remove_role(kidnapper_id, "civilian")
-add_role(kidnapper_id, "pirate")
-add_role(kidnapper_id, "discovered")
-side = "tsn"
-_obj = to_object(kidnapper_id)
-_obj.spawn_pos = Vec3(90000,0,90000)
-_obj.side = "pirate"
-_obj.race = "pirate"
-allies = _obj.data_set.get("ally_list",0)
-items = allies.split(",")
-items.remove(side)
-allies = ",".join(items)
-_obj.data_set.set("ally_list", allies, 0)
-target_pos(kidnapper_id, 90000, 0, 90000, throttle=1.5, target_id=0)
+    print(f"Kidnapper Discovered")
+    kidnap_status = 2
+    temp_list = to_list(role("kidnapper"))
+    kidnapper_id = temp_list[0]
+    remove_role(kidnapper_id, "suspect")
+    remove_role(kidnapper_id, "civ")
+    remove_role(kidnapper_id, "civilian")
+    add_role(kidnapper_id, "pirate")
+    add_role(kidnapper_id, "discovered")
+    side = "tsn"
+    _obj = to_object(kidnapper_id)
+    _obj.spawn_pos = Vec3(90000,0,90000)
+    _obj.side = "pirate"
+    _obj.race = "pirate"
+    allies = _obj.data_set.get("ally_list",0)
+    items = allies.split(",")
+    items.remove(side)
+    allies = ",".join(items)
+    _obj.data_set.set("ally_list", allies, 0)
+    target_pos(kidnapper_id, 90000, 0, 90000, throttle=1.5, target_id=0)
 
 //enable/comms if has_roles(COMMS_SELECTED_ID, "discovered")
 //comms if has_role(COMMS_SELECTED_ID, "discovered")
 
-check_surrender = get_data_set_value(COMMS_SELECTED_ID, "surrender_flag")
-if check_surrender == 1:
-    yield fail
-else:
-    + "Surrender now"  handle_kidnapper_surrender
+    check_surrender = get_data_set_value(COMMS_SELECTED_ID, "surrender_flag")
+    if check_surrender == 1:
+        yield fail
+    else:
+        + "Surrender now"  handle_kidnapper_surrender
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "discovered")
 //science if has_roles(SCIENCE_SELECTED_ID, "discovered")
 
-+ "scan":
-    <scan>
-        % This is an unfriendly merchant cargo ship.
-+ "status":
-    <scan>
-        " No additional data available.
-+ "intel":
-    <scan>
-        % The ship is registered to Captain {capname}.
-+ "bio":
-    <scan>
-        % The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
+    + "scan":
+        <scan>
+            % This is an unfriendly merchant cargo ship.
+    + "status":
+        <scan>
+            " No additional data available.
+    + "intel":
+        <scan>
+            % The ship is registered to Captain {capname}.
+    + "bio":
+        <scan>
+            % The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
 
-yield success
+    yield success
 
 ===== handle_kidnapper_surrender ====
 
-blob = to_blob(COMMS_SELECTED_ID)
-->END if blob is None
-player = to_object(COMMS_ORIGIN_ID)
-->END if player is None
-name = player.name
+    blob = to_blob(COMMS_SELECTED_ID)
+    ->END if blob is None
+    player = to_object(COMMS_ORIGIN_ID)
+    ->END if player is None
+    name = player.name
 
-sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
-shield_count = blob.get("shield_count", 0)
-s_ratio = 100
-for s in range(shield_count):
-    s_max = blob.get("shield_max_val", s )
-    s_cur = blob.get("shield_val", s )
-    s_ratio = min(s_cur/s_max, s_ratio)
+    sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
+    shield_count = blob.get("shield_count", 0)
+    s_ratio = 100
+    for s in range(shield_count):
+        s_max = blob.get("shield_max_val", s )
+        s_cur = blob.get("shield_val", s )
+        s_ratio = min(s_cur/s_max, s_ratio)
 
-# Ship surrenders if Secret Codecase active or if shields < 50%
-if sc_timer > 0 or s_ratio < 0.5:
-    kidnap_status = 3
-    sc_timer = 0
-    set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
-    e_obj = to_engine_object(COMMS_SELECTED_ID)
-    _pos_eo = e_obj.pos
-    _offset = e_obj.forward_vector()
-    stop_pos = _pos_eo + (_offset * 500)
-    target_pos(COMMS_SELECTED_ID, stop_pos.x, stop_pos.y, stop_pos.z, throttle=0.0, target_id=0, stop_dist=500)
-    drop_pos = _pos_eo + (_offset * -100)
-    comms_receive(f"""Escape Pod Deployed.""", title="Escape Pod", title_color=surrender_color)
-    pickup_spawn(drop_pos.x, drop_pos.y, drop_pos.z, "escape-pod")
-    await task_schedule(comms_do_surrender)
-    remove_role(COMMS_SELECTED_ID, "surrendered")
-    clear_target(COMMS_SELECTED_ID)
-else:
-    comms_receive(f"""What are you talking about, {name}? We don't know anything about the ambassador!""", title="failed surrender", title_color=raider_color)
+    # Ship surrenders if Secret Codecase active or if shields < 50%
+    if sc_timer > 0 or s_ratio < 0.5:
+        kidnap_status = 3
+        sc_timer = 0
+        set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
+        e_obj = to_engine_object(COMMS_SELECTED_ID)
+        _pos_eo = e_obj.pos
+        _offset = e_obj.forward_vector()
+        stop_pos = _pos_eo + (_offset * 500)
+        target_pos(COMMS_SELECTED_ID, stop_pos.x, stop_pos.y, stop_pos.z, throttle=0.0, target_id=0, stop_dist=500)
+        drop_pos = _pos_eo + (_offset * -100)
+        comms_receive(f"""Escape Pod Deployed.""", title="Escape Pod", title_color=surrender_color)
+        pickup_spawn(drop_pos.x, drop_pos.y, drop_pos.z, "escape-pod")
+        await task_schedule(comms_do_surrender)
+        remove_role(COMMS_SELECTED_ID, "surrendered")
+        clear_target(COMMS_SELECTED_ID)
+    else:
+        comms_receive(f"""What are you talking about, {name}? We don't know anything about the ambassador!""", title="failed surrender", title_color=raider_color)
 
-yield success
+    yield success
 
 ===== pest_messages =====
 
-await delay_sim(random.randint(180,300))
-if kidnap_status >= 5:
-    ->END
-if len(pest_idx) < 1:
-    pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-temp_idx = pest_idx.pop(random.randint(0,len(pest_idx) - 1))
-pest_message = pest_list[temp_idx]
-comms_receive_internal(f"""{pest_message}""", pest_id, "Ambassador Florbin", title="Passenger Request", face=ambassador_face, title_color="green")
-jump pest_messages
+    await delay_sim(random.randint(180,300))
+    if kidnap_status >= 5:
+        ->END
+    if len(pest_idx) < 1:
+        pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    temp_idx = pest_idx.pop(random.randint(0,len(pest_idx) - 1))
+    pest_message = pest_list[temp_idx]
+    comms_receive_internal(f"""{pest_message}""", pest_id, "Ambassador Florbin", title="Passenger Request", face=ambassador_face, title_color="green")
+    jump pest_messages
 
 
 ===== check_ambassador_rescued ======
 
-for p in role("__player__"):
-#    ds1_list = to_object_list(role("ds1"))
-#    ds1_id = to_id(ds1_list[0])
-    ds1_list = to_list(role("ds1"))
-    ds1_id = ds1_list[0]
-    dist = sbs.distance_id(p, ds1_id)
-    p_obj = to_object(p)
-    dock_status = p_obj.data_set.get("dock_state", 0)
-    check_pod = get_inventory_value(p, "escape-pod", 0)
-    if dock_status == "docked" and dist <= 600 and check_pod > 0:
-        #admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 4 4;ter #964b00 8 4;"
-        send_general_message("Admiral Harkin", "Ambassador Florbin has been safely delivered back to DS 1! Well done, " + p_obj.name + "!", admiral_face, p)
-        #comms_message(f"Ambassador Florbin has been safely delivered back to DS 1. Well done, {p_obj.name}!", ds1_id, p, title="Ambassador Rescued", title_color="green")
-        kidnap_status = 5
-        ->END
-await delay_sim(5)
-jump check_ambassador_rescued
+    for p in role("__player__"):
+    #    ds1_list = to_object_list(role("ds1"))
+    #    ds1_id = to_id(ds1_list[0])
+        ds1_list = to_list(role("ds1"))
+        ds1_id = ds1_list[0]
+        dist = sbs.distance_id(p, ds1_id)
+        p_obj = to_object(p)
+        dock_status = p_obj.data_set.get("dock_state", 0)
+        check_pod = get_inventory_value(p, "escape-pod", 0)
+        if dock_status == "docked" and dist <= 600 and check_pod > 0:
+            #admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 4 4;ter #964b00 8 4;"
+            send_general_message("Admiral Harkin", "Ambassador Florbin has been safely delivered back to DS 1! Well done, " + p_obj.name + "!", admiral_face, p)
+            #comms_message(f"Ambassador Florbin has been safely delivered back to DS 1. Well done, {p_obj.name}!", ds1_id, p, title="Ambassador Rescued", title_color="green")
+            kidnap_status = 5
+            ->END
+    await delay_sim(5)
+    jump check_ambassador_rescued
 
 
 #------------------------------------------------------------------------------------------------------------

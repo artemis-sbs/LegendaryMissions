@@ -27,7 +27,7 @@ property_pane = None
         camera_id = to_id(cambot)
         set_inventory_value(client_id, "ADMIRAL_COMBOT", camera_id)
         cambot_id = camera_id
-        #print("Creating ADMIRAL {cambot}")
+
         stations_friendly = to_object_list(role("station"))
         player_ship_update_friendly(cambot, stations_friendly, True)
 
@@ -42,7 +42,7 @@ property_pane = None
     #
     # Assign before setting comms up
     #
-    #print(f"admiral {camera_id}")
+    
     sbs.assign_client_to_ship(client_id, camera_id)
     science_set_scan_data(camera_id, camera_id, {"scan": "Admiral"})
     set_comms_selection(camera_id, camera_id)
@@ -62,9 +62,7 @@ property_pane = None
         gui_row("row-height: 20px;")
         ob = gui_slider("low: 0.0; high:360.0;", var="orbit")
         gui_row()
-        props_lb = gui_list_box([],"row-height: 4em; background:#1572;", item_template=property_lb, title_template="Properties")
-        ~~props_lb.title_section_style += "background:#1578;"~~
-        set_inventory_value(client_id, "__PROPS_LB__", props_lb)
+        gui_property_list_box()
 
     # if either dolly or orbit changes
     on gui_message(ob): # + orbit:
@@ -77,6 +75,10 @@ property_pane = None
         await task_schedule(admiral_move_camera)
 
     task_schedule(admiral_move_camera_sync)
+    default shared admiral_already_scheduled_eyes = False
+    -> END if admiral_already_scheduled_eyes 
+    admiral_already_scheduled_eyes = True
+
 
     # Middle
     with gui_sub_section():
@@ -137,12 +139,25 @@ property_pane = None
     ->END
 
 
+=== admiral_update_lookouts ==
+    await delay_sim(10)
+
+    my_players = to_object_list(role("admiral"))
+    for player in my_players:
+        blob = to_blob(player)
+        num_ids = blob.get("num_extra_scan_sources",0)
+
+        for friend in any_role("friendly, station, __player__"):
+            blob.set("extra_scan_source", friend, num_ids)
+            num_ids += 1
+        blob.set("num_extra_scan_sources",num_ids,0)
+    -> admiral_update_lookouts
+
+
+
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "admiral")
     #rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)
-    #print("RANGE Adrmiral {rang}")
-    #print("POINT Adrmiral {EVENT.source_point.x}, {EVENT.source_point.y},{EVENT.source_point.z}")
-    #print("IDs Adrmiral {EVENT.origin_id}, {EVENT.selected_id},{EVENT.parent_id} {EVENT.extra_extra_tag}")
-
+    
     # extra_extra_tag has lmb, rmb, blank is fake event
     if EVENT.extra_extra_tag != "rmb":
         # if no selection then use point

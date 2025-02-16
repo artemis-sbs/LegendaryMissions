@@ -2,65 +2,62 @@
 " In this scenario, bases will be located in the center of the sector, 
 " with minefields ringing the center, and enemies advancing from every 
 " angle. Siege makes for a fast game, where stations are continually under threat.
+meta_data:``` yaml
+Properties:
+  Main:
+    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "difficulty")'
+  Map:
+    Terrain: 'gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many",var="terrain_select")'
+    Lethal Terrain: 'gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")'
+    Friendly Ships: 'gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")'
+    Monsters: 'gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")'
+    Upgrades: 'gui_drop_down("$text: {upgrade_select};list: none, few, some, lots, many", var= "upgrade_select")'
+    Time Limit: 'gui_input("desc: Minutes;", var="game_time_limit")'
+```
 
 
-# Maybe this creates another label for gui purposes?
-# Or the dedent does what is right
-# and this just just beyond the dedent
-#properties:
-#    gui_property_tab("Main", 12)
-#    gui_property("player_count", "Player Ships", gui_int_slider("$text:int;low: 1.0;high:8.0"))
-#    gui_property("difficulty", "Difficulty", gui_int_slider("$text:int;low: 1.0;high:11.0"))
-#    gui_separator()
-#    gui_property("terrain_select", "Terrain", gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many"))
-#    gui_property("lethal_select", "Lethal Terrain", gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many"))
-#    gui_property("friendly_select", "Friendly Ships", gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many"))
-#    gui_property("monster_select", "Monsters", gui_drop_down("$text: {monster_select};list: none, few, some, lots, many"))
-#    gui_property("upgrade_select", "Upgrades", gui_drop_down("$text:{upgrade_select};list:none, few,some, lots, many"))
-#    gui_property("game_time_limit", "Time Limit", gui_input("desc: Minutes;"))
+    terrain_value = terrain_to_value(terrain_select)
+    lethal_value =  terrain_to_value(lethal_select)
+    friendly_value = terrain_to_value(friendly_select)
+    monster_value = terrain_to_value(monster_select)
+    upgrade_value = terrain_to_value(upgrade_select)
 
+    #------------------------------------------------------------------------------------------------------------
 
-terrain_value = terrain_to_value(terrain_select)
-lethal_value =  terrain_to_value(lethal_select)
-friendly_value = terrain_to_value(friendly_select)
-monster_value = terrain_to_value(monster_select)
-upgrade_value = terrain_to_value(upgrade_select)
-
-#------------------------------------------------------------------------------------------------------------
-
-terrain_spawn_stations(difficulty, lethal_value)
-await task_schedule(spawn_friendly_npc)
-terrain_asteroid_clusters(terrain_value)
-terrain_spawn_nebula_clusters(terrain_value)
-terrain_spawn_pickups(upgrade_value)
-terrain_spawn_monsters(monster_value)
-terrain_spawn_black_holes(lethal_value)
+    terrain_spawn_stations(difficulty, lethal_value)
+    await task_schedule(spawn_friendly_npc)
+    terrain_asteroid_clusters(terrain_value)
+    terrain_spawn_nebula_clusters(terrain_value)
+    terrain_spawn_pickups(upgrade_value)
+    terrain_spawn_monsters(monster_value)
+    terrain_spawn_black_holes(lethal_value)
 
 
 
-#------------------------------------------------------------------------------------------------------------
-# Generate Siege Fleets - These fleets are weighted towards Kraliens (based on difficulty), from 85% Kralien at Difficulty 1 
-# to 22% Kralien at Difficulty 10. The fleet lists can be found in 'map_common.py'. Skaraans are generated separately, as these 
-# 'independent contractors' tend to operate better on their own. The idea is to hopefully match the 'feel' of Artemis 2.x. 
-enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
+    #------------------------------------------------------------------------------------------------------------
+    # Generate Siege Fleets - These fleets are weighted towards Kraliens (based on difficulty), from 85% Kralien at Difficulty 1 
+    # to 22% Kralien at Difficulty 10. The fleet lists can be found in 'map_common.py'. Skaraans are generated separately, as these 
+    # 'independent contractors' tend to operate better on their own. The idea is to hopefully match the 'feel' of Artemis 2.x. 
+    enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
 
-diff_weight = [ [85, 5, 5, 5], [82, 6, 6, 6], [79, 7, 7, 7], [76, 8, 8, 8], [70, 10, 10, 10], [64, 12, 12, 12], [58, 14, 14, 14], [46, 18, 18, 18], [34, 22, 22, 22], [22, 26, 26, 26], [10, 30, 30, 30]]
- 
-fleet_count = 3 + int(difficulty/2)
-fleet_index = int(difficulty - 1)
+    diff_weight = [ [85, 5, 5, 5], [82, 6, 6, 6], [79, 7, 7, 7], [76, 8, 8, 8], [70, 10, 10, 10], [64, 12, 12, 12], [58, 14, 14, 14], [46, 18, 18, 18], [34, 22, 22, 22], [22, 26, 26, 26], [10, 30, 30, 30]]
+    
+    fleet_count = 3 + int(difficulty/2)
+    fleet_index = int(difficulty - 1)
 
-for a in range(fleet_count):
-    enemy_temp = random.choices(enemyTypeNameList, weights=diff_weight[fleet_index])
-    enemy = enemy_temp[0]
-    fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
-    create_siege_fleet(enemy, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-    if a > 1 and difficulty > 2:
+    for a in range(fleet_count):
+        enemy_temp = random.choices(enemyTypeNameList, weights=diff_weight[fleet_index])
+        enemy = enemy_temp[0]
         fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
-        create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+        create_siege_fleet(enemy, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+        if a > 1 and difficulty > 2:
+            fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
+            create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
 
-#------------------------------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------------------------
 
-task_schedule(task_end_game)
+    task_schedule(task_end_game)
 
-#------------------------------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------------------------
 

@@ -4,21 +4,21 @@ shared _surrender_return = task_schedule(take_surrendered_home)
 
 //comms if has_role(COMMS_SELECTED_ID, "raider")
 
-yield fail if has_role(COMMS_SELECTED_ID, "never_surrender")
-yield fail if has_role(COMMS_SELECTED_ID, "surrendered")
+    yield fail if has_role(COMMS_SELECTED_ID, "never_surrender")
+    yield fail if has_role(COMMS_SELECTED_ID, "surrendered")
 
-surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
-hide_surr = surrender_count >= 3
-#
-# Secret code case
-#
-sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
-show_surr = not hide_surr or (sc_timer > 0)
+    surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
+    hide_surr = surrender_count >= 3
+    #
+    # Secret code case
+    #
+    sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
+    show_surr = not hide_surr or (sc_timer > 0)
 
-yield fail if not show_surr
+    yield fail if not show_surr
 
-### comms_add_button("Surrender now", handle_comms_raider_surrender)
-+ "Surrender now"  handle_comms_raider_surrender
+    ### comms_add_button("Surrender now", handle_comms_raider_surrender)
+    + "Surrender now"  handle_comms_raider_surrender
 
 
 
@@ -26,62 +26,62 @@ yield fail if not show_surr
 
 ===== handle_comms_raider_surrender ====
 
-blob = to_blob(COMMS_SELECTED_ID)
-->END if blob is None
-player = to_object(COMMS_ORIGIN_ID)
-->END if player is None
-name = player.name
-surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
-set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
+    blob = to_blob(COMMS_SELECTED_ID)
+    ->END if blob is None
+    player = to_object(COMMS_ORIGIN_ID)
+    ->END if player is None
+    name = player.name
+    surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
+    set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
 
-sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
-shield_count = blob.get("shield_count", 0)
-s_ratio = 100
-for s in range(shield_count):
-    s_max = blob.get("shield_max_val", s )
-    s_cur = blob.get("shield_val", s )
-    s_ratio = min(s_cur/s_max, s_ratio)
+    sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
+    shield_count = blob.get("shield_count", 0)
+    s_ratio = 100
+    for s in range(shield_count):
+        s_max = blob.get("shield_max_val", s )
+        s_cur = blob.get("shield_val", s )
+        s_ratio = min(s_cur/s_max, s_ratio)
 
-# Secret Codecase, force surrender if active, otherwise check shield ratio
-if sc_timer > 0:
-    sc_timer = 0
-    set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
-    await task_schedule(comms_do_surrender)
-    
-elif s_ratio < 0.09:
-    if random.randint(1,6)<3:
+    # Secret Codecase, force surrender if active, otherwise check shield ratio
+    if sc_timer > 0:
+        sc_timer = 0
+        set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
         await task_schedule(comms_do_surrender)
+        
+    elif s_ratio < 0.09:
+        if random.randint(1,6)<3:
+            await task_schedule(comms_do_surrender)
+        else:
+            comms_receive(f"""We will fight to our last breath!""", title="failed surrender", title_color=raider_color)
+            add_role(COMMS_SELECTED_ID, "never_surrender")
+
+    elif s_ratio < 0.5:
+        if random.randint(0,6)<=2:
+            await task_schedule(comms_do_surrender)
+        else:
+            comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title="Surrender ignored", title_color=raider_color)
+
     else:
-        comms_receive(f"""We will fight to our last breath!""", title="failed surrender", title_color=raider_color)
-        add_role(COMMS_SELECTED_ID, "never_surrender")
+        comms_receive(f"""Go climb a tree, {name}!""", title="failed surrender", title_color=raider_color)
 
-elif s_ratio < 0.5:
-    if random.randint(0,6)<=2:
-        await task_schedule(comms_do_surrender)
-    else:
-        comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title="Surrender ignored", title_color=raider_color)
-
-else:
-    comms_receive(f"""Go climb a tree, {name}!""", title="failed surrender", title_color=raider_color)
-
-yield success
+    yield success
 
 
 ======== comms_do_surrender ========
-player = to_object(COMMS_ORIGIN_ID)
-->END if player is None
-name = player.name
-comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
-add_role(COMMS_SELECTED_ID, "surrendered")
-surrender = game_stats.get("ships_surrender", 0 )
-surrender += 1
-game_stats["ships_surrender"] = surrender
-remove_role(COMMS_SELECTED_ID, "raider")
-set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
-fleet_remove_ship(COMMS_SELECTED_ID)
+    player = to_object(COMMS_ORIGIN_ID)
+    ->END if player is None
+    name = player.name
+    comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
+    add_role(COMMS_SELECTED_ID, "surrendered")
+    surrender = game_stats.get("ships_surrender", 0 )
+    surrender += 1
+    game_stats["ships_surrender"] = surrender
+    remove_role(COMMS_SELECTED_ID, "raider")
+    set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
+    fleet_remove_ship(COMMS_SELECTED_ID)
 
 
-yield SUCCESS
+    yield SUCCESS
 
 
 
@@ -91,21 +91,21 @@ yield SUCCESS
 #
 ======== take_surrendered_home  =========
 
-await delay_sim(5)
+    await delay_sim(5)
 
-surrendered = role("surrendered")
-for ship in surrendered:
-    ship_obj = to_object(ship)
-    continue if ship_obj is None
+    surrendered = role("surrendered")
+    for ship in surrendered:
+        ship_obj = to_object(ship)
+        continue if ship_obj is None
 
-    spawn_pos = Vec3(ship_obj.spawn_pos)
-    _pos = ship_obj.pos
-    target_pos(ship, spawn_pos.x, spawn_pos.y, spawn_pos.z, throttle=1.5, target_id=0)
-    diff = _pos - spawn_pos
-    continue if diff.length() > 500
-    # if Close to 500, then delete
-    sbs.delete_object(ship)
+        spawn_pos = Vec3(ship_obj.spawn_pos)
+        _pos = ship_obj.pos
+        target_pos(ship, spawn_pos.x, spawn_pos.y, spawn_pos.z, throttle=1.5, target_id=0)
+        diff = _pos - spawn_pos
+        continue if diff.length() > 500
+        # if Close to 500, then delete
+        sbs.delete_object(ship)
 
 
-jump take_surrendered_home
+    jump take_surrendered_home
 
