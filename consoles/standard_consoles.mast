@@ -4,13 +4,13 @@
 # Helm, Weapons, Comms, Engineering, Science
 # Mainscreen, Cinematic
 #
-default shared HELM_CONSOLE_ENABLED = True
-default shared WEAPONS_CONSOLE_ENABLED = True
-default shared ENGINEERING_CONSOLE_ENABLED = True
-default shared COMMS_CONSOLE_ENABLED = True
-default shared SCIENCE_CONSOLE_ENABLED = True
-default shared MAINSCREEN_CONSOLE_ENABLED = True
-default shared CINEMATIC_CONSOLE_ENABLED = True
+default HELM_CONSOLE_ENABLED = True
+default WEAPONS_CONSOLE_ENABLED = True
+default ENGINEERING_CONSOLE_ENABLED = True
+default COMMS_CONSOLE_ENABLED = True
+default SCIENCE_CONSOLE_ENABLED = True
+default MAINSCREEN_CONSOLE_ENABLED = True
+default CINEMATIC_CONSOLE_ENABLED = True
 
 @console/helm "Helm" if HELM_CONSOLE_ENABLED
     " Pilot the ship

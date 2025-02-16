@@ -7,7 +7,7 @@ shared next_call_sign = 0
 #  Background task to look for strays
 #
 shared find_stray = task_schedule(find_stray_crafts)
-default shared HANGAR_CONSOLE_ENABLED = True
+default HANGAR_CONSOLE_ENABLED = True
 #
 # The route_spawn label is the entry point 
 # it examines the SPAWNED_ID to either
