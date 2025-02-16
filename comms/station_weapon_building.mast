@@ -25,53 +25,10 @@ surrender_color = "yellow"
 
 
 =============== handle_comms_station_hail  ===============
-<<<<<<< HEAD
-station_id = COMMS_SELECTED_ID
-ship_id = COMMS_ORIGIN_ID
-station_obj = to_object(COMMS_SELECTED_ID)
-->END if station_obj is None
-
-comms_id = to_object(COMMS_ORIGIN_ID).name
-station_comms_id = station_obj.name
-
-#   HOMING : 0, NUKE : 1, EMP : 2, MINE : 3
-station_build_times = get_build_times(station_id)
-torpedo_build_type = get_inventory_value(station_id, "build_type", 0)
-
-s_max = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 0))
-s_cur = int(get_data_set_value(COMMS_SELECTED_ID, "shield_val", 0))
-s_per = int(s_cur / s_max * 100)
-a_max = int(get_data_set_value(COMMS_SELECTED_ID, "armorMax", 0))
-a_cur = int(get_data_set_value(COMMS_SELECTED_ID, "armor", 0))
-a_per = int(a_cur / a_max * 100)
-
-homing = get_data_set_value(COMMS_SELECTED_ID, "Homing_NUM", 0)
-nuke = get_data_set_value(COMMS_SELECTED_ID, "Nuke_NUM", 0)
-emp = get_data_set_value(COMMS_SELECTED_ID, "EMP_NUM", 0)
-mine = get_data_set_value(COMMS_SELECTED_ID, "Mine_NUM", )
-build_time = format_time_remaining(COMMS_SELECTED_ID, "build_time")
-
-<<[green] "Hail"
-    " Hello, {comms_id}.  We stand ready to assist.
-    " ^Our shields are at {s_cur} / {s_max} ({s_per} %).
-    " ^Structural integrity is {a_cur} / {a_max} ({a_per} %). 
-    " ^^You have full docking privileges.
-    " ^{torpedo_build_type} in production. Completion in {build_time}
-    " ^{"type":<10}{"ready": >5}{"time to produce": >20}
-    " ^{"Homing": <10}{homing: >5}{"": >16}{station_build_times["Homing"]}:00 
-    " ^{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times["Nuke"]}:00
-    " ^{"EMP": <10}{emp: >5}{"": >16}{station_build_times["EMP"]}:00
-    " ^{"Mine": <10}{mine: >5}{"": >16}{station_build_times["Mine"]}:00
-
-yield success
-
-
-=======
     station_id = COMMS_SELECTED_ID
     ship_id = COMMS_ORIGIN_ID
     station_obj = to_object(COMMS_SELECTED_ID)
     ->END if station_obj is None
->>>>>>> bab940bc4f90c94e2faab709d7bdecb56fffe46c
 
     comms_id = to_object(COMMS_ORIGIN_ID).name
     station_comms_id = station_obj.name
@@ -80,6 +37,12 @@ yield success
     station_build_times = get_build_times(station_id)
     torpedo_build_type = get_inventory_value(station_id, "build_type", 0)
 
+    s_max = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 0))
+    s_cur = int(get_data_set_value(COMMS_SELECTED_ID, "shield_val", 0))
+    s_per = int(s_cur / s_max * 100)
+    a_max = int(get_data_set_value(COMMS_SELECTED_ID, "armorMax", 0))
+    a_cur = int(get_data_set_value(COMMS_SELECTED_ID, "armor", 0))
+    a_per = int(a_cur / a_max * 100)
 
     homing = get_data_set_value(COMMS_SELECTED_ID, "Homing_NUM", 0)
     nuke = get_data_set_value(COMMS_SELECTED_ID, "Nuke_NUM", 0)
@@ -89,8 +52,10 @@ yield success
 
     <<[green] "Hail"
         " Hello, {comms_id}.  We stand ready to assist.
-        " ^^You have full docking privileges.
-        " ^{torpedo_build_type} in production. Completion in {build_time}
+        " ^Our shields are at {s_cur} / {s_max} ({s_per} %).
+        " ^Structural integrity is {a_cur} / {a_max} ({a_per} %).
+        " ^You have full docking privileges.
+        " ^^{torpedo_build_type} in production. Completion in {build_time}
         " ^{"type":<10}{"ready": >5}{"time to produce": >20}
         " ^{"Homing": <10}{homing: >5}{"": >16}{station_build_times["Homing"]}:00 
         " ^{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times["Nuke"]}:00
