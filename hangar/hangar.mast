@@ -7,6 +7,7 @@ shared next_call_sign = 0
 #  Background task to look for strays
 #
 shared find_stray = task_schedule(find_stray_crafts)
+default shared HANGAR_CONSOLE_ENABLED = True
 #
 # The route_spawn label is the entry point 
 # it examines the SPAWNED_ID to either
@@ -66,8 +67,7 @@ shared find_stray = task_schedule(find_stray_crafts)
 
 
 
-
-@console/hangar "Flight Hangar"
+@console/hangar "Flight Hangar" if HANGAR_CONSOLE_ENABLED
     " Fly fighter- shuttle and cargo missions
     jump show_hangar # This could be replaced with a new command gui_navigate("//console/hangar")
 

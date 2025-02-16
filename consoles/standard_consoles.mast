@@ -4,9 +4,15 @@
 # Helm, Weapons, Comms, Engineering, Science
 # Mainscreen, Cinematic
 #
+default shared HELM_CONSOLE_ENABLED = True
+default shared WEAPONS_CONSOLE_ENABLED = True
+default shared ENGINEERING_CONSOLE_ENABLED = True
+default shared COMMS_CONSOLE_ENABLED = True
+default shared SCIENCE_CONSOLE_ENABLED = True
+default shared MAINSCREEN_CONSOLE_ENABLED = True
+default shared CINEMATIC_CONSOLE_ENABLED = True
 
-
-@console/helm "Helm"
+@console/helm "Helm" if HELM_CONSOLE_ENABLED
     " Pilot the ship
 
     # get_type_of_client
@@ -24,18 +30,19 @@
 
     await gui()
 
-
-@console/weapons "Weapons"
+@console/weapons "Weapons" if WEAPONS_CONSOLE_ENABLED
     " Protect the ship from enemies
     console_select = "weapons"
     jump common_console_show
 
-@console/engineering "Engineering"
+
+@console/engineering "Engineering" if ENGINEERING_CONSOLE_ENABLED
     " Keep the ship running optimally
     console_select = "engineering"
     jump common_console_show
 
-@console/comms "Communication"
+
+@console/comms "Communication" if COMMS_CONSOLE_ENABLED
     " Interact with other ships and stations
 
     # Clear Comms Info
@@ -43,7 +50,7 @@
     comms_info("static")
     jump common_console_show
 
-@console/science "Science"
+@console/science "Science" if SCIENCE_CONSOLE_ENABLED
     " Discover and provide vital information
     console_select = "science"
     jump common_console_show
@@ -56,7 +63,7 @@
 
     await gui()
 
-@console/mainscreen "Mainscreen"
+@console/mainscreen "Mainscreen" if MAINSCREEN_CONSOLE_ENABLED
     " The main viewscreen
 
     #
@@ -64,8 +71,7 @@
     #
     jump show_main_game_screen
 
-
-@console/cinematic "Cinematic"
+@console/cinematic "Cinematic" if CINEMATIC_CONSOLE_ENABLED
     " The cinematic view of the action
 
     # Layout to assure it takes up full screen 

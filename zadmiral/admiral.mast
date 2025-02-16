@@ -5,8 +5,9 @@ dolly = 50
 orbit = 180.0
 do_move = 0
 property_pane = None
+default shared ADMIRAL_CONSOLE_ENABLED = True
 
-@console/admiral "Admiral"
+@console/admiral "Admiral" if ADMIRAL_CONSOLE_ENABLED
 " Affect the overall battle
 
     #
