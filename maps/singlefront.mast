@@ -2,7 +2,7 @@
 "Bases will be lined up along the right edge of the sector,
 " and the enemies will enter from the left. This layout makes
 " a much longer game, with long travel distances. The bases are far from enemies, but more isolated.
-meta_data:``` yaml
+metadata:``` yaml
 Properties:
   Main:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'

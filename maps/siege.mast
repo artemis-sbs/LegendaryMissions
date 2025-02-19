@@ -2,7 +2,7 @@
 " In this scenario, bases will be located in the center of the sector, 
 " with minefields ringing the center, and enemies advancing from every 
 " angle. Siege makes for a fast game, where stations are continually under threat.
-meta_data:``` yaml
+metadata:``` yaml
 Properties:
   Main:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'

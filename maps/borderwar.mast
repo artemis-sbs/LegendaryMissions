@@ -6,7 +6,7 @@
 " control will allow you to set how many minutes will
 " pass before war is declared. Obviously, this should be
 "  less than the Time Limit.
-meta_data:``` yaml
+metadata:``` yaml
 Properties:
   Main:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'

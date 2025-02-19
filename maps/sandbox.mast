@@ -2,7 +2,7 @@
 " Creates a small map with no enemies. Useful in game mastered games using the Admiral Console
 " The map will contain players ships, stations, and friendly ships
 " To end the game, use the Admiral command end game 
-meta_data:``` yaml
+metadata:``` yaml
 Properties:
   Main:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'

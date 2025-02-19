@@ -8,7 +8,7 @@ shared kidnap_status = 0
 " one or two fleets or single Skaraans on higher difficulties)
 " in this scenario, although there may be monsters or quests
 " for the player to complete if the appropriate Sector Options are set.
-meta_data:``` yaml
+metadata:``` yaml
 Properties:
   Main:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'
