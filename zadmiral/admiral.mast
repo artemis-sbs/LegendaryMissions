@@ -23,14 +23,19 @@ default ADMIRAL_CONSOLE_ENABLED = True
     camera_id = cambot_id
     cambot = to_object(cambot_id)
     if cambot_id is None or cambot is None:
-        cambot = to_object(player_spawn(0,0,10, "", "tsn,admiral", "invisible")) 
+        #
+        # has_science_scan enables friendly eyes processing
+        # while not being a player
+        #
+        cambot = to_object(player_spawn(0,0,10, "", "tsn,admiral,has_science_scan", "invisible")) 
         remove_role(cambot, "__player__")
         camera_id = to_id(cambot)
         set_inventory_value(client_id, "ADMIRAL_COMBOT", camera_id)
         cambot_id = camera_id
 
-        stations_friendly = to_object_list(role("station"))
-        player_ship_update_friendly(cambot, stations_friendly, True)
+        # Set up scan sources
+        stations_friendly = role("station")|role("defender")|role("raider")
+        link(cambot_id,"extra_scan_source" ,stations_friendly)
 
     last_sci = cambot_id
     #

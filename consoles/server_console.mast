@@ -257,7 +257,6 @@ Main:
         if same:
             gui_blank()
 
-    print("SERVER: {SIM_STATE}")
     if SIM_STATE == "sim_running":
         gui_hide(resume_controls)
 
