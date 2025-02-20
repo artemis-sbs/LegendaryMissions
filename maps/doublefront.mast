@@ -3,7 +3,7 @@
 " while the enemies advance from two sides. This layout
 " (especially with minefields) makes for a complex terrain
 " situation, but isn't as open as a one-front layout.
-meta_data:``` yaml
+metadata:``` yaml
 Properties:
   Main:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'

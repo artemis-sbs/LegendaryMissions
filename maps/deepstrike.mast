@@ -3,7 +3,7 @@
 " just a friendly bulk cargo ship that can resupply
 " the player ship(s). The player ship(s) are launching
 " an assault into enemy territory, which is defended by enemy bases.
-meta_data:``` yaml
+metadata:``` yaml
 Properties:
   Main:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'
