@@ -18,6 +18,10 @@ from fleet import fleet_spawn
 def player_ship_update_friendly(player_id, friends, initial_scan = False):
     blob = to_blob(player_id)
     num_ids = 0 # blob.get("num_extra_scan_sources",0)
+    print("NOTE: player_ship_update_friendly is depreicated")
+    print("use link(player_ship. 'extra_scan_source', the_scan_sources)  ")
+    print("system will update")
+
 
     for friend in friends:
         blob.set("extra_scan_source", to_id(friend), num_ids)

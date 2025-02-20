@@ -155,7 +155,15 @@
             assign_client_to_ship(0,to_id(player_ship))
             first = False
 
-        player_ship_update_friendly(player_ship, stations_friendly, True)
+        # 
+        # schedule and set friendly eyes
+        # link or unlink extra_scan_source
+        #
+        friendly_eyes = role("tsn")  & (role("station")|role("defender"))
+        link(player_ship, "extra_scan_source", friendly_eyes)
+
+        extra_scan_sources_schedule()
+        #player_ship_update_friendly(player_ship, stations_friendly, True)
 
     shared players_cleaned = True
     ->END

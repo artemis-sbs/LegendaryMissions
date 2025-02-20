@@ -10,13 +10,16 @@
         player_ships = to_object_list(role("__player__"))
         for player_ship in player_ships:
             side = player_ship.side
-            stations_friendly = to_object_list(role(side)  & role("station"))
-            player_ship_update_friendly(player_ship, stations_friendly, True)
+            # __space_spawn__ are NEW objects
+            stations_friendly = role(side)  & role("station") & role("__space_spawn__")
+            link(player_ship,"extra_scan_source" ,stations_friendly)
+            #player_ship_update_friendly(player_ship, stations_friendly, True)
 
         # Let the Admiral see ALL stations for now
         # stations_friendly = to_object_list(role(side)  & role("station"))
         stations_friendly = to_object_list(role("station"))
-        player_ship_update_friendly(COMMS_ORIGIN_ID, stations_friendly, True)
+        link(COMMS_ORIGIN_ID,"extra_scan_source" ,stations_friendly)
+        # player_ship_update_friendly(COMMS_ORIGIN_ID, stations_friendly, True)
 
     + "Scatter Friendly":
         # A bit of a hack, but figure our which friendlies are new
