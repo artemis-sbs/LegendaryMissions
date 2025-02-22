@@ -1,5 +1,6 @@
 
 //comms if has_roles(COMMS_ORIGIN_ID, 'admiral')
+    gui_properties_set()
     + "Message" //comms/admiral/message
 
 

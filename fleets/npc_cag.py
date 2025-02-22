@@ -34,16 +34,11 @@ class NpcCAG(Agent):
         if carrier_race is None:
             return "arvonian_fighter"
         
-        race = ""
-        r_type = carrier_race
-        
-        race = r_type.split("_")
-        race = race[0]
-        if race=="xim":
-            race = "ximni"
+        if carrier_race=="xim":
+            carrier_race = "ximni"
 
 
-        match race:
+        match carrier_race:
             case "tsn":
                 return "tsn_fighter"
             case "pirate":
@@ -79,7 +74,7 @@ class NpcCAG(Agent):
             blob = e.data_set
             fighter_count = blob.get("bay_count",0)
             fighter_count = get_inventory_value(e, "fighters_in_bay", fighter_count)
-            fighter_key = self.get_fighter_key(e.art_id)
+            fighter_key = self.get_fighter_key(e.race)
             start_pos = e.pos
 
 
