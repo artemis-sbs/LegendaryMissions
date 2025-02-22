@@ -113,8 +113,11 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
         # raider = closest(player_id_or_obj, role("raider"), _too_close)
 
         # if raider is None:
+
+        #REFACTOR: This is where distance meta data is used 
         station = closest(player_id_or_obj, role(dock_roles), docking_range)
         if station is not None:
+            #REFACTOR: This is where enable is tested
             player_blob.set("dock_base_id", to_id(station))
             return RATE_FAST
         else:
@@ -168,6 +171,8 @@ def player_docking_docking(player_id_or_obj, dock_station):
     
     difficulty = get_shared_variable("difficulty", 5)
     _too_close = 300+(difficulty+1)*200
+
+    ### REFACTOR: THIS IS WHERE mooring is tested
     raider = closest(player_id_or_obj, role("raider"), _too_close)
     if raider is not None:
         comms_message("Attempting dock when enemies is ill advised.", player_id, player_id,  "Enemies near", None, "white", "red", from_name="Docking")
@@ -198,6 +203,7 @@ def player_docking_dock_start(player_id_or_obj, dock_station_id):
     if player_blob is None:
         return None # Player died
 
+    ### REFACTOR: This calls docked
     player_blob.set("dock_state", "docked")
     #TODO: move this out and respond to signal
     grid_restore_damcons(player_id)
@@ -227,7 +233,7 @@ def player_docking_station_docked(player_id_or_obj, dock_station):
         player_blob.set("dock_state", "undocked")
         return RATE_SLOW
 
-
+    ### REFACTOR: This calls refit
     refuel_amount = 20
     load_torp = is_timer_finished(player_id,"priority_docking_torp")
     if not is_timer_finished(player_id,"priority_docking"):
@@ -239,7 +245,8 @@ def player_docking_station_docked(player_id_or_obj, dock_station):
         if load_torp:
             set_timer(player_id,"priority_docking_torp", 6)
     
-        
+    ####REFACTOR: This should call throttle
+    ##### SHould it 
     throttle = player_blob.get("playerThrottle",0)
     if throttle >0.6:
         player_blob.set("playerThrottle",0.5, 0)

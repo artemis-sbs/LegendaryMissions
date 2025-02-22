@@ -8,42 +8,14 @@
         await delay_sim(1)
         jump wait_for_game_started
 
-    if world_select.path == "deep_strike":
-        schedule_player_docking(SPAWNED_ID, difficulty, "resupply_tanker", player_docking_resupply_docked)
-    else:
-        schedule_player_docking(SPAWNED_ID, difficulty, "station", player_docking_station_docked)
+    side = SPAWNED.side 
+    side = role(side)
 
-# Docking only on player ships
-# this adds a sub task to the docking task
-# //enable/docking
-# " Standard docking
-# "
-# ---
-# any_role:
-# all_role: station
-# side: True
-# distance: 600
-# cycle: 10
-# ...
-
-
-
-
-
-# //enable_docking if world_select.path == "deep_strike"
-# " Docking with the resupply tanker
-# ---
-# all_role: resupply_tanker
-# side: True
-# distance: 600
-# cycle: 10
-# ...
-
-
-
-
-
-
+    docking_set_docking_logic(SPAWNED_ID, side & role("station"), docking_dock_with_friendly_station)
+    # if world_select.path == "deep_strike":
+    #     schedule_player_docking(SPAWNED_ID, difficulty, "resupply_tanker", player_docking_resupply_docked)
+    # else:
+    #     schedule_player_docking(SPAWNED_ID, difficulty, "station", player_docking_station_docked)
 
 
 #
@@ -51,7 +23,183 @@
 #
 //select/weapons  if has_role(WEAPONS_ORIGIN_ID, "__player__")
 
-dock_state_string = WEAPONS_ORIGIN.data_set.get("dock_state", 0) 
-->END if dock_state_string == "undocked"
+    dock_state_string = WEAPONS_ORIGIN.data_set.get("dock_state", 0) 
+    ->END if dock_state_string == "undocked"
 
-set_weapons_selection(WEAPONS_ORIGIN_ID, 0)
+    set_weapons_selection(WEAPONS_ORIGIN_ID, 0)
+
+
+
+
+=== docking_dock_with_friendly_station
+metadata: ``` yaml
+distance: 600
+```
+# This is called every 4 second
+# System assures Objects exist
++++ enable
+    # ant additional testing
+    # to cancel yield fail
+    
+# Call while the tractor is 
++++ docking
+    _too_close = 300+(difficulty+1)*200
+    raider = closest(DOCKING_PLAYER_ID, role("raider"), _too_close)
+    if raider is not None:
+        comms_message("Attempting dock when enemies is ill advised.", DOCKING_PLAYER_ID, DOCKING_PLAYER_ID,  "Enemies near", None, "white", "red", from_name="Docking")
+        comms_broadcast(DOCKING_PLAYER_ID, "docking disable, enemy near")
+        yield fail
+
+# This is called every 1 second
++++ docked
+    grid_restore_damcons(DOCKING_PLAYER_ID)
+    # if priority docking
+    # Set counter targets faster
+    # counter targets are used to mod or checking
+    # The set counters
+    start_counter(DOCKING_PLAYER_ID, "refuel")
+    start_counter(DOCKING_PLAYER_ID, "torps")
+    start_counter(DOCKING_PLAYER_ID, "shields")
+    start_counter(DOCKING_PLAYER_ID, "interior")
+
++++ refit
+
+###  Add Energy
+    refuel_amount = 20
+    refuel_delay = 2    
+    shields_delay = 2
+    torps_delay = 6
+    interior_delay = 2
+
+    player_blob = DOCKING_PLAYER.data_set
+    player_id = DOCKING_PLAYER_ID
+    npc_blob = DOCKING_NPC.data_set
+
+
+    if not is_timer_finished(DOCKING_PLAYER_ID,"priority_docking"):
+        refuel_amount += 20
+        refuel_delay = 1    
+        shield_delay = 1
+        torp_delay = 3
+        interior_delay = 1
+
+    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"refuel") > refuel_delay:
+        start_counter(DOCKING_PLAYER_ID,"refuel")
+        fuel_value = DOCKING_PLAYER.data_set.get("energy",0)
+        if fuel_value < 1000:
+            fuel_value = fuel_value + refuel_amount
+            DOCKING_PLAYER.data_set.set("energy", int(fuel_value),0)
+### Refill torps
+    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"torps") > torps_delay:
+        start_counter(DOCKING_PLAYER_ID,"torps")
+
+        _torp_types = npc_blob.get("torpedo_types_available",0)
+        _torp_types =  [x.strip() for x in _torp_types.split(',')]
+        for torps in _torp_types:
+            tLeft = npc_blob.get(f"{torps}_NUM", 0)
+            if tLeft is not None and tLeft > 0:
+                torp_max = player_blob.get(f"{torps}_MAX", 0)
+                if torp_max is None:
+                    torp_max = 10
+                torp_now = player_blob.get(f"{torps}_NUM", 0)
+                if torp_now < torp_max:
+                    torp_now = torp_now + 1
+                    player_blob.set(f"{torps}_NUM", torp_now,0)
+                    npc_blob.set(f"{torps}_NUM", tLeft-1, 0)
+### Repair shields
+    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"shields") > shields_delay:
+        start_counter(DOCKING_PLAYER_ID,"shields")
+        shieldCoeff = player_blob.get("repair_rate_shields",0)
+        sCount = player_blob.get("shield_count",0)
+        for shield in range(sCount):
+            sVal = player_blob.get("shield_val", shield)
+            sValMax = player_blob.get("shield_max_val", shield)
+            changed = (sVal < sValMax)
+            sVal = max(0.0, min(sVal + shieldCoeff, sValMax)) # clamp the value
+            if changed:
+                player_blob.set("shield_val", sVal, shield)
+
+        systemCoeff = player_blob.get("repair_rate_systems",0)
+### Repair interior
+    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"interior") > interior_delay:
+        start_counter(DOCKING_PLAYER_ID,"interior")
+        system_grid_objects = to_list(grid_objects(player_id) & role("__damaged__") & role("system"))
+        if len(system_grid_objects):
+            grid_repair_grid_objects(player_id, system_grid_objects[0])
+        else:
+            #
+            # Repair hallways and non system rooms
+            #
+            non_system_grid_objects = to_list((grid_objects(player_id) & role("__damaged__") ) - role("system") -  role("lifeform"))
+            if len(non_system_grid_objects):
+                grid_repair_grid_objects(player_id, non_system_grid_objects[0])
+
++++ throttle
+    npc_id = DOCKING_NPC_ID
+    player_id = DOCKING_PLAYER_ID
+    DOCKING_PLAYER.data_set.set("playerThrottle",0.5, 0)
+    comms_message("Engines running when attempting to docked can hurt our systems.", npc_id, player_id,  "GEEZ! YOU'RE STILL DOCKED", None, "white", "red")
+    comms_broadcast(player_id, "Docking moors active")
+    yield fail
+
+    
+=== docking_dock_with_resupply_ship
+metadata: ``` yaml
+distance: 600
+target_roles: standard_docking
+match_side: True
+```
+
++++ docked
+    start_counter(DOCKING_PLAYER_ID, "refuel")
+    start_counter(DOCKING_PLAYER_ID, "torps")
+
+
++++ refit
+
+    refuel_amount = 20
+    refuel_delay = 2    
+    torps_delay = 6
+
+    player_blob = DOCKING_PLAYER.data_set
+    player_id = DOCKING_PLAYER_ID
+    npc_blob = DOCKING_NPC.data_set
+
+## Priority Docking
+    if not is_timer_finished(DOCKING_PLAYER_ID,"priority_docking"):
+        refuel_amount += 20
+        refuel_delay = 1    
+        torp_delay = 3
+
+###  Add Energy
+    refuel_amount = 20
+    if not is_timer_finished(DOCKING_PLAYER_ID,"priority_docking"):
+        refuel_amount += 20
+
+    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"refuel") > refuel_delay:
+        start_counter(DOCKING_PLAYER_ID,"refuel")
+        fuel_value = DOCKING_PLAYER.data_set.get("energy",0)
+        if fuel_value < 1000:
+            fuel_value = fuel_value + refuel_amount
+            DOCKING_PLAYER.data_set.set("energy", int(fuel_value),0)
+### Refill torps
+    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"torps") > torps_delay:
+        start_counter(DOCKING_PLAYER_ID,"torps")
+        player_blob = DOCKING_PLAYER.data_set
+        player_id = DOCKING_PLAYER_ID
+        npc_blob = DOCKING_NPC.data_set
+
+        _torp_types = npc_blob.get("torpedo_types_available",0)
+        _torp_types =  [x.strip() for x in _torp_types.split(',')]
+        for torps in _torp_types:
+            tLeft = npc_blob.get(f"{torps}_NUM", 0)
+            if tLeft is not None and tLeft > 0:
+                torp_max = player_blob.get(f"{torps}_MAX", 0)
+                if torp_max is None:
+                    torp_max = 10
+                torp_now = player_blob.get(f"{torps}_NUM", 0)
+                if torp_now < torp_max:
+                    torp_now = torp_now + 1
+                    player_blob.set(f"{torps}_NUM", torp_now,0)
+                    npc_blob.set(f"{torps}_NUM", tLeft-1, 0)
+
