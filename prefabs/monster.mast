@@ -1,8 +1,19 @@
-from sbs_utils.procedural.spawn import npc_spawn
-from sbs_utils.procedural.space_objects import clear_target
 
-def typhon_classic_spawn(x,y,z):
-    monster = npc_spawn(x,y,z,"ZZ", "monster,typhon,classic", "-", "behav_typhon")
+=== prefab_typhon_classic
+metadata: ```
+type: prefab/monster
+brain:
+    - label: ai_chase_npc
+      data:
+        SIZE_X: 10000
+    - label: ai_chase_player
+      data:
+        SIZE_X: 10000
+    - label: ai_chase_station
+      data:
+        SIZE_X: 10000
+```
+    monster = npc_spawn(START_X,START_Y,START_Z,"ZZ", "monster,typhon,classic", "-", "behav_typhon")
     monster.engine_object.exclusion_radius = 200
 
     monster.blob.set("body_1_color", "purple", 0)
@@ -15,5 +26,10 @@ def typhon_classic_spawn(x,y,z):
     monster.blob.set("particle_color_3", "purple", 0)
     monster.blob.set("beamColor", "yellow",0)
     clear_target(monster.id)
-    return monster
+
+    # Add the brain 
+    brain_add(monster, brain)
+    ->END
+
+
 

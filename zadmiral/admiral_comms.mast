@@ -37,7 +37,8 @@
     + "Monster":
         pos = Vec3(COMMS_ORIGIN.pos)
         pos.x = pos.x + 100
-        typhon_classic_spawn(*pos.xyz)
+        prefab_spawn("prefab_typhon_classic", None, *pos.xyz)
+
     + "Minefield":
         pos = Vec3(COMMS_ORIGIN.pos)
         size = get_inventory_value(COMMS_ORIGIN_ID, f"ADMIRAL_lmb_SIZE", 5000)

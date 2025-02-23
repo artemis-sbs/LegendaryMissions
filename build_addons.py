@@ -46,6 +46,7 @@ zipdir("hangar")
 ### Don't copy Legendary maps
 # zipdir("maps")
 zipdir("operator")
+zipdir("prefabs")
 zipdir("science_scans")
 zipdir("side_missions")
 zipdir("upgrades")

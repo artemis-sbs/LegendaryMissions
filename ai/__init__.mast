@@ -1,3 +1,2 @@
 import grid_ai.mast
-import monster.mast
-import monster.py
+import npc_brains.mast

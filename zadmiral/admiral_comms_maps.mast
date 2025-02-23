@@ -51,7 +51,7 @@
         pos = Vec3(COMMS_ORIGIN.pos)
         spawn_points = scatter.box(terrain_to_value(monster_select, 2), *pos.xyz, 75000, 1000, 75000, centered=True)
         for v in spawn_points:
-            typhon_classic_spawn(*v.xyz)
+            prefab_spawn("prefab_typhon_classic", None, *v.xyz)
 
     + "Scatter Black holes":
         pos = Vec3(COMMS_ORIGIN.pos)

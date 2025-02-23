@@ -1,41 +1,11 @@
-//spawn if has_roles(SPAWNED_ID, "monster, typhon, classic")
-    brain_add(SPAWNED_ID, ai_chase_current, {"distance": 3000 })
-    brain_add(SPAWNED_ID, ai_chase_npc, {"SIZE_X": 10000, "SIZE_Z": 10000 })
-    brain_add(SPAWNED_ID, ai_chase_player, {"SIZE_X": 10000, "SIZE_Z": 10000 })
-    brain_add(SPAWNED_ID, ai_chase_station, {"SIZE_X": 10000, "SIZE_Z": 10000 })
-# -- ai_loop
-# ->END if  not object_exists(SPAWNED_ID)
-
-# # The role "#" is an invisible e.g. admiral, operator
-# _target = closest(SPAWNED_ID, broad_test_around(SPAWNED_ID, 6000,6000, 0xf0)-role("__terrain__")-role("monster")-role("#"))
-# if _target is None:
-#     clear_target(SPAWNED_ID)
-# else:
-#     target(SPAWNED_ID, _target, True, 1.2)
-
-# await delay_sim(seconds=5)
-
-# jump ai_loop
-
-
-=== prefab_typhon_classic
-metadata: ``` yaml
-brain:
-    - ai_monster_chase_npc
-    - ai_monster_chase_player
-    - ai_chase_station
-```
-    typhon_classic_spawn(START_X, START_Y, START_Z)
-
-
 
 === ai_chase_current
 metadata: ``` yaml
+type: brain/npc
 distance: 5000
 ```
     # Can't use the target from the engine, because that 
     # can clear with stop distance
-    print(f"{test} {distance}")
     current_target =  BRAIN_AGENT.get_inventory_value("brain_target")
     # Clear it now, set it back if success
     BRAIN_AGENT.set_inventory_value("brain_target",0)
@@ -47,15 +17,12 @@ distance: 5000
 
 
 
-    
-
-
-
 === ai_chase_npc
 metadata: ```
-SIZE_X: 2000
-SIZE_Z: 2000
+type: brain/npc
+SIZE_X: 5000
 ```
+    default SIZE_Z = SIZE_X
     # The role "#" is an invisible e.g. admiral, operator
     _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('ship')-role("__player__")-role(BRAIN_AGENT.side)-role("#"))
     if _target is not None:
@@ -65,10 +32,11 @@ SIZE_Z: 2000
     yield fail
 
 === ai_chase_player
-metadata: ```
-SIZE_X: 2000
-SIZE_Z: 2000
+metadata: ``` 
+type: brain/npc
+SIZE_X: 5000
 ```
+    default SIZE_Z = SIZE_X
     # The role "#" is an invisible e.g. admiral, operator
     _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('__player__')-role(BRAIN_AGENT.side)-role("#"))
     if _target is not None:
@@ -80,10 +48,11 @@ SIZE_Z: 2000
 
 
 === ai_chase_station
-metadata: ```
-SIZE_X: 2000
-SIZE_Z: 2000
+metadata: ``` 
+type: brain/npc
+SIZE_X: 5000
 ```
+    default SIZE_Z = SIZE_X
     _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('station')-role(BRAIN_AGENT.side)-role("#"))
     #print(f"PAST CLOSEST {l} {r} {_target} {ss} {st} {s} ")
     if _target is not None:

@@ -8,7 +8,7 @@ from sbs_utils.procedural.inventory import set_inventory_value
 from sbs_utils.scatter import ring as scatter_ring
 from sbs_utils.faces import set_face, random_terran
 from sbs_utils.vec import Vec3
-from monster import typhon_classic_spawn
+from sbs_utils.procedural.prefab import prefab_spawn
 
 import math
 
@@ -213,7 +213,8 @@ def terrain_spawn_monsters(monster_value, center=None):
 
     spawn_points = scatter.box(monster_value, center.x,center.y, center.z, 75000, 1000, 75000, centered=True)
     for v in spawn_points:
-        typhon_classic_spawn(*v.xyz)
+        prefab_spawn("prefab_typhon_classic", None, *v.xyz)
+
 
 call_signs = []
 enemy_name_number = 0
@@ -249,92 +250,3 @@ def terrain_spawn_black_holes(lethal_value, center=None):
         terrain_spawn_black_hole(*v.xyz)
 
 
-"""
-
-def terrain_spawn_stations_old(difficulty, lethal_value):
-    _station_weights  = {"starbase_command": 3,"starbase_civil": 1,"starbase_industry": 5,"starbase_science": 1}
-
-    spawn_points = scatter.box(10000, 0,0,0, 65000, 1000, 65000, centered=True)
-    num = 1
-    total_weight = (12-difficulty) *2
-    _spawned_pos = []
-
-    for station in spawn_points:
-        #
-        # Pick a type of station
-        #
-        if total_weight <= 0:
-            break
-
-        station_type = random.choice(list(_station_weights.keys()))
-        station_weight = _station_weights[station_type]
-        #
-        #
-        if total_weight < station_weight:
-            continue
-
-        # Force big stations first
-        if total_weight > 8 and station_weight==1:
-            continue
-
-        total_weight -= station_weight
-
-        name = f"DS {num}"
-        #
-        # Space stations
-        #
-        _pos = station
-        dist = 15000 * 15000
-        move = True
-        while move:
-            move = False
-            for _prev in _spawned_pos:
-                distv = _pos - _prev
-                _dist_test = distv.dot(distv)
-                if _dist_test < dist:
-                    move = True
-                    _pos = next(spawn_points)
-                    break
-        _spawned_pos.append(_pos)
-
-        station_object = npc_spawn(*_pos, name, "tsn, station", station_type, "behav_station")
-        #
-        #
-        
-        
-        ds = to_id(station_object)
-        #
-        #
-        #
-        apos = station_object.engine_object.pos
-        #
-        # Make sure not too close
-        #
-
-        set_face(ds, random_terran(civilian=True))
-
-        #wrap a minefield around the station
-        if lethal_value > 0:
-            startAngle = random.randrange(0,359)
-            angle = random.randrange(90,170)
-            endAngle = startAngle + angle
-
-            depth = 1#random.randrange(2,3)
-    #        width = random.randrange(int(angle/6), int(angle/3))
-            width = int(5 * lethal_value)
-            widthArray = [int(angle / 5.0)]
-            inner = random.randrange(1200,1500)
-            cluster_spawn_points = scatter_ring(width, depth, apos.x,apos.y,apos.z, inner, inner, startAngle, endAngle)
-    #        cluster_spawn_points = scatter_ring_density(widthArray, apos.x,apos.y,apos.z, inner, 0, startAngle, endAngle)
-            # Random type, but same for cluster
-            # a_type = f"danger_{1}{ship_data'a'}"
-            for v2 in cluster_spawn_points:
-                #keep value between -500 and 500??
-        #                v2.y = abs(v2.y) % 500 * (v2.y/abs(v2.y))
-                mine_obj = terrain_spawn( v2.x, v2.y + random.randrange(-300,300), v2.z,None, None, "danger_1a", "behav_mine")
-                mine_obj.blob.set("damage_done", 5)
-                mine_obj.blob.set("blast_radius", 1000)
-                mine_obj.engine_object.blink_state = -5
-
-        num += 1
-"""
