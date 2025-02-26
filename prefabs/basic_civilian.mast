@@ -96,6 +96,7 @@ objective:
         repeat: True
         choices:
           - goto_station
+          - deliver_lifeform
 ```
   default ship_art = "transport_ship"
   await task_schedule(prefab_npc_civilian_common)
