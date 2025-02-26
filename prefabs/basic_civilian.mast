@@ -1,0 +1,228 @@
+=== prefab_npc_civilian_common
+    # Default means if not already defined define it, otherwise
+    # skip. So it does not overwrite if it exists
+    default shared shipname_data = load_json_data(get_mission_dir_filename("shipnames.json"))
+
+    alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
+    civname_list = shipname_data.get("civilian")
+
+    civ_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
+
+    friend = to_object(npc_spawn(START_X, START_Y, START_Z, civ_name, side+",friendly, civilian", ship_art, "behav_npcship"))
+    set_face(friend.id, random_terran(civilian=True))
+    friend.data_set.set("ally_list",allies,0)
+    
+
+    # Add the brain 
+    brain_add(friend.id, brain)
+    objective_add(friend.id, objective)
+    ->END
+
+
+=== prefab_npc_civilian_cargo
+metadata: ```
+type: prefab/npc/cargo
+side: civ
+allies: tsn
+brain:
+    - goto_object_or_location
+objective:
+    label: random_objective
+    data:
+      repeat: True
+      choices:
+        - deliver_lifeform
+        - deliver_resource
+        - deliver_ammo
+        - goto_station
+```
+  default ship_art = "cargo_ship"
+  await task_schedule(prefab_npc_civilian_common)
+  ->END
+
+
+
+=== prefab_npc_civilian_luxury_liner
+metadata: ```
+type: prefab/npc/luxury_liner
+side: civ
+allies: tsn
+brain:
+    - goto_object_or_location
+objective:
+    - label: random_objective
+      data:
+        repeat: True
+        choices:
+          - explore_nebula
+          - explore_asteroid
+          - goto_station
+```
+  default ship_art = "luxury_liner"
+  await task_schedule(prefab_npc_civilian_common)
+  ->END
+
+=== prefab_npc_civilian_science
+metadata: ```
+type: prefab/npc/science
+side: civ
+allies: tsn
+brain:
+    - goto_object_or_location
+objective:
+    - label: random_objective
+      data:
+        repeat: True
+        choices:
+          - explore_nebula
+          - explore_asteroid
+          - goto_station
+```
+  default ship_art = "science_ship"
+  await task_schedule(prefab_npc_civilian_common)
+  ->END
+
+
+=== prefab_npc_civilian_transport
+metadata: ```
+type: prefab/npc/transport
+side: civ
+allies: tsn
+brain:
+    - goto_object_or_location
+objective:
+    - label: random_objective
+      data:
+        repeat: True
+        choices:
+          - goto_station
+```
+  default ship_art = "transport_ship"
+  await task_schedule(prefab_npc_civilian_common)
+  ->END
+
+=== random_objective
+metadata: ```
+type: objective
+repeat: False # Repeat: True, False or count
+remove_used: False
+```
+  # Make sure we have objectives
+  #
+  # This needs something better to support multiple 
+  # occurrences of this
+  # 
+  repeat = OBJECTIVE.get_inventory_value("repeat", repeat)
+  objectives = OBJECTIVE.get_inventory_value("choices", choices)
+  objective_current = OBJECTIVE.get_inventory_value("current")
+  yield fail if len(objectives)==0
+  
+
+  if objective_current is None:
+    # Need to handle data
+    l = random.choice(objectives)
+    d = None
+
+    objective_current = objective_add(OBJECTIVE_AGENT_ID, l,d)
+
+    OBJECTIVE.set_inventory_value("current", objective_current)
+    #yield idle
+  # If got here objective should be set and is_running is True
+  yield idle if not objective_current.done
+  
+  if remove_used:
+    objectives = [o for o in objectives if o != current_objective]
+    OBJECTIVE.set_inventory_value("choices", objectives)
+    if len(objectives)==0:
+      OBJECTIVE.set_inventory_value("choices", None)
+      yield success
+    
+  if repeat == True:
+    is_running = False
+    OBJECTIVE.set_inventory_value("current", None)
+    # Keep running
+    yield idle
+  if repeat == False:
+    OBJECTIVE.set_inventory_value("current", None)
+    yield success
+  # Repeat is an int
+  yield fail if not isinstance(repeat, int)
+  repeat -= 1
+  OBJECTIVE.set_inventory_value("current", None)
+  OBJECTIVE.set_inventory_value("repeat", repeat)
+  
+  yield idle if repeat >0
+  yield success
+
+
+
+
+=== deliver_lifeform
+metadata: ```
+type: objective
+```
+  jump goto_station
+
+=== deliver_resource
+metadata: ```
+type: objective
+```
+  jump goto_station
+
+
+=== deliver_ammo
+metadata: ```
+type: objective
+```
+  jump goto_station
+
+
+=== explore_nebula
+metadata: ```
+type: objective
+```
+  jump goto_station
+
+=== explore_asteroid
+metadata: ```
+type: objective
+```
+  jump goto_station
+
+
+=== goto_station
+metadata: ```
+type: objective
+repeat: False # Repeat: True, False or count
+remove_used: False
+stop_dist: 500
+```
+  # For now get a random station not around
+  default stop_dist = 500
+  station_id = OBJECTIVE.get_inventory_value("goto_station:station")
+  if station_id is None:
+    station_ids = role("station") - broad_test_around(OBJECTIVE_AGENT_ID, 900,900)
+    yield fail if len(station_ids)==0
+    station_id = random.choice(list(station_ids))
+    OBJECTIVE.set_inventory_value("goto_station:station", station_id)
+    # Ask the brain to got there
+    # Do not it for the brain
+    OBJECTIVE_AGENT.set_inventory_value("brain_target", station_id)
+    station = to_object(station_id)
+    # print(f"GOTO STATION {OBJECTIVE_AGENT.name} {station.name}")
+
+  yield fail if station_id is None
+  station = to_object(station_id)
+  yield fail if station is None
+  dist = sbs.distance_id(OBJECTIVE_AGENT_ID, station_id)
+  if OBJECTIVE_AGENT.get_inventory_value("brain_target_reached") == True:
+    OBJECTIVE_AGENT.set_inventory_value("brain_target_reached", False)
+    yield success
+
+  yield idle if dist > stop_dist
+  #print(f"I SHOULD BE DONE {stop_dist} {dist}")
+  OBJECTIVE.set_inventory_value("goto_station:station", None)
+
+  yield success
+
+

@@ -85,27 +85,25 @@
             jump spawn_players
 
     # grab the ship data for all ships on TSN side
-    civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
-    ->END if len(civilian_data)==0
+    
+    # test have more
+    civilian_count *= 3
+
     count = 1
 
-    alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
-    civname_list = shipname_data.get("civilian")
-
+    prefabs = [prefab_npc_civilian_cargo, prefab_npc_civilian_science, prefab_npc_civilian_luxury_liner, prefab_npc_civilian_transport]
     for count in range(civilian_count):
         #
-        ship = random.choice(civilian_data)
+        prefab = random.choice(prefabs)
         #
         if len(stations_friendly) > 0:
             so = random.choice(stations_friendly)
             spawn_pos = so.pos
             spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
-        
-        civ_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
 
-        friend = to_object(npc_spawn(*spawn_pos, civ_name, "civ, tsn, friendly, civilian", ship["key"], "behav_npcship"))
-        set_face(friend.id, random_terran(civilian=True))
-        friend.data_set.set("ally_list","tsn",0)
+        data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z}
+        prefab_spawn(prefab, data)
+
         count += 1
 
     ->END if world_select.path == "sandbox"

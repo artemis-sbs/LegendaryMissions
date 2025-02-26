@@ -6,12 +6,15 @@ brain:
     - label: ai_chase_npc
       data:
         SIZE_X: 10000
+        throttle: 1.2
     - label: ai_chase_player
       data:
         SIZE_X: 10000
+        throttle: 1.2
     - label: ai_chase_station
       data:
         SIZE_X: 10000
+        throttle: 1.2
 ```
     monster = npc_spawn(START_X,START_Y,START_Z,"ZZ", "monster,typhon,classic", "-", "behav_typhon")
     monster.engine_object.exclusion_radius = 200

@@ -77,14 +77,12 @@
         set_face(friend, random_terran())
 
     + "Civilian":
-        civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
-        ->END if civilian_data is None
-
-        ship = random.choice(civilian_data)
+        prefabs = [prefab_npc_civilian_cargo, prefab_npc_civilian_science, prefab_npc_civilian_luxury_liner, prefab_npc_civilian_transport]
+        prefab = random.choice(prefabs)
         spawn_pos = Vec3(COMMS_ORIGIN.pos)
-        count = random.randint(25,99)
-        friend = to_id(npc_spawn(*spawn_pos, f"civ {str(count).zfill(2)}", "tsn, friendly, civilian", ship["key"], "behav_npcship"))
-        set_face(friend, random_terran(civilian=True))
+        data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z}
+        prefab_spawn(prefab, data)
+
 
 
 
