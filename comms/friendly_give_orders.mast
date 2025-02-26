@@ -19,6 +19,8 @@ import give_orders.py
             continue if obj is None
             detail = obj.get_inventory_value("desc")
             continue if detail is None
+            if detail == "":
+                detail = "Receiving new orders"
             msg += "    {detail}\n"
         comms_receive(msg)
 

@@ -53,15 +53,21 @@
 
     for station in station_data:
         side = station.get("side", "tsn")
-        if side == "USFP":
-            side = "tsn, usfp"
+        side_roles = side
+        if side.strip().lower() == "usfp":
+            side_roles = "tsn, usfp"
+            side = "tsn"
 
-        roles =  side +"," + station.get("roles", "station")
+        roles =  side_roles +"," + station.get("roles", "station")
         + "{station['name']}" {"station_type": station["key"], "roles": roles}:
             pos = Vec3(COMMS_ORIGIN.pos)
             num = get_shared_variable("next_station", 20)
             set_shared_variable("next_station", num+ 1)
-            npc_spawn(*pos, f"DS {num}", roles, station_type, "behav_station")
+            stations_friendly = to_id(npc_spawn(*pos, f"DS {num}", roles, station_type, "behav_station"))
+            link(COMMS_ORIGIN_ID,"extra_scan_source" ,stations_friendly)
+            for p in role("__player__") & role(side):
+                link(p,"extra_scan_source" ,stations_friendly)
+
 
 
 //comms/admiral/spawn/friend if has_roles(COMMS_ORIGIN_ID, 'admiral')
@@ -77,6 +83,7 @@
         set_face(friend, random_terran())
 
     + "Civilian":
+        side = "civ"
         prefabs = [prefab_npc_civilian_cargo, prefab_npc_civilian_science, prefab_npc_civilian_luxury_liner, prefab_npc_civilian_transport]
         prefab = random.choice(prefabs)
         spawn_pos = Vec3(COMMS_ORIGIN.pos)

@@ -25,6 +25,7 @@
         # A bit of a hack, but figure our which friendlies are new
         # When creating them
         pre_friendly = role("friendly")
+        side = "civ"
         await task_schedule(spawn_friendly_npc)
         post_friendly = role("friendly")
         new_friendly = post_friendly - pre_friendly
