@@ -87,9 +87,8 @@
     # grab the ship data for all ships on TSN side
     
     # test have more
-    #civilian_count *= 3
-
-    count = 1
+    if len(stations_friendly) > 0:
+        civilian_count = random.randint(civilian_count,len(stations_friendly))
 
     prefabs = [prefab_npc_civilian_cargo, prefab_npc_civilian_science, prefab_npc_civilian_luxury_liner, prefab_npc_civilian_transport]
     for count in range(civilian_count):
@@ -104,7 +103,7 @@
         data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z}
         prefab_spawn(prefab, data)
 
-        count += 1
+    
 
     ->END if world_select.path == "sandbox"
 
