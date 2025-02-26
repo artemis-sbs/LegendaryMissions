@@ -173,7 +173,9 @@ settings_add_defaults({"auto_play": {"enable": False}})
         #
         if ln < 700 and has_roles(t, "tsn, station") and last_go_dock:
             ship.data_set.set("dock_base_id", to_id(t))
-            ship.data_set.set("dock_state", "dock_start",0)
+            state = ship.data_set.get("dock_state",0)
+            if state != "docked" and state != "dock_start":
+                ship.data_set.set("dock_state", "dock_start",0)
             ship.data_set.set("playerThrottle", 0,0)
             speed = 0
         elif ln < 700 and has_roles(t, "raider"):
