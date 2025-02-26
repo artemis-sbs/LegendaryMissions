@@ -87,7 +87,7 @@
     # grab the ship data for all ships on TSN side
     
     # test have more
-    civilian_count *= 3
+    #civilian_count *= 3
 
     count = 1
 
