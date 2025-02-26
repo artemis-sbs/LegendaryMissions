@@ -50,6 +50,32 @@
             % There is a Laparian muskrat on the bridge. Perhaps the captain has a pet.
             % Reading a nest of Vena rats in the cargo bay. If this ship invites you to dinner do not accept.
 
+//enable/science if has_roles(SCIENCE_SELECTED_ID, "civ, friendly")
+//science if has_roles(SCIENCE_SELECTED_ID, "civ, friendly")
+
+    + "scan":
+        <scan>
+            % This is a civilian ship.
+            % This ship is on friendly terms
+            % This ship is an ally
+    + "status":
+        <scan>
+            " Hail Civilian ships for status
+    + "intel":
+        <scan>
+            % The ship is ready for battle.
+            % This ship has its escape pods prepared for launch.
+            % Today is the captain's birthday.
+
+    + "bio":
+        <scan>
+            % Reading no sign of pathogens on this ship.
+            % Unknown organism detected. This ship may have science specimens aboard.
+            % A few crew members are in quarantine due to the Vega flu.
+            % There is a Laparian muskrat on the bridge. Perhaps the captain has a pet.
+            % Reading a nest of Vena rats in the cargo bay. If this ship invites you to dinner do not accept.
+
+
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "typhon")
 //science if has_role(SCIENCE_SELECTED_ID, "typhon")

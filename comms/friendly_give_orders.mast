@@ -6,6 +6,24 @@ import give_orders.py
 =$xmas green,red
 
 
+//enable/comms if has_roles(COMMS_SELECTED_ID, "civ, friendly")
+
+
+//comms if has_roles(COMMS_SELECTED_ID, "civ, friendly") 
+    + "Hail":
+        obj_ids = linked_to(COMMS_SELECTED_ID, "OBJECTIVE")
+        yield success if len(obj_ids) == 0
+        msg = "Current objective status\n"
+        for obj_id in obj_ids:
+            obj = to_object(obj_id)
+            continue if obj is None
+            detail = obj.get_inventory_value("desc")
+            continue if detail is None
+            msg += "    {detail}\n"
+        comms_receive(msg)
+
+
+
 //enable/comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
 
 

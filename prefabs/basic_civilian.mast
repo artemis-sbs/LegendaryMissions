@@ -111,7 +111,8 @@ remove_used: False
   #
   # This needs something better to support multiple 
   # occurrences of this
-  # 
+  #
+  OBJECTIVE.set_inventory_value("desc", "Following current orders") 
   repeat = OBJECTIVE.get_inventory_value("repeat", repeat)
   objectives = OBJECTIVE.get_inventory_value("choices", choices)
   objective_current = OBJECTIVE.get_inventory_value("current")
@@ -181,13 +182,20 @@ type: objective
 metadata: ```
 type: objective
 ```
-  jump goto_station
+  object_id = OBJECTIVE.get_inventory_value("objective:goto_object")
+  if object_id is None:
+    object_ids = role("nebula") & broad_test_around(OBJECTIVE_AGENT_ID, 10000,10000) - broad_test_around(OBJECTIVE_AGENT_ID, 900,900)
+  jump goto_random_object
 
 === explore_asteroid
 metadata: ```
 type: objective
 ```
-  jump goto_station
+  object_id = OBJECTIVE.get_inventory_value("objective:goto_object")
+  if object_id is None:
+    object_ids = role("asteroid") & broad_test_around(OBJECTIVE_AGENT_ID, 10000,10000) - broad_test_around(OBJECTIVE_AGENT_ID, 900,900)
+  jump goto_random_object
+  
 
 
 === goto_station
@@ -197,32 +205,70 @@ repeat: False # Repeat: True, False or count
 remove_used: False
 stop_dist: 500
 ```
+  object_id = OBJECTIVE.get_inventory_value("objective:goto_object")
+  if object_id is None:
+    object_ids = role("station") - broad_test_around(OBJECTIVE_AGENT_ID, 900,900)
+
+  jump goto_random_object
+
+  # For now get a random station not around
+  # default stop_dist = 500
+  # station_id = OBJECTIVE.get_inventory_value("goto_station:station")
+  # if station_id is None:
+  #   station_ids = role("station") - broad_test_around(OBJECTIVE_AGENT_ID, 900,900)
+  #   yield fail if len(station_ids)==0
+  #   station_id = random.choice(list(station_ids))
+  #   OBJECTIVE.set_inventory_value("goto_station:station", station_id)
+  #   # Ask the brain to got there
+  #   # Do not it for the brain
+  #   OBJECTIVE_AGENT.set_inventory_value("brain_target", station_id)
+  #   station = to_object(station_id)
+  #   # print(f"GOTO STATION {OBJECTIVE_AGENT.name} {station.name}")
+
+  # yield fail if station_id is None
+  # station = to_object(station_id)
+  # yield fail if station is None
+  # dist = sbs.distance_id(OBJECTIVE_AGENT_ID, station_id)
+  # if OBJECTIVE_AGENT.get_inventory_value("brain_target_reached") == True:
+  #   OBJECTIVE_AGENT.set_inventory_value("brain_target_reached", False)
+  #   yield success
+
+  # yield idle if dist > stop_dist
+  # print(f"I SHOULD BE DONE {stop_dist} {dist}")
+  # OBJECTIVE.set_inventory_value("goto_station:station", None)
+
+  # yield success
+
+
+=== goto_random_object
+#
+#
   # For now get a random station not around
   default stop_dist = 500
-  station_id = OBJECTIVE.get_inventory_value("goto_station:station")
-  if station_id is None:
-    station_ids = role("station") - broad_test_around(OBJECTIVE_AGENT_ID, 900,900)
-    yield fail if len(station_ids)==0
-    station_id = random.choice(list(station_ids))
-    OBJECTIVE.set_inventory_value("goto_station:station", station_id)
+  # Makes sure there is something to avoid crash
+  default object_ids = [] 
+  object_id = OBJECTIVE.get_inventory_value("objective:goto_object")
+  if object_id is None:
+    yield fail if len(object_ids)==0
+    object_id = random.choice(list(object_ids))
+    OBJECTIVE.set_inventory_value("objective:goto_object", object_id)
     # Ask the brain to got there
     # Do not it for the brain
-    OBJECTIVE_AGENT.set_inventory_value("brain_target", station_id)
-    station = to_object(station_id)
+    OBJECTIVE_AGENT.set_inventory_value("brain_target", object_id)
+    obj = to_object(object_id)
+    OBJECTIVE.set_inventory_value("desc", f"Heading to {obj.name}")
     # print(f"GOTO STATION {OBJECTIVE_AGENT.name} {station.name}")
 
-  yield fail if station_id is None
-  station = to_object(station_id)
-  yield fail if station is None
-  dist = sbs.distance_id(OBJECTIVE_AGENT_ID, station_id)
+  yield fail if object_id is None
+  obj = to_object(object_id)
+  yield fail if obj is None
+  dist = sbs.distance_id(OBJECTIVE_AGENT_ID, object_id)
   if OBJECTIVE_AGENT.get_inventory_value("brain_target_reached") == True:
     OBJECTIVE_AGENT.set_inventory_value("brain_target_reached", False)
     yield success
 
   yield idle if dist > stop_dist
-  #print(f"I SHOULD BE DONE {stop_dist} {dist}")
-  OBJECTIVE.set_inventory_value("goto_station:station", None)
+  print(f"I SHOULD BE DONE {stop_dist} {dist}")
+  OBJECTIVE.set_inventory_value("objective:goto_object", None)
 
   yield success
-
-
