@@ -88,7 +88,7 @@
     
     # test have more
     if len(stations_friendly) > 0:
-        civilian_count = random.randint(civilian_count,len(stations_friendly))
+        civilian_count = random.randint(civilian_count,civilian_count*len(stations_friendly))
 
     prefabs = [prefab_npc_civilian_cargo, prefab_npc_civilian_science, prefab_npc_civilian_luxury_liner, prefab_npc_civilian_transport]
     for count in range(civilian_count):

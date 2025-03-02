@@ -878,7 +878,7 @@ yield success
     _obj = to_object(kidnapper_id)
     _obj.spawn_pos = Vec3(90000,0,90000)
     _obj.side = "pirate"
-    _obj.race = "pirate"
+
     allies = _obj.data_set.get("ally_list",0)
     items = allies.split(",")
     items.remove(side)

@@ -1,5 +1,7 @@
 import common_console_selection.py
 
+crew_name = ""
+
 route_change_console(on_change_console)
 
 ==== on_change_console
