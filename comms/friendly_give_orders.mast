@@ -26,31 +26,46 @@ import give_orders.py
 
 
 
-//enable/comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
+//enable/comms if has_roles(COMMS_SELECTED_ID, "prefab_npc_defender")
 
 
-//comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly") 
+//comms if has_roles(COMMS_SELECTED_ID, "prefab_npc_defender") 
+    + "Hail":
+        obj_ids = linked_to(COMMS_SELECTED_ID, "OBJECTIVE")
+        yield success if len(obj_ids) == 0
+        msg = "Current objective status\n"
+        for obj_id in obj_ids:
+            obj = to_object(obj_id)
+            continue if obj is None
+            detail = obj.get_inventory_value("desc")
+            continue if detail is None
+            if detail == "":
+                detail = "Receiving new orders"
+            msg += "    {detail}\n"
+        comms_receive(msg)
     + "Give Orders" //comms/give_orders
 
 
-//comms/give_orders if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
-    order = get_inventory_value(COMMS_SELECTED_ID, "ORDER","")
-    is_defender = has_roles(COMMS_SELECTED_ID, "defender")
-
+//comms/give_orders if has_roles(COMMS_SELECTED_ID, "prefab_npc_defender")
+    #has_objective = 
+    order = ""
     + "Back"  //comms/
-    + "Protect" friendly_give_orders_protect if is_defender
-    + "Attack"  friendly_give_orders_attack if is_defender
-    + "Explore"  friendly_give_orders_explore
-    + "Go to location"  friendly_give_orders_location
+
+    orders = labels_get_type("objective/orders/defender")
+    for order in orders:
+        display_name = order.get_inventory_value("display_name", order.name)
+        + "{display_name}" carry_out_orders  {"objective": order}
+
     + "Cancel" if order!="":
         set_inventory_value(COMMS_SELECTED_ID, "ORDER","")
+        default alt_ship = None
+        ->END if alt_ship is None
         # Clear nav
         nav = get_inventory_value(alt_ship, "ORDERS_NAV", None)
         if nav:
             sim.delete_navpoint_by_id(nav)
             set_inventory_value(alt_ship, "ORDERS_NAV", None)
 
-   
 
 #
 # Common way to back out of give orders
@@ -112,7 +127,12 @@ import give_orders.py
         set_inventory_value(alt_ship, "ORDERS_NAV", None)
 
     # set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
-            
+    objective_clear(COMMS_SELECTED_ID)
+    objective_add(objective, {"target_point": target_point, "target": None})
+
+    ######## The rest of this should be in the objective
+    ORDER = objective.get_inventory_value("display_name", objective.name)
+    ORDER_COLOR = "#040"
     if target_point is not None:
         message = "Heading to designated waypoint to {ORDER}"
         title = "Orders accepted"
@@ -208,10 +228,10 @@ import give_orders.py
             % You shall perish
             % You gonna die
 
-    #
-    # AI for friendly tsn ships (Defender and citizen ships)
-    #
-    //spawn if has_roles(SPAWNED_ID, "tsn, friendly")
+#
+# AI for friendly tsn ships (Defender and citizen ships)
+#
+//spawn if has_roles(SPAWNED_ID, "tsn, friendly")
     #
     # ai_loop is a inline label to allow rerunning the logic
     #

@@ -61,13 +61,18 @@
             so = random.choice(stations_friendly)
             spawn_pos = so.pos
             spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
+
+        name = f"TSN {tsnname_list.pop(random.randrange(len(tsnname_list)))}"
         if random.randint(1,1867) == 1867: ### This is an inside joke for our Canadian players. 
-            friend = to_id(npc_spawn(*spawn_pos, f"TSN {canuck_list.pop(random.randrange(len(canuck_list)))}", "tsn, friendly", ship["key"], "behav_npcship"))
-        else:
-            friend = to_id(npc_spawn(*spawn_pos, f"TSN {tsnname_list.pop(random.randrange(len(tsnname_list)))}", "tsn, friendly", ship["key"], "behav_npcship"))
+            name = f"TSN {canuck_list.pop(random.randrange(len(canuck_list)))}"
+
+        #friend = to_id(npc_spawn(*spawn_pos, name, "tsn, friendly", ship["key"], "behav_npcship"))
+        data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z, "name": name, "ship_art": ship["key"]}
+        prefab_spawn(prefab_npc_defender, data)
+        
         count += 1
         total_hull_points += hull_points
-        set_face(friend, random_terran())
+        
 
 ---- civilians
 
