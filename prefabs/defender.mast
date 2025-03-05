@@ -33,7 +33,7 @@ target_point: null
 ```
     print("Running label")
 +++ enter
-    print("Running label")
+    print("Running label {target} {target_point}")
     # This objective assumes it has control of the brain
     brain_clear(OBJECTIVE_AGENT_ID)
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location)
@@ -42,7 +42,7 @@ target_point: null
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", target)
     
 +++ test
-    print("Running test")
+    #print("Running test")
     yield idle
 
 === objective_attack_target
@@ -83,8 +83,6 @@ target_point: null
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", target_point)
     # Set targets later
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", target)
-    
-
     
 +++ test
     yield idle

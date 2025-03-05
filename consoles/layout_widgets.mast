@@ -27,8 +27,8 @@
 
     default select_2d = False
     _widget = "2dview"
-    if select_2d:
-        _widget = "comms_2d_view"
+    #if select_2d:
+    #    _widget = "comms_2d_view"
     with gui_sub_section("col-width:25;"):
         gui_row()
         with gui_sub_section():
@@ -46,15 +46,8 @@
 
         
         
-        if select_2d:
-                gui_update_widget_list("comms_2d_view","2dview")
-            else:
-                gui_update_widget_list("2dview", "comms_2d_view")
         on change select_2d:
-            if select_2d:
-                gui_update_widget_list("comms_2d_view","2dview")
-            else:
-                gui_update_widget_list("2dview", "comms_2d_view")
+            set_inventory_value(client_id, "2d_select", select_2d)
 
         on change follow_tag:
             if follow_tag:
