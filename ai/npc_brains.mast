@@ -1,5 +1,6 @@
 
 === ai_chase_current
+" Chasing current target
 metadata: ``` yaml
 type: brain/npc
 distance: 5000
@@ -22,6 +23,7 @@ stop_dist: 500
 
 
 === ai_chase_npc
+" Chasing npc target
 metadata: ```
 type: brain/npc
 SIZE_X: 5000
@@ -38,6 +40,7 @@ stop_dist: 500
     yield fail
 
 === ai_chase_player
+" Chasing player target
 metadata: ``` 
 type: brain/npc
 SIZE_X: 5000
@@ -56,6 +59,7 @@ stop_dist: 500
 
 
 === ai_chase_station
+" Chasing station target
 metadata: ``` 
 type: brain/npc
 SIZE_X: 5000
@@ -73,8 +77,7 @@ stop_dist: 500
 
 
 === goto_object_or_location
-" Goto to an assigned location or object.
-" Assigned pos/object could be via objective or comms etc.
+" Heading to an assigned location or object.
 metadata: ``` 
 type: brain/npc
 shoot: False
@@ -138,6 +141,7 @@ force_target_point: null
     yield fail
 
 === ai_full_stop
+" Throttle full stop
 metadata: ``` yaml
 type: brain/npc
 ```

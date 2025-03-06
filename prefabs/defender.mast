@@ -40,7 +40,8 @@ target_point: null
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", target_point)
     # Set targets later
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", target)
-    
+    message = "currently heading to assigned location"
+    OBJECTIVE.set_inventory_value("desc", message)
 +++ test
     #print("Running test")
     yield idle
@@ -71,15 +72,21 @@ target_point: null
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", target)
     
 +++ test
-    # current = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_active", "None")
-    # _t = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", None)
-    # # Set targets later
-    # _tp = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", None)
-    # if _tp != 0:
-    #     _tp = to_object(_tp)
-    #     if _tp is not None:
-    #         _tp = _tp.name
-    # print("ATTACK current thought {current} {_t} {_tp}")
+    message = "currently idle"
+    current = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_active", None)
+    if current is not None:
+        desc = current
+        name = "location"
+        _t = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", None)
+        # Set targets later
+        _tp = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", None)
+        if _tp != 0:
+            _tp = to_object(_tp)
+            if _tp is not None:
+                name = _tp.name
+
+        message = "attacking targeting {name} : {desc}"
+    OBJECTIVE.set_inventory_value("desc", message)
     yield idle
 
 
@@ -102,7 +109,23 @@ target_point: null
     # Set targets later
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", target)
     
+    
 +++ test
+    message = "currently idle"
+    current = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_active", None)
+    if current is not None:
+        desc = current
+        name = "location"
+        _t = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", None)
+        # Set targets later
+        _tp = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", None)
+        if _tp != 0:
+            _tp = to_object(_tp)
+            if _tp is not None:
+                name = _tp.name
+
+        message = "protecting targeting {name} : {desc}"
+    OBJECTIVE.set_inventory_value("desc", message)
     yield idle
 
 

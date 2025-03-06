@@ -66,35 +66,6 @@ import give_orders.py
             sim.delete_navpoint_by_id(nav)
             set_inventory_value(alt_ship, "ORDERS_NAV", None)
 
-
-#
-# Common way to back out of give orders
-#
-=== friendly_cancel_give_orders
-    comms_navigate("")
-    yield success
-
-=== friendly_give_orders_location
-    ORDER="await further orders"
-    ORDER_COLOR = "#040"
-    jump carry_out_orders
-
-=== friendly_give_orders_protect
-    ORDER="protect"
-    ORDER_COLOR = "#040"
-    jump carry_out_orders
-
-=== friendly_give_orders_attack
-    ORDER="attack"
-    ORDER_COLOR = "#400"
-    jump carry_out_orders
-
-=== friendly_give_orders_explore
-    ORDER="explore"
-    ORDER_COLOR = "#004"
-    jump carry_out_orders
-
-
 === carry_out_orders 
     #
     # The Alt ship should be the selected id at this point
