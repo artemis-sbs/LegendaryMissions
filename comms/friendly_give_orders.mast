@@ -77,6 +77,7 @@ import give_orders.py
     ->END if not alt_ship or alt_ship == 0
     set_inventory_value(EVENT.client_id, "2dview_alt_ship", alt_ship)
     alt_ship_obj = to_object(alt_ship)
+    on_ship =  sbs.get_ship_of_client(EVENT.client_id)
     ->END if alt_ship_obj is None
 
     target_point = get_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
@@ -89,12 +90,17 @@ import give_orders.py
 
     # Clear things
 
-    nav = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
+    
+    set_inventory_value(on_ship, "ORDERS_SELECTED_POINT", None)
+    set_inventory_value(on_ship, "ORDERS_SELECTED_OBJECT", None)
+    nav = get_inventory_value(on_ship, "ORDERS_SELECTED_NAV", None)
     if nav:
         sim.delete_navpoint_by_id(nav)
-        set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
+        set_inventory_value(on_ship, "ORDERS_SELECTED_NAV", None)
 
     # For now only one order
+    set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", None)
+    set_inventory_value(alt_ship, "ORDERS_SELECTED_OBJECT", None)
     nav = get_inventory_value(alt_ship, "ORDERS_NAV", None)
     if nav:
         sim.delete_navpoint_by_id(nav)
@@ -136,10 +142,18 @@ import give_orders.py
     await delay_sim(5)
     have_nav = has_inventory("ORDERS_SELECTED_OBJECT")
     for ship in have_nav:
+        
         continue if ship == 0
         alt_ship_obj = to_object(ship)
         continue if alt_ship_obj is None
         continue if alt_ship_obj == 0
+        on_ship = ship
+        alt_ship = ship
+        if has_role(on_ship, "__player__"):
+            alt_ship = get_inventory_value(on_ship, "2dview_alt_ship", None)
+            alt_ship_obj = to_object(alt_ship)
+            continue if alt_ship_obj is None
+                
         
         obj_id = get_inventory_value(ship,"ORDERS_SELECTED_OBJECT")
         continue if obj_id is None or obj_id == 0
