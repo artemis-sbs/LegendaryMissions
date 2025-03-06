@@ -5,7 +5,7 @@ side: tsn
 objective: objective_protect_area
 ship_art:
 face:
-allies:
+allies: civ
 name:
 ```
     # Default is ony set if the variable is not set
@@ -31,12 +31,12 @@ type: objective/orders/defender
 target: null
 target_point: null
 ```
-    print("Running label")
+    
 +++ enter
-    print("Running label {target} {target_point}")
     # This objective assumes it has control of the brain
     brain_clear(OBJECTIVE_AGENT_ID)
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location)
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", target_point)
     # Set targets later
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", target)
@@ -54,15 +54,32 @@ target_point: null
 ```
 +++ enter
     # This objective assumes it has control of the brain
+    #
+    # Will chase the current target,
+    # goto/return an assign location
+    # look for new targets
     brain_clear(OBJECTIVE_AGENT_ID)
-    brain_add(OBJECTIVE_AGENT_ID, ai_chase_current)
-    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location)
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_current, {"distance":20000})
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X":5000})
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"clear_when_reached": False})    
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+    
+    #brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": target, "force_target_point": target_point, "clear_when_reached": False})
 
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", target_point)
     # Set targets later
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", target)
     
 +++ test
+    # current = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_active", "None")
+    # _t = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", None)
+    # # Set targets later
+    # _tp = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", None)
+    # if _tp != 0:
+    #     _tp = to_object(_tp)
+    #     if _tp is not None:
+    #         _tp = _tp.name
+    # print("ATTACK current thought {current} {_t} {_tp}")
     yield idle
 
 
@@ -78,7 +95,8 @@ target_point: null
     # This objective assumes it has control of the brain
     brain_clear(OBJECTIVE_AGENT_ID)
     brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc)
-    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location)
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"clear_when_reached": False})
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
 
     set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", target_point)
     # Set targets later

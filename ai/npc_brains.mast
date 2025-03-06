@@ -3,6 +3,8 @@
 metadata: ``` yaml
 type: brain/npc
 distance: 5000
+throttle: 1.0
+stop_dist: 500
 ```
     # Can't use the target from the engine, because that 
     # can clear with stop distance
@@ -12,7 +14,9 @@ distance: 5000
     yield fail if current_target == 0
     yield fail if to_object(current_target) is None
     yield fail if sbs.distance_id(BRAIN_AGENT_ID, current_target) > distance
+    #print("CHASE CUR {distance} {current_target}")
     BRAIN_AGENT.set_inventory_value("brain_target", current_target)
+    target(BRAIN_AGENT_ID, current_target, True, throttle, stop_dist=stop_dist)
     yield success
 
 
@@ -78,37 +82,40 @@ throttle: 1.0
 stop_dist: 500
 clear_when_reached: True
 set_when_reached: brain_target_reached
+force_target: null
+force_target_point: null
 ```
-    _target = BRAIN_AGENT.get_inventory_value("brain_target")
+    _target = force_target
+    if _target is None:
+        _target = BRAIN_AGENT.get_inventory_value("brain_target")
+
     if _target == 0:
         _target = None
-    _target_pos = BRAIN_AGENT.get_inventory_value("brain_target_point")
-    _dist_calc = 0
-    print(f"GOTO O L DC: HERE {_target} {_target_pos}")
-    yield fail if _target is None and _target_pos is None
+
+    _target_point = force_target_point
+    if _target_point is None and force_target is None:
+        _target_point = BRAIN_AGENT.get_inventory_value("brain_target_point")
+    #print(f"GOTO O L DC: HERE {_target} {_target_point}")
+    yield fail if _target is None and _target_point is None
     
     # TArget pos overrides
-    if _target_pos is not None:
-        target_pos(BRAIN_AGENT_ID, _target_pos.x, _target_pos.y, _target_pos.z,throttle, stop_dist=stop_dist)
-    elif _target is not None:
-        # TODO REMOVE
-        _dist_calc = sbs.distance_id(BRAIN_AGENT_ID, _target)
-        #
+    if _target is not None:
         _target = to_object(_target)
         if _target is None:
             # Target is no more
             BRAIN_AGENT.set_inventory_value("brain_target", None)
             yield fail
         target(BRAIN_AGENT_ID, _target, shoot, throttle, stop_dist)
-        
-        _target_pos = _target.pos
-        #print(f"BRAIN {BRAIN_AGENT.name} targeting {_target.name}")
+        _target_point = _target.pos
+    elif _target_point is not None:
+        target_pos(BRAIN_AGENT_ID, _target_point.x, _target_point.y, _target_point.z,throttle, stop_dist=stop_dist)
+    #print(f"BRAIN {BRAIN_AGENT.name} targeting {_target.name}")
     # Catch all for stop
     # How can this be NOne???
-    yield fail if _target_pos is None
+    yield fail if _target_point is None
     
     _pos = BRAIN_AGENT.pos
-    _dist = _pos - _target_pos
+    _dist = _pos - _target_point
     _dist_sq = _dist.dot(_dist)
     s = stop_dist * stop_dist
     d = int(math.sqrt(_dist_sq))
@@ -129,3 +136,11 @@ set_when_reached: brain_target_reached
         BRAIN_AGENT.set_inventory_value(set_when_reached, True)
     
     yield fail
+
+=== ai_full_stop
+metadata: ``` yaml
+type: brain/npc
+```
+    BRAIN_AGENT.data_set.set("throttle", 0.0, 0)
+    yield success
+
