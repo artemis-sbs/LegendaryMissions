@@ -1,8 +1,11 @@
 
 === ai_chase_current
+" Chasing current target
 metadata: ``` yaml
 type: brain/npc
 distance: 5000
+throttle: 1.0
+stop_dist: 500
 ```
     # Can't use the target from the engine, because that 
     # can clear with stop distance
@@ -12,62 +15,69 @@ distance: 5000
     yield fail if current_target == 0
     yield fail if to_object(current_target) is None
     yield fail if sbs.distance_id(BRAIN_AGENT_ID, current_target) > distance
+    #print("CHASE CUR {distance} {current_target}")
     BRAIN_AGENT.set_inventory_value("brain_target", current_target)
+    target(BRAIN_AGENT_ID, current_target, True, throttle, stop_dist=stop_dist)
     yield success
 
 
 
 === ai_chase_npc
+" Chasing npc target
 metadata: ```
 type: brain/npc
 SIZE_X: 5000
 throttle: 1.0
+stop_dist: 500
 ```
     default SIZE_Z = SIZE_X
     # The role "#" is an invisible e.g. admiral, operator
-    _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('ship')-role("__player__")-role(BRAIN_AGENT.side)-role("#"))
+    _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('ship')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
     if _target is not None:
         BRAIN_AGENT.set_inventory_value("brain_target", to_id(_target))
-        target(BRAIN_AGENT_ID, _target, True, throttle, stop_dist=500)
+        target(BRAIN_AGENT_ID, _target, True, throttle, stop_dist=stop_dist)
         yield success
     yield fail
 
 === ai_chase_player
+" Chasing player target
 metadata: ``` 
 type: brain/npc
 SIZE_X: 5000
 throttle: 1.0
+stop_dist: 500
 ```
     default SIZE_Z = SIZE_X
     # The role "#" is an invisible e.g. admiral, operator
-    _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('__player__')-role(BRAIN_AGENT.side)-role("#"))
+    _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('__player__')-role_allies(BRAIN_AGENT_ID)-role("#"))
     if _target is not None:
         id = to_id(_target)
         BRAIN_AGENT.set_inventory_value("brain_target", to_id(_target))
-        target(BRAIN_AGENT_ID, _target, True, throttle, stop_dist=500)
+        target(BRAIN_AGENT_ID, _target, True, throttle, stop_dist=stop_dist)
         yield success
     yield fail
 
 
 === ai_chase_station
+" Chasing station target
 metadata: ``` 
 type: brain/npc
 SIZE_X: 5000
 throttle: 1.0
+stop_dist: 500
 ```
     default SIZE_Z = SIZE_X
-    _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('station')-role(BRAIN_AGENT.side)-role("#"))
+    _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('station')-role_allies(BRAIN_AGENT_ID)-role("#"))
     #print(f"PAST CLOSEST {l} {r} {_target} {ss} {st} {s} ")
     if _target is not None:
         BRAIN_AGENT.set_inventory_value("brain_target", to_id(_target))
-        target(BRAIN_AGENT_ID, _target, True, throttle, stop_dist=500)
+        target(BRAIN_AGENT_ID, _target, True, throttle, stop_dist=stop_dist)
         yield success
     yield fail
 
 
 === goto_object_or_location
-" Goto to an assigned location or object.
-" Assigned pos/object could be via objective or comms etc.
+" Heading to an assigned location or object.
 metadata: ``` 
 type: brain/npc
 shoot: False
@@ -75,47 +85,66 @@ throttle: 1.0
 stop_dist: 500
 clear_when_reached: True
 set_when_reached: brain_target_reached
+force_target: null
+force_target_point: null
 ```
-    _target = BRAIN_AGENT.get_inventory_value("brain_target")
-    _target_pos = BRAIN_AGENT.get_inventory_value("brain_target_pos")
-    _dist_calc = 0
-    yield fail if _target is None and _target_pos is None
+    _target = force_target
+    if _target is None:
+        _target = BRAIN_AGENT.get_inventory_value("brain_target")
+
+    if _target == 0:
+        _target = None
+
+    _target_point = force_target_point
+    if _target_point is None and force_target is None:
+        _target_point = BRAIN_AGENT.get_inventory_value("brain_target_point")
+    #print(f"GOTO O L DC: HERE {_target} {_target_point}")
+    yield fail if _target is None and _target_point is None
+    
     # TArget pos overrides
-    if _target_pos is not None:
-        target_pos(BRAIN_AGENT_ID, _target_pos.x, _target_pos.y, _target_pos.z,throttle)
-    elif _target is not None:
-        # TODO REMOVE
-        _dist_calc = sbs.distance_id(BRAIN_AGENT_ID, _target)
-        #
+    if _target is not None:
         _target = to_object(_target)
         if _target is None:
             # Target is no more
             BRAIN_AGENT.set_inventory_value("brain_target", None)
             yield fail
-        target(BRAIN_AGENT_ID, _target, shoot, throttle)
-        
-        _target_pos = _target.pos
-        #print(f"BRAIN {BRAIN_AGENT.name} targeting {_target.name}")
+        target(BRAIN_AGENT_ID, _target, shoot, throttle, stop_dist)
+        _target_point = _target.pos
+    elif _target_point is not None:
+        target_pos(BRAIN_AGENT_ID, _target_point.x, _target_point.y, _target_point.z,throttle, stop_dist=stop_dist)
+    #print(f"BRAIN {BRAIN_AGENT.name} targeting {_target.name}")
     # Catch all for stop
     # How can this be NOne???
-    yield fail if _target_pos is None
+    yield fail if _target_point is None
+    
     _pos = BRAIN_AGENT.pos
-    _dist = _pos - _target_pos
+    _dist = _pos - _target_point
     _dist_sq = _dist.dot(_dist)
     s = stop_dist * stop_dist
     d = int(math.sqrt(_dist_sq))
     # When distance is less than stopping reached station
     #print("GOTO O L DC: {_dist_calc} DOT: {d} STOP: {stop_dist} ")
     yield success if _dist_sq > s
+
+    BRAIN_AGENT.data_set.set("throttle", 0, 0)
     #print("GOTO O L BRAIN STOPPING {d} < {stop_dist} ")
     #
     # Fail in this case is good it reach the target
     if clear_when_reached:
         BRAIN_AGENT.set_inventory_value("brain_target", None)
-        BRAIN_AGENT.set_inventory_value("brain_target_pos", None)
+        BRAIN_AGENT.set_inventory_value("brain_target_point", None)
 
     if set_when_reached:
         #print("GOTO O L BRAIN STOPPING {d} < {stop_dist} ")
         BRAIN_AGENT.set_inventory_value(set_when_reached, True)
-
+    
     yield fail
+
+=== ai_full_stop
+" Throttle full stop
+metadata: ``` yaml
+type: brain/npc
+```
+    BRAIN_AGENT.data_set.set("throttle", 0.0, 0)
+    yield success
+

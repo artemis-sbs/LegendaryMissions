@@ -10,6 +10,10 @@
         gui_layout_widget("ship_data")
         gui_row("row-height: 50px;")
         gui_layout_widget("red_alert")
+        gui_row("row-height: 100-500px;")
+        gui_blank()
+        gui_row("row-height: 100px;")
+        gui_layout_widget("text_waterfall")
 
     # Middle
     with gui_sub_section():
@@ -19,18 +23,75 @@
         gui_layout_widget("comms_control")
 
     # Right
+    ss = gui_screen_size(client_id)
+
+    default select_2d = False
+    _widget = "2dview"
+    #if select_2d:
+    #    _widget = "comms_2d_view"
     with gui_sub_section("col-width:25;"):
         gui_row()
         with gui_sub_section():
             gui_row()
-            #gui_layout_widget("comms_2d_view")
-            gui_layout_widget("2dview")
+            gui_layout_widget(_widget)
+
+            gui_row("row-height: 35px;")
+
+            default follow_tag = False
+            gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+            gui_checkbox("2d select","col-width:110px;", var="select_2d")
+
             gui_row("row-height:100px;")
             gui_layout_widget("comms_face")
+
+        
+        
+        on change select_2d:
+            set_inventory_value(client_id, "2d_select", select_2d)
+
+        on change follow_tag:
+            #if follow_tag:
+            ship = sbs.get_ship_of_client(client_id)
+            _sel = get_comms_selection(ship)
+            set_inventory_value(client_id, "2d_follow", follow_tag)
+            comms_set_2dview_focus(client_id, _sel)
+
+
+        if ss.x < 1600:
+            gui_row("row-height: 35px;col-width:25px;")
+        else:
+            gui_row("row-height: 35px;col-width:45px;")
+
+        default store_tag = False
+        store_tag_check = gui_checkbox("", "col-width:35px;",var="store_tag")
+
+        default preset_tags = [0,0,0,0,0,0,0,0,0,0]
+        for x in range(10):
+            tag00 = gui_button("{x}", data={"preset": x})
+            on gui_message(tag00):
+                #print(f"COMMS PRESET {store_tag} {preset}")
+                ship = sbs.get_ship_of_client(client_id)
+                if store_tag:
+                    ship = sbs.get_ship_of_client(client_id)
+                    preset_tags[preset] = get_comms_selection(ship)
+                    store_tag = False
+                    store_tag_check.value =False
+                    gui_represent(store_tag_check)
+                    #print(f"COMMS STORE PRESET {ship} {preset_tags[preset]}")
+                else:
+                    _sel = preset_tags[preset]
+                    if _sel != 0 and to_object(_sel) is not None: 
+                        set_comms_selection(ship,_sel)
+                        comms_set_2dview_focus(client_id, _sel)
+                        follow_route_select_comms(ship,_sel)
+                        #print(f"COMMS RESTORE PRESET {ship} {_sel}")
+
+        
+        gui_row("row-height:20px;")
+        gui_blank()
         gui_row()
         gui_layout_widget("comms_sorted_list")
-        gui_row("row-height: 10;")
-        gui_layout_widget("text_waterfall")
+            
 
 
     yield idle
@@ -38,7 +99,7 @@
 
 
 //gui/normal_sci
-
+    ss = gui_screen_size(client_id)
     # Ship Data overlap
     gui_section(style="area:0,45px,100,100;")
     gui_row("row-height: 350px;col-width:280px;")
@@ -53,13 +114,67 @@
     with gui_sub_section("col-width:30;"):
         gui_row("row-height:35;margin:0,0,0,10px;")
         gui_layout_widget("science_data")
+        gui_row("row-height: 35px;")
+        default follow_tag = False
+        gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+        if ss.x < 1600:
+            gui_row("row-height: 35px;col-width:25px;")
+        else:
+            gui_row("row-height: 35px;col-width:45px;")
+        default store_tag = False
+        store_tag_check = gui_checkbox("", "col-width:35px;",var="store_tag")
+        default preset_tags = [0,0,0,0,0,0,0,0,0,0]
+        for x in range(10):
+            tag00 = gui_button("{x}", data={"preset": x})
+            on gui_message(tag00):
+                #print(f"COMMS PRESET {store_tag} {preset}")
+                ship = sbs.get_ship_of_client(client_id)
+                if store_tag:
+                    ship = sbs.get_ship_of_client(client_id)
+                    preset_tags[preset] = get_science_selection(ship)
+                    store_tag = False
+                    store_tag_check.value =False
+                    gui_represent(store_tag_check)
+                    #print(f"COMMS STORE PRESET {ship} {preset_tags[preset]}")
+                else:
+                    _sel = preset_tags[preset]
+                    if _sel != 0 and to_object(_sel) is not None: 
+                        set_science_selection(ship,_sel)
+                        if follow_tag:
+                            science_set_2dview_focus(client_id, _sel)
+                        else:
+                            science_set_2dview_focus(client_id, 0)
+                        follow_route_select_science(ship,_sel)
+                        #print(f"COMMS RESTORE PRESET {ship} {_sel}")
+
+        
+        gui_row("row-height:20px;")
+        gui_blank()
         gui_row()
         gui_layout_widget("science_sorted_list")
         gui_row("row-height: 10;")
         gui_layout_widget("text_waterfall")
 
+    on change follow_tag:
+        if follow_tag:
+            ship = sbs.get_ship_of_client(client_id)
+            _sel = get_science_selection(ship)
+            set_inventory_value(client_id, "2d_follow", True)
+            science_set_2dview_focus(client_id, _sel)
+        else:
+            set_inventory_value(client_id, "2d_follow", False)
+            science_set_2dview_focus(client_id, 0)
+
     yield idle
 
+//focus/science if not has_role(SCIENCE_SELECTED_ID, 'admiral')
+    ->END if SCIENCE_SELECTED is None
+    #
+    #
+    # Something else selected get out of give orders
+    #
+    nav_focus_id = EVENT.client_id
+    science_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
 
 
 //gui/normal_engi

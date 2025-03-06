@@ -1,0 +1,132 @@
+=== prefab_npc_defender
+metadata: ```
+type: prefab/npc/defender
+side: tsn
+objective: objective_protect_area
+ship_art:
+face:
+allies: civ
+name:
+```
+    # Default is ony set if the variable is not set
+    #default ship_art = None
+    ->END if ship_art is None
+    friend = to_object(npc_spawn(START_X, START_Y, START_Z, name, side+",friendly,prefab_npc_defender", ship_art, "behav_npcship"))
+    if face is None:
+      default race = side
+      set_face(friend.id, random_face(race))
+    #default allies = None
+    if allies is not None:
+      friend.data_set.set("ally_list",allies,0)
+
+    # Objective will set brain 
+    objective_add(friend.id, objective)
+    ->END
+
+
+=== objective_goto_location
+metadata: ```
+display_name: Head to location
+type: objective/orders/defender
+target: null
+target_point: null
+```
+    
++++ enter
+    # This objective assumes it has control of the brain
+    brain_clear(OBJECTIVE_AGENT_ID)
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location)
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", target_point)
+    # Set targets later
+    set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", target)
+    message = "currently heading to assigned location"
+    OBJECTIVE.set_inventory_value("desc", message)
++++ test
+    #print("Running test")
+    yield idle
+
+=== objective_attack_target
+metadata: ```
+display_name: Attack
+type: objective/orders/defender
+target: null
+target_point: null
+```
++++ enter
+    # This objective assumes it has control of the brain
+    #
+    # Will chase the current target,
+    # goto/return an assign location
+    # look for new targets
+    brain_clear(OBJECTIVE_AGENT_ID)
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_current, {"distance":20000})
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X":5000})
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"clear_when_reached": False})    
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+    
+    #brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": target, "force_target_point": target_point, "clear_when_reached": False})
+
+    set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", target_point)
+    # Set targets later
+    set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", target)
+    
++++ test
+    message = "currently idle"
+    current = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_active", None)
+    if current is not None:
+        desc = current
+        name = "location"
+        _t = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", None)
+        # Set targets later
+        _tp = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", None)
+        if _tp != 0:
+            _tp = to_object(_tp)
+            if _tp is not None:
+                name = _tp.name
+
+        message = "attacking targeting {name} : {desc}"
+    OBJECTIVE.set_inventory_value("desc", message)
+    yield idle
+
+
+
+=== objective_protect_area
+metadata: ```
+display_name: Protect Area
+type: objective/orders/defender
+target: null
+target_point: null
+```
++++ enter
+    # This objective assumes it has control of the brain
+    brain_clear(OBJECTIVE_AGENT_ID)
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc)
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"clear_when_reached": False})
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+
+    set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", target_point)
+    # Set targets later
+    set_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", target)
+    
+    
++++ test
+    message = "currently idle"
+    current = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_active", None)
+    if current is not None:
+        desc = current
+        name = "location"
+        _t = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target_point", None)
+        # Set targets later
+        _tp = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_target", None)
+        if _tp != 0:
+            _tp = to_object(_tp)
+            if _tp is not None:
+                name = _tp.name
+
+        message = "protecting targeting {name} : {desc}"
+    OBJECTIVE.set_inventory_value("desc", message)
+    yield idle
+
+
+

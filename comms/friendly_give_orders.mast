@@ -26,59 +26,45 @@ import give_orders.py
 
 
 
-//enable/comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
+//enable/comms if has_roles(COMMS_SELECTED_ID, "prefab_npc_defender")
 
 
-//comms if has_roles(COMMS_SELECTED_ID, "tsn, friendly") 
+//comms if has_roles(COMMS_SELECTED_ID, "prefab_npc_defender") 
+    + "Hail":
+        obj_ids = linked_to(COMMS_SELECTED_ID, "OBJECTIVE")
+        yield success if len(obj_ids) == 0
+        msg = "Current objective status\n"
+        for obj_id in obj_ids:
+            obj = to_object(obj_id)
+            continue if obj is None
+            detail = obj.get_inventory_value("desc")
+            continue if detail is None
+            if detail == "":
+                detail = "Receiving new orders"
+            msg += "    {detail}\n"
+        comms_receive(msg)
     + "Give Orders" //comms/give_orders
 
 
-//comms/give_orders if has_roles(COMMS_SELECTED_ID, "tsn, friendly")
-    order = get_inventory_value(COMMS_SELECTED_ID, "ORDER","")
-    is_defender = has_roles(COMMS_SELECTED_ID, "defender")
-
+//comms/give_orders if has_roles(COMMS_SELECTED_ID, "prefab_npc_defender")
+    #has_objective = 
+    order = ""
     + "Back"  //comms/
-    + "Protect" friendly_give_orders_protect if is_defender
-    + "Attack"  friendly_give_orders_attack if is_defender
-    + "Explore"  friendly_give_orders_explore
-    + "Go to location"  friendly_give_orders_location
+
+    orders = labels_get_type("objective/orders/defender")
+    for order in orders:
+        display_name = order.get_inventory_value("display_name", order.name)
+        + "{display_name}" carry_out_orders  {"objective": order}
+
     + "Cancel" if order!="":
         set_inventory_value(COMMS_SELECTED_ID, "ORDER","")
+        default alt_ship = None
+        ->END if alt_ship is None
         # Clear nav
         nav = get_inventory_value(alt_ship, "ORDERS_NAV", None)
         if nav:
             sim.delete_navpoint_by_id(nav)
             set_inventory_value(alt_ship, "ORDERS_NAV", None)
-
-   
-
-#
-# Common way to back out of give orders
-#
-=== friendly_cancel_give_orders
-    comms_navigate("")
-    yield success
-
-=== friendly_give_orders_location
-    ORDER="await further orders"
-    ORDER_COLOR = "#040"
-    jump carry_out_orders
-
-=== friendly_give_orders_protect
-    ORDER="protect"
-    ORDER_COLOR = "#040"
-    jump carry_out_orders
-
-=== friendly_give_orders_attack
-    ORDER="attack"
-    ORDER_COLOR = "#400"
-    jump carry_out_orders
-
-=== friendly_give_orders_explore
-    ORDER="explore"
-    ORDER_COLOR = "#004"
-    jump carry_out_orders
-
 
 === carry_out_orders 
     #
@@ -88,13 +74,16 @@ import give_orders.py
     #
     alt_ship= COMMS_SELECTED_ID
 
-    ->END if not alt_ship
+    ->END if not alt_ship or alt_ship == 0
     set_inventory_value(EVENT.client_id, "2dview_alt_ship", alt_ship)
     alt_ship_obj = to_object(alt_ship)
     ->END if alt_ship_obj is None
-    print("give orders on alta ship")
 
     target_point = get_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
+    target_object = to_object(get_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", None))
+    if target_object is not None:
+        target_point = None
+
     message = "Your order were unclear {COMMS_ORIGIN.name} - please confirm. I didn't get the area for the order."
     title = "Orders unclear"
 
@@ -112,28 +101,20 @@ import give_orders.py
         set_inventory_value(alt_ship, "ORDERS_NAV", None)
 
     # set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
-            
+    objective_clear(COMMS_SELECTED_ID)
+    #print("give orders on alt ship {objective}")
+    objective_add(alt_ship, objective, {"target_point": target_point, "target": to_id(target_object)})
+
+    ######## The rest of this should be in the objective
+    ORDER = objective.get_inventory_value("display_name", objective.name)
+    ORDER_COLOR = "#040"
     if target_point is not None:
         message = "Heading to designated waypoint to {ORDER}"
         title = "Orders accepted"
-        set_inventory_value(COMMS_SELECTED_ID, "ORDER", ORDER)
-        target_pos(COMMS_SELECTED_ID, target_point.x, target_point.y, target_point.z )
-        size = 5000
-        x = target_point.x
-        y = target_point.z
-
-
-        nav_name = "{ORDER} Orders^for {alt_ship_obj.name}"
-        nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, ORDER_COLOR)
-        nav = sim.get_navpoint_by_id(nav_id)
-        nav.visibleToShip = alt_ship
-        set_inventory_value(alt_ship, "ORDERS_NAV", nav_id)
-        set_inventory_value(COMMS_SELECTED_ID, "ORDERS_POINT", target_point)
-
-        # A more advance version should allow multiple orders
-        # order = (order, target_point, nav)
-
-
+    elif target_object is not None:
+        message = "Heading to rendezvous with {target_object.name}"
+        title = "Orders accepted"
+        
     if message is not None:
         comms_receive(message, title, color="white", title_color="cyan")
 
@@ -141,48 +122,67 @@ import give_orders.py
     yield success
 
 
+//shared/signal/game_started
+    task_schedule(update_nav_area_for_object)
+    ->END
+
+=== update_nav_area_for_object
+" This is a task to update any nav areas marking
+" a moving target
+    default shared nav_area_object_running = False
+    ->END if nav_area_object_running 
+
+--- repeat
+    await delay_sim(5)
+    have_nav = has_inventory("ORDERS_SELECTED_OBJECT")
+    for ship in have_nav:
+        continue if ship == 0
+        alt_ship_obj = to_object(ship)
+        continue if alt_ship_obj is None
+        continue if alt_ship_obj == 0
+        
+        obj_id = get_inventory_value(ship,"ORDERS_SELECTED_OBJECT")
+        continue if obj_id is None or obj_id == 0
+        obj = to_object(obj_id)
+        continue if obj is None
+        pos = Vec3(obj.pos)
+        size = 1000
+        nav_color = "#044"
+        nav_name = "^^^^^^Order Object^for {alt_ship_obj.name}"
+
+        x = pos.x
+        y = pos.y
+        z = pos.z
+
+        #
+        # This is copy pasted code from the //focus/comms2d
+        #
+        this_ship = ship
+        nav_id = get_inventory_value(this_ship, "ORDERS_SELECTED_NAV", None)
+        if nav_id is not None:
+            sim.delete_navpoint_by_id(nav_id)
+        y = z
+        nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, nav_color)
+        #nav_id = sim.add_navpoint(x, y, z, nav_name, "#eee")
+        nav = sim.get_navpoint_by_id(nav_id)
+        nav.visibleToShip = this_ship
+        set_inventory_value(this_ship, "ORDERS_SELECTED_NAV", nav_id)
+    jump repeat
+
+
 //focus/comms2d if has_role(COMMS2D_ORIGIN_ID, "__player__")
     alt_ship = get_inventory_value(EVENT.client_id, "2dview_alt_ship", 0)
-    on_ship =  sbs.get_ship_of_client(client_id)
+    on_ship =  sbs.get_ship_of_client(EVENT.client_id)
+    #set_inventory_value(on_ship, "2dview_alt_ship", 0)
+    #set_inventory_value(on_ship, "ORDERS_SELECTED_OBJECT", None)
+    do_select = get_inventory_value(EVENT.client_id, "2d_select", False)
+    if do_select and COMMS2D_SELECTED_ID != 0:
+        if alt_ship != COMMS2D_SELECTED_ID:
+            follow_route_select_comms(on_ship, COMMS2D_SELECTED_ID)
+            alt_ship = COMMS2D_SELECTED_ID
+            # Do I need to Follow Selection? Yes for Buttons
 
-    ->END if not alt_ship
-    alt_ship_obj = to_object(alt_ship)
-    ->END if alt_ship_obj is None
-    ->END if not has_roles(alt_ship, "tsn, friendly")
-
-    # clear existing pending
-    nav_id = get_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
-    if nav_id:
-        sim.delete_navpoint_by_id(nav_id)
-        set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", None)
-
-    # Handle initial clicks
-    if EVENT.selected_id != 0:
-        set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", None)
-        #set_inventory_value(alt_ship, "ORDERS_SELECTED_ID", EVENT.selected_id)
-        pos = Vec3(COMMS2D_SELECTED.pos)
-        set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", pos)
-        x = pos.x
-        y = pos.z
-
-    else:
-        set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", Vec3(EVENT.source_point))
-        x = EVENT.source_point.x
-        y = EVENT.source_point.z
-
-    size = 5000
-
-    nav_name = "Select Orders^for {alt_ship_obj.name}"
-
-    nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, "#444")
-
-    nav = sim.get_navpoint_by_id(nav_id)
-
-    nav.visibleToShip = alt_ship
-    set_inventory_value(alt_ship, "ORDERS_SELECTED_NAV", nav_id)
-
-
-    #Done no point running more
+    comms_set_2dview_focus(EVENT.client_id, alt_ship, EVENT)
     ->END
 
 
@@ -193,7 +193,6 @@ import give_orders.py
     #
     # Something else selected get out of give orders
     #
-    nav_focus_id = EVENT.client_id
     comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
     if COMMS_SELECTED.has_role('tsn'):
         ()[blue] "Unused"
@@ -208,80 +207,3 @@ import give_orders.py
             % You shall perish
             % You gonna die
 
-    #
-    # AI for friendly tsn ships (Defender and citizen ships)
-    #
-    //spawn if has_roles(SPAWNED_ID, "tsn, friendly")
-    #
-    # ai_loop is a inline label to allow rerunning the logic
-    #
---- ai_loop
-    #
-    # call this logic every 5 seconds
-    #
-    await delay_sim(seconds=5)
-
-    me = to_object(SPAWNED_ID)
-    ->END if me is None
-    #
-    # Comms can give orders to attack a target (or approach another friendly) 
-    #
-    target_point = get_inventory_value(SPAWNED_ID, "ORDERS_POINT", None)
-    #
-    # Default orders is protect
-    #
-    order = get_inventory_value(SPAWNED_ID, "ORDER", "default")
-    if order=="":
-        clear_target(SPAWNED_ID)
-        jump ai_loop
-
-    # Set a target point (clear target id)
-    if target_point is not None:
-        target_pos(SPAWNED_ID, target_point.x, target_point.y, target_point.z, target_id=0, stop_dist=200)
-
-    ## Look for a specified target
-    the_target = to_object(get_inventory_value(SPAWNED_ID, "TARGET_ID", None))
-    jump do_target if the_target is not None
-
-    #
-    # explore or location just go there
-    #
-    jump ai_loop if order == "explore" or order.startswith("await further")
-    jump attack if order == "attack"
-
-    #
-    # Defenders default to patrol/protect others nothing
-    #
-    jump ai_loop if order == "default" and not has_role(SPAWNED_ID, "defender")
-    if order == "default":
-        target_point = Vec3(me.pos)
-
---- patrol
-    #
-    # Only target things in patrol area
-    #
-    jump ai_loop if target_point is None
-    the_target = closest(SPAWNED_ID, broad_test(target_point.x-5000, target_point.z-5000,target_point.x+5000, target_point.z+5000, 0xf0)&role("raider"))
-    jump do_target 
-        
-
----- attack
-    #
-    # Attack and follow
-    #
-    if the_target is None:
-        in_rect = broad_test(target_point.x-5000, target_point.z-5000,target_point.x+5000, target_point.z+5000, 0xf0)
-        c = len(in_rect&role("raider"))
-        close_to_friend = broad_test_around(SPAWNED_ID, 5000,5000, 0xf0)
-        the_target = closest(SPAWNED_ID,(in_rect | close_to_friend) &role("raider"))
-
---- do_target
-    #
-    # Only shoot raiders
-    #            
-    if the_target is not None:
-        shoot = has_role(the_target, "raider")
-        target(SPAWNED_ID, the_target, shoot, stop_dist=500)
-    
-
-    jump ai_loop

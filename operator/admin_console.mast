@@ -1,5 +1,5 @@
 shared game_paused = False
-
+default shared operator_mode_enabled = False
 
 @console/admin "Operator Admin" if operator_mode_enabled
 " A console for the game operator
