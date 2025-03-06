@@ -50,14 +50,11 @@
             set_inventory_value(client_id, "2d_select", select_2d)
 
         on change follow_tag:
-            if follow_tag:
-                ship = sbs.get_ship_of_client(client_id)
-                _sel = get_comms_selection(ship)
-                set_inventory_value(client_id, "2d_follow", True)
-                comms_set_2dview_focus(client_id, _sel)
-            else:
-                set_inventory_value(client_id, "2d_follow", False)
-                comms_set_2dview_focus(client_id, 0)
+            #if follow_tag:
+            ship = sbs.get_ship_of_client(client_id)
+            _sel = get_comms_selection(ship)
+            set_inventory_value(client_id, "2d_follow", follow_tag)
+            comms_set_2dview_focus(client_id, _sel)
 
 
         if ss.x < 1600:
@@ -85,10 +82,7 @@
                     _sel = preset_tags[preset]
                     if _sel != 0 and to_object(_sel) is not None: 
                         set_comms_selection(ship,_sel)
-                        if follow_tag:
-                            comms_set_2dview_focus(client_id, _sel)
-                        else:
-                            comms_set_2dview_focus(client_id, 0)
+                        comms_set_2dview_focus(client_id, _sel)
                         follow_route_select_comms(ship,_sel)
                         #print(f"COMMS RESTORE PRESET {ship} {_sel}")
 
@@ -147,9 +141,9 @@
                     if _sel != 0 and to_object(_sel) is not None: 
                         set_science_selection(ship,_sel)
                         if follow_tag:
-                            comms_set_2dview_focus(client_id, _sel)
+                            science_set_2dview_focus(client_id, _sel)
                         else:
-                            comms_set_2dview_focus(client_id, 0)
+                            science_set_2dview_focus(client_id, 0)
                         follow_route_select_science(ship,_sel)
                         #print(f"COMMS RESTORE PRESET {ship} {_sel}")
 
@@ -166,10 +160,10 @@
             ship = sbs.get_ship_of_client(client_id)
             _sel = get_science_selection(ship)
             set_inventory_value(client_id, "2d_follow", True)
-            comms_set_2dview_focus(client_id, _sel)
+            science_set_2dview_focus(client_id, _sel)
         else:
             set_inventory_value(client_id, "2d_follow", False)
-            comms_set_2dview_focus(client_id, 0)
+            science_set_2dview_focus(client_id, 0)
 
     yield idle
 
@@ -180,7 +174,7 @@
     # Something else selected get out of give orders
     #
     nav_focus_id = EVENT.client_id
-    comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
+    science_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
 
 
 //gui/normal_engi

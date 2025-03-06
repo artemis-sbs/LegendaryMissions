@@ -202,76 +202,16 @@ import give_orders.py
 //focus/comms2d if has_role(COMMS2D_ORIGIN_ID, "__player__")
     alt_ship = get_inventory_value(EVENT.client_id, "2dview_alt_ship", 0)
     on_ship =  sbs.get_ship_of_client(EVENT.client_id)
-    set_inventory_value(on_ship, "2dview_alt_ship", 0)
-    set_inventory_value(on_ship, "ORDERS_SELECTED_OBJECT", 0)
+    #set_inventory_value(on_ship, "2dview_alt_ship", 0)
+    #set_inventory_value(on_ship, "ORDERS_SELECTED_OBJECT", None)
     do_select = get_inventory_value(EVENT.client_id, "2d_select", False)
     if do_select and COMMS2D_SELECTED_ID != 0:
-        set_comms_selection(on_ship, COMMS2D_SELECTED_ID)
         if alt_ship != COMMS2D_SELECTED_ID:
             follow_route_select_comms(on_ship, COMMS2D_SELECTED_ID)
-            comms_set_2dview_focus(EVENT.client_id, COMMS2D_SELECTED_ID)
             alt_ship = COMMS2D_SELECTED_ID
             # Do I need to Follow Selection? Yes for Buttons
 
-
-    ->END if not alt_ship
-    alt_ship_obj = to_object(alt_ship)
-    ->END if alt_ship_obj is None
-    ->END if not has_roles(alt_ship, "tsn, friendly")
-    # Don't move nav if the alt ship selected
-    ->END if EVENT.selected_id == alt_ship
-    set_inventory_value(on_ship, "2dview_alt_ship", alt_ship)
-
-    nav_color = "#444"
-    if EVENT.selected_id != 0:
-        _sel_ship = to_object(EVENT.selected_id)
-        ->END if _sel_ship is None
-
-        set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", None)
-        #set_inventory_value(alt_ship, "ORDERS_SELECTED_ID", EVENT.selected_id)
-        pos = Vec3(_sel_ship.pos)
-        set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", pos)
-        set_inventory_value(alt_ship, "ORDERS_SELECTED_OBJECT", EVENT.selected_id)
-        # Need to update
-        set_inventory_value(on_ship, "ORDERS_SELECTED_OBJECT", EVENT.selected_id)
-        size = 1000
-        nav_color = "#044"
-        nav_name = "^^^^^^Order Object^for {alt_ship_obj.name}"
-
-        x = pos.x
-        y = pos.y
-        z = pos.z
-
-    else:
-        set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", Vec3(EVENT.source_point))
-        set_inventory_value(alt_ship, "ORDERS_SELECTED_OBJECT", None)
-        x = EVENT.source_point.x
-        # Same plan as ship
-        y = alt_ship_obj.pos.y # EVENT.source_point.y
-        z = EVENT.source_point.z
-        size = 400
-        nav_color = "#00a"
-        nav_name = "^^^Order Waypoint^for {alt_ship_obj.name}"
-    
-    # Create/update nav point
-    # On both the alt_ship and on_ship
-    for this_ship in [alt_ship, on_ship]:
-        nav_id = get_inventory_value(this_ship, "ORDERS_SELECTED_NAV", None)
-        if nav_id is not None:
-            sim.delete_navpoint_by_id(nav_id)
-        y = z
-        nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, nav_color)
-        #nav_id = sim.add_navpoint(x, y, z, nav_name, "#eee")
-        nav = sim.get_navpoint_by_id(nav_id)
-        nav.visibleToShip = this_ship
-        set_inventory_value(this_ship, "ORDERS_SELECTED_NAV", nav_id)
-        # else:
-        #     nav = sim.get_navpoint_by_id(nav_id)
-        #     _pos = sbs.vec3(x,y,z)
-        #     nav.pos = _pos
-        #     nav.text = nav_name
-        #     nav.has_changed_flag = 1
-    #Done no point running more
+    comms_set_2dview_focus(EVENT.client_id, alt_ship, EVENT)
     ->END
 
 
@@ -282,7 +222,6 @@ import give_orders.py
     #
     # Something else selected get out of give orders
     #
-    nav_focus_id = EVENT.client_id
     comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
     if COMMS_SELECTED.has_role('tsn'):
         ()[blue] "Unused"
