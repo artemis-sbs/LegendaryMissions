@@ -37,7 +37,10 @@
 
             gui_row("row-height: 35px;")
 
-            default follow_tag = False
+
+            follow_tag = get_inventory_value(client_id, "2d_follow", True)
+            # Set back in case of default
+            set_inventory_value(client_id, "2d_follow", follow_tag)
             gui_checkbox("Follow","col-width:90px;", var="follow_tag")
             gui_checkbox("2d select","col-width:110px;", var="select_2d")
 
@@ -50,7 +53,6 @@
             set_inventory_value(client_id, "2d_select", select_2d)
 
         on change follow_tag:
-            #if follow_tag:
             ship = sbs.get_ship_of_client(client_id)
             _sel = get_comms_selection(ship)
             set_inventory_value(client_id, "2d_follow", follow_tag)
@@ -156,15 +158,11 @@
         gui_layout_widget("text_waterfall")
 
     on change follow_tag:
-        if follow_tag:
-            ship = sbs.get_ship_of_client(client_id)
-            _sel = get_science_selection(ship)
-            set_inventory_value(client_id, "2d_follow", True)
-            science_set_2dview_focus(client_id, _sel)
-        else:
-            set_inventory_value(client_id, "2d_follow", False)
-            science_set_2dview_focus(client_id, 0)
-
+        ship = sbs.get_ship_of_client(client_id)
+        _sel = get_science_selection(ship)
+        set_inventory_value(client_id, "2d_follow", follow_tag)
+        science_set_2dview_focus(client_id, _sel)
+        
     yield idle
 
 //focus/science if not has_role(SCIENCE_SELECTED_ID, 'admiral')
