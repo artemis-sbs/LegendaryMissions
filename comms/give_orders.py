@@ -19,11 +19,16 @@ def comms_set_2dview_focus(client_id, focus_id=0, EVENT=None):
     on_ship =  sbs.get_ship_of_client(client_id)
     set_inventory_value(client_id, "2dview_alt_ship", focus_id)
     set_inventory_value(on_ship, "2dview_alt_ship", focus_id)
+    
+    set_id = focus_id
     if not follow:
-        sbs.assign_client_to_alt_ship(client_id, 0)
-    else:
-        sbs.assign_client_to_alt_ship(client_id, focus_id)
+        set_id = 0
 
+    previous = get_inventory_value(client_id, "2dview_alt_ship_prev")
+    if previous != set_id:
+        sbs.assign_client_to_alt_ship(client_id, set_id)
+        set_inventory_value(client_id, "2dview_alt_ship_prev", set_id)
+    
 
     ###### UPDATE NAVAREAS
     on_ship =  sbs.get_ship_of_client(client_id)
@@ -121,7 +126,13 @@ def science_set_2dview_focus(client_id, focus_id=0):
     on_ship =  sbs.get_ship_of_client(client_id)
     set_inventory_value(client_id, "2dview_alt_ship", focus_id)
     set_inventory_value(on_ship, "2dview_alt_ship", focus_id)
+    set_id = focus_id
     if not follow:
-        sbs.assign_client_to_alt_ship(client_id, 0)
-    else:
-        sbs.assign_client_to_alt_ship(client_id, focus_id)
+        set_id = 0
+
+    previous = get_inventory_value(client_id, "2dview_alt_ship_prev")
+    if previous != set_id:
+        sbs.assign_client_to_alt_ship(client_id, set_id)
+        set_inventory_value(client_id, "2dview_alt_ship_prev", set_id)
+
+    
