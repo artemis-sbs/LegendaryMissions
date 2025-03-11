@@ -6,10 +6,9 @@ from sbs_utils.procedural.timers import delay_sim
 from sbs_utils.procedural.query import to_object, to_id, object_exists, get_side
 from sbs_utils.procedural.space_objects import target_pos, closest, broad_test_around
 from sbs_utils.procedural.roles import role
+from sbs_utils.procedural.brain import brain_add
 from sbs_utils.procedural.inventory import get_inventory_value
-from sbs_utils import faces
 from sbs_utils.vec import Vec3
-from sbs_utils.scatter import rect_fill
 
 
 import sbs
@@ -40,12 +39,51 @@ class Fleet(Agent):
 #            self.update_comms_id()
             for role in roles:
                 self.add_role(role)
+        from sbs_utils import yaml
+        brain = yaml.safe_load("""
+SEQ:
+  - ai_fleet_init_blackboard
+  - SEL:
+      - ai_fleet_chase_best_anger
+      - labeL: ai_fleet_chase_roles
+        data:
+          test_roles: station
+      - labeL: ai_fleet_chase_roles
+        data:
+          test_roles: station
+      - label: ai_fleet_chase_roles
+        data:
+          use_arena: false
+          test_roles: station
+  - ai_fleet_calc_forward_vector
+  - ai_fleet_scatter_formation
+""")
+        brain_add(self.id, brain, None, 0, None)
+        #task_schedule(self.tick)
 
-        task_schedule(self.tick)
 
-#        self.set_inventory_value("anger_map",{})
-#        self.set_link_value("ship_list",{})
+    def get_best_anger(self):
+        best_id = None
+        best_anger = 0
+        new_anger = {}
+        for e in self.anger_dict:
+            if 0 == e:
+                continue
+            if to_object(e) is None:
+                continue
 
+            that_anger = self.anger_dict[e]
+            if best_anger < that_anger:
+                best_anger = that_anger
+                best_id = e
+            new_value = max(0,that_anger-1)
+            if new_value >0:
+                new_anger[e] = max(0,that_anger-1) # reduce heat over time
+        self.anger_dict = new_anger
+
+        return best_id
+    
+    
     #--------------------------------------------------------------------------------------
     @label()
     def tick(self):
@@ -73,8 +111,6 @@ class Fleet(Agent):
         #that's my point
         self.position = average
 
-        use_path = False
-
         #--------------------------------------------------------------------
         #move my point in the direction I want to go (perhaps 1000m?)
 
@@ -88,40 +124,7 @@ class Fleet(Agent):
         self.position += difference
 
 
-        #--------------------------------------------------------------------
-        # am I angry at someone?
-        best_id = None
-        best_anger = 0
-        anger_as_set = set()
-        for e in self.anger_dict:
-            if 0 == e:
-                return
-            anger_as_set.add(e)
-            that_anger = self.anger_dict[e]
-            if best_anger < that_anger:
-                best_anger = that_anger
-                best_id = e
-            self.anger_dict[e] = max(0,that_anger-1) # reduce heat over time
-
-        if None != best_id:   # someone to be angry at
-            # if so, we should move towards him
-            enemy = Agent.get(best_id)
-            if None != enemy:
-                self.position = enemy.pos
-                use_path = False
-
-        #--------------------------------------------------------------------
-        # if it's time, find a path
-
-
-
-
-        #--------------------------------------------------------------------
-
-        #--------------------------------------------------------------------
-        # find target to move to and attack
-
-        # Look for a station near 
+        # Pick a ship
         lead_ship_id = to_id(ship_set[0])
         #
         # Limit some tests to area around the fleet
@@ -133,15 +136,21 @@ class Fleet(Agent):
         # Look for anything in anger list
         # This should include fighters and or friendlies as well as players
         #
+                #--------------------------------------------------------------------
+        # am I angry at someone?
         the_target = None
-        
-
+        best_anger = self.get_best_anger()
+        anger_as_set = set(self.anger_dict.keys())
         if the_target is None and len(anger_as_set)>0:
             if best_anger in local_arena:
                 the_target = best_anger
             else:
                 the_target = closest(lead_ship_id, local_arena & anger_as_set )
-
+            #
+            if best_anger is not None and the_target is None:
+                the_target = best_anger
+            # Make sure it exists
+            the_target = to_object(the_target)
 
         if the_target is None:
             the_target = closest(lead_ship_id, local_arena & role("Station") - role(get_side(lead_ship_id)))
