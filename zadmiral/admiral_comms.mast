@@ -107,7 +107,7 @@
     for race in races:
         + "{race}" {"race": race.lower()}:
             pos = Vec3(COMMS_ORIGIN.pos)
-            fleet_diff = get_shared_variable("difficulty", 4)
+            fleet_diff = max(0,get_shared_variable("difficulty", 4) -1)
             create_siege_fleet(race, fleet_diff, *pos.xyz)
 
 //comms/admiral/spawn/player if has_roles(COMMS_ORIGIN_ID, 'admiral')
