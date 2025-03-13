@@ -9,7 +9,7 @@
 #                 test_roles: station
 #             - labeL: ai_fleet_chase_roles
 #               data: 
-#                 test_roles: station
+#                 test_roles: __player__
 #             - label: ai_fleet_chase_roles
 #               data: 
 #                 use_arena: False
@@ -22,18 +22,19 @@
 metadata: ``` yaml
 type: brain/npc
 use_arena: True
+test_roles: station
 ```
     lead_ship_id = BRAIN_AGENT.get_inventory_value("blackboard:lead_ship_id")
     yield fail if lead_ship_id is None
     if use_arena:
         local_arena = BRAIN_AGENT.get_inventory_value("blackboard:local_arena")
         yield fail if local_arena is None
-
         the_target = closest(lead_ship_id, local_arena & any_role(test_roles) - role(get_side(lead_ship_id)))
     else:
         the_target = closest(lead_ship_id, any_role(test_roles) - role(get_side(lead_ship_id)))
 
     yield fail if the_target is None
+    #print(f"test_roles = '{test_roles}'")
     BRAIN_AGENT.set_inventory_value("blackboard:target", to_id(the_target))
     yield success
 
@@ -44,7 +45,7 @@ use_arena: True
 " by other brains
 metadata: ``` yaml
 type: brain/npc
-distance: 3000
+distance: 6000
 ```
     BRAIN_AGENT.set_inventory_value("blackboard:target", None)
     BRAIN_AGENT.set_inventory_value("blackboard:local_arena", set())

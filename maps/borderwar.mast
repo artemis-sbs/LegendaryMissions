@@ -139,7 +139,8 @@ Properties:
         apos.x = pos.x + 50.0
         apos.z = pos.z + 50.0
 
-        create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
+        #create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
+        prefab_spawn(prefab_fleet_raider, {"race": enemy1, "fleet_difficulty": difficulty,"START_X": apos.x, "START_Y": apos.y, "START_Z": apos.z})
 
 
 

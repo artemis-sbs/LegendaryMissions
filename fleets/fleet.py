@@ -39,26 +39,8 @@ class Fleet(Agent):
 #            self.update_comms_id()
             for role in roles:
                 self.add_role(role)
-        from sbs_utils import yaml
-        brain = yaml.safe_load("""
-SEQ:
-  - ai_fleet_init_blackboard
-  - SEL:
-      - ai_fleet_chase_best_anger
-      - labeL: ai_fleet_chase_roles
-        data:
-          test_roles: station
-      - labeL: ai_fleet_chase_roles
-        data:
-          test_roles: station
-      - label: ai_fleet_chase_roles
-        data:
-          use_arena: false
-          test_roles: station
-  - ai_fleet_calc_forward_vector
-  - ai_fleet_scatter_formation
-""")
-        brain_add(self.id, brain, None, 0, None)
+        
+        
         #task_schedule(self.tick)
 
 

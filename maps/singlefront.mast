@@ -66,7 +66,7 @@ Properties:
         print(f"Fleet Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
 
     #    create_npc_fleet_and_ships(enemy, fleet_quality, fleet_quality/3, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-        create_siege_fleet(enemy, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+        prefab_spawn(prefab_fleet_raider, {"race": enemy, "fleet_difficulty": difficulty,"START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
 
     # At this time, keep the Skaraans out of a Single Front mission
     #    if a > 1 and difficulty > 2:

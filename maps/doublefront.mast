@@ -76,7 +76,8 @@ Properties:
         if direction1 == 4:
             fleet_pos = next(scatter_box(1, -40000, -1000, 40000, -50000, 1000, -40000))
         print(f"Fleet1 Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
-        create_siege_fleet(enemy1, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+        #create_siege_fleet(enemy1, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+        prefab_spawn(prefab_fleet_raider, {"race": enemy1, "fleet_difficulty": difficulty,"START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
 
     for b in range(fleet_count2):
         if direction2 == 1:
@@ -88,7 +89,8 @@ Properties:
         if direction2 == 4:
             fleet_pos = next(scatter_box(1, -40000, -1000, 40000, -50000, 1000, -40000))
         print(f"Fleet2 Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
-        create_siege_fleet(enemy2, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+        #create_siege_fleet(enemy2, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+        prefab_spawn(prefab_fleet_raider, {"race": enemy2, "fleet_difficulty": difficulty,"START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
 
 
     # At this time, keep the Skaraans out of a Single Front mission

@@ -1,4 +1,5 @@
 import fleet.py
+import fleet.mast
 import brain_fleet.mast
 import npc_cag.py
 import map_common.mast
