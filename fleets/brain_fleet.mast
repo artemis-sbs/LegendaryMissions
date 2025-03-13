@@ -83,6 +83,8 @@ type: brain/npc
     if the_target is None:
         the_target = best_anger
     yield fail if the_target is None
+    heat = BRAIN_AGENT.get_heat_for(the_target)
+    #print("I'm Angry time: {heat}")
     BRAIN_AGENT.set_inventory_value("blackboard:target", the_target)
     yield success
 
