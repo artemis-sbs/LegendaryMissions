@@ -70,7 +70,8 @@ def brain_scan_get_text(obj):
         _text += "       SHIPS: "
         for ship in ships:
             sob = to_object(ship)
-            _text += f"{sob.name} "
+            if sob is not None:
+                _text += f"{sob.name} "
         _text += "\n"
 
     b = obj.get_inventory_value("__BRAIN__")
