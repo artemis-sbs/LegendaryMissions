@@ -9,7 +9,6 @@
         "show_logo_on_main": true,
         "pin": "000000"
     },
-    "PLAYER_COUNT": 8,
     "GRID_THEME": 0,
     "DIFFICULTY": 5,
     "WORLD_SELECT": "siege",
@@ -20,6 +19,8 @@
     "UPGRADE_SELECT": "lots",
     "GAME_TIME_LIMIT": 0,
     "WAR_TIME_DELAY": 10,
+    "PLAYER_CREATE_DEFAULT": true,
+    "PLAYER_COUNT": 8,
     "PLAYER_LIST": [
         {
             "name": "Artemis",
