@@ -107,7 +107,7 @@
     for race in races:
         + "{race}" {"race": race.lower()}:
             pos = Vec3(COMMS_ORIGIN.pos)
-            fleet_diff = get_shared_variable("difficulty", 4)
+            fleet_diff = get_shared_variable("DIFFICULTY", 4)
             #create_siege_fleet(race, fleet_diff, *pos.xyz)
             prefab_spawn(prefab_fleet_raider, {"race": race, "fleet_difficulty": fleet_diff,"START_X": pos.x, "START_Y": pos.y, "START_Z": pos.z})
 
@@ -229,7 +229,7 @@
 
 //comms/admiral/area/size if has_roles(COMMS_ORIGIN_ID, 'admiral')
     ## PROPS
-    #gui_int_slider("$text:int;low: 1.0;high:8.0",  var="player_count")
+    #gui_int_slider("$text:int;low: 1.0;high:8.0",  var="PLAYER_COUNT")
     #props_lb = get_inventory_value(client_id, "__PROPS_LB__")
     #if props_lb:
     #    p = [{"label": "Admiral size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"},{"label": "Order size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"}]
@@ -322,7 +322,7 @@
 //comms/admiral/commands/end_game if has_roles(COMMS_ORIGIN_ID, 'admiral')
     + "No don't end the game" //comms
     + "Yes end the game":
-        start_text = "Mission ended."
+        START_TEXT = "Mission ended."
         signal_emit("show_game_results", None)
 
 //comms/admiral/commands/count if has_roles(COMMS_ORIGIN_ID, 'admiral')

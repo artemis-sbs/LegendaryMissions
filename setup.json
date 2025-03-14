@@ -1,26 +1,26 @@
 {
-    "auto_start": false,
-    "auto_play": {
-        "enable": false
+    "AUTO_START": true,
+    "AUTO_PLAY": {
+        "enable": true
     },
-    "operator_mode": {
+    "OPERATOR_MODE": {
         "enable": false,
         "logo": "media/operator",
         "show_logo_on_main": true,
         "pin": "000000"
     },
-    "player_count": 1,
-    "grid_theme": 0,
-    "difficulty": 5,
-    "world_select": "siege",
-    "terrain_select": "some",
-    "lethal_select": "none",
-    "friendly_select": "few",
-    "monster_select": "few",
-    "upgrade_select": "lots",
-    "game_time_limit": 0,
-    "war_time_delay": 10,
-    "player_list": [
+    "PLAYER_COUNT": 8,
+    "GRID_THEME": 0,
+    "DIFFICULTY": 5,
+    "WORLD_SELECT": "siege",
+    "TERRAIN_SELECT": "some",
+    "LETHAL_SELECT": "none",
+    "FRIENDLY_SELECT": "few",
+    "MONSTER_SELECT": "many",
+    "UPGRADE_SELECT": "lots",
+    "GAME_TIME_LIMIT": 0,
+    "WAR_TIME_DELAY": 10,
+    "PLAYER_LIST": [
         {
             "name": "Artemis",
             "side": "tsn",

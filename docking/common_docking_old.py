@@ -69,14 +69,14 @@ def build_munition_queue_task(id_or_obj, torp_type):
 
 
 
-def schedule_player_docking(player_id_or_obj, difficulty, roles, docked_cb):
+def schedule_player_docking(player_id_or_obj, DIFFICULTY, roles, docked_cb):
     #
     # Schedule a simple tick task 
     # Pass the player ID to the task
     #
     t = TickDispatcher.do_interval(player_docking_task, 5)
     t.set_inventory_value("player_id", to_id(player_id_or_obj))
-    t.set_inventory_value("difficulty", difficulty)
+    t.set_inventory_value("DIFFICULTY", DIFFICULTY)
     t.set_inventory_value("roles", roles)
     t.set_inventory_value("docked_cb", docked_cb)
     
@@ -86,16 +86,16 @@ RATE_FAST = 0
 
 def player_docking_task(t):
     player_id = t.get_inventory_value("player_id")
-    difficulty = t.get_inventory_value("difficulty")
+    DIFFICULTY = t.get_inventory_value("DIFFICULTY")
     roles = t.get_inventory_value("roles")
     docked_cb = t.get_inventory_value("docked_cb")
-    rate = player_docking(player_id, difficulty, dock_roles=roles, docked_cb=docked_cb)
+    rate = player_docking(player_id, DIFFICULTY, dock_roles=roles, docked_cb=docked_cb)
     if rate is None:
         t.stop()
     else:
         t.delay = rate
 
-def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=None, docking_cb=None, dock_start_cb=None, dock_roles=None):
+def player_docking(player_id_or_obj, DIFFICULTY, docking_range=600, docked_cb=None, docking_cb=None, dock_start_cb=None, dock_roles=None):
     if not object_exists(player_id_or_obj):
         # Ship is destroyed
         return None
@@ -109,7 +109,7 @@ def player_docking(player_id_or_obj, difficulty, docking_range=600, docked_cb=No
 
     if "undocked" == dock_state_string:
         # player_blob.set("dock_base_id", 0)
-        # _too_close = 300+(difficulty+1)*200
+        # _too_close = 300+(DIFFICULTY+1)*200
         # raider = closest(player_id_or_obj, role("raider"), _too_close)
 
         # if raider is None:
@@ -169,8 +169,8 @@ def player_docking_docking(player_id_or_obj, dock_station):
         player_blob.set("dock_state", "undocked")
         return RATE_SLOW
     
-    difficulty = get_shared_variable("difficulty", 5)
-    _too_close = 300+(difficulty+1)*200
+    DIFFICULTY = get_shared_variable("DIFFICULTY", 5)
+    _too_close = 300+(DIFFICULTY+1)*200
 
     ### REFACTOR: THIS IS WHERE mooring is tested
     raider = closest(player_id_or_obj, role("raider"), _too_close)

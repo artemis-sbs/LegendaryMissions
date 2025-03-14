@@ -56,7 +56,7 @@ stop_dist: 500
     _target = to_object(_target)
     if _target is not None:
         _target_id = to_id(_target)
-        BRAIN_AGENT.set_inventory_value("blackboard:target", target_id)
+        BRAIN_AGENT.set_inventory_value("blackboard:target", _target_id)
         target(BRAIN_AGENT_ID, _target_id, True, throttle, stop_dist=stop_dist)
         yield success
     BRAIN_AGENT.set_inventory_value("blackboard:target", None)

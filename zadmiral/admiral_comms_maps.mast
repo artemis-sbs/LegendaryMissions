@@ -6,7 +6,7 @@
     + "Back" //comms
     + "Scatter Stations":
         pos = Vec3(COMMS_ORIGIN.pos)
-        terrain_spawn_stations(difficulty, terrain_to_value(lethal_select), center=pos)
+        terrain_spawn_stations(DIFFICULTY, terrain_to_value(LETHAL_SELECT), center=pos)
         player_ships = to_object_list(role("__player__"))
         for player_ship in player_ships:
             side = player_ship.side
@@ -42,21 +42,21 @@
         
     + "Scatter Asteroid Clusters":
         pos = Vec3(COMMS_ORIGIN.pos)
-        terrain_asteroid_clusters(terrain_to_value(terrain_select, 2), pos)
+        terrain_asteroid_clusters(terrain_to_value(TERRAIN_SELECT, 2), pos)
 
     + "Scatter Nebular Clusters":
-        terrain_spawn_nebula_clusters(terrain_to_value(terrain_select, 2), pos)
+        terrain_spawn_nebula_clusters(terrain_to_value(TERRAIN_SELECT, 2), pos)
 
 
     + "Scatter Monsters":
         pos = Vec3(COMMS_ORIGIN.pos)
-        spawn_points = scatter.box(terrain_to_value(monster_select, 2), *pos.xyz, 75000, 1000, 75000, centered=True)
+        spawn_points = scatter.box(terrain_to_value(MONSTER_SELECT, 2), *pos.xyz, 75000, 1000, 75000, centered=True)
         for v in spawn_points:
             prefab_spawn("prefab_typhon_classic", None, *v.xyz)
 
     + "Scatter Black holes":
         pos = Vec3(COMMS_ORIGIN.pos)
-        spawn_points = scatter.box(terrain_to_value(lethal_select, 2), *pos.xyz, 75000, 500, 75000, centered=True)
+        spawn_points = scatter.box(terrain_to_value(LETHAL_SELECT, 2), *pos.xyz, 75000, 500, 75000, centered=True)
         for v in spawn_points:
             terrain_spawn_black_hole(*v.xyz)
 

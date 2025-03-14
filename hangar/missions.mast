@@ -15,7 +15,7 @@
 ======== hangar_schedule_mission
     
 ---- wait_for_game_started
-if not game_started:
+if not GAME_STARTED:
     await delay_sim(3)
     jump wait_for_game_started
 ->END if to_object(SPAWNED_ID) is None

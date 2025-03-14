@@ -75,67 +75,67 @@ abilities = {
 all_abilities = abilities | engine_abilities
 
 siege_kralien_fleet = [
-    # Difficulty 1
+    # DIFFICULTY 1
     [["kralien_cruiser"], 
      ["kralien_cruiser", "kralien_cruiser"], 
      ["kralien_battleship"], 
      ["kralien_battleship", "kralien_cruiser"], 
      ["kralien_dreadnought"]],
-    # Difficulty 2
+    # DIFFICULTY 2
     [["kralien_cruiser", "kralien_cruiser", "kralien_cruiser"], 
      ["kralien_cruiser", "kralien_cruiser", "kralien_cruiser"], 
      ["kralien_battleship", "kralien_battleship"], 
      ["kralien_battleship", "kralien_battleship"], 
      ["kralien_dreadnought", "kralien_cruiser"]],
-    # Difficulty 3
+    # DIFFICULTY 3
     [["kralien_battleship", "kralien_cruiser", "kralien_cruiser"], 
      ["kralien_battleship", "kralien_cruiser", "kralien_cruiser"], 
      ["kralien_battleship", "kralien_cruiser", "kralien_cruiser"], 
      ["kralien_dreadnought", "kralien_cruiser"], 
      ["kralien_dreadnought", "kralien_cruiser"]],
-    # Difficulty 4
+    # DIFFICULTY 4
     [["kralien_battleship", "kralien_battleship", "kralien_cruiser"],
      ["kralien_cruiser", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_cruiser", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_dreadnought"]],
-    # Difficulty 5
+    # DIFFICULTY 5
     [["kralien_battleship", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_battleship", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_battleship", "kralien_battleship", "kralien_battleship"],
      ["kralien_battleship", "kralien_battleship", "kralien_battleship"],
      ["kralien_dreadnought", "kralien_battleship", "kralien_cruiser"]],
-    # Difficulty 6
+    # DIFFICULTY 6
     [["kralien_battleship", "kralien_battleship", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_cruiser", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_dreadnought", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_battleship", "kralien_battleship"]],
-    # Difficulty 7
+    # DIFFICULTY 7
     [["kralien_battleship", "kralien_battleship", "kralien_battleship", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_battleship", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_battleship", "kralien_battleship", "kralien_battleship"],
      ["kralien_dreadnought", "kralien_dreadnought", "kralien_battleship", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_battleship", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"]],
-    # Difficulty 8
+    # DIFFICULTY 8
     [["kralien_dreadnought", "kralien_battleship", "kralien_battleship", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_battleship", "kralien_battleship", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_dreadnought", "kralien_battleship", "kralien_battleship"],
      ["kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_dreadnought", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"]],
-    # Difficulty 9
+    # DIFFICULTY 9
     [["kralien_dreadnought", "kralien_dreadnought", "kralien_battleship", "kralien_battleship", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_battleship", "kralien_battleship", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_battleship", "kralien_battleship", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_battleship", "kralien_battleship", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_battleship", "kralien_battleship", "kralien_battleship", "kralien_battleship"]],
-    # Difficulty 10
+    # DIFFICULTY 10
     [["kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_battleship", "kralien_battleship"],
      ["kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_dreadnought", "kralien_battleship", "kralien_battleship", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_cruiser", "kralien_cruiser", "kralien_cruiser"],
      ["kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_battleship"]],
-    # Difficulty 11
+    # DIFFICULTY 11
     [["kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought"],
      ["kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought"],
      ["kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought", "kralien_dreadnought"],
@@ -144,67 +144,67 @@ siege_kralien_fleet = [
 ]
 
 siege_torgoth_fleet = [
-    # Difficulty 1
+    # DIFFICULTY 1
     [["torgoth_destroyer"],
      ["torgoth_destroyer"],
      ["torgoth_destroyer"],
      ["torgoth_destroyer"],
      ["torgoth_destroyer"]],
-     # Difficulty 2
+     # DIFFICULTY 2
      [["torgoth_destroyer"],
       ["torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_goliath"],
       ["torgoth_goliath"]],
-     # Difficulty 3
+     # DIFFICULTY 3
      [["torgoth_destroyer"],
       ["torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_goliath"],
       ["torgoth_goliath", "torgoth_destroyer"],
       ["torgoth_goliath", "torgoth_destroyer"]],
-     # Difficulty 4
+     # DIFFICULTY 4
      [["torgoth_destroyer"],
       ["torgoth_goliath"],
       ["torgoth_goliath", "torgoth_destroyer"],
       ["torgoth_goliath", "torgoth_destroyer"],
       ["torgoth_goliath", "torgoth_destroyer", "torgoth_destroyer"]],
-     # Difficulty 5
+     # DIFFICULTY 5
      [["torgoth_goliath", "torgoth_destroyer"],
       ["torgoth_goliath", "torgoth_destroyer"],
       ["torgoth_goliath", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_goliath", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer"]],
-     # Difficulty 6
+     # DIFFICULTY 6
      [["torgoth_goliath", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_goliath", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_goliath", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer"]],
-     # Difficulty 7
+     # DIFFICULTY 7
      [["torgoth_goliath", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_goliath", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_behemoth", "torgoth_destroyer", "torgoth_destroyer"]],
-     # Difficulty 8
+     # DIFFICULTY 8
      [["torgoth_goliath", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_behemoth", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_behemoth", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer"]],
-     # Difficulty 9
+     # DIFFICULTY 9
      [["torgoth_goliath", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_behemoth", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_behemoth", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer"]],
-     # Difficulty 10
+     # DIFFICULTY 10
      [["torgoth_goliath", "torgoth_goliath", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_leviathan", "torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_leviathan", "torgoth_leviathan", "torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_behemoth", "torgoth_behemoth", "torgoth_destroyer", "torgoth_destroyer", "torgoth_destroyer"],
       ["torgoth_behemoth", "torgoth_behemoth", "torgoth_leviathan", "torgoth_destroyer", "torgoth_destroyer"]],
-     # Difficulty 11
+     # DIFFICULTY 11
      [["torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth"],
       ["torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth"],
       ["torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth", "torgoth_behemoth"],
@@ -213,67 +213,67 @@ siege_torgoth_fleet = [
 ]
 
 siege_arvonian_fleet = [
-    # Difficulty 1
+    # DIFFICULTY 1
     [["arvonian_destroyer"],
      ["arvonian_destroyer"],
      ["arvonian_destroyer"],
      ["arvonian_destroyer"],
      ["arvonian_destroyer"]],
-     # Difficulty 2
+     # DIFFICULTY 2
      [["arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"]],
-     # Difficulty 3
+     # DIFFICULTY 3
      [["arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"]],
-     # Difficulty 4
+     # DIFFICULTY 4
      [["arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_light_carrier"]],
-     # Difficulty 5
+     # DIFFICULTY 5
      [["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_light_carrier"],
       ["arvonian_light_carrier", "arvonian_destroyer"],
       ["arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer"]],
-     # Difficulty 6
+     # DIFFICULTY 6
      [["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"]],
-     # Difficulty 7
+     # DIFFICULTY 7
      [["arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_destroyer", "arvonian_destroyer"]],
-     # Difficulty 8
+     # DIFFICULTY 8
      [["arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"]],
-     # Difficulty 9
+     # DIFFICULTY 9
      [["arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_light_carrier", "arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"]],
-     # Difficulty 10
+     # DIFFICULTY 10
      [["arvonian_carrier", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_carrier", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_light_carrier", "arvonian_light_carrier", "arvonian_destroyer", "arvonian_destroyer"],
       ["arvonian_carrier", "arvonian_carrier", "arvonian_carrier", "arvonian_destroyer", "arvonian_destroyer", "arvonian_destroyer"]],
-     # Difficulty 11
+     # DIFFICULTY 11
      [["arvonian_carrier", "arvonian_carrier", "arvonian_carrier", "arvonian_carrier", "arvonian_carrier", "arvonian_carrier"],
       ["arvonian_carrier", "arvonian_carrier", "arvonian_carrier", "arvonian_carrier", "arvonian_carrier", "arvonian_carrier"],
       ["arvonian_carrier", "arvonian_carrier", "arvonian_carrier", "arvonian_carrier", "arvonian_carrier", "arvonian_carrier"],
@@ -282,61 +282,61 @@ siege_arvonian_fleet = [
 ]
 
 siege_skaraan_fleet = [
-    # Difficulty 1
+    # DIFFICULTY 1
     [["skaraan_defiler"],
      ["skaraan_defiler"],
      ["skaraan_defiler"],
      ["skaraan_defiler"],
      ["skaraan_defiler"]],
-     # Difficulty 2
+     # DIFFICULTY 2
      [["skaraan_defiler"],
      ["skaraan_defiler"],
      ["skaraan_defiler"],
      ["skaraan_enforcer"],
      ["skaraan_enforcer"]],
-     # Difficulty 3
+     # DIFFICULTY 3
      [["skaraan_defiler"],
      ["skaraan_defiler"],
      ["skaraan_enforcer"],
      ["skaraan_enforcer"],
      ["skaraan_enforcer"]],
-     # Difficulty 4
+     # DIFFICULTY 4
      [["skaraan_enforcer"],
      ["skaraan_enforcer"],
      ["skaraan_enforcer"],
      ["skaraan_enforcer"],
      ["skaraan_enforcer"]],
-     # Difficulty 5
+     # DIFFICULTY 5
      [["skaraan_enforcer"],
      ["skaraan_enforcer"],
      ["skaraan_enforcer"],
      ["skaraan_enforcer"],
      ["skaraan_executor"]],
-     # Difficulty 6
+     # DIFFICULTY 6
      [["skaraan_enforcer"],
      ["skaraan_enforcer"],
      ["skaraan_enforcer"],
      ["skaraan_executor"],
      ["skaraan_executor"]],
-     # Difficulty 7
+     # DIFFICULTY 7
      [["skaraan_enforcer"],
      ["skaraan_enforcer"],
      ["skaraan_executor"],
      ["skaraan_executor"],
      ["skaraan_executor"]],
-     # Difficulty 8
+     # DIFFICULTY 8
      [["skaraan_enforcer"],
      ["skaraan_executor"],
      ["skaraan_executor"],
      ["skaraan_executor"],
      ["skaraan_executor"]],
-     # Difficulty 9
+     # DIFFICULTY 9
      [["skaraan_executor"],
      ["skaraan_executor"],
      ["skaraan_executor"],
      ["skaraan_executor"],
      ["skaraan_executor"]],
-     # Difficulty 10
+     # DIFFICULTY 10
      [["skaraan_executor"],
      ["skaraan_executor"],
      ["skaraan_executor"],
@@ -347,7 +347,7 @@ siege_skaraan_fleet = [
     #  ["skaraan_executor"],
     #  ["skaraan_executor"],
     #  ["skaraan_executor", "skaraan_executor"]],
-     # Difficulty 11
+     # DIFFICULTY 11
      [["skaraan_executor"],
      ["skaraan_executor"],
      ["skaraan_executor"],
@@ -362,67 +362,67 @@ siege_skaraan_fleet = [
 ]
 
 siege_ximni_fleet = [
-    # Difficulty 1
+    # DIFFICULTY 1
     [["xim_scout"],
      ["xim_scout"],
      ["xim_scout"],
      ["xim_scout"],
      ["xim_corsair"]],
-     # Difficulty 2
+     # DIFFICULTY 2
      [["xim_scout"],
      ["xim_scout"],
      ["xim_scout"],
      ["xim_corsair"],
      ["xim_light_cruiser"]],
-     # Difficulty 3
+     # DIFFICULTY 3
      [["xim_scout"],
      ["xim_scout"],
      ["xim_corsair"],
      ["xim_corsair"],
      ["xim_light_cruiser"]],
-     # Difficulty 4
+     # DIFFICULTY 4
      [["xim_scout"],
      ["xim_corsair"],
      ["xim_corsair"],
      ["xim_light_cruiser"],
      ["xim_light_cruiser"]],
-     # Difficulty 5
+     # DIFFICULTY 5
      [["xim_scout"],
      ["xim_corsair"],
      ["xim_light_cruiser"],
      ["xim_light_cruiser"],
      ["xim_light_cruiser"]],
-     # Difficulty 6
+     # DIFFICULTY 6
      [["xim_corsair"],
      ["xim_light_cruiser"],
      ["xim_light_cruiser"],
      ["xim_light_cruiser"],
      ["xim_light_cruiser"]],
-     # Difficulty 7
+     # DIFFICULTY 7
      [["xim_light_cruiser"],
      ["xim_light_cruiser"],
      ["xim_light_cruiser"],
      ["xim_dreadnought"],
      ["xim_dreadnought"]],
-     #Difficulty 8
+     #DIFFICULTY 8
      [["xim_dreadnought"],
      ["xim_dreadnought"],
      ["xim_dreadnought"],
      ["xim_dreadnought"],
      ["xim_battleship"]],
-     # Difficulty 9
+     # DIFFICULTY 9
      [["xim_dreadnought"],
      ["xim_dreadnought"],
      ["xim_battleship"],
      ["xim_battleship"],
      ["xim_battleship"]],
-     # Difficulty 10
+     # DIFFICULTY 10
      [["xim_dreadnought"],
      ["xim_battleship"],
      ["xim_battleship"],
      ["xim_dreadnought", "xim_dreadnought"],
      ["xim_battleship", "xim_battleship"]],
-     # Difficulty 11
+     # DIFFICULTY 11
      [["xim_dreadnought", "xim_dreadnought", "xim_dreadnought", "xim_battleship", "xim_battleship", "xim_battleship"],
      ["xim_dreadnought", "xim_dreadnought", "xim_dreadnought", "xim_battleship", "xim_battleship", "xim_battleship"],
      ["xim_dreadnought", "xim_dreadnought", "xim_dreadnought", "xim_battleship", "xim_battleship", "xim_battleship"],
@@ -431,67 +431,67 @@ siege_ximni_fleet = [
 ]
 
 siege_pirate_fleet = [
-    # Difficulty 1
+    # DIFFICULTY 1
     [["pirate_longbow"],
      ["pirate_longbow"],
      ["pirate_longbow"],
      ["pirate_longbow"],
      ["pirate_longbow"]],
-     # Difficulty 2
+     # DIFFICULTY 2
      [["pirate_longbow"],
       ["pirate_longbow"],
       ["pirate_longbow"],
       ["pirate_longbow", "pirate_longbow"],
       ["pirate_longbow", "pirate_longbow"]],
-     # Difficulty 3
+     # DIFFICULTY 3
      [["pirate_longbow"],
       ["pirate_longbow"],
       ["pirate_longbow", "pirate_longbow"],
       ["pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow"]],
-     # Difficulty 4
+     # DIFFICULTY 4
      [["pirate_longbow"],
       ["pirate_longbow", "pirate_longbow"],
       ["pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow"],
       ["pirate_strongbow"]],
-     # Difficulty 5
+     # DIFFICULTY 5
      [["pirate_longbow"],
       ["pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow"],
       ["pirate_strongbow"],
       ["pirate_strongbow"]],
-     # Difficulty 6
+     # DIFFICULTY 6
      [["pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow"],
       ["pirate_strongbow", "pirate_longbow"],
       ["pirate_strongbow", "pirate_longbow"],
       ["pirate_strongbow", "pirate_longbow", "pirate_longbow"]],
-     # Difficulty 7
+     # DIFFICULTY 7
      [["pirate_longbow", "pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow", "pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow", "pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow", "pirate_longbow", "pirate_longbow"],
       ["pirate_brigantine"]],
-     # Difficulty 8
+     # DIFFICULTY 8
      [["pirate_strongbow", "pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow", "pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow", "pirate_longbow", "pirate_longbow"],
       ["pirate_brigantine", "pirate_longbow"],
       ["pirate_brigantine", "pirate_longbow", "pirate_longbow"]],
-     # Difficulty 9
+     # DIFFICULTY 9
      [["pirate_strongbow", "pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow", "pirate_longbow", "pirate_longbow", "pirate_longbow"],
       ["pirate_brigantine", "pirate_longbow", "pirate_longbow"],
       ["pirate_brigantine", "pirate_longbow", "pirate_longbow"],
       ["pirate_brigantine", "pirate_longbow", "pirate_longbow", "pirate_longbow"]],
-     # Difficulty 10
+     # DIFFICULTY 10
      [["pirate_strongbow", "pirate_strongbow", "pirate_longbow", "pirate_longbow"],
       ["pirate_brigantine", "pirate_longbow", "pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow", "pirate_brigantine", "pirate_longbow", "pirate_longbow"],
       ["pirate_brigantine", "pirate_brigantine", "pirate_longbow", "pirate_longbow"],
       ["pirate_strongbow", "pirate_strongbow", "pirate_brigantine", "pirate_longbow", "pirate_longbow"]],
-     # Difficulty 11
+     # DIFFICULTY 11
      [["pirate_strongbow", "pirate_strongbow", "pirate_strongbow", "pirate_brigantine", "pirate_brigantine", "pirate_brigantine"],
       ["pirate_strongbow", "pirate_strongbow", "pirate_strongbow", "pirate_brigantine", "pirate_brigantine", "pirate_brigantine"],
       ["pirate_strongbow", "pirate_strongbow", "pirate_strongbow", "pirate_brigantine", "pirate_brigantine", "pirate_brigantine"],
@@ -553,7 +553,7 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
 
     Args:
         race (str): 
-        fleet_diff (int): difficulty -1 to use as index for fleet lists
+        fleet_diff (int): DIFFICULTY -1 to use as index for fleet lists
         posx (float): location
         posy (float): location
         posz (float): location
@@ -572,7 +572,7 @@ def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet"
 
     Args:
         race (str): 
-        fleet_diff (int): difficulty -1 to use as index for fleet lists
+        fleet_diff (int): DIFFICULTY -1 to use as index for fleet lists
         posx (float): location
         posy (float): location
         posz (float): location

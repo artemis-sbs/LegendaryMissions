@@ -6,23 +6,23 @@
 metadata:``` yaml
 Properties:
   Main:
-    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'
-    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "difficulty")'
+    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
   Map:
-    Terrain: 'gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many",var="terrain_select")'
-    Lethal Terrain: 'gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")'
-    Friendly Ships: 'gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")'
-    Monsters: 'gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")'
-    Upgrades: 'gui_drop_down("$text: {upgrade_select};list: none, few, some, lots, many", var= "upgrade_select")'
-    Time Limit: 'gui_input("desc: Minutes;", var="game_time_limit")'
+    Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, many",var="TERRAIN_SELECT")'
+    Lethal Terrain: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, many", var="LETHAL_SELECT")'
+    Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, many", var="FRIENDLY_SELECT")'
+    Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, many", var="MONSTER_SELECT")'
+    Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, many", var= "UPGRADE_SELECT")'
+    Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
 ```
 
 
-    terrain_value = terrain_to_value(terrain_select)
-    lethal_value =  terrain_to_value(lethal_select)
+    terrain_value = terrain_to_value(TERRAIN_SELECT)
+    lethal_value =  terrain_to_value(LETHAL_SELECT)
     friendly_value = 0 # No friendlies
-    monster_value = terrain_to_value(monster_select)
-    upgrade_value = terrain_to_value(upgrade_select)
+    monster_value = terrain_to_value(MONSTER_SELECT)
+    upgrade_value = terrain_to_value(UPGRADE_SELECT)
 
 
     if seed_value != 0:
@@ -81,9 +81,9 @@ Properties:
     pos = Vec3()
     startZ = -50000
 
-    fleet_index = int(difficulty) - 1
+    fleet_index = int(DIFFICULTY) - 1
 
-    num_enemy_stations = int(difficulty)
+    num_enemy_stations = int(DIFFICULTY)
     if num_enemy_stations < 3:
         num_enemy_stations = 3
     station_step = 100000/num_enemy_stations
@@ -135,7 +135,7 @@ Properties:
         apos.z = pos.z + 50.0
 
         #create_siege_fleet(enemy1, fleet_index, apos.x, apos.y, apos.z)
-        prefab_spawn(prefab_fleet_raider, {"race": enemy1,"fleet_difficulty": difficulty, "START_X": apos.x, "START_Y": apos.y, "START_Z": apos.z})
+        prefab_spawn(prefab_fleet_raider, {"race": enemy1,"fleet_difficulty": DIFFICULTY, "START_X": apos.x, "START_Y": apos.y, "START_Z": apos.z})
 
 
     task_schedule(task_deepstrike_end_game)

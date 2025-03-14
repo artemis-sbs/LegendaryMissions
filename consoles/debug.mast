@@ -7,23 +7,23 @@ shared allow_debug = True
 #  gui_active_path("console/helm, console/comms, console/engineering, console/science, console/weapons" )
 
 //gui/tab/helm if is_dev_build()
-    console_select= "helm"
+    CONSOLE_SELECT= "helm"
     jump console_selected 
 
 //gui/tab/comms if is_dev_build()
-    console_select= "comms"
+    CONSOLE_SELECT= "comms"
     jump console_selected 
 
 //gui/tab/engineering if is_dev_build()
-    console_select= "engineering"
+    CONSOLE_SELECT= "engineering"
     jump console_selected 
 
 //gui/tab/science if is_dev_build()
-    console_select= "science"
+    CONSOLE_SELECT= "science"
     jump console_selected 
 
 //gui/tab/weapons if is_dev_build()
-    console_select= "weapons"
+    CONSOLE_SELECT= "weapons"
     jump console_selected 
 
 
@@ -105,7 +105,7 @@ shared allow_debug = True
     gui_blank()
     gui_row()
     on gui_message(gui_button("Trigger end game")):
-        start_text = "Debug ended mission."
+        START_TEXT = "Debug ended mission."
         signal_emit("show_game_results", None)
 
 

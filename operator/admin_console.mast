@@ -1,7 +1,7 @@
 shared game_paused = False
-default shared operator_mode_enabled = False
+default shared OPERATOR_MODE_enabled = False
 
-@console/admin "Operator Admin" if operator_mode_enabled
+@console/admin "Operator Admin" if OPERATOR_MODE_enabled
 " A console for the game operator
 
 
@@ -10,7 +10,7 @@ default shared operator_mode_enabled = False
     """operator pin"""
     _in = gui_input("""desc: Enter pin;password:True;""", var="pin")
     on gui_message(_in):
-    jump operator_admin_console if pin == operator_mode.get("pin")
+    jump operator_admin_console if pin == OPERATOR_MODE.get("pin")
 
     await gui():
         + "cancel":
@@ -23,7 +23,7 @@ default shared operator_mode_enabled = False
 
     watch_end_game_task = None
     shared watch_raider_count = None
-    jump operator_stats if game_started
+    jump operator_stats if GAME_STARTED
 
     jump show_server_menu 
 
@@ -199,7 +199,7 @@ if EVENT.extra_extra_tag == "rmb":
 + "No do not end game":
     comms_navigate("//comms")
 + "Yes I am sure end the game":
-    start_text = "Mission ended."
+    START_TEXT = "Mission ended."
     signal_emit("show_game_results", None)
 
 

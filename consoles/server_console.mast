@@ -9,7 +9,7 @@ logger("mast:internal") #
 
 
 
-shared start_text = """
+shared START_TEXT = """
 $t Mission Selection:
 
 Select a mission type below then select start mission.
@@ -33,26 +33,26 @@ gui_reroute_clients("client_main")
 
     settings = settings_get_defaults()
     shared SETTINGS = settings
-    shared world_select  = settings.get("world_select")
-    shared terrain_select  = settings.get("terrain_select")
-    shared lethal_select  = settings.get("lethal_select")
-    shared friendly_select  = settings.get("friendly_select")
-    shared monster_select  = settings.get("monster_select")
-    shared upgrade_select  = settings.get("upgrade_select")
+    shared WORLD_SELECT  = settings.get("WORLD_SELECT")
+    shared TERRAIN_SELECT  = settings.get("TERRAIN_SELECT")
+    shared LETHAL_SELECT  = settings.get("LETHAL_SELECT")
+    shared FRIENDLY_SELECT  = settings.get("FRIENDLY_SELECT")
+    shared MONSTER_SELECT  = settings.get("MONSTER_SELECT")
+    shared UPGRADE_SELECT  = settings.get("UPGRADE_SELECT")
     shared seed_value  = settings.get("seed_value")
-    shared game_started  = settings.get("game_started")
-    shared game_ended  = settings.get("game_ended")
-    shared game_time_limit  = str(settings.get("game_time_limit", ""))
-    shared war_time_delay  = str(settings.get("war_time_delay", ""))
-    shared difficulty=   settings.get("difficulty")
-    shared player_count  = settings.get("player_count")
-    shared player_list  =  settings.get("player_list")
+    shared GAME_STARTED  = settings.get("GAME_STARTED")
+    shared GAME_ENDED  = settings.get("GAME_ENDED")
+    shared GAME_TIME_LIMIT  = str(settings.get("GAME_TIME_LIMIT", ""))
+    shared WAR_TIME_DELAY  = str(settings.get("WAR_TIME_DELAY", ""))
+    shared DIFFICULTY=   settings.get("DIFFICULTY")
+    shared PLAYER_COUNT  = settings.get("PLAYER_COUNT")
+    shared PLAYER_LIST  =  settings.get("PLAYER_LIST")
 
-    shared auto_start = settings.get("auto_start", False)
+    shared AUTO_START = settings.get("AUTO_START", False)
 
-    shared operator_mode = settings.get("operator_mode", {"enable: False"})
-    shared operator_mode_enabled = operator_mode.get("enable", False)
-    shared operator_show_logo_on_main = operator_mode.get("show_logo_on_main", False)
+    shared OPERATOR_MODE = settings.get("OPERATOR_MODE", {"enable: False"})
+    shared OPERATOR_MODE_enabled = OPERATOR_MODE.get("enable", False)
+    shared operator_show_logo_on_main = OPERATOR_MODE.get("show_logo_on_main", False)
 
     start_npc_cag()
 
@@ -61,13 +61,13 @@ gui_reroute_clients("client_main")
     shared mission_index = 0
     shared mission_list = maps_get_list()
     shared mission_overview = maps_get_init()
-    shared world_select_path  = settings.get("world_select")
+    shared WORLD_SELECT_path  = settings.get("WORLD_SELECT")
     sim_create()
     #
     # Create all the player ships
     # 
 
-    for player_ship_data in player_list:
+    for player_ship_data in PLAYER_LIST:
         player_ship = to_id(player_spawn(0,0,0, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
         player_ship_data["id"] = player_ship
         add_role(player_ship, "default_player_ship")
@@ -77,13 +77,13 @@ gui_reroute_clients("client_main")
     # sim_pause()
     i = 0
     for m in mission_list:
-        if m.path == world_select_path:
+        if m.path == WORLD_SELECT_path:
             mission_index = i
             break
         i += 1
-    shared world_select = mission_list[mission_index]
+    shared WORLD_SELECT = mission_list[mission_index]
 
-    jump operator_main_screen if operator_mode_enabled and operator_show_logo_on_main
+    jump operator_main_screen if OPERATOR_MODE_enabled and operator_show_logo_on_main
 
 
 #
@@ -91,16 +91,16 @@ gui_reroute_clients("client_main")
 #
 ====== show_server_menu =====
     #
-    jump start if auto_start
+    jump start if AUTO_START
 
     #
     # if there is a single mission or a map/__init__
     # Use it for the start text
     if mission_overview is not None:
-        start_text = """$t {mission_overview.display_name}:\n\n{mission_overview.desc}"""
+        START_TEXT = """$t {mission_overview.display_name}:\n\n{mission_overview.desc}"""
 
     gui_section( style="area: 20px, 20px, 100, 210px;margin:0,0,10px,0;padding:10px,0;background:#1578;")
-    gui_text_area(start_text)
+    gui_text_area(START_TEXT)
 
     # For using a seed value when randomly generating terrain, not currently implemented
     #row style="row-height:65px;"
@@ -112,16 +112,16 @@ gui_reroute_clients("client_main")
 
     gui_section(style="area: 50, 95-500px, 100, 95;margin:30px,0,10px,0;background:#1578;")
     #
-    # Demo only has difficulty
+    # Demo only has DIFFICULTY
     #
     #
     gui_property_list_box(name="Options")
-    p = map_get_properties(world_select)
+    p = map_get_properties(WORLD_SELECT)
     
     if sbs.is_demo():
         p = """
 Main:
-    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0", var="difficulty")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0", var="DIFFICULTY")'
 """
 
     gui_properties_set(p)
@@ -136,11 +136,11 @@ Main:
     # Initialize the selection to account for if we already have one
     mission_picker.set_selected_index(mission_index)
 
-    world_select = mission_picker.get_value()
+    WORLD_SELECT = mission_picker.get_value()
 
     on change mission_picker.get_selected_index():
         # This should be one thing, or None
-        world_select = mission_picker.get_value()
+        WORLD_SELECT = mission_picker.get_value()
         mission_index = mission_picker.get_selected_index()
         jump show_server_menu
 
@@ -160,31 +160,31 @@ Main:
     # label to build the world
     #
 
-    tl = safe_int(game_time_limit)
+    tl = safe_int(GAME_TIME_LIMIT)
     if tl >0:
         set_timer(SHARED, "time_limit", minutes=tl)
 
     #------------------------------------------------------------------------------------------------------------
     # Player = 7 points of damage, npc = a range 3.5 - 8.5 
-    sbs.set_beam_damages(0, 7.0, (difficulty/2.0) + 3.0)
+    sbs.set_beam_damages(0, 7.0, (DIFFICULTY/2.0) + 3.0)
 
 
-    if world_select is not None:
-        task_schedule(world_select)
+    if WORLD_SELECT is not None:
+        task_schedule(WORLD_SELECT)
 
     #
     # Consoles are waiting to be started 
     #
-    game_started = True
+    GAME_STARTED = True
     signal_emit("game_started", {})
 
 
     # Temp set this when first running
     shared SIM_STATE = "sim_unknown"
 
-    player_list = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
-    if len(player_list)>0:
-        sbs.assign_client_to_ship(0, player_list[0].id)
+    PLAYER_LIST = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
+    if len(PLAYER_LIST)>0:
+        sbs.assign_client_to_ship(0, PLAYER_LIST[0].id)
         
     gui_reroute_clients(game_started_console, exclude={client_id})
     #
@@ -279,7 +279,7 @@ Main:
 
 
 ====  pause_screen ====
-    jump operator_stats if operator_mode_enabled
+    jump operator_stats if OPERATOR_MODE_enabled
 
     gui_section( style="area: 5, 10, 50, 90;")
     """""Simulation paused"""""

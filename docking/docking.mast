@@ -4,7 +4,7 @@
 #
 //spawn if has_role(SPAWNED_ID, "__player__")
 ---- wait_for_game_started
-    if not game_started:
+    if not GAME_STARTED:
         await delay_sim(1)
         jump wait_for_game_started
 
@@ -12,10 +12,10 @@
     side = role(side)
 
     docking_set_docking_logic(SPAWNED_ID, side & role("station"), docking_dock_with_friendly_station)
-    # if world_select.path == "deep_strike":
-    #     schedule_player_docking(SPAWNED_ID, difficulty, "resupply_tanker", player_docking_resupply_docked)
+    # if WORLD_SELECT.path == "deep_strike":
+    #     schedule_player_docking(SPAWNED_ID, DIFFICULTY, "resupply_tanker", player_docking_resupply_docked)
     # else:
-    #     schedule_player_docking(SPAWNED_ID, difficulty, "station", player_docking_station_docked)
+    #     schedule_player_docking(SPAWNED_ID, DIFFICULTY, "station", player_docking_station_docked)
 
 
 #
@@ -43,7 +43,7 @@ distance: 600
     
 # Call while the tractor is 
 +++ docking
-    _too_close = 300+(difficulty+1)*200
+    _too_close = 300+(DIFFICULTY+1)*200
     raider = closest(DOCKING_PLAYER_ID, role("raider"), _too_close)
     if raider is not None:
         # comms_message("Attempting dock when enemies is ill advised.", DOCKING_PLAYER_ID, DOCKING_PLAYER_ID,  "Enemies near", None, "white", "red", from_name="Docking")

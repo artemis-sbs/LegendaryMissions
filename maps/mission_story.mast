@@ -14,7 +14,7 @@
 //shared/signal/player_ship_destroyed
 
     print("story: Exploded Deleting player_ship")
-    yield success if get_shared_inventory_value("game_ended", False)
+    yield success if get_shared_inventory_value("GAME_ENDED", False)
 
     so = to_object(DESTROYED_ID)
     if so is not None:
@@ -33,9 +33,9 @@
 
     players = role('__player__')
     if len(players)==0:
-        start_text = "Mission is lost!  All the player ships have been destroyed."
-        game_started = False
-        game_ended = True
+        START_TEXT = "Mission is lost!  All the player ships have been destroyed."
+        GAME_STARTED = False
+        GAME_ENDED = True
         sbs.play_music_file(0, "music/default/failure")
         signal_emit("show_game_results", None)
         ->END

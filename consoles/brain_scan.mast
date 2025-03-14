@@ -31,36 +31,36 @@ brain_to_watch = None
 
     gui_activate_console("brain_sci")
 
-    _ship_id = sbs.get_ship_of_client(client_id) 
-    faction_ship = to_object(_ship_id)
-    cambot_id = get_inventory_value(client_id, "BRAIN_COMBOT", None)
-    cambot = to_object(cambot_id)
-    if cambot_id is None or cambot is None:
-        #
-        # has_science_scan enables friendly eyes processing
-        # while not being a player
-        #
-        cambot = to_object(npc_spawn(0,0,-10000, "", "", "invisible", "behav_nebula")) 
-        cambot_id = to_id(cambot)
-        set_inventory_value(client_id, "ADMIRAL_COMBOT", cambot_id)
-        # Set up scan sources
-        stations_friendly = any_role("__npc__,__player__")
-        link(cambot_id,"extra_scan_source" ,stations_friendly)
+    # _ship_id = sbs.get_ship_of_client(client_id) 
+    # faction_ship = to_object(_ship_id)
+    # cambot_id = get_inventory_value(client_id, "BRAIN_COMBOT", None)
+    # cambot = to_object(cambot_id)
+    # if cambot_id is None or cambot is None:
+    #     #
+    #     # has_science_scan enables friendly eyes processing
+    #     # while not being a player
+    #     #
+    #     cambot = to_object(npc_spawn(0,0,-10000, "", "", "invisible", "behav_nebula")) 
+    #     cambot_id = to_id(cambot)
+    #     set_inventory_value(client_id, "ADMIRAL_COMBOT", cambot_id)
+    #     # Set up scan sources
+    #     stations_friendly = any_role("__npc__,__player__")
+    #     link(cambot_id,"extra_scan_source" ,stations_friendly)
 
-    last_sci = cambot_id
-    #
-    # Should have a way to get all factions/side
-    #
-    #cambot.data_set.set("ally_list","tsn,civ,raider",0)
-    cambot.data_set.set("ship_base_scan_range", 15000,0)
+    # last_sci = cambot_id
+    # #
+    # # Should have a way to get all factions/side
+    # #
+    # #cambot.data_set.set("ally_list","tsn,civ,raider",0)
+    # cambot.data_set.set("ship_base_scan_range", 15000,0)
     
-    await delay_sim(1)
+    # await delay_sim(1)
     #
     # Assign before setting comms up
     #
     
-    sbs.assign_client_to_ship(client_id, cambot_id)
-    science_set_scan_data(cambot_id, cambot_id, {"scan": "Brain Scan"})
+    # sbs.assign_client_to_ship(client_id, cambot_id)
+    # science_set_scan_data(cambot_id, cambot_id, {"scan": "Brain Scan"})
     # Whole screen
     gui_section(style="area:0,45px,100,100;")
 
