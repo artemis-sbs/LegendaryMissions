@@ -27,6 +27,7 @@ class Fleet(Agent):
         self.destination = Vec3(0,0,0)
         self.anger_dict = {}
         self.add_role("fleet")
+        self.name = f"fleet {self.id&0x0000FFFFFFFFFFFF}"
 
         if side is not None:
             if isinstance(side, str):
@@ -71,8 +72,7 @@ class Fleet(Agent):
         self.anger_dict = new_anger
 
         return best_id
-    
-    
+
     #--------------------------------------------------------------------------------------
 #     @label()
 #     def tick(self):
@@ -182,7 +182,6 @@ class Fleet(Agent):
 
 #         yield AWAIT(delay_sim(seconds=10))
 #         yield jump(self.tick)
-
     #--------------------------------------------------------------------------------------
     def ship_takes_damage(self, my_ship_id, attacker_id):
         if 0 == attacker_id:

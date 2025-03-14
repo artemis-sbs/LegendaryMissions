@@ -35,7 +35,7 @@ default ADMIRAL_CONSOLE_ENABLED = True
         cambot_id = camera_id
 
         # Set up scan sources
-        stations_friendly = role("station")|role("defender")|role("raider")
+        stations_friendly = any_role("__npc__,__player__")
         link(cambot_id,"extra_scan_source" ,stations_friendly)
 
     last_sci = cambot_id
@@ -43,7 +43,7 @@ default ADMIRAL_CONSOLE_ENABLED = True
     # Should have a way to get all factions/side
     #
     #cambot.data_set.set("ally_list","tsn,civ,raider",0)
-    cambot.data_set.set("ship_base_scan_range", 35000,0)
+    cambot.data_set.set("ship_base_scan_range", 15000,0)
     
     await delay_sim(1)
     #

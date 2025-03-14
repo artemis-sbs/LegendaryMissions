@@ -47,7 +47,7 @@
 
 
 //comms/admiral/spawn/station if has_roles(COMMS_ORIGIN_ID, 'admiral')
-    station_data = filter_ship_data_by_side(None, None, "station", False)
+    station_data = ship_data_filter_ship_data_by_side(None, None, "station", False)
 
     + "Back" //comms
 

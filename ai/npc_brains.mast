@@ -9,14 +9,14 @@ stop_dist: 500
 ```
     # Can't use the target from the engine, because that 
     # can clear with stop distance
-    current_target =  BRAIN_AGENT.get_inventory_value("brain_target")
+    current_target =  BRAIN_AGENT.get_inventory_value("blackboard:target")
     # Clear it now, set it back if success
-    BRAIN_AGENT.set_inventory_value("brain_target",0)
+    BRAIN_AGENT.set_inventory_value("blackboard:target",0)
     yield fail if current_target == 0
     yield fail if to_object(current_target) is None
     yield fail if sbs.distance_id(BRAIN_AGENT_ID, current_target) > distance
     #print("CHASE CUR {distance} {current_target}")
-    BRAIN_AGENT.set_inventory_value("brain_target", current_target)
+    BRAIN_AGENT.set_inventory_value("blackboard:target", current_target)
     target(BRAIN_AGENT_ID, current_target, True, throttle, stop_dist=stop_dist)
     yield success
 
@@ -33,10 +33,13 @@ stop_dist: 500
     default SIZE_Z = SIZE_X
     # The role "#" is an invisible e.g. admiral, operator
     _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('ship')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
+    _target = to_object(_target)
     if _target is not None:
-        BRAIN_AGENT.set_inventory_value("brain_target", to_id(_target))
-        target(BRAIN_AGENT_ID, _target, True, throttle, stop_dist=stop_dist)
+        _target_id = to_id(_target)
+        BRAIN_AGENT.set_inventory_value("blackboard:target", _target_id)
+        target(BRAIN_AGENT_ID, _target_id, True, throttle, stop_dist=stop_dist)
         yield success
+    BRAIN_AGENT.set_inventory_value("blackboard:target", None)
     yield fail
 
 === ai_chase_player
@@ -50,11 +53,13 @@ stop_dist: 500
     default SIZE_Z = SIZE_X
     # The role "#" is an invisible e.g. admiral, operator
     _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('__player__')-role_allies(BRAIN_AGENT_ID)-role("#"))
+    _target = to_object(_target)
     if _target is not None:
-        id = to_id(_target)
-        BRAIN_AGENT.set_inventory_value("brain_target", to_id(_target))
-        target(BRAIN_AGENT_ID, _target, True, throttle, stop_dist=stop_dist)
+        _target_id = to_id(_target)
+        BRAIN_AGENT.set_inventory_value("blackboard:target", target_id)
+        target(BRAIN_AGENT_ID, _target_id, True, throttle, stop_dist=stop_dist)
         yield success
+    BRAIN_AGENT.set_inventory_value("blackboard:target", None)
     yield fail
 
 
@@ -68,11 +73,14 @@ stop_dist: 500
 ```
     default SIZE_Z = SIZE_X
     _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('station')-role_allies(BRAIN_AGENT_ID)-role("#"))
+    _target = to_object(_target)
     #print(f"PAST CLOSEST {l} {r} {_target} {ss} {st} {s} ")
     if _target is not None:
-        BRAIN_AGENT.set_inventory_value("brain_target", to_id(_target))
-        target(BRAIN_AGENT_ID, _target, True, throttle, stop_dist=stop_dist)
+        _target_id = to_id(_target)
+        BRAIN_AGENT.set_inventory_value("blackboard:target", _target_id)
+        target(BRAIN_AGENT_ID, _target_id, True, throttle, stop_dist=stop_dist)
         yield success
+    BRAIN_AGENT.set_inventory_value("blackboard:target", None)
     yield fail
 
 
@@ -90,14 +98,14 @@ force_target_point: null
 ```
     _target = force_target
     if _target is None:
-        _target = BRAIN_AGENT.get_inventory_value("brain_target")
+        _target = BRAIN_AGENT.get_inventory_value("blackboard:target")
 
     if _target == 0:
         _target = None
 
     _target_point = force_target_point
     if _target_point is None and force_target is None:
-        _target_point = BRAIN_AGENT.get_inventory_value("brain_target_point")
+        _target_point = BRAIN_AGENT.get_inventory_value("blackboard:target_point")
     #print(f"GOTO O L DC: HERE {_target} {_target_point}")
     yield fail if _target is None and _target_point is None
     
@@ -106,7 +114,7 @@ force_target_point: null
         _target = to_object(_target)
         if _target is None:
             # Target is no more
-            BRAIN_AGENT.set_inventory_value("brain_target", None)
+            BRAIN_AGENT.set_inventory_value("blackboard:target", None)
             yield fail
         target(BRAIN_AGENT_ID, _target, shoot, throttle, stop_dist)
         _target_point = _target.pos
@@ -131,8 +139,8 @@ force_target_point: null
     #
     # Fail in this case is good it reach the target
     if clear_when_reached:
-        BRAIN_AGENT.set_inventory_value("brain_target", None)
-        BRAIN_AGENT.set_inventory_value("brain_target_point", None)
+        BRAIN_AGENT.set_inventory_value("blackboard:target", None)
+        BRAIN_AGENT.set_inventory_value("blackboard:target_point", None)
 
     if set_when_reached:
         #print("GOTO O L BRAIN STOPPING {d} < {stop_dist} ")

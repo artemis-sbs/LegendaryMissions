@@ -206,6 +206,7 @@ def terrain_spawn_nebula_clusters(terrain_value, center=None):
             nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
             nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
             nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
+            
 
 def terrain_spawn_monsters(monster_value, center=None):
     if center is None:

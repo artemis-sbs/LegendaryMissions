@@ -74,6 +74,7 @@ Properties:
     terrain_spawn_pickups(upgrade_value)
     terrain_spawn_monsters(monster_value)
     terrain_spawn_black_holes(lethal_value)
+    
 
 
     #------------------------------------------------------------------------------------------------------------

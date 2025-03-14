@@ -31,7 +31,7 @@ brain:
     - ai_fleet_scatter_formation
 ```
     _fleet_index = fleet_difficulty -1
-    fleet = create_siege_fleet(race, _fleet_index, START_X, START_Y, START_Z, fleet_roles, ship_roles)
+    fleet = fleet_create(race, _fleet_index, START_X, START_Y, START_Z, fleet_roles, ship_roles)
     # Add fleet behavior tree
     brain_add(fleet.id, brain, None, 0, None)
     yield success

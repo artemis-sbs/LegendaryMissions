@@ -33,6 +33,7 @@ test_roles: station
     else:
         the_target = closest(lead_ship_id, any_role(test_roles) - role(get_side(lead_ship_id)))
 
+    the_target = to_object(the_target)
     yield fail if the_target is None
     #print(f"test_roles = '{test_roles}'")
     BRAIN_AGENT.set_inventory_value("blackboard:target", to_id(the_target))
@@ -48,6 +49,7 @@ type: brain/npc
 distance: 6000
 ```
     BRAIN_AGENT.set_inventory_value("blackboard:target", None)
+    BRAIN_AGENT.set_inventory_value("blackboard:target_position", None)
     BRAIN_AGENT.set_inventory_value("blackboard:local_arena", set())
 
     ship_list = to_list(linked_to(BRAIN_AGENT_ID, "ship_list"))
@@ -83,7 +85,8 @@ type: brain/npc
     if the_target is None:
         the_target = best_anger
     yield fail if the_target is None
-    heat = BRAIN_AGENT.get_heat_for(the_target)
+    yield fail if to_object(the_target) is None
+    #heat = BRAIN_AGENT.get_heat_for(the_target)
     #print("I'm Angry time: {heat}")
     BRAIN_AGENT.set_inventory_value("blackboard:target", the_target)
     yield success
@@ -127,11 +130,11 @@ distance: 3000
     difference = Vec3(destination) - Vec3(position)
     lengthA = difference.length()
     difference = difference.unit()
-    pushA = min(lengthA, 2000)
+    pushA = min(lengthA, distance)
     difference *= pushA
 
     position += difference
-    
+
     throttle = 1.0
     if lengthA > 50000:
         throttle = 2.0
@@ -149,6 +152,8 @@ metadata: ``` yaml
 stop_dist: 500
 ```
     the_target = BRAIN_AGENT.get_inventory_value("blackboard:target")
+    yield fail if the_target is None
+    the_target = to_object(the_target)
     yield fail if the_target is None
     the_target_position = BRAIN_AGENT.get_inventory_value("blackboard:target_position")
     yield fail if the_target_position is None

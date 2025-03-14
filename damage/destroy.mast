@@ -37,7 +37,7 @@
     dest_posx = int(dest_eobj.pos.x)
     dest_posy = int(dest_eobj.pos.y)
     dest_posz = int(dest_eobj.pos.z)
-    dest_data = get_ship_data_for(dest_key)
+    dest_data = ship_data_get_ship_data_for(dest_key)
     
     dest_hull = None
     if dest_data is not None:
