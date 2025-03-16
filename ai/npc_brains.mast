@@ -156,3 +156,30 @@ type: brain/npc
     BRAIN_AGENT.data_set.set("throttle", 0.0, 0)
     yield success
 
+
+=== ai_stay_close
+" This does a mini jump to make sure the npc stays close
+" This is for monsters mostly
+metadata: ``` yaml
+type: brain/npc
+distance: 5000
+throttle: 1.0
+stop_dist: 500
+```
+    # Can't use the target from the engine, because that 
+    # can clear with stop distance
+    current_target =  BRAIN_AGENT.get_inventory_value("blackboard:target")
+    # Clear it now, set it back if success
+    yield fail if current_target == 0
+    current_target_obj = to_object(current_target)
+    yield fail if current_target_obj is None
+    dist = sbs.distance_id(BRAIN_AGENT_ID, current_target)
+    yield fail if  dist > distance
+    yield fail if dist < distance/2
+    # Do a Jump to keep it close
+    BRAIN_AGENT.pos = current_target_obj.pos
+    target(BRAIN_AGENT_ID, current_target_obj, True, 1.0, stop_dist)
+    # Clearing the target lets the other logic find a new one next pass
+    BRAIN_AGENT.set_inventory_value("blackboard:target",0)
+    yield success
+

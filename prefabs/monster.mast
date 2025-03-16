@@ -3,6 +3,7 @@
 metadata: ```
 type: prefab/monster
 brain:
+    - ai_stay_close
     - label: ai_chase_npc
       data:
         SIZE_X: 10000
