@@ -15,7 +15,7 @@
     "TERRAIN_SELECT": "some",
     "LETHAL_SELECT": "none",
     "FRIENDLY_SELECT": "few",
-    "MONSTER_SELECT": "many",
+    "MONSTER_SELECT": "few",
     "UPGRADE_SELECT": "lots",
     "GAME_TIME_LIMIT": 0,
     "WAR_TIME_DELAY": 10,
