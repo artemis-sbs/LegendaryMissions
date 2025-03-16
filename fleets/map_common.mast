@@ -19,7 +19,7 @@
         case "none":
             # no civilian or friendly npcs
             # But added eyes
-            jump spawn_players
+            ->END
 
 
     total_hull_points = 0
@@ -88,7 +88,7 @@
         case "few":
             civilian_count = 1
         case "none":
-            jump spawn_players
+            ->END
 
     # grab the ship data for all ships on TSN side
     
@@ -109,9 +109,7 @@
         data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z}
         prefab_spawn(prefab, data)
 
-    
-
-    ->END if WORLD_SELECT.path == "sandbox"
+    ->END
 
 
 ====== spawn_players =======

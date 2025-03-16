@@ -1,22 +1,13 @@
-#
-#
-# When a player spawns, enable docking
-#
-//spawn if has_role(SPAWNED_ID, "__player__")
----- wait_for_game_started
-    if not GAME_STARTED:
-        await delay_sim(1)
-        jump wait_for_game_started
 
-    side = SPAWNED.side 
-    side = role(side)
 
-    docking_set_docking_logic(SPAWNED_ID, side & role("station"), docking_dock_with_friendly_station)
-    # if WORLD_SELECT.path == "deep_strike":
-    #     schedule_player_docking(SPAWNED_ID, DIFFICULTY, "resupply_tanker", player_docking_resupply_docked)
-    # else:
-    #     schedule_player_docking(SPAWNED_ID, DIFFICULTY, "station", player_docking_station_docked)
-
+=== docking_standard_player_station
+    for player_id in role("__player__"):
+        player = to_object(player_id)
+        continue if player is None
+        side = player.side 
+        side = role(side)
+        docking_set_docking_logic(player_id, side & role("station"), docking_dock_with_friendly_station)
+    ->END
 
 #
 # Can only select weapons when undocked
@@ -25,7 +16,6 @@
 
     dock_state_string = WEAPONS_ORIGIN.data_set.get("dock_state", 0) 
     ->END if dock_state_string == "undocked"
-
     set_weapons_selection(WEAPONS_ORIGIN_ID, 0)
 
 
@@ -43,6 +33,7 @@ distance: 600
     
 # Call while the tractor is 
 +++ docking
+    set_weapons_selection(DOCKING_PLAYER_ID, 0)
     _too_close = 300+(DIFFICULTY+1)*200
     raider = closest(DOCKING_PLAYER_ID, role("raider"), _too_close)
     if raider is not None:
@@ -55,6 +46,7 @@ distance: 600
 
 # This is called every 1 second
 +++ docked
+    set_weapons_selection(DOCKING_PLAYER_ID, 0)
     grid_restore_damcons(DOCKING_PLAYER_ID)
     # if priority docking
     # Set counter targets faster
@@ -66,7 +58,7 @@ distance: 600
     start_counter(DOCKING_PLAYER_ID, "interior")
 
 +++ refit
-
+    set_weapons_selection(DOCKING_PLAYER_ID, 0)
 ###  Add Energy
     refuel_amount = 20
     refuel_delay = 2    
@@ -154,12 +146,13 @@ match_side: True
 ```
 
 +++ docked
+    set_weapons_selection(DOCKING_PLAYER_ID, 0)
     start_counter(DOCKING_PLAYER_ID, "refuel")
     start_counter(DOCKING_PLAYER_ID, "torps")
 
 
 +++ refit
-
+    set_weapons_selection(DOCKING_PLAYER_ID, 0)
     refuel_amount = 20
     refuel_delay = 2    
     torps_delay = 6

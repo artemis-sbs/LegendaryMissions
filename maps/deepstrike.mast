@@ -58,6 +58,11 @@ Properties:
     my_players = to_object_list(role("__player__"))
     for player in my_players:
         player.pos = new_pos
+        #
+        # Schedule docking with resupply
+        #
+        _side = role(player.side)
+        docking_set_docking_logic(player.id, _side & role("resupply_tanker"), docking_dock_with_resupply_ship)
 
     ########################
     # Build out terrain etc.
