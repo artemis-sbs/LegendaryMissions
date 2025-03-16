@@ -313,7 +313,7 @@ an update to the current tables
 
 ```
 
-//tile/fleet if tile_opts.difficulty==5
+//tile/fleet if tile_opts.DIFFICULTY==5
 
 label grid ="""
 ..........

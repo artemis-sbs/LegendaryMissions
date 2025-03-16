@@ -51,19 +51,19 @@
     sbs.delete_object(DAMAGE_TARGET_ID)
     sbs.particle_at(wr_pos, "color:#FA0,#F00; lifespan:60; image_cell:12; size:3; speed:1; count:100,1000")
 
-    # From the Start Mission screen, upgrade_select determines how frequently upgrades are dropped. 
+    # From the Start Mission screen, UPGRADE_SELECT determines how frequently upgrades are dropped. 
 
     upg_dropchance = 0
-    if "few" == upgrade_select:
+    if "few" == UPGRADE_SELECT:
         upg_dropchance = 2
-    elif "some" == upgrade_select:
+    elif "some" == UPGRADE_SELECT:
         upg_dropchance = 4
-    elif "lots" == upgrade_select:
+    elif "lots" == UPGRADE_SELECT:
         upg_dropchance = 6
-    elif "many" == upgrade_select:
+    elif "many" == UPGRADE_SELECT:
         upg_dropchance = 8
 
-    # Generate random number, end task if upg_rand is higher than the drop chance (determined by upgrade_select)
+    # Generate random number, end task if upg_rand is higher than the drop chance (determined by UPGRADE_SELECT)
 
     upg_rand = random.randint(1,10)
     print(f"Wreck destroyed, drop random {upg_rand}, drop chance {upg_dropchance}")

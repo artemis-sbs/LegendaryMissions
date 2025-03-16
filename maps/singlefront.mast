@@ -5,28 +5,28 @@
 metadata:``` yaml
 Properties:
   Main:
-    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "player_count")'
-    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "difficulty")'
+    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
   Map:
-    Terrain: 'gui_drop_down("$text: {terrain_select};list: none, few, some, lots, many",var="terrain_select")'
-    Lethal Terrain: 'gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")'
-    Friendly Ships: 'gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")'
-    Monsters: 'gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")'
-    Upgrades: 'gui_drop_down("$text: {upgrade_select};list: none, few, some, lots, many", var= "upgrade_select")'
-    Time Limit: 'gui_input("desc: Minutes;", var="game_time_limit")'
+    Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, many",var="TERRAIN_SELECT")'
+    Lethal Terrain: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, many", var="LETHAL_SELECT")'
+    Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, many", var="FRIENDLY_SELECT")'
+    Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, many", var="MONSTER_SELECT")'
+    Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, many", var= "UPGRADE_SELECT")'
+    Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
 ```
 
 
-    terrain_value = terrain_to_value(terrain_select)
-    lethal_value =  terrain_to_value(lethal_select)
-    friendly_value = terrain_to_value(friendly_select)
-    monster_value = terrain_to_value(monster_select)
-    upgrade_value = terrain_to_value(upgrade_select)
+    terrain_value = terrain_to_value(TERRAIN_SELECT)
+    lethal_value =  terrain_to_value(LETHAL_SELECT)
+    friendly_value = terrain_to_value(FRIENDLY_SELECT)
+    monster_value = terrain_to_value(MONSTER_SELECT)
+    upgrade_value = terrain_to_value(UPGRADE_SELECT)
 
     #------------------------------------------------------------------------------------------------------------
 
 
-    terrain_spawn_stations(difficulty, lethal_value)
+    terrain_spawn_stations(DIFFICULTY, lethal_value)
     await task_schedule(spawn_friendly_npc)
     terrain_asteroid_clusters(terrain_value)
     terrain_spawn_nebula_clusters(terrain_value)
@@ -45,8 +45,8 @@ Properties:
     # Pick a random direction for the attacker, 1 = North, 2 = East, 3 = South, 4 = West
     rand_direction = random.randint(1,4)
     
-    fleet_count = 3 + int(difficulty/2)
-    fleet_index = int(difficulty - 1)
+    fleet_count = 3 + int(DIFFICULTY/2)
+    fleet_index = int(DIFFICULTY - 1)
 
     # Ximni fleets are typically only one ship, so double fleets to balance this out until we code some better Ximni AI.
     if enemy == "Ximni":
@@ -66,10 +66,10 @@ Properties:
         print(f"Fleet Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
 
     #    create_npc_fleet_and_ships(enemy, fleet_quality, fleet_quality/3, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-        create_siege_fleet(enemy, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+        prefab_spawn(prefab_fleet_raider, {"race": enemy, "fleet_difficulty": DIFFICULTY,"START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
 
     # At this time, keep the Skaraans out of a Single Front mission
-    #    if a > 1 and difficulty > 2:
+    #    if a > 1 and DIFFICULTY > 2:
     #        fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
     #        create_npc_fleet_and_ships("skaraan", 1,0, fleet_pos.x, fleet_pos.y, fleet_pos.z)
     #        create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)

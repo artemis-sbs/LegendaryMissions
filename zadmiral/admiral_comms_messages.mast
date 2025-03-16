@@ -15,12 +15,12 @@
     p = """
 
     Side: 'gui_drop_down("$text: {side_select};list: none, tsn, raider",var="side_select")'
-    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0", var="difficulty")'
-    Abilities: 'gui_drop_down("$text: {monster_select};list: none, few, some, lots, many", var="monster_select")'
-    Upgrades: 'gui_drop_down("$text: {upgrade_select};list: none, few, some, lots, many", var= "upgrade_select")'
-    Delay Time: 'gui_input("desc: Minutes;", var="game_time_limit")'
-    Something else: 'gui_drop_down("$text: {lethal_select};list: none, few, some, lots, many", var="lethal_select")'
-    Another things: 'gui_drop_down("$text: {friendly_select};list: none, few, some, lots, many", var="friendly_select")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0", var="DIFFICULTY")'
+    Abilities: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, many", var="MONSTER_SELECT")'
+    Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, many", var= "UPGRADE_SELECT")'
+    Delay Time: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
+    Something else: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, many", var="LETHAL_SELECT")'
+    Another things: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, many", var="FRIENDLY_SELECT")'
 
 """
     gui_properties_set(p)

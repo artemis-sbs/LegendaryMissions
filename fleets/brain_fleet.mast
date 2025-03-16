@@ -1,0 +1,169 @@
+
+# Brain:
+#     SEQ:
+#         - ai_fleet_init_blackboard
+#         - SEL:
+#             - ai_fleet_chase_best_anger
+#             - labeL: ai_fleet_chase_roles
+#               data: 
+#                 test_roles: station
+#             - labeL: ai_fleet_chase_roles
+#               data: 
+#                 test_roles: __player__
+#             - label: ai_fleet_chase_roles
+#               data: 
+#                 use_arena: False
+#                 test_roles: station
+#         - ai_fleet_calc_forward_vector
+#         - ai_fleet_scatter_formation
+
+
+=== ai_fleet_chase_roles
+metadata: ``` yaml
+type: brain/npc
+use_arena: True
+test_roles: station
+```
+    lead_ship_id = BRAIN_AGENT.get_inventory_value("blackboard:lead_ship_id")
+    yield fail if lead_ship_id is None
+    if use_arena:
+        local_arena = BRAIN_AGENT.get_inventory_value("blackboard:local_arena")
+        yield fail if local_arena is None
+        the_target = closest(lead_ship_id, local_arena & any_role(test_roles) - role(get_side(lead_ship_id)))
+    else:
+        the_target = closest(lead_ship_id, any_role(test_roles) - role(get_side(lead_ship_id)))
+
+    the_target = to_object(the_target)
+    yield fail if the_target is None
+    #print(f"test_roles = '{test_roles}'")
+    BRAIN_AGENT.set_inventory_value("blackboard:target", to_id(the_target))
+    yield success
+
+
+=== ai_fleet_init_blackboard
+" Calculates a set in the fleet area
+" This is not a brain but will set data used
+" by other brains
+metadata: ``` yaml
+type: brain/npc
+distance: 6000
+```
+    BRAIN_AGENT.set_inventory_value("blackboard:target", None)
+    BRAIN_AGENT.set_inventory_value("blackboard:target_position", None)
+    BRAIN_AGENT.set_inventory_value("blackboard:local_arena", set())
+
+    ship_list = to_list(linked_to(BRAIN_AGENT_ID, "ship_list"))
+    yield fail if len(ship_list) ==0
+    lead_ship_id = ship_list[0]
+    BRAIN_AGENT.set_inventory_value("blackboard:lead_ship_id", lead_ship_id)
+
+    around = broad_test_around(lead_ship_id, distance, distance, 0xF0)
+    BRAIN_AGENT.set_inventory_value("blackboard:local_arena", around)
+    yield success
+
+=== ai_fleet_chase_best_anger
+" Chases any ship that make it angry
+metadata: ``` yaml
+type: brain/npc
+```
+    anger_as_set = set(BRAIN_AGENT.anger_dict.keys())
+    yield fail if len(anger_as_set)==0
+    best_anger = BRAIN_AGENT.get_best_anger()
+    lead_ship_id = BRAIN_AGENT.get_inventory_value("blackboard:lead_ship_id")
+    yield fail if lead_ship_id is None
+    local_arena = BRAIN_AGENT.get_inventory_value("blackboard:local_arena")
+    yield fail if local_arena is None
+
+
+    # Chase the most angry at if local
+    if best_anger in local_arena:
+        the_target = best_anger
+    else:
+        # Chase anything close angry at
+        the_target = closest(lead_ship_id, local_arena & anger_as_set)
+    # If nothing close chase the most infuriating
+    if the_target is None:
+        the_target = best_anger
+    yield fail if the_target is None
+    yield fail if to_object(the_target) is None
+    #heat = BRAIN_AGENT.get_heat_for(the_target)
+    #print("I'm Angry time: {heat}")
+    BRAIN_AGENT.set_inventory_value("blackboard:target", the_target)
+    yield success
+
+
+=== ai_fleet_calc_forward_vector
+" Calculates a point forward
+" looking at the current fleet position
+"
+metadata: ``` yaml
+type: brain/npc
+distance: 3000
+```
+    ship_set = to_list(linked_to(BRAIN_AGENT_ID, "ship_list"))
+    yield fail if len(ship_set) < 1
+    the_target = BRAIN_AGENT.get_inventory_value("blackboard:target")
+    yield fail if the_target is None
+    the_target_obj = to_object(the_target)
+    yield fail if the_target_obj is None
+    # calculate the average position of the fleet members
+    average = Vec3(0,0,0)
+    count = 0
+    for e in ship_set:
+        obj = to_object(e)
+        if obj is not None:
+            average.x += obj.engine_object.pos.x
+            average.y += obj.engine_object.pos.y
+            average.z += obj.engine_object.pos.z
+            count += 1
+        else:
+            # cull this object from the linked objects
+            BRAIN_AGENT.remove_link("ship_list", e)
+
+    yield fail if count == 0
+
+    average /= count
+    
+    position = average
+    destination = the_target_obj.pos
+
+    difference = Vec3(destination) - Vec3(position)
+    lengthA = difference.length()
+    difference = difference.unit()
+    pushA = min(lengthA, distance)
+    difference *= pushA
+
+    position += difference
+
+    throttle = 1.0
+    if lengthA > 50000:
+        throttle = 2.0
+    elif lengthA > 30000:
+        throttle = 1.5
+    
+    BRAIN_AGENT.set_inventory_value("blackboard:target_position", position)
+    BRAIN_AGENT.set_inventory_value("blackboard:throttle", throttle)
+    yield success
+
+
+
+=== ai_fleet_scatter_formation
+metadata: ``` yaml
+stop_dist: 500
+```
+    the_target = BRAIN_AGENT.get_inventory_value("blackboard:target")
+    yield fail if the_target is None
+    the_target = to_object(the_target)
+    yield fail if the_target is None
+    the_target_position = BRAIN_AGENT.get_inventory_value("blackboard:target_position")
+    yield fail if the_target_position is None
+    throttle = BRAIN_AGENT.get_inventory_value("blackboard:throttle", 1.0)
+
+    points = linked_to(BRAIN_AGENT_ID, "ship_list")
+        
+    for _id in points:
+        pos = Vec3(the_target_position)
+        pos = pos.rand_offset(300, 500, ring=True)
+        target_pos(_id, *pos.xyz, throttle, the_target, stop_dist=stop_dist)
+    yield success
+    

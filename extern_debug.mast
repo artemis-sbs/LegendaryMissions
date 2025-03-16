@@ -14,7 +14,7 @@ task_schedule(debug_mission)
     # lb.present(None)
 
     task_schedule(mission_list[map_to_run])
-    game_started = True
+    GAME_STARTED = True
     signal_emit("game_started", {})
 
 

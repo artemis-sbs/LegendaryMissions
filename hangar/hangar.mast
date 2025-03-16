@@ -24,7 +24,7 @@ default HANGAR_CONSOLE_ENABLED = True
     # await delay_sim(2)
     #
 ---- wait_for_game_started ---
-    #if not game_started:
+    #if not GAME_STARTED:
     await delay_sim(1)
     #    jump wait_for_game_started
 

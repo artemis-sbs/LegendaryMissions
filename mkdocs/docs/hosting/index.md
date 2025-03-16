@@ -46,7 +46,7 @@ To enable operator mode, a 'nearly headless' operation for LegendaryMissions, se
 With operator mode turned on, a client console can act as the mission startup settings screen and it also has some useful things for operators.
 
 ``` json
-"operator_mode": {
+"OPERATOR_MODE": {
         "enable": true,
         "logo": "media/operator",
         "show_logo_on_main": true,

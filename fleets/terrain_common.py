@@ -13,14 +13,14 @@ from sbs_utils.procedural.prefab import prefab_spawn
 import math
 
 
-def terrain_spawn_stations(difficulty, lethal_value, x_min=-32500, x_max=32500, center=None, min_num=0):
+def terrain_spawn_stations(DIFFICULTY, lethal_value, x_min=-32500, x_max=32500, center=None, min_num=0):
     if center is None:
         center = Vec3(0,0,0)
 
     _station_weights  = {"starbase_industry": 5,"starbase_command": 3,"starbase_civil": 1,"starbase_science": 1}
     # make the list of stations we will create -----------------------------------------------
     station_type_list = []
-    total_weight = (12-difficulty) *2
+    total_weight = (12-DIFFICULTY) *2
 
     while total_weight > 0:
         station_type = random.choice(list(_station_weights.keys()))
@@ -206,6 +206,7 @@ def terrain_spawn_nebula_clusters(terrain_value, center=None):
             nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
             nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
             nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
+            
 
 def terrain_spawn_monsters(monster_value, center=None):
     if center is None:

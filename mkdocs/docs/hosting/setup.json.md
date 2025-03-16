@@ -1,10 +1,10 @@
 # setup.json
 A file that can be used to set the default operating settings for Legendary Missions
 
-## auto_start
+## AUTO_START
 This will skip startup selection and start the mission as soon as it is selected.
 
-## operator_mode
+## OPERATOR_MODE
 
 ### enable
 set "true" to enable the operator mode. "false" to disable
@@ -27,28 +27,28 @@ You set the default selection values for the startup settings screen.
 ### players_count
 How many player ships are available foe the missions. Values are 1 to the number of ships in the player ship list.
 
-### difficulty
+### DIFFICULTY
 1-11
 
-### world_select
+### WORLD_SELECT
 siege is the only valid selection currently
 
-### terrain_select
+### TERRAIN_SELECT
 none, few, some, lots, many
 
-### lethal_select
+### LETHAL_SELECT
 none, few, some, lots, many
 
-### friendly_select
+### FRIENDLY_SELECT
 none, few, some, lots, many
 
-### monster_select
+### MONSTER_SELECT
 none, few, some, lots, many
 
-### upgrade_select
+### UPGRADE_SELECT
 none, few, some, lots, many
 
-### game_time_limit
+### GAME_TIME_LIMIT
 0 is unlimited any other values is the number of minutes the mission will last.
 Pausing the mission will also pause this timer.
 

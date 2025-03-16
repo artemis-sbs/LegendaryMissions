@@ -1,14 +1,14 @@
 #
 # This assure the settings are there
 #
-settings_add_defaults({"auto_play": {"enable": False}})
+settings_add_defaults({"AUTO_PLAY": {"enable": False}})
 
-//signal/show_game_results if SETTINGS["auto_play"]["enable"]
+//signal/show_game_results if SETTINGS["AUTO_PLAY"]["enable"]
     await delay_app(2)
     mission = get_mission_name()
     sbs.run_next_mission(mission)
 
-//signal/game_started if SETTINGS["auto_play"]["enable"]
+//signal/game_started if SETTINGS["AUTO_PLAY"]["enable"]
     await delay_sim(2)
     jump automated_player_ai
 
@@ -66,7 +66,7 @@ settings_add_defaults({"auto_play": {"enable": False}})
     camera_id = cambot_id
     cambot = to_object(cambot_id)
     if cambot_id is None or cambot is None:
-        cambot = to_object(player_spawn(0,0,0, "Colossus", "tsn,auto_play", "tsn_light_cruiser")) 
+        cambot = to_object(player_spawn(0,0,0, "Colossus", "tsn,AUTO_PLAY", "tsn_light_cruiser")) 
         camera_id = to_id(cambot)
         cambot_id = camera_id
         cambot.data_set.set("ally_list","tsn,raider",0)
@@ -284,12 +284,12 @@ jump automated_player_weapons_ai
     jump automated_player_comms_ai
 
 /*
-//focus/science if has_roles(SCIENCE_ORIGIN_ID, "auto_play")
+//focus/science if has_roles(SCIENCE_ORIGIN_ID, "AUTO_PLAY")
 set_science_selection(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
 await task_schedule(automated_player_move_camera)
 
 
-@console/autoplay "Auto Play" if SETTINGS["auto_play"]["enable"]
+@console/autoplay "Auto Play" if SETTINGS["AUTO_PLAY"]["enable"]
 " A Player ship driven by script
 #
 # Get side from selected ship

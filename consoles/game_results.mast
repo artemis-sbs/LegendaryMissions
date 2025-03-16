@@ -41,12 +41,12 @@ shared game_stats = ~~{
 //signal/show_game_results
 
     sim_pause()
-    game_ended = True
+    GAME_ENDED = True
     gui_section(style="area: 10, 10, 90, 90;")
 
     """color:white;justify: center; font: gui-6;$text:Game results"""
     gui_row()
-    """""color:cyan;justify:center;font:gui-5;$text:{start_text}"""""
+    """""color:cyan;justify:center;font:gui-5;$text:{START_TEXT}"""""
     gui_row()
     gui_hole(5)
     """color:yellow;justify: right;$text:TSN Destroyed"""

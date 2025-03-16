@@ -3,11 +3,11 @@
 
 =========== spawn_friendly_npc ===========
 
-    print(f"World Select: {world_select.path}")
-    if world_select.path == "deep_strike":
-        friendly_select = "none"
+    print(f"World Select: {WORLD_SELECT.path}")
+    if WORLD_SELECT.path == "deep_strike":
+        FRIENDLY_SELECT = "none"
 
-    match friendly_select:
+    match FRIENDLY_SELECT:
         case "many":
             max_hull_points=10
         case "lots":
@@ -78,7 +78,7 @@
 ---- civilians
 
     civilian_count = 0
-    match friendly_select:
+    match FRIENDLY_SELECT:
         case "many":
             civilian_count = 4
         case "lots":
@@ -111,7 +111,7 @@
 
     
 
-    ->END if world_select.path == "sandbox"
+    ->END if WORLD_SELECT.path == "sandbox"
 
 
 ====== spawn_players =======
@@ -132,7 +132,7 @@
         side = player_ship.side
         stations_friendly = to_object_list(role(side)  & role("station"))
 
-        if c>= player_count:
+        if c>= PLAYER_COUNT:
             # make sure the id is cleared dry docked ships
             player_ship.art_id = "invisible"
             player_ship.remove_role("__player__")
