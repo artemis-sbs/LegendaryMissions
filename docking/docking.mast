@@ -56,7 +56,7 @@ distance: 600
     start_counter(DOCKING_PLAYER_ID, "torps")
     start_counter(DOCKING_PLAYER_ID, "shields")
     start_counter(DOCKING_PLAYER_ID, "interior")
-
+    
 +++ refit
     set_weapons_selection(DOCKING_PLAYER_ID, 0)
 ###  Add Energy
@@ -133,8 +133,12 @@ distance: 600
     npc_id = DOCKING_NPC_ID
     player_id = DOCKING_PLAYER_ID
     DOCKING_PLAYER.data_set.set("playerThrottle",0.5, 0)
-    comms_message("Engines running when attempting to docked can hurt our systems.", npc_id, player_id,  "GEEZ! YOU'RE STILL DOCKED", None, "white", "red")
-    comms_broadcast(player_id, "Docking moors active")
+    ### Repair interior
+    warning = get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"throttle_warning", 10)
+    if warning > 5:
+        start_counter(DOCKING_PLAYER_ID,"throttle_warning")
+        comms_message("Engines running when attempting to docked can hurt our systems.", npc_id, player_id,  "GEEZ! YOU'RE STILL DOCKED", None, "white", "red")
+        comms_broadcast(player_id, "Docking moors active")
     yield fail
 
     
