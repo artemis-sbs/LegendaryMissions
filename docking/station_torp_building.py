@@ -14,11 +14,6 @@ __build_times = {
     "default": {"build_times": {"Homing": 3, "Nuke": 10, "EMP": 5, "Mine": 4}}
 }
 
-sbs.set_shared_string("Homing","gui_text:Homing;  speed:10; lifetime:25; flare_color:white; trail_color:white;warhead:standard;damage:35; explosion_size:10;explosion_color:fire; behavior:homing; energy_conversion_value:100")
-sbs.set_shared_string("Nuke"  ,"gui_text:Nuke  ;  speed:10; lifetime:25; flare_color:white; trail_color:#99f;warhead:blast; blast_radius:1000; damage:5; explosion_size:20;explosion_color:fire; behavior:homing; energy_conversion_value:200")
-sbs.set_shared_string("EMP"   , "gui_text:EMP  ;  speed:10; lifetime:25; flare_color:yellow; trail_color:#99f;warhead:blast,reduce_shields; blast_radius:1000; damage:50; explosion_size:20;explosion_color:#11F; behavior:homing; energy_conversion_value:50")
-sbs.set_shared_string("Mine"  , "gui_text:Mine ;  speed:10; lifetime:25; flare_color:white; trail_color:white; warhead:blast; blast_radius:1000; damage:5; explosion_size:20; explosion_color:fire; behavior:mine; energy_conversion_value:200")
-
 
 def get_build_times(id_or_obj):
     build_times = get_shared_variable("build_times", __build_times)
