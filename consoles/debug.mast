@@ -31,19 +31,6 @@ shared allow_debug = True
     jump debug_screen
 
 === debug_screen
-    items = [{"icon": 12, "text": "file"}, {"icon": 13, "text": "edit"}]
-
-    gui_section("area:0,10,5em,78;background: #fff1;")
-
-    # Area needs late binding
-    # Need a section style instead of item_width and height: should choose row-height, col-width
-
-    lb_horz = gui_list_box(items,"row-height: 70px", item_template=debug_menu_template, title_template="$text:menu;justify:center;color:white;", select=True)
-    gui_section( style="area: 10,10,90,90;")
-
-    """
-    Under construction
-    """
 
     gui_section(style="area:10,15,35,100;row-height:35px;")
     gui_row()
