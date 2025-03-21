@@ -104,6 +104,7 @@ def terrain_asteroid_clusters(terrain_value, center=None):
         az = random.randint(-20,20)
         #cluster_spawn_points = scatter_box(amount, v.x, 0,v.z, amount*50, amount*20,amount*200, centered=True, ax, ay, az )
         cluster_spawn_points = scatter.box(amount,  v.x, 0,v.z, size*150, size*50,size*200, True, 0, ay, 0 )
+                
 
         scatter_pass = 0
         for v2 in cluster_spawn_points:
@@ -142,7 +143,7 @@ def terrain_asteroid_clusters(terrain_value, center=None):
             asteroid.blob.set("local_scale_x_coeff", sx)
             asteroid.blob.set("local_scale_y_coeff", sy)
             asteroid.blob.set("local_scale_z_coeff", sz)
-            
+
 
               # Big asteroids or some random
             if not moons:
@@ -198,14 +199,18 @@ def terrain_spawn_nebula_clusters(terrain_value, center=None):
     t_min = terrain_value * 6
     t_max = t_min * 2
     spawn_points = scatter.box(random.randint(t_min,t_max), center.x, center.y, center.z, 100000, 1000, 100000, centered=True)
+    nebulas_colors = ["#aa0", "#0ff", "#e0e"]
     for v in spawn_points:
         cluster_spawn_points = scatter.sphere(random.randint(terrain_value*2,terrain_value*4), v.x, 0,v.z, 1000, 10000, ring=False)
+        cluster_color = random.choice(nebulas_colors)
         for v2 in cluster_spawn_points:
             v2.y = v2.y % 500.0
             nebula = terrain_spawn(v2.x, v2.y, v2.z,None, "#, nebula", "nebula", "behav_nebula")
             nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
             nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
             nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
+            nebula.blob.set("radar_color_override", cluster_color)
+            
             
 
 def terrain_spawn_monsters(monster_value, center=None):
