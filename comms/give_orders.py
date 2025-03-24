@@ -75,15 +75,14 @@ def comms_set_2dview_focus(client_id, focus_id=0, EVENT=None):
             return
         
         pos = source_point
-        if selected_id != alt_ship:
-            set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", None)
-            #set_inventory_value(alt_ship, "ORDERS_SELECTED_ID", EVENT.selected_id)
-            pos = Vec3(_sel_ship.pos)
-            set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", pos)
-            set_inventory_value(alt_ship, "ORDERS_SELECTED_OBJECT", selected_id)
-            # Need to update
-            set_inventory_value(on_ship, "ORDERS_SELECTED_OBJECT", selected_id)
-        
+        set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", None)
+        #set_inventory_value(alt_ship, "ORDERS_SELECTED_ID", EVENT.selected_id)
+        pos = Vec3(_sel_ship.pos)
+        set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", pos)
+        set_inventory_value(alt_ship, "ORDERS_SELECTED_OBJECT", selected_id)
+        # Need to update
+        set_inventory_value(on_ship, "ORDERS_SELECTED_OBJECT", selected_id)
+    
 
         size = 1000
         nav_color = "#044"
@@ -124,15 +123,15 @@ def science_set_2dview_focus(client_id, focus_id=0):
     
     follow = get_inventory_value(client_id, "2d_follow")
     on_ship =  sbs.get_ship_of_client(client_id)
-    set_inventory_value(client_id, "2dview_alt_ship", focus_id)
-    set_inventory_value(on_ship, "2dview_alt_ship", focus_id)
+    set_inventory_value(client_id, "science_2dview_alt_ship", focus_id)
+    set_inventory_value(on_ship, "science_2dview_alt_ship", focus_id)
     set_id = focus_id
     if not follow:
         set_id = 0
 
-    previous = get_inventory_value(client_id, "2dview_alt_ship_prev", 0)
+    previous = get_inventory_value(client_id, "science_2dview_alt_ship_prev", 0)
     if previous != set_id:
         sbs.assign_client_to_alt_ship(client_id, set_id)
-        set_inventory_value(client_id, "2dview_alt_ship_prev", set_id)
+        set_inventory_value(client_id, "science_2dview_alt_ship_prev", set_id)
 
     

@@ -35,7 +35,7 @@ objective_target_point: null
 +++ enter
     # This objective assumes it has control of the brain
     brain_clear(OBJECTIVE_AGENT_ID)
-    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location)
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": objective_target, "force_target_point": objective_target_point, "clear_when_reached": False})
     brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
     set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", objective_target_point)
     # Set targets later
@@ -63,14 +63,10 @@ objective_target_point: null
     brain_add(OBJECTIVE_AGENT_ID, ai_chase_current, {"distance":20000})
     brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X":5000})
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"clear_when_reached": False})    
+    # Goto the assigned location
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": objective_target, "force_target_point": objective_target_point, "clear_when_reached": False})
     brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
-    
-    #brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": target, "force_target_point": target_point, "clear_when_reached": False})
 
-    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", objective_target_point)
-    # Set targets later
-    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", objective_target)
-    
 +++ test
     message = "currently idle"
     current = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_active", None)
@@ -93,7 +89,7 @@ objective_target_point: null
 
 === objective_protect_area
 metadata: ```
-display_name: Protect Area
+display_name: Protect
 type: objective/orders/defender
 objective_target: null
 objective_target_point: null
@@ -103,13 +99,10 @@ objective_target_point: null
     brain_clear(OBJECTIVE_AGENT_ID)
     brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc)
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"clear_when_reached": False})
+    # Goto the assigned location
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": objective_target, "force_target_point": objective_target_point, "clear_when_reached": False})
     brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
 
-    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", objective_target_point)
-    # Set targets later
-    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", objective_target)
-    
-    
 +++ test
     message = "currently idle"
     current = get_inventory_value(OBJECTIVE_AGENT_ID, "brain_active", None)
@@ -128,5 +121,23 @@ objective_target_point: null
     OBJECTIVE.set_inventory_value("desc", message)
     yield idle
 
+
+
+=== objective_full_stop
+metadata: ```
+display_name: Full Stop
+type: objective/orders/defender
+objective_target: null
+objective_target_point: null
+```
++++ enter
+    # This objective assumes it has control of the brain
+    brain_clear(OBJECTIVE_AGENT_ID)
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+
++++ test
+    message = "currently idle"
+    OBJECTIVE.set_inventory_value("desc", message)
+    yield idle
 
 

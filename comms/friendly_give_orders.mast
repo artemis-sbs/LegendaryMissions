@@ -56,15 +56,7 @@ import give_orders.py
         display_name = order.get_inventory_value("display_name", order.name)
         + "{display_name}" carry_out_orders  {"objective": order}
 
-    + "Cancel" if order!="":
-        set_inventory_value(COMMS_SELECTED_ID, "ORDER","")
-        default alt_ship = None
-        ->END if alt_ship is None
-        # Clear nav
-        nav = get_inventory_value(alt_ship, "ORDERS_NAV", None)
-        if nav:
-            sim.delete_navpoint_by_id(nav)
-            set_inventory_value(alt_ship, "ORDERS_NAV", None)
+    
 
 === carry_out_orders 
     #
@@ -118,8 +110,12 @@ import give_orders.py
         message = "Heading to designated waypoint to {ORDER}"
         title = "Orders accepted"
     elif target_object is not None:
-        message = "Heading to rendezvous with {target_object.name}"
+        message = "Heading to {target_object.name}"
         title = "Orders accepted"
+    elif ORDER == "Full Stop":
+        message = "awaiting further orders"
+        title = ORDER
+    
         
     if message is not None:
         comms_receive(message, title, color="white", title_color="cyan")
@@ -135,26 +131,28 @@ import give_orders.py
 === update_nav_area_for_object
 " This is a task to update any nav areas marking
 " a moving target
-    default shared nav_area_object_running = False
-    ->END if nav_area_object_running 
-
 --- repeat
     await delay_sim(5)
     have_nav = has_inventory("ORDERS_SELECTED_OBJECT")
     for ship in have_nav:
-        
         continue if ship == 0
         alt_ship_obj = to_object(ship)
         continue if alt_ship_obj is None
         continue if alt_ship_obj == 0
         on_ship = ship
         alt_ship = ship
+        #
+        # If this is a player ship and is not following
+        # skip
         if has_role(on_ship, "__player__"):
             alt_ship = get_inventory_value(on_ship, "2dview_alt_ship", None)
             alt_ship_obj = to_object(alt_ship)
             continue if alt_ship_obj is None
                 
-        
+        #
+        #
+        # OK Lets update any ship that got this far
+        # If the target ship still exists
         obj_id = get_inventory_value(ship,"ORDERS_SELECTED_OBJECT")
         continue if obj_id is None or obj_id == 0
         obj = to_object(obj_id)
@@ -170,7 +168,7 @@ import give_orders.py
 
         #
         # This is copy pasted code from the //focus/comms2d
-        #
+        # so switch the  variable to match
         this_ship = ship
         nav_id = get_inventory_value(this_ship, "ORDERS_SELECTED_NAV", None)
         if nav_id is not None:
