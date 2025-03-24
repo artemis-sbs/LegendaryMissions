@@ -274,7 +274,7 @@ stop_dist: 500
     OBJECTIVE.set_inventory_value("objective:goto_object", object_id)
     # Ask the brain to got there
     # Do not it for the brain
-    OBJECTIVE_AGENT.set_inventory_value("brain_target", object_id)
+    OBJECTIVE_AGENT.set_inventory_value("blackboard:target", object_id)
     # print(f"GOTO STATION {OBJECTIVE_AGENT.name} {station.name}")
 
   yield fail if object_id is None

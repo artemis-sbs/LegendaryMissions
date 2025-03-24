@@ -55,6 +55,18 @@ def brain_scan_get_text_brain(b, indent):
 
 def brain_scan_get_text(obj):
     _text = f"$text:Brain for {obj.name}\n"
+
+    objectives = linked_to(obj.id, "OBJECTIVE")
+    if len(objectives)>0:
+
+        _text += "OBJECTIVES: "
+        for goal_id in objectives:
+            goal = to_object(goal_id)
+            if goal is None:
+                continue
+            desc = goal.get_inventory_value("desc", "No Desc")
+            _text += "    " + desc
+
     _target_id = obj.get_inventory_value("blackboard:target")
     if _target_id is not None:
         _text += f"       TARGET ID: {_target_id}\n"

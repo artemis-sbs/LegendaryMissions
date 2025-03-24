@@ -109,7 +109,7 @@ import give_orders.py
     # set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
     objective_clear(COMMS_SELECTED_ID)
     #print("give orders on alt ship {objective}")
-    objective_add(alt_ship, objective, {"target_point": target_point, "target": to_id(target_object)})
+    objective_add(alt_ship, objective, {"objective_target_point": target_point, "objective_target": to_id(target_object)})
 
     ######## The rest of this should be in the objective
     ORDER = objective.get_inventory_value("display_name", objective.name)
