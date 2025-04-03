@@ -582,6 +582,19 @@ def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet"
     Returns:
         fleet (Fleet): The created fleet
     """
+    # At this point it is an index 0-10
+    diff = get_shared_variable("DIFFICULTY", 4)
+    # If it is -1 use the default
+    if  fleet_diff == -1:
+        fleet_diff = diff
+    # if it < -99, adjust diffulty minus the hundreds place
+    # it is an add either way negative is same as subtract
+    if  fleet_diff < -99 or fleet_diff>99:
+            fleet_diff = diff+(fleet_diff//100)
+
+    fleet_diff = max(0, min(10,fleet_diff))
+    #print(f"FLEET {fleet_diff}")
+
     race = race.strip().lower()
     fleet_rand = random.randint(0, 4)
     siege_fleet = []
