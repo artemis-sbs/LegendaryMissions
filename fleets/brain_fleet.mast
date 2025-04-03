@@ -23,15 +23,16 @@ metadata: ``` yaml
 type: brain/npc
 use_arena: True
 test_roles: station
+exclude_roles: raider
 ```
     lead_ship_id = BRAIN_AGENT.get_inventory_value("blackboard:lead_ship_id")
     yield fail if lead_ship_id is None
     if use_arena:
         local_arena = BRAIN_AGENT.get_inventory_value("blackboard:local_arena")
         yield fail if local_arena is None
-        the_target = closest(lead_ship_id, local_arena & any_role(test_roles) - role(get_side(lead_ship_id)))
+        the_target = closest(lead_ship_id, local_arena & any_role(test_roles) - role(get_side(lead_ship_id)) - any_role(exclude_roles))
     else:
-        the_target = closest(lead_ship_id, any_role(test_roles) - role(get_side(lead_ship_id)))
+        the_target = closest(lead_ship_id, any_role(test_roles) - role(get_side(lead_ship_id)) - any_role(exclude_roles))
 
     the_target = to_object(the_target)
     yield fail if the_target is None

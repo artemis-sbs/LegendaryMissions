@@ -564,7 +564,7 @@ def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "Raider
         fleet (Fleet): The created fleet
     """
     diff = fleet_diff + 1 
-    return prefab_spawn("prefab_fleet_raider", {"race": "Skaraan", "fleet_difficulty": diff, "START_X": posx, "START_Y": posy, "START_Z": posz})
+    return prefab_spawn("prefab_fleet_raider", {"race": {race}, "fleet_difficulty": diff, "START_X": posx, "START_Y": posy, "START_Z": posz})
 
 #--------------------------------------------------------------------------------------
 def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet", ship_roles=None):
