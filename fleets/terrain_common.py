@@ -46,7 +46,7 @@ def terrain_spawn_stations(DIFFICULTY, lethal_value, x_min=-32500, x_max=32500, 
     for index in range(num_stations):
         stat_type = station_type_list[index]
         pos.x = center.x + random.uniform(x_min, x_max)
-        pos.y = center.y + random.random()*2000-1000
+        pos.y = center.y + random.random()*1000-500
         pos.z = center.z + startZ #+ random.random()*station_step/3  -   station_step/6
     #    _spawned_pos.append(pos)
         startZ += station_step
