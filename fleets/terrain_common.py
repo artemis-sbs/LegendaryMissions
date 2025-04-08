@@ -205,13 +205,14 @@ def terrain_spawn_nebula_clusters(terrain_value, center=None):
         cluster_color = random.randrange(3)
 
         for v2 in cluster_spawn_points:
-            v2.y = v2.y % 500.0
+            # v2.y = v2.y % 500.0 Mod doesn't work like you think
+            v2.y = random.uniform(-250,250)
 
             # This should be a set of prefabs
             nebula = terrain_spawn(v2.x, v2.y, v2.z,None, "#, nebula", "nebula", "behav_nebula")
-            #nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
-            #nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))
-            #nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
+            nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
+            nebula.blob.set("local_scale_y_coeff", random.uniform(2.0, 5.5))
+            nebula.blob.set("local_scale_z_coeff", random.uniform(1.0, 5.5))
 
             #terrain_setup_nebula_blue(nebula)
             if cluster_color == 1:
@@ -274,7 +275,7 @@ def terrain_setup_nebula_red(nebula):
     blob.set("radar_color_override", "#e0e")    
     #blob.set("radar_color_override", "#0ff")    
     size = 1000 * random.uniform(1.0, 5.5)
-    size = 5000.0
+    size = 4000.0
     blob.set("size", size)
     density = 9.24
     blob.set("density", density)
@@ -314,7 +315,7 @@ def terrain_setup_nebula_yellow(nebula):
     blob = to_data_set(nebula)
     blob.set("radar_color_override", "#aa0")    
     size = 1000 * random.uniform(1.0, 5.5)
-    size = 5000.0
+    size = 4000.0
     blob.set("size", size)
     density = 9.24
     blob.set("density", density)
@@ -353,7 +354,7 @@ def terrain_setup_nebula_blue(nebula):
     blob = to_data_set(nebula)
     blob.set("radar_color_override", "#0ff")    
     size = 1000 * random.uniform(1.0, 5.5)
-    size = 5000.0
+    size = 4000.0
     blob.set("size", size)
     density = 9.24
     blob.set("density", density)
