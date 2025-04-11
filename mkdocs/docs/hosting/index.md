@@ -1,8 +1,10 @@
-# Remote server Hosting and Operator tools
+# Remote server Hosting, Operator tools and Console locking
 
 The Legendary Missions can be configured to help automate startup, tools to help those having remote severs and/or running Artemis Cosmos in a virtual machine.
 
 There are also tools to help Operators have a consistent and quick start up  process to help their running at conventions go more smoothly.
+
+Console Locking helps anyone with a Bridge and desires to lock the client console PCs to specific consoles.
 
 ## Remote server tools
 Those Running Artemis Cosmos on a remote server can run Artemis Cosmos in a manner that allows them to not always require a Remote Desktop link to start and run games.
@@ -54,8 +56,6 @@ The operator tools include:
 - Main screen Operator logo
 - An Operator console
 - Operator Console commands
-- Client station locking
-- Client station pre game images
 
 ### time limit and setup.json
 
@@ -158,4 +158,67 @@ Like the Game master and Admiral console, there are commands for the operator. T
     - Subtract 10 minutes
 
 
+## Client station locking
+
+- console_mode
+- Client station pre game images
+
+
+If you desire you console PCs to be locked to a specific console. This can be accomplished.
+
+For example, you have a PC you want to be helm and do not want players changing the console.
+
+This is accomplished by setting values **on the client pc**.
+
+### console_mode
+
+The client PC will have a *client_strings.txt* file. Editing this file and adding the key **console_mode** and the value for what console and what ship to assign the client to.
+
+The console should be one of:
+
+- helm
+- weapons
+- engineering
+- comms
+- science
+- mainscreen
+- cinematic
+- hangar
+- admin
+- admiral
+
+The value needs to include the ship to assign them to. The ship name must be a ship created by the mission typically this one in setup.json
+
+The console type and ship are separated by a semi colon
+
+```
+console_mode
+helm;artemis
+```
+
+A locked console should no longer present a console selection screen , but instead show an image. 
+
+Additional consoles can also be supported. Any console defined with  @console can be used as a console type.
+
+
+
+
+
+![logo](../media/console_lock.png)
+
+## Client station pre game images
+
+When the console_mode is set, the console selection selection screen in not shown instead and image is shown.
+
+In fact, this can be a slideshow of images.
+
+These image file currently need to be in every mission you would like to have console_mode to present images.
+
+The image files need to be in a folder matching the console id in the media folder of the mission. e.g. *media/helm/image1.png*
+
+For a slide show place several images in the folder. The system will load all png files in the folder present them in alphabetical order. Images will rotate about every 10 seconds.
+
+!!! Note "Numeric ordering"
+
+    Because it is 'alphabetic' image10.png will sort before image2.png. So it may be better to name image02.png, etc. instead.
 
