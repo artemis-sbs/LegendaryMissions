@@ -127,7 +127,7 @@ The operator console is used to start the game and manage the game while it is r
 
 First thing the Operator Admin console can require a pin to limit access to it. This pin is set in setup.json on the server.
 
-![logo](../media/Operator_pin.png)
+![logo](../media/operator_pin.png)
 
 Selecting the Operator Admin Console will first present a pin input screen. Successful pin entry will go to the Operator screen.
 
@@ -143,7 +143,7 @@ Once the game is started the Operator console changes to a screen similar to the
 It provides additional information such as Time remaining and how many raiders are remaining.
 
 
-![logo](../media/Operator_admin.png)
+![logo](../media/operator_admin.png)
 
 
 Like the Game master and Admiral console, there are commands for the operator. These include:
