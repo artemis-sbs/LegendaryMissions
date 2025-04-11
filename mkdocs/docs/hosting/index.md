@@ -206,7 +206,7 @@ Additional consoles can also be supported. Any console defined with  @console ca
 
 ![logo](../media/console_lock.png)
 
-## Client station pre game images
+### Client station pre game images
 
 When the console_mode is set, the console selection selection screen in not shown instead and image is shown.
 
