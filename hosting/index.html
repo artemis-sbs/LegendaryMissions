@@ -20,7 +20,7 @@
     
     
       
-        <title>Remote server Hosting and Operator tools - Legendary Missions Documentation</title>
+        <title>Remote server Hosting, Operator tools and Console locking - Legendary Missions Documentation</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#remote-server-hosting-and-operator-tools" class="md-skip">
+        <a href="#remote-server-hosting-operator-tools-and-console-locking" class="md-skip">
           Skip to content
         </a>
       
@@ -117,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Remote server Hosting and Operator tools
+              Remote server Hosting, Operator tools and Console locking
             
           </span>
         </div>
@@ -2147,6 +2147,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#client-station-locking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Client station locking
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Client station locking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#console_mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      console_mode
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#client-station-pre-game-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      Client station pre game images
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2165,9 +2198,10 @@
   
 
 
-<h1 id="remote-server-hosting-and-operator-tools">Remote server Hosting and Operator tools</h1>
+<h1 id="remote-server-hosting-operator-tools-and-console-locking">Remote server Hosting, Operator tools and Console locking</h1>
 <p>The Legendary Missions can be configured to help automate startup, tools to help those having remote severs and/or running Artemis Cosmos in a virtual machine.</p>
 <p>There are also tools to help Operators have a consistent and quick start up  process to help their running at conventions go more smoothly.</p>
+<p>Console Locking helps anyone with a Bridge and desires to lock the client console PCs to specific consoles.</p>
 <h2 id="remote-server-tools">Remote server tools</h2>
 <p>Those Running Artemis Cosmos on a remote server can run Artemis Cosmos in a manner that allows them to not always require a Remote Desktop link to start and run games.</p>
 <p>While not truly a headless server it should reduce the number of times needed to remote in.</p>
@@ -2198,8 +2232,6 @@
 <li>Main screen Operator logo</li>
 <li>An Operator console</li>
 <li>Operator Console commands</li>
-<li>Client station locking</li>
-<li>Client station pre game images</li>
 </ul>
 <h3 id="time-limit-and-setupjson">time limit and setup.json</h3>
 <p>The time limit setting is available for missions, but operators in particular may want to set this setting in setup.json to a specific value to avoid retyping it all the time.</p>
@@ -2270,6 +2302,47 @@ It provides additional information such as Time remaining and how many raiders a
 </ul>
 </li>
 </ul>
+<h2 id="client-station-locking">Client station locking</h2>
+<ul>
+<li>console_mode</li>
+<li>Client station pre game images</li>
+</ul>
+<p>If you desire you console PCs to be locked to a specific console. This can be accomplished.</p>
+<p>For example, you have a PC you want to be helm and do not want players changing the console.</p>
+<p>This is accomplished by setting values <strong>on the client pc</strong>.</p>
+<h3 id="console_mode">console_mode</h3>
+<p>The client PC will have a <em>client_strings.txt</em> file. Editing this file and adding the key <strong>console_mode</strong> and the value for what console and what ship to assign the client to.</p>
+<p>The console should be one of:</p>
+<ul>
+<li>helm</li>
+<li>weapons</li>
+<li>engineering</li>
+<li>comms</li>
+<li>science</li>
+<li>mainscreen</li>
+<li>cinematic</li>
+<li>hangar</li>
+<li>admin</li>
+<li>admiral</li>
+</ul>
+<p>The value needs to include the ship to assign them to. The ship name must be a ship created by the mission typically this one in setup.json</p>
+<p>The console type and ship are separated by a semi colon</p>
+<div class="highlight"><pre><span></span><code>console_mode
+helm;artemis
+</code></pre></div>
+<p>A locked console should no longer present a console selection screen , but instead show an image. </p>
+<p>Additional consoles can also be supported. Any console defined with  @console can be used as a console type.</p>
+<p><img alt="logo" src="../media/console_lock.png" /></p>
+<h3 id="client-station-pre-game-images">Client station pre game images</h3>
+<p>When the console_mode is set, the console selection selection screen in not shown instead and image is shown.</p>
+<p>In fact, this can be a slideshow of images.</p>
+<p>These image file currently need to be in every mission you would like to have console_mode to present images.</p>
+<p>The image files need to be in a folder matching the console id in the media folder of the mission. e.g. <em>media/helm/image1.png</em></p>
+<p>For a slide show place several images in the folder. The system will load all png files in the folder present them in alphabetical order. Images will rotate about every 10 seconds.</p>
+<div class="admonition note">
+<p class="admonition-title">Numeric ordering</p>
+<p>Because it is 'alphabetic' image10.png will sort before image2.png. So it may be better to name image02.png, etc. instead.</p>
+</div>
 
 
 
