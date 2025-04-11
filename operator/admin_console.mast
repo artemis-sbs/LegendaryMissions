@@ -10,7 +10,7 @@ default shared OPERATOR_MODE_enabled = False
     """operator pin"""
     _in = gui_input("""desc: Enter pin;password:True;""", var="pin")
     on gui_message(_in):
-    jump operator_admin_console if pin == OPERATOR_MODE.get("pin")
+        jump operator_admin_console if pin == OPERATOR_MODE.get("pin")
 
     await gui():
         + "cancel":
