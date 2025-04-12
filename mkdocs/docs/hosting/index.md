@@ -1,6 +1,6 @@
 # Remote server Hosting, Operator tools and Console locking
 
-The Legendary Missions can be configured to help automate startup, tools to help those having remote severs and/or running Artemis Cosmos in a virtual machine.
+The Artemis Cosmos Missions can be configured to help automate startup, tools to help those having remote severs and/or running Artemis Cosmos in a virtual machine.
 
 There are also tools to help Operators have a consistent and quick start up  process to help their running at conventions go more smoothly.
 
@@ -59,10 +59,10 @@ The operator tools include:
 
 ### time limit and setup.json
 
-The time limit setting is available for missions, but operators in particular may want to set this setting in setup.json to a specific value to avoid retyping it all the time.
+The time limit setting is available for missions, but operators in particular may want to set this setting in setup.json to a specific value to avoid retyping it all the time. Time is in minutes.
 
 ``` json
-    GAME_TIME_LIMIT: true
+    GAME_TIME_LIMIT: 10
 ```
 
 In general the setup.json is useful for setting things up to avoid constantly tuning the setting each run. Should be useful for operators.
