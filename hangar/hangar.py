@@ -16,6 +16,7 @@ from sbs_utils.procedural.comms import comms_broadcast
 import random
 
 from sbs_utils.procedural.internal_damage import grid_rebuild_grid_objects
+from sbs_utils.procedural.grid import grid_delete_objects
 import sbs
 
 _craft_id = 1
@@ -189,9 +190,16 @@ def hangar_launch_craft(craft_id, client_id):
     #
     sbs.retrieve_from_standby_list(craft.engine_object)
     #
+    #
+    #
+    grid_delete_objects(craft.id)
+
+    #
     # Create the Ships internals
     #
     hm = sbs.get_hull_map(craft.id, True)
+
+
     craft.set_inventory_value("craft_name", craft.name)
     call_sign = get_inventory_value(client_id, "call_sign", None)
     sortie = get_inventory_value(client_id, "sortie", 0)
@@ -281,6 +289,11 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     craft.data_set.set("throttle", 0.0,0)
     craft_name = craft.get_inventory_value("craft_name", craft.name)
     craft.name = craft_name
+
+    #
+    # Remove any grid objects
+    #
+    grid_delete_objects(craft.id)
 
     pos = get_pos(dock_target)
     if pos:
