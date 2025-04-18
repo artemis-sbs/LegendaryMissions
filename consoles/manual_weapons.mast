@@ -65,7 +65,7 @@ shared manual_beams_version_task = None
     ship = to_object(ship_id)
     yield fail if ship is None
 
-    sbs.set_main_view_modes(client_id, "no_draw","a","a")
+    sbs.set_main_view_modes(client_id, "no_draw","a","cinematic")
 
     with gui_rebuild(manual):
         gui_row("row-height: 3em;")
