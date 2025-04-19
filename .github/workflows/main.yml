@@ -22,8 +22,6 @@ jobs:
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "autoplay"
 
-     
-    - uses: actions/checkout@master
     - name: Archive ai addon
       uses: thedoctor0/zip-release@main
       with:
@@ -158,9 +156,7 @@ jobs:
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "zadmiral"
-
-
-    - uses: actions/checkout@master
+    
     - name: Archive prefabs addon
       uses: thedoctor0/zip-release@main
       with:
