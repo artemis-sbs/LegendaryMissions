@@ -7,10 +7,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
     - name: Set env version
       id: get_version
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       
+    - uses: actions/checkout@master
+    - name: Archive autoplay addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'autoplay_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "autoplay"
+
+     
     - uses: actions/checkout@master
     - name: Archive ai addon
       uses: thedoctor0/zip-release@main
@@ -93,7 +105,7 @@ jobs:
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "hangar"
 
-    - name: Archive internl comms addon
+    - name: Archive internal comms addon
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
@@ -146,6 +158,18 @@ jobs:
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "zadmiral"
+
+
+    - uses: actions/checkout@master
+    - name: Archive prefabs addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'prefabs_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "prefabs"
+
 
 
     - name: Upload Release
