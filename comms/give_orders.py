@@ -1,7 +1,7 @@
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.helpers import FrameContext
 from sbs_utils.procedural.query import to_object, get_comms_selection
-from sbs_utils.procedural.roles import has_roles
+from sbs_utils.procedural.roles import has_roles, are_allies
 
 from sbs_utils.vec import Vec3
 import sbs
@@ -63,9 +63,12 @@ def comms_set_2dview_focus(client_id, focus_id=0, EVENT=None):
     alt_ship_obj = to_object(alt_ship)
     if alt_ship_obj is None:
         return
-    if not has_roles(alt_ship, "tsn, defender"):
+
+    if not are_allies(on_ship, alt_ship):
         return
     
+    if get_inventory_value(alt_ship, "give_orders_type", None) is None:
+        return
     
     # Now the event is important 
     nav_color = "#444"

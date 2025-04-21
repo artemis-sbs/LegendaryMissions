@@ -46,12 +46,14 @@ import give_orders.py
     + "Give Orders" //comms/give_orders
 
 
-//comms/give_orders if has_roles(COMMS_SELECTED_ID, "prefab_npc_defender")
+//comms/give_orders if get_inventory_value(COMMS_SELECTED_ID, "give_orders_type") is not None
     #has_objective = 
     order = ""
     + "Back"  //comms/
 
-    orders = labels_get_type("objective/orders/defender")
+    label_type = get_inventory_value(COMMS_SELECTED_ID, "give_orders_type")
+
+    orders = labels_get_type(label_type)
     for order in orders:
         display_name = order.get_inventory_value("display_name", order.name)
         + "{display_name}" carry_out_orders  {"objective": order}
