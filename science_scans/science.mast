@@ -82,7 +82,7 @@
 
     + "scan":
         <scan>
-            % Space organism class<colon> Typhon.
+            % Space organism class: Typhon.
     + "status":
         <scan>
             % This extra-dimensional creature cannot be affected by any known weapon.
@@ -91,7 +91,7 @@
             % This life form defies our laws of biology and physics. No known form of communication can reach it.
     + "intel":
         <scan>
-            % Life form classification<colon> HOSTILE and extremely DANGEROUS.
+            % Life form classification: HOSTILE and extremely DANGEROUS.
 
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "wreck")
@@ -104,11 +104,11 @@
             % Wreckage of a destroyed starship. 
     + "status":
         <scan> 
-            % WARNING<colon> Radiation leak detected! Do not board this derelict!
+            % WARNING: Radiation leak detected! Do not board this derelict!
             % Readings indicate this ship was destroyed by weapons fire.
             % Cause of this ship's destruction cannot be determined by sensor scan.
-            % WARNING<colon> high radiation levels! This ship might have been destroyed by an accidental reactor leak.
-            % WARNING<colon> high radiation level warning for the entire crew! This ship might have been destroyed by an accidental reactor leak.
+            % WARNING: high radiation levels! This ship might have been destroyed by an accidental reactor leak.
+            % WARNING: high radiation level warning for the entire crew! This ship might have been destroyed by an accidental reactor leak.
 
     + "bio":
         <scan>
@@ -119,12 +119,12 @@
 
     + "mat":
         <scan>
-            % Material scan<colon> no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging.
-            % Material scan<colon> minimal salvage value. Approximately 0.4 kilotons of fluxion.
-            % Material scan<colon> significant salvage value. Approximately 1.3 kilotons of urydium.
-            % Material scan<colon> minimal salvage value. Less than 0.1 kilotons of urydium.
-            % Material scan<colon> significant salvage value. More than 1.9 kilotons of fluxion.
-            % Material scan<colon> inconclusive. Something on this wreck is blocking our scans.
+            % Material scan: no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging.
+            % Material scan: minimal salvage value. Approximately 0.4 kilotons of fluxion.
+            % Material scan: significant salvage value. Approximately 1.3 kilotons of urydium.
+            % Material scan: minimal salvage value. Less than 0.1 kilotons of urydium.
+            % Material scan: significant salvage value. More than 1.9 kilotons of fluxion.
+            % Material scan: inconclusive. Something on this wreck is blocking our scans.
         
 
 
