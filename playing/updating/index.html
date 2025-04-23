@@ -498,6 +498,51 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#updating-to-the-latest-legendarymissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating to the latest LegendaryMissions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updating-to-a-specific-version-legendarymissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating to a specific version LegendaryMissions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updating-legendarymissions-to-a-different-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating LegendaryMissions to a different folder
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#can-you-have-multiple-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can you have multiple versions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#i-got-the-latest-but-it-doesnt-work-or-has-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      I got the latest, but it doesn't work or has issues
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2094,6 +2139,51 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#updating-to-the-latest-legendarymissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating to the latest LegendaryMissions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updating-to-a-specific-version-legendarymissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating to a specific version LegendaryMissions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updating-legendarymissions-to-a-different-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating LegendaryMissions to a different folder
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#can-you-have-multiple-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can you have multiple versions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#i-got-the-latest-but-it-doesnt-work-or-has-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      I got the latest, but it doesn't work or has issues
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2113,8 +2203,55 @@
 
 
 <h1 id="updating">Updating</h1>
+<p>Artemis Cosmos missions that are have their source on Github can be updated using the <em>fetch</em> command.</p>
 <h2 id="fetching">Fetching</h2>
-<p>Talk about using the fetch to get updates and bugfixes in between releases of Artemis: Cosmos</p>
+<p>Open a command line terminal and navigate to the missions directory in Artemis Cosmos location</p>
+<p>The fetch command can be used from there.</p>
+<p>The fetch command takes at least 2 arguments and can optionally have 2 more</p>
+<div class="highlight"><pre><span></span><code>fetch GITHUB_USER REPOSITORY [FOLDER] [BRANCH/TAG]
+</code></pre></div>
+<p>GIHUB_USER is the user or organization name e.g. artemis-sbs</p>
+<p>REPOSITORY is the mission repository name</p>
+<p>FOLDER is the folder under mission to copy the mission to. This is optional. The default the REPOSITORY name.</p>
+<p>BRANCH/TAG is the branch or TAG to use. This is optional. The  default is <em>main</em></p>
+<details class="note">
+<summary>Folder is needed when specifying a branch</summary>
+<p>Currently fetch requires the folder when specifying a branch.</p>
+</details>
+<h2 id="updating-to-the-latest-legendarymissions">Updating to the latest LegendaryMissions</h2>
+<p>To update the LegendaryMissions to the latest version use fetch.</p>
+<div class="highlight"><pre><span></span><code>.\fetch artemis-sbs LegendaryMissions
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Recommendation: Don't copy into an existing folder</p>
+<p>It is a good idea to rename or delete the existing mission folder so that the content you fetch is as clean as possible.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Mission scripter note</p>
+<p>Also if you have mission that leverage the AddOns from LegendaryMissions, it is a good idea to rebuild the Addons.</p>
+<div class="highlight"><pre><span></span><code>cd LegendaryMissions
+.\build_addons
+</code></pre></div>
+<p>You may need to update your story.json to the latest version. See the MAKEVERSION.bat file to see what that version is.</p>
+</div>
+<h2 id="updating-to-a-specific-version-legendarymissions">Updating to a specific version LegendaryMissions</h2>
+<p>You will need all four argument to fetch a specific branch.
+The folder is not optional when including the branch/tag.</p>
+<div class="highlight"><pre><span></span><code>.\fetch artemis-sbs LegendaryMissions LegendaryMissions v1.0.6
+</code></pre></div>
+<h2 id="updating-legendarymissions-to-a-different-folder">Updating LegendaryMissions to a different folder</h2>
+<p>If you want to keep the existing version, but try a new version you can fetch to a different folder.</p>
+<div class="highlight"><pre><span></span><code>.\fetch artemis-sbs LegendaryMissions LegendaryMissionsDev
+</code></pre></div>
+<h2 id="can-you-have-multiple-versions">Can you have multiple versions</h2>
+<p>Absolutely, you can have two versions of </p>
+<p>the scripting system uses version stamps to make sure the right dependencies are loaded.</p>
+<h2 id="i-got-the-latest-but-it-doesnt-work-or-has-issues">I got the latest, but it doesn't work or has issues</h2>
+<p>The Latest version is where active development is occurring. While the goal is to have it always working there are times when the latest version has issues.</p>
+<p>Issues can include it is targeting a new unreleased version of Artemis Cosmos.</p>
+<p>To get back to the copy that shipped with Artemis Cosmos, fetch using the tag for that version. It is best practice to remove or renaming the mission folder before fetching.</p>
+<div class="highlight"><pre><span></span><code>.\fetch artemis-sbs LegendaryMissions LegendaryMissions v1.0.6
+</code></pre></div>
 
 
 
