@@ -1,12 +1,36 @@
 
+=== ai_fix_damage
+    any_damage = to_grid_object(grid_closest(BRAIN_AGENT_ID,role("__damaged__")))
+    ->END if any_damage is None
+    grid_repair_grid_objects(BRAIN_AGENT.host_id, any_damage.id, BRAIN_AGENT_ID)
+    grid_damcons_handle_idling_boost_finish(BRAIN_AGENT)
+    ->END
+
+
+
 === upgrade_damcon_inc_hp
 metadata: ``` yaml
 type: upgrade/damcons
 ```
-    hp = UPGRADE_AGENT.get_inventory_value("HP")
-    max_hp = UPGRADE_AGENT.get_inventory_value("HP_MAX", 6)
-    hp = min(HP_MAX, hp+1)
-    UPGRADE_AGENT.set_inventory_value("HP")
+    hp = get_inventory_value(AGENT_ID, "HP", 0)
+    max_hp = get_inventory_value(AGENT_ID, "HP_MAX", 6)
+    # hp = min(HP_MAX, hp+1)
+    # set_inventory_value(AGENT_ID, "HP", hp)
+    hp += 1
+    yield success if hp==max_hp
+
+    ship = BRAIN_AGENT.host_id # obj defined in previous labels
+    hp %= (max_hp+1)
+    set_inventory_value(BRAIN_AGENT_ID, "HP", hp)
+    if hp < max_hp:
+        comms_broadcast(ship, f"{BRAIN_AGENT.name} recovering {hp}", "blue")
+        set_timer(BRAIN_AGENT_ID, "boost_timer", minutes=2)
+    else:
+        color = get_inventory_value(BRAIN_AGENT_ID, "color", "purple")
+        go_blob = to_blob(BRAIN_AGENT_ID)
+        if go_blob is not None:
+            go_blob.set("icon_color", color)
+        comms_broadcast(ship, f"{BRAIN_AGENT.name} fully recovered", "green")
     yield success
 
 === upgrade_damcon_speed_gym
@@ -14,6 +38,9 @@ metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
+    grid_short_status(BRAIN_AGENT_ID, "Whoo good workout.", "blue", seconds=3)
+    set_timer(BRAIN_AGENT_ID, "ripped_speed_coeff", minutes=random.randint(10,16))
+    set_inventory_value(BRAIN_AGENT_ID, "ripped_speed_coeff", 1.25)
     jump upgrade_damcon_speed
 
 === upgrade_damcon_speed_mess
@@ -21,6 +48,9 @@ metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
+    grid_short_status(BRAIN_AGENT_ID, "I ate good.", "blue", seconds=3)
+    set_inventory_value(BRAIN_AGENT_ID, "fed_speed_coeff", 1.25)
+    set_timer(BRAIN_AGENT_ID, "fed_speed_coeff", minutes=random.randint(10,16))
     jump upgrade_damcon_speed
 
 
@@ -29,6 +59,9 @@ metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
+    grid_short_status(BRAIN_AGENT_ID, "I feel rested.", "blue", seconds=3)
+    set_inventory_value(BRAIN_AGENT_ID, "rested_speed_coeff", 1.25)
+    set_timer(BRAIN_AGENT_ID, "rested_speed_coeff", minutes=random.randint(10,16))
     jump upgrade_damcon_speed
 
 
@@ -37,9 +70,11 @@ metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
-    current = UPGRADE_AGENT.dataset.get("move_speed", 0)
+    AGENT = to_object(AGENT_ID)
+    yield fail if AGENT is None
+    current = AGENT.data_set.get("move_speed", 0)
     current *= 1.25
-    current = UPGRADE_AGENT.dataset.set("move_speed", current,0)
+    current = AGENT.data_set.set("move_speed", current,0)
     yield success
 
 
@@ -49,7 +84,6 @@ type: prefab/lifeform/damcons
 brain:
   - SEQ: # movement
     - SEL:
-      - ai_lifeform_move_keep_going
       - ai_lifeform_move_to_work_order
       - ai_lifeform_move_to_damage
       - ai_lifeform_move_to_idle_pos
@@ -82,13 +116,59 @@ brain:
       idle_time: 60
       upgrade: upgrade_damcon_speed_quarters
 ```
+    i = 4
+    v = sbs.vec3(0.5,0,0.5)
+    point = sbs.find_valid_unoccupied_grid_point_for_vector3(ship_id, v, 5)
+
+    item_theme_data = grid_get_item_theme_data("damcons")
+    rally_theme_data = grid_get_item_theme_data("rally_point")
+    #
+    # Get Colors from theme
+    # 
+    colors  = item_theme_data.color
+    color_count = len(colors)
+    damage_colors  = item_theme_data.damage_color
+    default name = f"DC{i+1}"
+    
+    ->END if len(point) == 0
+        
+    icon = 2 # item_theme_data.icon
+    scale = item_theme_data.scale
+    dc = grid_spawn(ship_id, name, name, point[0],point[1],icon, colors[i%color_count], "crew,damcons,lifeform")
+
+    dc.engine_object.layer = 4
+    dc.blob.set("icon_scale", scale,0 )
+    _id = to_id(dc)
+    _go = to_object(dc)
+    set_inventory_value(_id, "color", colors[i%color_count])
+    set_inventory_value(_id, "damage_color", damage_colors[i%color_count])
+    set_inventory_value(_id, "blackboard:idle_pos", (point[0], point[1]) )
+    # Hit points == MAX_HP
+    set_inventory_value(_id, "HP", grid_get_max_hp() )
+    #
+    # Create idle/rally point
+    #
+    dc_color = get_inventory_value(_id, "color", "white")
+    marker_tag = f"{_go.name} rally point"
+    
+    icon = rally_theme_data.icon
+    scale = rally_theme_data.scale
+
+    idle_marker = grid_spawn(ship_id, marker_tag, marker_tag, point[0],point[1], icon, dc_color, "#,rally_point") 
+    _blob = to_blob(idle_marker)
+    _blob.set("icon_scale", scale, 0)
+    set_inventory_value(_id, "idle_marker", to_id(idle_marker))
+
+    brain_add(_go, brain)
+    ->END
 
 === ai_lifeform_move_keep_going
 metadata: ``` yaml
 room: __damaged__
 ```
-    length = BRAIN_AGENT.dataset.get("path_length",0)
+    length = BRAIN_AGENT.data_set.get("path_length",0)
     yield success if length is not None and length > 0.01
+    set_inventory_value(BRAIN_AGENT_ID, "blackboard:idle_pos", None)
     yield fail
 
 
@@ -98,8 +178,8 @@ room: __damaged__
 ```
     the_target =  to_object(grid_closest(BRAIN_AGENT_ID, linked_to(BRAIN_AGENT_ID, "work-order")))
     yield fail if the_target is None
-    x = the_target.dataset.get("curx",0)
-    y = the_target.dataset.get("cury",0)
+    x = the_target.data_set.get("curx",0)
+    y = the_target.data_set.get("cury",0)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:target_pos", (x,y))
     yield success
 
@@ -114,32 +194,45 @@ hp_speed_up: False
     yield fail if to_object(BRAIN_AGENT.host_id) is None
     any_damage = to_object(grid_closest(BRAIN_AGENT_ID,role("__damaged__")))
     yield fail if any_damage is None
-    x = any_damage.dataset.get("curx",0)
-    y = any_damage.dataset.get("cury",0)
+    x = any_damage.data_set.get("curx",0)
+    y = any_damage.data_set.get("cury",0)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:target_pos", (x,y))
     yield success
 
 === ai_lifeform_move_to_idle_pos
-metadata: ``` yaml
-```
-    idle_pos = get_inventory_value(BRAIN_AGENT_ID, "blackboard:idle_pos")
-    yield fail if idle_pos is None
-    set_inventory_value(BRAIN_AGENT_ID, "blackboard:target_pos", idle_pos)
-    # Keep going
+# metadata: ``` yaml
+# ```
+    rally_point = to_grid_object(BRAIN_AGENT.get_inventory_value("idle_marker", None))
+    yield fail if rally_point is None
+    x = rally_point.data_set.get("curx",0)
+    y = rally_point.data_set.get("cury",0)
+    set_inventory_value(BRAIN_AGENT_ID, "blackboard:target_pos", (x,y))
     yield success
 
 === ai_lifeform_move_to_location
-metadata: ``` yaml
-```
+# metadata: ``` yaml
+# ```
     _pos = get_inventory_value(BRAIN_AGENT_ID, "blackboard:target_pos")
     prev_pos = get_inventory_value(BRAIN_AGENT_ID, "blackboard:prev_target_pos")
+    idle_pos = get_inventory_value(BRAIN_AGENT_ID, "blackboard:idle_pos")
     yield fail if _pos is None
-    # Keep going
+    # Have we reached it
+    length = BRAIN_AGENT.data_set.get("path_length",0)
+    if prev_pos is not None and length is not None and length < 0.01:
+        set_inventory_value(BRAIN_AGENT_ID, "blackboard:prev_target_pos", None)
+        set_inventory_value(BRAIN_AGENT_ID, "blackboard:idle_pos", _pos)
+        grid_damcons_detailed_status(BRAIN_AGENT_ID, f"Idling at {_pos[0]},{_pos[1]}", "blue", 3)
+        yield fail
+    
     yield success if _pos == prev_pos
+    # Already been here
+    yield fail if _pos == idle_pos
     speed = grid_calc_speed(BRAIN_AGENT_ID)
     BRAIN_AGENT.set_inventory_value("idle_room", None)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:prev_target_pos", _pos)
+    set_inventory_value(BRAIN_AGENT_ID, "blackboard:idle_pos", None)
     grid_target_pos(BRAIN_AGENT_ID, _pos[0], _pos[1], speed)
+    #grid_damcons_detailed_status(SPAWNED_ID, f"Heading to {target_name}", "orange", 3)
     grid_damcons_detailed_status(BRAIN_AGENT_ID, f"Heading to location {_pos[0]},{_pos[1]}", "blue", 3)
     yield success
 
@@ -151,21 +244,35 @@ upgrade: ai_fix_damage
 idle_time: 60
 hp_speed_up: False
 ```
-    last_room_id = BRAIN_AGENT.get_inventory_value("idle_room", None)
-    current_room_ids = BRAIN_AGENT.get_inventory_value("current_rooms", set())
+    # Verify everything is still valid
+    yield fail if to_object(BRAIN_AGENT.host_id) is None
+    hm = sbs.get_hull_map(BRAIN_AGENT.host_id)
+    yield fail if hm is None
+    # 
+    x = BRAIN_AGENT.data_set.get("curx",0)
+    y = BRAIN_AGENT.data_set.get("cury",0)
+
+    _pos = get_inventory_value(BRAIN_AGENT_ID, "blackboard:boost_pos", (-1,-1))
+    # See if we're at 
+    new_location = x != _pos[0] or y != _pos[1]
+    
+
+    current_room_ids = set(hm.get_objects_at_point(x,y))
     boost_here = current_room_ids & role(room)
     # If not in previous room
-    if last_room_id not in boost_here:
-        yield fail
+    # yield fail if last_room_id is not None and last_room_id not in boost_here
+        
     elapsed = get_counter_elapsed_seconds(BRAIN_AGENT_ID, "idle_boost_counter")
     this_room = list(boost_here)
-    yield fail if len(this_room) != 1
+    yield fail if len(this_room) == 0
     this_room = this_room[0]
+
     # Set the idle_room
-    BRAIN_AGENT.set_inventory_value("idle_room", this_room)
-    # Start Idling
-    if elapsed is None:
-        start_counter("idle_boost_counter")
+    if new_location:
+        set_inventory_value(BRAIN_AGENT_ID, "blackboard:boost_pos", (x,y))
+        BRAIN_AGENT.set_inventory_value("idle_room", this_room)
+        BRAIN_AGENT.set_inventory_value("idle_state", "idling")
+        start_counter(BRAIN_AGENT_ID, "idle_boost_counter")
         yield success
     # continue idling
     target_time = idle_time
@@ -173,18 +280,23 @@ hp_speed_up: False
         hp = BRAIN_AGENT.get_inventory_value("HP", 1)
         target_time /= hp
     # Success but keep running
-    yield success if elapsed < target
+    yield success if elapsed < target_time
+    idle_state = BRAIN_AGENT.get_inventory_value("idle_state")
+    yield fail if idle_state == "done"
+
     # OK we reached the idle_time
     task_schedule(upgrade, data={"AGENT_ID": BRAIN_AGENT_ID, "ROOM_ID": this_room, "type": room })
-    yield success
-
-
-
-=== ai_clear_idle_at_room
-" used after checking all idle 
-metadata: ``` yaml
-```
-    last_room_id = BRAIN_AGENT.set_inventory_value("idle_room", None)
-    # yield fail 
+    BRAIN_AGENT.set_inventory_value("idle_state", "done")
+    # We fail so other things can run
     yield fail
+
+
+
+# === ai_clear_idle_at_room
+# " used after checking all idle 
+# # metadata: ``` yaml
+# # ```
+#     last_room_id = BRAIN_AGENT.set_inventory_value("idle_room", None)
+#     # yield fail 
+#     yield fail
 

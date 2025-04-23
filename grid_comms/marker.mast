@@ -19,7 +19,8 @@
     _blob = to_blob(COMMS_SELECTED_ID)
     _loc_x = _blob.get("curx", 0)
     _loc_y = _blob.get("cury", 0)
-    set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
+    #set_inventory_value(d.id, "idle_pos", (_loc_x, _loc_y) )
+    #set_inventory_value(d.id, "blackboard:idle_pos", (_loc_x, _loc_y) )
     idle_marker = get_inventory_value(d.id, "idle_marker", None)
     #
     #
