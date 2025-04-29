@@ -8,6 +8,15 @@ import give_orders.py
 
 //enable/comms if has_roles(COMMS_SELECTED_ID, "civ, friendly")
 
+#
+# This is an example of how to create an overridable button, but it is not used
+# By setting the weight to 0
+# 
+# //comms
+#     + !0 "Hail":
+#         comms_receive("Default hail")
+
+
 
 //comms if has_roles(COMMS_SELECTED_ID, "civ, friendly") 
     + "Hail":
