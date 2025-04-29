@@ -8,7 +8,7 @@ property_pane = None
 default ADMIRAL_CONSOLE_ENABLED = True
 
 @console/admiral !0 ^90 "Admiral" if ADMIRAL_CONSOLE_ENABLED
-" Aid you side in the war
+" Aid your side in the war
 
     #
     # Get side from selected ship
