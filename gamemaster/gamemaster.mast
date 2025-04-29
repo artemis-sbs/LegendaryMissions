@@ -5,22 +5,22 @@ dolly = 50
 orbit = 180.0
 do_move = 0
 property_pane = None
-default ADMIRAL_CONSOLE_ENABLED = True
+default GAMEMASTER_CONSOLE_ENABLED = True
 
-@console/admiral !0 ^100 "Admiral" if ADMIRAL_CONSOLE_ENABLED
-" Aid you side in the war
+@console/gamemaster !0 ^100 "Game Master" if GAMEMASTER_CONSOLE_ENABLED
+" Affect the overall battle
 
     #
     # Get side from selected ship
     #
 
     # Need Sci in the name for science selection
-    gui_activate_console("admiral_sci")
+    gui_activate_console("gamemaster_sci")
     
 
     _ship_id = sbs.get_ship_of_client(client_id) 
     faction_ship = to_object(_ship_id)
-    cambot_id = get_inventory_value(client_id, "ADMIRAL_COMBOT", None)
+    cambot_id = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
     camera_id = cambot_id
     cambot = to_object(cambot_id)
     if cambot_id is None or cambot is None:
@@ -28,10 +28,10 @@ default ADMIRAL_CONSOLE_ENABLED = True
         # has_science_scan enables friendly eyes processing
         # while not being a player
         #
-        cambot = to_object(player_spawn(0,0,10, "", "tsn,admiral,has_science_scan", "invisible")) 
+        cambot = to_object(player_spawn(0,0,10, "", "tsn,gamemaster,has_science_scan", "invisible")) 
         remove_role(cambot, "__player__")
         camera_id = to_id(cambot)
-        set_inventory_value(client_id, "ADMIRAL_COMBOT", camera_id)
+        set_inventory_value(client_id, "GAMEMASTER_COMBOT", camera_id)
         cambot_id = camera_id
 
         # Set up scan sources
@@ -54,7 +54,7 @@ default ADMIRAL_CONSOLE_ENABLED = True
     science_set_scan_data(camera_id, camera_id, {"scan": "Admiral"})
     set_comms_selection(camera_id, camera_id)
     follow_route_select_comms(camera_id, camera_id)
-    #comms_navigate("//comms/admiral")
+    #comms_navigate("//comms/gamemaster")
 
 
     # Whole screen
@@ -74,14 +74,14 @@ default ADMIRAL_CONSOLE_ENABLED = True
     # if either dolly or orbit changes
     on gui_message(ob): # + orbit:
         set_inventory_value(client_id, "orbit", orbit)
-        await task_schedule(admiral_move_camera)
+        await task_schedule(gamemaster_move_camera)
 
 
     on gui_message(dl): # + orbit:
         set_inventory_value(client_id, "dolly", dolly)
-        await task_schedule(admiral_move_camera)
+        await task_schedule(gamemaster_move_camera)
 
-    task_schedule(admiral_move_camera_sync)
+    task_schedule(gamemaster_move_camera_sync)
 
 
     # Middle
@@ -105,24 +105,24 @@ default ADMIRAL_CONSOLE_ENABLED = True
         
     await gui()
 
-==== admiral_move_camera_sync
+==== gamemaster_move_camera_sync
     await delay_sim(3)
     do_move = do_move + 1 if do_move is not None else 0
     # every 15 sec move camra anyway
     if do_move > 5:
-        await task_schedule(admiral_move_camera)
+        await task_schedule(gamemaster_move_camera)
         do_move = 0
 
     _ship_id = sbs.get_ship_of_client(client_id) 
     now_sci = get_science_selection(_ship_id)
     if not now_sci:
         now_sci = get_weapons_selection(_ship_id)
-    jump admiral_move_camera_sync if now_sci == last_sci
+    jump gamemaster_move_camera_sync if now_sci == last_sci
     last_sci = now_sci
-    await task_schedule(admiral_move_camera)
-    jump admiral_move_camera_sync 
+    await task_schedule(gamemaster_move_camera)
+    jump gamemaster_move_camera_sync 
 
-==== admiral_move_camera
+==== gamemaster_move_camera
     dolly = get_inventory_value(client_id, "dolly", dolly)
     orbit = get_inventory_value(client_id, "orbit", orbit)
 
@@ -146,7 +146,7 @@ default ADMIRAL_CONSOLE_ENABLED = True
 
 
 
-//focus/science if has_roles(SCIENCE_ORIGIN_ID, "admiral")
+//focus/science if has_roles(SCIENCE_ORIGIN_ID, "gamemaster")
     #rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)
     
     # extra_extra_tag has lmb, rmb, blank is fake event
@@ -156,12 +156,12 @@ default ADMIRAL_CONSOLE_ENABLED = True
         if SCIENCE_SELECTED_ID!=0:
             pos = Vec3(SCIENCE_SELECTED.pos)
         SCIENCE_ORIGIN.pos = pos
-        set_inventory_value(SCIENCE_ORIGIN_ID, "admiral_prev_selection", SCIENCE_SELECTED_ID)
-        admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Admiral", "lmb", "#040")
+        set_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
+        gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Admiral", "lmb", "#040")
     elif EVENT.extra_extra_tag == "rmb":
         # Need to reset scince to the right value????
         # But when, Next tick?
-        prev_sci = get_inventory_value(SCIENCE_ORIGIN_ID, "admiral_prev_selection", SCIENCE_SELECTED_ID)
+        prev_sci = get_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
         set_weapons_selection(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
         set_science_selection(SCIENCE_ORIGIN_ID, prev_sci)
         
@@ -169,11 +169,11 @@ default ADMIRAL_CONSOLE_ENABLED = True
         if SCIENCE_SELECTED_ID!=0:
             pos = Vec3(SCIENCE_SELECTED.pos)
 
-        # The selection point for the admiral is the pos of the Admiral ship
+        # The selection point for the gamemaster is the pos of the Admiral ship
         # But this selection we need to remmber
-        set_inventory_value(SCIENCE_ORIGIN_ID, "ADMIRAL_ORDERS_POINT", pos)
+        set_inventory_value(SCIENCE_ORIGIN_ID, "GAMEMASTER_ORDERS_POINT", pos)
 
-        admiral_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Orders", "rmb", "#400")
+        gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Orders", "rmb", "#400")
     
 
 

@@ -67,7 +67,7 @@ default HANGAR_CONSOLE_ENABLED = True
 
 
 
-@console/hangar "Flight Hangar" if HANGAR_CONSOLE_ENABLED
+@console/hangar !0 ^50 "Flight Hangar" if HANGAR_CONSOLE_ENABLED
     " Fly fighter- shuttle and cargo missions
     jump show_hangar # This could be replaced with a new command gui_navigate("//console/hangar")
 
