@@ -51,7 +51,7 @@ default GAMEMASTER_CONSOLE_ENABLED = True
     #
     
     sbs.assign_client_to_ship(client_id, camera_id)
-    science_set_scan_data(camera_id, camera_id, {"scan": "Admiral"})
+    science_set_scan_data(camera_id, camera_id, {"scan": "Game Master"})
     set_comms_selection(camera_id, camera_id)
     follow_route_select_comms(camera_id, camera_id)
     #comms_navigate("//comms/gamemaster")
@@ -157,7 +157,7 @@ default GAMEMASTER_CONSOLE_ENABLED = True
             pos = Vec3(SCIENCE_SELECTED.pos)
         SCIENCE_ORIGIN.pos = pos
         set_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
-        gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Admiral", "lmb", "#040")
+        gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
     elif EVENT.extra_extra_tag == "rmb":
         # Need to reset scince to the right value????
         # But when, Next tick?

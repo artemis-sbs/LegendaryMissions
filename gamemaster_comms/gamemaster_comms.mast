@@ -241,13 +241,13 @@
     + ^1 "Back" //comms/gamemaster/area
     + "Grow":
         pos = Vec3(COMMS_ORIGIN.pos)
-        gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, 1000, "Admiral", "lmb", "#040")
+        gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, 1000, "Game Master", "lmb", "#040")
     + "Shrink":
         pos = Vec3(COMMS_ORIGIN.pos)
-        gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, -1000, "Admiral", "lmb", "#040")
+        gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, -1000, "Game Master", "lmb", "#040")
     + "Reset":
         pos = Vec3(COMMS_ORIGIN.pos)
-        gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, 0, "Admiral", "lmb", "#040")
+        gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
 
 
 //comms/gamemaster/area/move if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
@@ -345,19 +345,19 @@
         if raider:
             raider = to_object(raider)
             COMMS_ORIGIN.pos = raider.pos
-            gamemaster_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
+            gamemaster_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Game Master", "lmb", "#040")
     + "Stations":
         raider = closest(COMMS_ORIGIN_ID, role("station"))
         if raider:
             raider = to_object(raider)
             COMMS_ORIGIN.pos = raider.pos
-            gamemaster_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
+            gamemaster_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Game Master", "lmb", "#040")
     + "Players":
         raider = closest(COMMS_ORIGIN_ID, role("__player__"))
         if raider:
             raider = to_object(raider)
             COMMS_ORIGIN.pos = raider.pos
-            gamemaster_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Admiral", "lmb", "#040")
+            gamemaster_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Game Master", "lmb", "#040")
     
 
 
