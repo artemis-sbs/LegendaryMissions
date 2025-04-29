@@ -45,6 +45,7 @@
         terrain_asteroid_clusters(terrain_to_value(TERRAIN_SELECT, 2), pos)
 
     + "Scatter Nebular Clusters":
+        pos = Vec3(COMMS_ORIGIN.pos)
         terrain_spawn_nebula_clusters(terrain_to_value(TERRAIN_SELECT, 2), pos)
 
 
