@@ -54,11 +54,9 @@ Properties:
         enemy = enemy_temp[0]
         fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
         prefab_spawn(prefab_fleet_raider, {"race": enemy, "fleet_difficulty": DIFFICULTY,"START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
-        # create_siege_fleet(enemy, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
         if a > 1 and DIFFICULTY > 2:
             fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
             prefab_spawn(prefab_fleet_raider, {"race": "Skaraan", "fleet_difficulty": DIFFICULTY, "START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
-            #create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
 
     #------------------------------------------------------------------------------------------------------------
 

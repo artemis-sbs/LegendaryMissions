@@ -108,7 +108,6 @@
         + "{race}" {"race": race.lower()}:
             pos = Vec3(COMMS_ORIGIN.pos)
             fleet_diff = get_shared_variable("DIFFICULTY", 4)
-            #create_siege_fleet(race, fleet_diff, *pos.xyz)
             prefab_spawn(prefab_fleet_raider, {"race": race, "fleet_difficulty": fleet_diff,"START_X": pos.x, "START_Y": pos.y, "START_Z": pos.z})
 
 //comms/admiral/spawn/player if has_roles(COMMS_ORIGIN_ID, 'admiral')

@@ -546,25 +546,6 @@ def random_bits(bits, count):
     return ret
 
 
-def create_siege_fleet(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet", ship_roles=None):
-    """ depricated: Create a new fleet and add the appropriate amount of ships
-        This is being kept to not break 1.0.1 scripts which there are not many
-        use prefab_spawn instead which is what this function now does
-
-    Args:
-        race (str): 
-        fleet_diff (int): DIFFICULTY -1 to use as index for fleet lists
-        posx (float): location
-        posy (float): location
-        posz (float): location
-        fleet_roles (str, optional): Role for the fleet. Defaults to "RaiderFleet".
-        ship_roles (str, optional): Roles for the ships. Defaults to None.
-
-    Returns:
-        fleet (Fleet): The created fleet
-    """
-    diff = fleet_diff + 1 
-    return prefab_spawn("prefab_fleet_raider", {"race": {race}, "fleet_difficulty": diff, "START_X": posx, "START_Y": posy, "START_Z": posz})
 
 #--------------------------------------------------------------------------------------
 def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet", ship_roles=None):

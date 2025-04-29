@@ -79,7 +79,6 @@ Properties:
         if direction1 == 4:
             fleet_pos = next(scatter_box(1, -40000, -1000, 40000, -50000, 1000, -40000))
         print(f"Fleet1 Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
-        #create_siege_fleet(enemy1, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
         prefab_spawn(prefab_fleet_raider, {"race": enemy1, "fleet_difficulty": DIFFICULTY,"START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
 
     for b in range(fleet_count2):
@@ -92,7 +91,6 @@ Properties:
         if direction2 == 4:
             fleet_pos = next(scatter_box(1, -40000, -1000, 40000, -50000, 1000, -40000))
         print(f"Fleet2 Position: {fleet_pos.x} {fleet_pos.y} {fleet_pos.z}")
-        #create_siege_fleet(enemy2, fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
         prefab_spawn(prefab_fleet_raider, {"race": enemy2, "fleet_difficulty": DIFFICULTY,"START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
 
 
@@ -100,7 +98,7 @@ Properties:
     #    if a > 1 and DIFFICULTY > 2:
     #        fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
     #        create_npc_fleet_and_ships("skaraan", 1,0, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-    #        create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+    
 
 
 

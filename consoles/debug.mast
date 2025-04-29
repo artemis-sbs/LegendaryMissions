@@ -190,7 +190,6 @@ shared allow_debug = True
 
     # spawn_data = npc_spawn(_pos.x, _pos.y, _pos.z+400, "Clay Pigeon", "ximni, raider", "xim_light_cruiser", "behav_npcship")
 
-    #fleet_obj = create_siege_fleet("ximni", 1, _pos.x, _pos.y, _pos.z+400, ship_roles=abi)
     fleet_obj = prefab_spawn(prefab_fleet_raider, {"race": "ximni", "fleet_difficulty": 1,"START_X": _pos.x, "START_Y": _pos.y, "START_Z": _pos.z})
 
     for e in linked_to(fleet_obj.id,"ship_list"):

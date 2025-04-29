@@ -75,7 +75,7 @@ Properties:
     #    if a > 1 and DIFFICULTY > 2:
     #        fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
     #        create_npc_fleet_and_ships("skaraan", 1,0, fleet_pos.x, fleet_pos.y, fleet_pos.z)
-    #        create_siege_fleet("Skaraan", fleet_index, fleet_pos.x, fleet_pos.y, fleet_pos.z)
+    
 
 
     #------------------------------------------------------------------------------------------------------------
