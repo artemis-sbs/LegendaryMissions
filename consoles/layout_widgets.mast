@@ -4,10 +4,12 @@
     # Left
     gui_section(style="area:0,45px,100,100;")
     gui_row()
-
+    default tab = 1
     with gui_sub_section("col-width:280px;"):
         gui_row("row-height: 350px;")
-        gui_layout_widget("ship_data")
+        #gui_layout_widget("ship_data")
+        gui_info_panel(tab=tab)
+
         gui_row("row-height: 50px;")
         gui_layout_widget("red_alert")
         gui_row("row-height: 100-500px;")
@@ -18,8 +20,17 @@
     # Middle
     with gui_sub_section():
         gui_row()
-        gui_layout_widget("comms_waterfall")
-        gui_row()
+        # If more tabs are added the swap will be more complicated
+        # Deal with it then
+        panels = ~~[{"icon": 37, 
+            "show": console_comms_swap_panels_from_water, 
+            "hide":  None},
+            {"icon": 112, 
+                "show": console_comms_swap_panels_from_2d, 
+                "hide": None } ]~~
+
+        gui_tabbed_panel(panels, tab_location=3, icon_size = 40)
+        gui_row("padding:0,10px,0,0")
         gui_layout_widget("comms_control")
 
     # Right
@@ -33,7 +44,9 @@
         gui_row()
         with gui_sub_section():
             gui_row()
-            gui_layout_widget(_widget)
+            # This is a blank is a place holder 
+            # for one of the swap panels
+            view2d_widget_control = gui_blank()
 
             gui_row("row-height: 35px;")
 
@@ -105,7 +118,9 @@
     # Ship Data overlap
     gui_section(style="area:0,45px,100,100;")
     gui_row("row-height: 350px;col-width:280px;")
-    gui_layout_widget("ship_data")
+    default tab = 1
+    #gui_layout_widget("ship_data")
+    gui_info_panel(tab=tab)
 
     gui_section(style="area:0,45px,100,100;")
     with gui_sub_section():
@@ -176,11 +191,12 @@
 
 
 //gui/normal_engi
-
+    default tab = 1
     # Ship Data, 
     gui_section(style="area:0,45px,100-300px,100;")
     gui_row("row-height: 350px;col-width:280px;")
-    gui_layout_widget("ship_data")
+    #gui_layout_widget("ship_data")
+    gui_info_panel(tab=tab)
 
     
     gui_section(style="area:30,45px,100,100;")
@@ -215,3 +231,19 @@
 
     yield idle
 
+
+//gui/normal_helm
+    default tab = 1
+    # Ship Data, 
+    gui_section(style="area:0,45px,100-300px,100;")
+    gui_row("row-height: 350px;col-width:280px;")
+    #gui_layout_widget("ship_data")
+    gui_info_panel(tab=tab)
+
+//gui/normal_weap
+    default tab = 1
+    # Ship Data, 
+    gui_section(style="area:0,45px,100-300px,100;")
+    gui_row("row-height: 350px;col-width:280px;")
+    #gui_layout_widget("ship_data")
+    gui_info_panel(tab=tab)

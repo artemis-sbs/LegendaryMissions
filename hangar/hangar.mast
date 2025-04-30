@@ -266,10 +266,22 @@ default HANGAR_CONSOLE_ENABLED = True
         home_id = get_dedicated_link(ride_select, "home_dock")
         hangar_objective_started(ride_select, home_id, mission_objective)
 
-
     gui_console("cockpit")
 
     await gui()
+
+
+//gui/cockpit
+    # Left
+    gui_section(style="area:0,45px,100,100;")
+    default tab = 1
+
+    with gui_sub_section("col-width:280px;"):
+        gui_row("row-height: 350px;")
+        #gui_layout_widget("ship_data")
+        gui_info_panel(tab=tab)
+        # gui_row("row-height: 100px;")
+        # gui_layout_widget("text_waterfall")
 
 
 
