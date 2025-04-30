@@ -247,3 +247,11 @@
     gui_row("row-height: 350px;col-width:280px;")
     #gui_layout_widget("ship_data")
     gui_info_panel(tab=tab)
+
+//gui/normal_main
+    default tab = 1
+    # Ship Data, 
+    gui_section(style="area:0,45px,100-300px,100;")
+    gui_row("row-height: 350px;col-width:280px;")
+    #gui_layout_widget("ship_data")
+    gui_info_panel(tab=tab)

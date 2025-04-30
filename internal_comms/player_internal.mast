@@ -17,23 +17,47 @@ default counselor_face = random_terran()
 +[$biology] "Exobiology" //comms/internal/exobiology
 +[$counselor]"Counselor" //comms/internal/counselor 
     
+//comms/flash_message_test
+    + "Server":
+        face = random_face()
+        messages = ["Hello, World", "Goto to the light", "What's doug got to do with it", "Yesterday you said tomorrow"]
+        message = random.choice(messages) 
+        tabbed_panel_send_message(0, message, face=face, time=3)
+    + "All":
+        face = random_face()
+        messages = ["Hello, World", "Goto to the light", "What's doug got to do with it", "Yesterday you said tomorrow"]
+        message = random.choice(messages) 
+        for gui in role("__gui__"):
+            tabbed_panel_send_message(gui, message, face=face, time=3)
+    + "This console":
+        face = random_face()
+        messages = ["Hello, World", "Goto to the light", "What's doug got to do with it", "Yesterday you said tomorrow"]
+        message = random.choice(messages) 
+        tabbed_panel_send_message(client_id, message, face=face, time=3)
+    + "This console no flash":
+        face = random_face()
+        messages = ["Hello, World", "Goto to the light", "What's doug got to do with it", "Yesterday you said tomorrow"]
+        message = random.choice(messages) 
+        tabbed_panel_send_message(client_id, message, face=face, time=0)
+
 
 //comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-+"Back" //comms
+    + !1 ^1 "Back" //comms
+    + "Flash message" //comms/flash_message_test if is_dev_build()
 
-+"Status":
-    <<[$sickbay] "Sickbay status"
-        % No serious injuries currently 
-        % Sickbay is ready when needed
-        % 
+    + "Status":
+        <<[$sickbay] "Sickbay status"
+            % No serious injuries currently 
+            % Sickbay is ready when needed
+            % 
 
 //comms/internal/security if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-+"Back" //comms
-+"Status":
-    <<[$security] "Security update"
-        % All secure
-        % All quiet on the port bow
-        % Times like this boring is good
+    + "Back" //comms
+    + "Status":
+        <<[$security] "Security update"
+            % All secure
+            % All quiet on the port bow
+            % Times like this boring is good
 
 //comms/internal/exobiology if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
 +"Back" //comms
