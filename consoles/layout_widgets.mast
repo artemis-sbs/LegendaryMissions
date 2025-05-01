@@ -200,7 +200,7 @@
     default tab = 1
     # Ship Data, 
     gui_section(style="area:0,45px,55,100;")
-    with gui_sub_section():
+    with gui_sub_section("col-width:280px;"):
         gui_row("row-height: 350px;col-width:280px;")
         #gui_layout_widget("ship_data")
         gui_info_panel(tab=tab)
