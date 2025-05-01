@@ -3,35 +3,41 @@
 
     # Left
     gui_section(style="area:0,45px,100,100;")
-    gui_row()
+    
     default tab = 1
-    with gui_sub_section("col-width:280px;"):
-        gui_row("row-height: 350px;")
-        #gui_layout_widget("ship_data")
-        gui_info_panel(tab=tab)
-
-        gui_row("row-height: 50px;")
-        gui_layout_widget("red_alert")
-        gui_row("row-height: 100-500px;")
-        gui_blank()
-        gui_row("row-height: 100px;")
-        gui_layout_widget("text_waterfall")
-
-    # Middle
+    # Top Left
     with gui_sub_section():
-        gui_row()
-        # If more tabs are added the swap will be more complicated
-        # Deal with it then
-        panels = ~~[{"icon": 37, 
-            "show": console_comms_swap_panels_from_water, 
-            "hide":  None},
-            {"icon": 112, 
-                "show": console_comms_swap_panels_from_2d, 
-                "hide": None } ]~~
+        with gui_sub_section("col-width:280px;"):
+            gui_row("row-height: 350px;")
+            #gui_layout_widget("ship_data")
+            gui_info_panel(tab=tab)
+            gui_row("row-height: 50px;")
+            gui_layout_widget("red_alert")
 
-        gui_tabbed_panel(panels, tab_location=3, icon_size = 40)
+        with gui_sub_section():
+            gui_row()
+            # If more tabs are added the swap will be more complicated
+            # Deal with it then
+            panels = ~~[{"icon": 37, 
+                "show": console_comms_swap_panels_from_water, 
+                "hide":  None},
+                {"icon": 112, 
+                    "show": console_comms_swap_panels_from_2d, 
+                    "hide": None } ]~~
+
+            gui_tabbed_panel(panels, tab_location=3, icon_size = 40)
+
         gui_row("padding:0,10px,0,0")
-        gui_layout_widget("comms_control")
+        # Bottom Left
+        with gui_sub_section():
+            gui_row("padding:0,25px,20px,0")
+            gui_property_list_box()
+            gui_row("row-height: 100px;")
+            gui_layout_widget("text_waterfall")
+        gui_hole()
+        with gui_sub_section():
+            
+            gui_layout_widget("comms_control")
 
     # Right
     ss = gui_screen_size(client_id)
