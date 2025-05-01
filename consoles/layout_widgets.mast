@@ -11,11 +11,11 @@
             gui_row("row-height: 350px;")
             #gui_layout_widget("ship_data")
             gui_info_panel(tab=tab)
-            gui_row("row-height: 50px;")
+            gui_row("row-height: 40px;col-width:260px;")
             gui_layout_widget("red_alert")
 
         with gui_sub_section():
-            gui_row()
+            gui_row("padding: 3px,0,0,0;")
             # If more tabs are added the swap will be more complicated
             # Deal with it then
             panels = ~~[{"icon": 37, 
@@ -30,7 +30,7 @@
         gui_row("padding:0,10px,0,0")
         # Bottom Left
         with gui_sub_section():
-            gui_row("padding:0,25px,20px,0")
+            gui_row("padding:0,25px,10px,0")
             gui_property_list_box()
             gui_row("row-height: 100px;")
             gui_layout_widget("text_waterfall")
