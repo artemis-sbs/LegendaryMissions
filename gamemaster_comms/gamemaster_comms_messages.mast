@@ -1,23 +1,28 @@
 
 //comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
-    gui_properties_set()
     + "Message" //comms/gamemaster/message
 
 
 //comms/gamemaster/message if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     + "Back" //comms
     + "Message crew" //comms/gamemaster/message/crew
-        
+
+
+=== handle_gamemaster_message_properties
+    default side_select = "tsn"
+    default prop_message = gui_properties_set_value("prop_message", "ttt")
+    p = """
+    message: 'gui_input("desc: message;",var="prop_message")'
+    """
+    print(p)
+    # This is gui variable, this is why we need client scope!
+    gui_properties_set(p)
+    yield idle
 
 //comms/gamemaster/message/crew if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     #default prop_message = gui_properties_set_value("prop_message", "ttt")
-    default side_select = "tsn"
-    p = """
-    message: 'gui_input("desc: message;",var="prop_message")'
-"""
-    # This is gui variable, this is why we need client scope!
-    gui_properties_set(p)
     
+    gui_sub_task_schedule(handle_gamemaster_message_properties)
     
 
     + "Back" //comms

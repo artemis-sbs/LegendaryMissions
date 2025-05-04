@@ -21,7 +21,7 @@
 
     side = COMMS_ORIGIN.side
     dockable = to_object_list(role(side) & any_role("__player__, station"))
-    + "back" //comms
+    + !0 "Back" //comms
     for d in dockable:
         + "{d.name} as dock" {"dock": d.id}: 
             hangar_set_dock(COMMS_ORIGIN_ID, dock)

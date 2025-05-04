@@ -65,7 +65,17 @@ import give_orders.py
     orders = labels_get_type(label_type)
     for order in orders:
         display_name = order.get_inventory_value("display_name", order.name)
-        + "{display_name}" carry_out_orders  {"objective": order}
+        + "{display_name}" {"order": order}:
+            cur_objective = order
+            comms_navigate("//comms/confirm_orders")
+
+//comms/confirm_orders
+    # Present the properties panel
+    gui_sub_task_schedule(handle_properties_defender_orders)
+    
+
+    + "Back" //comms/give_orders
+    + "Execute" carry_out_orders {"cur_objective": cur_objective}
 
     
 
@@ -111,11 +121,11 @@ import give_orders.py
 
     # set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
     objective_clear(COMMS_SELECTED_ID)
-    #print("give orders on alt ship {objective}")
-    objective_add(alt_ship, objective, {"objective_target_point": target_point, "objective_target": to_id(target_object)})
+    #print("give orders on alt ship {cur_objective}")
+    objective_add(alt_ship, cur_objective, {"objective_target_point": target_point, "objective_target": to_id(target_object)})
 
-    ######## The rest of this should be in the objective
-    ORDER = objective.get_inventory_value("display_name", objective.name)
+    ######## The rest of this should be in the cur_objective
+    ORDER = cur_objective.get_inventory_value("display_name", cur_objective.name)
     ORDER_COLOR = "#040"
     if target_point is not None:
         message = "Heading to designated waypoint to {ORDER}"

@@ -4,6 +4,7 @@ type: prefab/npc/defender
 side: tsn
 objective: objective_protect_area
 give_orders_type: objective/orders/defender
+property_label: handle_properties_defender_orders
 ship_art:
 face:
 allies: civ
@@ -26,6 +27,24 @@ name:
     objective_add(friend.id, objective)
     ->END
 
+
+=== handle_properties_defender_orders
+    default use_location = gui_properties_get_value("use_location", False)
+    if not use_location:
+        p = """
+            Use: 'gui_checkbox("use Location",var="use_location")'
+        """
+    else:
+        p = """
+            Use: 'gui_checkbox("other Location",var="use_location")'
+            list: 'gui_text("Later")'
+        """
+
+    #print(f"DEFPROP {p} {mast_task.id}")
+    gui_properties_set(p)
+    gui_properties_change("use_location", handle_properties_defender_orders)
+
+    yield idle
 
 === objective_goto_location
 metadata: ```

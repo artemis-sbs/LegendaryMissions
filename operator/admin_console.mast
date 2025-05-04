@@ -173,7 +173,7 @@ if EVENT.extra_extra_tag == "rmb":
 + "Game time" //comms/operator/time
 
 //comms/operator/game if has_roles(COMMS_ORIGIN_ID, "operator")
-+ "back" //comms
++ !0 "Back" //comms
 + "pause game" if not game_paused:
     game_paused = True
     sbs.pause_sim()
@@ -183,7 +183,7 @@ if EVENT.extra_extra_tag == "rmb":
 + "end game"  //comms/operator/game/end
 
 //comms/operator/time if has_roles(COMMS_ORIGIN_ID, "operator")
-+ "back" //comms
++ !0 "Back" //comms
 + "Add 1 minute":
     print("")
 + "Add 10 minutes":

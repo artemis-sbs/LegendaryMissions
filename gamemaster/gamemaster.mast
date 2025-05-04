@@ -54,6 +54,7 @@ default GAMEMASTER_CONSOLE_ENABLED = True
     science_set_scan_data(camera_id, camera_id, {"scan": "Game Master"})
     set_comms_selection(camera_id, camera_id)
     follow_route_select_comms(camera_id, camera_id)
+    
     #comms_navigate("//comms/gamemaster")
 
 
@@ -70,6 +71,7 @@ default GAMEMASTER_CONSOLE_ENABLED = True
         ob = gui_slider("low: 0.0; high:360.0;", var="orbit")
         gui_row()
         gui_property_list_box()
+        
 
     # if either dolly or orbit changes
     on gui_message(ob): # + orbit:

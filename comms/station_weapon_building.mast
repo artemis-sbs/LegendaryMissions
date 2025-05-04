@@ -17,11 +17,12 @@ surrender_color = "yellow"
 
 //comms/station/build
     comms_id = COMMS_ORIGIN.name
+    + !0 "Back" //comms
     + "Build Homing" station_build_weapon {"build_type": "Homing", "comms_id": comms_id, "weapon_text": "Homing"}
     + "Build Nuke" station_build_weapon {"build_type": "Nuke", "comms_id": comms_id, "weapon_text": "Nuke"}
     + "Build EMP" station_build_weapon {"build_type": "EMP", "comms_id": comms_id, "weapon_text": "EMP"}
     + "Build Mine" station_build_weapon {"build_type": "Mine", "comms_id": comms_id, "weapon_text": "Mine"}
-    + "back" //comms
+    
 
 
 =============== handle_comms_station_hail  ===============
@@ -61,7 +62,6 @@ surrender_color = "yellow"
         " ^{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times["Nuke"]}:00
         " ^{"EMP": <10}{emp: >5}{"": >16}{station_build_times["EMP"]}:00
         " ^{"Mine": <10}{mine: >5}{"": >16}{station_build_times["Mine"]}:00
-
     yield success
 
 
