@@ -1,3 +1,10 @@
+<var flash_message>
+    % Hello, World
+    % Goto to the light
+    % What's doug got to do with it
+    % Yesterday you said tomorrow
+
+
 //enable/comms if has_roles(COMMS_SELECTED_ID, '__PLAYER__')
 
 
@@ -18,33 +25,32 @@ default counselor_face = random_terran()
 +[$counselor]"Counselor" //comms/internal/counselor 
     
 //comms/flash_message_test
+
+
+    
     + "Server":
         face = random_face()
-        messages = ["Hello, World", "Goto to the light", "What's doug got to do with it", "Yesterday you said tomorrow"]
-        message = random.choice(messages) 
-        tabbed_panel_send_message(0, message, face=face, time=3)
+        panel_info_send_message(0, flash_message, face=face, time=3)
     + "All":
         face = random_face()
-        messages = ["Hello, World", "Goto to the light", "What's doug got to do with it", "Yesterday you said tomorrow"]
-        message = random.choice(messages) 
+        # message would normally keep returning random
+        # Because is an object
+        # by calling str() it makes it a string
+        all_message = str(flash_message)
         for gui in role("__gui__"):
-            tabbed_panel_send_message(gui, message, face=face, time=3)
+            panel_info_send_message(gui, all_message, face=face, time=3)
     + "This console":
         face = random_face()
-        messages = ["Hello, World", "Goto to the light", "What's doug got to do with it", "Yesterday you said tomorrow"]
-        message = random.choice(messages) 
-        tabbed_panel_send_message(client_id, message, face=face, time=3)
+        panel_info_send_message(gui_client_id(), flash_message, face=face, time=3)
     + "This console no flash":
         face = random_face()
-        messages = ["Hello, World", "Goto to the light", "What's doug got to do with it", "Yesterday you said tomorrow"]
-        message = random.choice(messages) 
-        tabbed_panel_send_message(client_id, message, face=face, time=0)
+        panel_info_send_message(gui_client_id(), flash_message, face=face, time=0)
 
 
 //comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
     + !1 ^1 "Back" //comms
     + "Flash message" //comms/flash_message_test if is_dev_build()
-
+    
     + "Status":
         <<[$sickbay] "Sickbay status"
             % No serious injuries currently 
