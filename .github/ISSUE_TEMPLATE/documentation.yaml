@@ -1,0 +1,33 @@
+name: Documentation issue
+description: Report error in documentation
+title: "[doc]: "
+labels: ["documentation", "triage"]
+# /3 is LegendaryMissions
+# /2 is Artemis Cosmos i.e. Engine
+# /7 is SBS Library
+projects: ["artemis-sbs/9"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to improve our documentation!
+  - type: dropdown
+    id: version
+    attributes:
+      label: What documentation is the problem?
+      options:
+        - SBS Utils
+        - LegendaryMissions
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-doc-error
+    attributes:
+      label: What is the issue with documentation?
+      description: Describe the issues 
+      placeholder: How can it be improved
+      value: "Include links if possible"
+    validations:
+      required: true
+
