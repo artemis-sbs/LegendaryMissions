@@ -26,10 +26,15 @@ default counselor_face = random_terran()
     
 
 === test_info_button
-    print("BUtton Pressed {__MESSAGE__}")
     face = __MESSAGE__.get("face")
     gui_info_panel_send_message(gui_client_id(), "Thanks for pushing that button", face=face, time=0)
     ->END
+
+=== test_info_button_cancel
+    face = __MESSAGE__.get("face")
+    gui_info_panel_send_message(gui_client_id(), "Sorry you didn't acknowledge", face=face, time=0)
+    ->END
+
 
 //comms/flash_message_test
 
@@ -54,7 +59,8 @@ default counselor_face = random_terran()
         gui_info_panel_send_message(0, str(flash_message), face=face, button="Acknowledge", button_label=test_info_button, time=0)
     + "This console with button":
         face = random_face()
-        gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, button="Acknowledge", button_label=test_info_button, time=0)
+        buns = [("Acknowledge", test_info_button), ("Cancel", test_info_button_cancel)]
+        gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, button=buns, time=0)
     + "This console no flash":
         face = random_face()
         gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, time=0)
