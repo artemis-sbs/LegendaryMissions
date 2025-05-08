@@ -24,13 +24,20 @@ default counselor_face = random_terran()
 +[$biology] "Exobiology" //comms/internal/exobiology
 +[$counselor]"Counselor" //comms/internal/counselor 
     
+
+=== test_info_button
+    print("BUtton Pressed {__MESSAGE__}")
+    face = __MESSAGE__.get("face")
+    gui_info_panel_send_message(gui_client_id(), "Thanks for pushing that button", face=face, time=0)
+    ->END
+
 //comms/flash_message_test
 
 
     
     + "Server":
         face = random_face()
-        panel_info_send_message(0, flash_message, face=face, time=3)
+        gui_info_panel_send_message(0, str(flash_message), face=face, time=3)
     + "All":
         face = random_face()
         # message would normally keep returning random
@@ -38,13 +45,19 @@ default counselor_face = random_terran()
         # by calling str() it makes it a string
         all_message = str(flash_message)
         for gui in role("__gui__"):
-            panel_info_send_message(gui, all_message, face=face, time=3)
+            gui_info_panel_send_message(gui, all_message, face=face, time=3)
     + "This console":
         face = random_face()
-        panel_info_send_message(gui_client_id(), flash_message, face=face, time=3)
+        gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, time=3)
+    + "Server with button":
+        face = random_face()
+        gui_info_panel_send_message(0, str(flash_message), face=face, button="Acknowledge", button_label=test_info_button, time=0)
+    + "This console with button":
+        face = random_face()
+        gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, button="Acknowledge", button_label=test_info_button, time=0)
     + "This console no flash":
         face = random_face()
-        panel_info_send_message(gui_client_id(), flash_message, face=face, time=0)
+        gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, time=0)
 
 
 //comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
