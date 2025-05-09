@@ -8,11 +8,18 @@
     # Top Left
     with gui_sub_section():
         with gui_sub_section("col-width:280px;"):
-            gui_row("row-height: 350px;")
+            gui_row("row-height: 400px;")
             #gui_layout_widget("ship_data")
             gui_info_panel(tab=tab)
-            gui_row("row-height: 40px;col-width:260px;")
-            gui_layout_widget("red_alert")
+            if is_dev_build():
+                gui_info_panel_add("upgrades", 105, gui_panel_upgrade_list,None)
+                gui_info_panel_add("message", 83, gui_panel_console_message,None)
+                gui_info_panel_add("messages", 84, gui_panel_console_message_list,None)
+                gui_info_panel_add("objective", 85, gui_panel_console_message,None)
+                gui_info_panel_add("objectives", 86, gui_panel_console_message_list,None)
+                
+
+            
 
         with gui_sub_section():
             gui_row("padding: 3px,0,0,0;")
@@ -32,8 +39,8 @@
         with gui_sub_section():
             gui_row("padding:0,25px,10px,0")
             gui_property_list_box()
-            gui_row("row-height: 100px;")
-            gui_layout_widget("text_waterfall")
+            gui_row("row-height: 40px;col-width:25-10px;")
+            gui_layout_widget("red_alert")
         gui_hole()
         with gui_sub_section():
             
@@ -123,10 +130,11 @@
     ss = gui_screen_size(client_id)
     # Ship Data overlap
     gui_section(style="area:0,45px,100,100;")
-    gui_row("row-height: 350px;col-width:280px;")
+    
     default tab = 1
-    #gui_layout_widget("ship_data")
+    gui_row("row-height: 400px;col-width:280px;")
     gui_info_panel(tab=tab)
+    gui_info_panel_add("message", 83, gui_panel_console_message,None)
 
     gui_section(style="area:0,45px,100,100;")
     with gui_sub_section():
@@ -201,9 +209,9 @@
     # Ship Data, 
     gui_section(style="area:0,45px,55,100;")
     with gui_sub_section("col-width:280px;"):
-        gui_row("row-height: 350px;col-width:280px;")
-        #gui_layout_widget("ship_data")
+        gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None)
     with gui_sub_section():
         gui_row("row-height: 300px;")
         # gui_section(style="area:285px,90px,800px,390px;")
@@ -240,24 +248,27 @@
 
 //gui/normal_helm
     default tab = 1
-    # Ship Data, 
+    # Ship Data, 0
     gui_section(style="area:0,45px,100-300px,100;")
-    gui_row("row-height: 350px;col-width:280px;")
-    #gui_layout_widget("ship_data")
-    gui_info_panel(tab=tab)
+    with gui_sub_section("col-width:280px;"):
+        gui_row("row-height: 400px;")
+        gui_info_panel(tab=tab)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None)
 
 //gui/normal_weap
     default tab = 1
     # Ship Data, 
     gui_section(style="area:0,45px,100-300px,100;")
-    gui_row("row-height: 350px;col-width:280px;")
-    #gui_layout_widget("ship_data")
-    gui_info_panel(tab=tab)
+    with gui_sub_section("col-width:280px;"):
+        gui_row("row-height: 400px;")
+        gui_info_panel(tab=tab)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None)
 
 //gui/normal_main
     default tab = 1
     # Ship Data, 
     gui_section(style="area:0,45px,100-300px,100;")
-    gui_row("row-height: 350px;col-width:280px;")
-    #gui_layout_widget("ship_data")
-    gui_info_panel(tab=tab)
+    with gui_sub_section("col-width:280px;"):
+        gui_row("row-height: 400px;")
+        gui_info_panel(tab=tab)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None)

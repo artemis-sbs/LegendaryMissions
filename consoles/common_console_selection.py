@@ -48,7 +48,7 @@ def console_get_images(console):
         files[i] = os.path.splitext(files[i])[0]
     return files
     
-from sbs_utils.procedural.gui import gui_task_for_client, panel_widget_hide, panel_widget_show
+from sbs_utils.procedural.gui import gui_task_for_client, gui_panel_widget_hide, gui_panel_widget_show
 def console_comms_swap_panels_from_water(cid,left,top,width,height):
     console_comms_swap_panels(cid,left,top,width,height, True)
 def console_comms_swap_panels_from_2d(cid,left,top,width,height):
@@ -66,11 +66,11 @@ def console_comms_swap_panels(cid,left,top,width,height, water):
     vb = view2d.bounds 
 
     if not water:
-        panel_widget_show(cid, vb.left,vb.top,vb.width, vb.height, "comms_waterfall")
-        panel_widget_show(cid, left,top,width, height, "2dview")
+        gui_panel_widget_show(cid, vb.left,vb.top,vb.width, vb.height, "comms_waterfall")
+        gui_panel_widget_show(cid, left,top,width, height, "2dview")
     else:
-        panel_widget_show(cid, vb.left,vb.top,vb.width, vb.height, "2dview")
-        panel_widget_show(cid, left,top,width, height, "comms_waterfall")
+        gui_panel_widget_show(cid, vb.left,vb.top,vb.width, vb.height, "2dview")
+        gui_panel_widget_show(cid, left,top,width, height, "comms_waterfall")
     
 
 

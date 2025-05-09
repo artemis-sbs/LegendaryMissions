@@ -277,9 +277,9 @@ default HANGAR_CONSOLE_ENABLED = True
     default tab = 1
 
     with gui_sub_section("col-width:280px;"):
-        gui_row("row-height: 350px;")
-        #gui_layout_widget("ship_data")
+        gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None)
         # gui_row("row-height: 100px;")
         # gui_layout_widget("text_waterfall")
 
