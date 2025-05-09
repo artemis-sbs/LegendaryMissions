@@ -1,2 +1,2 @@
-set VERSION=v1.0.7
+set VERSION=v1.1.0
 
