@@ -31,8 +31,7 @@ gui_reroute_clients("client_main")
 #
 ========== start_server ===============
 
-    settings = settings_get_defaults()
-    shared SETTINGS = settings
+    default shared SETTINGS = settings_get_defaults()
     shared WORLD_SELECT  = settings.get("WORLD_SELECT")
     shared TERRAIN_SELECT  = settings.get("TERRAIN_SELECT")
     shared LETHAL_SELECT  = settings.get("LETHAL_SELECT")

@@ -55,4 +55,5 @@ zipdir("admiral")
 zipdir("admiral_comms")
 zipdir("gamemaster")
 zipdir("gamemaster_comms")
+zipdir("basic_player_destroy")
 

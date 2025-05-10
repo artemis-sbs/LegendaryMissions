@@ -81,3 +81,9 @@
     wr_hull = get_inventory_value(wr.id, "hull_type", 0)
 
     ->END
+
+//damage/internal if has_role(DAMAGE_ORIGIN_ID, "__player__") and EVENT.sub_tag == "maelstrom"
+    explode_player_ship(DAMAGE_ORIGIN_ID)
+
+
+#
