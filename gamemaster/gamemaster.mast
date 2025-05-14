@@ -17,6 +17,7 @@ default GAMEMASTER_CONSOLE_ENABLED = True
     # Need Sci in the name for science selection
     gui_activate_console("gamemaster_sci")
     
+    
 
     _ship_id = sbs.get_ship_of_client(client_id) 
     faction_ship = to_object(_ship_id)
@@ -63,26 +64,14 @@ default GAMEMASTER_CONSOLE_ENABLED = True
     # Left
 
 
-    with gui_sub_section("col-width:30;"):
+    with gui_sub_section("col-width:25;"):
         gui_row("row-height: 50;")
-        dl = gui_slider("low: 0; high:300.0;", style="col-width:20px;", var="dolly")
-        gui_layout_widget("3dview")
-        gui_row("row-height: 20px;")
-        ob = gui_slider("low: 0.0; high:360.0;", var="orbit")
+        gui_blank()
         gui_row()
         gui_property_list_box()
         
 
-    # if either dolly or orbit changes
-    on gui_message(ob): # + orbit:
-        set_inventory_value(client_id, "orbit", orbit)
-        await task_schedule(gamemaster_move_camera)
-
-
-    on gui_message(dl): # + orbit:
-        set_inventory_value(client_id, "dolly", dolly)
-        await task_schedule(gamemaster_move_camera)
-
+  
     task_schedule(gamemaster_move_camera_sync)
 
 
@@ -95,11 +84,25 @@ default GAMEMASTER_CONSOLE_ENABLED = True
         gui_layout_widget("comms_control")
 
     # Right
+
+    gui_update_widgets("3dview^science_data^comms_waterfall","")
     with gui_sub_section("col-width:25;"):
-        gui_row("row-height:35;margin:0,0,0,10px;")
-        gui_layout_widget("science_data")
+        gui_row("row-height:45;margin:0,0,0,10px;")
+        panels = ~~[{"icon": 37, 
+                "show": lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data") , 
+                "hide":  lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data")},
+                {"icon": 112, 
+                    "show": lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall") , 
+                    "hide": lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall") },
+                {"icon": 113, 
+                    "show": gamemaster_panel_camera_show, 
+                    "hide": gamemaster_panel_camera_hide }
+                ]~~
+
+        gui_tabbed_panel(panels, tab_location=1,icon_size=20)
+        
         gui_row()
-        gui_layout_widget("science_sorted_list")
+        gui_layout_widget("comms_sorted_list")
         gui_row("row-height: 10;")
         gui_layout_widget("text_waterfall")
 
@@ -112,7 +115,7 @@ default GAMEMASTER_CONSOLE_ENABLED = True
     do_move = do_move + 1 if do_move is not None else 0
     # every 15 sec move camra anyway
     if do_move > 5:
-        await task_schedule(gamemaster_move_camera)
+        await sub_task_schedule(gamemaster_move_camera)
         do_move = 0
 
     _ship_id = sbs.get_ship_of_client(client_id) 
@@ -121,13 +124,10 @@ default GAMEMASTER_CONSOLE_ENABLED = True
         now_sci = get_weapons_selection(_ship_id)
     jump gamemaster_move_camera_sync if now_sci == last_sci
     last_sci = now_sci
-    await task_schedule(gamemaster_move_camera)
+    await gui_sub_task_schedule(gamemaster_move_camera)
     jump gamemaster_move_camera_sync 
 
 ==== gamemaster_move_camera
-    dolly = get_inventory_value(client_id, "dolly", dolly)
-    orbit = get_inventory_value(client_id, "orbit", orbit)
-
     _ship_id = sbs.get_ship_of_client(client_id) 
     _ship_obj = to_object(_ship_id)
 
@@ -160,6 +160,8 @@ default GAMEMASTER_CONSOLE_ENABLED = True
         SCIENCE_ORIGIN.pos = pos
         set_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
         gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
+        set_comms_selection(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+        follow_route_select_comms(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
     elif EVENT.extra_extra_tag == "rmb":
         # Need to reset scince to the right value????
         # But when, Next tick?
@@ -177,6 +179,12 @@ default GAMEMASTER_CONSOLE_ENABLED = True
 
         gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Orders", "rmb", "#400")
     
+//focus/comms if has_roles(COMMS_ORIGIN_ID, "gamemaster")
+    set_science_selection(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
+    if COMMS_SELECTED_ID!=0:
+        pos = Vec3(COMMS_SELECTED.pos)
+        gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
+        set_inventory_value(COMMS_ORIGIN_ID, "gamemaster_prev_selection", COMMS_SELECTED_ID)
 
 
 

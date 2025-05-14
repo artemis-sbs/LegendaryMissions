@@ -64,3 +64,19 @@ def old_property_lb(item):
     if gui_c:
         gui_c(item['props'], var=item['var'])
 
+from sbs_utils.procedural.gui import gui_panel_widget_show, gui_panel_widget_hide, gui_slider, gui_blank, gui_message_label
+
+def gamemaster_panel_camera_show(cid, left,top,width, height):
+    gui_panel_widget_show(cid, left,top,width, height, "3dview")
+    # For 3D view
+    gui_blank()
+
+    dl = gui_slider("low: 0; high:300.0;", style="col-width:20px;", var="dolly")
+    gui_row("row-height: 20px;")
+    ob = gui_slider("low: 0.0; high:360.0;", var="orbit")
+    gui_message_label(dl, "gamemaster_move_camera")
+    gui_message_label(ob, "gamemaster_move_camera")
+
+
+def gamemaster_panel_camera_hide(cid, left,top,width, height):
+    gui_panel_widget_hide(cid, left,top,width, height, "3dview")
