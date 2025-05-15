@@ -66,7 +66,11 @@ default GAMEMASTER_CONSOLE_ENABLED = True
 
     with gui_sub_section("col-width:25;"):
         gui_row("row-height: 50;")
-        gui_blank()
+        GM_LEFT = gui_tabbed_panel([], tab_location=0)
+        gui_info_panel_add("instruction", 113, gamemaster_panel_instructions, None, GM_LEFT)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None, GM_LEFT)
+        gui_info_panel_add("messages", 84, gui_panel_console_message_list,None, GM_LEFT)
+                
         gui_row()
         gui_property_list_box()
         
@@ -88,18 +92,34 @@ default GAMEMASTER_CONSOLE_ENABLED = True
     gui_update_widgets("3dview^science_data^comms_waterfall","")
     with gui_sub_section("col-width:25;"):
         gui_row("row-height:45;margin:0,0,0,10px;")
-        panels = ~~[{"icon": 37, 
-                "show": lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data") , 
-                "hide":  lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data")},
-                {"icon": 112, 
-                    "show": lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall") , 
-                    "hide": lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall") },
-                {"icon": 113, 
-                    "show": gamemaster_panel_camera_show, 
-                    "hide": gamemaster_panel_camera_hide }
-                ]~~
+        GM_RIGHT = gui_tabbed_panel([], tab_location=1)
+        ~~ gui_info_panel_add("science_data", 37, 
+            lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data"), 
+            GM_RIGHT ) ~~
 
-        gui_tabbed_panel(panels, tab_location=1,icon_size=20)
+        ~~ gui_info_panel_add("comms_waterfall", 112, 
+            lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall"), 
+            GM_RIGHT ) ~~
+        ~~ gui_info_panel_add("comms_waterfall", 113, 
+            gamemaster_panel_camera_show, 
+            gamemaster_panel_camera_hide, 
+            GM_RIGHT ) ~~
+
+
+        # panels = ~~[{"icon": 37, 
+        #         "show": lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data") , 
+        #         "hide":  lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data")},
+        #         {"icon": 112, 
+        #             "show": lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall") , 
+        #             "hide": lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall") },
+        #         {"icon": 113, 
+        #             "show": gamemaster_panel_camera_show, 
+        #             "hide": gamemaster_panel_camera_hide }
+        #         ]~~
+
+        
         
         gui_row()
         gui_layout_widget("comms_sorted_list")

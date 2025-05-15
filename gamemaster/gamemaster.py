@@ -51,7 +51,7 @@ def gamemaster_get_pos(ORIGIN_ID, selection_type):
 
     
 
-from sbs_utils.procedural.gui import gui_row, gui_text
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_text_area
 
 def old_property_lb(item):
     gui_row("row-height: 1.2em;padding:13px;")
@@ -80,3 +80,13 @@ def gamemaster_panel_camera_show(cid, left,top,width, height):
 
 def gamemaster_panel_camera_hide(cid, left,top,width, height):
     gui_panel_widget_hide(cid, left,top,width, height, "3dview")
+
+
+def gamemaster_panel_instructions(cid, left,top,width, height):
+    task = FrameContext.task
+    if task is None:
+        return
+    gm_text = task.get_variable("GAMEMASTER_INSTRUCTIONS", "Game Master instructions^set the variable GAMEMASTER_INSTRUCTIONS to see it here.")
+
+    gui_text_area(gm_text)
+
