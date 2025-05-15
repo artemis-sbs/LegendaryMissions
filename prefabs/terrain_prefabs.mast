@@ -1,0 +1,57 @@
+=== prefab_terrain_asteroid_box
+metadata: ``` yaml
+display_text: Asteroid box
+```
+    terrain_value = terrain_to_value(TERRAIN_SELECT)
+    terrain_spawn_asteroid_box(START_X, START_Y, START_Z, SIZE_X, SIZE_Z, density_scale=terrain_value)
+    ->END
+
+
+=== prefab_terrain_asteroid_polyline
+metadata: ``` yaml
+display_text: Asteroid sphere
+density_scale: 1
+```
+    default points = [] # defines if it doesn't exist
+    default density_scale = 0
+    if density_scale == 0 or density_scale is None:
+        terrain_value = terrain_to_value(TERRAIN_SELECT)
+        density_scale=terrain_value
+    terrain_spawn_asteroid_points(START_X, START_Y, START_Z, points, SIZE_X, density_scale)
+    ->END
+
+
+=== prefab_terrain_asteroid_sphere
+metadata: ``` yaml
+display_text: Asteroid sphere
+```
+    terrain_value = terrain_to_value(TERRAIN_SELECT)
+    terrain_spawn_asteroid_sphere(START_X, START_Y, START_Z, SIZE_X//2, density_scale=terrain_value)
+    ->END
+
+
+
+=== prefab_terrain_nebula_box
+metadata: ``` yaml
+display_text: Nebula box
+```
+    terrain_value = terrain_to_value(TERRAIN_SELECT)
+    terrain_spawn_nebula_box(START_X, START_Y, START_Z, SIZE_X, SIZE_Z, density_scale=terrain_value)
+    ->END
+
+=== prefab_terrain_nebula_sphere
+metadata: ``` yaml
+display_text: Nebula sphere
+```
+    terrain_value = terrain_to_value(TERRAIN_SELECT)
+    terrain_spawn_nebula_sphere(START_X, START_Y, START_Z, SIZE_X//2, density_scale=terrain_value)
+    ->END
+
+
+=== prefab_planetoid
+metadata: ``` yaml
+display_text: Nebula sphere
+```
+    co = terrain_spawn(START_X, START_Y, START_Z, None, "#,gasgiant", "planet", "behav_planet")
+    co.engine_object.exclusion_radius = 400
+    ->END
