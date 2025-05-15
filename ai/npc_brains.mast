@@ -26,13 +26,16 @@ stop_dist: 500
 " Chasing npc target
 metadata: ```
 type: brain/npc
-SIZE_X: 5000
 throttle: 1.0
 stop_dist: 500
 ```
+    default SIZE_X = None
     default SIZE_Z = SIZE_X
     # The role "#" is an invisible e.g. admiral, operator
-    _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('ship')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
+    if SIZE_X is None:
+        _target = closest(BRAIN_AGENT_ID, role('ship')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
+    else:
+        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('ship')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
     _target = to_object(_target)
     if _target is not None:
         _target_id = to_id(_target)
@@ -46,13 +49,17 @@ stop_dist: 500
 " Chasing player target
 metadata: ``` 
 type: brain/npc
-SIZE_X: 5000
 throttle: 1.0
 stop_dist: 500
 ```
+    default SIZE_X = None
     default SIZE_Z = SIZE_X
     # The role "#" is an invisible e.g. admiral, operator
-    _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('__player__')-role_allies(BRAIN_AGENT_ID)-role("#"))
+    if SIZE_X is None:
+        _target = closest(BRAIN_AGENT_ID, role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
+    else:
+        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
+
     _target = to_object(_target)
     if _target is not None:
         _target_id = to_id(_target)
@@ -67,12 +74,17 @@ stop_dist: 500
 " Chasing station target
 metadata: ``` 
 type: brain/npc
-SIZE_X: 5000
 throttle: 1.0
 stop_dist: 500
 ```
+    default SIZE_X = None
     default SIZE_Z = SIZE_X
-    _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('station')-role_allies(BRAIN_AGENT_ID)-role("#"))
+    # The role "#" is an invisible e.g. admiral, operator
+    if SIZE_X is None:
+        _target = closest(BRAIN_AGENT_ID, role("station")-role_allies(BRAIN_AGENT_ID)-role("#"))
+    else:
+        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role("station")-role_allies(BRAIN_AGENT_ID)-role("#"))
+
     _target = to_object(_target)
     #print(f"PAST CLOSEST {l} {r} {_target} {ss} {st} {s} ")
     if _target is not None:

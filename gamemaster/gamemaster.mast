@@ -158,13 +158,14 @@ default GAMEMASTER_CONSOLE_ENABLED = True
         if SCIENCE_SELECTED_ID!=0:
             pos = Vec3(SCIENCE_SELECTED.pos)
         SCIENCE_ORIGIN.pos = pos
+        comms_id = SCIENCE_SELECTED_ID
+        if comms_id==0:
+            comms_id = SCIENCE_ORIGIN_ID
         set_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
         gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
-        comms_id = SCIENCE_SELECTED_ID
-        if comms_id== 0:
-            comms_id = SCIENCE_ORIGIN_ID
-        set_comms_selection(SCIENCE_ORIGIN_ID, comms_id)
+        
         prev_comms = get_comms_selection(SCIENCE_ORIGIN_ID)
+        set_comms_selection(SCIENCE_ORIGIN_ID, comms_id)
         if prev_comms != comms_id:
             follow_route_select_comms(SCIENCE_ORIGIN_ID, comms_id)
     elif EVENT.extra_extra_tag == "rmb":
