@@ -4,6 +4,5 @@ import brain_fleet.mast
 import npc_cag.py
 import map_common.mast
 import elite_abilities.mast
-import terrain_common.py
 import map_common.py
 

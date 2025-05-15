@@ -8,10 +8,10 @@ station_color = "green"
 raider_color = "red"
 surrender_color = "yellow"
 
-//enable/comms if has_roles(COMMS_SELECTED_ID, "tsn, Station")
+//enable/comms if has_roles(COMMS_SELECTED_ID, "Station")
 
 
-//comms if has_roles(COMMS_SELECTED_ID, 'Station')
+//comms if role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "Station")
     + "Hail"  handle_comms_station_hail
     + "Build Weapons" //comms/station/build
 

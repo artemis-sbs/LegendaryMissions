@@ -1,6 +1,6 @@
-//enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
+//enable/science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
 
-//science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
+//science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
 
     + "scan":
         <scan>
@@ -155,8 +155,8 @@
 
 
 
-//enable/science if has_role(SCIENCE_SELECTED_ID, "raider")
-//science if has_role(SCIENCE_SELECTED_ID, "raider")
+//enable/science if not role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+//science if not role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
 
 
 taunt_trait=get_inventory_value(SCIENCE_SELECTED_ID, "taunt_trait")

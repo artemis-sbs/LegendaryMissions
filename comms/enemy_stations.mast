@@ -1,8 +1,8 @@
 =$raider red, white
 
-//enable/comms if has_roles(COMMS_SELECTED_ID, 'raider, Station')
+//enable/comms if not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, 'Station')
 
-//comms if has_roles(COMMS_SELECTED_ID, 'raider, Station')
+//comms if not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, 'Station')
     #
     # Data defined here is NOT available to the button body,
     # but just like other buttons to labels, the data can be attached to the button

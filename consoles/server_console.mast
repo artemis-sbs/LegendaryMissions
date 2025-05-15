@@ -80,6 +80,12 @@ gui_reroute_clients("client_main")
             add_role(player_ship, "default_player_ship")
             set_face(player_ship, get_face_from_data(player_ship_data["face"]))
             set_inventory_value(player_ship, "respawn_time", 5)
+            signal_emit("create_player_ships", None)
+    else:
+        signal_emit("create_player_ships", None)
+    #
+    # Make sure the scan sources update system runs
+    extra_scan_sources_schedule()
 
     # sim_pause()
     i = 0

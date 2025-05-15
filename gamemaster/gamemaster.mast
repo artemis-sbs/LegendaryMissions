@@ -29,7 +29,7 @@ default GAMEMASTER_CONSOLE_ENABLED = True
         # has_science_scan enables friendly eyes processing
         # while not being a player
         #
-        cambot = to_object(player_spawn(0,0,10, "", "tsn,gamemaster,has_science_scan", "invisible")) 
+        cambot = to_object(player_spawn(0,0,10, "", "#,gamemaster,has_science_scan", "invisible")) 
         remove_role(cambot, "__player__")
         camera_id = to_id(cambot)
         set_inventory_value(client_id, "GAMEMASTER_COMBOT", camera_id)
@@ -160,8 +160,13 @@ default GAMEMASTER_CONSOLE_ENABLED = True
         SCIENCE_ORIGIN.pos = pos
         set_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
         gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
-        set_comms_selection(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
-        follow_route_select_comms(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+        comms_id = SCIENCE_SELECTED_ID
+        if comms_id== 0:
+            comms_id = SCIENCE_ORIGIN_ID
+        set_comms_selection(SCIENCE_ORIGIN_ID, comms_id)
+        prev_comms = get_comms_selection(SCIENCE_ORIGIN_ID)
+        if prev_comms != comms_id:
+            follow_route_select_comms(SCIENCE_ORIGIN_ID, comms_id)
     elif EVENT.extra_extra_tag == "rmb":
         # Need to reset scince to the right value????
         # But when, Next tick?
@@ -188,3 +193,10 @@ default GAMEMASTER_CONSOLE_ENABLED = True
 
 
 
+#
+# This make sure that the game master can communicate with anything
+#    
+//enable/science if has_roles(SCIENCE_ORIGIN_ID, 'gamemaster')
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, "Default Scan")
+
+//enable/comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')

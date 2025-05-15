@@ -30,7 +30,7 @@ if race_taunts is not None:
 
 =$raider red,white
 
-//comms if has_roles(COMMS_SELECTED_ID, 'raider') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
+//comms if not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Hail":
     if has_roles(COMMS_SELECTED_ID, 'kralien'):
         <<[$raider] "Hail"
