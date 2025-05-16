@@ -35,16 +35,18 @@ display_text: Asteroid sphere
 metadata: ``` yaml
 display_text: Nebula box
 ```
+    default cluster_color = None
     terrain_value = terrain_to_value(TERRAIN_SELECT)
-    terrain_spawn_nebula_box(START_X, START_Y, START_Z, SIZE_X, SIZE_Z, density_scale=terrain_value)
+    terrain_spawn_nebula_box(START_X, START_Y, START_Z, SIZE_X, SIZE_Z, density_scale=terrain_value, cluster_color=cluster_color )
     ->END
 
 === prefab_terrain_nebula_sphere
 metadata: ``` yaml
 display_text: Nebula sphere
 ```
+    default cluster_color = None
     terrain_value = terrain_to_value(TERRAIN_SELECT)
-    terrain_spawn_nebula_sphere(START_X, START_Y, START_Z, SIZE_X//2, density_scale=terrain_value)
+    terrain_spawn_nebula_sphere(START_X, START_Y, START_Z, SIZE_X//2, density_scale=terrain_value, cluster_color=cluster_color)
     ->END
 
 
