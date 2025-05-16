@@ -1,0 +1,105 @@
+
+
+
+=== common_station_create ===
+    default shared station_count = 1
+    
+    s_roles = "{side_value}, station, {roles_value}"
+    name = get_variable('NAME')
+    if name is None:
+      name = f"DS {station_count}"
+        
+    station_count += 1
+    
+
+    #default shared colors = ["orange", "blue", "green"]
+    #nav_id = sim.add_navarea(START_X, START_Z, START_X+SIZE_X, START_Z,START_X, START_Z+SIZE_Z,START_X+SIZE_X, START_Z+SIZE_Z, name, colors[station_count%3])
+
+    w = SIZE_X/2
+    d = SIZE_Z/2
+
+    st_x = START_X+w + ((random.random()*2)-1) * w/2
+    st_z = START_Z+d + ((random.random()*2)-1) * d/2
+
+    #remove_objects_sphere(st_x, START_Y, st_z, 600)
+
+    station_object = npc_spawn(st_x, START_Y, st_z, name, s_roles, station_type, "behav_station")
+    ds = to_id(station_object)
+    set_face(ds, random_face(race_value))
+    ->END
+
+
+=== prefab_station_command
+metadata: ``` yaml
+display_text: Command Base
+station_type: starbase_command
+side_value: tsn
+roles_value: station
+race_value: terran
+```
+    jump common_station_create 
+
+=== prefab_station_civil
+metadata: ``` yaml
+display_text: Civil Station
+station_type: starbase_civil
+side_value: tsn
+roles_value: station
+race_value: terran
+```
+    jump common_station_create 
+
+=== prefab_station_industry
+metadata: ``` yaml
+display_text: Industry station
+station_type: starbase_industry
+side_value: tsn
+roles_value: station
+race_value: terran
+```
+    jump common_station_create 
+
+=== prefab_station_science
+metadata: ``` yaml
+display_text: Science station
+station_type: starbase_science
+side_value: tsn
+roles_value: station
+race_value: terran
+```
+    jump common_station_create 
+
+
+=== prefab_station_arvonian
+metadata: ``` yaml
+display_text: Arvonian Station
+station_type: starbase_arvonian
+side_value: raider
+roles_value: station
+race_value: terran
+```
+    jump common_station_create 
+
+
+
+=== prefab_station_torgoth
+metadata: ``` yaml
+display_text: Torgoth Station
+station_type: starbase_torgoth
+side_value: raider
+roles_value: station
+race_value: terran
+```
+    jump common_station_create 
+
+
+
+=== prefab_station_kralien
+metadata: ``` yaml
+display_text: Kralien Station
+station_type: starbase_kralien
+side_value: raider
+roles_value: station
+race_value: kralien
+```
+    jump common_station_create 
