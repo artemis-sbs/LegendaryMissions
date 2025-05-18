@@ -33,7 +33,7 @@ brain:
 
     # Add the brain 
     brain_add(monster, brain)
-    ->END
+    yield result to_id(monster)
 
 
 

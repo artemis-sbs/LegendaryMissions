@@ -25,7 +25,7 @@ name:
 
     # Objective will set brain 
     objective_add(friend.id, objective)
-    ->END
+    yield result friend.id
 
 
 === handle_properties_defender_orders

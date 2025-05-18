@@ -16,7 +16,7 @@
     # Add the brain 
     brain_add(friend.id, brain)
     objective_add(friend.id, objective)
-    ->END
+    yield result friend.id
 
 
 === prefab_npc_civilian_cargo

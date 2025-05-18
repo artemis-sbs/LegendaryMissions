@@ -159,7 +159,6 @@
 
         role_ally_add(player_ship, "civ")
         test = player_ship.data_set.get("ally_list", 0)
-        print(f"SPAWN PLAYER Should have civ {test}")
         # 
         # schedule and set friendly eyes
         # link or unlink extra_scan_source
