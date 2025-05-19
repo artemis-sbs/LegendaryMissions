@@ -316,8 +316,8 @@ route_change_console(on_change_console)
     # Remove any console roles
     for k in consoles:
         remove_role(client_id, k.path)
-    add_role(client_id, "console, {CONSOLE_SELECT}")
-
+    add_role(client_id, f"console, {CONSOLE_SELECT}")
+    
     sbs.set_client_string(client_id, "console_previous", CONSOLE_SELECT)
 
     sbs.set_client_string(client_id, "crew_name", crew_name)
