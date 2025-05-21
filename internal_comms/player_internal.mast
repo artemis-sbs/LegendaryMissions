@@ -137,4 +137,27 @@ pathogen_test = None
 ->END
 
 
+//comms/
+    comms_badges = role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")
+    yield fail if len(comms_badges)==0
+    + "Hail Comms Badge" //comms/comms_badge
 
+#
+# Handle Comms comms badges
+#
+//comms/comms_badge if has_roles(COMMS_ORIGIN_ID, "__player__")
+
+    comms_badges = role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")
+    yield fail if len(comms_badges)==0
+
+    #
+    # Lifeforms or grid objects can have a comms badge
+    # 
+    ### TODO: Need a way toe specify styles
+    for lifeform_id in comms_badges:
+        lifeform = to_object(lifeform_id)
+        continue if lifeform is None
+        + "{lifeform.name}" {"LIFEFORM_ID": lifeform_id}:
+            lifeform = to_object(LIFEFORM_ID)
+            yield fail if lifeform is None
+            comms_navigate(lifeform.path)
