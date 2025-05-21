@@ -54,7 +54,8 @@ gui_reroute_clients("client_main")
     shared OPERATOR_MODE_enabled = OPERATOR_MODE.get("enable", False)
     shared operator_show_logo_on_main = OPERATOR_MODE.get("show_logo_on_main", False)
 
-    start_npc_cag()
+    # This make it dependaent of Fleets
+    #start_npc_cag()
 
     shared skybox = skybox_schedule_random()
 

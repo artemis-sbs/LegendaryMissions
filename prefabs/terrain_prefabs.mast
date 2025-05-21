@@ -57,3 +57,18 @@ display_text: Nebula sphere
     co = terrain_spawn(START_X, START_Y, START_Z, None, "#,gasgiant", "planet", "behav_planet")
     co.engine_object.exclusion_radius = 400
     ->END
+
+
+
+==== prefab_black_hole
+metadata: ```
+type: prefab/black_hole
+display_text: Black Hole
+``` 
+    default gravity_radius = 1500
+    default gravity_strength = 1.0
+    default turbulence_strength = 1.0
+    default collision_damage=200
+
+    bh = terrain_spawn_black_hole(START_X,START_Y,START_Z, gravity_radius, gravity_strength, turbulence_strength, collision_damage)
+    yield result bh.id

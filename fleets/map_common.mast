@@ -1,6 +1,9 @@
 ################
 ## common code for different map type
 
+//signal/game_started
+    start_npc_cag()
+
 =========== spawn_friendly_npc ===========
 
     print(f"World Select: {WORLD_SELECT.path}")
