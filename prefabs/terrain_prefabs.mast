@@ -65,9 +65,9 @@ metadata: ```
 type: prefab/black_hole
 display_text: Black Hole
 ``` 
-    default gravity_radius = 1500
-    default gravity_strength = 1.0
-    default turbulence_strength = 1.0
+    default gravity_radius = 5000
+    default gravity_strength = 4.0
+    default turbulence_strength = 2.0
     default collision_damage=200
 
     bh = terrain_spawn_black_hole(START_X,START_Y,START_Z, gravity_radius, gravity_strength, turbulence_strength, collision_damage)
