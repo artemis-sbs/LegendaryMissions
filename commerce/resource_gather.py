@@ -26,6 +26,9 @@ def resource_handle_damage():
     y = blob.get("local_scale_y_coeff",0)
     z = blob.get("local_scale_z_coeff",0)
 
+    x = x if x is not None else 1.0
+    y = y if y is not None else 1.0
+    z = z if z is not None else 1.0
 
 
     xf, xi = math.modf(x)
