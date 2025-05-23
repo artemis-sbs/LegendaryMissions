@@ -16,7 +16,7 @@
 
 
 
-//comms if has_roles(COMMS_SELECTED_ID, "civ, friendly") 
+//comms if has_roles(COMMS_SELECTED_ID, "civ, friendly") and is_space_object_id(COMMS_SELECTED_ID)
     + "Hail":
         obj_ids = linked_to(COMMS_SELECTED_ID, "OBJECTIVE")
         yield success if len(obj_ids) == 0

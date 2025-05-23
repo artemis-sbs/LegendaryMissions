@@ -1,6 +1,6 @@
 //enable/grid/comms if has_roles(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "marker")
 
-//comms if has_roles(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "marker")
+//comms if has_roles(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "marker") and is_grid_object_id(COMMS_SELECTED_ID)
     + "set rally point" //comms/marker/rally
 
 
