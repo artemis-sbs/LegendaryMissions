@@ -29,7 +29,11 @@ set_inventory_value(SPAWNED_ID, "max_crew_size", crew_size)
 +"Back" //comms
 +"Crew status":
     crew_size = COMMS_ORIGIN["crew_size"] #| 0
+    if crew_size == None:
+        crew_size = 0
     dead = COMMS_ORIGIN["casulaty_count"] # | 0
+    if dead == None:
+        dead = 0
     <<[$sickbay] "sickbay crew health"
         " Currently we have {crew_size} healthy crew members and {dead} casualties
 
