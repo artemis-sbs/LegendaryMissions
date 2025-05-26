@@ -562,6 +562,8 @@ def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet"
     race = race.strip().lower()
     fleet_rand = random.randint(0, 4)
     siege_fleet = []
+    if race == "random":
+        race = random.choice(["kralien", "torgoth","arvonian", "skaraan", "ximni", "pirate"])
     if race == "kralien":
         siege_fleet = siege_kralien_fleet[fleet_diff][fleet_rand]
     if race == "torgoth":
@@ -599,8 +601,6 @@ def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet"
         for h in hard:
             all_abilities_copy.pop(h, None)
 
-
-    
 #    carrier_count = 0
     for b in range(num_ships):
         art_id = siege_fleet[b]
