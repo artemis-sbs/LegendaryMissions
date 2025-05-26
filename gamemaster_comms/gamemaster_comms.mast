@@ -157,7 +157,7 @@ default gamemaster_face = random_terran()
         +[$gamemaster]"{side} {model}" {"side": side.lower(), "art_id": art_id, "name": name}:
             pos = Vec3(COMMS_ORIGIN.pos)
             player_ship = to_id(player_spawn(*pos, name, side, art_id))
-            set_face(player_ship, get_face_from_data(side))
+            set_face(player_ship, random_face(side))
 
             stations_friendly = role(side)  & (role("station")|role("defender"))
             link(player_ship,"extra_scan_source" ,stations_friendly)

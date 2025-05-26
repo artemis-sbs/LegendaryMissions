@@ -6,9 +6,9 @@ from sbs_utils.procedural.routes import follow_route_select_science
 from sbs_utils.procedural.spawn import npc_spawn, terrain_spawn
 from sbs_utils.procedural.links import link, unlink
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
-from sbs_utils.procedural.prefab import prefab_spawn
 from sbs_utils import faces as faces
 from sbs_utils.faces import set_face, random_face
+from sbs_utils.names import name_random_hostile
 from sbs_utils.vec import Vec3
 import random
 from fleet import fleet_spawn
@@ -31,23 +31,6 @@ def player_ship_update_friendly(player_id, friends, initial_scan = False):
 
     blob.set("num_extra_scan_sources",num_ids,0)
 
-
-call_signs = []
-enemy_name_number = 0
-call_signs.extend(range(1,100))
-
-random.shuffle(call_signs)
-
-#--------------------------------------------------------------------------------------
-def get_random_npc_call_sign(race):
-    global enemy_name_number
-
-    enemy_prefix = "KLMNQ"
-    if race == "skaraan":
-        enemy_prefix = "TR"
-    r_name = f"{random.choice(enemy_prefix)}{str(call_signs[enemy_name_number]).zfill(2)}"
-    enemy_name_number = (enemy_name_number+1)%99
-    return r_name
 
 
 
@@ -620,22 +603,10 @@ def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet"
     
 #    carrier_count = 0
     for b in range(num_ships):
-#        done_ae = False
-#        while not done_ae:
-#            art_id = siege_fleet[b]
-#            ship_data_ae = get_ship_data_for(art_id)
-
-            # is this shis gonna be a carrier?
-#            d_roles = ship_data_ae.get("roles", "")
-#            if "carrier" in d_roles and carrier_count >= max_carriers:
-#                continue
-#            if "carrier" in d_roles:
-#                carrier_count += 1
-#            done_ae = True
         art_id = siege_fleet[b]
         roles = f"{race}, {ship_roles}" if ship_roles is not None else f"{race}, raider"
         
-        r_name = get_random_npc_call_sign(race)                           #  f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
+        r_name = name_random_hostile(race)                           #  f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
 
         spawn_data = npc_spawn(posx, posy, posz, r_name, roles, art_id, "behav_npcship")
         raider = spawn_data.py_object
@@ -671,30 +642,4 @@ def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet"
         # Should add a common function to call to get the face based on race
         set_face(raider.id, random_face(race))
     return fleet_obj
-
-def get_face_from_data(face_style):
-    match face_style:
-        case "terran":
-            return faces.random_terran()
-        case "terran_male":
-            return faces.random_terran_male()
-        case "terran_female":
-            return faces.random_terran_female()
-        case "terran_fluid":
-            return faces.random_terran_fluid()
-        case "terran_civilian":
-            return faces.random_terran_fluid()
-        case "torgoth":
-            return faces.random_torgoth()
-        case "skaraan":
-            return faces.random_skaraan()
-        case "ximni":
-            return faces.random_ximni()
-        case "arvonian":
-            return faces.random_arvonian()
-        case "kralien":
-            return faces.random_kralien()
-        case "random":
-            return faces.random_face()
-    return face_style
 

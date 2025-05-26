@@ -76,6 +76,7 @@ class NpcCAG(Agent):
             fighter_count = get_inventory_value(e, "fighters_in_bay", fighter_count)
             fighter_key = self.get_fighter_key(e.race)
             start_pos = e.pos
+            carrier_side = e.side
 
 
             # set up the refit timer for this carrier
@@ -99,14 +100,14 @@ class NpcCAG(Agent):
                         self.remove_link("inactive_fighter_list", f)
                         craft = to_object(f)
                         sbs.retrieve_from_standby_list(craft.engine_object)
-                        add_role(f, "raider")
+                        add_role(f, carrier_side)
                         set_timer(f, "bingo", seconds=120)
                         target(f, target_id)
                 else:
                     for g in range(fighter_count):
                         # launch an npc fighter
                         nam = f"{e.name} {str(random.randint(0,99)).zfill(2)}"
-                        spawn_data = npc_spawn(start_pos.x, start_pos.y, start_pos.z, nam, "raider,fighter", fighter_key, "behav_npcship")
+                        spawn_data = npc_spawn(start_pos.x, start_pos.y, start_pos.z, nam, f"{carrier_side}, fighter", fighter_key, "behav_npcship")
                         spawn_id = to_id(spawn_data)
                         # link them to me
                         self.add_link("active_fighter_list", spawn_id)
