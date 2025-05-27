@@ -1,8 +1,8 @@
 //enable/grid/comms if has_role(COMMS_ORIGIN_ID, "cockpit")
 
-//comms if has_role(COMMS_ORIGIN_ID, "cockpit") and has_role(COMMS_SELECTED_ID,"computer") and is_grid_object_id(COMMS_SELECTED_ID)
+//comms/grid if has_role(COMMS_ORIGIN_ID, "cockpit") and has_role(COMMS_SELECTED_ID,"computer") and is_grid_object_id(COMMS_SELECTED_ID)
 
-    + "set dock" //comms/set_dock
+    + "set dock" //comms/grid/set_dock
     + "eject":
         COMMS_ORIGIN.data_set.set("fighter_thrust_flag", 0,0)
         COMMS_ORIGIN.data_set.set("fighter_shoot_flag", 0,0)
@@ -17,11 +17,11 @@
             gui_reroute_client(fighter_client, show_hangar)
 
 
-//comms/set_dock if has_role(COMMS_ORIGIN_ID, "cockpit")
+//comms/grid/set_dock if has_role(COMMS_ORIGIN_ID, "cockpit")
 
     side = COMMS_ORIGIN.side
     dockable = to_object_list(role(side) & any_role("__player__, station"))
-    + !0 "Back" //comms
+    + !0 "Back" //comms/grid
     for d in dockable:
         + "{d.name} as dock" {"dock": d.id}: 
             hangar_set_dock(COMMS_ORIGIN_ID, dock)
@@ -29,7 +29,7 @@
 
 
 
-//comms if has_role(COMMS_ORIGIN_ID, "cockpit") and has_role(COMMS_SELECTED_ID,"shield")  and is_grid_object_id(COMMS_SELECTED_ID)
+//comms/grid if has_role(COMMS_ORIGIN_ID, "cockpit") and has_role(COMMS_SELECTED_ID,"shield")  and is_grid_object_id(COMMS_SELECTED_ID)
     + "Balanced":
         set_engineering_value(COMMS_ORIGIN_ID, "front shield", 1.0)
         set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 1.0)
@@ -42,7 +42,7 @@
         set_engineering_value(COMMS_ORIGIN_ID, "front shield", 0.0)
         set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 2.0)
 
-//comms if has_role(COMMS_ORIGIN_ID, "bomber") and has_roles(COMMS_SELECTED_ID,"system,weapon,torpedo") and is_grid_object_id(COMMS_SELECTED_ID)
+//comms/grid if has_role(COMMS_ORIGIN_ID, "bomber") and has_roles(COMMS_SELECTED_ID,"system,weapon,torpedo") and is_grid_object_id(COMMS_SELECTED_ID)
     + "Homing":
         COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Homing",0)
     + "Nuke":
