@@ -1,12 +1,12 @@
 //enable/grid/comms if has_roles(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "epad")
 
-//comms if has_roles(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "epad") and is_grid_object_id(COMMS_SELECTED_ID)
+//comms/grid if has_roles(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "epad") and is_grid_object_id(COMMS_SELECTED_ID)
     grid_detailed_status(COMMS_SELECTED_ID, "Engineering Personal Assistant Device", "#DDF")
-    + "display" //comms/epad/display
+    + "display" //comms/grid/epad/display
 
 
-//comms/epad/display if has_role(COMMS_SELECTED_ID, "epad")
-    + "Back" //comms
+//comms/grid/epad/display if has_role(COMMS_SELECTED_ID, "epad")
+    + "Back" //comms/grid
     + "Room icons" epad_room_icons
     + "Room circles" epad_room_simple
     + "System icons" epad_system_icons
