@@ -7,7 +7,7 @@ shared taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
 =$raider red,white
 
 
-//enable/comms if not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and is_space_object_id(COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "ship")
+//enable/comms if is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "ship")
 #//spawn if has_roles(SPAWNED_ID, "ship,raider")
     if taunt_data is not None:
         #
@@ -26,7 +26,7 @@ shared taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
 
 
 
-//comms if not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered') and is_space_object_id(COMMS_SELECTED_ID)
+//comms if is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Hail":
     if has_roles(COMMS_SELECTED_ID, 'kralien'):
         <<[$raider] "Hail"
@@ -104,7 +104,7 @@ shared taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
         <<[$raider] "Hail"
             % Go away, {COMMS_ORIGIN.name}! You talk too much!
 
-//comms if not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered') and is_space_object_id(COMMS_SELECTED_ID)
+//comms if is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Taunt"  handle_comms_taunt_raider_top
 
 
