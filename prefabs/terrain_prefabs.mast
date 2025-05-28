@@ -3,7 +3,8 @@ metadata: ``` yaml
 display_text: Asteroid box
 ```
     default density_scale = terrain_to_value(TERRAIN_SELECT)
-    terrain_spawn_asteroid_box(START_X, START_Y, START_Z, SIZE_X, SIZE_Z, density_scale=density_scale)
+    default selectable = False
+    terrain_spawn_asteroid_box(START_X, START_Y, START_Z, SIZE_X, SIZE_Z, density_scale=density_scale, selectable=selectable)
     ->END
 
 
