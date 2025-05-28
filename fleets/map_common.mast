@@ -36,7 +36,8 @@
     # pick a random tsn ship
     count = 1
 
-    default shared shipname_data = load_json_data(get_mission_dir_filename("shipnames.json"))
+    
+    default shared shipname_data = load_json_string(media_read_relative_file("shipnames.json"))
     tsnname_list = shipname_data.get("tsn")
     canuck_list = shipname_data.get("canadian")
 

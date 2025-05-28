@@ -1,7 +1,7 @@
 #
 # Load taunt data from the json file which contains the current taunts.
 #
-shared taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
+shared taunt_data = load_json_string(media_read_relative_file("taunts.json"))
 
 
 =$raider red,white
