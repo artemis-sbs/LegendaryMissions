@@ -8,7 +8,6 @@ shared taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
 
 
 //enable/comms if is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "ship")
-#//spawn if has_roles(SPAWNED_ID, "ship,raider")
     if taunt_data is not None:
         #
         # Select 3 taunts

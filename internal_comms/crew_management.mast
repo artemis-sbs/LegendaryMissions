@@ -1,18 +1,14 @@
 #
 # Hook when a ship spawns
 #
-//spawn if has_role(SPAWNED_ID, "__player__")
+//enable/comms if has_role(COMMS_SELECTED_ID, "__player__")
+    # for future
+    task_schedule(crew_manage_health)
 
-# Do later so the grid objects are sure to be there
-await delay_sim(seconds=2)
-
-# for future
-task_schedule(crew_manage_health)
-
-grid_count = len(role("quarters") & grid_objects(SPAWNED_ID)) # general idea of ship size
-crew_size = grid_count * 10
-set_inventory_value(SPAWNED_ID, "crew_size", crew_size)
-set_inventory_value(SPAWNED_ID, "max_crew_size", crew_size)
+    grid_count = len(role("quarters") & grid_objects(COMMS_SELECTED_ID)) # general idea of ship size
+    crew_size = grid_count * 10
+    set_inventory_value(COMMS_SELECTED_ID, "crew_size", crew_size)
+    set_inventory_value(COMMS_SELECTED_ID, "max_crew_size", crew_size)
 
 #
 # This is duplicated in player_internal, but should resolve to one
@@ -28,7 +24,7 @@ set_inventory_value(SPAWNED_ID, "max_crew_size", crew_size)
 //comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
     crew_size = get_inventory_value(COMMS_ORIGIN_ID, "crew_size", 0)
     dead = get_inventory_value(COMMS_ORIGIN_ID, "casulaty_count", 0)
-    +"Back" //comms
+    + ^1 "Back" //comms
     +"Crew status":
         if dead > 0 and dead <= 20:
             <<[$sickbay] "Casualties are being treated"
@@ -36,7 +32,6 @@ set_inventory_value(SPAWNED_ID, "max_crew_size", crew_size)
                 % Sickbay is treating {dead} casualties. The remaining {cew_size} crew are in good condition.
         if dead == 0:
             physicals = random.randint(2,10)
-            comms_broadcast(0,"{physicals}")
             <<[$sickbay] "Crew members are healthy"
                 % All {crew_size} crew members are healthy. The counselor can tell you if they're happy.
                 % No problems have been reported by the crew.
@@ -70,16 +65,16 @@ if crew_size > 0:
 
 await delay_sim(minutes=2)
 
-crew_size = get_inventory_value(SPAWNED_ID, "crew_size", 0)
-dead = get_inventory_value(SPAWNED_ID, "casulaty_count", 0)
-total_dead = get_inventory_value(SPAWNED_ID, "accumalted_casulaty_count", 0)
+crew_size = get_inventory_value(COMMS_SELECTED_ID, "crew_size", 0)
+dead = get_inventory_value(COMMS_SELECTED_ID, "casulaty_count", 0)
+total_dead = get_inventory_value(COMMS_SELECTED_ID, "accumalted_casulaty_count", 0)
 
 
 jump crew_manage_health if dead <  1
 if random.randint(0,25) == 12:
-    set_inventory_value(SPAWNED_ID, "crew_size", crew_size+1)
-    set_inventory_value(SPAWNED_ID, "casulaty_count", dead - 1)
-    set_inventory_value(SPAWNED_ID, "accumalted_casulaty_count", total_dead-1)
+    set_inventory_value(COMMS_SELECTED_ID, "crew_size", crew_size+1)
+    set_inventory_value(COMMS_SELECTED_ID, "casulaty_count", dead - 1)
+    set_inventory_value(COMMS_SELECTED_ID, "accumalted_casulaty_count", total_dead-1)
 
 jump crew_manage_health
 
