@@ -1,3 +1,16 @@
+default shared DEFAULT_SCIENCE_AUTO_SCAN = True
+
+
+//shared/signal/science_auto_scan if DEFAULT_SCIENCE_AUTO_SCAN
+    tab = "scan"
+    if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID):
+        tab = "*"
+    science_ensure_scan(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, tab)
+    
+
+
+
+
 //enable/science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
 
 //science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")

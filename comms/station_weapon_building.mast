@@ -9,6 +9,18 @@ raider_color = "red"
 surrender_color = "yellow"
 
 //enable/comms if has_roles(COMMS_SELECTED_ID, "Station")
+    #
+    # All stations start building homing, just as any player
+    # Build task needs a player to talk to
+    #
+    COMMS_SELECTED.data_set.set("Homing_NUM", random.randint(8,12),0)
+    COMMS_SELECTED.data_set.set("Nuke_NUM",  random.randint(2,5),0)
+    COMMS_SELECTED.data_set.set("EMP_NUM", random.randint(2,5),0)
+    COMMS_SELECTED.data_set.set( "Mine_NUM", random.randint(2,5), 0)
+
+    build_munition_queue_task(COMMS_SELECTED_ID, "Homing")
+    # scanned = COMMS_SELECTED["SCANNED"]
+
 
 
 //comms if role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "Station")
@@ -121,22 +133,3 @@ surrender_color = "yellow"
 
     ->task_station_building
 
-
-
-
-//spawn if  has_roles(SPAWNED_ID, "tsn, station")
-    #
-    # All stations start building homing, just as any player
-    # Build task needs a player to talk to
-    #
-
-    SPAWNED.data_set.set("Homing_NUM", random.randint(8,12),0)
-    SPAWNED.data_set.set("Nuke_NUM",  random.randint(2,5),0)
-    SPAWNED.data_set.set("EMP_NUM", random.randint(2,5),0)
-    SPAWNED.data_set.set( "Mine_NUM", random.randint(2,5), 0)
-
-    build_munition_queue_task(SPAWNED_ID, "Homing")
-
-    scanned = SPAWNED["SCANNED"]
-
-    -> END
