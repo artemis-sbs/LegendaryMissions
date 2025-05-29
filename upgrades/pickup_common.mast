@@ -2,7 +2,7 @@
 # Adds upgrade to ship inventory, deletes object, creates particle splash.
 # For HiDens Power Cell, no inventory, just adds 500-600 energy to ship.
 
-//collision/interactive if has_roles(COLLISION_ORIGIN_ID, "upgrade")
+//collision/interactive if has_roles(COLLISION_ORIGIN_ID, "upgrade") and has_roles(COLLISION_SELECTED_ID, "__player__")
 
     if has_roles(COLLISION_ORIGIN_ID, "upgrade, carapaction_coil"):
         print("Pickup: Carapaction Coil")
