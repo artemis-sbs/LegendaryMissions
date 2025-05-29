@@ -37,7 +37,7 @@ import glob
 def console_get_images(console):
     # "media/helm/consoles0001"
     d = fs.get_mission_dir()
-    cd = f"{d}/media/{console}"
+    cd = f"{d}/media/LegendaryMissions/{console}"
 
     if not os.path.isdir(cd):
         return []

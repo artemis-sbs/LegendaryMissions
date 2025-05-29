@@ -5,7 +5,7 @@
     },
     "OPERATOR_MODE": {
         "enable": false,
-        "logo": "media/operator",
+        "logo": "media/LegendaryMissions/operator",
         "show_logo_on_main": true,
         "pin": "000000"
     },

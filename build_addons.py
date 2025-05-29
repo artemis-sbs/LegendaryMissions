@@ -8,7 +8,7 @@ skip =  {"__pycache__"}
 version = os.environ.get('VERSION')
 
 
-def zipdir(path):
+def zipdir(folder_path, ext="mastlib"):
     # try: 
     #     os.mkdir('.addons')
     # except Exception:
@@ -16,22 +16,23 @@ def zipdir(path):
     # finally:
     #     pass
 
-    with zipfile.ZipFile(f"../__lib__/artemis-sbs.LegendaryMissions.{path}.{version}.mastlib", "w") as zf:
-        
-
-        for dirname, subdirs, files in os.walk(path):
-            p = pathlib.Path(dirname)
+    with zipfile.ZipFile(f"../__lib__/artemis-sbs.LegendaryMissions.{folder_path}.{version}.{ext}", "w") as zf:
+        for root, subdirs, files in os.walk(folder_path):
+            p = pathlib.Path(root)
             arc_dirname = str(pathlib.Path(*p.parts[1:]))
-            print(f"{dirname} arc {arc_dirname}")
+            print(f"{root} arc {arc_dirname}")
             if arc_dirname in skip:
                 print("SKIP")
                 continue
 
-            if dirname != path:            
-                zf.write(dirname)
+            # if root != folder_path:            
+            #     zf.write(root)
                 
-            for filename in files:
-                zf.write(os.path.join(dirname, filename), arcname=os.path.join(arc_dirname, filename))
+            for file in files:
+                file_path = os.path.join(root, file)
+                archive_path = os.path.relpath(file_path, folder_path)
+                zf.write(file_path, archive_path)
+                #zf.write(os.path.join(root, filename), arcname=os.path.join(arc_dirname, filename))
 
 zipdir("autoplay")
 zipdir("ai")
@@ -45,15 +46,16 @@ zipdir("grid_comms")
 zipdir("hangar")
 ### Don't copy Legendary maps
 # zipdir("maps")
+zipdir("internal_comms")
 zipdir("operator")
-zipdir("prefabs")
 zipdir("science_scans")
 zipdir("side_missions")
 zipdir("upgrades")
-zipdir("internal_comms")
 zipdir("admiral")
 zipdir("admiral_comms")
 zipdir("gamemaster")
 zipdir("gamemaster_comms")
+zipdir("prefabs")
 zipdir("basic_player_destroy")
+zipdir("media", "zip")
 
