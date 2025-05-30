@@ -1,8 +1,5 @@
-
-settings_add_defaults({"PLAYER_SHIP_RESPAWN": False})
-
 default shared SETTINGS = settings_get_defaults()
-shared PLAYER_SHIP_RESPAWN = SETTINGS["PLAYER_SHIP_RESPAWN"]
+shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
 
 # This handles when a player ships is destroyed
 # The default is to is to truly delete it

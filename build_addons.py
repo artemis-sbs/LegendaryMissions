@@ -57,5 +57,6 @@ zipdir("gamemaster")
 zipdir("gamemaster_comms")
 zipdir("prefabs")
 zipdir("basic_player_destroy")
+zipdir("basic_random_skybox")
 zipdir("media", "zip")
 

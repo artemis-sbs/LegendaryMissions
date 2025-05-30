@@ -1,0 +1,59 @@
+#
+#  A list of allowable sky boxes
+#  One will be randomly picked
+#  If you want specific skybox, just hav one
+#
+
+@media/music/default "Cosmos Default Music"
+#
+# Code can be here and will run when this
+# music is scheduled
+@media/music/Artemis2 "Classic Artemis2 music"
+
+#
+#
+#
+#
+@media/skybox/sky1  "Default red"
+#
+# These are labels that run at 
+# when the skybox is scheduled
+#
+if client_id==0:
+    music_schedule_random()
+
+@media/skybox/sky1-blue "Cosmos"
+if client_id==0:
+    music_schedule("default")
+
+@media/skybox/sky1-blue "Cosmos again"
+# You can have same skybox
+# You can have different start up code
+# or just increase the odds of it coming up
+#
+if client_id==0:
+    music_schedule("Artemis2")
+
+@media/skybox/sky1-ds9 "subdued blue"
+if client_id==0:
+    music_schedule_random()
+
+@media/skybox/sky1-rainbow "Rainbow"
+if client_id==0:
+    music_schedule_random()
+
+
+@media/skybox/sky1-bored-alice "borealis"
+if client_id==0:
+    music_schedule_random()
+
+
+@media/skybox/sky-delight "Sailor's delight"
+if client_id==0:
+    music_schedule_random()
+
+
+@media/skybox/sky-neb2-rvb "Red vs. Blue"
+if client_id==0:
+    music_schedule_random()
+

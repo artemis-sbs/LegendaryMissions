@@ -202,6 +202,15 @@ jobs:
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "basic_player_destroy"
 
+    - name: Archive basic_random_skybox addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'basic_random_skybox.${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "basic_random_skybox"
+
     - name: Archive media zip
       uses: thedoctor0/zip-release@main
       with:
@@ -210,8 +219,6 @@ jobs:
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "media"
-
-
 
     - name: Upload Release
       uses: ncipollo/release-action@v1
