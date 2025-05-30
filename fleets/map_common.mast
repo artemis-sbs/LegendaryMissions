@@ -12,72 +12,31 @@
 
     match FRIENDLY_SELECT:
         case "many":
-            max_hull_points=10
+            count = 10
         case "lots":
-            max_hull_points=8
+            count = 8
         case "some":
-            max_hull_points=5
+            count = 5
         case "few":
-            max_hull_points=3
+            count = 3
         case "none":
             # no civilian or friendly npcs
             # But added eyes
             ->END
 
-
-    total_hull_points = 0
-    # Adding more friendly
-    max_hull_points *= 3
-
-    attempts = 0
-
-    # grab the ship data for all ships on TSN side
-    tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "defender", ret_key_only=False)
-    # pick a random tsn ship
-    count = 1
-
-    
-    default shared shipname_data = load_json_string(media_read_relative_file("shipnames.json"))
-    tsnname_list = shipname_data.get("tsn")
-    canuck_list = shipname_data.get("canadian")
-
-    jump civilians if tsn_ship_data is None
-
     spawn_pos = Vec3(0,0,0)
     stations_friendly = to_object_list(role("tsn")  & role("station"))
-    for x while total_hull_points<max_hull_points:
-        #
-        ship = random.choice(tsn_ship_data)
-
-        hull_points = ship["hullpoints"]
-
-        if hull_points+total_hull_points > max_hull_points:
-            attempts += 1
-            # failed to find a small enough ship
-            if attempts > 20:
-                break
-            #
-            # try again
-            continue
-
-        # reset attempts
-        attempts = 0
+    for x while count>0:
         # OK add this ship
         if len(stations_friendly) > 0:
             so = random.choice(stations_friendly)
             spawn_pos = so.pos
             spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
 
-        name = f"TSN {tsnname_list.pop(random.randrange(len(tsnname_list)))}"
-        if random.randint(1,1867) == 1867: ### This is an inside joke for our Canadian players. 
-            name = f"TSN {canuck_list.pop(random.randrange(len(canuck_list)))}"
-
-        #friend = to_id(npc_spawn(*spawn_pos, name, "tsn, friendly", ship["key"], "behav_npcship"))
-        data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z, "name": name, "ship_art": ship["key"]}
+        data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z}
         prefab_spawn(prefab_npc_defender, data)
-        
-        count += 1
-        total_hull_points += hull_points
+        count -= 1
+
 
 ---- civilians
 

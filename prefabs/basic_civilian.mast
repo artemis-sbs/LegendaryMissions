@@ -1,10 +1,11 @@
+default shared SHIP_NAME_DATA = load_json_data(get_mission_dir_filename("shipnames.json"))
+
 === prefab_npc_civilian_common
     # Default means if not already defined define it, otherwise
     # skip. So it does not overwrite if it exists
-    default shared shipname_data = load_json_data(get_mission_dir_filename("shipnames.json"))
 
     alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
-    civname_list = shipname_data.get("civilian")
+    civname_list = SHIP_NAME_DATA.get("civilian")
 
     civ_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
 

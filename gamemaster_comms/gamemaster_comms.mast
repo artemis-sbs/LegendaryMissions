@@ -77,19 +77,8 @@ default gamemaster_face = random_terran()
 //comms/gamemaster/spawn/friend if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     +[$gamemaster]"Back" //comms
     +[$gamemaster]"Defender":
-        tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "defender", ret_key_only=False)
-        ->END if tsn_ship_data is None
-        default shared shipname_data = load_json_data(get_mission_dir_filename("shipnames.json"))
-        side = "tsn"
-        ship = random.choice(tsn_ship_data)
         spawn_pos = Vec3(COMMS_ORIGIN.pos)
-        count = random.randint(25,99)
-        tsnname_list = shipname_data.get("tsn")
-        if random.randint(1,1867) == 1867:
-            tsnname_list = shipname_data.get("canadian")
-
-        name = f"TSN {tsnname_list.pop(random.randrange(len(tsnname_list)))}"
-        data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z, "name": name, "ship_art": ship["key"]}
+        data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z}
         prefab_spawn(prefab_npc_defender, data)
 
 

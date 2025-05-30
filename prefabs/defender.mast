@@ -1,25 +1,37 @@
+import prefab_helpers.py
+
+shared SHIP_NAME_DATA = load_json_string(media_read_relative_file("shipnames.json"))
+
 === prefab_npc_defender
 metadata: ```
 type: prefab/npc/defender
-side: tsn
+side_value: tsn
 objective: objective_protect_area
 give_orders_type: objective/orders/defender
 property_label: handle_properties_defender_orders
-ship_art:
-face:
 allies: civ
-name:
 ```
+    default name = get_defender_name(side_value)
+    default origin = side_value
+    default crew = origin
+    default face = None
+    default max_hull_points = 10
+
+
+#TODO: This seems like it will slow things down
+    tsn_ship_data = ship_data_filter_ship_data_by_side(None, origin, "defender", ret_key_only=True)
+#
+#
+    default ship_art = random.choice(tsn_ship_data)
     # Default is ony set if the variable is not set
     #default ship_art = None
     ->END if ship_art is None
-    friend = to_object(npc_spawn(START_X, START_Y, START_Z, name, side+",friendly,prefab_npc_defender", ship_art, "behav_npcship"))
+    friend = to_object(npc_spawn(START_X, START_Y, START_Z, name, side_value+",friendly,prefab_npc_defender", ship_art, "behav_npcship"))
     if face is None:
-      default race = side
-      set_face(friend.id, random_face(race))
-    #default allies = None
+        set_face(friend.id, random_face(crew))
+    
     if allies is not None:
-      friend.data_set.set("ally_list",allies,0)
+        friend.data_set.set("ally_list",allies,0)
 
     set_inventory_value(friend, "give_orders_type", give_orders_type)
 
