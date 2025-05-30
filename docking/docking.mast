@@ -1,5 +1,17 @@
 
 
+default shared SETTINGS = settings_get_defaults()
+shared DOCKING = SETTINGS.get("DOCKING", {})
+default shared DOCKING_REFUEL_AMOUNT = DOCKING.get("refuel_amount", 20)
+default shared DOCKING_REFUEL_DELAY = DOCKING.get("refuel_delay", 2)
+default shared DOCKING_SHIELD_DELAY = DOCKING.get("shield_delay", 2)
+default shared DOCKING_TORPS_DELAY = DOCKING.get("torps_delay", 6)
+default shared DOCKING_INTERIOR_DELAY = DOCKING.get("interior_delay", 2)
+
+default shared DOCKING_INTERIOR_COUNT = DOCKING.get("interior_count", 2)
+default shared DOCKING_SHIELD_COEFF = DOCKING.get("shield_coeff", 2)
+
+
 === docking_standard_player_station
     for player_id in role("__player__"):
         player = to_object(player_id)
@@ -60,11 +72,13 @@ distance: 600
 +++ refit
     set_weapons_selection(DOCKING_PLAYER_ID, 0)
 ###  Add Energy
-    refuel_amount = 20
-    refuel_delay = 2    
-    shields_delay = 2
-    torps_delay = 6
-    interior_delay = 2
+    refuel_amount = DOCKING_REFUEL_AMOUNT 
+    refuel_delay = DOCKING_REFUEL_DELAY
+    shields_delay = DOCKING_SHIELD_DELAY
+    shields_coeff = DOCKING_SHIELD_COEFF
+    torps_delay = DOCKING_TORPS_DELAY
+    interior_delay = DOCKING_INTERIOR_DELAY
+    interior_count = DOCKING_INTERIOR_COUNT
 
     player_blob = DOCKING_PLAYER.data_set
     player_id = DOCKING_PLAYER_ID
@@ -72,20 +86,24 @@ distance: 600
 
 
     if not is_timer_finished(DOCKING_PLAYER_ID,"priority_docking"):
-        refuel_amount += 20
-        refuel_delay = 1    
-        shield_delay = 1
-        torp_delay = 3
-        interior_delay = 1
+        refuel_amount = DOCKING_REFUEL_AMOUNT * 2
+        refuel_delay = DOCKING_REFUEL_DELAY / 2
+        shields_delay = DOCKING_SHIELD_DELAY / 2
+        shields_coeff = DOCKING_SHIELD_COEFF * 2
+        torps_delay = DOCKING_TORPS_DELAY / 2
+        interior_delay = DOCKING_INTERIOR_DELAY /2
+        interior_count = DOCKING_INTERIOR_COUNT *2
 
-    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"refuel") > refuel_delay:
+    # t = get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"refuel")
+    # print(f"docking {t}")
+    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"refuel") >= refuel_delay:
         start_counter(DOCKING_PLAYER_ID,"refuel")
         fuel_value = DOCKING_PLAYER.data_set.get("energy",0)
         if fuel_value < 1000:
             fuel_value = fuel_value + refuel_amount
             DOCKING_PLAYER.data_set.set("energy", int(fuel_value),0)
 ### Refill torps
-    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"torps") > torps_delay:
+    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"torps") >= torps_delay:
         start_counter(DOCKING_PLAYER_ID,"torps")
 
         _torp_types = npc_blob.get("torpedo_types_available",0)
@@ -102,31 +120,35 @@ distance: 600
                     player_blob.set(f"{torps}_NUM", torp_now,0)
                     npc_blob.set(f"{torps}_NUM", tLeft-1, 0)
 ### Repair shields
-    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"shields") > shields_delay:
+    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"shields") >= shields_delay:
         start_counter(DOCKING_PLAYER_ID,"shields")
-        shieldCoeff = player_blob.get("repair_rate_shields",0)
+        shield_rate = player_blob.get("repair_rate_shields",0)
+        shield_rate *= shields_coeff
         sCount = player_blob.get("shield_count",0)
         for shield in range(sCount):
             sVal = player_blob.get("shield_val", shield)
             sValMax = player_blob.get("shield_max_val", shield)
             changed = (sVal < sValMax)
-            sVal = max(0.0, min(sVal + shieldCoeff, sValMax)) # clamp the value
+            sVal = max(0.0, min(sVal + shield_rate, sValMax)) # clamp the value
             if changed:
                 player_blob.set("shield_val", sVal, shield)
 
         systemCoeff = player_blob.get("repair_rate_systems",0)
 ### Repair interior
-    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"interior") > interior_delay:
+    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"interior") >= interior_delay:
         start_counter(DOCKING_PLAYER_ID,"interior")
         system_grid_objects = to_list(grid_objects(player_id) & role("__damaged__") & role("system"))
         if len(system_grid_objects):
-            grid_repair_grid_objects(player_id, system_grid_objects[0])
+            count = min(len(system_grid_objects), interior_count)
+            grid_repair_grid_objects(player_id, system_grid_objects[:count])
+            
         else:
             #
             # Repair hallways and non system rooms
             #
             non_system_grid_objects = to_list((grid_objects(player_id) & role("__damaged__") ) - role("system") -  role("lifeform"))
             if len(non_system_grid_objects):
+                count = min(len(non_system_grid_objects), interior_count)
                 grid_repair_grid_objects(player_id, non_system_grid_objects[0])
 
 +++ throttle

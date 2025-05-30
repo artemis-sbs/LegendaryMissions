@@ -9,6 +9,15 @@
         "show_logo_on_main": true,
         "pin": "000000"
     },
+    "DOCKING": {
+        "refuel_amount": 20,
+        "refuel_delay": 2,
+        "shield_delay": 2,
+        "shield_coeff": 2,
+        "torps_delay": 6,
+        "interior_delay": 2,
+        "interior_count": 2
+    },
     "GRID_THEME": 0,
     "DIFFICULTY": 5,
     "WORLD_SELECT": "siege",
