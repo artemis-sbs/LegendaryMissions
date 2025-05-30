@@ -2,7 +2,7 @@
 shared _surrender_return = task_schedule(take_surrendered_home)
 
 
-//comms if is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) 
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) 
 
     yield fail if has_role(COMMS_SELECTED_ID, "never_surrender")
     yield fail if has_role(COMMS_SELECTED_ID, "surrendered")

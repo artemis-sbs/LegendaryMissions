@@ -7,7 +7,7 @@ shared taunt_data = load_json_string(media_read_relative_file("taunts.json"))
 =$raider red,white
 
 
-//enable/comms if is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "ship")
+//enable/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "ship")
     if taunt_data is not None:
         #
         # Select 3 taunts
@@ -25,7 +25,7 @@ shared taunt_data = load_json_string(media_read_relative_file("taunts.json"))
 
 
 
-//comms if is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Hail":
     if has_roles(COMMS_SELECTED_ID, 'kralien'):
         <<[$raider] "Hail"
@@ -103,7 +103,7 @@ shared taunt_data = load_json_string(media_read_relative_file("taunts.json"))
         <<[$raider] "Hail"
             % Go away, {COMMS_ORIGIN.name}! You talk too much!
 
-//comms if is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Taunt"  handle_comms_taunt_raider_top
 
 
