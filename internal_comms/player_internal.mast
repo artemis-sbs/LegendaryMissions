@@ -1,3 +1,4 @@
+default shared SIMPLE_INTERNAL = True
 <var flash_message>
     % Hello, World
     % Goto to the light
@@ -8,7 +9,7 @@
 //enable/comms if has_roles(COMMS_SELECTED_ID, '__PLAYER__')
 
 
-//comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
+//comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__')) and SIMPLE_INTERNAL
 
 default sickbay_face = random_terran()
 =$sickbay blue,white,sickbay_face
