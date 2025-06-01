@@ -8,7 +8,8 @@
     default SIZE_Z = SIZE_X
     
     s_roles = "{side_value}, station, {roles_value}"
-    name = get_variable('NAME')
+    # NOTE: all cap NAME is deprecated
+    default name = get_variable('NAME')
     if name is None:
       name = f"DS {station_count}"
         

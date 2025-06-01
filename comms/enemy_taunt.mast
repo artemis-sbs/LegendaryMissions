@@ -7,20 +7,20 @@ shared taunt_data = load_json_string(media_read_relative_file("taunts.json"))
 =$raider red,white
 
 
-//enable/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "ship")
-    if taunt_data is not None:
-        #
-        # Select 3 taunts
-        #
-        race = get_race(COMMS_SELECTED_ID)
-        if race is None:
-            print(f"spawn, raider invalid race {race}")
+//spawn has_roles(SPAWNED_ID, "ship")
+if taunt_data is not None:
+    #
+    # Select 3 taunts
+    #
+    race = get_race(SPAWNED_ID)
+    if race is None:
+        print(f"spawn, raider invalid race {race}")
 
-        race_taunts = taunt_data.get(race)
-        if race_taunts is not None:
-            this_taunt_data = random.sample(race_taunts, 3)
-            set_inventory_value(COMMS_SELECTED_ID, "taunt_data", this_taunt_data)
-            set_inventory_value(COMMS_SELECTED_ID, "taunt_trait", random.randint(0,2))
+    race_taunts = taunt_data.get(race)
+    if race_taunts is not None:
+        this_taunt_data = random.sample(race_taunts, 3)
+        set_inventory_value(SPAWNED_ID, "taunt_data", this_taunt_data)
+        set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
 
 
 
