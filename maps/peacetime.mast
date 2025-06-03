@@ -83,11 +83,11 @@ Properties:
 
     # The lists are loaded in from shipnames.json to help build a fleet of cargo ships with captains, containers, and goods
     alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
-    peacetime_list = shipname_data.get("peacetime")
-    civname_list = shipname_data.get("civilian")
-    capname_list = shipname_data.get("captain")
-    clue_list = shipname_data.get("clue_list")
-    goods_list = shipname_data.get("tradegoods")
+    civname_list = SHIP_NAME_DATA.get("civilian")
+    peacetime_list = SHIP_NAME_DATA.get("peacetime")
+    capname_list = SHIP_NAME_DATA.get("captain")
+    clue_list = SHIP_NAME_DATA.get("clue_list")
+    goods_list = SHIP_NAME_DATA.get("tradegoods")
     suspect = []
 
     # Kidnapper ship (first suspect) hides the ambassador in a suspicious container, randomized as list index 6, 8, 10, or 12.
@@ -448,7 +448,9 @@ Properties:
 
     # Drop a secret codecase near DS1. This allows the scenario to be completed without a Weapons Officer.
     if upgrade_value >= 1:
-        ds1_obj = to_object(ds_list[0])
+#        ds1_obj = to_object(ds_list[0])
+        ds1_list = to_object_list(role("ds1"))
+        ds1_obj = ds1_list[0]
         ds1_pos = ds1_obj.pos
         pickup_spawn(ds1_pos.x, ds1_pos.y, ds1_pos.z - 500, "secret_codecase")
 
@@ -969,8 +971,6 @@ yield success
 ===== check_ambassador_rescued ======
 
     for p in role("__player__"):
-    #    ds1_list = to_object_list(role("ds1"))
-    #    ds1_id = to_id(ds1_list[0])
         ds1_list = to_list(role("ds1"))
         ds1_id = ds1_list[0]
         dist = sbs.distance_id(p, ds1_id)
@@ -992,10 +992,10 @@ yield success
 
 //collision/interactive if has_roles(COLLISION_ORIGIN_ID, "escape-pod") and kidnap_status == 3
     kidnap_status = 4
-    send_general_message("Ambassador Florbin", "Thank you for rescuing me! I'll make sure you get a commendation for this. Now, if you could just drop be off back at DS 1, there's a new episode of 'Zed Star Five' I need to get back to.", ambassador_face, COLLISION_SELECTED_ID)
+    send_general_message("Ambassador Florbin", "Thank you for rescuing me! I'll make sure you get a commendation for this. Now, if you could just drop me off back at DS 1, there's a new episode of 'Zed Star Five' I need to get back to.", ambassador_face, COLLISION_SELECTED_ID)
     pest_id = COLLISION_SELECTED_ID
     pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-    pest_list = shipname_data.get("complaints")
+    pest_list = SHIP_NAME_DATA.get("complaints")
     task_schedule(pest_messages)
 
 //damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby")
