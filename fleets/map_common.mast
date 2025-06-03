@@ -1,78 +1,47 @@
 ################
 ## common code for different map type
 
+//signal/game_started
+    start_npc_cag()
+
 =========== spawn_friendly_npc ===========
 
-    print(f"World Select: {world_select.path}")
-    if world_select.path == "deep_strike":
-        friendly_select = "none"
+    print(f"World Select: {WORLD_SELECT.path}")
+    if WORLD_SELECT.path == "deep_strike":
+        FRIENDLY_SELECT = "none"
 
-    match friendly_select:
+    match FRIENDLY_SELECT:
         case "many":
-            max_hull_points=10
+            count = 10
         case "lots":
-            max_hull_points=8
+            count = 8
         case "some":
-            max_hull_points=5
+            count = 5
         case "few":
-            max_hull_points=3
+            count = 3
         case "none":
             # no civilian or friendly npcs
             # But added eyes
-            jump spawn_players
-
-
-    total_hull_points = 0
-
-    attempts = 0
-
-    # grab the ship data for all ships on TSN side
-    tsn_ship_data = ship_data_filter_ship_data_by_side(None, "TSN", "defender", ret_key_only=False)
-    # pick a random tsn ship
-    count = 1
-
-    shared shipname_data = load_json_data(get_mission_dir_filename("shipnames.json"))
-    tsnname_list = shipname_data.get("tsn")
-    canuck_list = shipname_data.get("canadian")
-
-    jump civilians if tsn_ship_data is None
+            ->END
 
     spawn_pos = Vec3(0,0,0)
     stations_friendly = to_object_list(role("tsn")  & role("station"))
-    for x while total_hull_points<max_hull_points:
-        #
-        ship = random.choice(tsn_ship_data)
-
-        hull_points = ship["hullpoints"]
-
-        if hull_points+total_hull_points > max_hull_points:
-            attempts += 1
-            # failed to find a small enough ship
-            if attempts > 20:
-                break
-            #
-            # try again
-            continue
-
-        # reset attempts
-        attempts = 0
+    for x while count>0:
         # OK add this ship
         if len(stations_friendly) > 0:
             so = random.choice(stations_friendly)
             spawn_pos = so.pos
             spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
-        if random.randint(1,1867) == 1867: ### This is an inside joke for our Canadian players. 
-            friend = to_id(npc_spawn(*spawn_pos, f"TSN {canuck_list.pop(random.randrange(len(canuck_list)))}", "tsn, friendly", ship["key"], "behav_npcship"))
-        else:
-            friend = to_id(npc_spawn(*spawn_pos, f"TSN {tsnname_list.pop(random.randrange(len(tsnname_list)))}", "tsn, friendly", ship["key"], "behav_npcship"))
-        count += 1
-        total_hull_points += hull_points
-        set_face(friend, random_terran())
+
+        data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z}
+        prefab_spawn(prefab_npc_defender, data)
+        count -= 1
+
 
 ---- civilians
 
     civilian_count = 0
-    match friendly_select:
+    match FRIENDLY_SELECT:
         case "many":
             civilian_count = 4
         case "lots":
@@ -82,33 +51,28 @@
         case "few":
             civilian_count = 1
         case "none":
-            jump spawn_players
+            ->END
 
     # grab the ship data for all ships on TSN side
-    civilian_data = ship_data_filter_ship_data_by_side(None, None, "civilian", ret_key_only=False)
-    ->END if len(civilian_data)==0
-    count = 1
+    
+    # test have more
+    if len(stations_friendly) > 0:
+        civilian_count = random.randint(civilian_count,civilian_count*len(stations_friendly))
 
-    alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
-    civname_list = shipname_data.get("civilian")
-
+    prefabs = [prefab_npc_civilian_cargo, prefab_npc_civilian_science, prefab_npc_civilian_luxury_liner, prefab_npc_civilian_transport]
     for count in range(civilian_count):
         #
-        ship = random.choice(civilian_data)
+        prefab = random.choice(prefabs)
         #
         if len(stations_friendly) > 0:
             so = random.choice(stations_friendly)
             spawn_pos = so.pos
             spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
-        
-        civ_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randrange(len(civname_list)))
 
-        friend = to_object(npc_spawn(*spawn_pos, civ_name, "civ, tsn, friendly, civilian", ship["key"], "behav_npcship"))
-        set_face(friend.id, random_terran(civilian=True))
-        friend.data_set.set("ally_list","tsn",0)
-        count += 1
+        data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z}
+        prefab_spawn(prefab, data)
 
-    ->END if world_select.path == "sandbox"
+    ->END
 
 
 ====== spawn_players =======
@@ -129,7 +93,7 @@
         side = player_ship.side
         stations_friendly = to_object_list(role(side)  & role("station"))
 
-        if c>= player_count:
+        if c>= PLAYER_COUNT:
             # make sure the id is cleared dry docked ships
             player_ship.art_id = "invisible"
             player_ship.remove_role("__player__")
@@ -145,6 +109,7 @@
         sbs.player_ship_setup_from_data(player_ship.engine_object)
         player_ship.name = name
 
+
         if len(stations_friendly) > 0:
             so = random.choice(stations_friendly)
             spawn_pos = so.pos
@@ -155,14 +120,15 @@
             assign_client_to_ship(0,to_id(player_ship))
             first = False
 
+        role_ally_add(player_ship, "civ")
+        test = player_ship.data_set.get("ally_list", 0)
         # 
         # schedule and set friendly eyes
         # link or unlink extra_scan_source
         #
-        friendly_eyes = role("tsn")  & (role("station")|role("defender"))
+        friendly_eyes = role_allies(player_ship)  & (role("station")|role("defender"))
         link(player_ship, "extra_scan_source", friendly_eyes)
 
-        extra_scan_sources_schedule()
         #player_ship_update_friendly(player_ship, stations_friendly, True)
 
     shared players_cleaned = True

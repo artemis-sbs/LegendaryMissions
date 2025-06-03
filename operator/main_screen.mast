@@ -7,7 +7,7 @@
     x = 0
     y = 0
     gui_section( style=f"area: 100-{x+w+g}px, 100-{y+h+g}px, 100-{x+g}px, 100-{y+g}px;")
-    gui_image_keep_aspect_ratio_center(get_mission_dir_filename("media/artemis_home_page"))
+    gui_image_keep_aspect_ratio_center(get_mission_dir_filename("media/LegendaryMissions/artemis_home_page"))
 
     x += 128
     gui_section( style=f"area: 100-{x+w+g}px, 100-{y+h+g}px, 100-{x+g}px, 100-{y+g}px;")
@@ -20,7 +20,7 @@
 
     # """ Show a Logo and say waiting for game to start """
     gui_section( style=f"area: 0, 0, 100, 76;")
-    gui_image_keep_aspect_ratio_center(get_mission_dir_filename("media/operator"))
+    gui_image_keep_aspect_ratio_center(get_mission_dir_filename("media/LegendaryMissions/operator"))
 
 
     await gui()

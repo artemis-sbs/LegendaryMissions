@@ -1,5 +1,5 @@
 
-build_task = None
+
 
 //spawn if has_role(SPAWNED_ID, "elite")
     task_schedule(handle_elite_abilities)

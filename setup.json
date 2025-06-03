@@ -1,26 +1,37 @@
 {
-    "auto_start": false,
-    "auto_play": {
+    "AUTO_START": false,
+    "AUTO_PLAY": {
         "enable": false
     },
-    "operator_mode": {
+    "OPERATOR_MODE": {
         "enable": false,
-        "logo": "media/operator",
+        "logo": "media/LegendaryMissions/operator",
         "show_logo_on_main": true,
         "pin": "000000"
     },
-    "player_count": 1,
-    "grid_theme": 0,
-    "difficulty": 5,
-    "world_select": "siege",
-    "terrain_select": "some",
-    "lethal_select": "none",
-    "friendly_select": "few",
-    "monster_select": "few",
-    "upgrade_select": "lots",
-    "game_time_limit": 0,
-    "war_time_delay": 10,
-    "player_list": [
+    "DOCKING": {
+        "refuel_amount": 20,
+        "refuel_delay": 2,
+        "shield_delay": 2,
+        "shield_coeff": 2,
+        "torps_delay": 6,
+        "interior_delay": 2,
+        "interior_count": 2
+    },
+    "GRID_THEME": 0,
+    "DIFFICULTY": 5,
+    "WORLD_SELECT": "siege",
+    "TERRAIN_SELECT": "some",
+    "LETHAL_SELECT": "none",
+    "FRIENDLY_SELECT": "few",
+    "MONSTER_SELECT": "few",
+    "UPGRADE_SELECT": "lots",
+    "GAME_TIME_LIMIT": 0,
+    "WAR_TIME_DELAY": 10,
+    "PLAYER_CREATE_DEFAULT": true,
+    "PLAYER_COUNT": 1,
+    "PLAYER_SHIP_RESPAWN": false,
+    "PLAYER_LIST": [
         {
             "name": "Artemis",
             "side": "tsn",

@@ -1,0 +1,223 @@
+#
+#
+#
+dolly = 50
+orbit = 180.0
+do_move = 0
+property_pane = None
+default GAMEMASTER_CONSOLE_ENABLED = True
+
+@console/gamemaster !0 ^100 "Game Master" if GAMEMASTER_CONSOLE_ENABLED
+" Affect the overall battle
+
+    #
+    # Get side from selected ship
+    #
+
+    # Need Sci in the name for science selection
+    gui_activate_console("gamemaster_sci")
+    
+    
+
+    _ship_id = sbs.get_ship_of_client(client_id) 
+    faction_ship = to_object(_ship_id)
+    cambot_id = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+    camera_id = cambot_id
+    cambot = to_object(cambot_id)
+    if cambot_id is None or cambot is None:
+        #
+        # has_science_scan enables friendly eyes processing
+        # while not being a player
+        #
+        cambot = to_object(player_spawn(0,0,10, "", "#,gamemaster,has_science_scan", "invisible")) 
+        remove_role(cambot, "__player__")
+        camera_id = to_id(cambot)
+        set_inventory_value(client_id, "GAMEMASTER_COMBOT", camera_id)
+        cambot_id = camera_id
+
+        # Set up scan sources
+        stations_friendly = any_role("__npc__,__player__")
+        link(cambot_id,"extra_scan_source" ,stations_friendly)
+
+    last_sci = cambot_id
+    #
+    # Should have a way to get all factions/side
+    #
+    #cambot.data_set.set("ally_list","tsn,civ,raider",0)
+    cambot.data_set.set("ship_base_scan_range", 15000,0)
+    
+    await delay_sim(1)
+    #
+    # Assign before setting comms up
+    #
+    
+    sbs.assign_client_to_ship(client_id, camera_id)
+    science_set_scan_data(camera_id, camera_id, {"scan": "Game Master"})
+    set_comms_selection(camera_id, camera_id)
+    follow_route_select_comms(camera_id, camera_id)
+    
+    #comms_navigate("//comms/gamemaster")
+
+
+    # Whole screen
+    gui_section(style="area:0,45px,100,100;")
+    # Left
+
+
+    with gui_sub_section("col-width:25;"):
+        gui_row("row-height: 50;")
+        GM_LEFT = gui_tabbed_panel([], tab_location=0)
+        gui_info_panel_add("instruction", 113, gamemaster_panel_instructions, None, GM_LEFT)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None, GM_LEFT)
+        gui_info_panel_add("messages", 84, gui_panel_console_message_list,None, GM_LEFT)
+                
+        gui_row()
+        gui_property_list_box()
+        
+
+  
+    task_schedule(gamemaster_move_camera_sync)
+
+
+    # Middle
+    with gui_sub_section():
+        gui_row()
+        #gui_layout_widget("science_2d_view")
+        gui_layout_widget("science_2d_view")
+        gui_row()
+        gui_layout_widget("comms_control")
+
+    # Right
+
+    gui_update_widgets("3dview^science_data^comms_waterfall","")
+    with gui_sub_section("col-width:25;"):
+        gui_row("row-height:45;margin:0,0,0,10px;")
+        GM_RIGHT = gui_tabbed_panel([], tab_location=1)
+        ~~ gui_info_panel_add("science_data", 37, 
+            lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data"), 
+            GM_RIGHT ) ~~
+
+        ~~ gui_info_panel_add("comms_waterfall", 112, 
+            lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall"), 
+            GM_RIGHT ) ~~
+        ~~ gui_info_panel_add("comms_waterfall", 113, 
+            gamemaster_panel_camera_show, 
+            gamemaster_panel_camera_hide, 
+            GM_RIGHT ) ~~
+
+
+        # panels = ~~[{"icon": 37, 
+        #         "show": lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data") , 
+        #         "hide":  lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data")},
+        #         {"icon": 112, 
+        #             "show": lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall") , 
+        #             "hide": lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall") },
+        #         {"icon": 113, 
+        #             "show": gamemaster_panel_camera_show, 
+        #             "hide": gamemaster_panel_camera_hide }
+        #         ]~~
+
+        
+        
+        gui_row()
+        gui_layout_widget("comms_sorted_list")
+        gui_row("row-height: 10;")
+        gui_layout_widget("text_waterfall")
+
+    
+        
+    await gui()
+
+==== gamemaster_move_camera_sync
+    await delay_sim(3)
+    do_move = do_move + 1 if do_move is not None else 0
+    # every 15 sec move camra anyway
+    if do_move > 5:
+        await sub_task_schedule(gamemaster_move_camera)
+        do_move = 0
+
+    _ship_id = sbs.get_ship_of_client(client_id) 
+    now_sci = get_science_selection(_ship_id)
+    if not now_sci:
+        now_sci = get_weapons_selection(_ship_id)
+    jump gamemaster_move_camera_sync if now_sci == last_sci
+    last_sci = now_sci
+    await gui_sub_task_schedule(gamemaster_move_camera)
+    jump gamemaster_move_camera_sync 
+
+==== gamemaster_move_camera
+    _ship_id = sbs.get_ship_of_client(client_id) 
+    _ship_obj = to_object(_ship_id)
+
+    sel = get_science_selection(_ship_id)
+    weap_sel = get_weapons_selection(_ship_id)
+    ->END if _ship_obj is None
+
+    source = Vec3(0,0, dolly * 10)
+    source = source.rotate_around(Vec3(0,0,0), 0, orbit, 0)
+    if sel is None or sel==0:
+        sel = weap_sel
+    if sel is None or sel==0:
+        sel = _ship_id
+    ->END if sel is None or sel==0
+    
+    gui_cinematic_full_control(client_id, sel, source, sel, Vec3())
+    ->END
+
+
+
+//focus/science if has_roles(SCIENCE_ORIGIN_ID, "gamemaster")
+    #rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)
+    
+    # extra_extra_tag has lmb, rmb, blank is fake event
+    if EVENT.extra_extra_tag != "rmb":
+        # if no selection then use point
+        pos = Vec3(EVENT.source_point)
+        if SCIENCE_SELECTED_ID!=0:
+            pos = Vec3(SCIENCE_SELECTED.pos)
+        SCIENCE_ORIGIN.pos = pos
+        comms_id = SCIENCE_SELECTED_ID
+        if comms_id==0:
+            comms_id = SCIENCE_ORIGIN_ID
+        set_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
+        gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
+        
+        prev_comms = get_comms_selection(SCIENCE_ORIGIN_ID)
+        set_comms_selection(SCIENCE_ORIGIN_ID, comms_id)
+        if prev_comms != comms_id:
+            follow_route_select_comms(SCIENCE_ORIGIN_ID, comms_id)
+    elif EVENT.extra_extra_tag == "rmb":
+        # Need to reset scince to the right value????
+        # But when, Next tick?
+        prev_sci = get_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
+        set_weapons_selection(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+        set_science_selection(SCIENCE_ORIGIN_ID, prev_sci)
+        
+        pos = Vec3(EVENT.source_point)
+        if SCIENCE_SELECTED_ID!=0:
+            pos = Vec3(SCIENCE_SELECTED.pos)
+
+        # The selection point for the gamemaster is the pos of the Admiral ship
+        # But this selection we need to remmber
+        set_inventory_value(SCIENCE_ORIGIN_ID, "GAMEMASTER_ORDERS_POINT", pos)
+
+        gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Orders", "rmb", "#400")
+    
+//focus/comms if has_roles(COMMS_ORIGIN_ID, "gamemaster")
+    set_science_selection(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
+    if COMMS_SELECTED_ID!=0:
+        pos = Vec3(COMMS_SELECTED.pos)
+        gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
+        set_inventory_value(COMMS_ORIGIN_ID, "gamemaster_prev_selection", COMMS_SELECTED_ID)
+
+
+
+#
+# This make sure that the game master can communicate with anything
+#    
+//enable/science if has_roles(SCIENCE_ORIGIN_ID, 'gamemaster')
+    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, "Default Scan")
+
+//enable/comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')

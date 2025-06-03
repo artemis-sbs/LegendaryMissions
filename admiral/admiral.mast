@@ -7,8 +7,8 @@ do_move = 0
 property_pane = None
 default ADMIRAL_CONSOLE_ENABLED = True
 
-@console/admiral "Admiral" if ADMIRAL_CONSOLE_ENABLED
-" Affect the overall battle
+@console/admiral !0 ^90 "Admiral" if ADMIRAL_CONSOLE_ENABLED
+" Aid your side in the war
 
     #
     # Get side from selected ship
@@ -16,6 +16,7 @@ default ADMIRAL_CONSOLE_ENABLED = True
 
     # Need Sci in the name for science selection
     gui_activate_console("admiral_sci")
+    
 
     _ship_id = sbs.get_ship_of_client(client_id) 
     faction_ship = to_object(_ship_id)
@@ -34,7 +35,7 @@ default ADMIRAL_CONSOLE_ENABLED = True
         cambot_id = camera_id
 
         # Set up scan sources
-        stations_friendly = role("station")|role("defender")|role("raider")
+        stations_friendly = any_role("__npc__,__player__")
         link(cambot_id,"extra_scan_source" ,stations_friendly)
 
     last_sci = cambot_id
@@ -42,8 +43,8 @@ default ADMIRAL_CONSOLE_ENABLED = True
     # Should have a way to get all factions/side
     #
     #cambot.data_set.set("ally_list","tsn,civ,raider",0)
-    cambot.data_set.set("ship_base_scan_range", 35000,0)
-
+    cambot.data_set.set("ship_base_scan_range", 15000,0)
+    
     await delay_sim(1)
     #
     # Assign before setting comms up
@@ -81,9 +82,6 @@ default ADMIRAL_CONSOLE_ENABLED = True
         await task_schedule(admiral_move_camera)
 
     task_schedule(admiral_move_camera_sync)
-    default shared admiral_already_scheduled_eyes = False
-    -> END if admiral_already_scheduled_eyes 
-    admiral_already_scheduled_eyes = True
 
 
     # Middle
@@ -102,6 +100,8 @@ default ADMIRAL_CONSOLE_ENABLED = True
         gui_layout_widget("science_sorted_list")
         gui_row("row-height: 10;")
         gui_layout_widget("text_waterfall")
+
+    
         
     await gui()
 
@@ -143,21 +143,6 @@ default ADMIRAL_CONSOLE_ENABLED = True
     
     gui_cinematic_full_control(client_id, sel, source, sel, Vec3())
     ->END
-
-
-=== admiral_update_lookouts ==
-    await delay_sim(10)
-
-    my_players = to_object_list(role("admiral"))
-    for player in my_players:
-        blob = to_blob(player)
-        num_ids = blob.get("num_extra_scan_sources",0)
-
-        for friend in any_role("friendly, station, __player__"):
-            blob.set("extra_scan_source", friend, num_ids)
-            num_ids += 1
-        blob.set("num_extra_scan_sources",num_ids,0)
-    -> admiral_update_lookouts
 
 
 

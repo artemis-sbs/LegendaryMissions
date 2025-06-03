@@ -1,6 +1,19 @@
-//enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
+default shared DEFAULT_SCIENCE_AUTO_SCAN = True
 
-//science if has_roles(SCIENCE_SELECTED_ID, "tsn, Station")
+
+//shared/signal/science_auto_scan if DEFAULT_SCIENCE_AUTO_SCAN
+    tab = "scan"
+    if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID):
+        tab = "*"
+    science_ensure_scan(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, tab)
+    
+
+
+
+
+//enable/science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
+
+//science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
 
     + "scan":
         <scan>
@@ -50,13 +63,39 @@
             % There is a Laparian muskrat on the bridge. Perhaps the captain has a pet.
             % Reading a nest of Vena rats in the cargo bay. If this ship invites you to dinner do not accept.
 
+//enable/science if has_roles(SCIENCE_SELECTED_ID, "civ, friendly")
+//science if has_roles(SCIENCE_SELECTED_ID, "civ, friendly")
+
+    + "scan":
+        <scan>
+            % This is a civilian ship.
+            % This ship is on friendly terms
+            % This ship is an ally
+    + "status":
+        <scan>
+            " Hail Civilian ships for status
+    + "intel":
+        <scan>
+            % The ship is ready for battle.
+            % This ship has its escape pods prepared for launch.
+            % Today is the captain's birthday.
+
+    + "bio":
+        <scan>
+            % Reading no sign of pathogens on this ship.
+            % Unknown organism detected. This ship may have science specimens aboard.
+            % A few crew members are in quarantine due to the Vega flu.
+            % There is a Laparian muskrat on the bridge. Perhaps the captain has a pet.
+            % Reading a nest of Vena rats in the cargo bay. If this ship invites you to dinner do not accept.
+
+
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "typhon")
 //science if has_role(SCIENCE_SELECTED_ID, "typhon")
 
     + "scan":
         <scan>
-            % Space organism class<colon> Typhon.
+            % Space organism class: Typhon.
     + "status":
         <scan>
             % This extra-dimensional creature cannot be affected by any known weapon.
@@ -65,7 +104,7 @@
             % This life form defies our laws of biology and physics. No known form of communication can reach it.
     + "intel":
         <scan>
-            % Life form classification<colon> HOSTILE and extremely DANGEROUS.
+            % Life form classification: HOSTILE and extremely DANGEROUS.
 
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "wreck")
@@ -78,11 +117,11 @@
             % Wreckage of a destroyed starship. 
     + "status":
         <scan> 
-            % WARNING<colon> Radiation leak detected! Do not board this derelict!
+            % WARNING: Radiation leak detected! Do not board this derelict!
             % Readings indicate this ship was destroyed by weapons fire.
             % Cause of this ship's destruction cannot be determined by sensor scan.
-            % WARNING<colon> high radiation levels! This ship might have been destroyed by an accidental reactor leak.
-            % WARNING<colon> high radiation level warning for the entire crew! This ship might have been destroyed by an accidental reactor leak.
+            % WARNING: high radiation levels! This ship might have been destroyed by an accidental reactor leak.
+            % WARNING: high radiation level warning for the entire crew! This ship might have been destroyed by an accidental reactor leak.
 
     + "bio":
         <scan>
@@ -93,12 +132,12 @@
 
     + "mat":
         <scan>
-            % Material scan<colon> no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging.
-            % Material scan<colon> minimal salvage value. Approximately 0.4 kilotons of fluxion.
-            % Material scan<colon> significant salvage value. Approximately 1.3 kilotons of urydium.
-            % Material scan<colon> minimal salvage value. Less than 0.1 kilotons of urydium.
-            % Material scan<colon> significant salvage value. More than 1.9 kilotons of fluxion.
-            % Material scan<colon> inconclusive. Something on this wreck is blocking our scans.
+            % Material scan: no salvage value. Scrap metal and traces of heavier elements, but nothing worth salvaging.
+            % Material scan: minimal salvage value. Approximately 0.4 kilotons of fluxion.
+            % Material scan: significant salvage value. Approximately 1.3 kilotons of urydium.
+            % Material scan: minimal salvage value. Less than 0.1 kilotons of urydium.
+            % Material scan: significant salvage value. More than 1.9 kilotons of fluxion.
+            % Material scan: inconclusive. Something on this wreck is blocking our scans.
         
 
 
@@ -129,8 +168,8 @@
 
 
 
-//enable/science if has_role(SCIENCE_SELECTED_ID, "raider")
-//science if has_role(SCIENCE_SELECTED_ID, "raider")
+//enable/science if not role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+//science if not role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
 
 
 taunt_trait=get_inventory_value(SCIENCE_SELECTED_ID, "taunt_trait")

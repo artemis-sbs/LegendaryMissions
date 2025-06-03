@@ -46,7 +46,8 @@ def map_nebula_scatter(t_min, t_max, x,y,z, w,h, d):
     for v in spawn_points:
         cluster_spawn_points = scatter.sphere(random.randint(t_min*2,t_min*4), v.x, 0,v.z, 1000, 10000, ring=False)
         for v2 in cluster_spawn_points:
-            v2.y = v2.y % 500.0
+            #v2.y = v2.y % 500.0
+            v2.y = random.random() * 500.0-250
             nebula = terrain_spawn(v2.x, v2.y, v2.z,None, "#, nebula", "nebula", "behav_nebula")
             nebula.blob.set("local_scale_x_coeff", random.uniform(1.0, 5.5))
             nebula.blob.set("local_scale_y_coeff", random.uniform(1.0, 5.5))

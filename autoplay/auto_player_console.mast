@@ -1,14 +1,14 @@
 #
 # This assure the settings are there
 #
-settings_add_defaults({"auto_play": {"enable": False}})
+settings_add_defaults({"AUTO_PLAY": {"enable": False}})
 
-//signal/show_game_results if SETTINGS["auto_play"]["enable"]
+//signal/show_game_results if SETTINGS["AUTO_PLAY"]["enable"]
     await delay_app(2)
     mission = get_mission_name()
     sbs.run_next_mission(mission)
 
-//signal/game_started if SETTINGS["auto_play"]["enable"]
+//signal/game_started if SETTINGS["AUTO_PLAY"]["enable"]
     await delay_sim(2)
     jump automated_player_ai
 
@@ -66,7 +66,7 @@ settings_add_defaults({"auto_play": {"enable": False}})
     camera_id = cambot_id
     cambot = to_object(cambot_id)
     if cambot_id is None or cambot is None:
-        cambot = to_object(player_spawn(0,0,0, "Colossus", "tsn,auto_play", "tsn_light_cruiser")) 
+        cambot = to_object(player_spawn(0,0,0, "Colossus", "tsn,AUTO_PLAY", "tsn_light_cruiser")) 
         camera_id = to_id(cambot)
         cambot_id = camera_id
         cambot.data_set.set("ally_list","tsn,raider",0)
@@ -173,7 +173,9 @@ settings_add_defaults({"auto_play": {"enable": False}})
         #
         if ln < 700 and has_roles(t, "tsn, station") and last_go_dock:
             ship.data_set.set("dock_base_id", to_id(t))
-            ship.data_set.set("dock_state", "dock_start",0)
+            state = ship.data_set.get("dock_state",0)
+            if state != "docked" and state != "dock_start":
+                ship.data_set.set("dock_state", "dock_start",0)
             ship.data_set.set("playerThrottle", 0,0)
             speed = 0
         elif ln < 700 and has_roles(t, "raider"):
@@ -281,79 +283,3 @@ jump automated_player_weapons_ai
     await delay_sim(10)
     jump automated_player_comms_ai
 
-/*
-//focus/science if has_roles(SCIENCE_ORIGIN_ID, "auto_play")
-set_science_selection(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
-await task_schedule(automated_player_move_camera)
-
-
-@console/autoplay "Auto Play" if SETTINGS["auto_play"]["enable"]
-" A Player ship driven by script
-#
-# Get side from selected ship
-#
-
-# Need Sci in the name for science selection
-gui_activate_console("autoplay_sci")
-
-_ship_id = sbs.get_ship_of_client(client_id) 
-faction_ship = to_object(_ship_id)
-
-singularity = get_inventory_value(client_id, "THE_SINGULARITY", None)
-if singularity is None:
-    #
-    # A sub task can go idle
-    #
-    singularity = await sub_task_schedule(automated_player_ai)
-    set_inventory_value(client_id, "THE_SINGULARITY", singularity)
-
-
-
-# Whole screen
-gui_section(style="area:0,45px,100,100;")
-# Left
-
-
-with gui_sub_section("col-width:35;"):
-    gui_row("row-height: 50;")
-    dl = gui_slider("low: 0; high:300.0;", style="col-width:20px;", var="dolly")
-    gui_layout_widget("3dview")
-    gui_row("row-height: 20px;")
-    ob = gui_slider("low: 10; high:360.0;", var="orbit")
-    gui_row()
-    props_lb = gui_list_box([],"row-height: 4em; background:#1572;", item_template=property_lb, title_template="Properties")
-    ~~props_lb.title_section_style += "background:#1578;"~~
-    set_inventory_value(client_id, "__PROPS_LB__", props_lb)
-
-# if either dolly or orbit changes
-on gui_message(ob): # + orbit:
-    set_inventory_value(client_id, "orbit", orbit)
-    await task_schedule(automated_player_move_camera)
-
-
-on gui_message(dl): # + orbit:
-    set_inventory_value(client_id, "dolly", dolly)
-    await task_schedule(automated_player_move_camera)
-
-
-# Middle
-with gui_sub_section():
-    gui_row()
-    #gui_layout_widget("science_2d_view")
-    gui_layout_widget("science_2d_view")
-    gui_row()
-    gui_layout_widget("comms_control")
-
-# Right
-with gui_sub_section("col-width:25;"):
-    gui_row("row-height:35;margin:0,0,0,10px;")
-    gui_layout_widget("science_data")
-    gui_row()
-    gui_layout_widget("science_sorted_list")
-    gui_row("row-height: 10;")
-    gui_layout_widget("text_waterfall")
-
-await task_schedule(automated_player_move_camera)
-
-await gui()
-*/

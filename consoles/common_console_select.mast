@@ -1,35 +1,37 @@
 import common_console_selection.py
 
+crew_name = ""
+
 route_change_console(on_change_console)
 
 ==== on_change_console
 
-    jump select_console if not game_ended
+    jump select_console if not GAME_ENDED
     ->END
 
 #
 # Expects shared data 
-#    player_list that has the list of player ships
-#    player_count the number of expected player ships
-#    game_started game state
+#    PLAYER_LIST that has the list of player ships
+#    PLAYER_COUNT the number of expected player ships
+#    GAME_STARTED game state
 #
 
 ========= client_main ==========
     consoles = gui_get_console_type_list()
     console_select_item = consoles[0]
-    console_select = consoles[0].path
+    CONSOLE_SELECT = consoles[0].path
 
 
     # Assuming Id is in creation order
-    player_list = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
-    player_list_all = player_list.copy()
+    PLAYER_LIST = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
+    player_list_all = PLAYER_LIST.copy()
 
 
     console_ready = False
     console_read_only = False
-    ship_name = player_list[0].name
+    ship_name = PLAYER_LIST[0].name
     client_select_ship = ship_name.lower()
-    ship_type = player_list[0].art_id
+    ship_type = PLAYER_LIST[0].art_id
     ship_type_def = ship_type
 
     shared ship_list = ""
@@ -64,7 +66,7 @@ route_change_console(on_change_console)
 
         for i in range(len(consoles)):
             continue if mode != consoles[i].path
-            console_select = consoles[i].path
+            CONSOLE_SELECT = consoles[i].path
             console_select_item = consoles[i]
             console_ready = True
             console_read_only = True
@@ -76,15 +78,15 @@ route_change_console(on_change_console)
         #mode = None
         #if len(modes)>=3:
         #    mode = modes[2]
-        #    # console_select = mode
+        #    # CONSOLE_SELECT = mode
         #    jump operator_admin_console if mode=='admin'
     elif previous_console is not None and len(previous_console) > 0:
         for i in range(len(consoles)):
             continue if previous_console != consoles[i].path
-            console_select = consoles[i].path
+            CONSOLE_SELECT = consoles[i].path
             console_select_item = consoles[i]
 
-    if auto_start and console_select_item:
+    if AUTO_START and console_select_item:
         jump(console_selected)
         
 
@@ -93,10 +95,10 @@ route_change_console(on_change_console)
 
 
 ========== select_console ==========
-    # default console_select = "helm"
+    # default CONSOLE_SELECT = "helm"
     # default client_select_ship = "artemis"
-    player_list = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
-    player_list_all = player_list.copy()
+    PLAYER_LIST = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
+    player_list_all = PLAYER_LIST.copy()
     #
 
     #
@@ -105,14 +107,14 @@ route_change_console(on_change_console)
     #
     default shared players_cleaned = False
     if players_cleaned:
-        player_count = len(player_list)
+        PLAYER_COUNT = len(PLAYER_LIST)
 
     # Clamp selected index
-    client_selected_index = min(int(player_count), client_selected_index )
+    client_selected_index = min(int(PLAYER_COUNT), client_selected_index )
 
 
-    ship_type_def = player_list[client_selected_index].art_id
-    ship_name = player_list[client_selected_index].name
+    ship_type_def = PLAYER_LIST[client_selected_index].art_id
+    ship_name = PLAYER_LIST[client_selected_index].name
     client_select_ship = ship_name.lower()
 
     #gui_activate_console("select_console")
@@ -123,7 +125,7 @@ route_change_console(on_change_console)
 
         _input = gui_input("desc:Ship Name", var="ship_name")
         on gui_message(_input):
-            player_list[client_selected_index].name = ship_name
+            PLAYER_LIST[client_selected_index].name = ship_name
             client_select_ship = ship_name
             #gui_update_shared("sh_ship_list", None)
 
@@ -142,14 +144,14 @@ route_change_console(on_change_console)
         spick = ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors)
         gui_content(spick, style="tag:sh_ship_picker", var="ship_type")
         on change ship_type:
-            player_list[client_selected_index].art_id = ship_type
+            PLAYER_LIST[client_selected_index].art_id = ship_type
             gui_update_shared("sh_ship_list", None)
 
-    if sbs.is_demo() or console_select_item.path != "helm" or game_started:
+    if sbs.is_demo() or console_select_item.path != "helm" or GAME_STARTED:
         gui_hide(ship_sec)
         gui_show(ship_sec_not)
         spick.read_only = True
-    elif console_select_item.path == "helm" and not game_started:
+    elif console_select_item.path == "helm" and not GAME_STARTED:
         gui_show(ship_sec_not)
         spick.read_only = False
         
@@ -159,7 +161,7 @@ route_change_console(on_change_console)
     # List of available ships
     # ship_sec2 = gui_region(style="area: 1,110px,500px,520px")
     gui_section( style="area: 10px,550px,500px,100-60px;")
-    ship_list = player_list_all[:player_count]
+    ship_list = player_list_all[:PLAYER_COUNT]
     ship_select_lb = gui_list_box(ship_list,"background:#1572;tag:sh_ship_list;", item_template=console_ship_select_template, title_template=console_ship_select_title_template, select=True)
     ship_select_lb.set_selected_index(client_selected_index)
 
@@ -182,7 +184,7 @@ route_change_console(on_change_console)
     # Ready state
     #
     gui_section( style="area: 80,100-60px, 99,100;row-height: 50px;")
-    if not game_started and not console_ready:
+    if not GAME_STARTED and not console_ready:
         gui_checkbox("ready", var="console_ready")
     else:
         on gui_message(gui_button("ready")):
@@ -193,12 +195,12 @@ route_change_console(on_change_console)
     gui_layout_widget("text_waterfall")
 
 
-    on change player_count:
-        client_selected_index = min(client_selected_index, int(player_count)-1)
+    on change PLAYER_COUNT:
+        client_selected_index = min(client_selected_index, int(PLAYER_COUNT)-1)
         # Just refresh if reduce ship count for now
-        # jump select_console if len(lb_ships.items)>player_count
+        # jump select_console if len(lb_ships.items)>PLAYER_COUNT
         # Otherwise can refresh faster if adding ships
-        ship_list = player_list_all[:player_count]
+        ship_list = player_list_all[:PLAYER_COUNT]
         ship_select_lb.items = ship_list
         ship_select_lb.set_selected_index(min(client_selected_index, len(ship_list)))
         gui_represent(ship_select_lb)
@@ -209,13 +211,13 @@ route_change_console(on_change_console)
         # Redo gui if change involves helm
         #
         console_select_item = console_select_lb.get_value()
-        console_select = console_select_item.path
-        if console_select_item.path == "helm" and not game_started:
+        CONSOLE_SELECT = console_select_item.path
+        if console_select_item.path == "helm" and not GAME_STARTED:
             gui_show(ship_sec)
             gui_hide(ship_sec_not)
             spick.read_only = False
             gui_represent(ship_sec2)
-        elif operator_mode_enabled and console_select_item.path == "admin":
+        elif OPERATOR_MODE_enabled and console_select_item.path == "admin":
             console_ready = True
             jump(console_select_item.label)
         else:
@@ -269,7 +271,7 @@ route_change_console(on_change_console)
     await delay_sim(1)
 
 ====== console_selected ====
-    if console_select is None or client_select_ship is None:
+    if CONSOLE_SELECT is None or client_select_ship is None:
         jump select_console
 
     _ship_id= None
@@ -305,24 +307,24 @@ route_change_console(on_change_console)
     # Make it so the console can be found if needed
     #
     #------------------------------------------------------------------------------------------------------------
-    sbs.set_beam_damages(client_id, 7.0, difficulty)
+    sbs.set_beam_damages(client_id, 7.0, DIFFICULTY)
     #------------------------------------------------------------------------------------------------------------
 
 
 
-    set_inventory_value(client_id, "CONSOLE_TYPE", console_select)
+    set_inventory_value(client_id, "CONSOLE_TYPE", CONSOLE_SELECT)
     # Remove any console roles
     for k in consoles:
         remove_role(client_id, k.path)
-    add_role(client_id, "console, {console_select}")
-
-    sbs.set_client_string(client_id, "console_previous", console_select)
+    add_role(client_id, f"console, {CONSOLE_SELECT}")
+    
+    sbs.set_client_string(client_id, "console_previous", CONSOLE_SELECT)
 
     sbs.set_client_string(client_id, "crew_name", crew_name)
     set_inventory_value(client_id, "CREW_NAME", crew_name)
 
     # Retrieve the item by string (because might have navigator here via tab)
-    console = gui_get_console_type(console_select)
+    console = gui_get_console_type(CONSOLE_SELECT)
     if console is not None:
         jump(console.label)
     else:
@@ -348,17 +350,17 @@ route_change_console(on_change_console)
 
 ======= console_force_mode
 
-    jump game_started_console if game_started
+    jump game_started_console if GAME_STARTED
 
     # "media/helm/consoles0001"
-    _images = console_get_images(console_select)
+    _images = console_get_images(CONSOLE_SELECT)
     _image = 0
 
 
 --- loop
     gui_section( style=f"area: 0, 76, 100, 100;")
     """
-    $t Console assigned to {console_select}
+    $t Console assigned to {CONSOLE_SELECT}
 
     $t on ship {client_select_ship}
     """

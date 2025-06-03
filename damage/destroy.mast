@@ -16,7 +16,7 @@
 
 
 
-//damage/killed if has_role(DAMAGE_ORIGIN_ID, "raider")
+//damage/killed if has_role(DAMAGE_SELECTED_ID, "raider")
     #
     # Don't spawn a wreck in a black hole
     #
@@ -26,18 +26,18 @@
     # grab a few things from it: the x/y/z position, and the side value, so we can determine later what type of 
     # upgrade it might drop. 
 
-    ->END if DAMAGE_ORIGIN_ID == 0
-    dest_obj = to_object(DAMAGE_ORIGIN_ID)
+    ->END if DAMAGE_SELECTED_ID == 0
+    dest_obj = to_object(DAMAGE_SELECTED_ID)
     ->END if dest_obj is None
     
     dest_side = dest_obj.side
     dest_key = dest_obj.art_id
 
-    dest_eobj = to_engine_object(DAMAGE_ORIGIN_ID)
+    dest_eobj = to_engine_object(DAMAGE_SELECTED_ID)
     dest_posx = int(dest_eobj.pos.x)
     dest_posy = int(dest_eobj.pos.y)
     dest_posz = int(dest_eobj.pos.z)
-    dest_data = get_ship_data_for(dest_key)
+    dest_data = ship_data_get_ship_data_for(dest_key)
     
     dest_hull = None
     if dest_data is not None:
@@ -81,3 +81,9 @@
     wr_hull = get_inventory_value(wr.id, "hull_type", 0)
 
     ->END
+
+//damage/internal if has_role(DAMAGE_ORIGIN_ID, "__player__") and EVENT.sub_tag == "maelstrom"
+    explode_player_ship(DAMAGE_ORIGIN_ID)
+
+
+#

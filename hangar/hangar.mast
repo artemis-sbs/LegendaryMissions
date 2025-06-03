@@ -24,7 +24,7 @@ default HANGAR_CONSOLE_ENABLED = True
     # await delay_sim(2)
     #
 ---- wait_for_game_started ---
-    #if not game_started:
+    #if not GAME_STARTED:
     await delay_sim(1)
     #    jump wait_for_game_started
 
@@ -67,7 +67,7 @@ default HANGAR_CONSOLE_ENABLED = True
 
 
 
-@console/hangar "Flight Hangar" if HANGAR_CONSOLE_ENABLED
+@console/hangar !0 ^50 "Flight Hangar" if HANGAR_CONSOLE_ENABLED
     " Fly fighter- shuttle and cargo missions
     jump show_hangar # This could be replaced with a new command gui_navigate("//console/hangar")
 
@@ -266,10 +266,22 @@ default HANGAR_CONSOLE_ENABLED = True
         home_id = get_dedicated_link(ride_select, "home_dock")
         hangar_objective_started(ride_select, home_id, mission_objective)
 
-
     gui_console("cockpit")
 
     await gui()
+
+
+//gui/cockpit
+    # Left
+    gui_section(style="area:0,45px,100,100;")
+    default tab = 1
+
+    with gui_sub_section("col-width:280px;"):
+        gui_row("row-height: 400px;")
+        gui_info_panel(tab=tab)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None)
+        # gui_row("row-height: 100px;")
+        # gui_layout_widget("text_waterfall")
 
 
 

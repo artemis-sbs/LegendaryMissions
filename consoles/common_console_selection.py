@@ -37,7 +37,7 @@ import glob
 def console_get_images(console):
     # "media/helm/consoles0001"
     d = fs.get_mission_dir()
-    cd = f"{d}/media/{console}"
+    cd = f"{d}/media/LegendaryMissions/{console}"
 
     if not os.path.isdir(cd):
         return []
@@ -48,3 +48,30 @@ def console_get_images(console):
         files[i] = os.path.splitext(files[i])[0]
     return files
     
+from sbs_utils.procedural.gui import gui_task_for_client, gui_panel_widget_hide, gui_panel_widget_show
+def console_comms_swap_panels_from_water(cid,left,top,width,height):
+    console_comms_swap_panels(cid,left,top,width,height, True)
+def console_comms_swap_panels_from_2d(cid,left,top,width,height):
+    console_comms_swap_panels(cid,left,top,width,height, False)
+
+def console_comms_swap_panels(cid,left,top,width,height, water):
+    task = gui_task_for_client(cid)
+    if task is None:
+        return
+    
+    view2d = task.get_variable("view2d_widget_control")
+    if view2d is None:
+        return
+    
+    vb = view2d.bounds 
+
+    if not water:
+        gui_panel_widget_show(cid, vb.left,vb.top,vb.width, vb.height, "comms_waterfall")
+        gui_panel_widget_show(cid, left,top,width, height, "2dview")
+    else:
+        gui_panel_widget_show(cid, vb.left,vb.top,vb.width, vb.height, "2dview")
+        gui_panel_widget_show(cid, left,top,width, height, "comms_waterfall")
+    
+
+
+

@@ -1,0 +1,39 @@
+
+=== prefab_typhon_classic
+metadata: ```
+type: prefab/monster
+brain:
+    - ai_stay_close
+    - label: ai_chase_npc
+      data:
+        SIZE_X: 10000
+        throttle: 2.6
+    - label: ai_chase_player
+      data:
+        SIZE_X: 10000
+        throttle: 3.6
+    - label: ai_chase_station
+      data:
+        SIZE_X: 10000
+        throttle: 1.6
+```
+    monster = npc_spawn(START_X,START_Y,START_Z,"ZZ", "monster,typhon,classic", "-", "behav_typhon")
+    monster.engine_object.exclusion_radius = 200
+
+    monster.blob.set("body_1_color", "purple", 0)
+    monster.blob.set("body_2_color", "purple", 0)
+    monster.blob.set("body_1_diffuse_bitmap_file", "drone_diffuse", 0)
+    monster.blob.set("body_2_diffuse_bitmap_file", "drone_diffuse", 0)
+
+    monster.blob.set("particle_color_1", "purple", 0)
+    monster.blob.set("particle_color_2", "purple", 0)
+    monster.blob.set("particle_color_3", "purple", 0)
+    monster.blob.set("beamColor", "yellow",0)
+    clear_target(monster.id)
+
+    # Add the brain 
+    brain_add(monster, brain)
+    yield result to_id(monster)
+
+
+

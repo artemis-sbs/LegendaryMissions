@@ -1,22 +1,16 @@
-from sbs_utils.objects import Npc
 from sbs_utils.agent import Agent, get_story_id
 from sbs_utils.mast.label import label
-from sbs_utils.tickdispatcher import TickDispatcher
-from sbs_utils.procedural.execution import task_schedule, jump, AWAIT, get_variable
-from sbs_utils.procedural.timers import delay_sim, is_timer_set_and_finished, is_timer_finished, set_timer, is_timer_set, clear_timer
+from sbs_utils.procedural.execution import task_schedule, jump, AWAIT
+from sbs_utils.procedural.timers import delay_sim, is_timer_finished, set_timer, is_timer_set, clear_timer
 from sbs_utils.procedural.query import to_object, to_id, object_exists, to_object_list, get_side
 from sbs_utils.procedural.space_objects import target, closest, broad_test_around, target_pos
-from sbs_utils.procedural.roles import role, all_roles, get_race, add_role, remove_role
-from sbs_utils.procedural.science import science_set_scan_data
+from sbs_utils.procedural.roles import role, all_roles, add_role, remove_role
 from sbs_utils.procedural.spawn import npc_spawn
-from sbs_utils.procedural.links import get_dedicated_link, set_dedicated_link, unlink, link
+from sbs_utils.procedural.links import get_dedicated_link, set_dedicated_link
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
-from sbs_utils import faces
-from sbs_utils.scatter import sphere
 from sbs_utils.vec import Vec3
 
 
-from enum import IntEnum
 import random
 
 import sbs
@@ -36,15 +30,15 @@ class NpcCAG(Agent):
 
     #--------------------------------------------------------------------------------------
     def get_fighter_key(self, carrier_race):
-        race = ""
-        r_type = carrier_race
-        race = r_type.split("_")
-        race = race[0]
-        if race=="xim":
-            race = "ximni"
+        # TODO: This is not good enough for modding
+        if carrier_race is None:
+            return "arvonian_fighter"
+        
+        if carrier_race=="xim":
+            carrier_race = "ximni"
 
 
-        match race:
+        match carrier_race:
             case "tsn":
                 return "tsn_fighter"
             case "pirate":
@@ -80,8 +74,9 @@ class NpcCAG(Agent):
             blob = e.data_set
             fighter_count = blob.get("bay_count",0)
             fighter_count = get_inventory_value(e, "fighters_in_bay", fighter_count)
-            fighter_key = self.get_fighter_key(get_race(e))
+            fighter_key = self.get_fighter_key(e.race)
             start_pos = e.pos
+            carrier_side = e.side
 
 
             # set up the refit timer for this carrier
@@ -105,14 +100,14 @@ class NpcCAG(Agent):
                         self.remove_link("inactive_fighter_list", f)
                         craft = to_object(f)
                         sbs.retrieve_from_standby_list(craft.engine_object)
-                        add_role(f, "raider")
+                        add_role(f, carrier_side)
                         set_timer(f, "bingo", seconds=120)
                         target(f, target_id)
                 else:
                     for g in range(fighter_count):
                         # launch an npc fighter
                         nam = f"{e.name} {str(random.randint(0,99)).zfill(2)}"
-                        spawn_data = npc_spawn(start_pos.x, start_pos.y, start_pos.z, nam, "raider,fighter", fighter_key, "behav_npcship")
+                        spawn_data = npc_spawn(start_pos.x, start_pos.y, start_pos.z, nam, f"{carrier_side}, fighter", fighter_key, "behav_npcship")
                         spawn_id = to_id(spawn_data)
                         # link them to me
                         self.add_link("active_fighter_list", spawn_id)

@@ -2,7 +2,7 @@
 shared _surrender_return = task_schedule(take_surrendered_home)
 
 
-//comms if has_role(COMMS_SELECTED_ID, "raider")
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) 
 
     yield fail if has_role(COMMS_SELECTED_ID, "never_surrender")
     yield fail if has_role(COMMS_SELECTED_ID, "surrendered")
@@ -36,6 +36,7 @@ shared _surrender_return = task_schedule(take_surrendered_home)
 
     sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
     shield_count = blob.get("shield_count", 0)
+    ->END if shield_count is None
     s_ratio = 100
     for s in range(shield_count):
         s_max = blob.get("shield_max_val", s )

@@ -1,0 +1,9 @@
+# //enable/comms if has_roles(COMMS_ORIGIN_ID, 'admiral')
+
+
+# //comms if has_roles(COMMS_ORIGIN_ID, 'admiral')
+#     + "Play audio":
+#         #file = get_mission_audio_file("media/my_explosion")
+#         sbs.play_audio_file(0, "big_explosion", 1.0, 1.0) 
+
+    

@@ -1,0 +1,58 @@
+import brain_scan.py
+brain_scan_tick = 0
+brain_scan_task = None
+brain_to_watch = None
+
+//gui/tab/brain if is_dev_build()
+    jump brain_screen
+
+=== brain_scan_update
+    await delay_sim(5)
+    still_active = sbs.get_type_of_client(client_id)
+    jump brain_scan_update if still_active != "brain_sci"
+
+    await sub_task_schedule(brain_scan_update_text)
+    jump brain_scan_update
+
+=== brain_scan_update_text
+    obj = to_object(brain_to_watch)
+    ->END if obj is None
+    
+    _text = brain_scan_get_text(obj)
+    brain_text.value = _text
+    gui_represent(brain_text)
+    ->END
+
+
+=== brain_screen
+    if brain_scan_task is None:
+        sub_task_schedule(brain_scan_update)
+    
+
+    gui_activate_console("brain_sci")
+
+    # Whole screen
+    gui_section(style="area:0,45px,100,100;")
+
+    with gui_sub_section("col-width:75;"):
+        #   with t:
+        gui_row("row-height:35;margin:0,0,0,10px;")
+        brain_text = gui_text("Under construction")
+
+    has_brain = to_object_list(has_inventory("__BRAIN__"))
+
+    # Left
+    with gui_sub_section("col-width:25;"):
+        gui_row()
+        obj_list = gui_list_box(has_brain,"row-height: 0.1em; background:#1572;", item_template=brain_scan_selection_item, title_template=brain_scan_selection_title, select=True)
+    
+    obj_list.title_section_style += "background:#1578;"
+    on change obj_list.get_value():
+        brain_to_watch = to_id(obj_list.get_value())
+        await sub_task_schedule(brain_scan_update_text)
+
+    on change len(has_inventory("__BRAIN__")):
+        jump brain_screen
+
+
+    await gui()

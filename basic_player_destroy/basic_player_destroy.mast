@@ -1,0 +1,92 @@
+default shared SETTINGS = settings_get_defaults()
+shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
+
+# This handles when a player ships is destroyed
+# The default is to is to truly delete it
+# 
+#
+//shared/signal/player_ship_destroyed if not PLAYER_SHIP_RESPAWN
+
+    yield success if get_shared_inventory_value("GAME_ENDED", False)
+
+    so = to_object(DESTROYED_ID)
+    if so is not None:
+        <all>
+        % {so.name} has perished
+        % {so.name} has blown up
+        % lost contact with {so.name} 
+
+    # await delay_sim(1)
+
+    so = to_object(DESTROYED_ID)
+    if so is not None:
+        sbs.delete_object(DESTROYED_ID)
+
+    await delay_sim(1)
+
+    players = role('__player__')
+    if len(players)==0:
+        START_TEXT = "Mission is lost!  All the player ships have been destroyed."
+        GAME_STARTED = False
+        GAME_ENDED = True
+        sbs.play_music_file(0, "music/default/failure")
+        signal_emit("show_game_results", None)
+        ->END
+
+
+//shared/signal/player_ship_destroyed if PLAYER_SHIP_RESPAWN
+    await delay_sim(2)
+    so = to_object(DESTROYED_ID)
+
+    yield success if get_shared_inventory_value("GAME_ENDED", False)
+    yield fail if so is None
+
+    respawn_player_ship(DESTROYED_ID)
+    grid_rebuild_grid_objects(DESTROYED_ID)
+
+
+
+
+#
+# This gives GUIs a chance to for clients to 
+# Redirect
+#
+#
+//signal/player_ship_destroyed
+
+    ship_id = sbs.get_ship_of_client(client_id)
+    yield success if ship_id == 0 or ship_id != DESTROYED_ID
+    yield success if PLAYER_SHIP_RESPAWN
+
+    jump reassign_to_main if has_role(client_id, "mainscreen")
+
+    jump reassign_to_main if client_id == 0
+    jump reassign_to_hangar if has_role(DESTROYED_ID,"cockpit")
+
+    players = to_object_list(role("__player__") - role("exploded"))
+
+    jump reassign_to_console_select if len(players)>0
+
+    jump reassign_to_hangar if False
+
+
+---- reassign_to_hangar
+
+    gui_reroute_client(client_id, "show_hangar")
+    yield success
+
+--- reassign_to_console_select
+    gui_reroute_client(client_id, "select_console")
+    yield success
+
+--- reassign_to_main
+    #
+    # Get a list of valid ships
+    #
+    players = to_object_list(role("__player__") - role("exploded"))
+    yield success if len(players)==0
+
+    player = random.choice(players)
+    if player is not None:
+        sbs.assign_client_to_ship(client_id, player.id)
+    yield success

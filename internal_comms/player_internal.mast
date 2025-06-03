@@ -1,7 +1,15 @@
+default shared SIMPLE_INTERNAL = True
+<var flash_message>
+    % Hello, World
+    % Goto to the light
+    % What's doug got to do with it
+    % Yesterday you said tomorrow
+
+
 //enable/comms if has_roles(COMMS_SELECTED_ID, '__PLAYER__')
 
 
-//comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
+//comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__')) and SIMPLE_INTERNAL
 
 default sickbay_face = random_terran()
 =$sickbay blue,white,sickbay_face
@@ -18,22 +26,68 @@ default counselor_face = random_terran()
 +[$counselor]"Counselor" //comms/internal/counselor 
     
 
-//comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-+"Back" //comms
+=== test_info_button
+    face = __MESSAGE__.get("face")
+    gui_info_panel_send_message(gui_client_id(), "Thanks for pushing that button", history=False, face=face, time=3)
+    ->END
 
-+"Status":
-    <<[$sickbay] "Sickbay status"
-        % No serious injuries currently 
-        % Sickbay is ready when needed
-        % 
+=== test_info_button_cancel
+    face = __MESSAGE__.get("face")
+    gui_info_panel_send_message(gui_client_id(), "Sorry you didn't acknowledge", history=False, face=face, time=3)
+    ->END
+
+
+//comms/flash_message_test
+
+
+    
+    + "Server":
+        face = random_face()
+        gui_info_panel_send_message(0, str(flash_message), face=face, time=3)
+    + "All":
+        face = random_face()
+        # message would normally keep returning random
+        # Because is an object
+        # by calling str() it makes it a string
+        all_message = str(flash_message)
+        for gui in role("__gui__"):
+            gui_info_panel_send_message(gui, all_message, face=face, time=3)
+    + "This console":
+        face = random_face()
+        gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, icon_index=78+random.randint(2,6), time=3)
+    + "This console with button":
+        face = random_face()
+        buns = [("Acknowledge", test_info_button), ("Cancel", test_info_button_cancel)]
+        gui_info_panel_send_message(gui_client_id(), str(flash_message), banner="Incoming", title="You have a View screen message", title_color="pink", face=face, button=buns, history=True, time=0)
+    + "This console no flash":
+        face = random_face()
+        gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, time=0)
+    + "This console objective":
+        face = random_face()
+        gui_info_panel_send_message(gui_client_id(), "Some objective complete", path="objective", title="You finished something", title_color="cyan", banner="Complete", banner_color="green", time=3)
+    + "This console Waterfall":
+        <var chatter>
+            % Some text
+            % Oh this is so random
+            % Pretty cool
+        comms_broadcast(gui_client_id(), str(chatter))
+
+//comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
+    + !1 ^1 "Back" //comms
+    + "Flash message" //comms/flash_message_test if is_dev_build()
+    
+    + "Status":
+        <<[$sickbay] "Sickbay status"
+            % No serious injuries currently 
+            % Sickbay is ready when needed
 
 //comms/internal/security if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-+"Back" //comms
-+"Status":
-    <<[$security] "Security update"
-        % All secure
-        % All quiet on the port bow
-        % Times like this boring is good
+    + "Back" //comms
+    + "Status":
+        <<[$security] "Security update"
+            % All secure
+            % All quiet on the port bow
+            % Times like this boring is good
 
 //comms/internal/exobiology if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
 +"Back" //comms
@@ -83,4 +137,27 @@ pathogen_test = None
 ->END
 
 
+//comms/
+    comms_badges = role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")
+    yield fail if len(comms_badges)==0
+    + "Hail Comms Badge" //comms/comms_badge
 
+#
+# Handle Comms comms badges
+#
+//comms/comms_badge if has_roles(COMMS_ORIGIN_ID, "__player__")
+
+    comms_badges = role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")
+    yield fail if len(comms_badges)==0
+
+    #
+    # Lifeforms or grid objects can have a comms badge
+    # 
+    ### TODO: Need a way toe specify styles
+    for lifeform_id in comms_badges:
+        lifeform = to_object(lifeform_id)
+        continue if lifeform is None
+        + "{lifeform.name}" {"LIFEFORM_ID": lifeform_id}:
+            lifeform = to_object(LIFEFORM_ID)
+            yield fail if lifeform is None
+            comms_navigate(lifeform.path)

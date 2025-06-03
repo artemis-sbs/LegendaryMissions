@@ -41,7 +41,7 @@ def mock_sbs_runtime(file):
     from sbs_utils.agent import Agent
     from sbs_utils.handlerhooks import cosmos_event_handler
 
-    sim = sbs.simulation()
+    sim = sbs.create_new_sim()
 
     Agent.SHARED.set_inventory_value("sim", sim)
     ctx = Context(sim, sbs, FakeEvent())

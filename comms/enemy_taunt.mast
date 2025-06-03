@@ -1,36 +1,31 @@
 #
 # Load taunt data from the json file which contains the current taunts.
 #
-shared taunt_data = load_json_data(get_mission_dir_filename("taunts.json"))
-
-
-
-
-
-//enable/comms if has_role(COMMS_SELECTED_ID, "Raider")
-
-
-//spawn if has_role(SPAWNED_ID, "raider")
-yield fail if taunt_data is None
-#
-# Select 3 taunts
-#
-race = get_race(SPAWNED_ID)
-if race is None:
-    print(f"spawn, raider invalid race {race}")
-    ->END
-
-race_taunts = taunt_data.get(race)
-if race_taunts is not None:
-    this_taunt_data = random.sample(race_taunts, 3)
-    set_inventory_value(SPAWNED_ID, "taunt_data", this_taunt_data)
-    set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
-   
+shared taunt_data = load_json_string(media_read_relative_file("taunts.json"))
 
 
 =$raider red,white
 
-//comms if has_roles(COMMS_SELECTED_ID, 'raider') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
+
+//spawn has_roles(SPAWNED_ID, "ship")
+if taunt_data is not None:
+    #
+    # Select 3 taunts
+    #
+    race = get_race(SPAWNED_ID)
+    if race is None:
+        print(f"spawn, raider invalid race {race}")
+
+    race_taunts = taunt_data.get(race)
+    if race_taunts is not None:
+        this_taunt_data = random.sample(race_taunts, 3)
+        set_inventory_value(SPAWNED_ID, "taunt_data", this_taunt_data)
+        set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
+
+
+
+
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Hail":
     if has_roles(COMMS_SELECTED_ID, 'kralien'):
         <<[$raider] "Hail"
@@ -108,7 +103,7 @@ if race_taunts is not None:
         <<[$raider] "Hail"
             % Go away, {COMMS_ORIGIN.name}! You talk too much!
 
-//comms if has_roles(COMMS_SELECTED_ID, 'raider') and not has_roles(COMMS_SELECTED_ID, 'surrendered')
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Taunt"  handle_comms_taunt_raider_top
 
 

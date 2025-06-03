@@ -118,8 +118,8 @@ The main label runs for the server and each client. However, the assignment of s
 
         ``` mast
         # Shared by server and all clients
-        shared difficulty=5
-        shared player_count = 1
+        shared DIFFICULTY=5
+        shared PLAYER_COUNT = 1
         # Unique for each client + server
         user_name = "Player"
         console_name = "helm"

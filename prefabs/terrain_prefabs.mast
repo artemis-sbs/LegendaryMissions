@@ -1,0 +1,75 @@
+=== prefab_terrain_asteroid_box
+metadata: ``` yaml
+display_text: Asteroid box
+```
+    default density_scale = terrain_to_value(TERRAIN_SELECT)
+    default selectable = False
+    terrain_spawn_asteroid_box(START_X, START_Y, START_Z, SIZE_X, SIZE_Z, density_scale=density_scale, selectable=selectable)
+    ->END
+
+
+=== prefab_terrain_asteroid_polyline
+metadata: ``` yaml
+display_text: Asteroid sphere
+density_scale: 1
+```
+    default points = [] # defines if it doesn't exist
+    default density_scale = 0
+    if density_scale == 0 or density_scale is None:
+        terrain_value = terrain_to_value(TERRAIN_SELECT)
+        density_scale=terrain_value
+    terrain_spawn_asteroid_points(START_X, START_Y, START_Z, points, SIZE_X, density_scale)
+    ->END
+
+
+=== prefab_terrain_asteroid_sphere
+metadata: ``` yaml
+display_text: Asteroid sphere
+```
+    default density_scale =  terrain_to_value(TERRAIN_SELECT)
+    terrain_spawn_asteroid_sphere(START_X, START_Y, START_Z, SIZE_X//2, density_scale=density_scale )
+    ->END
+
+
+
+=== prefab_terrain_nebula_box
+metadata: ``` yaml
+display_text: Nebula box
+```
+    default cluster_color = None
+    default density_scale = terrain_to_value(TERRAIN_SELECT)
+    terrain_spawn_nebula_box(START_X, START_Y, START_Z, SIZE_X, SIZE_Z, density_scale=density_scale , cluster_color=cluster_color )
+    ->END
+
+=== prefab_terrain_nebula_sphere
+metadata: ``` yaml
+display_text: Nebula sphere
+```
+    default cluster_color = None
+    default density_scale  = terrain_to_value(TERRAIN_SELECT)
+    terrain_spawn_nebula_sphere(START_X, START_Y, START_Z, SIZE_X//2, density_scale=density_scale, cluster_color=cluster_color)
+    ->END
+
+
+=== prefab_planetoid
+metadata: ``` yaml
+display_text: Nebula sphere
+```
+    co = terrain_spawn(START_X, START_Y, START_Z, None, "#,gasgiant", "planet", "behav_planet")
+    co.engine_object.exclusion_radius = 400
+    ->END
+
+
+
+==== prefab_black_hole
+metadata: ```
+type: prefab/black_hole
+display_text: Black Hole
+``` 
+    default gravity_radius = 5000
+    default gravity_strength = 4.0
+    default turbulence_strength = 2.0
+    default collision_damage=200
+
+    bh = terrain_spawn_black_hole(START_X,START_Y,START_Z, gravity_radius, gravity_strength, turbulence_strength, collision_damage)
+    yield result bh.id

@@ -1,0 +1,32 @@
+name: Feature Request
+description: Request a new feature.
+title: "[feature]: "
+labels: ["enhancement", "triage"]
+# /3 is LegendaryMissions
+# /2 is Artemis Cosmos i.e. Engine
+# /7 is SBS Library
+projects: ["artemis-sbs/3"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest something new!
+  - type: dropdown
+    id: version
+    attributes:
+      label: What version of Artemis Cosmos would you like enhanced?
+      options:
+        - v1.0.6
+        - v1.0.1
+    validations:
+      required: true
+  - type: textarea
+    id: what-feature
+    attributes:
+      label: What feature would you like to see?
+      description: Dream big, but we can't promise every idea can me accomplished?
+      placeholder: Tell us your dream!
+      value: "It would be really cool if...!"
+    validations:
+      required: true
+

@@ -1,0 +1,357 @@
+default gamemaster_face = random_terran()
+=$gamemaster #0E0,white,gamemaster_face
+
+
+//enable/comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+
+
+//comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +[$gamemaster]"Spawn" //comms/gamemaster/spawn
+    +[$gamemaster]"Selected" //comms/gamemaster/selected
+    +[$gamemaster]"Area" //comms/gamemaster/area
+    +[$gamemaster]"Commands" //comms/gamemaster/commands
+
+
+//comms/gamemaster/spawn if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +[$gamemaster]"Back" //comms
+    +[$gamemaster]"Enemy" //comms/gamemaster/spawn/ship
+    +[$gamemaster]"Friendly" //comms/gamemaster/spawn/friend
+    +[$gamemaster]"Station" //comms/gamemaster/spawn/station
+    +[$gamemaster]"Terrain" //comms/gamemaster/spawn/terrain
+    +[$gamemaster]"Player" //comms/gamemaster/spawn/player
+
+
+
+//comms/gamemaster/spawn/terrain if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +[$gamemaster]"Back" //comms
+    +[$gamemaster]"Asteroids":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"GAMEMASTER_lmb_SIZE", 5000)
+        # This should be a property setting
+        map_asteroid_scatter(9, 21, *pos, size, 1000, size)
+    +[$gamemaster]"Nebulas":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"GAMEMASTER_lmb_SIZE", 5000)
+        # This should be a property setting
+        map_nebula_scatter(4, 12, *pos, size, 1000, size)
+    +[$gamemaster]"Black hole":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        pos.x = pos.x + 100
+        terrain_spawn_black_hole(*pos.xyz)
+    +[$gamemaster]"Monster":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        pos.x = pos.x + 100
+        prefab_spawn("prefab_typhon_classic", None, *pos.xyz)
+
+    +[$gamemaster]"Minefield":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"GAMEMASTER_lmb_SIZE", 5000)
+        map_mine_scatter(4, 10, *pos, size, 1000, size)
+    
+
+
+//comms/gamemaster/spawn/station if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    station_data = ship_data_filter_ship_data_by_side(None, None, "station", False)
+
+    +[$gamemaster]"Back" //comms
+
+    for station in station_data:
+        side = station.get("side", "tsn")
+        side_roles = side
+        if side.strip().lower() == "usfp":
+            side_roles = "tsn, usfp"
+            side = "tsn"
+
+        roles =  side_roles +"," + station.get("roles", "station")
+        +[$gamemaster]"{station['name']}" {"station_type": station["key"], "roles": roles}:
+            pos = Vec3(COMMS_ORIGIN.pos)
+            num = get_shared_variable("next_station", 20)
+            set_shared_variable("next_station", num+ 1)
+            stations_friendly = to_id(npc_spawn(*pos, f"DS {num}", roles, station_type, "behav_station"))
+            link(COMMS_ORIGIN_ID,"extra_scan_source" ,stations_friendly)
+            for p in role("__player__") & role(side):
+                link(p,"extra_scan_source" ,stations_friendly)
+
+
+
+//comms/gamemaster/spawn/friend if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +[$gamemaster]"Back" //comms
+    +[$gamemaster]"Defender":
+        spawn_pos = Vec3(COMMS_ORIGIN.pos)
+        data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z}
+        prefab_spawn(prefab_npc_defender, data)
+
+
+    +[$gamemaster]"Civilian":
+        side = "civ"
+        prefabs = [prefab_npc_civilian_cargo, prefab_npc_civilian_science, prefab_npc_civilian_luxury_liner, prefab_npc_civilian_transport]
+        prefab = random.choice(prefabs)
+        spawn_pos = Vec3(COMMS_ORIGIN.pos)
+        data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z}
+        prefab_spawn(prefab, data)
+
+
+
+
+//comms/gamemaster/spawn/ship if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    races = ["Arvonian", "Kralien", "Torgoth","Skaraan","Ximni", "Pirate" ]
+    +[$gamemaster]"Back" //comms
+    
+    for race in races:
+        +[$gamemaster]"{race}" {"race": race.lower()}:
+            pos = Vec3(COMMS_ORIGIN.pos)
+            fleet_diff = get_shared_variable("DIFFICULTY", 4)
+            prefab_spawn(prefab_fleet_raider, {"race": race, "fleet_difficulty": fleet_diff,"START_X": pos.x, "START_Y": pos.y, "START_Z": pos.z})
+
+//comms/gamemaster/spawn/player if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +[$gamemaster]"Back" //comms
+
+    valid = map(lambda s: ship_data_get_ship_data_for(s),get_shared_variable("valid_interiors") )
+    valid = sorted(valid, key=lambda s: s.get("side",""))
+
+    names = ~~["Exarch",
+    "Pyrrhus",
+    "Devastator",
+    "Celina",
+    "Pegasus",
+    "Blossom",
+    "Commissioner",
+    "Dark",
+    "Avius",
+    "Pathfinder",
+    "Courage",
+    "Untouchable",
+    "Invictus",
+    "Amanda",
+    "Cromwell",
+    "Mace",
+    "Victory",
+    "Ingenuity",
+    "Saragossa",
+    ]~~
+    for ship_data in valid:
+        
+        continue if ship_data is None
+        continue if "ship" not in ship_data.get("roles", "")
+        ship = ship_data.get("key", None)
+        continue if ship is None
+
+
+        side = ship_data.get("side", "tsn")
+        model = ship_data.get("name", "ship")
+        
+        name = random.choice(names)
+        art_id = ship
+
+        +[$gamemaster]"{side} {model}" {"side": side.lower(), "art_id": art_id, "name": name}:
+            pos = Vec3(COMMS_ORIGIN.pos)
+            player_ship = to_id(player_spawn(*pos, name, side, art_id))
+            set_face(player_ship, random_face(side))
+
+            stations_friendly = role(side)  & (role("station")|role("defender"))
+            link(player_ship,"extra_scan_source" ,stations_friendly)
+            
+
+
+//comms/gamemaster/selected if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +[$gamemaster]"Back" //comms
+    +[$gamemaster]"Set attribute" //comms/gamemaster/selected/set
+    +[$gamemaster]"Delete":
+        _other = COMMS_SELECTED_ID
+        if _other and COMMS_ORIGIN_ID != _other:
+            sbs.delete_object(_other)
+    +[$gamemaster]"Damage" //comms/gamemaster/selected/damage
+    +[$gamemaster]"Move to Orders area":
+        pos = gamemaster_get_pos(COMMS_ORIGIN_ID, "rmb")
+        _other = COMMS_SELECTED_ID
+        if COMMS_ORIGIN_ID != _other:
+            _other = to_object(_other)
+            if _other is not None:
+                _other.pos = pos
+
+//comms/gamemaster/selected/set if has_roles(COMMS_ORIGIN_ID, 'gamemaster') 
+    +[$gamemaster]"Back" //comms
+
+//comms/gamemaster/selected/set if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and has_role(get_science_selection(COMMS_ORIGIN),"__player__")
+    +[$gamemaster]"Fuel" //comms/gamemaster/selected/set/fuel
+
+//comms/gamemaster/selected/damage if has_roles(COMMS_ORIGIN_ID, 'gamemaster') 
+    +[$gamemaster]"Back" //comms
+
+//comms/gamemaster/selected/damage if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and has_role(get_science_selection(COMMS_ORIGIN),"__player__")
+    _systems =  ["Beam", "torpedo","Impulse", "Warp", "Jump", "Maneuver",  "front shield", "rear shield"]
+    _roles = ["beam", "torpedo", "impulse", "warp","jump", "maneuver", "fwd", "aft"]
+    did = get_science_selection(COMMS_ORIGIN)
+    i = 0
+    for a in _systems:
+        +[$gamemaster]"{a}" {"did":did, "_roles":_roles[i]}:
+            grid_damage_system(did, _roles)
+        i+=1
+
+
+
+
+
+//comms/gamemaster/selected if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+
+//comms/gamemaster/selected/set/fuel if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +^1 [$gamemaster] "Back" //comms
+    +[$gamemaster]"Add Fuel":
+        _other = COMMS_SELECTED_ID
+        if _other and COMMS_ORIGIN_ID != _other:
+            _blob = to_blob(_other)
+            if _blob is not None:
+                energy = _blob.get("energy",0)
+                _blob.set("energy", energy+20)
+    +[$gamemaster]"Remove Fuel":
+        _other = COMMS_SELECTED_ID
+        if _other and COMMS_ORIGIN_ID != _other:
+            _blob = to_blob(_other)
+            if _blob is not None:
+                energy = _blob.get("energy",0)
+                _blob.set("energy", energy-20)
+
+
+//comms/gamemaster/area if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +^1 [$gamemaster] "Back" //comms
+    +[$gamemaster]"Change gamemaster size" //comms/gamemaster/area/size
+    +[$gamemaster]"Delete" //comms/gamemaster/area/delete
+    +[$gamemaster]"Move to orders area" //comms/gamemaster/area/move
+
+//comms/gamemaster/area/size if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    ## PROPS
+    #gui_int_slider("$text:int;low: 1.0;high:8.0",  var="PLAYER_COUNT")
+    #props_lb = get_inventory_value(client_id, "__PROPS_LB__")
+    #if props_lb:
+    #    p = [{"label": "Admiral size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"},{"label": "Order size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"}]
+    #    props_lb.items = p
+    #    gui_represent(props_lb)
+
+    # gui_activate_properties([{"label": "Admiral size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"},{"label": "Order size", "control": "gui_slider", "props": "low: 2000.0;high:25000.0;"}])
+
+    # Back would clear properties
+    +^1[$gamemaster] "Back" //comms/gamemaster/area
+    +[$gamemaster]"Grow":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, 1000, "Game Master", "lmb", "#040")
+    +[$gamemaster]"Shrink":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, -1000, "Game Master", "lmb", "#040")
+    +[$gamemaster]"Reset":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
+
+
+//comms/gamemaster/area/move if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +^1 [$gamemaster] "Back" //comms
+    +[$gamemaster]"Terrain":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"GAMEMASTER_lmb_SIZE", 5000)
+        # & role("Asteroid")
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x01)
+
+        pos = gamemaster_get_pos(COMMS_ORIGIN_ID, "rmb")
+        for _other in to_object_list(ids):
+            if COMMS_ORIGIN_ID != _other.id:
+                _other.pos = pos
+
+
+
+    +[$gamemaster]"Npc":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"GAMEMASTER_lmb_SIZE", 5000)
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x10)
+        pos = gamemaster_get_pos(COMMS_ORIGIN_ID, "rmb")
+        for _other in to_object_list(ids):
+            if COMMS_ORIGIN_ID != _other.id:
+                _other.pos = pos
+
+    +[$gamemaster]"Player":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"GAMEMASTER_lmb_SIZE", 5000)
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x20)
+        pos = gamemaster_get_pos(COMMS_ORIGIN_ID, "rmb")
+        for _other in to_object_list(ids):
+            if COMMS_ORIGIN_ID != _other.id:
+                _other.pos = pos
+
+
+//comms/gamemaster/area/delete if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +^1[$gamemaster] "Back" //comms
+    +[$gamemaster]"Terrain":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"GAMEMASTER_lmb_SIZE", 5000)
+        # & role("Asteroid")
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x01)
+        for id in ids:
+            sbs.delete_object(id)
+
+
+    +[$gamemaster]"Npc":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"GAMEMASTER_lmb_SIZE", 5000)
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x10)
+        for id in ids:
+            sbs.delete_object(id)
+
+    +[$gamemaster]"Player":
+        pos = Vec3(COMMS_ORIGIN.pos)
+        size = get_inventory_value(COMMS_ORIGIN_ID, f"GAMEMASTER_lmb_SIZE", 5000)
+        ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x20)
+        for id in ids:
+            continue if id == COMMS_ORIGIN_ID
+            sbs.delete_object(id)
+
+
+
+//comms/gamemaster/commands if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +[$gamemaster]"Back" //comms
+    +[$gamemaster]"Jump to" //comms/gamemaster/commands/jump
+    +[$gamemaster]"Count" //comms/gamemaster/commands/count
+    +[$gamemaster]"End Game" //comms/gamemaster/commands/end_game
+
+//comms/gamemaster/commands/end_game if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +[$gamemaster]"No don't end the game" //comms
+    +[$gamemaster]"Yes end the game":
+        START_TEXT = "Mission ended."
+        signal_emit("show_game_results", None)
+
+//comms/gamemaster/commands/count if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +[$gamemaster]"Back" //comms
+    +[$gamemaster]"Raider":
+        count = len(role("raider"))
+        comms_broadcast(client_id, f"Raiders remaining {count}")    
+    +[$gamemaster]"Stations":
+        count = len(role("station"))
+        comms_broadcast(client_id, f"Station remaining {count}")    
+    +[$gamemaster]"Players":
+        count = len(role("__player__"))
+        comms_broadcast(client_id, f"Players remaining {count}")    
+
+
+
+//comms/gamemaster/commands/jump if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +[$gamemaster]"Back" //comms
+    +[$gamemaster]"Raider":
+        raider = closest(COMMS_ORIGIN_ID, role("raider"))
+        if raider:
+            raider = to_object(raider)
+            COMMS_ORIGIN.pos = raider.pos
+            gamemaster_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Game Master", "lmb", "#040")
+    +[$gamemaster]"Stations":
+        raider = closest(COMMS_ORIGIN_ID, role("station"))
+        if raider:
+            raider = to_object(raider)
+            COMMS_ORIGIN.pos = raider.pos
+            gamemaster_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Game Master", "lmb", "#040")
+    +[$gamemaster]"Players":
+        raider = closest(COMMS_ORIGIN_ID, role("__player__"))
+        if raider:
+            raider = to_object(raider)
+            COMMS_ORIGIN.pos = raider.pos
+            gamemaster_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Game Master", "lmb", "#040")
+    
+
+==== test_gamemaster
+    print("POC works")
+

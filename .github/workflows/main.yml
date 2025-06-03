@@ -7,16 +7,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
     - name: Set env version
       id: get_version
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       
     - uses: actions/checkout@master
+    - name: Archive autoplay addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'autoplay.${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "autoplay"
+
     - name: Archive ai addon
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'ai_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'ai.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "ai"
@@ -25,7 +35,7 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'commerce_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'commerce.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "commerce"
@@ -34,7 +44,7 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'comms_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'comms.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "comms"
@@ -43,7 +53,7 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'consoles_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'consoles.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "consoles"        
@@ -52,7 +62,7 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'damage_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'damage.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "damage"
@@ -61,16 +71,16 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'docking_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'docking.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "docking"
 
-    - name: Archive fleet addon
+    - name: Archive fleets addon
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'fleets_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'fleets.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "fleets"
@@ -79,25 +89,25 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'grid_comms_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'grid_comms.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "grid_comms"
 
-    - name: Archive hanagr addon
+    - name: Archive hangar addon
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'hangar_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'hangar.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "hangar"
 
-    - name: Archive internl comms addon
+    - name: Archive internal comms addon
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'internal_comms_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'internal_comms.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "internal_comms"
@@ -106,7 +116,7 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'operator_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'operator.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "operator"
@@ -115,7 +125,7 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'science_scans_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'science_scans.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "science_scans"
@@ -124,7 +134,7 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'side_missions_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'side_missions.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "side_missions"
@@ -133,7 +143,7 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'upgrades_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'upgrades.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "upgrades"
@@ -142,15 +152,77 @@ jobs:
       uses: thedoctor0/zip-release@main
       with:
         type: 'zip'
-        filename: 'zadmiral_${{ steps.get_version.outputs.VERSION }}.mastlib'
+        filename: 'admiral.${{ steps.get_version.outputs.VERSION }}.mastlib'
         #directory: 'sbs_utils'
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
-        path: "zadmiral"
+        path: "admiral"
+    
+    - name: Archive admiral_comms addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'admiral_comms.${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "admiral_comms"
 
+    - name: Archive gamemaster addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'gamemaster.${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "gamemaster"
+    
+    - name: Archive gamemaster_comms addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'gamemaster_comms.${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "gamemaster_comms"
+
+    - name: Archive prefabs addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'prefabs.${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "prefabs"
+
+    - name: Archive basic_player_destroy addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'basic_player_destroy.${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "basic_player_destroy"
+
+    - name: Archive basic_random_skybox addon
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'basic_random_skybox.${{ steps.get_version.outputs.VERSION }}.mastlib'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "basic_random_skybox"
+
+    - name: Archive media zip
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'media.${{ steps.get_version.outputs.VERSION }}.zip'
+        #directory: 'sbs_utils'
+        #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
+        path: "media"
 
     - name: Upload Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "*_${{ steps.get_version.outputs.VERSION }}.mastlib"
+        artifacts: "*.${{ steps.get_version.outputs.VERSION }}.*"
         token: ${{ secrets.GITHUB_TOKEN }}
 

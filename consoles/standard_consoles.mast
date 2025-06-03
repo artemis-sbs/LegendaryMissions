@@ -12,11 +12,11 @@ default SCIENCE_CONSOLE_ENABLED = True
 default MAINSCREEN_CONSOLE_ENABLED = True
 default CINEMATIC_CONSOLE_ENABLED = True
 
-@console/helm "Helm" if HELM_CONSOLE_ENABLED
+@console/helm !0 ^5 "Helm" if HELM_CONSOLE_ENABLED
     " Pilot the ship
 
     # get_type_of_client
-    console_select = "helm"
+    CONSOLE_SELECT = "helm"
 
     _ship_id = sbs.get_ship_of_client(client_id) 
     #
@@ -25,45 +25,45 @@ default CINEMATIC_CONSOLE_ENABLED = True
     blob = to_blob(_ship_id)
     is_jump = blob.get("jump_drive_active", 0) == 1
 
-    gui_add_console_tab(_ship_id, console_select, console_select, None)
-    gui_console(console_select, is_jump)
+    gui_add_console_tab(_ship_id, CONSOLE_SELECT, CONSOLE_SELECT, None)
+    gui_console(CONSOLE_SELECT, is_jump)
 
     await gui()
 
-@console/weapons "Weapons" if WEAPONS_CONSOLE_ENABLED
+@console/weapons !0 ^10 "Weapons" if WEAPONS_CONSOLE_ENABLED
     " Protect the ship from enemies
-    console_select = "weapons"
+    CONSOLE_SELECT = "weapons"
     jump common_console_show
 
 
-@console/engineering "Engineering" if ENGINEERING_CONSOLE_ENABLED
+@console/engineering !0 ^15 "Engineering" if ENGINEERING_CONSOLE_ENABLED
     " Keep the ship running optimally
-    console_select = "engineering"
+    CONSOLE_SELECT = "engineering"
     jump common_console_show
 
 
-@console/comms "Communication" if COMMS_CONSOLE_ENABLED
+@console/comms !0 ^20 "Communication" if COMMS_CONSOLE_ENABLED
     " Interact with other ships and stations
 
     # Clear Comms Info
-    console_select = "comms"
+    CONSOLE_SELECT = "comms"
     comms_info("static")
     jump common_console_show
 
-@console/science "Science" if SCIENCE_CONSOLE_ENABLED
+@console/science !0 ^25 "Science" if SCIENCE_CONSOLE_ENABLED
     " Discover and provide vital information
-    console_select = "science"
+    CONSOLE_SELECT = "science"
     jump common_console_show
 
 
 ===== common_console_show ====
     _ship_id = sbs.get_ship_of_client(client_id) 
-    gui_add_console_tab(_ship_id, "helm", console_select, None)
-    gui_console(console_select)
+    gui_add_console_tab(_ship_id, CONSOLE_SELECT, CONSOLE_SELECT, None)
+    gui_console(CONSOLE_SELECT)
 
     await gui()
 
-@console/mainscreen "Mainscreen" if MAINSCREEN_CONSOLE_ENABLED
+@console/mainscreen !0 ^30 "Mainscreen" if MAINSCREEN_CONSOLE_ENABLED
     " The main viewscreen
 
     #
@@ -71,7 +71,7 @@ default CINEMATIC_CONSOLE_ENABLED = True
     #
     jump show_main_game_screen
 
-@console/cinematic "Cinematic" if CINEMATIC_CONSOLE_ENABLED
+@console/cinematic !0 ^35 "Cinematic" if CINEMATIC_CONSOLE_ENABLED
     " The cinematic view of the action
 
     # Layout to assure it takes up full screen 

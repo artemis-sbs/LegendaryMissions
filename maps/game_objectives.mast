@@ -15,9 +15,9 @@
         c = len(left)
         # End attack
         remove_role(left, "raider")
-        start_text = "Mission time has run out! {c} enemies left."
-        game_started = False
-        game_ended = True
+        START_TEXT = "Mission time has run out! {c} enemies left."
+        GAME_STARTED = False
+        GAME_ENDED = True
         sbs.play_music_file(0, "music/default/victory")
         #gui_reroute_clients(show_game_results)
         #gui_reroute_server(show_game_results)
@@ -30,9 +30,9 @@
 
     stations = role('tsn') & role('station')
     if len(stations) ==0:
-        start_text = "Mission is lost!  All yer base are belong to us, dammit."
-        game_started = False
-        game_ended = True
+        START_TEXT = "Mission is lost!  All yer base are belong to us, dammit."
+        GAME_STARTED = False
+        GAME_ENDED = True
 
         sbs.play_music_file(0, "music/default/failure")
         signal_emit("show_game_results", None)
@@ -40,10 +40,10 @@
         ->END
 
     raiders = role('Raider')
-    if len(raiders)==0 and world_select.path !="peacetime":
-        start_text = "Mission is won!  All the enemies have been destroyed."
-        game_started = False
-        game_ended = True
+    if len(raiders)==0 and WORLD_SELECT.path !="peacetime":
+        START_TEXT = "Mission is won!  All the enemies have been destroyed."
+        GAME_STARTED = False
+        GAME_ENDED = True
         sbs.play_music_file(0, "music/default/victory")
         signal_emit("show_game_results", None)
         ->END
