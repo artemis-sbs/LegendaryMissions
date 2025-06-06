@@ -160,4 +160,4 @@ pathogen_test = None
         + "{lifeform.name}" {"LIFEFORM_ID": lifeform_id}:
             lifeform = to_object(LIFEFORM_ID)
             yield fail if lifeform is None
-            comms_navigate(lifeform.path)
+            comms_navigate(lifeform.path, comms_badge=LIFEFORM_ID)
