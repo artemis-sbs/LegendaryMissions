@@ -19,9 +19,10 @@ default new_comms_layout = True
         #     gui_info_panel_add("objective", 85, gui_panel_console_message,None)
         #     gui_info_panel_add("objectives", 86, gui_panel_console_message_list,None)
 
-        gui_row("row-height: 40px;")
-        gui_layout_widget("red_alert")
-        gui_row("row-height: 35px;")
+        gui_row()
+        gui_blank()
+        
+        gui_row("row-height: 45px;margin:0,0,0,10px;")
 
         follow_tag = get_inventory_value(client_id, "2d_follow", True)
         # Set back in case of default
@@ -32,6 +33,9 @@ default new_comms_layout = True
             _sel = get_comms_selection(ship)
             set_inventory_value(client_id, "2d_follow", follow_tag)
             comms_set_2dview_focus(client_id, _sel)
+
+        gui_row("row-height: 40px;")
+        gui_layout_widget("red_alert")
 
 
 
