@@ -67,9 +67,9 @@ def console_comms_swap_panels(cid,left,top,width,height, water):
 
     if not water:
         gui_panel_widget_show(cid, vb.left,vb.top,vb.width, vb.height, "comms_waterfall")
-        gui_panel_widget_show(cid, left,top,width, height, "2dview")
+        gui_panel_widget_show(cid, left,top,width, height, "comms_2d_view")
     else:
-        gui_panel_widget_show(cid, vb.left,vb.top,vb.width, vb.height, "2dview")
+        gui_panel_widget_show(cid, vb.left,vb.top,vb.width, vb.height, "comms_2d_view")
         gui_panel_widget_show(cid, left,top,width, height, "comms_waterfall")
     
 
