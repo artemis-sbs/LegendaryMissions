@@ -75,21 +75,10 @@
      
 
 === carry_out_orders 
-    #
-    # The Alt ship should be the selected id at this point
-    # But can get confused when disconnecting or new connection 
-    #
-    #
-    alt_ship= COMMS_SELECTED_ID
+    ->END if not COMMS_SELECTED_ID or COMMS_SELECTED_ID == 0
+    ->END if to_object(COMMS_SELECTED_ID) is None
 
-    ->END if not alt_ship or alt_ship == 0
-    set_inventory_value(EVENT.client_id, "2dview_alt_ship", alt_ship)
-    alt_ship_obj = to_object(alt_ship)
-    on_ship =  sbs.get_ship_of_client(EVENT.client_id)
-    ->END if alt_ship_obj is None
-
-
-
+    
     target_point = get_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
     target_object = to_object(get_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", None))
     if target_object is not None:
@@ -101,13 +90,15 @@
     # Clear things
     
     # For now only one order
-    set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", None)
-    set_inventory_value(alt_ship, "ORDERS_SELECTED_OBJECT", None)
-
+    set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
+    set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", None)
+    
     # set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
     objective_clear(COMMS_SELECTED_ID)
+    
     #print("give orders on alt ship {cur_objective}")
-    objective_add(alt_ship, cur_objective, {"objective_target_point": target_point, "objective_target": to_id(target_object)})
+    objective_add(COMMS_SELECTED_ID, cur_objective, {"objective_target_point": target_point, "objective_target": to_id(target_object)})
+    
 
     ######## The rest of this should be in the cur_objective
     ORDER = cur_objective.get_inventory_value("display_name", cur_objective.name)
@@ -126,7 +117,6 @@
     if message is not None:
         comms_receive(message, title, color="white", title_color="cyan")
 
-    #comms_navigate("")
     yield success
 
 
