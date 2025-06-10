@@ -1,5 +1,12 @@
 default shared SIMPLE_INTERNAL = True
 
+# =$sickbay blue,white,sickbay_face
+# =$security red,white,security_face
+# =$biology cyan,white,biology_face
+# =$counselor gold,white,counselor_face
+
+
+
 
 //enable/comms if has_role(COMMS_ORIGIN_ID, '__player__') and COMMS_SELECTED_ID == 0
     tsn_command = lifeform_spawn("TSN Command", random_terran(civilian=True), "tsn",0, path="//comms/tsn_command")
@@ -30,24 +37,13 @@ default shared SIMPLE_INTERNAL = True
 
 
 //enable/comms if has_roles(COMMS_SELECTED_ID, '__PLAYER__') and (COMMS_SELECTED_ID == COMMS_ORIGIN_ID)
+    lifeform_spawn("Sickbay", random_terran(civilian=False), "tsn, sickbay",COMMS_SELECTED_ID, path="//comms/internal/sickbay", title_color="blue")
+    lifeform_spawn("Security", random_terran(civilian=False), "tsn, security",COMMS_SELECTED_ID, path="//comms/internal/security", title_color="#b00")
+    lifeform_spawn("Exobiology", random_terran(civilian=False), "tsn, exobiology",COMMS_SELECTED_ID, path="//comms/internal/exobiology", title_color="cyan")
+    lifeform_spawn("Counselor", random_terran(civilian=False), "tsn, counselor",COMMS_SELECTED_ID, path="//comms/internal/counselor", title_color="gold")
 
 
-//comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__')) and SIMPLE_INTERNAL
-
-default sickbay_face = random_terran()
-=$sickbay blue,white,sickbay_face
-default security_face = random_terran()
-=$security red,white,security_face
-default biology_face = random_terran()
-=$biology cyan,white,biology_face
-default counselor_face = random_terran()
-=$counselor gold,white,counselor_face
-
-+[$sickbay] "Sickbay" //comms/internal/sickbay
-+[$security] "Security" //comms/internal/security
-+[$biology] "Exobiology" //comms/internal/exobiology
-+[$counselor]"Counselor" //comms/internal/counselor 
-    
+# //comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__')) and SIMPLE_INTERNAL
 
 
 //comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
@@ -55,52 +51,85 @@ default counselor_face = random_terran()
     + "Flash message" //comms/flash_message_test if is_dev_build()
     
     + "Status":
-        <<[$sickbay] "Sickbay status"
-            % No serious injuries currently 
-            % Sickbay is ready when needed
+        with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+            << "Sickbay status"
+                % No serious injuries currently 
+                % Sickbay is ready when needed
+
+#
+# The back is duplicated in player_internal, but should resolve to one
+# Having it here shows it doesn't assume player_internal is here
+#
+//comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
+    crew_size = get_inventory_value(COMMS_ORIGIN_ID, "crew_size", 0)
+    dead = get_inventory_value(COMMS_ORIGIN_ID, "casulaty_count", 0)
+    + ^1 "Back" //comms
+    +"Crew status":
+        if dead > 0 and dead <= 20:
+            with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+                << "Casualties are being treated"
+                    % Currently we have {crew_size} healthy crew members and {dead} casualties.
+                    % Sickbay is treating {dead} casualties. The remaining {cew_size} crew are in good condition.
+        if dead == 0:
+            physicals = random.randint(2,10)
+            with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+                << "Crew members are healthy"
+                    % All {crew_size} crew members are healthy. The counselor can tell you if they're happy.
+                    % No problems have been reported by the crew.
+                    % Of the {crew_size} crew on board, {physicals} still need to report for their physicals.
+        if dead > 20:
+            with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+                << "Casualties are being treated"
+                    % We're swamped down here! All 20 medical beds are full, and we have another {dead-20} casualties lined up outside the door!
+                    % There are {dead} casualties. We need to get to a starbase or ship with larger medical facilities.
+
+
 
 //comms/internal/security if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
     + "Back" //comms
     + "Status":
-        <<[$security] "Security update"
-            % All secure
-            % All quiet on the port bow
-            % Times like this boring is good
+        with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+            << "Security update"
+                % All secure
+                % All quiet on the port bow
+                % Times like this boring is good
 
 //comms/internal/exobiology if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-+"Back" //comms
-default pathogen_test = None
-+"Test for pathogen" if pathogen_test is None:
-    <<[$biology] "exobiology Potential biohazard"
-        "Testing running, one moment
+    +"Back" //comms
+    default pathogen_test = None
+    +"Test for pathogen" if pathogen_test is None:
+        with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+            << "exobiology Potential biohazard"
+                "Testing running, one moment
 
-    # It is best to schedule delayed responses so the comms buttons are not stalled
-    pathogen_test = sub_task_schedule(test_finished)
+        # It is best to schedule delayed responses so the comms buttons are not stalled
+        pathogen_test = task_schedule(test_finished)
 
-+"Cancel pathogen test" if pathogen_test is not None:
-    task_cancel(pathogen_test)
-    pathogen_test  = None
-    <<[$biology] "exobiology Potential biohazard"
-        "pathogen test aborted, per request
+    +"Cancel pathogen test" if pathogen_test is not None:
+        task_cancel(pathogen_test)
+        pathogen_test  = None
+        with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+            << "exobiology Potential biohazard"
+                "pathogen test aborted, per request
 
-+"Status of pathogen test" if pathogen_test is not None:
-    <<[$biology] "exobiology Potential biohazard"
-        "Testing still running, one moment
+    +"Status of pathogen test" if pathogen_test is not None:
+        with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+            << "exobiology Potential biohazard"
+                "Testing still running, one moment
 
 //comms/internal/counselor if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-+"Back" //comms
+    +"Back" //comms
 
-+ "Status":
-    <<[$counselor] "counselor crew update"
-        "Something is disturbing the crew
-    #
-    # but you can delay comms, There will be no buttons during this delay
-    #
-    await delay_sim(seconds=3)
-    <<[$counselor] "counselor crew update"
-        "Things feel like they are getting worse
-    
-
+    + "Status":
+        with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+            << "counselor crew update"
+                "Something is disturbing the crew
+            #
+            # but you can delay comms, There will be no buttons during this delay
+            #
+            await delay_sim(seconds=3)
+            << "counselor crew update"
+                "Things feel like they are getting worse
 
 
 
@@ -108,17 +137,18 @@ default pathogen_test = None
 # This is a new task to delay the response of the test results
 # COMMS variables should migrate to this task
 
-await delay_sim(seconds=10)
-<<[$biology]  "exobiology biohazard test results"
-    "test results finished. Tell the captain we do not have a pathogen.
-pathogen_test = None
-->END
+    await delay_sim(seconds=10)
+    with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+        <<  "exobiology biohazard test results"
+            "test results finished. Tell the captain we do not have a pathogen.
+        pathogen_test = None
+    ->END
 
 
 
 
 
-
+############################################################################
 === test_info_button
     face = __MESSAGE__.get("face")
     gui_info_panel_send_message(gui_client_id(), "Thanks for pushing that button", history=False, face=face, time=3)

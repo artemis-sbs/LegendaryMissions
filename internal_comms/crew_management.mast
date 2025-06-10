@@ -10,36 +10,7 @@
     set_inventory_value(COMMS_SELECTED_ID, "crew_size", crew_size)
     set_inventory_value(COMMS_SELECTED_ID, "max_crew_size", crew_size)
 
-#
-# This is duplicated in player_internal, but should resolve to one
-#
-#//comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-#+"Sickbay" //comms/internal/sickbay
 
-
-#
-# The back is duplicated in player_internal, but should resolve to one
-# Having it here shows it doesn't assume player_internal is here
-#
-//comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-    crew_size = get_inventory_value(COMMS_ORIGIN_ID, "crew_size", 0)
-    dead = get_inventory_value(COMMS_ORIGIN_ID, "casulaty_count", 0)
-    + ^1 "Back" //comms
-    +"Crew status":
-        if dead > 0 and dead <= 20:
-            <<[$sickbay] "Casualties are being treated"
-                % Currently we have {crew_size} healthy crew members and {dead} casualties.
-                % Sickbay is treating {dead} casualties. The remaining {cew_size} crew are in good condition.
-        if dead == 0:
-            physicals = random.randint(2,10)
-            <<[$sickbay] "Crew members are healthy"
-                % All {crew_size} crew members are healthy. The counselor can tell you if they're happy.
-                % No problems have been reported by the crew.
-                % Of the {crew_size} crew on board, {physicals} still need to report for their physicals.
-        if dead > 20:
-            <<[$sickbay] "Casualties are being treated"
-                % We're swamped down here! All 20 medical beds are full, and we have another {dead-20} casualties lined up outside the door!
-                % There are {dead} casualties. We need to get to a starbase or ship with larger medical facilities.
 
 
 

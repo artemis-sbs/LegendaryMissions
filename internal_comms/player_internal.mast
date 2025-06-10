@@ -23,8 +23,9 @@
     +^1 "Back" //comms
     #
     # Lifeforms or grid objects can have a comms badge
-    # 
-    ### TODO: Need a way toe specify styles
+    # Sorted by ID to have some consistency 
+    #
+    comms_badges = sorted(comms_badges)
     for lifeform_id in comms_badges:
         lifeform = to_object(lifeform_id)
         continue if lifeform is None
