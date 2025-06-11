@@ -1,5 +1,12 @@
-# setup.json
+# settings.yaml
+
 A file that can be used to set the default operating settings for Legendary Missions
+
+!!! tip "setup.json"
+
+    In versions prior to 1.1.x the setup.json file was used.
+    setup.json is deprecated but still also looked for after settings.yaml
+
 
 ## AUTO_START
 This will skip startup selection and start the mission as soon as it is selected.

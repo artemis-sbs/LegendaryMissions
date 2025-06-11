@@ -55,7 +55,7 @@ nav:
 
   - hosting:
     - hosting/index.md
-    - hosting/setup.json.md
+    - hosting/setting.yaml.md
 
 
 

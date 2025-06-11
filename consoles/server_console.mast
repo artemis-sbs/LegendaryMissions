@@ -50,7 +50,7 @@ gui_reroute_clients("client_main")
 
     shared AUTO_START = settings.get("AUTO_START", False)
 
-    shared OPERATOR_MODE = settings.get("OPERATOR_MODE", {"enable: False"})
+    shared OPERATOR_MODE = settings.get("OPERATOR_MODE", {"enable": False})
     shared OPERATOR_MODE_enabled = OPERATOR_MODE.get("enable", False)
     shared operator_show_logo_on_main = OPERATOR_MODE.get("show_logo_on_main", False)
 

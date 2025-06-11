@@ -5,19 +5,40 @@ dolly = 50
 orbit = 180.0
 do_move = 0
 property_pane = None
-default GAMEMASTER_CONSOLE_ENABLED = True
+
+default shared GAMEMASTER_CONSOLE = settings.get("GAMEMASTER", {"enable": True})
+default shared GAMEMASTER_CONSOLE_ENABLED = GAMEMASTER_CONSOLE.get("enable", True)
+default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 
 @console/gamemaster !0 ^100 "Game Master" if GAMEMASTER_CONSOLE_ENABLED
 " Affect the overall battle
 
-    #
-    # Get side from selected ship
-    #
+    # This is a bit of a work around s the operator doesn't need the pin twice
+    default GAMEMASTER_SKIP_PIN = False
+
+    jump full_console if GAMEMASTER_SKIP_PIN
+    jump full_console if GAMEMASTER_CONSOLE_PIN is None or GAMEMASTER_CONSOLE_PIN == ""
+
+--- login_screen
+    gui_section( style=f"area: 20, 40, 80, 40+40px;")
+    pin = ""
+    """Gamemaster pin"""
+    _in = gui_input("""desc: Enter pin;password:True;""", var="pin")
+    on gui_message(_in):
+        jump full_console if pin == GAMEMASTER_CONSOLE_PIN
+
+    await gui():
+        + "cancel":
+            jump select_console
+
+
+    jump login_screen
+
+--- full_console
+    GAMEMASTER_SKIP_PIN = False
 
     # Need Sci in the name for science selection
     gui_activate_console("gamemaster_sci")
-    
-    
 
     _ship_id = sbs.get_ship_of_client(client_id) 
     faction_ship = to_object(_ship_id)
@@ -89,11 +110,6 @@ default GAMEMASTER_CONSOLE_ENABLED = True
 
             gui_text("$text: raider count;justify:right;font:gui-3;")
             gui_text(f"$text: {count};justify:left;font:gui-3;", style="tag: sh_raider_count;padding:20px;")
-
-
-        
-        
-
   
     task_schedule(gamemaster_move_camera_sync)
 
@@ -135,10 +151,10 @@ default GAMEMASTER_CONSOLE_ENABLED = True
         gui_layout_widget("comms_sorted_list")
 
     
-    task_schedule(gm_stats)
+    task_schedule(update_gm_stats)
     await gui()
 
-==== gm_stats
+==== update_gm_stats
 
     await delay_sim(seconds=10)
 
@@ -151,7 +167,7 @@ default GAMEMASTER_CONSOLE_ENABLED = True
         gui_update_shared("sh_game_time",f"$text: {t};justify:left;font:gui-3;")
 
 
-    jump update_raider_count
+    jump update_gm_stats
 
 
 ==== gamemaster_move_camera_sync
