@@ -156,19 +156,8 @@ default gamemaster_face = random_terran()
 //comms/gamemaster/selected if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     +[$gamemaster]"Back" //comms
     +[$gamemaster]"Set attribute" //comms/gamemaster/selected/set
-    +[$gamemaster]"Delete":
-        _other = COMMS_SELECTED_ID
-        if _other and COMMS_ORIGIN_ID != _other:
-            sbs.delete_object(_other)
     +[$gamemaster]"Damage" //comms/gamemaster/selected/damage
-    +[$gamemaster]"Move to Orders area":
-        pos = gamemaster_get_pos(COMMS_ORIGIN_ID, "rmb")
-        _other = COMMS_SELECTED_ID
-        if COMMS_ORIGIN_ID != _other:
-            _other = to_object(_other)
-            if _other is not None:
-                _other.pos = pos
-
+    
 //comms/gamemaster/selected/set if has_roles(COMMS_ORIGIN_ID, 'gamemaster') 
     +[$gamemaster]"Back" //comms
 
@@ -352,6 +341,14 @@ default gamemaster_face = random_terran()
             gamemaster_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Game Master", "lmb", "#040")
     
 
-==== test_gamemaster
-    print("POC works")
+//popup/science if has_roles(SCIENCE_ORIGIN_ID, 'gamemaster') and SCIENCE_SELECTED_ID != 0
+    + "Move Selection here":
+        so = to_object(SCIENCE_SELECTED_ID)
+        if so is not None:
+            so.pos = SCIENCE_POPUP_POINT
 
+//popup/science if has_roles(SCIENCE_ORIGIN_ID, 'gamemaster') and SCIENCE_POPUP_ID != 0 and SCIENCE_POPUP_ID != SCIENCE_ORIGIN_ID
+    + "Delete {SCIENCE_POPUP.name}":
+        so = to_object(SCIENCE_POPUP_ID)
+        if so is not None:
+            sbs.delete_object(SCIENCE_POPUP_ID)
