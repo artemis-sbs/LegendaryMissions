@@ -89,9 +89,9 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
         with gui_sub_section():
             gui_row("row-height: 50;")
             GM_LEFT = gui_tabbed_panel([], tab_location=0)
-            gui_info_panel_add("instruction", 82, gamemaster_panel_instructions, None, GM_LEFT)
-            gui_info_panel_add("message", 83, gui_panel_console_message,None, GM_LEFT)
-            gui_info_panel_add("messages", 84, gui_panel_console_message_list,None, GM_LEFT)
+            gui_info_panel_add("instruction", 82, gamemaster_panel_instructions, var= GM_LEFT)
+            gui_info_panel_add("message", 83, gui_panel_console_message, var= GM_LEFT)
+            gui_info_panel_add("messages", 84, gui_panel_console_message_list,var=GM_LEFT)
             
             gui_row("row-height: 10;")
             gui_layout_widget("text_waterfall")
@@ -133,17 +133,18 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
         ~~ gui_info_panel_add("comms_control", 137, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_control"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
-            GM_RIGHT ) ~~
+            var=GM_RIGHT ) ~~
         ~~ gui_info_panel_add("science_data", 63, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data"), 
-            GM_RIGHT ) ~~
+            var=GM_RIGHT ) ~~
         ~~ gui_info_panel_add("gamemaster_camera", 13, 
             gamemaster_panel_camera_show, 
-            gamemaster_panel_camera_hide, GM_RIGHT) ~~
+            gamemaster_panel_camera_hide, var=GM_RIGHT) ~~
         ~~ gui_info_panel_add("comms_waterfall", 112, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall"), 
-            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall"),GM_RIGHT ) ~~
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall"),
+            var=GM_RIGHT ) ~~
 
 
         

@@ -12,7 +12,7 @@ default new_comms_layout = True
         gui_row("row-height: 400px;")
         #gui_layout_widget("ship_data")
         gui_info_panel(tab=tab)
-        gui_info_panel_add("message", 83, gui_panel_console_message,None)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
         # if is_dev_build():
         #     gui_info_panel_add("upgrades", 105, gui_panel_upgrade_list,None)
         #     gui_info_panel_add("messages", 84, gui_panel_console_message_list,None)
@@ -242,7 +242,7 @@ default new_comms_layout = True
     default tab = 1
     gui_row("row-height: 400px;col-width:280px;")
     gui_info_panel(tab=tab)
-    gui_info_panel_add("message", 83, gui_panel_console_message,None)
+    gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
 
     gui_section(style="area:0,45px,100,100;")
     with gui_sub_section():
@@ -319,7 +319,7 @@ default new_comms_layout = True
     with gui_sub_section("col-width:280px;"):
         gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
-        gui_info_panel_add("message", 83, gui_panel_console_message,None)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
     with gui_sub_section():
         gui_row("row-height: 300px;")
         # gui_section(style="area:285px,90px,800px,390px;")
@@ -361,7 +361,7 @@ default new_comms_layout = True
     with gui_sub_section("col-width:280px;"):
         gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
-        gui_info_panel_add("message", 83, gui_panel_console_message,None)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
 
 //gui/normal_weap
     default tab = 1
@@ -370,7 +370,7 @@ default new_comms_layout = True
     with gui_sub_section("col-width:280px;"):
         gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
-        gui_info_panel_add("message", 83, gui_panel_console_message,None)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
 
 //gui/normal_main
     default tab = 1
@@ -379,4 +379,4 @@ default new_comms_layout = True
     with gui_sub_section("col-width:280px;"):
         gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
-        gui_info_panel_add("message", 83, gui_panel_console_message,None)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
