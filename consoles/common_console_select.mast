@@ -373,14 +373,12 @@ route_change_console(on_change_console)
 
     # Remember delay_app is needed her because the sim
     # may not be running
-    await gui(timeout = delay_app(10)):
-        on timeout:
-            jump loop
+    await gui(timeout = delay_app(10))
 
 
     jump loop
 
-    --- no_images
+--- no_images
 
     await gui()
 
