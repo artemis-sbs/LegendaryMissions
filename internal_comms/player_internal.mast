@@ -2,21 +2,26 @@
 
 //comms if has_roles(COMMS_ORIGIN_ID, "__player__")
     if COMMS_SELECTED_ID == 0:
-        comms_badges = role("comms_badge") & role("long_range")
-        yield fail if len(comms_badges)==0
-        + "Hail Long Range" //comms/comms_badge
+        comms_navigate("//comms/FTL")
     else:
         comms_badges = role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")
         yield fail if len(comms_badges)==0
-        + "Hail Comms Badge" //comms/comms_badge
-    
+        + "Comms Badge" //comms/comms_badge
+
+
+//comms/FTL if has_roles(COMMS_ORIGIN_ID, "__player__") and COMMS_SELECTED_ID == 0
+    comms_badges = role("comms_badge") & role("ultra_beam")
+    yield fail if len(comms_badges)==0
+    + "Ultra-Beam" //comms/ultra_beam
+
+
 
 #
 # Handle Comms comms badges
 #
 //comms/comms_badge if has_roles(COMMS_ORIGIN_ID, "__player__")
     if COMMS_SELECTED_ID == 0:
-        comms_badges = role("comms_badge") & role("long_range")
+        comms_badges = role("comms_badge") & role("ultra_beam")
     else:
         comms_badges = role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")
     yield fail if len(comms_badges)==0
@@ -33,3 +38,26 @@
             lifeform = to_object(COMMS_LIFEFORM_ID)
             yield fail if lifeform is None
             comms_navigate(lifeform.path, comms_badge=COMMS_LIFEFORM_ID)
+    ->END
+
+
+//comms/ultra_beam if has_roles(COMMS_ORIGIN_ID, "__player__")
+    if COMMS_SELECTED_ID == 0:
+        comms_badges = role("comms_badge") & role("ultra_beam")
+    else:
+        comms_badges = role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")
+    yield fail if len(comms_badges)==0
+    +^1 "Back" //comms
+    #
+    # Lifeforms or grid objects can have a comms badge
+    # Sorted by ID to have some consistency 
+    #
+    comms_badges = sorted(comms_badges)
+    for lifeform_id in comms_badges:
+        lifeform = to_object(lifeform_id)
+        continue if lifeform is None
+        + "{lifeform.name}" {"COMMS_LIFEFORM_ID": lifeform_id}:
+            lifeform = to_object(COMMS_LIFEFORM_ID)
+            yield fail if lifeform is None
+            comms_navigate(lifeform.path, comms_badge=COMMS_LIFEFORM_ID)
+    ->END
