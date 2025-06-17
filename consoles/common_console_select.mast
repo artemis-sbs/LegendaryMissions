@@ -1,6 +1,7 @@
 import common_console_selection.py
 
 crew_name = ""
+default shared grid_data = grid_get_grid_data()
 
 route_change_console(on_change_console)
 

@@ -5,7 +5,7 @@ import grid_ai.py
 #route grid object route_grid_arrive
 
 
-shared grid_data = grid_get_grid_data()
+default shared grid_data = grid_get_grid_data()
 
 
 //spawn if has_role(SPAWNED_ID, "__player__")

@@ -6,7 +6,8 @@ orbit = 180.0
 do_move = 0
 property_pane = None
 
-default shared GAMEMASTER_CONSOLE = settings.get("GAMEMASTER", {"enable": True})
+default SETTINGS = settings_get_defaults()
+default shared GAMEMASTER_CONSOLE = SETTINGS.get("GAMEMASTER", {"enable": True})
 default shared GAMEMASTER_CONSOLE_ENABLED = GAMEMASTER_CONSOLE.get("enable", True)
 default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 

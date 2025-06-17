@@ -1,6 +1,6 @@
 
-settings = settings_get_defaults()
-shared GRID_THEME_INDEX = settings.get("GRID_THEME",0) 
+default SETTINGS = settings_get_defaults()
+shared GRID_THEME_INDEX = SETTINGS.get("GRID_THEME",0) 
 grid_set_grid_current_theme(GRID_THEME_INDEX )
 
 
