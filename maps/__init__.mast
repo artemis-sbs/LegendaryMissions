@@ -9,4 +9,5 @@ import peacetime.mast
 import borderwar.mast
 import watch_for_end.mast
 import sandbox.mast
+import legendary_comms.mast
 

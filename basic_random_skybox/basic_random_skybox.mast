@@ -43,7 +43,7 @@ if client_id==0:
     music_schedule_random()
 
 
-@media/skybox/sky1-bored-alice "borealis"
+@media/skybox/sky-bored-alice "borealis"
 if client_id==0:
     music_schedule_random()
 

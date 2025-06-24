@@ -106,16 +106,12 @@ shared allow_debug = True
             abis = None
         await task_schedule(spawn_test_enemy,data={"abi": abis})
 
-    abilities = elite_get_all_abilities()
-    lb_abilities = ~~list_box_control(list(abilities), 
-                                text=lambda item: f"$text:{item};justify: center;",
-                                title = lambda: "$text:Elite Abilities;justify:center;",
-                                background= "#1572", title_background="#1578",
-                                multi=True,
-                                item_height=4)~~
-
     gui_section(style="area:50,25,80,75;")
-    gui_content(lb_abilities, var="abils")
+    abilities = elite_get_all_abilities()
+    lb_abilities = ~~gui_list_box(list(abilities), "row-height: 0.1em; background:#1572;",
+                                item_template=lambda item: None if gui_row("row-height: 1.1em;") and gui_text(f'$text:{item};justify: left;') else None,
+                                title_template = lambda: None if gui_row("row-height: 1.1em;background:#1578;") and gui_text("$text:Elite Abilities;justify:center;") else None,
+                                multi=True)~~
 
     gui_section(style="area:50,76,80,76+35px;")
     on gui_message(gui_button("clear")):

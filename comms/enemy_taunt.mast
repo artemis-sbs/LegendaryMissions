@@ -18,12 +18,13 @@ if taunt_data is not None:
 
     race_taunts = taunt_data.get(race)
     if race_taunts is not None:
-        this_taunt_data = random.sample(race_taunts, 3)
+        c = min(3, len(race_taunts))
+        this_taunt_data = random.sample(race_taunts, c)
         set_inventory_value(SPAWNED_ID, "taunt_data", this_taunt_data)
-        set_inventory_value(SPAWNED_ID, "taunt_trait", random.randint(0,2))
+        set_inventory_value(SPAWNED_ID, "taunt_trait", random.randrange(c))
 
 
-
+//enable/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
 
 //comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Hail":

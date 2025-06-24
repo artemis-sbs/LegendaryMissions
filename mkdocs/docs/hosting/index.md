@@ -50,28 +50,28 @@ Alternatively you can get the mission from github.
 
 The operator tools include:
 
-- time limit and setup.json
+- time limit and settings.yaml
 - default mission
 - Enable Operator mode
 - Main screen Operator logo
 - An Operator console
 - Operator Console commands
 
-### time limit and setup.json
+### time limit and setting.yaml
 
-The time limit setting is available for missions, but operators in particular may want to set this setting in setup.json to a specific value to avoid retyping it all the time. Time is in minutes.
+The time limit setting is available for missions, but operators in particular may want to set this setting in settings.yaml to a specific value to avoid retyping it all the time. Time is in minutes.
 
-``` json
+``` yaml
     GAME_TIME_LIMIT: 10
 ```
 
-In general the setup.json is useful for setting things up to avoid constantly tuning the setting each run. Should be useful for operators.
+In general the settings.yaml is useful for setting things up to avoid constantly tuning the setting each run. Should be useful for operators.
 
-[see here ](setup.json.md) for what settings Operators may want to tweak.
+[see here ](settings.yaml.md) for what settings Operators may want to tweak.
 
 !!! tip "Different defaults"
 
-    Operators that want different setups for varied crews, could copy the mission and alter the setup.json. While this takes up more space, It could be a time saver. This only needs to be don on the server.
+    Operators that want different setups for varied crews, could copy the mission and alter the settings.yaml. While this takes up more space, It could be a time saver. This only needs to be don on the server.
 
 
 ### Default mission
@@ -81,7 +81,7 @@ It won't prevent you from later selecting other missions.
 
 
 ### Enabling Operator mode setting
-The Legendary Missions and mission that leverage the operator Addon have a setup.json file. This file can set the default starting values as well as enable operator mode.
+The Legendary Missions and mission that leverage the operator Addon have a settings.yaml file. This file can set the default starting values as well as enable operator mode.
 
 To enable operator mode, set the OPERATOR_MODE enable to true.
 
@@ -101,19 +101,18 @@ The main screen is the first thing most player will see and can look at while th
 
 The Operator logo is an image the Operator can control and replace to have whatever content they would like on the main screen prior to the game starting.
 
-Three setting effect this first operator mode needs to be enabled in all missions setup.json that this is desired in.
+Three setting effect this first operator mode needs to be enabled in all missions settings.yaml that this is desired in.
 Next *show_logo_on_main* needs to be set to true. Then *logo* should be the png folder and name for what file is desired.
 
 The logo name should not have the .png extension, and only png files are supported.
 The logo file currently need to be in every mission you would like to have Operator mode logo work.
 
 ``` json
-"OPERATOR_MODE": {
-        "enable": true,
-        "logo": "media/operator",
-        "show_logo_on_main": true,
-        "pin": "000000"
-    },
+OPERATOR_MODE: 
+    enable: true
+    logo: "media/operator"
+    show_logo_on_main: true
+    pin: "000000"
 ```
 
 ![logo](../media/Operator_logo.png)
@@ -125,7 +124,7 @@ By enabling OPERATOR_MODE a new console will show up in the client selection scr
 
 The operator console is used to start the game and manage the game while it is running.
 
-First thing the Operator Admin console can require a pin to limit access to it. This pin is set in setup.json on the server.
+First thing the Operator Admin console can require a pin to limit access to it. This pin is set in settings.yaml on the server.
 
 ![logo](../media/operator_pin.png)
 
@@ -187,7 +186,7 @@ The console should be one of:
 - admin
 - admiral
 
-The value needs to include the ship to assign them to. The ship name must be a ship created by the mission typically this one in setup.json
+The value needs to include the ship to assign them to. The ship name must be a ship created by the mission typically this one in settings.yaml
 
 The console type and ship are separated by a semi colon
 

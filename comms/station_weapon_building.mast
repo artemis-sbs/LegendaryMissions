@@ -4,9 +4,9 @@
 
 
 # Set title colors for incoming messages from stations, raiders, and surrendered raiders.
-station_color = "green"
-raider_color = "red"
-surrender_color = "yellow"
+shared station_color = "green"
+shared raider_color = "red"
+shared surrender_color = "yellow"
 
 //enable/comms if has_roles(COMMS_SELECTED_ID, "Station")
     #

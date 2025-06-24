@@ -8,7 +8,6 @@ type: prefab/npc/defender
 side_value: tsn
 objective: objective_protect_area
 give_orders_type: objective/orders/defender
-property_label: handle_properties_defender_orders
 allies: civ
 ```
     default name = get_defender_name(side_value)
@@ -40,30 +39,13 @@ allies: civ
     yield result friend.id
 
 
-=== handle_properties_defender_orders
-    default use_location = gui_properties_get_value("use_location", False)
-    if not use_location:
-        p = """
-            Use: 'gui_checkbox("use Location",var="use_location")'
-        """
-    else:
-        p = """
-            Use: 'gui_checkbox("other Location",var="use_location")'
-            list: 'gui_text("Later")'
-        """
-
-    #print(f"DEFPROP {p} {mast_task.id}")
-    gui_properties_set(p)
-    gui_properties_change("use_location", handle_properties_defender_orders)
-
-    yield idle
-
 === objective_goto_location
 metadata: ```
 display_name: Head to location
 type: objective/orders/defender
 objective_target: null
 objective_target_point: null
+valid_for: any
 ```
     
 +++ enter
@@ -86,6 +68,7 @@ display_name: Attack
 type: objective/orders/defender
 objective_target: null
 objective_target_point: null
+valid_for: hostile
 ```
 +++ enter
     # This objective assumes it has control of the brain
@@ -127,6 +110,7 @@ display_name: Protect
 type: objective/orders/defender
 objective_target: null
 objective_target_point: null
+valid_for: allies
 ```
 +++ enter
     # This objective assumes it has control of the brain
@@ -163,6 +147,7 @@ display_name: Full Stop
 type: objective/orders/defender
 objective_target: null
 objective_target_point: null
+valid_for: any
 ```
 +++ enter
     # This objective assumes it has control of the brain

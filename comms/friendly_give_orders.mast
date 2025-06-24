@@ -50,46 +50,33 @@
                 detail = "Receiving new orders"
             msg += "    {detail}\n"
         comms_receive(msg)
-    + "Give Orders" //comms/give_orders
 
 
-//comms/give_orders if get_inventory_value(COMMS_SELECTED_ID, "give_orders_type") is not None
-    #has_objective = 
-    order = ""
-    + "Back"  //comms/
 
+
+
+//popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "prefab_npc_defender") 
     label_type = get_inventory_value(COMMS_SELECTED_ID, "give_orders_type")
 
     orders = labels_get_type(label_type)
+    ally = role_are_allies(COMMS_SELECTED_ID, COMMS_POPUP_ID)
     for order in orders:
+        valid_for = order.get_inventory_value("valid_for", "any")
+        if valid_for == "allies" and not ally:
+            continue
+        if valid_for == "hostile" and ally:
+            continue
+
+        set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", COMMS_POPUP_POINT)
+        set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", COMMS_POPUP_ID)
+
         display_name = order.get_inventory_value("display_name", order.name)
-        + "{display_name}" {"order": order}:
-            cur_objective = order
-            comms_navigate("//comms/confirm_orders")
-
-//comms/confirm_orders
-    # Present the properties panel
-    gui_sub_task_schedule(handle_properties_defender_orders)
-    
-
-    + "Back" //comms/give_orders
-    + "Execute" carry_out_orders {"cur_objective": cur_objective}
-
-    
+        + "Have {COMMS_SELECTED.name} {display_name}" carry_out_orders {"cur_objective": order}
+     
 
 === carry_out_orders 
-    #
-    # The Alt ship should be the selected id at this point
-    # But can get confused when disconnecting or new connection 
-    #
-    #
-    alt_ship= COMMS_SELECTED_ID
-
-    ->END if not alt_ship or alt_ship == 0
-    set_inventory_value(EVENT.client_id, "2dview_alt_ship", alt_ship)
-    alt_ship_obj = to_object(alt_ship)
-    on_ship =  sbs.get_ship_of_client(EVENT.client_id)
-    ->END if alt_ship_obj is None
+    ->END if COMMS_SELECTED_ID == 0
+    ->END if to_object(COMMS_SELECTED_ID) is None
 
     target_point = get_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
     target_object = to_object(get_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", None))
@@ -100,28 +87,17 @@
     title = "Orders unclear"
 
     # Clear things
-
     
-    set_inventory_value(on_ship, "ORDERS_SELECTED_POINT", None)
-    set_inventory_value(on_ship, "ORDERS_SELECTED_OBJECT", None)
-    nav = get_inventory_value(on_ship, "ORDERS_SELECTED_NAV", None)
-    if nav:
-        sim.delete_navpoint_by_id(nav)
-        set_inventory_value(on_ship, "ORDERS_SELECTED_NAV", None)
-
     # For now only one order
-    set_inventory_value(alt_ship, "ORDERS_SELECTED_POINT", None)
-    set_inventory_value(alt_ship, "ORDERS_SELECTED_OBJECT", None)
-    nav = get_inventory_value(alt_ship, "ORDERS_NAV", None)
-    if nav:
-        sim.delete_navpoint_by_id(nav)
-        set_inventory_value(alt_ship, "ORDERS_NAV", None)
+    set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
+    set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", None)
 
     # set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
     objective_clear(COMMS_SELECTED_ID)
+    
     #print("give orders on alt ship {cur_objective}")
-    objective_add(alt_ship, cur_objective, {"objective_target_point": target_point, "objective_target": to_id(target_object)})
-
+    objective_add(COMMS_SELECTED_ID, cur_objective, {"objective_target_point": target_point, "objective_target": to_id(target_object)})
+    
     ######## The rest of this should be in the cur_objective
     ORDER = cur_objective.get_inventory_value("display_name", cur_objective.name)
     ORDER_COLOR = "#040"
@@ -139,66 +115,7 @@
     if message is not None:
         comms_receive(message, title, color="white", title_color="cyan")
 
-    comms_navigate("")
     yield success
-
-
-//shared/signal/game_started
-    task_schedule(update_nav_area_for_object)
-    ->END
-
-=== update_nav_area_for_object
-" This is a task to update any nav areas marking
-" a moving target
---- repeat
-    await delay_sim(5)
-    have_nav = has_inventory("ORDERS_SELECTED_OBJECT")
-    for ship in have_nav:
-        continue if ship == 0
-        alt_ship_obj = to_object(ship)
-        continue if alt_ship_obj is None
-        continue if alt_ship_obj == 0
-        on_ship = ship
-        alt_ship = ship
-        #
-        # If this is a player ship and is not following
-        # skip
-        if has_role(on_ship, "__player__"):
-            alt_ship = get_inventory_value(on_ship, "2dview_alt_ship", None)
-            alt_ship_obj = to_object(alt_ship)
-            continue if alt_ship_obj is None
-                
-        #
-        #
-        # OK Lets update any ship that got this far
-        # If the target ship still exists
-        obj_id = get_inventory_value(ship,"ORDERS_SELECTED_OBJECT")
-        continue if obj_id is None or obj_id == 0
-        obj = to_object(obj_id)
-        continue if obj is None
-        pos = Vec3(obj.pos)
-        size = 1000
-        nav_color = "#044"
-        nav_name = "^^^^^^Order Object^for {alt_ship_obj.name}"
-
-        x = pos.x
-        y = pos.y
-        z = pos.z
-
-        #
-        # This is copy pasted code from the //focus/comms2d
-        # so switch the  variable to match
-        this_ship = ship
-        nav_id = get_inventory_value(this_ship, "ORDERS_SELECTED_NAV", None)
-        if nav_id is not None:
-            sim.delete_navpoint_by_id(nav_id)
-        y = z
-        nav_id = sim.add_navarea(x-size, y-size,x+size, y-size,x-size, y+size,x+size, y+size, nav_name, nav_color)
-        #nav_id = sim.add_navpoint(x, y, z, nav_name, "#eee")
-        nav = sim.get_navpoint_by_id(nav_id)
-        nav.visibleToShip = this_ship
-        set_inventory_value(this_ship, "ORDERS_SELECTED_NAV", nav_id)
-    jump repeat
 
 
 //focus/comms2d if has_role(COMMS2D_ORIGIN_ID, "__player__")

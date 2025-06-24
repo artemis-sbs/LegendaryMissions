@@ -156,19 +156,8 @@ default gamemaster_face = random_terran()
 //comms/gamemaster/selected if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     +[$gamemaster]"Back" //comms
     +[$gamemaster]"Set attribute" //comms/gamemaster/selected/set
-    +[$gamemaster]"Delete":
-        _other = COMMS_SELECTED_ID
-        if _other and COMMS_ORIGIN_ID != _other:
-            sbs.delete_object(_other)
     +[$gamemaster]"Damage" //comms/gamemaster/selected/damage
-    +[$gamemaster]"Move to Orders area":
-        pos = gamemaster_get_pos(COMMS_ORIGIN_ID, "rmb")
-        _other = COMMS_SELECTED_ID
-        if COMMS_ORIGIN_ID != _other:
-            _other = to_object(_other)
-            if _other is not None:
-                _other.pos = pos
-
+    
 //comms/gamemaster/selected/set if has_roles(COMMS_ORIGIN_ID, 'gamemaster') 
     +[$gamemaster]"Back" //comms
 
@@ -308,13 +297,10 @@ default gamemaster_face = random_terran()
     +[$gamemaster]"Back" //comms
     +[$gamemaster]"Jump to" //comms/gamemaster/commands/jump
     +[$gamemaster]"Count" //comms/gamemaster/commands/count
-    +[$gamemaster]"End Game" //comms/gamemaster/commands/end_game
+    +[$gamemaster]"Game" //comms/gamemaster/commands/game
+    +[$gamemaster]"Game time" //comms/gamemaster/commands/time
 
-//comms/gamemaster/commands/end_game if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
-    +[$gamemaster]"No don't end the game" //comms
-    +[$gamemaster]"Yes end the game":
-        START_TEXT = "Mission ended."
-        signal_emit("show_game_results", None)
+
 
 //comms/gamemaster/commands/count if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     +[$gamemaster]"Back" //comms
@@ -350,8 +336,51 @@ default gamemaster_face = random_terran()
             raider = to_object(raider)
             COMMS_ORIGIN.pos = raider.pos
             gamemaster_show_nav_area(COMMS_ORIGIN_ID, raider.pos, 0, "Game Master", "lmb", "#040")
-    
 
-==== test_gamemaster
-    print("POC works")
 
+
+
+//comms/gamemaster/commands/game if has_roles(COMMS_ORIGIN_ID, "gamemaster")
+    + !0 "Back" //comms
+    +[$gamemaster] "pause game" if not game_paused:
+        game_paused = True
+        sbs.pause_sim()
+    +[$gamemaster] "resume game" if game_paused:
+        game_paused = False
+        sbs.resume_sim()
+    +[$gamemaster] "end game"  //comms/gamemaster/commands/game/end
+
+
+//comms/gamemaster/commands/game/end if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +[$gamemaster]"No don't end the game" //comms
+    +[$gamemaster]"Yes end the game":
+        START_TEXT = "Mission ended."
+        signal_emit("show_game_results", None)
+
+
+
+
+//comms/gamemaster/commands/time if has_roles(COMMS_ORIGIN_ID, "gamemaster")
+    +!0 [$gamemaster] "Back" //comms
+    +[$gamemaster] "Add 1 minute":
+        print("")
+    +[$gamemaster] "Add 10 minutes":
+        print("")
+    +[$gamemaster] "Subtract 1 minute":
+        print("")
+    +[$gamemaster] "Subtract 10 minutes":
+        print("")
+
+
+
+//popup/science if has_roles(SCIENCE_ORIGIN_ID, 'gamemaster') and SCIENCE_SELECTED_ID != 0
+    + "Move Selection here":
+        so = to_object(SCIENCE_SELECTED_ID)
+        if so is not None:
+            so.pos = SCIENCE_POPUP_POINT
+
+//popup/science if has_roles(SCIENCE_ORIGIN_ID, 'gamemaster') and SCIENCE_POPUP_ID != 0 and SCIENCE_POPUP_ID != SCIENCE_ORIGIN_ID
+    + "Delete {SCIENCE_POPUP.name}":
+        so = to_object(SCIENCE_POPUP_ID)
+        if so is not None:
+            sbs.delete_object(SCIENCE_POPUP_ID)

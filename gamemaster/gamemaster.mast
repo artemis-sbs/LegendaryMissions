@@ -5,19 +5,41 @@ dolly = 50
 orbit = 180.0
 do_move = 0
 property_pane = None
-default GAMEMASTER_CONSOLE_ENABLED = True
+
+default SETTINGS = settings_get_defaults()
+default shared GAMEMASTER_CONSOLE = SETTINGS.get("GAMEMASTER", {"enable": True})
+default shared GAMEMASTER_CONSOLE_ENABLED = GAMEMASTER_CONSOLE.get("enable", True)
+default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 
 @console/gamemaster !0 ^100 "Game Master" if GAMEMASTER_CONSOLE_ENABLED
 " Affect the overall battle
 
-    #
-    # Get side from selected ship
-    #
+    # This is a bit of a work around s the operator doesn't need the pin twice
+    default GAMEMASTER_SKIP_PIN = False
+
+    jump full_console if GAMEMASTER_SKIP_PIN
+    jump full_console if GAMEMASTER_CONSOLE_PIN is None or GAMEMASTER_CONSOLE_PIN == ""
+
+--- login_screen
+    gui_section( style=f"area: 20, 40, 80, 40+40px;")
+    pin = ""
+    """Gamemaster pin"""
+    _in = gui_input("""desc: Enter pin;password:True;""", var="pin")
+    on gui_message(_in):
+        jump full_console if pin == GAMEMASTER_CONSOLE_PIN
+
+    await gui():
+        + "cancel":
+            jump select_console
+
+
+    jump login_screen
+
+--- full_console
+    GAMEMASTER_SKIP_PIN = False
 
     # Need Sci in the name for science selection
     gui_activate_console("gamemaster_sci")
-    
-    
 
     _ship_id = sbs.get_ship_of_client(client_id) 
     faction_ship = to_object(_ship_id)
@@ -63,18 +85,32 @@ default GAMEMASTER_CONSOLE_ENABLED = True
     gui_section(style="area:0,45px,100,100;")
     # Left
 
-
-    with gui_sub_section("col-width:25;"):
-        gui_row("row-height: 50;")
-        GM_LEFT = gui_tabbed_panel([], tab_location=0)
-        gui_info_panel_add("instruction", 113, gamemaster_panel_instructions, None, GM_LEFT)
-        gui_info_panel_add("message", 83, gui_panel_console_message,None, GM_LEFT)
-        gui_info_panel_add("messages", 84, gui_panel_console_message_list,None, GM_LEFT)
-                
+    gui_update_widgets("3dview^science_data^comms_waterfall^comms_control","")
+    with gui_sub_section("col-width:350px;"):
+        with gui_sub_section():
+            gui_row("row-height: 50;")
+            GM_LEFT = gui_tabbed_panel([], tab_location=0)
+            gui_info_panel_add("instruction", 82, gamemaster_panel_instructions, var= GM_LEFT)
+            gui_info_panel_add("message", 83, gui_panel_console_message, var= GM_LEFT)
+            gui_info_panel_add("messages", 84, gui_panel_console_message_list,var=GM_LEFT)
+            
+            gui_row("row-height: 10;")
+            gui_layout_widget("text_waterfall")
         gui_row()
-        gui_property_list_box()
-        
+        with gui_sub_section():
+            if is_timer_set(SHARED, "time_limit"):
+                gui_row("row-height: 45px")
+                gui_text("$text: time left;justify: right;font:gui-3;")
+                t = format_time_remaining(SHARED, "time_limit")
+                gui_text(f"$text: {t};justify:left;font:gui-3;", style="tag: sh_game_time;padding:20px;")    
 
+            gui_row("row-height: 45px")
+            # Show remaining enemy count
+            r = role("raider") 
+            count=len(r)
+
+            gui_text("$text: raider count;justify:right;font:gui-3;")
+            gui_text(f"$text: {count};justify:left;font:gui-3;", style="tag: sh_raider_count;padding:20px;")
   
     task_schedule(gamemaster_move_camera_sync)
 
@@ -84,51 +120,57 @@ default GAMEMASTER_CONSOLE_ENABLED = True
         gui_row()
         #gui_layout_widget("science_2d_view")
         gui_layout_widget("science_2d_view")
-        gui_row()
-        gui_layout_widget("comms_control")
 
     # Right
 
-    gui_update_widgets("3dview^science_data^comms_waterfall","")
+    
     with gui_sub_section("col-width:25;"):
+        gui_row("row-height: 10;")
+        gui_property_list_box("options")
+
         gui_row("row-height:45;margin:0,0,0,10px;")
         GM_RIGHT = gui_tabbed_panel([], tab_location=1)
-        ~~ gui_info_panel_add("science_data", 37, 
+
+        ~~ gui_info_panel_add("comms_control", 137, 
+            lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_control"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+            var=GM_RIGHT ) ~~
+        ~~ gui_info_panel_add("science_data", 63, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data"), 
-            GM_RIGHT ) ~~
-
+            var=GM_RIGHT ) ~~
+        ~~ gui_info_panel_add("gamemaster_camera", 13, 
+            gamemaster_panel_camera_show, 
+            gamemaster_panel_camera_hide, var=GM_RIGHT) ~~
         ~~ gui_info_panel_add("comms_waterfall", 112, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall"), 
-            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall"), 
-            GM_RIGHT ) ~~
-        ~~ gui_info_panel_add("comms_waterfall", 113, 
-            gamemaster_panel_camera_show, 
-            gamemaster_panel_camera_hide, 
-            GM_RIGHT ) ~~
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall"),
+            var=GM_RIGHT ) ~~
 
 
-        # panels = ~~[{"icon": 37, 
-        #         "show": lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data") , 
-        #         "hide":  lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data")},
-        #         {"icon": 112, 
-        #             "show": lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall") , 
-        #             "hide": lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall") },
-        #         {"icon": 113, 
-        #             "show": gamemaster_panel_camera_show, 
-        #             "hide": gamemaster_panel_camera_hide }
-        #         ]~~
-
-        
         
         gui_row()
         gui_layout_widget("comms_sorted_list")
-        gui_row("row-height: 10;")
-        gui_layout_widget("text_waterfall")
 
     
-        
+    task_schedule(update_gm_stats)
     await gui()
+
+==== update_gm_stats
+
+    await delay_sim(seconds=10)
+
+    r = role("raider")
+    count = len(r)
+    gui_update_shared("sh_raider_count", f"$text:{count};justify:left;font:gui-3;")
+
+    if is_timer_set(SHARED, "time_limit"):
+        t = format_time_remaining(SHARED, "time_limit")
+        gui_update_shared("sh_game_time",f"$text: {t};justify:left;font:gui-3;")
+
+
+    jump update_gm_stats
+
 
 ==== gamemaster_move_camera_sync
     await delay_sim(3)
@@ -188,22 +230,6 @@ default GAMEMASTER_CONSOLE_ENABLED = True
         set_comms_selection(SCIENCE_ORIGIN_ID, comms_id)
         if prev_comms != comms_id:
             follow_route_select_comms(SCIENCE_ORIGIN_ID, comms_id)
-    elif EVENT.extra_extra_tag == "rmb":
-        # Need to reset scince to the right value????
-        # But when, Next tick?
-        prev_sci = get_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
-        set_weapons_selection(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
-        set_science_selection(SCIENCE_ORIGIN_ID, prev_sci)
-        
-        pos = Vec3(EVENT.source_point)
-        if SCIENCE_SELECTED_ID!=0:
-            pos = Vec3(SCIENCE_SELECTED.pos)
-
-        # The selection point for the gamemaster is the pos of the Admiral ship
-        # But this selection we need to remmber
-        set_inventory_value(SCIENCE_ORIGIN_ID, "GAMEMASTER_ORDERS_POINT", pos)
-
-        gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Orders", "rmb", "#400")
     
 //focus/comms if has_roles(COMMS_ORIGIN_ID, "gamemaster")
     set_science_selection(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)

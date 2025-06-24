@@ -138,117 +138,90 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
             % Material scan: minimal salvage value. Less than 0.1 kilotons of urydium.
             % Material scan: significant salvage value. More than 1.9 kilotons of fluxion.
             % Material scan: inconclusive. Something on this wreck is blocking our scans.
-        
-
-
-### / / select/science
-=== Not_executing
-    print("Not execuring is executing")
-
-    # VVVVV Default scan VVVVV
-
-    # These are fast scan of known things or things unknown to the script
-    if has_roles(SCIENCE_SELECTED_ID, "tsn,fighter"):
-        briefing = get_inventory_value(SCIENCE_SELECTED_ID, "briefing", "Mission unknown")
-        science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "A Friendly Fighter", "intel": briefing})
-    elif has_roles(SCIENCE_SELECTED_ID, "tsn,shuttle"):
-        briefing = get_inventory_value(SCIENCE_SELECTED_ID, "briefing", "Mission unknown")
-        science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "A Friendly shuttle", "intel": briefing})
-    elif has_role(SCIENCE_SELECTED_ID, "asteroid"):
-        science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Asteroid", "intel": "The object is an ordinary asteroid"})
-    elif has_role(SCIENCE_SELECTED_ID, "nebula"):
-        science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, {"scan": "Nebula.", "intel": "An ordinary nebula. It has minimal uel harvisting patential."})
-    #else:
-    #    science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, "unknown object type.")
-
-    ->END
-
-
-
 
 
 
 //enable/science if not role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
-//science if not role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+//science if not role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_any_role(SCIENCE_SELECTED_ID, "ship,cockpit")
 
 
-taunt_trait=get_inventory_value(SCIENCE_SELECTED_ID, "taunt_trait")
-intel_list = get_inventory_value(SCIENCE_SELECTED_ID, "taunt_data")
+    taunt_trait=get_inventory_value(SCIENCE_SELECTED_ID, "taunt_trait")
+    intel_list = get_inventory_value(SCIENCE_SELECTED_ID, "taunt_data")
 
-taunt_intel = "The captain cannot be taunted."
-bio_intel = "The bio scan has failed."
+    taunt_intel = "The captain cannot be taunted."
+    bio_intel = "The bio scan has failed."
 
-race = get_race(SCIENCE_SELECTED_ID)
-if race is None:
-    race = f"unknown race {race}"
+    race = get_race(SCIENCE_SELECTED_ID)
+    if race is None:
+        race = f"unknown race {race}"
 
-elite_intel = ""
-if has_role(SCIENCE_SELECTED_ID, "elite"):
-    elite_intel = "Warning: Elite abilities " + elite_get_abilities_scan(SCIENCE_SELECTED_ID)
+    elite_intel = ""
+    if has_role(SCIENCE_SELECTED_ID, "elite"):
+        elite_intel = "Warning: Elite abilities " + elite_get_abilities_scan(SCIENCE_SELECTED_ID)
 
-    
-taunt_intel = "The captain cannot be taunted {race}."
-bio_intel = f"A bunch of {race} creatures."
-
-if taunt_trait is not None and intel_list is not None:
-    taunt_intel = intel_list[taunt_trait]['science']
-
-+ "scan":
-    <scan>
-        " Enemy vessel. Exercise caution.
-+ "status":
-    <scan>
-        " Dynamic properties of enemy vessels cannot be scanned in this software.
-
-+ "intel" {"taunt_intel": taunt_intel, "elite_intel": elite_intel}:
-    <scan>
-        " {taunt_intel}
-        " {elite_intel}
-
-+ "bio" {"bio_intel": bio_intel}:
-    <scan>
-        " {bio_intel}
         
+    taunt_intel = "The captain cannot be taunted {race}."
+    bio_intel = f"A bunch of {race} creatures."
+
+    if taunt_trait is not None and intel_list is not None:
+        taunt_intel = intel_list[taunt_trait]['science']
+
+    + "scan":
+        <scan>
+            " Enemy vessel. Exercise caution.
+    + "status":
+        <scan>
+            " Dynamic properties of enemy vessels cannot be scanned in this software.
+
+    + "intel" {"taunt_intel": taunt_intel, "elite_intel": elite_intel}:
+        <scan>
+            " {taunt_intel}
+            " {elite_intel}
+
+    + "bio" {"bio_intel": bio_intel}:
+        <scan>
+            " {bio_intel}
+            
 
 
 
 //enable/science if has_role(SCIENCE_SELECTED_ID, "upgrade")
 //science if has_role(SCIENCE_SELECTED_ID, "upgrade")
 
-if has_roles(SCIENCE_SELECTED_ID, "upgrade, carapaction_coil"):
-    upg_desc = "Carapaction Coil. 5 min 300% shield recharge boost."
-elif has_roles(SCIENCE_SELECTED_ID, "upgrade, infusion_pcoils"):
-    upg_desc = "Infusion P-Coils. 5 Minute 300% Impulse and Maneuver Speed Boost."
-elif has_roles(SCIENCE_SELECTED_ID, "upgrade, tauron_focuser"):
-    upg_desc = "Tauron Focuser. 5 Minute 100% Beam and Reload Speed Boost."
-elif has_roles(SCIENCE_SELECTED_ID, "upgrade, secret_codecase"):
-    upg_desc = "Secret Codecase. Force one enemy ship to auto-surrender"
-elif has_roles(SCIENCE_SELECTED_ID, "upgrade, hidens_powercell"):
-    upg_desc = "HiDens Powercell. Increase energy by 500-600."
-elif has_roles(SCIENCE_SELECTED_ID, "upgrade, vigoranium_nodule"):
-    upg_desc = "Vigoranium Nodule. Restore Damage Control Teams."
-elif has_roles(SCIENCE_SELECTED_ID, "upgrade, cetrocite_crystal"):
-    upg_desc = "Cetrocite Crystal. 5 Minute 100% Faster Heat Reduction."
-elif has_roles(SCIENCE_SELECTED_ID, "upgrade, lateral_array"):
-    upg_desc = "Lateral Array. 5 Minute Target Scan Triple Speed."
-elif has_roles(SCIENCE_SELECTED_ID, "upgrade, haplix_overcharger"):
-    upg_desc = "Haplix Overcharger. +300 to shields but may damage shield generators."
-elif has_roles(SCIENCE_SELECTED_ID, "upgrade, escape-pod"):
-    upg_desc = "Escape Pod. Life-support capsule used in emergency situations."
+    if has_roles(SCIENCE_SELECTED_ID, "upgrade, carapaction_coil"):
+        upg_desc = "Carapaction Coil. 5 min 300% shield recharge boost."
+    elif has_roles(SCIENCE_SELECTED_ID, "upgrade, infusion_pcoils"):
+        upg_desc = "Infusion P-Coils. 5 Minute 300% Impulse and Maneuver Speed Boost."
+    elif has_roles(SCIENCE_SELECTED_ID, "upgrade, tauron_focuser"):
+        upg_desc = "Tauron Focuser. 5 Minute 100% Beam and Reload Speed Boost."
+    elif has_roles(SCIENCE_SELECTED_ID, "upgrade, secret_codecase"):
+        upg_desc = "Secret Codecase. Force one enemy ship to auto-surrender"
+    elif has_roles(SCIENCE_SELECTED_ID, "upgrade, hidens_powercell"):
+        upg_desc = "HiDens Powercell. Increase energy by 500-600."
+    elif has_roles(SCIENCE_SELECTED_ID, "upgrade, vigoranium_nodule"):
+        upg_desc = "Vigoranium Nodule. Restore Damage Control Teams."
+    elif has_roles(SCIENCE_SELECTED_ID, "upgrade, cetrocite_crystal"):
+        upg_desc = "Cetrocite Crystal. 5 Minute 100% Faster Heat Reduction."
+    elif has_roles(SCIENCE_SELECTED_ID, "upgrade, lateral_array"):
+        upg_desc = "Lateral Array. 5 Minute Target Scan Triple Speed."
+    elif has_roles(SCIENCE_SELECTED_ID, "upgrade, haplix_overcharger"):
+        upg_desc = "Haplix Overcharger. +300 to shields but may damage shield generators."
+    elif has_roles(SCIENCE_SELECTED_ID, "upgrade, escape-pod"):
+        upg_desc = "Escape Pod. Life-support capsule used in emergency situations."
 
-+ "scan" {"upg_desc": upg_desc}:
-    <scan>
-        " {upg_desc} 
+    + "scan" {"upg_desc": upg_desc}:
+        <scan>
+            " {upg_desc} 
 
 
 
 //enable/science if has_role(SCIENCE_SELECTED_ID, "black_hole")
 //science if has_role(SCIENCE_SELECTED_ID, "black_hole")
 
-+ "scan":
-    <scan>
-        % Black hole - 'What seest thou else in the dark backward and abysm of time?'
-        % Micro-singularity - smaller than a stellar black hole, but still very deadly.  
-        % Lethal hazard - the extreme gravity of a black hole will rip the ship apart.  
-        % Black hole - 'A rip in the very fabric of space and time.' 
+    + "scan":
+        <scan>
+            % Black hole - 'What seest thou else in the dark backward and abysm of time?'
+            % Micro-singularity - smaller than a stellar black hole, but still very deadly.  
+            % Lethal hazard - the extreme gravity of a black hole will rip the ship apart.  
+            % Black hole - 'A rip in the very fabric of space and time.' 
 

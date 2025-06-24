@@ -1,0 +1,103 @@
+
+# Auto start will automatically start the mission when it is selected
+AUTO_START: false
+
+# Auto play is a special mode
+# Typically used for testing
+# But could be useful with 
+# attracting attention
+AUTO_PLAY:
+    enable: false
+
+#
+# Operator mode is for operators
+# It allows the main screen to display and image
+# and remote starting of the game
+#
+OPERATOR_MODE: 
+    enable: false
+    logo: "media/LegendaryMissions/operator"
+    show_logo_on_main: true
+    pin: "000000"
+
+
+GAMEMASTER: 
+    enable: true
+### Uncomment the pin if you want the 
+###Gamemaster to require a pin
+    #pin: "000000"
+#
+# These are the settings 
+# for standard docking
+#    
+DOCKING: 
+    refuel_amount: 20
+    refuel_delay: 2
+    shield_delay: 2
+    shield_coeff: 2
+    torps_delay: 6
+    interior_delay: 2
+    interior_count: 2
+
+# Color theme for engineering
+# see grid_theme.json
+GRID_THEME: 0
+
+DIFFICULTY: 5
+
+WORLD_SELECT: "siege"
+
+TERRAIN_SELECT: "some"
+LETHAL_SELECT: "none"
+FRIENDLY_SELECT: "few"
+MONSTER_SELECT: "few"
+UPGRADE_SELECT: "lots"
+GAME_TIME_LIMIT: 0
+WAR_TIME_DELAY: 10
+
+# Player related settings
+PLAYER_CREATE_DEFAULT: true
+PLAYER_COUNT: 1
+PLAYER_SHIP_RESPAWN: false
+PLAYER_LIST: 
+    -   name: "Artemis"
+        side: "tsn"
+        ship: "tsn_light_cruiser"
+        face: "terran"
+
+    -   name: "Intrepid"
+        side: "tsn"
+        ship: "tsn_battle_cruiser"
+        face: "terran"
+
+    -   name: "Aegis"
+        side: "tsn"
+        ship: "tsn_battle_cruiser"
+        face: "terran"
+
+    -   name: "Horatio"
+        side: "tsn"
+        ship: "tsn_battle_cruiser"
+        face: "terran"
+
+    -   name: "Excalibur"
+        side: "tsn"
+        ship: "tsn_battle_cruiser"
+        face: "terran"
+
+    -   name: "Hera"
+        side: "tsn"
+        ship: "tsn_battle_cruiser"
+        face: "terran"
+
+    -   name: "Ceres"
+        side: "tsn"
+        ship: "tsn_battle_cruiser"
+        face: "terran"
+
+    -   name: "Diana"
+        side: "tsn"
+        ship: "tsn_battle_cruiser"
+        face: "terran"
+
+
