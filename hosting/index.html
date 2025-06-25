@@ -12,7 +12,7 @@
         <link rel="prev" href="../playing/updating/">
       
       
-        <link rel="next" href="setup.json/">
+        <link rel="next" href="../script/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -530,11 +530,11 @@
   
   
     <li class="md-nav__item">
-      <a href="setup.json/" class="md-nav__link">
+      <a href="setting.yaml.md" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    setup.json
+    None
   </span>
   
 
@@ -2089,9 +2089,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#time-limit-and-setupjson" class="md-nav__link">
+  <a href="#time-limit-and-settingyaml" class="md-nav__link">
     <span class="md-ellipsis">
-      time limit and setup.json
+      time limit and setting.yaml
     </span>
   </a>
   
@@ -2226,28 +2226,28 @@
 <h2 id="operator-tools">Operator Tools</h2>
 <p>The operator tools include:</p>
 <ul>
-<li>time limit and setup.json</li>
+<li>time limit and settings.yaml</li>
 <li>default mission</li>
 <li>Enable Operator mode</li>
 <li>Main screen Operator logo</li>
 <li>An Operator console</li>
 <li>Operator Console commands</li>
 </ul>
-<h3 id="time-limit-and-setupjson">time limit and setup.json</h3>
-<p>The time limit setting is available for missions, but operators in particular may want to set this setting in setup.json to a specific value to avoid retyping it all the time. Time is in minutes.</p>
-<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="err">GAME_TIME_LIMIT</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
+<h3 id="time-limit-and-settingyaml">time limit and setting.yaml</h3>
+<p>The time limit setting is available for missions, but operators in particular may want to set this setting in settings.yaml to a specific value to avoid retyping it all the time. Time is in minutes.</p>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="nt">GAME_TIME_LIMIT</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 </code></pre></div>
-<p>In general the setup.json is useful for setting things up to avoid constantly tuning the setting each run. Should be useful for operators.</p>
-<p><a href="setup.json/">see here </a> for what settings Operators may want to tweak.</p>
+<p>In general the settings.yaml is useful for setting things up to avoid constantly tuning the setting each run. Should be useful for operators.</p>
+<p><a href="settings.yaml/">see here </a> for what settings Operators may want to tweak.</p>
 <div class="admonition tip">
 <p class="admonition-title">Different defaults</p>
-<p>Operators that want different setups for varied crews, could copy the mission and alter the setup.json. While this takes up more space, It could be a time saver. This only needs to be don on the server.</p>
+<p>Operators that want different setups for varied crews, could copy the mission and alter the settings.yaml. While this takes up more space, It could be a time saver. This only needs to be don on the server.</p>
 </div>
 <h3 id="default-mission">Default mission</h3>
 <p>Look above for setting the default Mission Folder. This will help run your most common mission e.g. Legendary Missions.</p>
 <p>It won't prevent you from later selecting other missions.</p>
 <h3 id="enabling-operator-mode-setting">Enabling Operator mode setting</h3>
-<p>The Legendary Missions and mission that leverage the operator Addon have a setup.json file. This file can set the default starting values as well as enable operator mode.</p>
+<p>The Legendary Missions and mission that leverage the operator Addon have a settings.yaml file. This file can set the default starting values as well as enable operator mode.</p>
 <p>To enable operator mode, set the OPERATOR_MODE enable to true.</p>
 <p>With operator mode turned on, a client console can act as the mission startup settings screen and it also has some useful things for operators.</p>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;OPERATOR_MODE&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -2260,22 +2260,21 @@
 <h3 id="main-screen-operator-logo">Main screen Operator logo</h3>
 <p>The main screen is the first thing most player will see and can look at while they wait for the game to start.</p>
 <p>The Operator logo is an image the Operator can control and replace to have whatever content they would like on the main screen prior to the game starting.</p>
-<p>Three setting effect this first operator mode needs to be enabled in all missions setup.json that this is desired in.
+<p>Three setting effect this first operator mode needs to be enabled in all missions settings.yaml that this is desired in.
 Next <em>show_logo_on_main</em> needs to be set to true. Then <em>logo</em> should be the png folder and name for what file is desired.</p>
 <p>The logo name should not have the .png extension, and only png files are supported.
 The logo file currently need to be in every mission you would like to have Operator mode logo work.</p>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;OPERATOR_MODE&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;enable&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;logo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;media/operator&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;show_logo_on_main&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;pin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;000000&quot;</span>
-<span class="w">    </span><span class="p">},</span>
+<div class="highlight"><pre><span></span><code><span class="err">OPERATOR_MODE</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="err">e</span><span class="kc">na</span><span class="err">ble</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="err">logo</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;media/operator&quot;</span>
+<span class="w">    </span><span class="err">show_logo_o</span><span class="kc">n</span><span class="err">_mai</span><span class="kc">n</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="err">pi</span><span class="kc">n</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;000000&quot;</span>
 </code></pre></div>
 <p><img alt="logo" src="../media/Operator_logo.png" /></p>
 <h3 id="operator-admin-console">Operator Admin Console</h3>
 <p>By enabling OPERATOR_MODE a new console will show up in the client selection screen.</p>
 <p>The operator console is used to start the game and manage the game while it is running.</p>
-<p>First thing the Operator Admin console can require a pin to limit access to it. This pin is set in setup.json on the server.</p>
+<p>First thing the Operator Admin console can require a pin to limit access to it. This pin is set in settings.yaml on the server.</p>
 <p><img alt="logo" src="../media/operator_pin.png" /></p>
 <p>Selecting the Operator Admin Console will first present a pin input screen. Successful pin entry will go to the Operator screen.</p>
 <p>Prior to the start of the game the Operator console displays. The Start up options regardless of the show_logo_on_main setting.</p>
@@ -2325,7 +2324,7 @@ It provides additional information such as Time remaining and how many raiders a
 <li>admin</li>
 <li>admiral</li>
 </ul>
-<p>The value needs to include the ship to assign them to. The ship name must be a ship created by the mission typically this one in setup.json</p>
+<p>The value needs to include the ship to assign them to. The ship name must be a ship created by the mission typically this one in settings.yaml</p>
 <p>The console type and ship are separated by a semi colon</p>
 <div class="highlight"><pre><span></span><code>console_mode
 helm;artemis
