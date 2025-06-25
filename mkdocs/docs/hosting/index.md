@@ -87,13 +87,12 @@ To enable operator mode, set the OPERATOR_MODE enable to true.
 
 With operator mode turned on, a client console can act as the mission startup settings screen and it also has some useful things for operators.
 
-``` json
-"OPERATOR_MODE": {
-        "enable": true,
-        "logo": "media/operator",
-        "show_logo_on_main": true,
-        "pin": "000000"
-    },
+``` yaml
+OPERATOR_MODE: 
+    enable: true
+    logo: "media/operator"
+    show_logo_on_main: true
+    pin: "000000"
 ```
 
 ### Main screen Operator logo
@@ -107,7 +106,7 @@ Next *show_logo_on_main* needs to be set to true. Then *logo* should be the png 
 The logo name should not have the .png extension, and only png files are supported.
 The logo file currently need to be in every mission you would like to have Operator mode logo work.
 
-``` json
+``` yaml
 OPERATOR_MODE: 
     enable: true
     logo: "media/operator"
