@@ -12,7 +12,7 @@
         <link rel="prev" href="../playing/updating/">
       
       
-        <link rel="next" href="../script/">
+        <link rel="next" href="settings.yaml/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -530,11 +530,11 @@
   
   
     <li class="md-nav__item">
-      <a href="setting.yaml.md" class="md-nav__link">
+      <a href="settings.yaml/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    None
+    settings.yaml
   </span>
   
 
@@ -2250,12 +2250,11 @@
 <p>The Legendary Missions and mission that leverage the operator Addon have a settings.yaml file. This file can set the default starting values as well as enable operator mode.</p>
 <p>To enable operator mode, set the OPERATOR_MODE enable to true.</p>
 <p>With operator mode turned on, a client console can act as the mission startup settings screen and it also has some useful things for operators.</p>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;OPERATOR_MODE&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;enable&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;logo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;media/operator&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;show_logo_on_main&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;pin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;000000&quot;</span>
-<span class="w">    </span><span class="p">},</span>
+<div class="highlight"><pre><span></span><code><span class="nt">OPERATOR_MODE</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">enable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">logo</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;media/operator&quot;</span>
+<span class="w">    </span><span class="nt">show_logo_on_main</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">pin</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000000&quot;</span>
 </code></pre></div>
 <h3 id="main-screen-operator-logo">Main screen Operator logo</h3>
 <p>The main screen is the first thing most player will see and can look at while they wait for the game to start.</p>
@@ -2264,11 +2263,11 @@
 Next <em>show_logo_on_main</em> needs to be set to true. Then <em>logo</em> should be the png folder and name for what file is desired.</p>
 <p>The logo name should not have the .png extension, and only png files are supported.
 The logo file currently need to be in every mission you would like to have Operator mode logo work.</p>
-<div class="highlight"><pre><span></span><code><span class="err">OPERATOR_MODE</span><span class="p">:</span><span class="w"> </span>
-<span class="w">    </span><span class="err">e</span><span class="kc">na</span><span class="err">ble</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-<span class="w">    </span><span class="err">logo</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;media/operator&quot;</span>
-<span class="w">    </span><span class="err">show_logo_o</span><span class="kc">n</span><span class="err">_mai</span><span class="kc">n</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-<span class="w">    </span><span class="err">pi</span><span class="kc">n</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;000000&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">OPERATOR_MODE</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">enable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">logo</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;media/operator&quot;</span>
+<span class="w">    </span><span class="nt">show_logo_on_main</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">pin</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000000&quot;</span>
 </code></pre></div>
 <p><img alt="logo" src="../media/Operator_logo.png" /></p>
 <h3 id="operator-admin-console">Operator Admin Console</h3>
