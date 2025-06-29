@@ -51,13 +51,22 @@ shared game_stats = ~~{
     """color:white;justify: center; font: gui-6;$text:Game results"""
     gui_row()
     """""color:cyan;justify:center;font:gui-5;$text:{START_TEXT}"""""
+##    
     gui_row()
     gui_hole(5)
-    """color:yellow;justify: right;$text:TSN Destroyed"""
+    """color:yellow; justify: right;$text:Difficulty"""
+    gui_blank(style="col-width: 1;")
+    gui_hole(5)
+    """color:yellow;justify: left;$text:{DIFFICULTY}"""
+##
+
+    gui_row()
+    gui_hole(5)
+    """color:yellow;justify: right;$text:Terran Destroyed"""
     gui_blank(style="col-width: 1;")
     gui_hole(5)
     """color:yellow;justify: left;$text:{game_stats["tsn_destroyed"]}"""
-
+##
     gui_row()
     gui_hole(5)
     """color:yellow; justify: right;$text:arvonian ships destroyed"""
@@ -99,6 +108,7 @@ shared game_stats = ~~{
     gui_blank(style="col-width: 1;")
     gui_hole(5)
     """color:yellow;justify: left;$text:{game_stats["ships_surrender"]}"""
+
     gui_row()
     gui_hole(5)
     end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)
@@ -107,6 +117,7 @@ shared game_stats = ~~{
     gui_hole(5)
     """color:yellow;justify: left;$text:{end_time} minutes"""
 
+    
 
     mission = get_mission_name()
     start_mission = get_startup_mission_name()

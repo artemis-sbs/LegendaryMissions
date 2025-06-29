@@ -361,10 +361,10 @@ route_change_console(on_change_console)
 --- loop
     gui_section( style=f"area: 0, 76, 100, 100;")
     """
-    $t Console assigned to {CONSOLE_SELECT}
+$t Console assigned to {CONSOLE_SELECT}
 
-    $t on ship {client_select_ship}
-    """
+$t on ship {client_select_ship}
+"""
     jump no_images if len(_images)==0
 
     gui_section( style=f"area: 0, 0, 100, 76;")
