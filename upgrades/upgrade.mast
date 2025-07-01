@@ -266,8 +266,8 @@ import upgrade.py
                 fshield += 300.0
                 rshield += 300.0
                 print (f"Front Shield: {fshield} Rear Shield: {rshield}")
-                set_data_set_value(player_blob, "shield_val", fshield, 0)
-                set_data_set_value(player_blob, "shield_val", rshield, 1)
+                player_blob.set(ship_id, "shield_val", fshield, 0)
+                player_blob.set(ship_id, "shield_val", rshield, 1)
                 ho_count -= 1
                 set_inventory_value(ship_id, "haplix_overcharger", ho_count)
                 comms_broadcast(ship_id, "Haplix Overcharger Activated", "#FF0")
@@ -367,7 +367,7 @@ import upgrade.py
     if shieldrate is None:
         shieldrate = 1.0
     shieldrate *= 3.0
-    set_data_set_value(player_blob, "all_shield_ugprade_coeff", shieldrate)
+    player_blob.set(ship_id, "all_shield_ugprade_coeff", shieldrate)
     print(f"New Shield Repair Rate: {shieldrate}")
     for x in range(300):
         cc_timer = get_inventory_value(ship_id, "cc_timer" )
@@ -378,7 +378,7 @@ import upgrade.py
 
     shieldrate /= 3.0
     print(f"Reset Shield Repair Rate: {shieldrate}")
-    set_data_set_value(player_blob, "all_shield_upgrade_coeff", shieldrate)
+    player_blob.set(ship_id, "all_shield_upgrade_coeff", shieldrate)
     gui_update_shared("sh-cc-count", "$text: {cc_count};")
     gui_update_shared("sh-cc-txt", "$text: Carapaction Coil;")
     gui_update_shared("sh-cc-timer", "$text: 5 Minute 300% Shield Recharge Boost;")
@@ -396,9 +396,9 @@ import upgrade.py
     impfaster *= 3.0
     turnfaster *= 3.0
     #warpfaster *= 3.0
-    set_data_set_value(player_blob, "impulse_upgrade_coeff", impfaster)
-    set_data_set_value(player_blob, "turn_upgrade_coeff", turnfaster)
-    #set_data_set_value(player_blob, "warp_upgrade_coeff", warpfaster)
+    player_blob.set(ship_id, "impulse_upgrade_coeff", impfaster)
+    player_blob.set(ship_id, "turn_upgrade_coeff", turnfaster)
+    #player_blob.set(ship_id, "warp_upgrade_coeff", warpfaster)
     print(f"New Impulse Coefficient: {impfaster}")
     print(f"New Turn Coefficient: {turnfaster}")
 
@@ -415,9 +415,9 @@ import upgrade.py
     print(f"Reset Impulse Coefficient: {impfaster}")
     print(f"Reset Turn Coefficient: {turnfaster}")
 
-    set_data_set_value(player_blob, "impulse_upgrade_oeff", impfaster)
-    set_data_set_value(player_blob, "turn_upgrade_coeff", turnfaster)
-    #set_data_set_value(player_blob, "warp_upgrade_coeff", warpfaster)
+    player_blob.set(ship_id, "impulse_upgrade_oeff", impfaster)
+    player_blob.set(ship_id, "turn_upgrade_coeff", turnfaster)
+    #player_blob.set(ship_id, "warp_upgrade_coeff", warpfaster)
     gui_update_shared("sh-ip-count", "$text: {ip_count};")
     gui_update_shared("sh-ip-txt", "$text: Infusion P-Coils;")
     gui_update_shared("sh-ip-timer", "$text: 5 Minute 300% Impulse and Maneuver Speed Boost;")
@@ -435,8 +435,8 @@ import upgrade.py
     print(f"Current TorpeTube Coefficent: {tubefaster}")
     beamfaster *= 2.0
     tubefaster *= 2.0
-    set_data_set_value(player_blob, "all_beam_upgrade_coeff", beamfaster)
-    set_data_set_value(player_blob, "all_tube_upgrade_coeff", tubefaster)
+    player_blob.set(ship_id, "all_beam_upgrade_coeff", beamfaster)
+    player_blob.set(ship_id, "all_tube_upgrade_coeff", tubefaster)
     print(f"New Beam Speed Coefficient: {beamfaster}")
     print(f"New TorpeTube Coefficient: {tubefaster}")
     for x in range(300):
@@ -450,8 +450,8 @@ import upgrade.py
     tubefaster /= 2.0
     print(f"Reset Beam Damage Coefficient: {beamfaster}")
     print(f"Reset TorpeTube Coefficient: {tubefaster}")
-    set_data_set_value(player_blob, "all_beam_upgrade_coeff", beamfaster)
-    set_data_set_value(player_blob, "all_tube_upgrade_coeff", tubefaster)
+    player_blob.set(ship_id, "all_beam_upgrade_coeff", beamfaster)
+    player_blob.set(ship_id, "all_tube_upgrade_coeff", tubefaster)
     gui_update_shared("sh-tf-count", "$text: {tf_count};")
     gui_update_shared("sh-tf-txt", "$text: Tauron Focuser;")
     gui_update_shared("sh-tf-timer", "$text: 5 Minute 100% Beam and Reload Speed Boost;")
@@ -492,7 +492,7 @@ import upgrade.py
     else:
         stayfrosty *= 2.0
 
-    set_data_set_value(player_blob, "coolant_upgrade_coeff", stayfrosty)
+    player_blob.set(ship_id, "coolant_upgrade_coeff", stayfrosty)
     print(f"New Coolant Coefficient: {stayfrosty}")
     for x in range(300):
         cl_timer = get_inventory_value(ship_id, "cl_timer" )
@@ -503,7 +503,7 @@ import upgrade.py
 
     stayfrosty /= 2.0
     print(f"Reset Coolant Coefficient: {stayfrosty}")
-    set_data_set_value(player_blob, "coolant_upgrade_coeff", stayfrosty)
+    player_blob.set(ship_id, "coolant_upgrade_coeff", stayfrosty)
     gui_update_shared("sh-cl-count", "$text: {cl_count};")
     gui_update_shared("sh-cl-txt", "$text: Cetrocite Crystal;")
     gui_update_shared("sh-cl-timer", "$text: 5 Minute 100% Faster Heat Reduction;")
@@ -518,7 +518,7 @@ import upgrade.py
     else:
         scanrate *= 3.0
 
-    set_data_set_value(player_blob, "sensor_upgrade_coeff", scanrate)
+    player_blob.set(ship_id, "sensor_upgrade_coeff", scanrate)
     print(f"New Scan Speed: {scanrate}")
     for x in range(300):
         la_timer = get_inventory_value(ship_id, "la_timer" )
@@ -529,7 +529,7 @@ import upgrade.py
 
     scanrate /= 3.0
     print(f"Reset Scan Speed: {scanrate}")
-    set_data_set_value(player_blob, "sensor_upgrade_coeff", scanrate)
+    player_blob.set(ship_id, "sensor_upgrade_coeff", scanrate)
     gui_update_shared("sh-la-count", "$text: {la_count};")
     gui_update_shared("sh-la-txt", "$text: Lateral Array;")
     gui_update_shared("sh-la-timer", "$text: 5 Minute Target Scan Triple Speed;")
