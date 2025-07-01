@@ -37,12 +37,16 @@ default shared DOCKING_SHIELD_COEFF = DOCKING.get("shield_coeff", 2)
 metadata: ``` yaml
 distance: 600
 ```
-# This is called every 4 second
+# This is called every 1 second
 # System assures Objects exist
 +++ enable
-    # ant additional testing
-    # to cancel yield fail
-    
+# additional testing
+# to cancel yield fail
+
++++ undocking
+# This is called when docking is released
+
+
 # Call while the tractor is 
 +++ docking
     set_weapons_selection(DOCKING_PLAYER_ID, 0)
