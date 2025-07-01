@@ -4,13 +4,28 @@ from sbs_utils.procedural.query import to_object
 from sbs_utils.helpers import FrameContext
 import sbs_utils.yaml as yaml
 import json
+from sbs_utils.vec import Vec3
+
+
+# I need this because Vec3 has an __iter__
+class JSONEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, Vec3):
+                return {"x": o.x, "y": o.y, "z": o.z}
+            return super().default(o)
+
+
 
 def brain_scan_get_text_brain(b, indent):
     if int(b.brain_type.value)  == 0x100:
         t = f"{b.active}"
-        d = json.dumps(b.data)
-        d = d.replace("{"," " )
-        d = d.replace("}"," " )
+        try:
+            d = json.dumps(b.data, cls=JSONEncoder)
+            d = d.replace("{"," " )
+            d = d.replace("}"," " )
+        except Exception as e:
+            d = f"data {e}"
+
 
         i = " " * (indent *2)
         res = f"[UNKNOWN]"

@@ -76,6 +76,9 @@ valid_for: hostile
     # Will chase the current target,
     # goto/return an assign location
     # look for new targets
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", objective_target_point)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", objective_target)
+    
     brain_clear(OBJECTIVE_AGENT_ID)
     brain_add(OBJECTIVE_AGENT_ID, ai_chase_current, {"distance":20000})
     brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X":5000})
@@ -147,7 +150,7 @@ display_name: Full Stop
 type: objective/orders/defender
 objective_target: null
 objective_target_point: null
-valid_for: any
+valid_for: self
 ```
 +++ enter
     # This objective assumes it has control of the brain
