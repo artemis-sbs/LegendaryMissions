@@ -53,9 +53,26 @@
 
 
 
+//popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "prefab_npc_defender") and COMMS_POPUP_ID == COMMS_SELECTED_ID
+    
+    label_type = get_inventory_value(COMMS_SELECTED_ID, "give_orders_type")
+
+    orders = labels_get_type(label_type)
+    for order in orders:
+        valid_for = order.get_inventory_value("valid_for", "any")
+        if "self" != valid_for:
+            continue
+
+        set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", COMMS_POPUP_POINT)
+        set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", COMMS_POPUP_ID)
+
+        display_name = order.get_inventory_value("display_name", order.name)
+        + "Have {COMMS_SELECTED.name} {display_name}" carry_out_orders {"cur_objective": order}
+     
 
 
-//popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "prefab_npc_defender") 
+
+//popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "prefab_npc_defender") and COMMS_POPUP_ID != COMMS_SELECTED_ID
     label_type = get_inventory_value(COMMS_SELECTED_ID, "give_orders_type")
 
     orders = labels_get_type(label_type)
@@ -66,13 +83,69 @@
             continue
         if valid_for == "hostile" and ally:
             continue
+        if valid_for == "self":
+            continue
 
         set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", COMMS_POPUP_POINT)
         set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", COMMS_POPUP_ID)
 
         display_name = order.get_inventory_value("display_name", order.name)
         + "Have {COMMS_SELECTED.name} {display_name}" carry_out_orders {"cur_objective": order}
-     
+
+
+//popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "civilian")
+    current = set(linked_to(COMMS_SELECTED_ID, "OBJECTIVE"))
+    original = get_inventory_value(COMMS_SELECTED_ID, "ORIGINAL_OBJECTIVE")
+    if original is None:
+        set_inventory_value(COMMS_SELECTED_ID, "ORIGINAL_OBJECTIVE", current)
+        brain = get_inventory_value(COMMS_SELECTED_ID, "__BRAIN__")
+        set_inventory_value(COMMS_SELECTED_ID, "ORIGINAL_BRAIN", brain)
+        old_target = get_inventory_value(COMMS_SELECTED_ID,"blackboard:target")
+        set_inventory_value(COMMS_SELECTED_ID,"ORIGINAL_TARGET", old_target)
+        original = current
+        print(f"I Cached it {current}")
+
+    
+    is_default_objective = current == original
+    print(f"{original} {current} {is_default_objective}")
+    popup = COMMS_POPUP.name if COMMS_POPUP is not None else "Location"
+    sel = COMMS_SELECTED.name if COMMS_SELECTED is not None else ""
+    
+
+    + "{sel} head to location" if COMMS_POPUP_ID == 0:
+        objective_clear(COMMS_SELECTED_ID)
+        target_point = Vec3(COMMS_POPUP_POINT)
+
+        objective_add(COMMS_SELECTED_ID, objective_goto_location, {"objective_target_point": target_point, "objective_target": None})
+    + "{sel} head to {popup}" if COMMS_POPUP is not None:
+        objective_clear(COMMS_SELECTED_ID)
+        ->END if not object_exists(COMMS_POPUP_ID)
+        target_point = Vec3(COMMS_POPUP.pos)
+        objective_add(COMMS_SELECTED_ID, objective_goto_location, {"objective_target_point": target_point, "objective_target": COMMS_POPUP_ID})
+
+    + "{sel} return to work"  {"restore": original, "sel_id": COMMS_SELECTED_ID} if not is_default_objective:
+        # This is a bit complicated 
+        # And not flexible, assumes brain
+        # And what data the brain needs saved
+        # TODO: Add support functions to library
+        og_brain = get_inventory_value(COMMS_SELECTED_ID, "ORIGINAL_BRAIN")
+        set_inventory_value(COMMS_SELECTED_ID, "__BRAIN__", og_brain)
+        old_target = get_inventory_value(COMMS_SELECTED_ID, "ORIGINAL_TARGET")
+        set_inventory_value(COMMS_SELECTED_ID, "blackboard:target", old_target)
+        set_inventory_value(COMMS_SELECTED_ID, "blackboard:target_position", None)
+
+   
+        objective_clear(COMMS_SELECTED_ID)
+        for oid in restore:
+            add_role(oid, "OBJECTIVE")
+            add_role(oid, "OBJECTIVE_RUN")
+            link(sel_id, "OBJECTIVE", oid)
+            link(sel_id, "OBJECTIVE_RUN", oid)
+
+    + "{sel} full Stop":
+        objective_clear(COMMS_SELECTED_ID)
+        objective_add(COMMS_SELECTED_ID, objective_full_stop)
+
 
 === carry_out_orders 
     ->END if COMMS_SELECTED_ID == 0
