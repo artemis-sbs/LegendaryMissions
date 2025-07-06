@@ -5,7 +5,7 @@ dolly = 50
 orbit = 180.0
 do_move = 0
 property_pane = None
-default ADMIRAL_CONSOLE_ENABLED = True
+default ADMIRAL_CONSOLE_ENABLED = False
 
 @console/admiral !0 ^90 "Admiral" if ADMIRAL_CONSOLE_ENABLED
 " Aid your side in the war
