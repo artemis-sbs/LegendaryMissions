@@ -60,7 +60,7 @@
         upg_dropchance = 4
     elif "lots" == UPGRADE_SELECT:
         upg_dropchance = 6
-    elif "many" == UPGRADE_SELECT:
+    elif "max" == UPGRADE_SELECT:
         upg_dropchance = 8
 
     # Generate random number, end task if upg_rand is higher than the drop chance (determined by UPGRADE_SELECT)

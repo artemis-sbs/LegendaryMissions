@@ -2,6 +2,7 @@ import prefab_helpers.py
 
 shared SHIP_NAME_DATA = load_json_string(media_read_relative_file("shipnames.json"))
 
+
 === prefab_npc_defender
 metadata: ```
 type: prefab/npc/defender
@@ -33,6 +34,7 @@ allies: civ
         friend.data_set.set("ally_list",allies,0)
 
     set_inventory_value(friend, "give_orders_type", give_orders_type)
+    
 
     # Objective will set brain 
     objective_add(friend.id, objective)
@@ -161,5 +163,7 @@ valid_for: self
     message = "currently idle"
     OBJECTIVE.set_inventory_value("desc", message)
     yield idle
+
+
 
 

@@ -11,7 +11,7 @@
         FRIENDLY_SELECT = "none"
 
     match FRIENDLY_SELECT:
-        case "many":
+        case "max":
             count = 10
         case "lots":
             count = 8
@@ -42,7 +42,7 @@
 
     civilian_count = 0
     match FRIENDLY_SELECT:
-        case "many":
+        case "max":
             civilian_count = 4
         case "lots":
             civilian_count = 3
