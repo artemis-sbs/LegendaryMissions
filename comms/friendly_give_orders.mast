@@ -103,27 +103,29 @@
         old_target = get_inventory_value(COMMS_SELECTED_ID,"blackboard:target")
         set_inventory_value(COMMS_SELECTED_ID,"ORIGINAL_TARGET", old_target)
         original = current
-        print(f"I Cached it {current}")
 
     
     is_default_objective = current == original
-    print(f"{original} {current} {is_default_objective}")
     popup = COMMS_POPUP.name if COMMS_POPUP is not None else "Location"
     sel = COMMS_SELECTED.name if COMMS_SELECTED is not None else ""
+    are_same = COMMS_SELECTED_ID == COMMS_POPUP_ID
     
 
     + "{sel} head to location" if COMMS_POPUP_ID == 0:
         objective_clear(COMMS_SELECTED_ID)
         target_point = Vec3(COMMS_POPUP_POINT)
+        comms_receive("Heading to assigned location", "On our way", color="white", title_color="cyan")
 
         objective_add(COMMS_SELECTED_ID, objective_goto_location, {"objective_target_point": target_point, "objective_target": None})
-    + "{sel} head to {popup}" if COMMS_POPUP is not None:
+    + "{sel} head to {popup}" if COMMS_POPUP is not None and not are_same:
         objective_clear(COMMS_SELECTED_ID)
         ->END if not object_exists(COMMS_POPUP_ID)
         target_point = Vec3(COMMS_POPUP.pos)
         objective_add(COMMS_SELECTED_ID, objective_goto_location, {"objective_target_point": target_point, "objective_target": COMMS_POPUP_ID})
+        
+        comms_receive(f"Rendezvousing with {COMMS_POPUP.name}", "On our way", color="white", title_color="cyan")
 
-    + "{sel} return to work"  {"restore": original, "sel_id": COMMS_SELECTED_ID} if not is_default_objective:
+    + "{sel} return to work"  {"restore": original, "sel_id": COMMS_SELECTED_ID} if not is_default_objective and are_same:
         # This is a bit complicated 
         # And not flexible, assumes brain
         # And what data the brain needs saved
@@ -134,6 +136,9 @@
         set_inventory_value(COMMS_SELECTED_ID, "blackboard:target", old_target)
         set_inventory_value(COMMS_SELECTED_ID, "blackboard:target_position", None)
 
+        comms_receive("Getting back to doing to what I do best", "returning to work", color="white", title_color="cyan")
+
+
    
         objective_clear(COMMS_SELECTED_ID)
         for oid in restore:
@@ -142,9 +147,10 @@
             link(sel_id, "OBJECTIVE", oid)
             link(sel_id, "OBJECTIVE_RUN", oid)
 
-    + "{sel} full Stop":
+    + "{sel} full Stop" if are_same:
         objective_clear(COMMS_SELECTED_ID)
         objective_add(COMMS_SELECTED_ID, objective_full_stop)
+        comms_receive("Stopped awaiting new orders", "Full Stop", color="white", title_color="cyan")
 
 
 === carry_out_orders 
