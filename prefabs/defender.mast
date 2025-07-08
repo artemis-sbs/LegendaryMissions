@@ -53,12 +53,17 @@ valid_for: any
 +++ enter
     # This objective assumes it has control of the brain
     brain_clear(OBJECTIVE_AGENT_ID)
+    # Need to clear any values we depend on
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+    #
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": objective_target, "force_target_point": objective_target_point, "clear_when_reached": False})
     brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
     set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", objective_target_point)
     # Set targets later
     set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", objective_target)
-    message = "currently heading to assigned location"
+    name = get_location_text(objective_target, objective_target_point, "assigned location")
+    message = "currently heading to {name}"
     OBJECTIVE.set_inventory_value("desc", message)
 +++ test
     #print("Running test")
@@ -95,14 +100,13 @@ valid_for: hostile
     if current is not None:
         desc = current
         name = "location"
-        _t = get_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
+        _tp = get_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
         # Set targets later
-        _tp = get_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
-        if _tp != 0:
-            _tp = to_object(_tp)
-            if _tp is not None:
-                name = _tp.name
-
+        _t = get_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+        if _t is not None or _tp is not None:
+            name = get_location_text(_t, _tp, name)
+        else:
+            name = get_location_text(objective_target, objective_target_point, name)
         message = "attacking targeting {name} : {desc}"
     OBJECTIVE.set_inventory_value("desc", message)
     yield idle
@@ -120,7 +124,10 @@ valid_for: allies
 +++ enter
     # This objective assumes it has control of the brain
     brain_clear(OBJECTIVE_AGENT_ID)
-    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc)
+    # Need to clear any values we depend on
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X":5000})
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"clear_when_reached": False})
     # Goto the assigned location
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": objective_target, "force_target_point": objective_target_point, "clear_when_reached": False})
@@ -132,13 +139,13 @@ valid_for: allies
     if current is not None:
         desc = current
         name = "location"
-        _t = get_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
+        _tp = get_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
         # Set targets later
-        _tp = get_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
-        if _tp != 0:
-            _tp = to_object(_tp)
-            if _tp is not None:
-                name = _tp.name
+        _t = get_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+        if _t is not None or _tp is not None:
+            name = get_location_text(_t, _tp, name)
+        else:
+            name = get_location_text(objective_target, objective_target_point, name)
 
         message = "protecting targeting {name} : {desc}"
     OBJECTIVE.set_inventory_value("desc", message)

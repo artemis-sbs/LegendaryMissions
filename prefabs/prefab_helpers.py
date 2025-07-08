@@ -1,4 +1,5 @@
 from sbs_utils.procedural.execution import get_shared_variable
+from sbs_utils.procedural.query import to_space_object
 import random
 
 
@@ -19,7 +20,17 @@ def get_defender_name(side="tsn", allow_canuck=True):
 
     return name
 
+def get_location_text(t, tp, defa):
+    t = to_space_object(t) 
+    if t is not None:
+        return t.name
+    if tp is not None:
+        z = chr(64 + int(tp.z // 20000 + 13) % 26)
+        x = int(tp.x // 20000 + 12) % 100
 
+        return f"{z}{x:02d}"
+        
+    return defa
 
 
 

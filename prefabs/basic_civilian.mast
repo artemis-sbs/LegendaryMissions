@@ -218,8 +218,10 @@ type: objective
     OBJECTIVE.set_inventory_value("desc", "")
   if OBJECTIVE.get_inventory_value("desc") == "":
     obj = to_object(object_id)
+    
     if obj is not None:
-      OBJECTIVE.set_inventory_value("desc", "Exploring Nebula")
+      loc = get_location_text(None,  obj.pos, "")
+      OBJECTIVE.set_inventory_value("desc", f"Exploring Nebula at {loc}")
   jump goto_random_object
 
 === explore_asteroid
@@ -235,7 +237,8 @@ type: objective
   if OBJECTIVE.get_inventory_value("desc") == "":
     obj = to_object(object_id)
     if obj is not None:
-      OBJECTIVE.set_inventory_value("desc", "Exploring asteroid")
+      loc = get_location_text(None,  obj.pos, "")
+      OBJECTIVE.set_inventory_value("desc", f"Exploring Nebula at {loc}")
   jump goto_random_object
   
 
