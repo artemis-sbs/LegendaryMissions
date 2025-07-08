@@ -42,6 +42,14 @@ default shared SIMPLE_INTERNAL = True
     lifeform_spawn("Exobiology", random_terran(civilian=False), "tsn, exobiology",COMMS_SELECTED_ID, path="//comms/internal/exobiology", title_color="cyan")
     lifeform_spawn("Counselor", random_terran(civilian=False), "tsn, counselor",COMMS_SELECTED_ID, path="//comms/internal/counselor", title_color="gold")
 
+# Rufus P. Mortimer is semi-hidden character that can activate some functions on certain TSN ships
+//enable/comms if has_roles(COMMS_SELECTED_ID, '__PLAYER__') and (COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and (to_object(COMMS_ORIGIN_ID).art_id == "tsn_battle_cruiser")
+    lifeform_spawn("Rufus", random_terran(civilian=False), "tsn, rufus",COMMS_SELECTED_ID, path="//comms/internal/rufus", title_color="purple")
+//enable/comms if has_roles(COMMS_SELECTED_ID, '__PLAYER__') and (COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and (to_object(COMMS_ORIGIN_ID).art_id == "tsn_juggernaut")
+    lifeform_spawn("Rufus", random_terran(civilian=False), "tsn, rufus",COMMS_SELECTED_ID, path="//comms/internal/rufus", title_color="purple")
+//enable/comms if has_roles(COMMS_SELECTED_ID, '__PLAYER__') and (COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and (to_object(COMMS_ORIGIN_ID).art_id == "tsn_dreadnought")
+    lifeform_spawn("Rufus", random_terran(civilian=False), "tsn, rufus",COMMS_SELECTED_ID, path="//comms/internal/rufus", title_color="purple")
+
 
 # //comms if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID) and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__')) and SIMPLE_INTERNAL
 
@@ -130,6 +138,36 @@ default shared SIMPLE_INTERNAL = True
             await delay_sim(seconds=3)
             << "counselor crew update"
                 "Things feel like they are getting worse
+
+# Rufus P. Mortimer is semi-hidden character that can activate some functions on certain TSN ships
+//comms/internal/rufus if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__')and (to_object(COMMS_ORIGIN_ID).art_id == "tsn_battle_cruiser"))
+    + ^1 "Back" //comms
+    +"Rotate Beam Arcs":
+        task_schedule(rotate_beam_arc1)
+        task_schedule(rotate_beam_arc2)
+        await delay_sim(10)
+        with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+            << "Recalibrate Beams"
+                % Beam arcs rotated, sir!
+
+//comms/internal/rufus if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__')and (to_object(COMMS_ORIGIN_ID).art_id == "tsn_juggernaut"))
+    + ^1 "Back" //comms
+    +"Rotate Beam Arcs":
+        task_schedule(rotate_beam_arc1)
+        task_schedule(rotate_beam_arc2)
+        await delay_sim(10)
+        with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+            << "Recalibrate Beams"
+                % Beam arcs rotated, sir!
+
+//comms/internal/rufus if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__')and (to_object(COMMS_ORIGIN_ID).art_id == "tsn_dreadnought"))
+    + ^1 "Back" //comms
+    +"Refocus Primary Beam":
+        task_schedule(refocus_primary_beam)
+        await delay_sim(10)
+        with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
+            << "Recalibrate Beams"
+                % Primary beam refocused, sir!
 
 
 
