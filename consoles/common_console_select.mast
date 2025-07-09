@@ -277,7 +277,7 @@ route_change_console(on_change_console)
 
     _ship_id= None
     for player_ship in to_object_list(role("__PLAYER__")):
-        if player_ship.name.lower() == client_select_ship:
+        if player_ship.name.lower() == client_select_ship.lower():
             _ship_id = player_ship.id
 
             sbs.assign_client_to_ship(client_id, _ship_id)
