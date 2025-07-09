@@ -45,6 +45,13 @@ default CINEMATIC_CONSOLE_ENABLED = True
 @console/comms !0 ^20 "Communication" if COMMS_CONSOLE_ENABLED
     " Interact with other ships and stations
 
+
+    ship = sbs.get_ship_of_client(client_id)
+    sel = get_comms_selection(ship)
+    if ship is not None:
+        if sel is None:
+            sel  = 0
+        follow_route_select_comms(ship,sel)
     # Clear Comms Info
     CONSOLE_SELECT = "comms"
     comms_info("static")
