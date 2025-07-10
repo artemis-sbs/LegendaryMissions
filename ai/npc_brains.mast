@@ -97,7 +97,9 @@ stop_dist: 500
 
 
 === goto_object_or_location
-" Heading to an assigned location or object.
+% Heading to an assigned location or object.
+% On my way 
+% Pedal is to the metal
 metadata: ``` 
 type: brain/npc
 shoot: False

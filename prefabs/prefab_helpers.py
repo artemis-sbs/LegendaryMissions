@@ -28,7 +28,7 @@ def get_location_text(t, tp, defa):
         z = chr(64 + int(tp.z // 20000 + 13) % 26)
         x = int(tp.x // 20000 + 12) % 100
 
-        return f"{z}{x:02d}"
+        return f"grid {z}{x:02d}"
         
     return defa
 

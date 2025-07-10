@@ -62,11 +62,17 @@ valid_for: any
     set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", objective_target_point)
     # Set targets later
     set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", objective_target)
-    name = get_location_text(objective_target, objective_target_point, "assigned location")
-    message = "currently heading to {name}"
-    OBJECTIVE.set_inventory_value("desc", message)
+    
 +++ test
-    #print("Running test")
+    name = get_location_text(objective_target, objective_target_point, "assigned location")
+    <var msg>
+        % currently heading to {name}
+        % on my way to {name}
+        % petal to the metal to {name}
+
+    # you need the str() to get a random string
+    message = str(msg)
+    OBJECTIVE.set_inventory_value("desc", message)
     yield idle
 
 === objective_attack_target
@@ -107,7 +113,16 @@ valid_for: hostile
             name = get_location_text(_t, _tp, name)
         else:
             name = get_location_text(objective_target, objective_target_point, name)
-        message = "attacking targeting {name} : {desc}"
+
+        <var msg>
+            % Looking for trouble at {name}
+            % Attacking anything near {name}
+            % Getting my beam on with {name}
+
+        # you need the str() to get a random string
+        obj_message = str(msg)
+        
+        message = "{obj_message}: {desc}"
     OBJECTIVE.set_inventory_value("desc", message)
     yield idle
 
@@ -147,7 +162,16 @@ valid_for: allies
         else:
             name = get_location_text(objective_target, objective_target_point, name)
 
-        message = "protecting targeting {name} : {desc}"
+        <var msg>
+            % Locking down {name}
+            % I will protect {name} until the end
+            % Protecting {name}
+            % Anyone messes with {name} they will pay
+
+        # you need the str() to get a random string
+        obj_message = str(msg)
+        
+        message = "{obj_message}: {desc}"
     OBJECTIVE.set_inventory_value("desc", message)
     yield idle
 
