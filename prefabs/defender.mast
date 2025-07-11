@@ -28,6 +28,9 @@ allies: civ
     ->END if ship_art is None
     friend = to_object(npc_spawn(START_X, START_Y, START_Z, name, side_value+",friendly,prefab_npc_defender", ship_art, "behav_npcship"))
     if face is None:
+        if (crew is None or crew=="terran") and side_value == "tsn":
+            # Force terran defenders to be military and not civilian
+            set_face(friend.id, random_terran(civilian=False))
         set_face(friend.id, random_face(crew))
     
     if allies is not None:
