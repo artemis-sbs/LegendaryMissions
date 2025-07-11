@@ -85,6 +85,8 @@ type: objective/orders/defender
 objective_target: null
 objective_target_point: null
 valid_for: hostile
+line_of_sight: 10000
+cut_off_distance: 20000
 ```
 +++ enter
     # This objective assumes it has control of the brain
@@ -96,8 +98,8 @@ valid_for: hostile
     set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", objective_target)
     
     brain_clear(OBJECTIVE_AGENT_ID)
-    brain_add(OBJECTIVE_AGENT_ID, ai_chase_current, {"distance":20000})
-    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X":5000})
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_current, {"distance":cut_off_distance})
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X":line_of_sight})
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"clear_when_reached": False})    
     # Goto the assigned location
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": objective_target, "force_target_point": objective_target_point, "clear_when_reached": False})
@@ -138,6 +140,7 @@ type: objective/orders/defender
 objective_target: null
 objective_target_point: null
 valid_for: allies
+line_of_sight: 10000
 ```
 +++ enter
     # This objective assumes it has control of the brain
@@ -145,7 +148,7 @@ valid_for: allies
     # Need to clear any values we depend on
     set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
     set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
-    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X":5000})
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X": line_of_sight})
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"clear_when_reached": False})
     # Goto the assigned location
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": objective_target, "force_target_point": objective_target_point, "clear_when_reached": False})
