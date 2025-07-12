@@ -29,6 +29,7 @@ body:
     attributes:
       label: What version of Artemis Cosmos?
       options:
+        - v1.1.x
         - v1.0.6
         - v1.0.1
     validations:

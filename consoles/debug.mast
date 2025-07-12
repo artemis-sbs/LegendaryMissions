@@ -86,6 +86,11 @@ shared allow_debug = True
     on gui_message(gui_button("Force error")):
         fred = None
         x = fred.fred
+
+    gui_row()
+    on gui_message(gui_button("Dump Task counts")):
+        debug_dump_mast()
+        
         
 
     gui_row()
