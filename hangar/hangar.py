@@ -91,10 +91,22 @@ def hangar_set_dock(craft_id, docked_id):
 
     set_dedicated_link(craft_id, "home_dock", docked_id) # dedicated = can only have one
     link(docked_id, "hangar_craft", craft_id)
-    set_science_selection(craft_id, docked_id)
+    set_science_selection(craft_id, docked_id) # This is effectively a waypoint home for the craft
     hangar_bump_version()
 
 def hangar_craft_spawn(docked_id, art, roles, prefix):
+    """
+    Spawns a new hangar craft in the hangar of the specified ship or station.  
+    You probably don't need to use this, because in hangar.mast, when a ship or station is spawned, this function is called to create all the necessary shuttles, fighters, and bombers needed.
+
+    Args:
+        docked_id (int): the id of the parent craft
+        art (str): the art id of the craft to spawn, from shipData.json
+        roles (str): a comma-separated list of roles
+        prefix (str): the desired prefix to the name of craft
+    Returns:
+        SpawnData: The SpawnData object associated with the craft
+    """
     global _craft_id
     if roles is None:
         roles = "cockpit,standby"
@@ -149,6 +161,18 @@ def hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, objective):
 
 
 def hangar_random_craft_spawn(docked_id, roles):
+    """
+    Spawns a random shuttle, bomber, or fighter.  
+    30% chance of spawning a shuttle.  
+    50% chance of spawning a bomber.  
+    If neither of these occur, a fighter is spawned.  
+
+    Args:
+        docked_id (int): the id of the ship or station in which the craft will spawn
+        roles (str): a comma-separated list of roles to add to the craft
+    Returns:
+        SpawnData: The SpawnData object associated with the craft you've spawned.
+    """
     if randint(0,3) == 1:
         return hangar_shuttle_spawn(docked_id, roles)
     if randint(0,5) == 1:
@@ -157,6 +181,16 @@ def hangar_random_craft_spawn(docked_id, roles):
     return hangar_fighter_spawn(docked_id, roles)
 
 def hangar_fighter_spawn(docked_id, roles):
+    """
+    Spawn a fighter with the given roles in the hangar of the ship or station with the specified ID.  
+    The fighter will spawn with the prefix "FX".
+
+    Args:
+        docked_id (int): the id of the ship or station in which the craft will spawn
+        roles (str): a comma-separated list of roles to add to the craft
+    Returns:
+        SpawnData: The SpawnData object associated with the craft you've spawned.
+    """
     if roles is None:
         roles = "fighter"
     else:
@@ -164,6 +198,16 @@ def hangar_fighter_spawn(docked_id, roles):
     return hangar_craft_spawn(docked_id, "tsn_fighter", roles, "FX")
 
 def hangar_bomber_spawn(docked_id, roles):
+    """
+    Spawn a bomber with the given roles in the hangar of the ship or station with the specified ID.  
+    The fighter will spawn with the prefix "BX".
+
+    Args:
+        docked_id (int): the id of the ship or station in which the craft will spawn
+        roles (str): a comma-separated list of roles to add to the craft
+    Returns:
+        SpawnData: The SpawnData object associated with the craft you've spawned.
+    """
     if roles is None:
         roles = "bomber"
     else:
@@ -171,6 +215,16 @@ def hangar_bomber_spawn(docked_id, roles):
     return hangar_craft_spawn(docked_id, "tsn_bomber", roles, "BX")
 
 def hangar_shuttle_spawn(docked_id, roles):
+    """
+    Spawn a shuttle with the given roles in the hangar of the ship or station with the specified ID.  
+    The fighter will spawn with the prefix "SX".
+
+    Args:
+        docked_id (int): the id of the ship or station in which the craft will spawn
+        roles (str): a comma-separated list of roles to add to the craft
+    Returns:
+        SpawnData: The SpawnData object associated with the craft you've spawned.
+    """
     if roles is None:
         roles = "shuttle"
     else:
@@ -248,6 +302,16 @@ def hangar_launch_craft(craft_id, client_id):
 
 
 def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
+    """
+    Try to dock the craft to the nearest space object with a hangar. 
+    If the craft is not a valid dockable object, returns None.  
+    If the craft isn't close enough, returns false.  
+    Args:
+        craft_id (int): the ID of the craft
+        dock_rng (int): the farthest the craft can be from its hangar in order to dock.
+    Returns: 
+        boolean | None
+    """
     if craft_id is None: return
     if has_role(craft_id, "standby"): return
     craft = to_object(craft_id)
@@ -290,6 +354,8 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     craft_name = craft.get_inventory_value("craft_name", craft.name)
     craft.name = craft_name
 
+    
+
     #
     # Remove any grid objects
     #
@@ -320,6 +386,13 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
 from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text
 
 def get_dock_name(so):
+    """
+    Get the name of the home hangar of the specified craft.
+    Args:
+        so: the ID or object representing the craft
+    Returns:
+        str: The name of the craft's home ship or station.
+    """
     dock = get_science_selection(so)
     if not dock:
         return ""
@@ -358,6 +431,13 @@ def hangar_console_title_template():
 
 
 def hangar_get_docks(side):
+    """
+    Get a list of all stations and ships that have a hangar.
+    Args:
+        side (str): The side of the craft (currently unused)
+    Returns:
+        list[int]: A list of the IDs of all ships and stations with a hangar.
+    """
     docks = has_link("hangar_craft")
     # crafts = all_roles(f"cockpit,standby,{side}")
     # docks = set()
@@ -368,6 +448,13 @@ def hangar_get_docks(side):
     return to_object_list(docks)
 
 def hangar_get_crafts_at(dock_id):
+    """
+    Get all craft that are inside the specified hangar.
+    Args:
+        dock_id (int): The ID of the ship or station
+    Returns:
+        list[space_object]: A list of craft space_objects inside the hangar.
+    """
     dock_id = to_id(dock_id)
     if dock_id is None:
         return

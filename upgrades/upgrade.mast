@@ -547,3 +547,19 @@ import upgrade.py
     gui_update_shared("sh-ho-timer", "$text: +300 to shields but may damage shield generators")
     ->END
 
+//dock/hangar if has_role(DOCK_ORIGIN_ID, "cockpit") and has_role(DOCK_PARENT_ID, "__player__")
+    upgrade_list = ~~[
+        "carapaction_coil",
+        "infusion_pcoils",
+        "tauron_focuser",
+        "secret_codecase",
+        "hidens_powercell",
+        "vigoranium_nodule",
+        "cetrocite_crystal",
+        "lateral_array",
+        "haplix_overcharger",
+        "escape-pod"
+    ]~~
+    for upgrade in upgrade_list:
+        transfer_upgrades_of_type(DOCK_ORIGIN_ID, DOCK_PARENT_ID, upgrade)
+    ->END

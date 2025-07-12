@@ -54,7 +54,7 @@ default HANGAR_CONSOLE_ENABLED = True
     ->END if to_object(SPAWNED_ID) is None
 
     shuttle_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
-    fighter_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
+    fighter_count = grid_count_grid_data(SPAWNED.art_id, "fighter", 0)
     set_inventory_value(SPAWNED_ID, "MAX_SHUTTLE", shuttle_count)
     set_inventory_value(SPAWNED_ID, "MAX_FIGHTER", fighter_count)
 

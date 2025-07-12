@@ -1,4 +1,6 @@
 from sbs_utils.procedural.spawn import terrain_spawn
+from sbs_utils.procedural.query import to_object
+from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils import scatter
 from sbs_utils.vec import Vec3
 import random
@@ -83,3 +85,22 @@ def terrain_spawn_pickups(upgrade_value, center=None):
 
         if upg == 9:
             pickup_spawn(v.x, v.y, v.z, "haplix_overcharger")
+
+def transfer_upgrades_of_type(giver_id, reciever_id, upgrade):
+    """
+    Transfer all upgrades of the specified type from one object to another.
+    Args:
+        giver_id (int): The ID of the object that has up the upgrades.
+        hangar_id (int): The ID of the object that is recieving the upgrades
+        upgrade (str): The name of the upgrades, e.g. carapaction_coil
+    """
+    if to_object(giver_id) is None:
+        return
+    if to_object(reciever_id) is None:
+        return
+    craft_count = get_inventory_value(giver_id, upgrade, 0)
+    hangar_count = get_inventory_value(reciever_id, upgrade, 0)
+    set_inventory_value(reciever_id, upgrade, craft_count + hangar_count)
+    set_inventory_value(craft_count, upgrade, 0)
+
+
