@@ -547,7 +547,35 @@ import upgrade.py
     gui_update_shared("sh-ho-timer", "$text: +300 to shields but may damage shield generators")
     ->END
 
-//dock/hangar if has_role(DOCK_ORIGIN_ID, "cockpit") and has_role(DOCK_PARENT_ID, "__player__")
+//signal/cockpit_dock_success
+    if to_object(craft_id) is None or to_object(home) is None:
+        ->END
+    if has_role(craft_id, "cockpit") and has_role(home, "__player__"): # Only transfer upgrades if it's a player controlled craft docking with a player ship
+        upgrade_list = ~~[
+            "carapaction_coil",
+            "infusion_pcoils",
+            "tauron_focuser",
+            "secret_codecase",
+            "hidens_powercell",
+            "vigoranium_nodule",
+            "cetrocite_crystal",
+            "lateral_array",
+            "haplix_overcharger",
+            "escape-pod"
+        ]~~
+        upgrade_list = get_anom_data()
+        for upgrade in upgrade_list:
+            if transfer_upgrades_of_type(craft_id, home, upgrade):
+                comms_broadcast(home, "Transfered " + upgrade_list[upgrade]["name"])
+    ->END
+
+
+//comms/gamemaster/spawn/terrain if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+
+    +[$gamemaster]"Upgrade" //comms/gamemaster/spawn/terrain/upgrade
+
+
+//comms/gamemaster/spawn/terrain/upgrade if has_roles(COMMS_ORIGIN_ID, "gamemaster")
     upgrade_list = ~~[
         "carapaction_coil",
         "infusion_pcoils",
@@ -560,6 +588,18 @@ import upgrade.py
         "haplix_overcharger",
         "escape-pod"
     ]~~
+    # upgrade_list = get_anom_data()
+    +[$gamemaster]"Random":
+        item = random.randint(0, len(upgrade_list))
+        upgrade = upgrade_list[item]
+        pickup_spawn(pos.x, pos.y, pos.z, upgrade)
+    
     for upgrade in upgrade_list:
-        transfer_upgrades_of_type(DOCK_ORIGIN_ID, DOCK_PARENT_ID, upgrade)
-    ->END
+        u = upgrade_list[upgrade]
+        comms_broadcast(0, u)
+        pos = Vec3(COMMS_ORIGIN.pos)
+        if u is None:
+            comms_broadcast(0, "UPGRADE IS NONE")
+        +[$gamemaster] "{u}":
+            pickup_spawn(pos.x, pos.y, pos.z, u)
+    

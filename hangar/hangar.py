@@ -306,6 +306,7 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     Try to dock the craft to the nearest space object with a hangar. 
     If the craft is not a valid dockable object, returns None.  
     If the craft isn't close enough, returns false.  
+    If the docking is successful, returns true.  
     Args:
         craft_id (int): the ID of the craft
         dock_rng (int): the farthest the craft can be from its hangar in order to dock.
