@@ -47,12 +47,18 @@
     elif has_roles(COLLISION_ORIGIN_ID, "upgrade, hidens_powercell"):
         print("Pickup: HiDens Power Cell")
         comms_broadcast(COLLISION_SELECTED_ID, "Pickup: HiDens Power Cell", "#E3F")
+        # If it's a player ship, energy is just added
         if has_roles(COLLISION_SELECTED_ID, "__player__"):
             blob = to_blob(COLLISION_SELECTED_ID)
             if blob is not None:
                 energy = blob.get("energy", 0)
                 energy += 500
                 blob.set("energy", energy, 0)
+        # If it's a craft, enery is still stored in the cell, but should be transferred to the next player ship it docks at.
+        elif has_roles(COLLISION_SELECTED_ID, "cockpit"):
+            addinv = get_inventory_value(COLLISION_SELECTED_ID, "hidens_powercell", 0)
+            addinv += 1
+            set_inventory_value(COLLISION_SELECTED_ID, "hidens_powercell", addinv)
         tobj = sim.get_space_object(COLLISION_ORIGIN_ID)
         tpos = tobj.pos
         sbs.delete_object(COLLISION_ORIGIN_ID)

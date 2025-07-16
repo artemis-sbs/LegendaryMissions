@@ -42,6 +42,12 @@ def pickup_spawn(x, y, z, roles, blink=None, yaw=None, name=None, art_id=None,):
 
 
 def terrain_spawn_pickups(upgrade_value, center=None):
+    """
+    Spawn pickups around the given position.
+    Args:
+        upgrade_value (int): The density of upgrades to spwan. Acceptable values are 1-4.
+        center (Vec3): The point around which to spawn the upgrades. If None, turns into Vec3(0,0,0). Default is None.
+    """
     if center is None:
         center = Vec3(0,0,0)
 
@@ -55,7 +61,11 @@ def terrain_spawn_pickups(upgrade_value, center=None):
     elif upgrade_value==4:
         num_upgrade = random.randint(10,15)
 
-
+    # TODO: I think that instead of using explicit numbers to represent each upgrade, we need a more extensible system.
+    # So we should use something like this instead:
+    # upg = random.randint(1, len(anom_data.values()))
+    # for upg in anom_data.values()):
+    #     pickup_spawn(v.x, v.y, v.z, anom_data[upg])
     spawn_points = scatter.box(num_upgrade, *center.xyz, 75000, 1000, 75000, centered=True)
     for v in spawn_points:
         upg = random.randint(1,9)

@@ -551,22 +551,17 @@ import upgrade.py
     if to_object(craft_id) is None or to_object(home) is None:
         ->END
     if has_role(craft_id, "cockpit") and has_role(home, "__player__"): # Only transfer upgrades if it's a player controlled craft docking with a player ship
-        upgrade_list = ~~[
-            "carapaction_coil",
-            "infusion_pcoils",
-            "tauron_focuser",
-            "secret_codecase",
-            "hidens_powercell",
-            "vigoranium_nodule",
-            "cetrocite_crystal",
-            "lateral_array",
-            "haplix_overcharger",
-            "escape-pod"
-        ]~~
         upgrade_list = get_anom_data()
         for upgrade in upgrade_list:
             if transfer_upgrades_of_type(craft_id, home, upgrade):
                 comms_broadcast(home, "Transfered " + upgrade_list[upgrade]["name"])
+        hdp = get_inventory_value(home, "hidens_powercell",0)
+        blob = to_blob(home)
+        if blob is not None:
+            while hdp > 0:
+                energy = blob.get("energy", 0)
+                energy += 500
+                blob.set("energy", energy, 0)
     ->END
 
 
