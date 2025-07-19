@@ -109,30 +109,30 @@ if taunt_data is not None:
 
 
 //comms/taunt/raider
-#
-# Present taunts
-# Taunts are added when the raider spawns 
-# see the above //spawn handler
-#
-name = COMMS_ORIGIN.name
-this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
-#
-# Skip if the loading of taunts failed
-#
-yield fail if this_taunt_data is None
+    #
+    # Present taunts
+    # Taunts are added when the raider spawns 
+    # see the above //spawn handler
+    #
+    name = COMMS_ORIGIN.name
+    this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
+    #
+    # Skip if the loading of taunts failed
+    #
+    yield fail if this_taunt_data is None
 
-taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
-right_button = this_taunt_data[taunt_trait]['button']
+    taunt_trait=get_inventory_value(COMMS_SELECTED_ID, "taunt_trait")
+    right_button = this_taunt_data[taunt_trait]['button']
 
 
-#data_wrap = {"data": data}
-#~~data_wrap["select_right"] = right_button == button_text~~
-
-for data in this_taunt_data:
-    button_text = data["button"]
-    right = right_button == button_text
-    + "{button_text}" handle_comms_taunt_raider_select {"data": data, "select_right": right}
-    
+    #data_wrap = {"data": data}
+    #~~data_wrap["select_right"] = right_button == button_text~~
+    + !0 "Back" //comms
+    for data in this_taunt_data:
+        button_text = data["button"]
+        right = right_button == button_text
+        + "{button_text}" handle_comms_taunt_raider_select {"data": data, "select_right": right}
+        
 
 
 
