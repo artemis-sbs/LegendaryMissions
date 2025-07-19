@@ -55,7 +55,8 @@ default shared SIMPLE_INTERNAL = True
 
 
 //comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-    + !1 ^1 "Back" //comms
+    
+    + !1 ^1 "Back" //comms/comms_badge
     + "Flash message" //comms/flash_message_test if is_dev_build()
     
     + "Status":
@@ -71,7 +72,7 @@ default shared SIMPLE_INTERNAL = True
 //comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
     crew_size = get_inventory_value(COMMS_ORIGIN_ID, "crew_size", 0)
     dead = get_inventory_value(COMMS_ORIGIN_ID, "casulaty_count", 0)
-    + ^1 "Back" //comms
+    + ^1 "Back" //comms/comms_badge
     +"Crew status":
         if dead > 0 and dead <= 20:
             with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
@@ -94,7 +95,7 @@ default shared SIMPLE_INTERNAL = True
 
 
 //comms/internal/security if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-    + "Back" //comms
+    + "Back" //comms/comms_badge
     + "Status":
         with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
             << "Security update"
@@ -103,7 +104,7 @@ default shared SIMPLE_INTERNAL = True
                 % Times like this boring is good
 
 //comms/internal/exobiology if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-    +"Back" //comms
+    +"Back" //comms/comms_badge
     default pathogen_test = None
     +"Test for pathogen" if pathogen_test is None:
         with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
@@ -126,7 +127,7 @@ default shared SIMPLE_INTERNAL = True
                 "Testing still running, one moment
 
 //comms/internal/counselor if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-    +"Back" //comms
+    +"Back" //comms/comms_badge
 
     + "Status":
         with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
@@ -141,7 +142,7 @@ default shared SIMPLE_INTERNAL = True
 
 # Rufus P. Mortimer is semi-hidden character that can activate some functions on certain TSN ships
 //comms/internal/rufus if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__')and (to_object(COMMS_ORIGIN_ID).art_id == "tsn_battle_cruiser"))
-    + ^1 "Back" //comms
+    + ^1 "Back" //comms/comms_badge
     +"Rotate Beam Arcs":
         task_schedule(rotate_beam_arc1)
         task_schedule(rotate_beam_arc2)
@@ -151,7 +152,7 @@ default shared SIMPLE_INTERNAL = True
                 % Beam arcs rotated, sir!
 
 //comms/internal/rufus if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__')and (to_object(COMMS_ORIGIN_ID).art_id == "tsn_juggernaut"))
-    + ^1 "Back" //comms
+    + ^1 "Back" //comms/comms_badge
     +"Rotate Beam Arcs":
         task_schedule(rotate_beam_arc1)
         task_schedule(rotate_beam_arc2)
@@ -161,7 +162,7 @@ default shared SIMPLE_INTERNAL = True
                 % Beam arcs rotated, sir!
 
 //comms/internal/rufus if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__')and (to_object(COMMS_ORIGIN_ID).art_id == "tsn_dreadnought"))
-    + ^1 "Back" //comms
+    + ^1 "Back" //comms/comms_badge
     +"Refocus Primary Beam":
         task_schedule(refocus_primary_beam)
         await delay_sim(10)
