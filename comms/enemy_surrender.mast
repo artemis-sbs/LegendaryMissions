@@ -64,7 +64,7 @@ shared _surrender_return = task_schedule(take_surrendered_home)
 
     else:
         comms_receive(f"""Go climb a tree, {name}!""", title="failed surrender", title_color=raider_color)
-
+    comms_navigate("//comms")
     yield success
 
 
