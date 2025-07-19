@@ -42,7 +42,7 @@ default CINEMATIC_CONSOLE_ENABLED = True
     jump common_console_show
 
 
-@console/comms !0 ^20 "Communication" if COMMS_CONSOLE_ENABLED
+@console/comms !0 ^25 "Communication" if COMMS_CONSOLE_ENABLED
     " Interact with other ships and stations
 
 
@@ -57,7 +57,7 @@ default CINEMATIC_CONSOLE_ENABLED = True
     comms_info("static")
     jump common_console_show
 
-@console/science !0 ^25 "Science" if SCIENCE_CONSOLE_ENABLED
+@console/science !0 ^20 "Science" if SCIENCE_CONSOLE_ENABLED
     " Discover and provide vital information
     CONSOLE_SELECT = "science"
     jump common_console_show
