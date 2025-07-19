@@ -116,12 +116,12 @@ default HANGAR_CONSOLE_ENABLED = True
     gui_section(style="area: 0,0, 36,100-150px;background: #fff1;")
 
     call_sign = get_inventory_value(client_id, "call_sign", "Selene")
-    gui_section(style="area: 20px,6,35,10;")
+    gui_section(style="area: 20px,6,35,6+40px;")
     gui_input("desc:Call sign", var="call_sign")
     on change call_sign:
         set_inventory_value(client_id, "call_sign", call_sign)
 
-    gui_section(style="area: 20px,10+20px, 35, 49;")
+    gui_section(style="area: 20px,6+50px, 35, 49;")
     
     dock_picker = gui_list_box(docks,"background:#1572;padding:0,0,10px,0;", item_template=hangar_console_dock_template, title_template=hangar_console_dock_title_template, select=True)
     ride_picker = gui_list_box(crafts,"background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)

@@ -421,15 +421,6 @@ def hangar_get_call_signs():
 
     
 
-def hangar_console_ship_template(item):
-    gui_row("row-height: 1.2em;padding:13px;")
-    gui_text(f"$text:{item.name};justify: left;")
-    
-
-def hangar_console_title_template():
-    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
-    gui_text(f"$text:SHIP;justify: left;")
-
 
 def hangar_get_docks(side):
     """
@@ -466,7 +457,17 @@ def hangar_get_crafts_at(dock_id):
         if dock == dock_id:
             crafts.append(to_object(c))
     return crafts
+
+
+def hangar_console_ship_template(item):
+    gui_row("row-height: 1.2em;padding:13px;")
+    gui_text(f"$text:{item.name};justify: left;")
     
+
+def hangar_console_title_template():
+    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
+    gui_text(f"$text:Ship;justify: left;")
+
 
 def hangar_console_dock_template(item):
     gui_row("row-height: 1.2em;padding:13px;")
@@ -475,6 +476,6 @@ def hangar_console_dock_template(item):
 
 def hangar_console_dock_title_template():
     gui_row("row-height: 1.2em;padding:13px;background:#1578;")
-    gui_text(f"$text:HANGAR LOCATION;justify: left;")
+    gui_text(f"$text:Hangar Location;justify: left;")
 
 
