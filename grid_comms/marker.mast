@@ -9,7 +9,8 @@
 
     ###, color=f"{get_inventory_value(d.id, 'color')}", data=
     dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
-    for d in dcs:
+    sorted_dcs = sorted(dcs, key=lambda d: d.name)
+    for d in sorted_dcs:
         + "set {d.name} rally point"  comms_marker_rally_dc {"d": d}
 
 # Special options for modifying beam arcs/width on certain TSN ships
