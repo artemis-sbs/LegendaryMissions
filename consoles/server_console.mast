@@ -282,6 +282,18 @@ Main:
     view = get_variable("MAIN_SCREEN_VIEW", "3d_view")
     facing = get_variable("MAIN_SCREEN_FACING", "front")
     mode = get_variable("MAIN_SCREEN_MODE", "chase")
+    ###
+    ### TODO: This is a fix for 
+    ### Clients sending THEIR mode, not 
+    ### This client's mode
+    ### So this will ignore cinematic
+
+    default my_mode = "chase"
+
+    if mode == "cinematic":
+        mode = my_mode
+    else:
+        my_mode = mode
 
     sbs.set_main_view_modes(client_id, view, facing, mode)
 
