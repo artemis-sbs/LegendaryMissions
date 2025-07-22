@@ -220,6 +220,14 @@ jobs:
         #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
         path: "media"
 
+    - name: Archive media zip
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'collisions.${{ steps.get_version.outputs.VERSION }}.mastlib'
+        path: "collisions"
+
+
     - name: Upload Release
       uses: ncipollo/release-action@v1
       with:
