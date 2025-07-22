@@ -1,0 +1,121 @@
+# For passive collision, players are the TARGET_ID and SELECTED_ID
+# SOURCE_ID and ORIGIN_ID are the other thing
+//collision/passive if has_role(COLLISION_TARGET_ID, "__player__")
+    player = COLLISION_TARGET_ID
+    passive = COLLISION_SOURCE_ID
+
+    playerObj = to_object(player)
+    passiveObj = to_object(passive)
+    if not playerObj:
+        yield fail
+    if not passiveObj:
+        yield fail
+    cur_speed = to_engine_object(playerObj).cur_speed
+
+    # Scales with speed, difficulty, and TODO: the size of the asteroid
+    base_damage = cur_speed * cur_speed * DIFFICULTY
+    damage = base_damage
+
+    player_pos = get_pos(player)
+    passive_pos = get_pos(passive)
+
+    # Are shields up?
+    shields_up = get_data_set_value(player, "shields_raised_flag", 0)
+    if shields_up:
+
+        shield_index = sim.get_shield_hit_index(to_engine_object(passive), to_engine_object(player))
+        # comms_broadcast(0, "shield_index: {shield_index}")
+        shield_strength = get_data_set_value(player,"shield_val",shield_index)
+        if not shield_strength:
+            ->END
+        shield_power = get_engineering_value(player, "FRONT SHIELD",0)
+
+        # Damage shields first
+        shield_damage = damage / shield_power # Engineering power to shields reduces damage, or increases it if shield power is reduced
+        remaining_shields = shield_strength - shield_damage
+        # comms_broadcast(0, "Shields: {remaining_shields}")
+        if remaining_shields <= 0:
+            damage = remaining_shields * -1 * shield_power # Now we return the remainder back to the original equivalent damage value
+            # Set shields to 0 if remaining shield strength is less than or equal to 0
+            set_data_set_value(player, "shield_val", 0, shield_index)
+        else:
+            set_data_set_value(player, "shield_val", remaining_shields, shield_index)
+            # If the shields took all the damage, end the task
+            ->END
+
+    # Now we deal with shields down and any remaining damage after the shields blunted some of it.
+    # Note that the base hullpoints value of the Light Cruiser is 3, while shields is 120
+    # So we probably want to divide the shields value by a lot?
+    
+    # Diff 5
+    # Warp 1 -> 1*1*5 = 5
+    # Wapr 2 -> 2*2*5 = 20
+    # Wapr 3 -> 3*3*5 = 45
+    # Warp 4 -> 4*4*5 = 16*5 = 80?
+
+    # Divide by 10 for now?
+
+    damage = damage / 10
+
+    # Looks like the system and damage amount for this function are not implemented
+    damage = int(damage)
+    for i in range(damage):
+        grid_take_internal_damage_at(player, passive_pos, None, 1)
+
+    # Try to blow up the asteroid
+    if has_role(passive, "asteroid"):
+        # jump asteroid_hit {"asteroid_id": passive, "damage": base_damage} # Does not work
+        task_schedule(asteroid_hit, {"asteroid_id": passive, "damage": base_damage})
+
+# For testing
+== debug_roles
+metadata: ```
+id: 
+deets: ""
+```
+    comms_broadcast(0, deets)
+    obj = to_object(id)
+    if not obj:
+        comms_broadcast(0, "ID NOT FOUND")
+        ->END
+    _roles = obj.get_roles()
+    comms_broadcast(0, str(_roles))
+    ->END
+
+== asteroid_hit
+" If an asteroid is hit, then if the damage is great enough, it should be destroyed or desintigrated
+metadata: ```
+asteroid_id: 
+damage: 0
+```
+    # Probably don't need to do anything if the asteroid isn't damaged
+    # comms_broadcast(0, "destroying asteroid")
+    if damage == 0:
+        jump END
+    if to_object(asteroid_id) is None:
+        jump END
+    if damage > 5:
+        pos = get_pos(asteroid_id)
+        sbs.delete_object(asteroid_id)
+        # Make a particle effect when it's destroyed
+        # sbs.particle_at(pos, "color: #644117; count: 100; lifespan: 100; size: 500; speed: {damage}; image_cell: 14;")
+        # sbs.particle_at(pos, "color: #641,#977; lifespan:60; image_cell:9; size:20;speed: 1; count:100,1000;")
+        sbs.particle_at(pos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
+# Testing asteroid destruction and particle effects, but also could be useful for a gm to remove asteroids
+//comms/gamemaster/spawn/terrain if has_role(COMMS_ORIGIN_ID, "gamemaster")
+    +[gamemaster]"Destroy asteroids":
+        asteroids = role("asteroid")
+        # a_pos = set()
+        # for a in asteroids:
+        #     a_pos.add(get_pos(a))
+        delete_object(asteroids)
+        # comms_broadcast(0, str(len(a_pos)))
+        # for a in a_pos:
+        #     # pos = get_pos(a)
+        #     # sbs.delete_object(a)
+        #     comms_broadcast(0, str(a))
+        #     sbs.particle_at(a, "color: #641,#977; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
+            # task_schedule(asteroid_hit, {"asteroid_id": a, "damage": 10})
+
+
+
