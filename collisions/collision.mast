@@ -1,0 +1,79 @@
+//spawn if has_role(SPAWNED_ID, "__player__")
+    hp = get_inventory_value(SPAWNED_ID, "hp", 20)
+    comms_broadcast(0, "Start HP: {hp}")
+# For passive collision, players are the TARGET_ID and SELECTED_ID
+# SOURCE_ID and ORIGIN_ID are the other thing
+//collision/passive if has_role(COLLISION_TARGET_ID, "__player__")
+    # if has_role(COLLISION_ORIGIN_ID, "asteroid"):
+    #     comms_broadcast(0, "Origin")
+    # if has_role(COLLISION_PARENT_ID, "asteroid"):
+    #     comms_broadcast(0, "Parent")
+    # if has_role(COLLISION_SOURCE_ID, "asteroid"):
+    #     comms_broadcast(0, "Source")
+    # task_schedule(passive_hit, {"player": COLLISION_TARGET_ID, "passive": COLLISION_SOURCE_ID})        #EVENT is not enabled for collisions for some reason...
+    # comms_broadcast(0, "{EVENT.source_point.x} {EVENT.source_point.y} {EVENT.source_point.z}")
+    player = COLLISION_TARGET_ID
+    passive = COLLISION_SOURCE_ID
+
+    playerObj = to_object(player)
+    passiveObj = to_object(passive)
+    if not playerObj:
+        yield fail
+    if not passiveObj:
+        yield fail
+    cur_speed = to_engine_object(playerObj).cur_speed
+
+    # Scales with speed, difficulty, and TODO: the size of the asteroid
+    base_damage = cur_speed * cur_speed * DIFFICULTY
+
+    player_pos = get_pos(player)
+    passive_pos = get_pos(passive)
+
+    shields_up = get_data_set_value(player, "shields_raised_flag", 0)
+    if shields_up:
+
+        shield_index = sim.get_shield_hit_index(to_engine_object(passive), to_engine_object(player))
+        comms_broadcast(0, "shield_index: {shield_index}")
+        shield_strength = get_data_set_value(player,"shield_val",shield_index)
+        if not shield_strength:
+            ->END
+        shield_power = get_engineering_value(player, "FRONT SHIELD",0)
+
+        # Damage shields first
+        shield_damage = base_damage / shield_power # Engineering power to shields reduces damage
+        remaining_shields = shield_strength - shield_damage
+        comms_broadcast(0, "Shields: {remaining_shields}")
+        if remaining_shields < 0:
+            base_damage = remaining_shields * -1 * shield_power # Now we return the remainder back to the original equivalent damage value
+            # player_blob.set("shield_val", shield_index, 0)
+            set_data_set_value(player, "shield_val", 0, shield_index)
+        else:
+            set_data_set_value(player, "shield_val", remaining_shields, shield_index)
+            ->END
+    # Now we deal with shields down and any remaining damage.
+    # Note that the base hullpoints value of the Light Cruiser is 3, while shields is 120
+    # So we probably want to divide the shields value by a lot?
+    
+    # Diff 5
+    # Warp 1 -> 1*1*5 = 5
+    # Wapr 2 -> 2*2*5 = 20
+    # Wapr 3 -> 3*3*5 = 45
+    # Warp 4 -> 4*4*5 = 16*5 = 80?
+
+    # Divide by 10 for now?
+
+    base_damage = base_damage / 10
+    hp = get_inventory_value(player, "hp", 0)
+    hp = hp - base_damage
+    if hp < 0:
+        hp = 0
+    comms_broadcast(0, "HP: {hp}")
+    set_inventory_value(player, "hp", hp)
+    if hp == 0:
+        explode_player_ship(player)
+    
+    
+    
+
+//damage/object
+    comms_broadcast(0, "Damage object")
