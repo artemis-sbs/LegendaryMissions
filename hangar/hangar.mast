@@ -293,7 +293,7 @@ default HANGAR_CONSOLE_ENABLED = True
 
     if hangar_attempt_dock_craft(fighter_so.id):
         fighter_client = get_inventory_value(fighter_so.id, "client_id")
-        new_home = to_object(get_science_selection(fighter_so.id))
+        new_home = to_space_object(get_science_selection(fighter_so.id))
         
         if new_home is not None:
             signal_emit("cockpit_dock_success", {"craft_id": fighter_so.id, "home": new_home.id})
