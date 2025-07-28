@@ -70,10 +70,11 @@ default shared SIMPLE_INTERNAL = True
 # Having it here shows it doesn't assume player_internal is here
 #
 //comms/internal/sickbay if ((COMMS_SELECTED_ID == COMMS_ORIGIN_ID)and has_roles(COMMS_ORIGIN_ID, 'tsn,__PLAYER__'))
-    crew_size = get_inventory_value(COMMS_ORIGIN_ID, "crew_size", 0)
-    dead = get_inventory_value(COMMS_ORIGIN_ID, "casulaty_count", 0)
     + ^1 "Back" //comms/comms_badge
     +"Crew status":
+        crew_size = get_inventory_value(COMMS_ORIGIN_ID, "crew_size", 0)
+        dead = get_inventory_value(COMMS_ORIGIN_ID, "casulaty_count", 0)
+    
         if dead > 0 and dead <= 20:
             with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
                 << "Casualties are being treated"
