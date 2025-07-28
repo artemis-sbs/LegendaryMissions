@@ -22,7 +22,7 @@ shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
     if so is not None:
         sbs.delete_object(DESTROYED_ID)
 
-    await delay_sim(1)
+    await delay_sim(0)
 
     players = role('__player__')
     if len(players)==0:
@@ -32,6 +32,10 @@ shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
         sbs.play_music_file(0, "music/default/failure")
         signal_emit("show_game_results", None)
         ->END
+    else:
+## Update the player list
+
+
 
 
 //shared/signal/player_ship_destroyed if PLAYER_SHIP_RESPAWN
@@ -54,6 +58,8 @@ shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
 #
 //signal/player_ship_destroyed
 
+## Wait for delete to be processed    
+    await delay_sim(0)
     ship_id = sbs.get_ship_of_client(client_id)
     yield success if ship_id == 0 or ship_id != DESTROYED_ID
     yield success if PLAYER_SHIP_RESPAWN
@@ -76,7 +82,7 @@ shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
     yield success
 
 --- reassign_to_console_select
-    gui_reroute_client(client_id, "select_console")
+    gui_reroute_client(client_id, "select_console_clear_ship")
     yield success
 
 --- reassign_to_main
