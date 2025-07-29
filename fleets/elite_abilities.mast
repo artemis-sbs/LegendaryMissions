@@ -1,4 +1,5 @@
-
+default gamemaster_face = random_terran()
+=$gamemaster #0E0,white,gamemaster_face
 
 
 //spawn if has_role(SPAWNED_ID, "elite")
@@ -258,3 +259,93 @@
     await delay_sim(30)
     yield success
 
+#region Game Master Stuff
+//comms/gamemaster/selected/set if not has_role(COMMS_SELECTED_ID, "__player__") and has_role(COMMS_ORIGIN_ID, "gamemaster")
+    +[$gamemaster]"Add Elite Ability" //comms/gamemaster/selected/set/elite_add
+    +[$gamemaster]"Remove Elite Ability" //comms/gamemaster/selected/set/elite_remove
+    ->END
+
+//comms/gamemaster/selected/set/elite_add if not has_role(COMMS_SELECTED_ID, "__player__") and has_role(COMMS_ORIGIN_ID, "gamemaster")
+    +!0[$gamemaster]"Back"//comms/gamemaster/selected/set
+    abilities = elite_get_all_abilities()
+    ship_abilities = elite_get_abilities_scan(COMMS_SELECTED_ID)
+    for a in abilities.keys():
+        # Only add the button if the ship doesn't have the ability
+        if (ship_abilities.count(abilities[a]) == 0):
+            +[$gamemaster]"{abilities[a]}" {"ship": COMMS_SELECTED_ID, "ability": a, "origin": COMMS_ORIGIN_ID}:
+                if to_object(ship) is None:
+                    ->END
+                if elite_is_engine_ability(ability):
+                    # Change blob data
+                    set_data_set_value(ship, ability, 1)
+                add_role(ship, ability)
+                task_schedule(handle_elite_abilities, {"SPAWNED_ID": COMMS_SELECTED_ID})
+                # TODO: Check if the shipp has been scanned already
+                # get_data_set_value(COMMS_SELECTED_ID, "scan_type_list",0)
+                # science_set_scan_data(role("__player__"), COMMS_SELECTED_ID, "intel")
+                # science_ensure_scan(role("__player__"), ship, "intel")
+
+                # TODO: Since scan data is based on side, any ship with that side will work for this.
+                # But, at some point, players might be on different sides. In which case, using the __player__ role
+                # will NOT be adequate.
+                scanner = role("__player__").pop()
+                jump update_elite_scan_info {"origin": origin, "ship": ship}
+
+            
+
+
+//comms/gamemaster/selected/set/elite_remove if not has_role(COMMS_SELECTED_ID, "__player__") and has_role(COMMS_ORIGIN_ID, "gamemaster")
+    +!0[$gamemaster]"Back"//comms/gamemaster/selected/set
+    abilities = elite_get_all_abilities()
+    +[$gamemaster]"Clear All Abilities"{"ship": COMMS_SELECTED_ID, "origin": COMMS_ORIGIN_ID}:
+        abilities = elite_get_all_abilities()
+        if to_object(COMMS_SELECTED_ID) is None:
+            ->END
+        for a in abilities.keys():
+            if elite_is_engine_ability(a):
+                set_data_set_value(COMMS_SELECTED_ID, a, 0)
+            remove_role(COMMS_SELECTED_ID, a)
+        # TODO: Check if the ship has been scanned already
+        # If there's already scan data, we need to update it
+        jump update_elite_scan_info {"origin": origin, "ship": ship}
+    ship_abilities = elite_get_abilities_scan(COMMS_SELECTED_ID)
+    for a in abilities.keys():
+        # Only add the button for the ability if it has the ability
+        if ship_abilities.count(abilities[a]) > 0:
+            +[$gamemaster]"{abilities[a]}" {"ship": COMMS_SELECTED_ID, "ability": a, "origin": COMMS_ORIGIN_ID}:
+                if to_object(ship) is None:
+                    ->END
+                if elite_is_engine_ability(ability):
+                    set_data_set_value(ship, ability, 0)
+                remove_role(ship, ability)
+                # TODO: Check if the ship has been scanned already
+                jump update_elite_scan_info {"origin": origin, "ship": ship}
+
+
+==update_elite_scan_info
+" Update the scan text for an elite after updating the elite's abilities. 
+metadata: ```
+origin:
+ship:
+```
+    # If there's already scan data, we need to update it
+    if science_has_scan_data(origin, ship,"intel"):
+        # Get the current scan data
+        current_scan = science_get_scan_data(origin, ship,"intel")
+        # Get the current abilities list
+        abilities = elite_get_abilities_scan(ship)
+        elite_info = ""
+        if abilities != "":
+            elite_info = "Warning: Elite abilities " + abilities
+        new_scan = ""
+        # Does not already have elite abilities in the scan info
+        if (current_scan.count("Warning: Elite abilities ")==0 or current_scan == ""):
+            new_scan = current_scan + "^" + elite_info
+
+        # If it did already have alite abilities, update it.
+        else:
+            loc = current_scan.find("Warning: Elite abilities ")
+            new_scan = current_scan[0:loc] + "^" + elite_info
+        # Now update the scan data
+        science_update_scan_data(origin, ship, new_scan, "intel")
+#endregion
