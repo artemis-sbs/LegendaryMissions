@@ -23,7 +23,10 @@ def console_ship_select_template(item):
     if dat is not None:
         desc = dat.get("name")
         origin = dat.get("origin")
-        desc = f"{origin} - {desc}"
+        if origin is not None:
+            desc = f"{origin} - {desc}"
+        else:
+            desc = f"{desc}"
 
     with gui_sub_section():
         gui_text(f"$text:{item.name} - {item.side};justify: left;font:gui-3;")
