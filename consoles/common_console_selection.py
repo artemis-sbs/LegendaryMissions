@@ -1,5 +1,6 @@
 from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section
 from sbs_utils import fs
+from sbs_utils.procedural import ship_data
 
 def console_select_template(item):
     gui_row("row-height: 1.2em;padding:13px;")
@@ -16,11 +17,18 @@ def console_select_title_template():
 
 def console_ship_select_template(item):
     gui_row("row-height:3em;padding:13px;")
-    gui_ship(f"{item.art_id}", style="col-width:50px;")
+    gui_ship(f"{item.art_id}", style="col-width:50px;padding:0,0,5px,0;")
+    dat = ship_data.get_ship_data_for(item.art_id)
+    desc = "A fine ship"
+    if dat is not None:
+        desc = dat.get("name")
+        origin = dat.get("origin")
+        desc = f"{origin} - {desc}"
+
     with gui_sub_section():
-        gui_text(f"$text:{item.name};justify: left;font:gui-3;")
+        gui_text(f"$text:{item.name} - {item.side};justify: left;font:gui-3;")
         gui_row()
-        gui_text(f"$text:{item.name};justify: left;font:gui-2;color:#bbb;")
+        gui_text(f"$text:{desc};justify: left;font:gui-2;color:#bbb;")
     # gui_text(f"$text:Hello;justify: left;font:gui-2;")
     
 
