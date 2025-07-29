@@ -227,7 +227,7 @@
             % How can I help
             % Your orders
             % Yes, sir
-    elif COMMS_SELECTED.has_role('raider'):
+    elif COMMS_SELECTED.has_role('raider') and not science_is_unknown(COMMS_ORIGIN_ID, COMMS_SELECTED_ID):
         ()[red] "Unused"
             % Piss off
             % Eat my beams
