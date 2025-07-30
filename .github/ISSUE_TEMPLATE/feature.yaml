@@ -25,8 +25,8 @@ body:
     id: what-feature
     attributes:
       label: What feature would you like to see?
-      description: Tell us the thing why this feature is needed. Dream big, but we can't promise every idea can me accomplished?
-      placeholder: What would like solved? Tell us your dream! But please clearer state why this is needed.
+      description: Tell us why this feature is needed. Dream big, but we can't promise every idea can me accomplished?
+      placeholder: What would you like solved? Tell us your dream! But please clearly state why this is needed.
     validations:
       required: true
 
