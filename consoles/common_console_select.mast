@@ -118,10 +118,10 @@ route_change_console(on_change_console)
     # Clamp selected index
     client_selected_index = min(PLAYER_COUNT-1, client_selected_index )
 
-
-    ship_type_def = PLAYER_LIST[client_selected_index].art_id
-    ship_name = PLAYER_LIST[client_selected_index].name
-    client_select_ship = ship_name.lower()
+    if len(PLAYER_LIST) >0:
+        ship_type_def = PLAYER_LIST[client_selected_index].art_id
+        ship_name = PLAYER_LIST[client_selected_index].name
+        client_select_ship = ship_name.lower()
 
     #gui_activate_console("select_console")
 
@@ -162,8 +162,6 @@ route_change_console(on_change_console)
         gui_show(ship_sec_not)
         spick.read_only = False
         
-
-
     #
     # List of available ships
     # ship_sec2 = gui_region(style="area: 1,110px,500px,520px")

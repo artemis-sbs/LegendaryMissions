@@ -25,7 +25,7 @@
     for d in dockable:
         + "{d.name} as dock" {"dock": d.id}: 
             hangar_set_dock(COMMS_ORIGIN_ID, dock)
-            comms_navigate("//comms")
+            comms_navigate("//comms/grid")
 
 
 
