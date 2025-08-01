@@ -1,0 +1,50 @@
+# Spawning default sides
+prefab_spawn(prefab_side_generic, {"name":"TSN", "key":"tsn", "desc":"Terran Stellar Navy", "allies":"usfp"})
+prefab_spawn(prefab_side_generic, {"name": "USFP", "key":"usfp", "desc":"USFP", "allies":"tsn", "enemies":"kralien, arvonian, torgoth, skaraan"})
+prefab_spawn(prefab_side_generic, {"name": "Kralien", "key":"kralien", "desc":"Kralien Emprie", "allies":"arvonian, torgoth, skaraan", "enemies":"tsn,usfp", "races":"kralien"})
+prefab_spawn(prefab_side_generic, {"name": "Arvonian", "key":"arvonian", "desc":"Arvoinian", "allies":"kralien, torgoth, skaraan", "enemies":"tsn,usfp", "races":"arvonian"})
+prefab_spawn(prefab_side_generic, {"name": "Torgoth", "key":"torgoth", "desc":"Torgoth", "allies":"kralien, arvonian, skaraan", "enemies":"tsn,usfp", "races":"torgoth"})
+prefab_spawn(prefab_side_generic, {"name": "Skaraan", "key":"skaraan", "desc":"Skaraan", "allies":"arvonian, torgoth, kralien", "enemies":"tsn,usfp", "races":"skaraan"})
+prefab_spawn(prefab_side_generic, {"name": "Ximni", "key":"ximni", "desc":"Ximni", "allies":"", "enemies":"", "races":"ximni"})
+prefab_spawn(prefab_side_generic, {"name":"Pirate", "key":"pirate", "enemies":"tsn,usfp,kralien,arvonian,torgoth,ximni"}) #Excluding Skaraan as enemy because they might cooperate sometimes.
+# Debugging
+# l = len(role("side"))
+# comms_broadcast(0, "Sides: {l}")
+
+=== prefab_side_generic
+" Generic definition of a Side or Faction.
+" Defaults are the TSN values
+metadata: ```
+type: prefab/side
+name: TSN
+key: tsn
+desc:
+allies:
+enemies:
+races: terran
+```
+    if key is None:
+        # key is the only critical property
+        yield fail
+    sides = role("side") & role(key)
+    if len(sides) > 0:
+        # The side with the given key already exists
+        yield fail
+    if name is None:
+        name = key
+    if desc is None:
+        desc = name
+    if allies is None:
+        allies = ""
+    if enemies is None:
+        enemies = ""
+    id = prefab.get_id()
+    add_role(id, key)
+    add_role(id, "side")
+    set_inventory_value(id, "side_name", name)
+    set_inventory_value(id, "side_key", key)
+    set_inventory_value(id, "side_allies", allies)
+    set_inventory_value(id, "side_enemies", enemies)
+    set_inventory_value(id, "side_races", races)
+    set_inventory_value(id, "side_desc", desc)
+    yield result id
