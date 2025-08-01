@@ -26,7 +26,7 @@ races: terran
     if key is None:
         # key is the only critical property
         yield fail
-    sides = role("side") & role(key)
+    sides = role("__side__") & role(key)
     if len(sides) > 0:
         # The side with the given key already exists
         yield fail
@@ -40,7 +40,7 @@ races: terran
         enemies = ""
     id = prefab.get_id()
     add_role(id, key)
-    add_role(id, "side")
+    add_role(id, "__side__")
     set_inventory_value(id, "side_name", name)
     set_inventory_value(id, "side_key", key)
     set_inventory_value(id, "side_allies", allies)
