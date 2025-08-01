@@ -46,6 +46,7 @@
         + "{lifeform.name}" {"COMMS_LIFEFORM_ID": lifeform_id}:
             lifeform = to_object(COMMS_LIFEFORM_ID)
             yield fail if lifeform is None
-            comms_navigate(lifeform.path, comms_badge=COMMS_LIFEFORM_ID)
+            path = lifeform.get_inventory_value("path")
+            comms_navigate(path, comms_badge=COMMS_LIFEFORM_ID)
 
 

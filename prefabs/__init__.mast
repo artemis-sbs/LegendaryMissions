@@ -4,3 +4,4 @@ import defender.mast
 import side_prefabs.mast
 import terrain_prefabs.mast
 import station_prefabs.mast
+import lifeform_prefabs.mast
