@@ -8,7 +8,7 @@ default shared SIMPLE_INTERNAL = True
 #
 # Testing Lifeforms via prefab 
 #
-prefab_spawn(prefab_lifeform_generic, {"name": "TSNN", "role_values": "comms_badge,ultra_beam", "path": "//comms/tsnn"})
+prefab_spawn(prefab_lifeform_generic, {"name": "TSNN", "path": "//comms/tsnn"})
 
 
 //comms/tsnn  if has_role(COMMS_ORIGIN_ID, '__player__') and COMMS_SELECTED_ID == 0
@@ -17,7 +17,7 @@ prefab_spawn(prefab_lifeform_generic, {"name": "TSNN", "role_values": "comms_bad
         with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
             >> "The Latest news"
                 % Torgoth fleets are nearing the outer rim
-                % TSN near alliance with Arvonian, but can the be trusted
+                % TSN near alliance with Arvonian, but can they be trusted
                 % An Artemis Armada in the future seems likely
 
 
