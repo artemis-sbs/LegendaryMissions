@@ -86,11 +86,47 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     # Left
 
     gui_update_widgets("3dview^science_data^comms_waterfall^comms_control","")
-    with gui_sub_section("col-width:350px;"):
+    with gui_sub_section("col-width:150px;"):
         with gui_sub_section():
             gui_row("row-height: 50;")
-            GM_LEFT = gui_tabbed_panel([], tab_location=0)
+            GM_LEFT = gui_tabbed_panel([], tab_location=0, icon_size=45)
             gui_info_panel_add("instruction", 82, gamemaster_panel_instructions, var= GM_LEFT)
+            ~~ gui_info_panel_add("spawn_ship", 0, 
+            lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "test_comms"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+            var=GM_LEFT ) ~~
+            ~~ gui_info_panel_add("spawn_ship", 154, 
+            lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+            var=GM_LEFT ) ~~
+            ~~ gui_info_panel_add("spawn_ship", 140, 
+            lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn/ship"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+            var=GM_LEFT ) ~~
+            ~~ gui_info_panel_add("spawn_fleet", 98, 
+            lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn/fleet"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+            var=GM_LEFT ) ~~
+            ~~ gui_info_panel_add("spawn_starbase", 114, 
+            lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn/starbase"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+            var=GM_LEFT ) ~~
+            ~~ gui_info_panel_add("spawn_terrain", 51, 
+            lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn/terrain"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+            var=GM_LEFT ) ~~
+            ~~ gui_info_panel_add("spawn_monster", 78, 
+            lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn/monster"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+            var=GM_LEFT ) ~~
+            ~~ gui_info_panel_add("configure_world", 13, 
+            lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "config/world"), 
+            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+            var=GM_LEFT ) ~~
+            # ~~ gui_info_panel_add("comms_control", 137, 
+            # lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "comms_control"), 
+            # lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+            # var=GM_LEFT ) ~~
             gui_info_panel_add("message", 83, gui_panel_console_message, var= GM_LEFT)
             gui_info_panel_add("messages", 84, gui_panel_console_message_list,var=GM_LEFT)
             
@@ -131,14 +167,12 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
         gui_row("row-height:45;margin:0,0,0,10px;")
         GM_RIGHT = gui_tabbed_panel([], tab_location=1)
 
-        ~~ gui_info_panel_add("comms_control", 137, 
-            lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_control"), 
-            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
-            var=GM_RIGHT ) ~~
+
         ~~ gui_info_panel_add("science_data", 63, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data"), 
             var=GM_RIGHT ) ~~
+        gui_info_panel_add("ship_details", 31, gm_panel_list, tick=gm_panel_list_tick, var=GM_RIGHT)
         ~~ gui_info_panel_add("gamemaster_camera", 13, 
             gamemaster_panel_camera_show, 
             gamemaster_panel_camera_hide, var=GM_RIGHT) ~~
@@ -146,7 +180,7 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall"),
             var=GM_RIGHT ) ~~
-
+# gui_drop_down(style="")
 
         
         gui_row()
@@ -170,6 +204,48 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 
 
     jump update_gm_stats
+
+#region GameMaster Ship Details Info Panel Stuff
+
+//comms/gamemaster/test_comms
+    +"Test1"
+    +"Test2"
+
+=== update_gm_ship_details
+metadata: ```
+variable: 
+```
+    if variable is None:
+        comms_broadcast(0, "var is None")
+    # on change variable:
+        
+=== update_ship_name
+    newname = get_variable("gm_ship_name")
+    sel = gui_get_variable("gm_selection")
+    ship = to_object(sel)
+    if ship is not None:
+        ship.name = newname
+=== update_ship_side
+    new_side = get_variable("gm_ship_side")
+    sel = gui_get_variable("gm_selection")
+    ship = to_object(sel)
+    if ship is not None:
+        ship.set_side(new_side)
+=== gm_select_spawn_test1
+    comms_broadcast(0, "test1")
+    jump END
+=== gm_select_spawn_test2
+    comms_broadcast(0, "test2")
+    jump END
+
+=== GM_Button_Pressed
+    # Should have these variables available:
+    # parent_category, item
+
+    comms_broadcast(0, "{parent_category}")
+    comms_broadcast(0, "{item}")
+
+#endregion
 
 
 ==== gamemaster_move_camera_sync
@@ -223,6 +299,7 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
         comms_id = SCIENCE_SELECTED_ID
         if comms_id==0:
             comms_id = SCIENCE_ORIGIN_ID
+        gui_set_variable("gm_selection", SCIENCE_SELECTED_ID)
         set_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
         gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
         

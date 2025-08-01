@@ -1,9 +1,9 @@
 
-//comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+//comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and has_role(COMMS_SELECTED_ID,"__player__")
     +[$gamemaster] "Message" //comms/gamemaster/message
 
 
-//comms/gamemaster/message if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+//comms/gamemaster/message if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and has_role(COMMS_SELECTED_ID,"__player__")
     +[$gamemaster] "Back" //comms
     +[$gamemaster] "Message crew" //comms/gamemaster/message/crew
 

@@ -5,14 +5,23 @@ default gamemaster_face = random_terran()
 //enable/comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
 
 
-//comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
-    +[$gamemaster]"Spawn" //comms/gamemaster/spawn
-    +[$gamemaster]"Selected" //comms/gamemaster/selected
-    +[$gamemaster]"Area" //comms/gamemaster/area
-    +[$gamemaster]"Commands" //comms/gamemaster/commands
+//comms if gm_comms_path(COMMS_ORIGIN_ID, "test_comms")
+    +"Test1":
+        set_inventory_value(COMMS_ORIGIN_ID,"spawn/ship/single")
+    +"Test2":
+        set_inventory_value(COMMS_ORIGIN_ID, "spawn/ship/fleet")
+
+//comms if gm_comms_path(COMMS_ORIGIN_ID, "spawn/ship/single")
+    +"Single"
+
+# //comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+#     +[$gamemaster]"Spawn" //comms/gamemaster/spawn if not has_any_role(COMMS_SELECTED_ID, "ship, station")
+#     +[$gamemaster]"Selected" //comms/gamemaster/selected if has_any_role(COMMS_SELECTED_ID, "ship, station")
+#     +[$gamemaster]"Area" //comms/gamemaster/area
+#     +[$gamemaster]"Commands" //comms/gamemaster/commands
 
 
-//comms/gamemaster/spawn if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+//comms/gamemaster/spawn if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and not has_any_role(COMMS_SELECTED_ID, "ship, station")
     +[$gamemaster]"Back" //comms
     +[$gamemaster]"Enemy" //comms/gamemaster/spawn/ship
     +[$gamemaster]"Friendly" //comms/gamemaster/spawn/friend
@@ -22,7 +31,7 @@ default gamemaster_face = random_terran()
 
 
 
-//comms/gamemaster/spawn/terrain if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+//comms/gamemaster/spawn/terrain if has_roles(COMMS_ORIGIN_ID, 'gamemaster') 
     +[$gamemaster]"Back" //comms
     +[$gamemaster]"Asteroids":
         pos = Vec3(COMMS_ORIGIN.pos)
