@@ -35,9 +35,9 @@
         print("Passive Collision, Shield Power: " + str(shield_power))
 
         # Damage shields first
-        if shield_power >= 1:
+        if shield_power > 1:
             shield_damage = damage - (shield_power * 20) # Engineering power to shields reduces damage, or increases it if shield power is reduced
-        elif shield_power <1:
+        elif shield_power <= 1:
             shield_damage = damage 
         print("Passive Collision, Shield Power Adjustment: " + str(shield_damage))
         remaining_shields = shield_strength - shield_damage
