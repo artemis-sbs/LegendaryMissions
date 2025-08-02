@@ -13,8 +13,11 @@
     cur_speed = to_engine_object(playerObj).cur_speed
 
     # Scales with speed, difficulty, and TODO: the size of the asteroid
-    base_damage = cur_speed * cur_speed * DIFFICULTY
+    base_damage = cur_speed * DIFFICULTY
     damage = base_damage
+    print("Passive Collision, Current Speed: " + str(cur_speed))
+    print("Passive Collision, Difficulty: " + str(DIFFICULTY))
+    print("Passive Collision, Raw Damage: " + str(damage))
 
     player_pos = get_pos(player)
     passive_pos = get_pos(passive)
@@ -29,13 +32,19 @@
         if not shield_strength:
             ->END
         shield_power = get_engineering_value(player, "FRONT SHIELD",0)
+        print("Passive Collision, Shield Power: " + str(shield_power))
 
         # Damage shields first
-        shield_damage = damage / shield_power # Engineering power to shields reduces damage, or increases it if shield power is reduced
+        if shield_power >= 1:
+            shield_damage = damage - (shield_power * 20) # Engineering power to shields reduces damage, or increases it if shield power is reduced
+        elif shield_power <1:
+            shield_damage = damage 
+        print("Passive Collision, Shield Power Adjustment: " + str(shield_damage))
         remaining_shields = shield_strength - shield_damage
+        print("Passive Collision, Remaining Shields: " + str(remaining_shields))
         # comms_broadcast(0, "Shields: {remaining_shields}")
         if remaining_shields <= 0:
-            damage = remaining_shields * -1 * shield_power # Now we return the remainder back to the original equivalent damage value
+            damage = remaining_shields * -1 # Now we return the remainder back to the original equivalent damage value
             # Set shields to 0 if remaining shield strength is less than or equal to 0
             set_data_set_value(player, "shield_val", 0, shield_index)
         else:
@@ -47,18 +56,15 @@
     # Note that the base hullpoints value of the Light Cruiser is 3, while shields is 120
     # So we probably want to divide the shields value by a lot?
     
-    # Diff 5
-    # Warp 1 -> 1*1*5 = 5
-    # Wapr 2 -> 2*2*5 = 20
-    # Wapr 3 -> 3*3*5 = 45
-    # Warp 4 -> 4*4*5 = 16*5 = 80?
+    # Divide by 50 for now?
+    print("Passive Collision, Remaining Damage: " + str(damage))
+    damage = damage / 50
+    print("Passive Collision, Grid Hits: " + str(int(damage)))
 
-    # Divide by 10 for now?
-
-    damage = damage / 10
-
-    # Looks like the system and damage amount for this function are not implemented
+    # This grid_take_internal_damage_at() function is designed for beam hits, so it probably isn't a good fit here
+    # Using it for now until we can come up with something better.
     damage = int(damage)
+    ->END if damage < 1
     for i in range(damage):
         grid_take_internal_damage_at(player, passive_pos, None, 1)
 
