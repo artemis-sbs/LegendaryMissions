@@ -131,6 +131,7 @@ default HANGAR_CONSOLE_ENABLED = True
         sbs.assign_client_to_ship(client_id, to_id(dock_choice))
     if ride_choice is not None:
         ride_picker.set_value(ride_choice)
+        
     # ride_picker.title_background = "#1578"
     
     gui_section(style="area: 20px,50, 35,50+20px;")
@@ -217,9 +218,10 @@ default HANGAR_CONSOLE_ENABLED = True
     # Fighter stats
     #
     gui_section(style="area: 35,100-50px, 75,100;")
-    gui_text(f"stat-1", style="tag:stats-1")
+    stats = hangar_get_stats(client_id, ride_choice)
+    gui_text(f"{stats[0]}", style="tag:stats-1")
     gui_row()
-    gui_text(f"stat-2", style="tag:stats-2")
+    gui_text(f"{stats[1]}", style="tag:stats-2")
 
 
     gui_section(style="area: 75,100-50px, 100,100;")
