@@ -110,9 +110,6 @@ default HANGAR_CONSOLE_ENABLED = True
         if ride_choice not in crafts:
             ride_choice = crafts[0]
 
-    briefing = "Select a craft to pilot. If you accept the mission hit launch."
-
-
     gui_section(style="area: 0,0, 36,100-150px;background: #fff1;")
 
     call_sign = get_inventory_value(client_id, "call_sign", "Selene")
@@ -138,6 +135,10 @@ default HANGAR_CONSOLE_ENABLED = True
     gui_row(style="row-height:20px;")
     gui_text("$text:Mission Briefing;color: white;justify: center;", style="background: #1578;")
     gui_section(style="area: 20px,50+20px, 35,100-160px;background: #1572;")
+
+    
+
+    briefing = get_inventory_value(ride_choice, "briefing", "No fighters")
     """
     {briefing}
     """ style="tag:briefing-text;padding: 10px,15px,10px,0;"
@@ -185,16 +186,23 @@ default HANGAR_CONSOLE_ENABLED = True
 
 
     gui_section(style="area: 75,100-80px, 100,100-50px;background: #002;")
-    gui_text("select ship", style="tag:refit-text")
+    
 
     # Set a counter to allow timed refresh
     # elegant or pure hack
     start_counter(client_id, "refresh_status")
-    update_ticker = get_counter_elapsed_seconds(client_id, "refresh_status")+2
+    update_ticker = get_counter_elapsed_seconds(client_id, "refresh_status")+1
+
+    if ride_choice is not None:
+        if is_timer_finished(ride_choice, "refit"):
+            gui_text("ready to launch", style="tag:refit-text")
+        else:
+            refit_time = format_time_remaining(ride_choice, "refit")
+            gui_text("$text: refit - launch in {refit_time}", style="tag:refit-text")
 
     on change update_ticker < get_counter_elapsed_seconds(client_id, "refresh_status"):
         fighter_change += 1
-        update_ticker = get_counter_elapsed_seconds(client_id, "refresh_status")+5
+        update_ticker = get_counter_elapsed_seconds(client_id, "refresh_status")+1
 
     on change fighter_change:
         gui_update("refit-text", "$text: select ship")
@@ -293,6 +301,10 @@ default HANGAR_CONSOLE_ENABLED = True
     ->END if fighter_so is None
     name = fighter_so.name
 
+    # TODO: Failed Mission
+    task_schedule(hangar_schedule_mission, {"CRAFT_ID": fighter_so.id}, inherit=False)
+
+
     if hangar_attempt_dock_craft(fighter_so.id):
         fighter_client = get_inventory_value(fighter_so.id, "client_id")
         new_home = to_space_object(get_science_selection(fighter_so.id))
@@ -304,6 +316,7 @@ default HANGAR_CONSOLE_ENABLED = True
         if fighter_client is not None:
             set_dedicated_link(fighter_client, "craft_id", None)    
             gui_reroute_client(fighter_client, show_hangar)
+
         
 
     ->END
