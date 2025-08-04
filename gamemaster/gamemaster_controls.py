@@ -1,7 +1,7 @@
 from sbs_utils.procedural.gui.button import Button
 from sbs_utils.helpers import FrameContext
 from sbs_utils.procedural.gui import *
-from sbs_utils.procedural.execution import gui_get_variable, gui_set_variable
+from sbs_utils.procedural.execution import gui_get_variable, gui_set_variable, task_schedule
 from sbs_utils.procedural.query import to_set, to_object
 from sbs_utils.procedural.comms import comms_broadcast, comms_navigate, comms_navigate_override
 from sbs_utils.procedural.ship_data import filter_ship_data_by_side
@@ -10,6 +10,38 @@ from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_va
 import sbs
 
 
+def get_gm_label():
+    ret = []
+    page = FrameContext.page
+    if page is None:
+        return []
+    #
+    # Walk all labels looking for map Labels
+    #
+    init_label = None
+    all_labels = page.story.labels
+    for l in all_labels:
+        if not l.startswith("gamemaster_menu"):
+            continue
+        m = all_labels[l]
+        comms_broadcast(0, f"Label path: {m.path}")
+        if m.path == "__overview__":
+            init_label = m
+        else:
+            ret.append(m)
+#                {"name": m.display_name, "description": text_sanitize(m.desc), "label": m},
+#            )
+    #
+    # If there is just the one i.e. the init return that
+    #
+    if len(ret)==0 and init_label is not None:
+        return [init_label]
+    elif len(ret)==0:
+        return  [
+            {"name": "No maps found", "description": "No maps were found when searching all mast/python labels."},
+        ]
+    return ret
+
 class GM_Gui_Tab(Button):
    def __init__(self, tag, name, icon):
       super().__init__(tag, f"$text:{name}")
@@ -17,10 +49,10 @@ class GM_Gui_Tab(Button):
 
 # def buildButton(parent)
 def get_ship_data_for_side(side):
-    ships = filter_ship_data_by_side(sides=side)
+    ships = filter_ship_data_by_side(None, sides=side)
     for ship in ships:
         gui_button(ship["key"], data={"ship":ship})
-        gui_message(b, "GM_Spawn")
+        gui_message(ship, "GM_Spawn")
 
 def buildButtons(parent_category, items):
     # with gui_list_box():
@@ -68,18 +100,14 @@ def get_sides():
 def build_spawn_menu():
     sides = get_sides()
     # comms_broadcast(0, f"{','.join(sides)}")
-    gui_drop_down(f"$text:TSN;list:{','.join(sides)}", var="GM_SIDE_SELECT")
+    # gui_drop_down(f"$text:TSN;list:{','.join(sides)}", var="GM_SIDE_SELECT")
+    get_gm_label()
+    gui_property_list_box(name="Config")
     gui_row()
-    gui_button("Ship")
-    gui_row()
-    gui_button("Fleet")
-    gui_row()
-    gui_button("Starbase")
-    gui_row()
-    gui_button("Terrain")
-    gui_row()
-    gui_button("Monster")
-    gui_row()
+    gui_text("Name")
+    gui_button("Hi")
+    # gui_row()
+    
 
 def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
     diff = 1
@@ -115,7 +143,7 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
         path = "//comms/gamemaster/"+menu
         # comms_broadcast(0, path)
         # comms_navigate(path)
-        ship = sbs.get_ship_of_client()
+        ship = sbs.get_ship_of_client(cid)
         comms_broadcast(0, f"Ship: {ship}")
         if ship is None:
            comms_broadcast(0, "ship is None")
