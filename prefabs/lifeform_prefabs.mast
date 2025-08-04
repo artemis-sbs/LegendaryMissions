@@ -11,20 +11,11 @@ name: Lifeform
 desc:
 role_values: ""
 host_id: null
+face: null
 title_color: green
 message_color: white
 path: //comms/lifeform
 ```
     id = self.get_id()
-    self.name = name
-    self.add_role("lifeform")
-    self.add_role(role_values)
-
-    self._comms_id = None
-    lifeform_set_path(self.id,path)
-    lifeform_transfer(self.id,host_id)
-    
-    self.INV.title_color = title_color
-    self.INV.message_color = message_color
-
+    lifeform_init(self, name, face, role_values, host_id, None, path, title_color, message_color)
     yield result id
