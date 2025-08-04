@@ -59,5 +59,6 @@ zipdir("prefabs")
 zipdir("basic_player_destroy")
 zipdir("basic_random_skybox")
 zipdir("collisions")
+zipdir("data_panels")
 zipdir("media", "zip")
 

@@ -227,6 +227,13 @@ jobs:
         filename: 'collisions.${{ steps.get_version.outputs.VERSION }}.mastlib'
         path: "collisions"
 
+    - name: Archive media zip
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'data_panels.${{ steps.get_version.outputs.VERSION }}.mastlib'
+        path: "data_panels"
+
 
     - name: Upload Release
       uses: ncipollo/release-action@v1
