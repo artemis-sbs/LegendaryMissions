@@ -86,6 +86,8 @@
 # This task will be ended automatically
 # gui sub task shares the data scope with the gui task
     gui_sub_task_schedule("watch")
+# hide the options button
+    sbs.transparent_options_button(client_id,1)
 # Present the GUI
     await gui()
 
