@@ -1,0 +1,110 @@
+# 
+# This adds a new console to select 
+# a display panel
+
+@console/display_panels !0 ^110 "Display panels" 
+    " Display panels for of this ship
+
+
+    gui_section( style=f"area: 0, 45px, 100, 100;")
+
+# The section for buttons to pick a display panel
+# currently just the one
+
+#    with gui_sub_section("row-height:50px"):
+#        gui_button("Alert Condition",  on_press="alert_condition")
+
+    jump alert_condition
+
+    await gui()
+
+
+#
+# The Alert condition panel
+#
+# A Panel to show the ships condition
+# Red, green, yellow or blue 
+#
+=== alert_condition
+
+
+--- repaint    
+
+    # this get the id of the ship this console is on
+    ship_id = sbs.get_ship_of_client(client_id)
+    # this get the red alert state of that ship
+
+# Get the state needed to determine condition
+    alert_state = get_data_set_value(ship_id, "red_alert",0)
+    shield_state = get_data_set_value(ship_id, "shields_raised_flag", 0)
+    dock_state = get_data_set_value(ship_id, "dock_state", 0)
+
+
+# CONDITION RED: At red alert, docked or not (animated)
+    if alert_state == 1:
+        color = "RED"
+# CONDITION BLUE: Docking (animated) or docked (static), not at red alert, shields down
+    elif alert_state != 1 and shield_state == 0 and dock_state == "docked":
+        color = "BLUE"
+# CONDITION GREEN: Not docked, not at red alert, shields down
+    elif alert_state != 1 and shield_state == 0 and dock_state != "docked":
+        color = "GREEN"
+# CONDITION YELLOW: Shields up, not at red alert, docked or not
+    elif alert_state != 1 and shield_state == 1 and dock_state != "docked":
+        color = "YELLOW"
+    else:
+        color = "YELLOW"
+
+# Save the previous state 
+    prev_alert_state = alert_state
+    prev_shield_state = shield_state
+    prev_dock_state = dock_state
+#
+# This creates several sections
+# and fill them with the proper color
+# essentially drawing a rectangle
+#
+    for y in range(7):
+        ry = 40 - y*5 - 2
+        ly = ry - 4
+        lx = 5 + y * 2
+        rx = 95 - y *2
+        gui_section( style=f"area: {lx}, {ly}, {rx}, {ry};background:{color}")
+        ly = 60+ y*5 + 2
+        ry = ly + 4
+        gui_section( style=f"area: {lx}, {ly}, {rx}, {ry};background:{color}")
+        
+#
+# Add a section to draw the text  
+#
+    gui_section( style=f"area: 20, 40, 80, 60;")
+    gui_text(f"text:CONDITION;justify:center;font:gui-6;color:{color}")
+    gui_row()
+    gui_text(f"text:{color};justify:center;font:gui-6;color:{color}")
+# This starts a sub task on the gui task
+# When a New GUI is presented later
+# This task will be ended automatically
+# gui sub task shares the data scope with the gui task
+    gui_sub_task_schedule("watch")
+# Present the GUI
+    await gui()
+
+#
+# The watch sub label will watch
+# for changes and if needed repaint the gui
+#
+--- watch
+    await delay_sim(1)
+    ->END if not object_exists(ship_id)
+# Get the current state
+    alert_state = get_data_set_value(ship_id, "red_alert",0)
+    shield_state = get_data_set_value(ship_id, "shields_raised_flag", 0)
+    dock_state = get_data_set_value(ship_id, "dock_state", 0)
+
+# If anything changed its time to refresh
+    if alert_state != prev_alert_state or shield_state != prev_shield_state or dock_state != prev_dock_state:
+# Since this is a GUI change, it needs to call gui_task_jump to
+# redirect the gui        
+        gui_task_jump("repaint")
+    jump watch
+
