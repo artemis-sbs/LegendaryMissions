@@ -604,7 +604,7 @@ def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet"
 #    carrier_count = 0
     for b in range(num_ships):
         art_id = siege_fleet[b]
-        roles = f"{race}, {ship_roles}" if ship_roles is not None else f"{race}, raider"
+        roles = f"{ship_roles},{race}" if ship_roles is not None else f"raider,{race}"
         
         r_name = name_random_hostile(race)                           #  f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
 
