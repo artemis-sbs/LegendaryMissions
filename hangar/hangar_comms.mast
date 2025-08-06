@@ -31,7 +31,7 @@
         set_engineering_value(FIGHTER_ID, "front shield", f)
         set_engineering_value(FIGHTER_ID, "rear shield", r)
     
-    elif button == "torp_type" and has_role(COMMS_ORIGIN_ID, "bomber"):
+    elif button == "torp_type" and has_role(FIGHTER_ID, "bomber"):
         tt = FIGHTER.data_set.get("torpedoTubeCurrentType", 0)
         print(f"FF {FIGHTER.name} {button}")
         if tt == "Homing":
