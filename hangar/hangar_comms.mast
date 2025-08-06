@@ -33,7 +33,7 @@
     
     elif button == "torp_type" and has_role(FIGHTER_ID, "bomber"):
         tt = FIGHTER.data_set.get("torpedoTubeCurrentType", 0)
-        print(f"FF {FIGHTER.name} {button}")
+        #print(f"FF {FIGHTER.name} {button}")
         if tt == "Homing":
             tt = "Nuke"
         elif tt == "Nuke":
