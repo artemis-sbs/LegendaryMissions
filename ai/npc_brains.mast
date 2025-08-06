@@ -7,6 +7,8 @@ distance: 5000
 throttle: 1.0
 stop_dist: 500
 ```
+    # Clear the target
+    clear_target(BRAIN_AGENT.id)
     # Can't use the target from the engine, because that 
     # can clear with stop distance
     current_target =  BRAIN_AGENT.get_inventory_value("blackboard:target")
@@ -17,7 +19,8 @@ stop_dist: 500
     yield fail if sbs.distance_id(BRAIN_AGENT_ID, current_target) > distance
     #print("CHASE CUR {distance} {current_target}")
     BRAIN_AGENT.set_inventory_value("blackboard:target", current_target)
-    target(BRAIN_AGENT_ID, current_target, True, throttle, stop_dist=stop_dist)
+    shoot = role_are_allies(BRAIN_AGENT_ID, current_target)
+    target(BRAIN_AGENT_ID, current_target, shoot, throttle, stop_dist=stop_dist)
     yield success
 
 
@@ -32,6 +35,9 @@ stop_dist: 500
     default SIZE_X = None
     default SIZE_Z = SIZE_X
     # The role "#" is an invisible e.g. admiral, operator
+
+    # Clear the target
+    clear_target(BRAIN_AGENT.id)
     if SIZE_X is None:
         _target = closest(BRAIN_AGENT_ID, role('ship')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
     else:
@@ -54,6 +60,8 @@ stop_dist: 500
 ```
     default SIZE_X = None
     default SIZE_Z = SIZE_X
+    # Clear the target
+    clear_target(BRAIN_AGENT.id)
     # The role "#" is an invisible e.g. admiral, operator
     if SIZE_X is None:
         _target = closest(BRAIN_AGENT_ID, role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
@@ -79,6 +87,8 @@ stop_dist: 500
 ```
     default SIZE_X = None
     default SIZE_Z = SIZE_X
+    # Clear the target
+    clear_target(BRAIN_AGENT.id)
     # The role "#" is an invisible e.g. admiral, operator
     if SIZE_X is None:
         _target = closest(BRAIN_AGENT_ID, role("station")-role_allies(BRAIN_AGENT_ID)-role("#"))
@@ -110,6 +120,8 @@ set_when_reached: brain_target_reached
 force_target: null
 force_target_point: null
 ```
+    # Clear the target
+    clear_target(BRAIN_AGENT.id)
     _target = force_target
     if _target is None:
         _target = BRAIN_AGENT.get_inventory_value("blackboard:target")
@@ -167,6 +179,8 @@ force_target_point: null
 metadata: ``` yaml
 type: brain/npc
 ```
+    # Clear the target
+    clear_target(BRAIN_AGENT.id)
     BRAIN_AGENT.data_set.set("throttle", 0.0, 0)
     yield success
 
@@ -182,6 +196,8 @@ stop_dist: 500
 ```
     # Can't use the target from the engine, because that 
     # can clear with stop distance
+    # Clear the target
+    clear_target(BRAIN_AGENT.id)
     current_target =  BRAIN_AGENT.get_inventory_value("blackboard:target")
     # Clear it now, set it back if success
     yield fail if current_target == 0
