@@ -235,6 +235,8 @@ default HANGAR_CONSOLE_ENABLED = True
     gui_section(style="area: 75,100-50px, 100,100;")
     on gui_message(gui_button("Launch")):
         if ride_choice is not None:
+            old_ship_id = sbs.get_ship_of_client(client_id)
+            unlink(old_ship_id, "consoles", client_id)
             ride_select = ride_choice
             link(ride_select , "consoles", client_id)
             jump launch_to_cockpit

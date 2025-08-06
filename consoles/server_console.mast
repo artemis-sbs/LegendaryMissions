@@ -202,9 +202,13 @@ Main:
     #
     # This is a remote
     if client_id != 0:
-        gui_reroute_server(show_main_game_screen)
+        gui_reroute_server(show_main_game_screen_server)
         gui_reroute_client(client_id, operator_stats)
 
+=== show_main_game_screen_server
+    ship_id = sbs.get_ship_of_client(client_id)
+    link(ship_id,"consoles", client_id)
+    add_role(client_id, "console, mainscreen")
 
 === show_main_game_screen === 
 
@@ -223,8 +227,8 @@ Main:
     ship_id = sbs.get_ship_of_client(client_id)
 
     gui_console("mainscreen")
-    link(ship_id,"consoles", client_id)
-    add_role(client_id, "console, mainscreen")
+    # link(ship_id,"consoles", client_id)
+    # add_role(client_id, "console, mainscreen")
 
 
 
