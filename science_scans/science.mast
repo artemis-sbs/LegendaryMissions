@@ -225,3 +225,25 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
             % Lethal hazard - the extreme gravity of a black hole will rip the ship apart.  
             % Black hole - 'A rip in the very fabric of space and time.' 
 
+
+//enable/science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "__player__")
+//science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "__player__")
+
+    + "scan":
+        <scan>
+            % This is a friendly ship.
+
+    + "status":
+        <scan> 
+            % Another ship in the navy
+            % Ready for battle
+
+    + "intel":
+        <scan> 
+            % Built five years ago, this ship was in excellent condition before the battle.
+            % This is a brand new ship that is not yet fully crewed.
+
+    + "bio":
+        <scan>
+            % They seem just like us
+            % Passes all bio scans. It is safe to dock with

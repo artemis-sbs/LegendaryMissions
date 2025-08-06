@@ -1,6 +1,6 @@
-default new_comms_layout = True
+
 #=== layout_comms_engine_widgets
-//gui/normal_comm if new_comms_layout 
+//gui/normal_comm
 
     # Left
     gui_section(style="area:0,45px,100,100;")
@@ -57,7 +57,7 @@ default new_comms_layout = True
         gui_row("row-height:100px;")
         gui_layout_widget("comms_face")
 
-        gui_row("row-height:10;")
+        gui_row("row-height:15;")
         gui_property_list_box("Options")
 
         gui_row()
@@ -71,30 +71,6 @@ default new_comms_layout = True
             gui_row("row-height: 35px;col-width:45px;")
 
 
-        default store_tag = False
-        store_tag_check = gui_checkbox("", "col-width:35px;",var="store_tag")
-
-        default preset_tags = [0,0,0,0,0,0,0,0,0,0]
-        for x in range(10):
-            tag00 = gui_button("{x}", data={"preset": x})
-            on gui_message(tag00):
-                #print(f"COMMS PRESET {store_tag} {preset}")
-                ship = sbs.get_ship_of_client(client_id)
-                if store_tag:
-                    ship = sbs.get_ship_of_client(client_id)
-                    preset_tags[preset] = get_comms_selection(ship)
-                    store_tag = False
-                    store_tag_check.value =False
-                    gui_represent(store_tag_check)
-                    #print(f"COMMS STORE PRESET {ship} {preset_tags[preset]}")
-                else:
-                    _sel = preset_tags[preset]
-                    if _sel != 0 and to_object(_sel) is not None: 
-                        set_comms_selection(ship,_sel)
-                        comms_set_2dview_focus(client_id, _sel)
-                        follow_route_select_comms(ship,_sel)
-                        #print(f"COMMS RESTORE PRESET {ship} {_sel}")
-
         gui_row("row-height:20px;")
         gui_blank()
         gui_row() #"padding:0,25px,10px,0")
@@ -103,134 +79,6 @@ default new_comms_layout = True
 
 
     yield idle
-
-
-//gui/normal_comm if not new_comms_layout 
-
-    # Left
-    gui_section(style="area:0,45px,100,100;")
-    
-    default tab = 1
-    # Top Left
-    with gui_sub_section():
-        with gui_sub_section("col-width:280px;"):
-            gui_row("row-height: 400px;")
-            #gui_layout_widget("ship_data")
-            gui_info_panel(tab=tab)
-            if is_dev_build():
-                gui_info_panel_add("upgrades", 105, gui_panel_upgrade_list,None)
-                gui_info_panel_add("message", 83, gui_panel_console_message,None)
-                gui_info_panel_add("messages", 84, gui_panel_console_message_list,None)
-                gui_info_panel_add("objective", 85, gui_panel_console_message,None)
-                gui_info_panel_add("objectives", 86, gui_panel_console_message_list,None)
-                
-
-            
-
-        with gui_sub_section():
-            gui_row("padding: 3px,0,0,0;")
-            # If more tabs are added the swap will be more complicated
-            # Deal with it then
-            panels = ~~[{"icon": 37, 
-                "show": console_comms_swap_panels_from_water, 
-                "hide":  None},
-                {"icon": 112, 
-                    "show": console_comms_swap_panels_from_2d, 
-                    "hide": None } ]~~
-
-            gui_tabbed_panel(panels, tab_location=3, icon_size = 40)
-
-        gui_row("padding:0,10px,0,0")
-        # Bottom Left
-        with gui_sub_section():
-            gui_row("padding:0,25px,10px,0")
-            gui_property_list_box()
-            gui_row("row-height: 40px;col-width:25-10px;")
-            gui_layout_widget("red_alert")
-        gui_hole()
-        with gui_sub_section():
-            
-            gui_layout_widget("comms_control")
-
-    # Right
-    ss = gui_screen_size(client_id)
-
-    default select_2d = False
-    _widget = "comms_2d_view"
-    #if select_2d:
-    #    _widget = "comms_2d_view"
-    with gui_sub_section("col-width:25;"):
-        gui_row()
-        with gui_sub_section():
-            gui_row()
-            # This is a blank is a place holder 
-            # for one of the swap panels
-            view2d_widget_control = gui_blank()
-
-            gui_row("row-height: 35px;")
-
-
-            follow_tag = get_inventory_value(client_id, "2d_follow", True)
-            # Set back in case of default
-            set_inventory_value(client_id, "2d_follow", follow_tag)
-            gui_checkbox("Follow","col-width:90px;", var="follow_tag")
-            gui_checkbox("2d select","col-width:110px;", var="select_2d")
-
-            gui_row("row-height:100px;")
-            gui_layout_widget("comms_face")
-
-        
-        
-        on change select_2d:
-            set_inventory_value(client_id, "2d_select", select_2d)
-
-        on change follow_tag:
-            ship = sbs.get_ship_of_client(client_id)
-            _sel = get_comms_selection(ship)
-            set_inventory_value(client_id, "2d_follow", follow_tag)
-            comms_set_2dview_focus(client_id, _sel)
-
-
-        if ss.x < 1600:
-            gui_row("row-height: 35px;col-width:25px;")
-        else:
-            gui_row("row-height: 35px;col-width:45px;")
-
-        default store_tag = False
-        store_tag_check = gui_checkbox("", "col-width:35px;",var="store_tag")
-
-        default preset_tags = [0,0,0,0,0,0,0,0,0,0]
-        for x in range(10):
-            tag00 = gui_button("{x}", data={"preset": x})
-            on gui_message(tag00):
-                #print(f"COMMS PRESET {store_tag} {preset}")
-                ship = sbs.get_ship_of_client(client_id)
-                if store_tag:
-                    ship = sbs.get_ship_of_client(client_id)
-                    preset_tags[preset] = get_comms_selection(ship)
-                    store_tag = False
-                    store_tag_check.value =False
-                    gui_represent(store_tag_check)
-                    #print(f"COMMS STORE PRESET {ship} {preset_tags[preset]}")
-                else:
-                    _sel = preset_tags[preset]
-                    if _sel != 0 and to_object(_sel) is not None: 
-                        set_comms_selection(ship,_sel)
-                        comms_set_2dview_focus(client_id, _sel)
-                        follow_route_select_comms(ship,_sel)
-                        #print(f"COMMS RESTORE PRESET {ship} {_sel}")
-
-        
-        gui_row("row-height:20px;")
-        gui_blank()
-        gui_row()
-        gui_layout_widget("comms_sorted_list")
-            
-
-
-    yield idle
-
-
 
 
 
@@ -260,32 +108,7 @@ default new_comms_layout = True
             gui_row("row-height: 35px;col-width:25px;")
         else:
             gui_row("row-height: 35px;col-width:45px;")
-        default store_tag = False
-        store_tag_check = gui_checkbox("", "col-width:35px;",var="store_tag")
-        default preset_tags = [0,0,0,0,0,0,0,0,0,0]
-        for x in range(10):
-            tag00 = gui_button("{x}", data={"preset": x})
-            on gui_message(tag00):
-                #print(f"COMMS PRESET {store_tag} {preset}")
-                ship = sbs.get_ship_of_client(client_id)
-                if store_tag:
-                    ship = sbs.get_ship_of_client(client_id)
-                    preset_tags[preset] = get_science_selection(ship)
-                    store_tag = False
-                    store_tag_check.value =False
-                    gui_represent(store_tag_check)
-                    #print(f"COMMS STORE PRESET {ship} {preset_tags[preset]}")
-                else:
-                    _sel = preset_tags[preset]
-                    if _sel != 0 and to_object(_sel) is not None: 
-                        set_science_selection(ship,_sel)
-                        if follow_tag:
-                            science_set_2dview_focus(client_id, _sel)
-                        else:
-                            science_set_2dview_focus(client_id, 0)
-                        follow_route_select_science(ship,_sel)
-                        #print(f"COMMS RESTORE PRESET {ship} {_sel}")
-
+        
         
         gui_row("row-height:20px;")
         gui_blank()

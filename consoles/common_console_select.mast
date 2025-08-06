@@ -291,6 +291,10 @@ route_change_console(on_change_console)
         if player_ship.name.lower() == client_select_ship.lower():
             _ship_id = player_ship.id
 
+## unlink previous ship
+            old_ship_id = sbs.get_ship_of_client(client_id)
+            unlink(old_ship_id, "consoles", client_id)
+
             sbs.assign_client_to_ship(client_id, _ship_id)
             assign_client_to_alt_ship(client_id, 0)
             #set_inventory_value(client_id, "assigned_ship", _ship_id)

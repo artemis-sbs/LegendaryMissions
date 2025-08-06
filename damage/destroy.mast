@@ -31,6 +31,7 @@
     ->END if dest_obj is None
     
     dest_side = dest_obj.side
+    dest_origin = dest_obj.origin
     dest_key = dest_obj.art_id
 
     dest_eobj = to_engine_object(DAMAGE_SELECTED_ID)
@@ -67,18 +68,21 @@
     # We give the wreck a random yaw/pitch (so it spins a bit), set the radar color, and assign some inventory values
     # to help determine later if it drops any particular upgrade. 
 
-    wr = terrain_spawn(dest_posx, dest_posy, dest_posz, "Wreck", f"wreck, {dest_side}", "wreck", "behav_asteroid")
+    # note: changed to not use side or exact origin to avoid logic conflicts
+    # the role of side/origin wasn't used but confused other logic
+    wr = terrain_spawn(dest_posx, dest_posy, dest_posz, "Wreck", f"wreck, wreck_{dest_origin}", "wreck", "behav_asteroid")
     temp_yaw = random.uniform(0.001, 0.003)
     temp_pitch = random.uniform(0.002, 0.004)
     wr.engine_object.steer_yaw = temp_yaw
     wr.engine_object.steer_pitch = temp_pitch
     wr.blob.set("radar_color_override", "#f0c")
+    
     set_inventory_value(wr.id, "hp", 150)
-    set_inventory_value(wr.id, "hull_side", dest_side)
+    wr.py_object.origin = dest_obj.origin # set_inventory_value(wr.id, "hull_side", dest_origin)
     set_inventory_value(wr.id, "hull_type", dest_hull)
-    wr_hp = get_inventory_value(wr.id, "hp", 0)
-    wr_side = get_inventory_value(wr.id, "hull_side", 0)
-    wr_hull = get_inventory_value(wr.id, "hull_type", 0)
+    # wr_hp = get_inventory_value(wr.id, "hp", 0)
+    # wr_side = get_inventory_value(wr.id, "hull_side", 0)
+    # wr_hull = get_inventory_value(wr.id, "hull_type", 0)
 
     ->END
 

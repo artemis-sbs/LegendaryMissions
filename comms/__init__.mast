@@ -8,4 +8,5 @@ import enemy_taunt.mast
 import enemy_surrender.mast
 import priority_docking.mast
 import enemy_stations.mast
+import player_comms.mast
 

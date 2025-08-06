@@ -43,7 +43,7 @@
     wr_posy = wr_eobj.pos.y
     wr_posz = wr_eobj.pos.z
     wr_pos = wr_eobj.pos        # Need this vector for the particle effect
-    wr_side = get_inventory_value(wr.id, "hull_side", 0)
+    wr_origin = wr.origin ##get_inventory_value(wr.id, "hull_side", 0)
 
     # Once we have the position and the side value, destroy the wreck, delete the engine object, and generate a particle effect. 
 
@@ -66,7 +66,7 @@
     # Generate random number, end task if upg_rand is higher than the drop chance (determined by UPGRADE_SELECT)
 
     upg_rand = random.randint(1,10)
-    print(f"Wreck destroyed, drop random {upg_rand}, drop chance {upg_dropchance}")
+    print(f"Wreck destroyed, drop random {upg_rand}, drop chance {upg_dropchance} origin {wr_origin}")
     ->END if upg_rand > upg_dropchance
 
     # If we are dropping an upgrade, reroll upg_rand and determine upgrade based on the side value/race.
@@ -77,7 +77,7 @@
     # If you're adding any new upgrades, make sure you add them to what the Skaraans might drop. 
 
     upg_rand = random.randint(1, 10)
-    if wr_side == "kralien":
+    if wr_origin == "kralien":
         if upg_rand >= 6 and upg_rand <= 10:
             # Lateral Array 50%
             pickup_spawn(wr_posx, wr_posy, wr_posz, "lateral_array")
@@ -88,7 +88,7 @@
             # Carapaction Coil 20%
             pickup_spawn(wr_posx, wr_posy, wr_posz, "carapaction_coil")
 
-    if wr_side == "arvonian":
+    if wr_origin == "arvonian":
         if upg_rand >= 6 and upg_rand <= 10:
             # Infusion P-Coils 50%
             pickup_spawn(wr_posx, wr_posy, wr_posz, "infusion_pcoils")
@@ -99,7 +99,7 @@
             # HiDens Powercell 20%
             pickup_spawn(wr_posx, wr_posy, wr_posz, "hidens_powercell")
 
-    if wr_side == "torgoth":
+    if wr_origin == "torgoth":
         if upg_rand >= 6 and upg_rand <= 10:
             # Carapaction Coil 50%
             pickup_spawn(wr_posx, wr_posy, wr_posz, "carapaction_coil")
@@ -110,7 +110,7 @@
             # Cetrocite Crystal 20%
             pickup_spawn(wr_posx, wr_posy, wr_posz, "cetrocite_crystal")
 
-    if wr_side == "ximni":
+    if wr_origin == "ximni":
         if upg_rand >= 6 and upg_rand <= 10:
             # Tauron Focuser 50%
             pickup_spawn(wr_posx, wr_posy, wr_posz, "tauron_focuser")
@@ -121,7 +121,7 @@
             # Infusion P-Coils 20%
             pickup_spawn(wr_posx, wr_posy, wr_posz, "infusion_pcoils")
 
-    if wr_side == "skaraan" or wr_side is None:
+    if wr_origin == "skaraan" or wr_origin is None:
         upg_rand = random.randint(1,9)          # For all upgrades, equal chance. The Skaraans can be expected to carry any type of exotic technology.
         if upg_rand == 1:
             pickup_spawn(wr_posx, wr_posy, wr_posz, "carapaction_coil")

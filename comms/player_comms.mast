@@ -1,0 +1,28 @@
+
+
+
+//enable/comms if has_role(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "__player__") and COMMS_ORIGIN_ID != COMMS_SELECTED_ID
+    print("ENABLED")
+//comms if has_role(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "__player__") and COMMS_ORIGIN_ID != COMMS_SELECTED_ID
+    + "Ship to Ship" //comms/ship_to_ship
+
+
+//comms/ship_to_ship
+    default prop_message = gui_set_variable("prop_message", "")
+    p = """
+    message: 'gui_input("desc: message;",var="prop_message")'
+    """
+    # This is gui variable, this is why we need client scope!
+    gui_properties_set(p)
+
+    + "Back" //comms
+    + "Send":
+        prop_message = gui_get_variable("prop_message", "")
+        if prop_message != "":
+            with comms_override(COMMS_SELECTED_ID, COMMS_ORIGIN_ID):
+                comms_transmit(prop_message)
+            with comms_override(COMMS_ORIGIN_ID, COMMS_SELECTED_ID):
+                comms_receive(prop_message)
+    
+
+
