@@ -7,6 +7,7 @@ from sbs_utils.procedural.comms import comms_broadcast, comms_navigate, comms_na
 from sbs_utils.procedural.ship_data import filter_ship_data_by_side
 from sbs_utils.procedural.roles import role, has_role
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+from sbs_utils.procedural.signal import signal_emit
 import sbs
 
 
@@ -98,18 +99,34 @@ def get_sides():
     return sides_list
 
 def build_spawn_menu():
+    signal_emit("gm_settings_choice", {"width": "350px;"})
     sides = get_sides()
     # comms_broadcast(0, f"{','.join(sides)}")
     # gui_drop_down(f"$text:TSN;list:{','.join(sides)}", var="GM_SIDE_SELECT")
-    get_gm_label()
+    # get_gm_label()
     gui_property_list_box(name="Config")
-    gui_row()
-    gui_text("Name")
-    gui_button("Hi")
+    props = """
+    Main:
+        Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
+        Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
+    Map:
+        Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'
+        Lethal Terrain: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, max", var="LETHAL_SELECT")'
+        Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, max", var="FRIENDLY_SELECT")'
+        Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, max", var="MONSTER_SELECT")'
+        Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
+        Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
+    """
+    gui_properties_set(props)
+    # gui_row()
+    # gui_text("Name")
+    # gui_button("Hi")
     # gui_row()
     
 
 def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
+    # signal_emit("gm_settings_choice", {"width": "150px"})
+    # build_spawn_menu()
     diff = 1
     gui_text(f"$text:{menu}")
     gui_row()
@@ -162,7 +179,9 @@ def gm_comms_path(COMMS_ORIGIN_ID, path) -> bool:
         return False
     return get_inventory_value(COMMS_ORIGIN_ID, "gm_menu", "") == path
 
-
+def buildShipPropsPanel(title, props_list):
+    gui_property_list_box(title)
+    gui_properties_set(props_list)
     
 
 
