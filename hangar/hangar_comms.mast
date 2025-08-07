@@ -1,3 +1,54 @@
+
+
+//shared/signal/press_fighter_button
+    if button == "eject":
+        FIGHTER.data_set.set("fighter_thrust_flag", 0,0)
+        FIGHTER.data_set.set("fighter_shoot_flag", 0,0)
+        FIGHTER.data_set.set("fighter_boost_flag", 0,0)
+        FIGHTER.data_set.set("throttle", 0.0,0)
+        # Reset to just the craft name
+        FIGHTER.name = FIGHTER.get_inventory_value("craft_name", FIGHTER.name)
+
+        fighter_client = get_inventory_value(FIGHTER_ID, "client_id")
+        if fighter_client is not None:
+            set_dedicated_link(fighter_client, "craft_id", None)    
+            gui_reroute_client(fighter_client, show_hangar)
+
+
+    elif button ==  "shield_balance":
+        f = get_engineering_value(FIGHTER_ID, "front shield")
+        r = get_engineering_value(FIGHTER_ID, "rear shield")
+        if f == r:
+            f = 2.0
+            r = 0.0
+        elif f > r:
+            f = 0.0
+            r = 2.0
+        elif f < r:
+            f = 1.0
+            r = 1.0
+        
+        set_engineering_value(FIGHTER_ID, "front shield", f)
+        set_engineering_value(FIGHTER_ID, "rear shield", r)
+    
+    elif button == "torp_type" and has_role(FIGHTER_ID, "bomber"):
+        tt = FIGHTER.data_set.get("torpedoTubeCurrentType", 0)
+        #print(f"FF {FIGHTER.name} {button}")
+        if tt == "Homing":
+            tt = "Nuke"
+        elif tt == "Nuke":
+            tt = "Mine"
+        elif tt == "Mine":
+            tt = "Homing"
+        else:
+            tt = "Homing"
+
+
+        FIGHTER.data_set.set("torpedoTubeCurrentType", tt,0)
+
+
+
+
 //enable/grid/comms if has_role(COMMS_ORIGIN_ID, "cockpit")
 
 //comms/grid if has_role(COMMS_ORIGIN_ID, "cockpit") and has_role(COMMS_SELECTED_ID,"computer") and is_grid_object_id(COMMS_SELECTED_ID)

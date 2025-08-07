@@ -9,7 +9,7 @@ type: prefab/npc/defender
 side_value: tsn
 objective: objective_protect_area
 give_orders_type: objective/orders/defender
-allies: civ
+allies: civ,surrendered
 ```
     default name = get_defender_name(side_value)
     default origin = side_value
