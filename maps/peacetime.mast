@@ -111,7 +111,7 @@ Properties:
     spawn_points = scatter.box(5, 0, 0, 0, 50000, 1000, 50000, centered=True)
     for c in spawn_points:
         # First three suspects have "California" names
-        if s_count >= 1 and s_count <= 3:    
+        if s_count >= 1 and s_count <= 3:
             cargo_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + peacetime_list.pop(random.randint(0,len(peacetime_list)-1))
             c_ship = to_id(npc_spawn(*c, cargo_name, "civ, civilian, suspect", "cargo_ship", "behav_npcship"))
         # Last two suspects have "Civilian" names
@@ -816,11 +816,11 @@ yield success
 
 ===== kidnap_message =====
     await delay_sim(15)
-    for p in role("__player__"):
-        if p is not None:
-            send_general_message("Admiral Harkin", "Ambassador Florbin has been kidnapped! Contact DS1 for details.", admiral_face, p)
+    ds1_list = to_list(role("ds1"))
+    ->END if len(ds1_list) < 1
+    ds1_id = ds1_list[0]
+    send_general_message("Admiral Harkin", "Ambassador Florbin has been kidnapped! Contact DS1 for details.", admiral_face, ds1_id)
     ->END
-
 
 ===== scanning_cargo_containers ======
 
@@ -969,9 +969,9 @@ yield success
 
 
 ===== check_ambassador_rescued ======
-
     for p in role("__player__"):
         ds1_list = to_list(role("ds1"))
+        ->END if len(ds1_list) < 1
         ds1_id = ds1_list[0]
         dist = sbs.distance_id(p, ds1_id)
         p_obj = to_object(p)
@@ -979,7 +979,7 @@ yield success
         check_pod = get_inventory_value(p, "escape-pod", 0)
         if dock_status == "docked" and dist <= 600 and check_pod > 0:
             #admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 4 4;ter #964b00 8 4;"
-            send_general_message("Admiral Harkin", "Ambassador Florbin has been safely delivered back to DS 1! Well done, " + p_obj.name + "!", admiral_face, p)
+            send_general_message("Admiral Harkin", "Ambassador Florbin has been safely delivered back to DS 1! Well done, " + p_obj.name + "!", admiral_face, ds1_id)
             #comms_message(f"Ambassador Florbin has been safely delivered back to DS 1. Well done, {p_obj.name}!", ds1_id, p, title="Ambassador Rescued", title_color="green")
             kidnap_status = 5
             ->END
