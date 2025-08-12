@@ -122,8 +122,7 @@ shared _surrender_return = task_schedule(take_surrendered_home)
     comms_receive(f"""OK we give up, {name}.""", title_color=surrender_color)
     add_role(COMMS_SELECTED_ID, "surrendered")
     surrender = game_stats.get("ships_surrender", 0 )
-    if random.randint(1,100)<=50:
-        surrender += 1
+    surrender += 1
     game_stats["ships_surrender"] = surrender
     remove_role(COMMS_SELECTED_ID, "raider")
     set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
