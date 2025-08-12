@@ -29,6 +29,7 @@ Properties:
     terrain_spawn_stations(DIFFICULTY, lethal_value)
     await task_schedule(spawn_friendly_npc)
     await task_schedule(spawn_players)
+    await task_schedule(default_player_friendly_eyes)
     await task_schedule(docking_standard_player_station)
     
     terrain_asteroid_clusters(terrain_value)
