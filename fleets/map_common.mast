@@ -133,7 +133,20 @@
 
     shared players_cleaned = True
     ->END
-    
+
+==== default_player_friendly_eyes
+" Schedule this label if all player ships are on the same side and should share scan data.  
+" If `players` isn't specified in the metadata, then it will use `role('__player__')`. 
+metadata: ```
+players:
+```
+    if players is None:
+        players = role('__player__')
+    for p in players:
+        for o in players:
+            if p != o:
+                link(p, "extra_scan_source", o)
+    ->END
     
 ==== player_ships_remove_unused
     sbs.delete_object(_ship_id)
