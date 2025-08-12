@@ -13,7 +13,7 @@
     cur_speed = to_engine_object(playerObj).cur_speed
 
     # Scales with speed, difficulty, and TODO: the size of the asteroid
-    base_damage = cur_speed * DIFFICULTY
+    base_damage = abs(cur_speed) * DIFFICULTY
     damage = base_damage
     print("Passive Collision, Current Speed: " + str(cur_speed))
     print("Passive Collision, Difficulty: " + str(DIFFICULTY))

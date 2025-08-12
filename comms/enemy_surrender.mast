@@ -8,7 +8,7 @@ shared _surrender_return = task_schedule(take_surrendered_home)
     yield fail if has_role(COMMS_SELECTED_ID, "surrendered")
 
     surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
-    hide_surr = surrender_count >= 3
+    hide_surr = surrender_count >= 4
     #
     # Secret code case
     #
@@ -32,9 +32,16 @@ shared _surrender_return = task_schedule(take_surrendered_home)
     ->END if player is None
     name = player.name
     surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
-    set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
 
+    # Secret Codecase, force surrender if active, otherwise check shield ratio
     sc_timer = get_inventory_value(COMMS_ORIGIN_ID, "sc_timer", 0)
+    if sc_timer > 0:
+        sc_timer = 0
+        set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
+        await task_schedule(comms_do_surrender)
+        ->END
+
+    # get lowest shield value
     shield_count = blob.get("shield_count", 0)
     ->END if shield_count is None
     s_ratio = 100
@@ -43,27 +50,67 @@ shared _surrender_return = task_schedule(take_surrendered_home)
         s_cur = blob.get("shield_val", s )
         s_ratio = min(s_cur/s_max, s_ratio)
 
-    # Secret Codecase, force surrender if active, otherwise check shield ratio
-    if sc_timer > 0:
-        sc_timer = 0
-        set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
-        await task_schedule(comms_do_surrender)
-        
+    s_chance = random.randint(1,100)
+    s_crew = to_object(COMMS_SELECTED_ID).crew
+
+    print("Surrender Attempt")
+    print("Shield Ratio: " + str(s_ratio))
+    print("Surrender Chance: " + str(s_chance))
+    print("Surrender Crew: " + str(s_crew))
+    s_mod = 0
+    if s_crew == "arvonian": # Arvonian nobolity prides itself on honor and valor, and detests cowardice
+        s_mod = 5  
+    if s_crew == "skaraan": # Surrendering is bad for business 
+        s_mod = 10
+    if s_crew == "kralien": # Kralien ships tend to be underpowered and outgunned
+        s_mod = -15
+    if s_crew == "torgoth": # Torgoth are xenophobic and less likely to surrender to an "inferior" race
+        s_mod = 15
+    if s_crew == "ximni": # Meaningless death is not considered to be in the spirit of "Xim"
+        s_mod = -10
+    print("Crew Modifier: " + str(s_mod))
+    s_chance = s_chance + s_mod
+    print("Difficulty Modifier: " + str(DIFFICULTY * 2))
+    s_chance = s_chance + (DIFFICULTY * 2)
+    print("Modified Chance: " + str(s_chance))
+
+    if s_ratio >= 0.5:
+          comms_receive(f"""Go climb a tree, {name}!""", title="failed surrender", title_color=raider_color)
+    elif s_ratio < 0.5 and s_ratio >= 0.09:
+        if s_chance <= 40:
+            await task_schedule(comms_do_surrender)
+        else:
+            comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title="Surrender ignored", title_color=raider_color)
     elif s_ratio < 0.09:
-        if random.randint(1,6)<3:
+        if s_chance <= 75:
             await task_schedule(comms_do_surrender)
         else:
             comms_receive(f"""We will fight to our last breath!""", title="failed surrender", title_color=raider_color)
             add_role(COMMS_SELECTED_ID, "never_surrender")
 
-    elif s_ratio < 0.5:
-        if random.randint(0,6)<=2:
-            await task_schedule(comms_do_surrender)
-        else:
-            comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title="Surrender ignored", title_color=raider_color)
+    # Chance that a surrender attempt doesn't "count" towards the limit (currently 3 max)
+    # At higher difficulty, chance is lower. 
+    if random.randint(1,100) <= (60 - DIFFICULTY * 4):    
+        set_inventory_value(COMMS_SELECTED_ID, "surrender_count", surrender_count+1)
+    surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
+    print("Surrender Count: " + str(surrender_count))
 
-    else:
-        comms_receive(f"""Go climb a tree, {name}!""", title="failed surrender", title_color=raider_color)
+#    if s_ratio < 0.09:
+#        if s_chance <= 75:
+#            await task_schedule(comms_do_surrender)
+#        else:
+#            comms_receive(f"""We will fight to our last breath!""", title="failed surrender", title_color=raider_color)
+#            add_role(COMMS_SELECTED_ID, "never_surrender")
+#
+#    elif s_ratio < 0.5:
+#        if random.randint(1,100)<=40:
+#            await task_schedule(comms_do_surrender)
+#        else:
+#            comms_receive(f"""We can still defeat you, {name}! Prepare to die!""", title="Surrender ignored", title_color=raider_color)
+#
+#    else:
+#        comms_receive(f"""Go climb a tree, {name}!""", title="failed surrender", title_color=raider_color)
+
     comms_navigate("//comms")
     yield success
 
