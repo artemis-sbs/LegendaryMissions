@@ -51,6 +51,7 @@ Properties:
     set_face(tanker, random_terran())
 
     await task_schedule(spawn_players)
+    await task_schedule(default_player_friendly_eyes)
 
     print(f"Deep Strike: Reposition Player")
     new_pos = Vec3(20000,0,1500)

@@ -70,6 +70,7 @@ Properties:
     # wait for the creation of the player ships
     await task_schedule(spawn_friendly_npc)
     await task_schedule(spawn_players)
+    await task_schedule(default_player_friendly_eyes)
     await task_schedule(docking_standard_player_station)
 
 

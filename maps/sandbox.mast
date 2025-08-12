@@ -33,6 +33,7 @@ Properties:
     # terrain_spawn_pickups(upgrade_value)
 
     await task_schedule(spawn_players)
+    await task_schedule(default_player_friendly_eyes)
     await task_schedule(docking_standard_player_station)
 
     #------------------------------------------------------------------------------------------------------------
