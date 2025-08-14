@@ -9,11 +9,27 @@ prefab_spawn(prefab_side_generic, {"name": "Ximni", "key":"ximni", "desc":"Ximni
 prefab_spawn(prefab_side_generic, {"name":"Pirate", "key":"pirate", "enemies":"tsn,usfp,kralien,arvonian,torgoth,ximni"}) #Excluding Skaraan as enemy because they might cooperate sometimes.
 # Debugging
 # l = len(role("side"))
-# comms_broadcast(0, "Sides: {l}")
+# await delay_sim(2)
+task_schedule("test")
+jump END
+
+=== test
+    allies = side_are_allies("tsn","usfp")
+    enemies = side_are_enemies("usfp", "tsn")
+    print(f"Sides are allies {allies}")
+    print(f"side are enemies {enemies}")
+    side_set_relations("tsn","usfp", -1)
+    enemies = side_are_enemies("tsn", "usfp")
+    allies = side_are_enemies("usfp","tsn")
+    print(f"Sides are allies {allies}")
+    print(f"side are enemies {enemies}")
+
+    print(f"Sides are enemies: {enemies}")
+    ->END
 
 === prefab_side_generic
-" Generic definition of a Side or Faction.
-" Defaults are the TSN values
+" Generic definition of a Side or Faction. If a side has enemies or allies, the side will be added to the enemy/ally list for 
+" the applicable sides. Defaults are the TSN values.
 metadata: ```
 type: prefab/side
 name: TSN
@@ -26,8 +42,8 @@ races: terran
     if key is None:
         # key is the only critical property
         yield fail
-    sides = role("__side__") & role(key)
-    if len(sides) > 0:
+    _sides = role("__side__") & role(key)
+    if len(_sides) > 0:
         # The side with the given key already exists
         yield fail
     if name is None:
@@ -41,10 +57,26 @@ races: terran
     id = prefab.get_id()
     add_role(id, key)
     add_role(id, "__side__")
+    # Convert to Sets
+    ally_list = set(allies.split())
+    enemy_list = set(enemies.split())
+    races_list = set(races.split())
+    # Remove whitespaces from beginning and end of each item
+    ally_list = ~~{item.strip() for item in ally_list}~~
+    enemy_list = ~~{item.strip() for item in enemy_list}~~
+    races_list = ~~{item.strip() for item in races_list}~~
     set_inventory_value(id, "side_name", name)
     set_inventory_value(id, "side_key", key)
-    set_inventory_value(id, "side_allies", allies)
-    set_inventory_value(id, "side_enemies", enemies)
-    set_inventory_value(id, "side_races", races)
+    # Pretty sure these are not needed, since the later call to side_set_relations() will do this anyway
+    # set_inventory_value(id, "side_allies", ally_list)
+    # set_inventory_value(id, "side_enemies", enemy_list)
+    set_inventory_value(id, "side_races", races_list)
     set_inventory_value(id, "side_desc", desc)
+
+    # Now we need to update the other factions
+    for item in ally_list:
+        side_set_relations(key, item, 1)
+    for item in enemy_list:
+        set_side_relations(key, item, -1)
+
     yield result id
