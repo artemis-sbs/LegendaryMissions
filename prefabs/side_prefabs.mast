@@ -10,22 +10,23 @@ prefab_spawn(prefab_side_generic, {"name":"Pirate", "key":"pirate", "enemies":"t
 # Debugging
 # l = len(role("side"))
 # await delay_sim(2)
-task_schedule("test")
-jump END
+# task_schedule("test")
+# jump END
 
-=== test
-    allies = side_are_allies("tsn","usfp")
-    enemies = side_are_enemies("usfp", "tsn")
-    print(f"Sides are allies {allies}")
-    print(f"side are enemies {enemies}")
-    side_set_relations("tsn","usfp", -1)
-    enemies = side_are_enemies("tsn", "usfp")
-    allies = side_are_enemies("usfp","tsn")
-    print(f"Sides are allies {allies}")
-    print(f"side are enemies {enemies}")
-
-    print(f"Sides are enemies: {enemies}")
-    ->END
+# === test
+#     print("=========================------------------------------TEST================================------------------------------")
+#     allies = side_are_allies("tsn","kralien")
+#     enemies = side_are_enemies("kralien", "tsn")
+#     print(f"Sides are allies {allies}")
+#     print(f"side are enemies {enemies}")
+#     side_set_relations("tsn","kralien", 0)
+#     enemies = side_are_enemies("tsn", "kralien")
+#     allies = side_are_allies("kralien","tsn")
+#     neutral = side_are_neutral("kralien","tsn")
+#     print(f"Sides are allies {allies}")
+#     print(f"side are enemies {enemies}")
+#     print(f"side are neutral: {neutral}")
+#     ->END
 
 === prefab_side_generic
 " Generic definition of a Side or Faction. If a side has enemies or allies, the side will be added to the enemy/ally list for 
@@ -50,26 +51,30 @@ races: terran
         name = key
     if desc is None:
         desc = name
-    if allies is None:
-        allies = ""
-    if enemies is None:
-        enemies = ""
     id = prefab.get_id()
     add_role(id, key)
     add_role(id, "__side__")
     # Convert to Sets
-    ally_list = set(allies.split())
-    enemy_list = set(enemies.split())
-    races_list = set(races.split())
+    if allies is None:
+        ally_list = set()
+    else:
+        ally_list = set(allies.split(","))
+    if enemies is None:
+        enemy_list = set()
+    else:
+        enemy_list = set(enemies.split(","))
+    if races is None:
+        races_list = set()
+    else:
+        races_list = set(races.split(","))
     # Remove whitespaces from beginning and end of each item
     ally_list = ~~{item.strip() for item in ally_list}~~
     enemy_list = ~~{item.strip() for item in enemy_list}~~
     races_list = ~~{item.strip() for item in races_list}~~
     set_inventory_value(id, "side_name", name)
     set_inventory_value(id, "side_key", key)
-    # Pretty sure these are not needed, since the later call to side_set_relations() will do this anyway
-    # set_inventory_value(id, "side_allies", ally_list)
-    # set_inventory_value(id, "side_enemies", enemy_list)
+    set_inventory_value(id, "side_allies", ally_list)
+    set_inventory_value(id, "side_enemies", enemy_list)
     set_inventory_value(id, "side_races", races_list)
     set_inventory_value(id, "side_desc", desc)
 
@@ -77,6 +82,6 @@ races: terran
     for item in ally_list:
         side_set_relations(key, item, 1)
     for item in enemy_list:
-        set_side_relations(key, item, -1)
+        side_set_relations(key, item, -1)
 
     yield result id
