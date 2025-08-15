@@ -8,13 +8,32 @@ prefab_spawn(prefab_side_generic, {"name": "Skaraan", "key":"skaraan", "desc":"S
 prefab_spawn(prefab_side_generic, {"name": "Ximni", "key":"ximni", "desc":"Ximni", "allies":"", "enemies":"", "races":"ximni"})
 prefab_spawn(prefab_side_generic, {"name":"Pirate", "key":"pirate", "enemies":"tsn,usfp,kralien,arvonian,torgoth,ximni"}) #Excluding Skaraan as enemy because they might cooperate sometimes.
 # Debugging
+
+
+
 # l = len(role("side"))
 # await delay_sim(2)
-# task_schedule("test")
-# jump END
+# task_schedule("test1")
+# # jump END
 
-# === test
-#     print("=========================------------------------------TEST================================------------------------------")
+# === test1
+#     delay_sim(seconds=2)
+#     print("================------------------TEST===================----------------")
+# data = {"START_X":0,"START_Y":0,"START_Z":0}
+# npc = prefab_spawn(prefab_npc_defender, data)
+    # print("NPC: {npc}")6
+    # enemy = await prefab_spawn(prefab_npc_defender, {"START_X":10000,"START_Y":0,"START_Z":0,"side_value":"kralien", "allies": ""})
+    # print("enemy: {enemy}")
+
+    # side_set_ship_allies_and_enemies(npc)
+    # side_set_ship_allies_and_enemies(enemy)
+
+    # allies = side_are_allies(npc, enemy)
+    # enemies = side_are_enemies(npc, enemy)
+    # print("side are allies: {allies}")
+    # print("enemies: {enemies}")
+
+
 #     allies = side_are_allies("tsn","kralien")
 #     enemies = side_are_enemies("kralien", "tsn")
 #     print(f"Sides are allies {allies}")
@@ -26,7 +45,7 @@ prefab_spawn(prefab_side_generic, {"name":"Pirate", "key":"pirate", "enemies":"t
 #     print(f"Sides are allies {allies}")
 #     print(f"side are enemies {enemies}")
 #     print(f"side are neutral: {neutral}")
-#     ->END
+    # ->END
 
 === prefab_side_generic
 " Generic definition of a Side or Faction. If a side has enemies or allies, the side will be added to the enemy/ally list for 
