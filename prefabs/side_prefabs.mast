@@ -18,7 +18,7 @@ races: terran
         yield fail
     _sides = role("__side__") & role(key)
     id = to_side_id(key)
-    if id is None:
+    if id is not None:
         yield fail
     if len(_sides) > 0:
         # The side with the given key already exists
