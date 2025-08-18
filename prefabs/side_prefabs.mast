@@ -1,51 +1,5 @@
-# Spawning default sides
-prefab_spawn(prefab_side_generic, {"name":"TSN", "key":"tsn", "desc":"Terran Stellar Navy", "allies":"usfp"})
-prefab_spawn(prefab_side_generic, {"name": "USFP", "key":"usfp", "desc":"USFP", "allies":"tsn", "enemies":"kralien, arvonian, torgoth, skaraan"})
-prefab_spawn(prefab_side_generic, {"name": "Kralien", "key":"kralien", "desc":"Kralien Emprie", "allies":"arvonian, torgoth, skaraan", "enemies":"tsn,usfp", "races":"kralien"})
-prefab_spawn(prefab_side_generic, {"name": "Arvonian", "key":"arvonian", "desc":"Arvoinian", "allies":"kralien, torgoth, skaraan", "enemies":"tsn,usfp", "races":"arvonian"})
-prefab_spawn(prefab_side_generic, {"name": "Torgoth", "key":"torgoth", "desc":"Torgoth", "allies":"kralien, arvonian, skaraan", "enemies":"tsn,usfp", "races":"torgoth"})
-prefab_spawn(prefab_side_generic, {"name": "Skaraan", "key":"skaraan", "desc":"Skaraan", "allies":"arvonian, torgoth, kralien", "enemies":"tsn,usfp", "races":"skaraan"})
-prefab_spawn(prefab_side_generic, {"name": "Ximni", "key":"ximni", "desc":"Ximni", "allies":"", "enemies":"", "races":"ximni"})
-prefab_spawn(prefab_side_generic, {"name":"Pirate", "key":"pirate", "enemies":"tsn,usfp,kralien,arvonian,torgoth,ximni"}) #Excluding Skaraan as enemy because they might cooperate sometimes.
-# Debugging
 
-
-
-# l = len(role("side"))
-# await delay_sim(2)
-# task_schedule("test1")
-# # jump END
-
-# === test1
-#     delay_sim(seconds=2)
-#     print("================------------------TEST===================----------------")
-# data = {"START_X":0,"START_Y":0,"START_Z":0}
-# npc = prefab_spawn(prefab_npc_defender, data)
-    # print("NPC: {npc}")6
-    # enemy = await prefab_spawn(prefab_npc_defender, {"START_X":10000,"START_Y":0,"START_Z":0,"side_value":"kralien", "allies": ""})
-    # print("enemy: {enemy}")
-
-    # side_set_ship_allies_and_enemies(npc)
-    # side_set_ship_allies_and_enemies(enemy)
-
-    # allies = side_are_allies(npc, enemy)
-    # enemies = side_are_enemies(npc, enemy)
-    # print("side are allies: {allies}")
-    # print("enemies: {enemies}")
-
-
-#     allies = side_are_allies("tsn","kralien")
-#     enemies = side_are_enemies("kralien", "tsn")
-#     print(f"Sides are allies {allies}")
-#     print(f"side are enemies {enemies}")
-#     side_set_relations("tsn","kralien", 0)
-#     enemies = side_are_enemies("tsn", "kralien")
-#     allies = side_are_allies("kralien","tsn")
-#     neutral = side_are_neutral("kralien","tsn")
-#     print(f"Sides are allies {allies}")
-#     print(f"side are enemies {enemies}")
-#     print(f"side are neutral: {neutral}")
-    # ->END
+task_schedule(spawn_default_sides)
 
 === prefab_side_generic
 " Generic definition of a Side or Faction. If a side has enemies or allies, the side will be added to the enemy/ally list for 
@@ -63,6 +17,9 @@ races: terran
         # key is the only critical property
         yield fail
     _sides = role("__side__") & role(key)
+    id = to_side_id(key)
+    if id is None:
+        yield fail
     if len(_sides) > 0:
         # The side with the given key already exists
         yield fail
@@ -71,7 +28,7 @@ races: terran
     if desc is None:
         desc = name
     id = prefab.get_id()
-    add_role(id, key)
+    # add_role(id, key) #Probably don't need this.
     add_role(id, "__side__")
     # Convert to Sets
     if allies is None:
@@ -97,10 +54,55 @@ races: terran
     set_inventory_value(id, "side_races", races_list)
     set_inventory_value(id, "side_desc", desc)
 
-    # Now we need to update the other factions
+    # Now we need to update the other factions' ally and enemy lists
     for item in ally_list:
         side_set_relations(key, item, 1)
     for item in enemy_list:
         side_set_relations(key, item, -1)
 
     yield result id
+    ->END
+
+
+== spawn_default_sides
+" Create the standard sides for the Artemis universe: TSN, USFP, Kralien, Arvonian, Torgoth, Skaraan, Ximni, Pirate, and the generic Raider
+    await prefab_spawn(prefab_side_generic, {"name": "TSN", "key":"tsn", "desc":"Terran Stellar Navy", "allies":"usfp", "enemies":"kralien, arvonian, torgoth, skaraan, pirate"})
+    await prefab_spawn(prefab_side_generic, {"name": "USFP", "key":"usfp", "desc":"USFP", "allies":"tsn", "enemies":"kralien, arvonian, torgoth, skaraan, pirate"})
+    await prefab_spawn(prefab_side_generic, {"name": "Kralien", "key":"kralien", "desc":"Kralien Emprie", "allies":"arvonian, torgoth, skaraan", "enemies":"tsn,usfp", "races":"kralien"})
+    await prefab_spawn(prefab_side_generic, {"name": "Arvonian", "key":"arvonian", "desc":"Arvonian", "allies":"kralien, torgoth, skaraan", "enemies":"tsn,usfp", "races":"arvonian"})
+    await prefab_spawn(prefab_side_generic, {"name": "Torgoth", "key":"torgoth", "desc":"Torgoth", "allies":"kralien, arvonian, skaraan", "enemies":"tsn,usfp", "races":"torgoth"})
+    await prefab_spawn(prefab_side_generic, {"name": "Skaraan", "key":"skaraan", "desc":"Skaraan", "allies":"arvonian, torgoth, kralien", "enemies":"tsn,usfp", "races":"skaraan"})
+    await prefab_spawn(prefab_side_generic, {"name": "Ximni", "key":"ximni", "desc":"Ximni", "allies":"", "enemies":"", "races":"ximni"})
+    await prefab_spawn(prefab_side_generic, {"name": "Pirate", "key":"pirate", "enemies":"tsn,usfp,kralien,arvonian,torgoth,ximni", "races":"terran,ximni"}) #Excluding Skaraan as enemy because they might cooperate sometimes.
+    await prefab_spawn(prefab_side_generic, {"name": "Raider", "key":"raider", "allies":"kralien,arvonian,torgoth,skaraan","enemies":"tsn,usfp"})
+    
+    # Debugging
+    # await delay_sim(1)
+    # ships = side_members_set("TSN")
+    # for s in ships:
+    #     obj = to_object(s)
+    #     if obj is not None:
+    #         # side = obj.side
+    #         print(f"{obj.name}")
+    
+
+    # l = len(role("side"))
+    # await delay_sim(2)
+
+    # delay_sim(seconds=2)
+    # enemy = npc_spawn(10000,0,0,"TEST","kralien","kralien_cruiser","behav_npcship")
+    # obj = to_object(enemy)
+    # obj.name = "Name"
+    # obj.side_display = "Side_display"
+    # # obj.race = "Race"
+    # obj.origin = "origin"
+    # obj.update_comms_id()
+    # print("enemy: {enemy}")
+    # side_set_ship_allies_and_enemies(enemy)
+    # side = side_display_name(enemy)
+    # print(f"{side}")
+    # allies = get_data_set_value(enemy, "ally_list")
+    # print(f"allies: {allies}")
+
+    ->END
+
