@@ -6,6 +6,8 @@
     
     default SIZE_X = 1000
     default SIZE_Z = SIZE_X
+    default use_nav_proxy = True
+    default nav_proxy_color = "#65653d"
     
     s_roles = "{side_value}, station, {roles_value}"
     # NOTE: all cap NAME is deprecated
@@ -30,6 +32,10 @@
         # Force TSN terran faces to have military uniforms
         set_face(ds, random_terran(civilian=True))
     set_face(ds, random_face(race_value))
+## create nav proxy 
+# todo: what do we do with this ID
+    if use_nav_proxy:
+        sim.add_navproxy(ds, name, station_type, nav_proxy_color)
 # This will set the results 
 # of the task to the a set with the station ID
 # standard practice for prefabs
