@@ -1,6 +1,11 @@
 # For passive collision, players are the TARGET_ID and SELECTED_ID
 # SOURCE_ID and ORIGIN_ID are the other thing
 //collision/passive if has_role(COLLISION_TARGET_ID, "__player__")
+
+    if has_role(COLLISION_SOURCE_ID, "black_hole"):
+        explode_player_ship(COLLISION_TARGET_ID)
+        ->END
+
     player = COLLISION_TARGET_ID
     passive = COLLISION_SOURCE_ID
 
