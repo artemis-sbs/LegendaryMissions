@@ -79,14 +79,18 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     follow_route_select_comms(camera_id, camera_id)
     
     #comms_navigate("//comms/gamemaster")
-
+    # Whole screen
+    # Putting the 2d view across the entire screen
+    gui_section(style="area:0,45px,100,100;")
+    gui_layout_widget("science_2d_view")
 
     # Whole screen
     gui_section(style="area:0,45px,100,100;")
     # Left
     
     gui_update_widgets("3dview^science_data^comms_waterfall^comms_control","")
-    gss = gui_sub_section("col-width:350px;")
+    #region Left Side
+    gss = gui_sub_section("col-width:150px;")
     comms_broadcast(0, "Setting up gui....")
     on signal gm_settings_choice:
         comms_broadcast(0, "Signal: {width}")
@@ -94,12 +98,14 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
         # width - the new width of the column
         gss.style="col-width:{width}"
         # gui_set_variable("col-width", "{width}")
-        gss.represent()
-        # gui_represent(gss)
+        # gss.represent()
+        gui_represent(gss)
     with gss:
+        # This is the left hand info panel
         with gui_sub_section():
             gui_row("row-height: 50;")
             GM_LEFT = gui_tabbed_panel([], tab_location=0, icon_size=45)
+            gui_info_panel_add("Close", 151, nothing, var=GM_LEFT)
             gui_info_panel_add("instruction", 82, gamemaster_panel_instructions, var= GM_LEFT)
             ~~ gui_info_panel_add("test_comms", 0, 
             lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "test_comms"), 
@@ -141,41 +147,60 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
             gui_info_panel_add("messages", 84, gui_panel_console_message_list,var=GM_LEFT)
             
             gui_row("row-height: 10;")
+            gui_blank()
+            gui_row()
             gui_layout_widget("text_waterfall")
+            
+            # left = 0
+            # top = 300
+            # width = 100
+            # height = 100
+            # ~~sbs.send_client_widget_rects(
+            #     client_id,
+            #     "text_waterfall",
+            #     top,
+            #     left,
+            #     left + width,
+            #     top + height,
+            #     left,
+            #     top,
+            #     left + width,
+            #     top + height,
+            # )~~
         gui_row()
-        with gui_sub_section():
-            if is_timer_set(SHARED, "time_limit"):
-                gui_row("row-height: 45px")
-                gui_text("$text: time left;justify: right;font:gui-3;")
-                t = format_time_remaining(SHARED, "time_limit")
-                gui_text(f"$text: {t};justify:left;font:gui-3;", style="tag: sh_game_time;padding:20px;")    
-
-            gui_row("row-height: 45px")
-            # Show remaining enemy count
-            r = role("raider") 
-            count=len(r)
-
-            gui_text("$text: raider count;justify:right;font:gui-3;")
-            gui_text(f"$text: {count};justify:left;font:gui-3;", style="tag: sh_raider_count;padding:20px;")
-  
+        # with gui_sub_section():
+            
     task_schedule(gamemaster_move_camera_sync)
+    #endregion
 
     # Middle
+    #region Middle
     with gui_sub_section():
         gui_row()
+        # menu = gui_sub_section(style="col-width: 100px; row-height: 10em;")
+        sides = get_sides()
+        # glb = gui_list_box(sides, "")
+        # build_menu(["hi","yes","no"], ["test_buttons","test_buttons","test_buttons"])
+        gui_row("row-height: 1.5em;")
+        # b = gui_button("PRess Here")
+        # on gui_message(b):
+        #     glb.items = ["hi","this","is","amazingly","working"]
+        #     gui_represent(glb)
+        # gui_button(style="")
         #gui_layout_widget("science_2d_view")
-        gui_layout_widget("science_2d_view")
+        # gui_layout_widget("science_2d_view")
+    #endregion
 
     # Right
 
-    
+    #region Right Side
     with gui_sub_section("col-width:25;"):
         gui_row("row-height: 10;")
         gui_property_list_box("options")
 
         gui_row("row-height:45;margin:0,0,0,10px;")
         GM_RIGHT = gui_tabbed_panel([], tab_location=1)
-
+        gui_info_panel_add("Close", 149, nothing, var=GM_RIGHT)
 
         ~~ gui_info_panel_add("science_data", 63, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data"), 
@@ -185,26 +210,73 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
         ~~ gui_info_panel_add("gamemaster_camera", 13, 
             gamemaster_panel_camera_show, 
             gamemaster_panel_camera_hide, var=GM_RIGHT) ~~
+        gui_info_panel_add("game_stats", 15, show=show_gm_stats, var=GM_RIGHT)
         ~~ gui_info_panel_add("comms_waterfall", 112, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall"),
             var=GM_RIGHT ) ~~
-# gui_drop_down(style="")
 
         
         gui_row()
-        gui_layout_widget("comms_sorted_list")
+        csl = gui_layout_widget("comms_sorted_list")
+        gui_row()
+        gui_row("tag:toggle;row-height: 1.5em;")
+        toggle = gui_button("Toggle Comms List", style="tag:gm_toggle_csl;")
 
+        # Get the bounds of the widget
+        bounds = csl.bounds
+
+        show = True
+        on gui_message(toggle):
+            show = not show
+            height = 10
+            if show:
+                height = 300
+                gui_panel_widget_show(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_sorted_list")
+            else:
+                gui_panel_widget_hide(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_sorted_list")
+    
+    #endregion
     
     task_schedule(update_gm_stats)
     await gui()
+
+== gm_spawn_ship
+metadata: ```
+buttons: 
+```
+    print(f"Spawning Ship: Nothing yet")
+    # gui_button("Hello 1")
+    # gui_button("Hello 2")
+    if buttons is None:
+        print(f"Buttons is None")
+        yield fail
+    print(f"buttons: {buttons}")
+    signal_emit("update_glb",{"update_contents":["hi","this","is","amazingly","working"]})
+    # for b in buttons:
+    #     gui_button(b)
+    #     gui_row()
+    # buildButtons("Test", buttons)
+    
+
+=== test_buttons
+    comms_broadcast(0, "BUTTON PRESSED!")
+    ->END
 
 ==== update_gm_stats
 
     await delay_sim(seconds=10)
 
-    r = role("raider")
-    count = len(r)
+    gm_side = get_inventory_value(client_id, "gamemaster_cur_side",None)
+    if gm_side is None:
+        player = role("__player__").pop()
+        side = to_side_id(player)
+        gm_side = get_inventory_value(side, "side_key", "tsn")
+        set_inventory_value(client_id, "gamemaster_cur_side", gm_side)
+    print(f"{gm_side}")
+    r = side_enemy_members_set(gm_side)
+    # r = role("raider") 
+    count=len(r)
     gui_update_shared("sh_raider_count", f"$text:{count};justify:left;font:gui-3;")
 
     if is_timer_set(SHARED, "time_limit"):

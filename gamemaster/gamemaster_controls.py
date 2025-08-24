@@ -1,7 +1,7 @@
 from sbs_utils.procedural.gui.button import Button
 from sbs_utils.helpers import FrameContext
 from sbs_utils.procedural.gui import *
-from sbs_utils.procedural.execution import gui_get_variable, gui_set_variable, task_schedule
+from sbs_utils.procedural.execution import gui_get_variable, gui_set_variable, task_schedule, gui_sub_task_schedule
 from sbs_utils.procedural.query import to_set, to_object
 from sbs_utils.procedural.comms import comms_broadcast, comms_navigate, comms_navigate_override
 from sbs_utils.procedural.ship_data import filter_ship_data_by_side
@@ -146,7 +146,9 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
     set_inventory_value(cid, "gm_menu", menu)
     spawn_sides = get_sides()
     if menu == "spawn/ship":
-        buildButtons("ship",spawn_sides)
+        build_menu(spawn_sides)
+        # gui_sub_task_schedule("gm_spawn_ship", data={"buttons":spawn_sides})
+        # buildButtons("ship",spawn_sides)
     elif menu == "spawn/fleet":
         buildButtons("fleet",spawn_sides)
     elif menu == "spawn/starbase":
@@ -169,8 +171,8 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
         if sel is None:
            comms_broadcast(0, "sel is None")
         comms_navigate_override(ship, sel, path)
-    elif menu == "spawn":
-        build_spawn_menu()
+    # elif menu == "spawn":
+    #     build_spawn_menu()
     else:
         pass
     
@@ -183,5 +185,15 @@ def buildShipPropsPanel(title, props_list):
     gui_property_list_box(title)
     gui_properties_set(props_list)
     
+def build_menu(button_names, button_labels=None, button_height=10, width=100):
+    # with gui_sub_section(style=f"col-width: {width}px; row-height: {button_height*len(button_names)}px;"):
+    # with menu:
+        for button in range(len(button_names)):
+            op = None
+            if button_labels is not None:
+                op = button_labels[button]
+            gui_button(button_names[button], style=f"row-height: {button_height}px;", on_press=op)
+            gui_row()
 
-
+def nothing():
+    pass

@@ -95,6 +95,36 @@ def gm_panel_list_item(message_obj):
         elif message:
             gui_text(f"$text: {message};font:gui-2;color:{message_color};")
 
+from sbs_utils.procedural.timers import is_timer_set, format_time_remaining
+from sbs_utils.procedural.inventory import set_inventory_value, get_inventory_value
+from sbs_utils.procedural.sides import to_side_id, side_enemy_members_set
+from sbs_utils.mast.mast_node import Scope # Enum, 1
+from sbs_utils.procedural.roles import role
+def show_gm_stats(client_id, top, left, width, height):
+    print(f"show gm stats CID: {client_id}")
+    if is_timer_set(Scope.SHARED, "time_limit"):
+        gui_row("row-height: 45px")
+        gui_text("$text: time left;justify: right;font:gui-3;")
+        gui_row()
+        t = format_time_remaining(Scope.SHARED, "time_limit")
+        gui_text(f"$text: {t};justify:left;font:gui-3;", style="tag: sh_game_time;padding:20px;")    
 
+    gui_row("row-height: 45px")
+    # Show remaining enemy count
+    gm_side = get_inventory_value(client_id, "gamemaster_cur_side",None)
+    if gm_side is None:
+        player = role("__player__").pop()
+        side = to_side_id(player)
+        gm_side = get_inventory_value(side, "side_key", "tsn")
+        set_inventory_value(client_id, "gamemaster_cur_side", gm_side)
+    print(f"{gm_side}")
+    r = side_enemy_members_set(gm_side)
+    # r = role("raider") 
+    count=len(r)
 
+    gui_text("$text: raider count;justify:right;font:gui-3;")
+    gui_text(f"$text: {count};justify:left;font:gui-3;", style="tag: sh_raider_count;padding:20px;")
+
+def tick_gm_stats():
+    pass
 
