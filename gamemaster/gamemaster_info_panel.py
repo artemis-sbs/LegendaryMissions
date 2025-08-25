@@ -49,7 +49,9 @@ def show_gm_panel_gui(cid):
     # # gui_message(ship_roles_gui, update_ship_roles)
     # gui_row()
 
-
+def listbox_button(item):
+    gui_button(item)
+    gui_row()
 
 def gm_panel_list_item(message_obj):
     task = FrameContext.client_task

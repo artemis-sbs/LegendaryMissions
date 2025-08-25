@@ -177,8 +177,12 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     #region Middle
     with gui_sub_section():
         gui_row()
-        # menu = gui_sub_section(style="col-width: 100px; row-height: 10em;")
-        sides = get_sides()
+        menu = gui_sub_section(style="col-width: 100px;")
+        with menu:
+            sides = get_sides()
+            gui_row()
+            gui_list_box(sides, "row-height:30px;", item_template=listbox_button)
+            gui_row()
         # glb = gui_list_box(sides, "")
         # build_menu(["hi","yes","no"], ["test_buttons","test_buttons","test_buttons"])
         gui_row("row-height: 1.5em;")
@@ -218,6 +222,7 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 
         
         gui_row()
+        #region Comms Sorted List and associated code
         csl = gui_layout_widget("comms_sorted_list")
         gui_row()
         gui_row("tag:toggle;row-height: 1.5em;")
@@ -235,7 +240,9 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
                 gui_panel_widget_show(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_sorted_list")
             else:
                 gui_panel_widget_hide(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_sorted_list")
-    
+        # Hide widget by default?
+        gui_panel_widget_hide(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_sorted_list")
+        #endregion
     #endregion
     
     task_schedule(update_gm_stats)
@@ -257,7 +264,8 @@ buttons:
     #     gui_button(b)
     #     gui_row()
     # buildButtons("Test", buttons)
-    
+
+
 
 === test_buttons
     comms_broadcast(0, "BUTTON PRESSED!")
