@@ -80,9 +80,10 @@ Properties:
     # Build enemy stations, generate fleets
 
 
-    enemy_station_list = []
-    navpoint_list = []
-    enemy_station_dict = {}
+#    enemy_station_list = []
+#    navpoint_list = []
+#    navproxy_list = []
+#    enemy_station_dict = {}
 
     pos = Vec3()
     startZ = -50000
@@ -117,15 +118,14 @@ Properties:
         name = "{station_prefix} {index+1}"
 
         if enemy1 == "Kralien":
-            enemy_station_object = npc_spawn(*pos, name, "kralien, enemy, station", station_type, "behav_station")
+            enemy_station_object = npc_spawn(*pos, name, "raider, kralien, enemy, delprox, station", station_type, "behav_station")
         if enemy1 == "Torgoth":
-            enemy_station_object = npc_spawn(*pos, name, "torgoth, enemy, station", station_type, "behav_station")
+            enemy_station_object = npc_spawn(*pos, name, "raider, torgoth, enemy, delprox, station", station_type, "behav_station")
         if enemy1 == "Arvonian":
-            enemy_station_object = npc_spawn(*pos, name, "arvonian, enemy, station", station_type, "behav_station")
-        nav_id = sim.add_navpoint(*pos, name, "#A44")
-        enemy_station_list.append(to_id(enemy_station_object))
-        navpoint_list.append(nav_id)
-        enemy_station_dict[to_id(enemy_station_object)] = nav_id
+            enemy_station_object = npc_spawn(*pos, name, "raider, arvonian, enemy, delprox, station", station_type, "behav_station")
+        eso_id = to_id(enemy_station_object)
+        nav_obj = sim.add_navproxy(eso_id, name, station_type, "#A44")
+        set_inventory_value(eso_id, "navprox_id", to_id(nav_obj))
 
         if enemy1 == "Kralien":
             set_face(to_id(enemy_station_object), random_kralien())

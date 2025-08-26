@@ -66,12 +66,14 @@
 
     # Check to see if any stations no longer exist. If so, delete the navpoint associated with that station.
 
-    if len(stations) >= 1:
-        for i in range(len(enemy_station_dict)):
-            station_id = enemy_station_list[i]
-            nav_id = enemy_station_dict[station_id]
-            if not object_exists(station_id) and nav_id in navpoint_list:
-                sim.delete_navpoint_by_id(nav_id)
+#    if len(stations) >= 1:
+#        for i in range(len(enemy_station_dict)):
+#            station_id = enemy_station_list[i]
+#            nav_id = navproxy_list[i]
+#            print(station_id)
+#            print(nav_id)
+#            if not object_exists(station_id) and nav_id in navproxy_list:
+#               sim.delete_navproxy_by_id(nav_id)
 
     # If all enemies and enemy stations have been destroyed, mission succeeds and game ends.
 
@@ -146,13 +148,13 @@
 
     # Check to see if any enemy stations no longer exist. If so, delete the navpoint associated with that station.
 
-    if len(stations) >= 1:
-        for i in range(len(enemy_station_dict)):
-            station_id = enemy_station_list[i]
-            nav_id = enemy_station_dict[station_id]
-            if not object_exists(station_id) and nav_id in navpoint_list:
-                sim.delete_navpoint_by_id(nav_id)
-                navpoint_list.remove(nav_id)
+#    if len(stations) >= 1:
+#        for i in range(len(enemy_station_dict)):
+#            station_id = enemy_station_list[i]
+#            nav_id = enemy_station_dict[station_id]
+#            if not object_exists(station_id) and nav_id in navpoint_list:
+#                sim.delete_navpoint_by_id(nav_id)
+#                navpoint_list.remove(nav_id)
 
     # If all enemy raiders and enemy stations have been destroyed, mission succeeds and game ends.
 
