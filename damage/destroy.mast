@@ -13,7 +13,11 @@
             % The enemy have over run us. We're doomed.
             % Remember us....<static>
         
-
+//damage/destroy if has_roles(DESTROYED_ID, "delprox,station") 
+    nav_id = get_inventory_value(DESTROYED_ID, "navprox_id", 0)
+    print("Station Destroyed, Deleting Navproxy:")
+    print(nav_id)
+    sim.delete_navproxy_by_id(nav_id)
 
 
 //damage/killed if has_role(DAMAGE_SELECTED_ID, "raider")
