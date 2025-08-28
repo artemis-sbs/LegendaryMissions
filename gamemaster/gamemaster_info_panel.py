@@ -48,10 +48,13 @@ def show_gm_panel_gui(cid):
     # ship_roles_gui = gui_input(f"desc:{role_str}", var="ship_roles")
     # # gui_message(ship_roles_gui, update_ship_roles)
     # gui_row()
-
+from sbs_utils.procedural.style import apply_control_styles
 def listbox_button(item):
-    gui_button(item)
-    gui_row()
+    gui_row("row-height: 1.5em;")
+    task = FrameContext.task
+    layout_item = gui_text(item)
+    apply_control_styles(".button", "", layout_item, task)
+    # gui_button()
 
 def gm_panel_list_item(message_obj):
     task = FrameContext.client_task

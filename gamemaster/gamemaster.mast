@@ -36,6 +36,9 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     jump login_screen
 
 --- full_console
+    side = "tsn"
+    jump gamemaster_side_relations# {"side": "tsn"}
+    ->END
     GAMEMASTER_SKIP_PIN = False
 
     # Need Sci in the name for science selection
@@ -85,7 +88,7 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     gui_layout_widget("science_2d_view")
 
     # Whole screen
-    gui_section(style="area:0,45px,100,100;")
+    section = gui_section(style="area:0,45px,100,100;")
     # Left
     
     gui_update_widgets("3dview^science_data^comms_waterfall^comms_control","")
@@ -181,11 +184,42 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
         with menu:
             sides = get_sides()
             gui_row()
-            gui_list_box(sides, "row-height:30px;", item_template=listbox_button)
+            cc = gui_layout_widget("comms_control")
+            bounds = cc.bounds
+            # glb = gui_list_box(items=sides, style="", item_template=listbox_button, select=True)
+            # glb.set_value(sides[0])
+            # gui_text("","")
             gui_row()
+            # test = gui_button("Test")
+            # on change glb.get_value():
+            #     l = list(("hi","yes","no"))
+            #     glb.items = l
+            #     glb.set_value(l[0])
+            #     print("Trying to represent...")
+            #     gui_represent(glb)
+            on change get_inventory_value(client_id, "gm_menu"):
+                route = get_inventory_value(client_id, "gm_menu")
+                # comms_broadcast(0, "gm menu changed")
+                # gui_hide(glb)
+                # gui_hide(test)
+                # gui_represent(menu)
+                gui_panel_widget_hide(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_control")
+            on change get_inventory_value(client_id,"gm_menu_button"):
+            # on signal gm_menu_button:
+                item = get_inventory_value(client_id,"gm_menu_button")
+                comms_broadcast(0,f"gm menu button: {item}")
+                # gui_show(glb)
+                # gui_show(test)
+                # gui_represent(section)
+                gui_panel_widget_show(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_control")
+            
+
+
         # glb = gui_list_box(sides, "")
         # build_menu(["hi","yes","no"], ["test_buttons","test_buttons","test_buttons"])
         gui_row("row-height: 1.5em;")
+        # gui_hide(glb)
+        # gui_show(glb)
         # b = gui_button("PRess Here")
         # on gui_message(b):
         #     glb.items = ["hi","this","is","amazingly","working"]
@@ -199,6 +233,7 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 
     #region Right Side
     with gui_sub_section("col-width:25;"):
+        #region List Box
         gui_row("row-height: 10;")
         gui_property_list_box("options")
 
@@ -219,7 +254,7 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall"),
             var=GM_RIGHT ) ~~
-
+        #endregion
         
         gui_row()
         #region Comms Sorted List and associated code
@@ -247,6 +282,77 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     
     task_schedule(update_gm_stats)
     await gui()
+
+
+
+=== gamemaster_side_relations
+    default_side = side
+
+    print("--------------------gamemaster_side_relations------------------------")
+    print("{default_side}")
+    sides = list(side_keys_set())
+    relations = list(("Allies", "Neutral", "Enemies"))
+    relations_value = list((1,0,-1))
+    region = gui_region("area: 15,15,85,85")
+    matrix = list()
+    gui_row()
+    with gui_sub_section("padding: 20px;"):
+        gui_text("Select Side: ")
+        side_list = ",".join(sorted(sides))
+        selected_side = gui_drop_down("$text:{default_side};list:{side_list}")
+        selected_side.value = default_side
+        gui_text("New Side: ")
+        
+        gui_row("row-height: 30px;")
+        gui_text("  ")
+    gui_row()
+    
+    # text = gui_text("TESTING", "tag: test")
+    # for rel in relations:
+    #     gui_text(rel)
+    #     gui_blank()
+    # gui_row()
+    buttons = list()
+    for s in range(len(sides)):
+        if sides[s] == default_side:
+            continue
+        # print(s)
+        mat = list()
+        matrix.append(mat)
+        gui_row()
+        gui_text("{sides[s]}")
+        side1 = sides[s]
+        side2 = selected_side.value
+        actual_relations = side_get_relations(side1, side2)
+        # print("{actual_relations}")
+        for x in range(len(relations)):
+            
+            rel = relations_value[x]
+            relation = relations[x]
+            style = None
+            if rel == actual_relations:
+                style = "color:#40ff00"
+            gui_blank()
+            button = gui_button(f"{relation}", style, data={"side1": side1, "side2": side2, "rel": rel}, on_press="update_side")
+            buttons.append(button)
+    set_inventory_value(client_id, "gm_side_relations_button_list", buttons)
+    on change selected_side.value:
+        side = selected_side.value
+        jump gamemaster_side_relations
+    await gui()
+    ->END
+== update_side
+    side1 = __ITEM__.data["side1"]
+    side2 = __ITEM__.data["side2"]
+    rel = __ITEM__.data["rel"]
+    print("{side2}")
+    old = side_get_relations(side1, side2)
+    print("{old}")
+    side_set_relations(side1,side2,rel)
+    rel = side_get_relations(side1,side2)
+    print("{rel}")
+    jump gamemaster_side_relations
+
 
 == gm_spawn_ship
 metadata: ```
@@ -281,7 +387,7 @@ buttons:
         side = to_side_id(player)
         gm_side = get_inventory_value(side, "side_key", "tsn")
         set_inventory_value(client_id, "gamemaster_cur_side", gm_side)
-    print(f"{gm_side}")
+    # print(f"{gm_side}")
     r = side_enemy_members_set(gm_side)
     # r = role("raider") 
     count=len(r)
@@ -333,6 +439,8 @@ variable:
 
     comms_broadcast(0, "{parent_category}")
     comms_broadcast(0, "{item}")
+    # signal_emit("gm_menu_button",{"item":item})
+    set_inventory_value(client_id,"gm_menu_button",item)
 
 #endregion
 

@@ -60,9 +60,9 @@ def buildButtons(parent_category, items):
     for item in items:
         b = gui_button(item, data={"parent_category":parent_category, "item": item})
         # lbl = f"gm_select_{parent_category}_{item}"
-        lbl = "GM_Button_Pressed"
+        # lbl = "GM_Button_Pressed"
         # comms_broadcast(0, lbl)
-        gui_message(b,lbl)
+        gui_message(b,"GM_Button_Pressed")
         gui_row()
 
 spawn_sides = list((
@@ -195,5 +195,5 @@ def build_menu(button_names, button_labels=None, button_height=10, width=100):
             gui_button(button_names[button], style=f"row-height: {button_height}px;", on_press=op)
             gui_row()
 
-def nothing():
+def nothing(cid, left, top, width, height):
     pass
