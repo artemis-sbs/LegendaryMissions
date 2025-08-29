@@ -293,48 +293,57 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     sides = list(side_keys_set())
     relations = list(("Allies", "Neutral", "Enemies"))
     relations_value = list((1,0,-1))
-    region = gui_region("area: 15,15,85,85")
+    gui_region("area: 5,5,85,15")
     matrix = list()
     gui_row()
-    with gui_sub_section("padding: 20px;"):
+    with gui_sub_section("padding: 20px; row-height: 50px;"):
+        gui_row()
         gui_text("Select Side: ")
         side_list = ",".join(sorted(sides))
         selected_side = gui_drop_down("$text:{default_side};list:{side_list}")
         selected_side.value = default_side
         gui_text("New Side: ")
-        
-        gui_row("row-height: 30px;")
-        gui_text("  ")
+        new_side = gui_input("desc: Side Name")
+        create = gui_button("Create Side")
+        on gui_message(create):
+            print("New side created")
+            prefab_spawn(prefab_side_generic, data={"name":new_side.value, "key":new_side.value.lower()})
+            side = new_side.value
+            jump gamemaster_side_relations
+        # gui_row("row-height: 30px;")
+    gui_text("  ")
     gui_row()
+    region = gui_region("area: 20,20,85,85")
+    with gui_sub_section():
     
-    # text = gui_text("TESTING", "tag: test")
-    # for rel in relations:
-    #     gui_text(rel)
-    #     gui_blank()
-    # gui_row()
-    buttons = list()
-    for s in range(len(sides)):
-        if sides[s] == default_side:
-            continue
-        # print(s)
-        mat = list()
-        matrix.append(mat)
-        gui_row()
-        gui_text("{sides[s]}")
-        side1 = sides[s]
-        side2 = selected_side.value
-        actual_relations = side_get_relations(side1, side2)
-        # print("{actual_relations}")
-        for x in range(len(relations)):
-            
-            rel = relations_value[x]
-            relation = relations[x]
-            style = None
-            if rel == actual_relations:
-                style = "color:#40ff00"
-            gui_blank()
-            button = gui_button(f"{relation}", style, data={"side1": side1, "side2": side2, "rel": rel}, on_press="update_side")
-            buttons.append(button)
+        # text = gui_text("TESTING", "tag: test")
+        # for rel in relations:
+        #     gui_text(rel)
+        #     gui_blank()
+        # gui_row()
+        buttons = list()
+        for s in range(len(sides)):
+            if sides[s] == default_side:
+                continue
+            # print(s)
+            mat = list()
+            matrix.append(mat)
+            gui_row()
+            gui_text("{sides[s]}")
+            side1 = sides[s]
+            side2 = selected_side.value
+            actual_relations = side_get_relations(side1, side2)
+            # print("{actual_relations}")
+            for x in range(len(relations)):
+                
+                rel = relations_value[x]
+                relation = relations[x]
+                style = None
+                if rel == actual_relations:
+                    style = "color:#40ff00"
+                gui_blank()
+                button = gui_button(f"{relation}", style, data={"side1": side1, "side2": side2, "rel": rel}, on_press="update_side")
+                buttons.append(button)
     set_inventory_value(client_id, "gm_side_relations_button_list", buttons)
     on change selected_side.value:
         side = selected_side.value
