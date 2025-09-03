@@ -37,8 +37,8 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 
 --- full_console
     side = "tsn"
-    jump gamemaster_side_relations# {"side": "tsn"}
-    ->END
+    # jump gamemaster_side_relations# {"side": "tsn"}
+    # ->END
     GAMEMASTER_SKIP_PIN = False
 
     # Need Sci in the name for science selection
@@ -66,9 +66,15 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 
     last_sci = cambot_id
     #
-    # Should have a way to get all factions/side
+    # Should have a way to get all factions/side - now we do!
     #
-    #cambot.data_set.set("ally_list","tsn,civ,raider",0)
+    side = faction_ship.side
+    sel = get_inventory_value(cambot_id, "gm_last_selected_side")
+    if sel is not None:
+        side = sel
+    cambot.side = side
+    side_set_ship_allies_and_enemies(cambot)
+    #cambot.data_set.set("ally_list","tsn,civ,raider",0) # This is set by side_set_ship_allies_and_enemies()
     cambot.data_set.set("ship_base_scan_range", 15000,0)
     
     await delay_sim(1)
@@ -95,14 +101,14 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     #region Left Side
     gss = gui_sub_section("col-width:150px;")
     comms_broadcast(0, "Setting up gui....")
-    on signal gm_settings_choice:
-        comms_broadcast(0, "Signal: {width}")
-        # data:
-        # width - the new width of the column
-        gss.style="col-width:{width}"
-        # gui_set_variable("col-width", "{width}")
-        # gss.represent()
-        gui_represent(gss)
+    # on signal gm_settings_choice:
+    #     comms_broadcast(0, "Signal: {width}")
+    #     # data:
+    #     # width - the new width of the column
+    #     gss.style="col-width:{width}"
+    #     # gui_set_variable("col-width", "{width}")
+    #     # gss.represent()
+    #     gui_represent(gss)
     with gss:
         # This is the left hand info panel
         with gui_sub_section():
@@ -285,7 +291,13 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 
 
 
-=== gamemaster_side_relations
+--- gamemaster_side_relations
+    # print("Getting mast labels")
+    # labels = role("__MAST_LABEL__") #should get all mast labels
+    # for l in labels:
+    #     l = to_object(l)
+    #     if l.name.startswith("__route__signal"):
+    #         print(l.name)
     default_side = side
 
     print("--------------------gamemaster_side_relations------------------------")
@@ -293,23 +305,30 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     sides = list(side_keys_set())
     relations = list(("Allies", "Neutral", "Enemies"))
     relations_value = list((1,0,-1))
-    gui_region("area: 5,5,85,15")
+    # Left, Top, Right, Bottom
+    gui_region("area: 10,5,90,15")
     matrix = list()
     gui_row()
-    with gui_sub_section("padding: 20px; row-height: 50px;"):
-        gui_row()
-        gui_text("Select Side: ")
-        side_list = ",".join(sorted(sides))
-        selected_side = gui_drop_down("$text:{default_side};list:{side_list}")
-        selected_side.value = default_side
-        gui_text("New Side: ")
-        new_side = gui_input("desc: Side Name")
-        create = gui_button("Create Side")
-        on gui_message(create):
-            print("New side created")
-            prefab_spawn(prefab_side_generic, data={"name":new_side.value, "key":new_side.value.lower()})
-            side = new_side.value
-            jump gamemaster_side_relations
+    with gui_sub_section("row-height: 50px; col-width: 20;"):
+        # gui_row()
+        with gui_sub_section("col-width: 5em;"):
+            gui_text("Select Side: ")
+        with gui_sub_section("col-width: 8em;"):
+            side_list = ",".join(sorted(sides))
+            selected_side = gui_drop_down("$text:{default_side};list:{side_list}")
+            selected_side.value = default_side
+        gui_blank()
+        with gui_sub_section("col-width: 5em;"):
+            gui_text("New Side: ")
+        with gui_sub_section("col-width: 8em;"):
+            new_side = gui_input("desc: Side Name")
+        with gui_sub_section("col-width: 5em;"):
+            create = gui_button("Create Side")
+            on gui_message(create):
+                print("New side created")
+                prefab_spawn(prefab_side_generic, data={"name":new_side.value, "key":new_side.value.lower()})
+                side = new_side.value
+                jump gamemaster_side_relations
         # gui_row("row-height: 30px;")
     gui_text("  ")
     gui_row()
@@ -348,9 +367,14 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     on change selected_side.value:
         side = selected_side.value
         jump gamemaster_side_relations
+    with gui_section("area: 90,90,100,100"):
+        back = gui_button("Back")
+        on gui_message(back):
+            print("Back buttom pressed")
+            jump full_console
     await gui()
     ->END
-== update_side
+--- update_side
     side1 = __ITEM__.data["side1"]
     side2 = __ITEM__.data["side2"]
     rel = __ITEM__.data["rel"]
@@ -361,6 +385,11 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     rel = side_get_relations(side1,side2)
     print("{rel}")
     jump gamemaster_side_relations
+
+
+== gm_build_spawn_menu
+    items = []
+    gui_list_box(items)
 
 
 == gm_spawn_ship

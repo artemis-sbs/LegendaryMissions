@@ -89,7 +89,7 @@ spawn_monster = list((
 
 def get_sides():
     """
-    Returns a list of the names of all sides (Agents with the role "side")
+    Returns a list of the names of all sides (Agents with the role "__side__")
     """
     sides = role("__side__")
     sides_list = list()
@@ -98,30 +98,53 @@ def get_sides():
         sides_list.append(get_inventory_value(s, "side_name", ""))
     return sides_list
 
+def gm_build_item(item):
+    gui_row("row-height: 8em;")
+    gui_text(item)
+    print("gm build item")
+def gm_build_title(title):
+    gui_row("row-height: 8em;")
+    gui_text(title)
+    print("gm build title")
+
 def build_spawn_menu():
     signal_emit("gm_settings_choice", {"width": "350px;"})
     sides = get_sides()
     # comms_broadcast(0, f"{','.join(sides)}")
     # gui_drop_down(f"$text:TSN;list:{','.join(sides)}", var="GM_SIDE_SELECT")
     # get_gm_label()
-    gui_property_list_box(name="Config")
-    props = """
-    Main:
-        Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
-        Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
-    Map:
-        Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'
-        Lethal Terrain: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, max", var="LETHAL_SELECT")'
-        Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, max", var="FRIENDLY_SELECT")'
-        Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, max", var="MONSTER_SELECT")'
-        Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
-        Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
-    """
-    gui_properties_set(props)
+    # gui_property_list_box(name="Spawn")
+    # props = """
+    # Main:
+    #     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
+    #     Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
+    # Map:
+    #     Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'
+    #     Lethal Terrain: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, max", var="LETHAL_SELECT")'
+    #     Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, max", var="FRIENDLY_SELECT")'
+    #     Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, max", var="MONSTER_SELECT")'
+    #     Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
+    #     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
+    # """
+    # gui_properties_set(props)
     # gui_row()
     # gui_text("Name")
     # gui_button("Hi")
     # gui_row()
+    items = ["Hello", "Goodbye"]
+    messages_objs = [{"title": "Carapaction Coil", "message":"5 min 300% shield recharge boost", "title_color": "yellow"}]
+    messages_objs.append({"title": "Infusion P-Coils", "message":"5 min Impulse and Maneuver Speed boost", "title_color": "yellow"})
+    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
+    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
+    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
+    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
+    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
+    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
+    messages_objs.append({"title": "Infusion P-Coils", "message":"5 min Impulse and Maneuver Speed boost", "title_color": "yellow"})
+    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
+    list_box = gui_list_box(messages_objs, "$text: Spawn Stuff;", collapsible=True, item_template=gm_build_item, title_section_style=gm_build_title)
+    # gui_row()
+    return list_box
     
 
 def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
@@ -145,7 +168,10 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
     # comms_navigate_override(ship, sel, path)
     set_inventory_value(cid, "gm_menu", menu)
     spawn_sides = get_sides()
-    if menu == "spawn/ship":
+    if menu == "spawn":
+        build_spawn_menu()
+
+    elif menu == "spawn/ship":
         build_menu(spawn_sides)
         # gui_sub_task_schedule("gm_spawn_ship", data={"buttons":spawn_sides})
         # buildButtons("ship",spawn_sides)

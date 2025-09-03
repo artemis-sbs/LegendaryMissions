@@ -5,6 +5,10 @@ from sbs_utils.procedural.query import to_set, to_object
 from sbs_utils.procedural.comms import comms_broadcast, comms_navigate, comms_navigate_override
 import sbs
 
+world_options = [
+    {"path":"world_options","title": "Manage Sides", "label": "gamemaster_side_relations"}
+]
+
 
 def gm_panel_list(cid, left, top, width, height):
     task = gui_task_for_client(cid)
@@ -133,3 +137,7 @@ def show_gm_stats(client_id, top, left, width, height):
 def tick_gm_stats():
     pass
 
+
+
+def gm_add_world_option(path, title, label):
+    world_options.append({"path": path, "title": title, "label": label})
