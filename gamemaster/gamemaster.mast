@@ -36,7 +36,8 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     jump login_screen
 
 --- full_console
-    side = "tsn"
+    # for testing Side management screen
+    # side = "tsn"
     # jump gamemaster_side_relations# {"side": "tsn"}
     # ->END
     GAMEMASTER_SKIP_PIN = False
@@ -302,20 +303,24 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 
     print("--------------------gamemaster_side_relations------------------------")
     print("{default_side}")
-    sides = list(side_keys_set())
+    side_ids = sides_set()
+    side_names = set()
+    for s in side_ids:
+        side_names.add(side_display_name(s))
+    sides = sorted(list(side_names))
     relations = list(("Allies", "Neutral", "Enemies"))
     relations_value = list((1,0,-1))
     # Left, Top, Right, Bottom
     gui_region("area: 10,5,90,15")
-    matrix = list()
     gui_row()
     with gui_sub_section("row-height: 50px; col-width: 20;"):
         # gui_row()
         with gui_sub_section("col-width: 5em;"):
             gui_text("Select Side: ")
         with gui_sub_section("col-width: 8em;"):
-            side_list = ",".join(sorted(sides))
-            selected_side = gui_drop_down("$text:{default_side};list:{side_list}")
+            side_list = ",".join(sides)
+            name = side_display_name(default_side)
+            selected_side = gui_drop_down("$text:{name};list:{side_list}")
             selected_side.value = default_side
         gui_blank()
         with gui_sub_section("col-width: 5em;"):
@@ -329,26 +334,61 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
                 prefab_spawn(prefab_side_generic, data={"name":new_side.value, "key":new_side.value.lower()})
                 side = new_side.value
                 jump gamemaster_side_relations
-        # gui_row("row-height: 30px;")
     gui_text("  ")
     gui_row()
-    region = gui_region("area: 20,20,85,85")
+    region = gui_region("area: 5,20,20,90;")
     with gui_sub_section():
-    
-        # text = gui_text("TESTING", "tag: test")
-        # for rel in relations:
-        #     gui_text(rel)
-        #     gui_blank()
-        # gui_row()
+        gui_row("row-height: 2em;")
+        gui_text("Side Info")
+        gui_spacer_row()
+        side = to_side_id(selected_side.value)
+        gui_row("row-height: 2em;")
+        SIDE_NAME = side_display_name(side)
+        side_name = gui_input("$text: {SIDE_NAME}; desc: Name")
+        gui_spacer_row()
+        gui_row("row-height: 2em;")
+        SIDE_KEY = get_inventory_value(side, "side_key")
+        side_key = gui_input("$text: {SIDE_KEY}; desc: Key")
+        gui_spacer_row()
+        gui_row("row-height: 4em;")
+        SIDE_DESC = get_inventory_value(side, "side_desc")
+        side_desc = gui_input("$text: {SIDE_DESC}; desc: Description")
+        # TODO: Add functionality to add/remove races. Probably need a race prefab
+        gui_row("row-height: 0.8em;")
+        gui_text(" ")
+        gui_row("row-height: 2em;")
+        update = gui_button("Update Side")
+        on gui_message(update):
+            
+            if get_inventory_value(side, "side_name") != side_name.value:
+                set_inventory_value(side, "side_name", side_name.value)
+            if get_inventory_value(side, "side_key") != side_key.value:
+                old_key = get_inventory_value(side, "side_key")
+                # Update all members of the side
+                side_members = side_members_set(side)
+                side_members.add(side)
+                add_role(side_members, side_key.value)
+                remove_role(side_members, old_key)
+                for m in side_members:
+                    mo = to_object(m)
+                    mo.side = side_key.value
+                set_inventory_value(side, "side_key", side_key.value)
+            if get_inventory_value(side, "side_desc") != side_desc.value:
+                set_inventory_value(side, "side_desc", side_desc.value)
+            side = side_display_name(side)
+            jump gamemaster_side_relations
+
+    region = gui_region("area: 25,20,90,90; ")
+    with gui_sub_section():
         buttons = list()
         for s in range(len(sides)):
             if sides[s] == default_side:
                 continue
-            # print(s)
-            mat = list()
-            matrix.append(mat)
+            gui_row("row-height: 0.2em;")
+            gui_text(" ")
             gui_row()
-            gui_text("{sides[s]}")
+            name = side_display_name(sides[s])
+            gui_text("{name}")
             side1 = sides[s]
             side2 = selected_side.value
             actual_relations = side_get_relations(side1, side2)
@@ -360,14 +400,14 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
                 style = None
                 if rel == actual_relations:
                     style = "color:#40ff00"
-                gui_blank()
                 button = gui_button(f"{relation}", style, data={"side1": side1, "side2": side2, "rel": rel}, on_press="update_side")
-                buttons.append(button)
+            
+
     set_inventory_value(client_id, "gm_side_relations_button_list", buttons)
     on change selected_side.value:
         side = selected_side.value
         jump gamemaster_side_relations
-    with gui_section("area: 90,90,100,100"):
+    with gui_section("area: 90,95,100,100"):
         back = gui_button("Back")
         on gui_message(back):
             print("Back buttom pressed")

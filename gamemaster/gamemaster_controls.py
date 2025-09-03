@@ -223,3 +223,9 @@ def build_menu(button_names, button_labels=None, button_height=10, width=100):
 
 def nothing(cid, left, top, width, height):
     pass
+
+def gui_spacer_row():
+    gui_row("row-height: 0.2em;")
+    gui_text(" ")
+    gui_row()
+
