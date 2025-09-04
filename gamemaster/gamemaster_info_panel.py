@@ -3,6 +3,8 @@ from sbs_utils.procedural.gui import *
 from sbs_utils.procedural.execution import gui_get_variable, gui_set_variable
 from sbs_utils.procedural.query import to_set, to_object
 from sbs_utils.procedural.comms import comms_broadcast, comms_navigate, comms_navigate_override
+from sbs_utils.procedural.signal import signal_emit
+from sbs_utils.procedural.sides import side_keys_set
 import sbs
 
 world_options = [
@@ -41,9 +43,13 @@ def show_gm_panel_gui(cid):
     # gui_button(f"$text: Hello")
     ship_name_change = gui_input(f"$text:{obj.name};desc:Ship Name", var="gm_ship_name")
     gui_message(ship_name_change, "update_ship_name")
-    gui_row()
-
-    side_change = gui_drop_down(f"$text:{obj.side};list:{obj.side},Kralien,Arvonian,Torgoth,Skaraan,Ximni",style="row-height: 2em;",var="gm_ship_side")
+    gui_row("row-height: 2em;")
+    sides = role("__side__")
+    sides_list = list()
+    for s in sides:
+        sides_list.append(get_inventory_value(s, "side_name", ""))
+    sides = ",".join(sides_list)
+    side_change = gui_drop_down(f"$text:{obj.side};list:{sides}",style="row-height: 2em;",var="gm_ship_side")
     gui_message(side_change, "update_ship_side")
     gui_row()
 
@@ -56,9 +62,14 @@ from sbs_utils.procedural.style import apply_control_styles
 def listbox_button(item):
     gui_row("row-height: 1.5em;")
     task = FrameContext.task
-    layout_item = gui_text(item)
+    layout_item = gui_button(item, on_press="GM_Button_Pressed", data={"item": item, "parent_category": "one"})
     apply_control_styles(".button", "", layout_item, task)
     # gui_button()
+
+def listbox_item_pressed(button):
+    print("listbox item pressed")
+    signal_emit("gm_button_selected", {"button": button})
+
 
 def gm_panel_list_item(message_obj):
     task = FrameContext.client_task
@@ -117,6 +128,15 @@ def show_gm_stats(client_id, top, left, width, height):
         gui_row()
         t = format_time_remaining(Scope.SHARED, "time_limit")
         gui_text(f"$text: {t};justify:left;font:gui-3;", style="tag: sh_game_time;padding:20px;")    
+        
+        # TODO: Add timer changes
+        # gui_row("row-height: 0.5em;")
+        # gui_text(" ")
+        # gui_row()
+        # gui_text("Adjust Time")
+        # time = gui_drop_down("1 Minute, 5 Minutes, 10 Minutes")
+        # gui_button("Add Time")
+        # gui_button("Remove Time")
 
     gui_row("row-height: 45px")
     # Show remaining enemy count

@@ -159,7 +159,7 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
             gui_row("row-height: 10;")
             gui_blank()
             gui_row()
-            gui_layout_widget("text_waterfall")
+            # gui_layout_widget("text_waterfall")
             
             # left = 0
             # top = 300
@@ -188,49 +188,58 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     with gui_sub_section():
         gui_row()
         menu = gui_sub_section(style="col-width: 100px;")
-        with menu:
-            sides = get_sides()
-            gui_row()
-            cc = gui_layout_widget("comms_control")
-            bounds = cc.bounds
-            # glb = gui_list_box(items=sides, style="", item_template=listbox_button, select=True)
-            # glb.set_value(sides[0])
-            # gui_text("","")
-            gui_row()
-            # test = gui_button("Test")
-            # on change glb.get_value():
-            #     l = list(("hi","yes","no"))
-            #     glb.items = l
-            #     glb.set_value(l[0])
-            #     print("Trying to represent...")
-            #     gui_represent(glb)
-            on change get_inventory_value(client_id, "gm_menu"):
-                route = get_inventory_value(client_id, "gm_menu")
-                # comms_broadcast(0, "gm menu changed")
-                # gui_hide(glb)
-                # gui_hide(test)
-                # gui_represent(menu)
-                gui_panel_widget_hide(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_control")
-            on change get_inventory_value(client_id,"gm_menu_button"):
-            # on signal gm_menu_button:
-                item = get_inventory_value(client_id,"gm_menu_button")
-                comms_broadcast(0,f"gm menu button: {item}")
-                # gui_show(glb)
-                # gui_show(test)
-                # gui_represent(section)
-                gui_panel_widget_show(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_control")
+        # with menu:
+
+        # #     # gui_set_variable("gm_menu1_bounds", menu.sub_section.bounds)
+
+        #     sides = get_sides()
+        #     gui_row()
+        #     cc = gui_layout_widget("comms_control")
+        #     bounds = cc.bounds
+        #     glb = gui_list_box(items=sides, style="", item_template=listbox_button, select=True)
+        #     # glb.set_value(sides[0])
+        #     # gui_text("","")
+        #     gui_row()
+        #     # test = gui_button("Test")
+        #     # on change glb.get_value():
+        #     #     l = list(("hi","yes","no"))
+        #     #     glb.items = l
+        #     #     glb.set_value(l[0])
+        #     #     print("Trying to represent...")
+        #     #     gui_represent(glb)
+        #     on change get_inventory_value(client_id, "gm_menu"):
+        #         route = get_inventory_value(client_id, "gm_menu")
+        #         # comms_broadcast(0, "gm menu changed")
+        #         # gui_hide(glb)
+        #         # gui_hide(test)
+        #         # gui_represent(menu)
+        #         gui_panel_widget_hide(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_control")
+        #     on change get_inventory_value(client_id,"gm_menu_button"):
+        #     # on signal gm_menu_button:
+        #         item = get_inventory_value(client_id,"gm_menu_button")
+        #         comms_broadcast(0,f"gm menu button: {item}")
+        #         # gui_show(glb)
+        #         # gui_show(test)
+        #         # gui_represent(section)
+        #         gui_panel_widget_show(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_control")
             
-
-
+        sides = get_sides()
+        glb = gui_list_box(items=sides, style="", item_template=listbox_button, select=True)
         # glb = gui_list_box(sides, "")
         # build_menu(["hi","yes","no"], ["test_buttons","test_buttons","test_buttons"])
         gui_row("row-height: 1.5em;")
         # gui_hide(glb)
         # gui_show(glb)
-        # b = gui_button("PRess Here")
-        # on gui_message(b):
-        #     glb.items = ["hi","this","is","amazingly","working"]
-        #     gui_represent(glb)
+        b = gui_button("Press Here")
+        on gui_message(b):
+            signal_emit("gui_message_sig")
+        on signal gui_message_sig:
+            glb.items = []#["hi","this","is","amazingly","working"]
+            gui_represent(glb)
+        on signal gm_button_selected:
+            print("GM Button Selected Signal")
+            glb.items = []
+            gui_represent(glb)
         # gui_button(style="")
         #gui_layout_widget("science_2d_view")
         # gui_layout_widget("science_2d_view")
@@ -271,12 +280,14 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
         toggle = gui_button("Toggle Comms List", style="tag:gm_toggle_csl;")
 
         # Get the bounds of the widget
+        gui_set_variable("gm_comms_sorted_list_bounds", csl.bounds)
         bounds = csl.bounds
 
         show = True
         on gui_message(toggle):
             show = not show
             height = 10
+            bounds = gui_get_variable("gm_comms_sorted_list_bounds")
             if show:
                 height = 300
                 gui_panel_widget_show(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_sorted_list")
@@ -498,12 +509,14 @@ variable:
     ship = to_object(sel)
     if ship is not None:
         ship.name = newname
+    ->END
 === update_ship_side
     new_side = get_variable("gm_ship_side")
     sel = gui_get_variable("gm_selection")
     ship = to_object(sel)
     if ship is not None:
         ship.set_side(new_side)
+    ->END
 === gm_select_spawn_test1
     comms_broadcast(0, "test1")
     jump END
@@ -517,9 +530,10 @@ variable:
 
     comms_broadcast(0, "{parent_category}")
     comms_broadcast(0, "{item}")
-    # signal_emit("gm_menu_button",{"item":item})
+    print("Emitting Signal")
+    signal_emit("gm_button_selected",{"item":item})
     set_inventory_value(client_id,"gm_menu_button",item)
-
+    ->END
 #endregion
 
 

@@ -99,12 +99,12 @@ def get_sides():
     return sides_list
 
 def gm_build_item(item):
-    gui_row("row-height: 8em;")
-    gui_text(item)
+    gui_row("row-height: 2em;")
+    gui_button(item["title"])
     print("gm build item")
 def gm_build_title(title):
-    gui_row("row-height: 8em;")
-    gui_text(title)
+    gui_row("row-height: 2em;")
+    gui_text(title["title"])
     print("gm build title")
 
 def build_spawn_menu():
@@ -142,7 +142,9 @@ def build_spawn_menu():
     messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
     messages_objs.append({"title": "Infusion P-Coils", "message":"5 min Impulse and Maneuver Speed boost", "title_color": "yellow"})
     messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
-    list_box = gui_list_box(messages_objs, "$text: Spawn Stuff;", collapsible=True, item_template=gm_build_item, title_section_style=gm_build_title)
+    with gui_sub_section():
+        gui_row()
+        list_box = gui_list_box(messages_objs, "$text: Spawn Stuff;", collapsible=True, item_template=gm_build_item, title_section_style=gm_build_title)
     # gui_row()
     return list_box
     
@@ -183,20 +185,20 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
         buildButtons("terrain",spawn_terrain)
     elif menu == "spawn/monster":
         buildButtons("monster",spawn_monster)
-    elif menu == "test_comms":
-        gui_panel_widget_show(cid, left, top, width, height, "comms_control")
-        path = "//comms/gamemaster/"+menu
-        # comms_broadcast(0, path)
-        # comms_navigate(path)
-        ship = sbs.get_ship_of_client(cid)
-        comms_broadcast(0, f"Ship: {ship}")
-        if ship is None:
-           comms_broadcast(0, "ship is None")
-        sel = gui_get_variable("gm_selection")
-        comms_broadcast(0, f"Selected: {sel}")
-        if sel is None:
-           comms_broadcast(0, "sel is None")
-        comms_navigate_override(ship, sel, path)
+    # elif menu == "test_comms":
+    #     gui_panel_widget_show(cid, left, top, width, height, "comms_control")
+    #     path = "//comms/gamemaster/"+menu
+    #     # comms_broadcast(0, path)
+    #     # comms_navigate(path)
+    #     ship = sbs.get_ship_of_client(cid)
+    #     comms_broadcast(0, f"Ship: {ship}")
+    #     if ship is None:
+    #        comms_broadcast(0, "ship is None")
+    #     sel = gui_get_variable("gm_selection")
+    #     comms_broadcast(0, f"Selected: {sel}")
+    #     if sel is None:
+    #        comms_broadcast(0, "sel is None")
+    #     comms_navigate_override(ship, sel, path)
     # elif menu == "spawn":
     #     build_spawn_menu()
     else:
@@ -218,7 +220,7 @@ def build_menu(button_names, button_labels=None, button_height=10, width=100):
             op = None
             if button_labels is not None:
                 op = button_labels[button]
-            gui_button(button_names[button], style=f"row-height: {button_height}px;", on_press=op)
+            gui_button(button_names[button], style=f"row-height: {button_height}px;", on_press="gm_build_sub_menu")
             gui_row()
 
 def nothing(cid, left, top, width, height):
@@ -229,3 +231,15 @@ def gui_spacer_row():
     gui_text(" ")
     gui_row()
 
+
+def spawn_sub_menu(button):
+    bounds = button.bounds
+    if bounds is None:
+        from sbs_utils.pages.layout.bounds import Bounds
+        bounds = Bounds(0,0,150,100)#shouldn't be a thing
+    gui_section(f"area: {bounds.right}, {bounds.top}, {bounds.right + 150}, 100")
+    with gui_sub_section():
+        gui_button("Testing")
+
+# def type(obj):
+#     return (obj)
