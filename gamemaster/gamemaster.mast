@@ -306,6 +306,9 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     gui_row()
     gui_layout_widget("comms_control")
 
+    gui_section("area: 200px,90,600px,100")
+    gui_layout_widget("text_waterfall")
+
 
     task_schedule(update_gm_stats)
     await gui()
@@ -435,6 +438,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     await gui()
     ->END
 --- update_side
+    # __ITEM__ is the button object
     side1 = __ITEM__.data["side1"]
     side2 = __ITEM__.data["side2"]
     rel = __ITEM__.data["rel"]
@@ -498,7 +502,7 @@ buttons:
 
     # jump update_gm_stats
 
-//spawn if has_role("ship")
+//spawn if has_role(SPAWNED_ID, "ship")
     to_update = get_inventory_value(client_id, "gm_counts_list", None)
     if to_update is not None:
         # TODO: Finish this - need to change this to use a listbox I think
