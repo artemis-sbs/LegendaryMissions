@@ -154,7 +154,7 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
     # build_spawn_menu()
     diff = 1
     gui_text(f"$text:{menu}")
-    gui_row()
+    gui_row("row-height: 0.2em;")
     top = top + diff
     height = height - diff
     # gui_panel_widget_show(cid, left, top, width, height, "comms_control")
@@ -185,6 +185,10 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
         buildButtons("terrain",spawn_terrain)
     elif menu == "spawn/monster":
         buildButtons("monster",spawn_monster)
+    elif menu == "config/world":
+        gui_row("row-height: 4em;")
+        gui_button("Manage Sides", on_press="gamemaster_side_relations")
+        gui_row()
     # elif menu == "test_comms":
     #     gui_panel_widget_show(cid, left, top, width, height, "comms_control")
     #     path = "//comms/gamemaster/"+menu
@@ -203,6 +207,9 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
     #     build_spawn_menu()
     else:
         pass
+
+def open_side_management_screen():
+    signal_emit("side_management")
     
 def gm_comms_path(COMMS_ORIGIN_ID, path) -> bool:
     if not has_role(COMMS_ORIGIN_ID, "gamemaster"):
@@ -223,10 +230,12 @@ def build_menu(button_names, button_labels=None, button_height=10, width=100):
             gui_button(button_names[button], style=f"row-height: {button_height}px;", on_press="gm_build_sub_menu")
             gui_row()
 
-def nothing(cid, left, top, width, height):
+def nothing(cid, left, top, width, height, widget=""):
+    """Literally does nothing"""
     pass
 
 def gui_spacer_row():
+    """Make a small spacer row between gui elements"""
     gui_row("row-height: 0.2em;")
     gui_text(" ")
     gui_row()

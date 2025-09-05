@@ -117,9 +117,9 @@ def gm_panel_list_item(message_obj):
 
 from sbs_utils.procedural.timers import is_timer_set, format_time_remaining
 from sbs_utils.procedural.inventory import set_inventory_value, get_inventory_value
-from sbs_utils.procedural.sides import to_side_id, side_enemy_members_set
+from sbs_utils.procedural.sides import to_side_id, side_enemy_members_set, sides_set, side_display_name, side_members_set
 from sbs_utils.mast.mast_node import Scope # Enum, 1
-from sbs_utils.procedural.roles import role
+from sbs_utils.procedural.roles import role,any_role
 def show_gm_stats(client_id, top, left, width, height):
     print(f"show gm stats CID: {client_id}")
     if is_timer_set(Scope.SHARED, "time_limit"):
@@ -147,12 +147,26 @@ def show_gm_stats(client_id, top, left, width, height):
         gm_side = get_inventory_value(side, "side_key", "tsn")
         set_inventory_value(client_id, "gamemaster_cur_side", gm_side)
     print(f"{gm_side}")
-    r = side_enemy_members_set(gm_side)
-    # r = role("raider") 
-    count=len(r)
 
-    gui_text("$text: raider count;justify:right;font:gui-3;")
-    gui_text(f"$text: {count};justify:left;font:gui-3;", style="tag: sh_raider_count;padding:20px;")
+    sides = sides_set()
+    side_counts = list()
+    for side in sides:
+        r = side_members_set(side)-any_role("shuttle,fighter,gamemaster")
+        for m in r:
+            o = to_object(m)
+            comms_broadcast(0, o.name)
+        # r = role("raider") 
+        count=len(r)
+        if count > 0:
+            gui_text(f"$text: {side_display_name(side)};justify:right;font:gui-2;")
+            raider_count = gui_text(f"$text: {count};justify:left;font:gui-2;", style="tag: sh_raider_count;padding:10px;")
+            side_counts.append(raider_count)
+            gui_row()
+    set_inventory_value(client_id, "gm_counts_list", side_counts)
+    set_inventory_value(client_id, "gm_show_stats", True)
+    
+def hide_gm_stats(client_id, top, left, width, height):
+    set_inventory_value(client_id, "gm_show_stats", False)
 
 def tick_gm_stats():
     pass
