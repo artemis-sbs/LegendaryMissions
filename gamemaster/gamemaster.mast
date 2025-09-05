@@ -529,6 +529,7 @@ variable:
     ship = to_object(sel)
     if ship is not None:
         ship.name = newname
+        to_blob(ship).set("name_tag",newname)
     ->END
 === update_ship_side
     new_side = get_variable("gm_ship_side")
@@ -536,6 +537,7 @@ variable:
     ship = to_object(sel)
     if ship is not None:
         ship.set_side(new_side)
+        to_blob(ship).set("hull_side", new_side)
     ->END
 === gm_select_spawn_test1
     comms_broadcast(0, "test1")
