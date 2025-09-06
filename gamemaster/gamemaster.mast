@@ -538,6 +538,7 @@ variable:
     if ship is not None:
         ship.set_side(new_side)
         to_blob(ship).set("hull_side", new_side)
+        side_set_ship_allies_and_enemies(ship)
     ->END
 === gm_select_spawn_test1
     comms_broadcast(0, "test1")

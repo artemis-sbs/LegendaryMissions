@@ -15,6 +15,7 @@ default gamemaster_face = random_terran()
     +"Single"
 
 //comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    gui_set_variable("gm_selected", COMMS_SELECTED_ID)
     +[$gamemaster]"Spawn" //comms/gamemaster/spawn if not has_any_role(COMMS_SELECTED_ID, "ship, station")
     +[$gamemaster]"Selected" //comms/gamemaster/selected if has_any_role(COMMS_SELECTED_ID, "ship, station")
     +[$gamemaster]"Area" //comms/gamemaster/area
@@ -99,18 +100,68 @@ default gamemaster_face = random_terran()
         data = {"START_X": spawn_pos.x, "START_Y": spawn_pos.y, "START_Z": spawn_pos.z}
         prefab_spawn(prefab, data)
 
-
+# //comms/gamemaster/spawn/ship/
 
 
 //comms/gamemaster/spawn/ship if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    # TODO use ship_data info instead of this list
     races = ["Arvonian", "Kralien", "Torgoth","Skaraan","Ximni", "Pirate" ]
     +^1[$gamemaster]"Back" //comms
     
     for race in races:
-        +[$gamemaster]"{race}" {"race": race.lower()}:
-            pos = Vec3(COMMS_ORIGIN.pos)
-            fleet_diff = get_shared_variable("DIFFICULTY", 4)
-            prefab_spawn(prefab_fleet_raider, {"race": race, "fleet_difficulty": fleet_diff,"START_X": pos.x, "START_Y": pos.y, "START_Z": pos.z})
+        +[$gamemaster]"{race}" {"race": race}:
+            set_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_race", race)
+            comms_navigate("//comms/gamemaster/spawn/ship/side")
+
+            # pos = Vec3(COMMS_ORIGIN.pos)
+            # fleet_diff = get_shared_variable("DIFFICULTY", 4)
+            # prefab_spawn(prefab_fleet_raider, {"race": race, "fleet_difficulty": fleet_diff,"START_X": pos.x, "START_Y": pos.y, "START_Z": pos.z})
+//comms/gamemaster/spawn/ship/side
+    +^1[$gamemaster]"Back" //comms/gamemaster/spawn/ship
+    race = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_race")
+    ships = ship_data_filter_ship_data_by_side(None, race)
+    roles = list()
+    for ship in ships:
+        ship_roles = ship["roles"].split(",")
+        roles.extend(ship_roles)
+    # remove duplicates
+    roles = set(roles)
+    roles.remove("ship")
+    roles.remove("cockpit")
+    # sort alphabetically
+    roles = sorted(list(roles))
+    for r in roles:
+        +[$gamemaster]"{r}" {"role": r, "gm": COMMS_ORIGIN_ID}:
+            set_inventory_value(gm, "gm_spawn_menu_side_role", role)
+            comms_navigate("//comms/gamemaster/spawn/ship/side/role")
+
+//comms/gamemaster/spawn/ship/side/role
+    +^1[$gamemaster]"Back" //comms/gamemaster/spawn/ship/side
+    race = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_race")
+    selected_role = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_side_role")
+    print("Selected Role: {selected_role}")
+    side = to_side_id(race)
+    side_key = get_inventory_value(side, "side_name")
+    ships = ship_data_filter_ship_data_by_side(None, side_key, selected_role)
+    for ship in ships:
+        name = ship["name"]
+        +[$gamemaster]"{side_key} {name}" {"ship_data": ship, "gm": COMMS_ORIGIN}:
+            # Get vec3 of gamemaster
+            pos = Vec3(gm.pos)
+            behav = "behav_npcship"
+            if ship_data["roles"].find("station") != -1:
+                behav = "behav_station"
+            ship_name = name_random_hostile(side_key.lower())
+            npc = npc_spawn(pos.x,pos.y,pos.z,ship_name,side_key.lower(), ship_data["key"], behav)
+
+            # TODO: DOUG I NEED HELP WITH THIS!
+
+            # objective_add(npc, ai_chase_player, {"BRAIN_AGENT_ID":ship, "BRAIN_AGENT": to_object(ship)})
+            # objective_add(npc, ai_chase_station, {"BRAIN_AGENT_ID":ship, "BRAIN_AGENT": to_object(ship)})
+            # objective_add(npc, ai_chase_npc, {"BRAIN_AGENT_ID":ship, "BRAIN_AGENT": to_object(ship)})
+
+
+
 
 //comms/gamemaster/spawn/player if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     +^1[$gamemaster]"Back" //comms
@@ -165,6 +216,7 @@ default gamemaster_face = random_terran()
 //comms/gamemaster/selected if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     +^1[$gamemaster]"Back" //comms
     +[$gamemaster]"Set attribute" //comms/gamemaster/selected/set
+    # +[$gamemaster]"Set Objective" //comms/gamemaster/selected/objective
     +[$gamemaster]"Damage" //comms/gamemaster/selected/damage
     if COMMS_ORIGIN_ID != COMMS_SELECTED_ID:
         +[$gamemaster]"Delete":
@@ -190,6 +242,21 @@ default gamemaster_face = random_terran()
         i+=1
 
 
+//comms/gamemaster/selected/objective # WIP - not used yet
+    
+    labels = role("__MAST_LABEL__")
+    for label in labels:
+        o = to_object(label)
+        t = get_inventory_value(label, "type")
+        if t is not None:
+            if t.startswith("brain/npc"):
+                print("{t}")
+                print(f"{o.name}")
+                lbl = o.name
+                +[$gamemaster]"{lbl}" {"name": lbl, "ship": COMMS_SELECTED_ID}:
+                    objective_clear(ship)
+                    objective_add(ship,lbl,{"BRAIN_AGENT_ID":ship, "BRAIN_AGENT": to_object(ship)})
+                    # task_schedule(name, {"BRAIN_AGENT": to_object(ship)})
 
 
 
