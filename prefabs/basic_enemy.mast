@@ -1,0 +1,85 @@
+=== prefab_single_ship
+" Spawn a single ship of the specified side, with the specified art, and give it an AI
+metadata: ```
+type: prefab/npc/ship
+side_value: kralien
+give_orders_type: objective/orders/defender
+ship_role: light
+fleet_roles: ship_fleet
+ship_art: 
+brain:
+  SEQ:
+    - ai_fleet_init_blackboard
+    - SEL:
+        - ai_fleet_chase_best_anger
+        - label: ai_fleet_chase_roles
+          data:
+            test_roles: station
+        - label: ai_fleet_chase_roles
+          data:
+            test_roles: __player__
+        # No player nearby, chase nearest enemy
+        - label: ai_fleet_chase_roles
+          data:
+            test_roles: ship
+        # Nothing close find a station
+        - label: ai_fleet_chase_roles
+          data:
+            use_arena: false
+            test_roles: station
+        # No Stations go for any player
+        - label: ai_fleet_chase_roles
+          data:
+            use_arena: false
+            test_roles: __player__
+    - ai_fleet_calc_forward_vector
+    - ai_fleet_scatter_formation
+```
+    default name = name_random_hostile(side_value)
+    default origin = side_value
+    default crew = origin
+    default face = None
+    default max_hull_points = 10
+
+    #TODO: This seems like it will slow things down
+    default ship_role = "ship"
+    print("ROLE: " + ship_role)
+    ship_data_options = ship_data_filter_ship_data_by_side(None, origin, ship_role, ret_key_only=True)
+    if len(ship_data_options) == 0:
+        print("Ship data options empty in basic_enemy.mast")
+        default ship_art = None
+    else:
+        default ship_art = random.choice(ship_data_options)
+    # Default is ony set if the variable is not set
+    #default ship_art = None
+    ->END if ship_art is None
+
+    ship = to_object(npc_spawn(START_X, START_Y, START_Z, name, side_value+","+ship_role, ship_art, "behav_npcship"))
+    if face is None:
+        if (crew is None or crew=="terran") and side_value == "tsn":
+            # Force terran defenders to be military and not civilian
+            set_face(ship.id, random_terran(civilian=False))
+        set_face(ship.id, random_face(crew))
+
+    
+    
+    # Set blob ally list, and hostile list for when it's implemented
+    side_set_ship_allies_and_enemies(ship)
+
+    # Get the closest enemy ship and rotate it to face that ship - what blob value should be used?
+    # closeship = closest(ship, side_enemy_members_set(side))
+    # if closeship is not None:
+    #     set_data_set_value(ship, "")
+
+    # This allows a player to be on the same side as an enemy for PVP
+    set_inventory_value(ship, "give_orders_type", give_orders_type)
+
+    # Add to fleet of one ship
+    fleet_obj = fleet_spawn(Vec3(START_X, START_Y, START_Z), fleet_roles)
+    set_inventory_value(ship.id, "my_fleet_id", fleet_obj.id)
+    link(fleet_obj.id,"ship_list", ship.id)
+
+    # Objective will set brain 
+    # objective_add(fleet_obj.id, objective)
+    brain_add(fleet_obj.id, brain, None, 0, None)
+    yield result ship.id

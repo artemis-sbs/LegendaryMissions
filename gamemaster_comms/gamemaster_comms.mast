@@ -24,7 +24,7 @@ default gamemaster_face = random_terran()
 
 //comms/gamemaster/spawn if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and not has_any_role(COMMS_SELECTED_ID, "ship, station")
     +^1[$gamemaster]"Back" //comms
-    +[$gamemaster]"Enemy" //comms/gamemaster/spawn/ship
+    +[$gamemaster]"Ship" //comms/gamemaster/spawn/ship
     +[$gamemaster]"Friendly" //comms/gamemaster/spawn/friend
     +[$gamemaster]"Station" //comms/gamemaster/spawn/station
     +[$gamemaster]"Terrain" //comms/gamemaster/spawn/terrain
@@ -105,7 +105,7 @@ default gamemaster_face = random_terran()
 
 //comms/gamemaster/spawn/ship if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     # TODO use ship_data info instead of this list
-    races = ["Arvonian", "Kralien", "Torgoth","Skaraan","Ximni", "Pirate" ]
+    races = ["Arvonian", "Kralien", "Torgoth","Skaraan","Ximni", "Pirate", "TSN", "USFP" ]
     +^1[$gamemaster]"Back" //comms
     
     for race in races:
@@ -142,24 +142,23 @@ default gamemaster_face = random_terran()
     selected_role = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_side_role")
     # print("Selected Role: {selected_role}")
     side = to_side_id(race)
-    side_key = get_inventory_value(side, "side_name")
-    ships = ship_data_filter_ship_data_by_side(None, side_key, selected_role)
+    side_name = get_inventory_value(side, "side_name")
+    ships = ship_data_filter_ship_data_by_side(None, side_name, selected_role)
     for ship in ships:
-        name = ship["name"]
-        +[$gamemaster]"{side_key} {name}" {"ship_data": ship, "gm": COMMS_ORIGIN}:
-            # Get vec3 of gamemaster
-            pos = Vec3(gm.pos)
-            behav = "behav_npcship"
-            if ship_data["roles"].find("station") != -1:
-                behav = "behav_station"
-            ship_name = name_random_hostile(side_key.lower())
-            npc = npc_spawn(pos.x,pos.y,pos.z,ship_name,side_key.lower(), ship_data["key"], behav)
+        # name = ship["name"]
+        if ship["roles"].find("station") == -1:
+            +[$gamemaster]"{side_name} {ship['name']}" {"ship_data": ship, "gm": COMMS_ORIGIN}:
+                # Get vec3 of gamemaster
+                pos = Vec3(gm.pos)
+                prefab_spawn(prefab_single_ship, {"START_X":pos.x, "START_Y":pos.y, "START_Z":pos.z, "ship_art":ship_data["key"], "side_value":side_name.lower(), "ship_role":selected_role})
+                # npc = npc_spawn(pos.x,pos.y,pos.z,ship_name,side_name.lower(), ship_data["key"], behav)
 
-            # TODO: DOUG I NEED HELP WITH THIS!
+                # TODO: DOUG I NEED HELP WITH THIS! Fixed using prefab but need to learn it better
 
-            # objective_add(npc, ai_chase_player, {"BRAIN_AGENT_ID":ship, "BRAIN_AGENT": to_object(ship)})
-            # objective_add(npc, ai_chase_station, {"BRAIN_AGENT_ID":ship, "BRAIN_AGENT": to_object(ship)})
-            # objective_add(npc, ai_chase_npc, {"BRAIN_AGENT_ID":ship, "BRAIN_AGENT": to_object(ship)})
+                # objective_add(npc, ai_chase_player, {"BRAIN_AGENT_ID":ship, "BRAIN_AGENT": to_object(ship)})
+                # objective_add(npc, ai_chase_station, {"BRAIN_AGENT_ID":ship, "BRAIN_AGENT": to_object(ship)})
+                # objective_add(npc, ai_chase_npc, {"BRAIN_AGENT_ID":ship, "BRAIN_AGENT": to_object(ship)})
+                # comms_navigate("//comms/gamemaster/spawn/ship/side/role")
 
 
 
