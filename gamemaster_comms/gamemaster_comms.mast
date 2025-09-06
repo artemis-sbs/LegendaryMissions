@@ -126,8 +126,9 @@ default gamemaster_face = random_terran()
         roles.extend(ship_roles)
     # remove duplicates
     roles = set(roles)
-    roles.remove("ship")
-    roles.remove("cockpit")
+    roles.discard("ship")
+    roles.discard("cockpit")
+    roles.discard(race.lower())
     # sort alphabetically
     roles = sorted(list(roles))
     for r in roles:
@@ -139,7 +140,7 @@ default gamemaster_face = random_terran()
     +^1[$gamemaster]"Back" //comms/gamemaster/spawn/ship/side
     race = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_race")
     selected_role = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_side_role")
-    print("Selected Role: {selected_role}")
+    # print("Selected Role: {selected_role}")
     side = to_side_id(race)
     side_key = get_inventory_value(side, "side_name")
     ships = ship_data_filter_ship_data_by_side(None, side_key, selected_role)
