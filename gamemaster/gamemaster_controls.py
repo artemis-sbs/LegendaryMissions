@@ -234,9 +234,9 @@ def nothing(cid, left, top, width, height, widget=""):
     """Literally does nothing"""
     pass
 
-def gui_spacer_row():
+def gui_spacer_row(row_height="0.2em"):
     """Make a small spacer row between gui elements"""
-    gui_row("row-height: 0.2em;")
+    gui_row(f"row-height: {row_height};")
     gui_text(" ")
     gui_row()
 

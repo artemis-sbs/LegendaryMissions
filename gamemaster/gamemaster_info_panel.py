@@ -63,7 +63,7 @@ def listbox_button(item):
     gui_row("row-height: 1.5em;")
     task = FrameContext.task
     layout_item = gui_button(item, on_press="GM_Button_Pressed", data={"item": item, "parent_category": "one"})
-    apply_control_styles(".button", "", layout_item, task)
+    # apply_control_styles(".button", "", layout_item, task)
     # gui_button()
 
 def listbox_item_pressed(button):

@@ -5,6 +5,7 @@ dolly = 50
 orbit = 180.0
 do_move = 0
 property_pane = None
+info_panel_width = "200px"
 
 default SETTINGS = settings_get_defaults()
 default shared GAMEMASTER_CONSOLE = SETTINGS.get("GAMEMASTER", {"enable": True})
@@ -105,7 +106,8 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     
     gui_update_widgets("3dview^science_data^comms_waterfall^comms_control","")
     #region Left Side
-    gss = gui_sub_section("col-width:200px;")
+    
+    gss = gui_sub_section(f"col-width:{info_panel_width};")
 
     with gss:
         # This is the left hand info panel
@@ -187,69 +189,34 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     #region Middle
     with gui_sub_section():
         gui_row()
+        # This is hopefully a band-aid solution so we don't cover up the 2d zoom controls
+        gui_spacer_row("60px;")
         if GAMEMASTER_CONSOLE_BETA:
-            menu = gui_sub_section(style="col-width: 100px;")
-            # with menu:
+            gui_sub_section(style="col-width: 100px;")
+            glb = gui_list_box(items=[], style="", item_template=listbox_button, select=True)
+            set_inventory_value(client_id, "gm_list_box_1", glb)
 
-            # #     # gui_set_variable("gm_menu1_bounds", menu.sub_section.bounds)
+            gui_sub_section(style="col-width: 100px;")
+            glb2 = gui_list_box(items=[], style="", item_template=listbox_button, select=True)
+            set_inventory_value(client_id, "gm_list_box_2", glb2)
 
-            #     sides = get_sides()
-            #     gui_row()
-            #     cc = gui_layout_widget("comms_control")
-            #     bounds = cc.bounds
-            #     glb = gui_list_box(items=sides, style="", item_template=listbox_button, select=True)
-            #     # glb.set_value(sides[0])
-            #     # gui_text("","")
-            #     gui_row()
-            #     # test = gui_button("Test")
-            #     # on change glb.get_value():
-            #     #     l = list(("hi","yes","no"))
-            #     #     glb.items = l
-            #     #     glb.set_value(l[0])
-            #     #     print("Trying to represent...")
-            #     #     gui_represent(glb)
-            #     on change get_inventory_value(client_id, "gm_menu"):
-            #         route = get_inventory_value(client_id, "gm_menu")
-            #         # comms_broadcast(0, "gm menu changed")
-            #         # gui_hide(glb)
-            #         # gui_hide(test)
-            #         # gui_represent(menu)
-            #         gui_panel_widget_hide(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_control")
-            #     on change get_inventory_value(client_id,"gm_menu_button"):
-            #     # on signal gm_menu_button:
-            #         item = get_inventory_value(client_id,"gm_menu_button")
-            #         comms_broadcast(0,f"gm menu button: {item}")
-            #         # gui_show(glb)
-            #         # gui_show(test)
-            #         # gui_represent(section)
-            #         gui_panel_widget_show(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_control")
-                
-            sides = get_sides()
-            glb = gui_list_box(items=sides, style="", item_template=listbox_button, select=True)
-            # glb = gui_list_box(sides, "")
-            # build_menu(["hi","yes","no"], ["test_buttons","test_buttons","test_buttons"])
-            gui_row("row-height: 1.5em;")
-            # gui_hide(glb)
-            # gui_show(glb)
-            b = gui_button("Press Here")
-            on gui_message(b):
-                signal_emit("gui_message_sig")
-            on signal gui_message_sig:
-                glb.items = []#["hi","this","is","amazingly","working"]
-                gui_represent(glb)
-            on signal gm_button_selected:
-                print("GM Button Selected Signal")
-                glb.items = []
-                gui_represent(glb)
-            # gui_button(style="")
-            #gui_layout_widget("science_2d_view")
-            # gui_layout_widget("science_2d_view")
+            gui_sub_section(style="col-width: 100px;")
+            glb3 = gui_list_box(items=[], style="", item_template=listbox_button, select=True)
+            set_inventory_value(client_id, "gm_list_box_3", glb3)
+
+            gui_sub_section(style="col-width: 100px;")
+            glb4 = gui_list_box(items=[], style="", item_template=listbox_button, select=True)
+            set_inventory_value(client_id, "gm_list_box_4", glb4)
+
+            gui_sub_section(style="col-width: 100px;")
+            glb5 = gui_list_box(items=[], style="", item_template=listbox_button, select=True)
+            set_inventory_value(client_id, "gm_list_box_5", glb5)
     #endregion
 
     # Right
 
     #region Right Side
-    with gui_sub_section("col-width:25;"):
+    with gui_sub_section("col-width:200px;"):
         #region List Box
         gui_row("row-height: 10;")
         gui_property_list_box("options")
@@ -277,26 +244,15 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
         #region Comms Sorted List and associated code
         csl = gui_layout_widget("comms_sorted_list")
         gui_row()
-        if GAMEMASTER_CONSOLE_BETA:
-            gui_row("tag:toggle;row-height: 1.5em;")
-            toggle = gui_button("Toggle Comms List", style="tag:gm_toggle_csl;")
-
-            # Get the bounds of the widget
-            gui_set_variable("gm_comms_sorted_list_bounds", csl.bounds)
-            bounds = csl.bounds
-
-            show = True
-            on gui_message(toggle):
-                show = not show
-                height = 10
-                bounds = gui_get_variable("gm_comms_sorted_list_bounds")
-                if show:
-                    height = 300
-                    gui_panel_widget_show(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_sorted_list")
-                else:
-                    gui_panel_widget_hide(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_sorted_list")
-            # Hide widget by default?
-            gui_panel_widget_hide(client_id, left=bounds.left,top=bounds.top, width=bounds.width, height=bounds.height, widget="comms_sorted_list")
+        gui_row("tag:toggle;row-height: 1.5em;")
+        toggle = gui_button("Toggle Comms List") # Pressing this button will toggle the comms sorted list
+        show = True
+        on gui_message(toggle):
+            show = not show
+            if show:
+                gui_show(csl)
+            else:
+                gui_hide(csl)
         #endregion
     #endregion
     
