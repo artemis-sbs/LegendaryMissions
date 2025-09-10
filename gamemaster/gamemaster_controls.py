@@ -1,5 +1,5 @@
 from sbs_utils.procedural.gui.button import Button
-from sbs_utils.helpers import FrameContext
+from sbs_utils.helpers import FrameContext, FakeEvent
 from sbs_utils.procedural.gui import *
 from sbs_utils.procedural.execution import gui_get_variable, gui_set_variable, task_schedule, gui_sub_task_schedule
 from sbs_utils.procedural.query import to_set, to_object
@@ -58,12 +58,14 @@ def get_ship_data_for_side(side):
 def buildButtons(parent_category, items):
     # with gui_list_box():
     for item in items:
+        gui_row("row-height: 2em;")
         b = gui_button(item, data={"parent_category":parent_category, "item": item})
         # lbl = f"gm_select_{parent_category}_{item}"
         # lbl = "GM_Button_Pressed"
         # comms_broadcast(0, lbl)
         gui_message(b,"GM_Button_Pressed")
-        gui_row()
+        # gui_row()
+    gui_row()
 
 spawn_sides = list((
     "TSN",
@@ -98,115 +100,96 @@ def get_sides():
         sides_list.append(get_inventory_value(s, "side_name", ""))
     return sides_list
 
-def gm_build_item(item):
-    gui_row("row-height: 2em;")
-    gui_button(item["title"])
-    print("gm build item")
-def gm_build_title(title):
-    gui_row("row-height: 2em;")
-    gui_text(title["title"])
-    print("gm build title")
+def gm_set_menu_contents(client_id, menu, contents):
+    """
+    Set the contents of a menu. Empties all derived menus.
+    Args:
+        menu (int): The menu number (1-5)
+        contents (dict): A dict with 'name' and 'on_press' values
+    """
+    listbox = get_inventory_value(client_id, f"gm_list_box_{menu}")
+    listbox.items = contents
+    listbox.represent(FakeEvent(client_id))
+    for x in range(menu+1,6):
+        lb = get_inventory_value(client_id, f"gm_list_box_{x}")
+        lb.items = []
+        lb.represent(FakeEvent(client_id))
 
-def build_spawn_menu():
-    signal_emit("gm_settings_choice", {"width": "350px;"})
-    sides = get_sides()
-    # comms_broadcast(0, f"{','.join(sides)}")
-    # gui_drop_down(f"$text:TSN;list:{','.join(sides)}", var="GM_SIDE_SELECT")
-    # get_gm_label()
-    # gui_property_list_box(name="Spawn")
-    # props = """
-    # Main:
-    #     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
-    #     Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
-    # Map:
-    #     Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'
-    #     Lethal Terrain: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, max", var="LETHAL_SELECT")'
-    #     Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, max", var="FRIENDLY_SELECT")'
-    #     Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, max", var="MONSTER_SELECT")'
-    #     Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
-    #     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
-    # """
-    # gui_properties_set(props)
-    # gui_row()
-    # gui_text("Name")
-    # gui_button("Hi")
-    # gui_row()
-    items = ["Hello", "Goodbye"]
-    messages_objs = [{"title": "Carapaction Coil", "message":"5 min 300% shield recharge boost", "title_color": "yellow"}]
-    messages_objs.append({"title": "Infusion P-Coils", "message":"5 min Impulse and Maneuver Speed boost", "title_color": "yellow"})
-    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
-    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
-    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
-    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
-    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
-    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
-    messages_objs.append({"title": "Infusion P-Coils", "message":"5 min Impulse and Maneuver Speed boost", "title_color": "yellow"})
-    messages_objs.append({"title": "Lateral Array", "message":"5 min Target Scan Triple Speed", "title_color": "green" })
-    with gui_sub_section():
-        gui_row()
-        list_box = gui_list_box(messages_objs, "$text: Spawn Stuff;", collapsible=True, item_template=gm_build_item, title_section_style=gm_build_title)
-    # gui_row()
-    return list_box
-    
+
+def spawn_with_side_common(client_id,required_roles = [], exclude_roles=[]):
+    prev_menu = get_inventory_value(client_id, "gm_menu")
+    if prev_menu is None:
+        prev_menu = ""
+    if prev_menu.find("spawn") != -1:
+        # `race` is not the best word for this use case, origin might be better?
+        race = get_inventory_value(client_id, "gm_spawn_menu_race")
+        if race is None:
+            race = "TSN"
+
+        ships = filter_ship_data_by_side(None, race)
+        roles = list()
+        for ship in ships:
+            ship_roles = ship["roles"].split(",")
+            has_required = True
+            for rr in required_roles:
+                if ship_roles.count(rr) == 0:
+                    has_required = False
+                    break
+            if has_required:
+                roles.extend(ship_roles)
+        # remove duplicates
+        roles = set(roles)
+        for ex in exclude_roles:
+            roles.discard(ex)
+        # roles.discard("ship")
+        # roles.discard("cockpit")
+        roles.discard(race.lower())
+        # sort alphabetically
+        roles = sorted(list(roles))
+        # menu.items = []
+        newItems = []
+        for r in roles:
+            data = {"name": r, "on_press": "GM_Side_Selection"}
+            newItems.append(data)
+            # print(f"Adding {r}")
+        gm_set_menu_contents(client_id, 1, newItems)
 
 def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
-    # signal_emit("gm_settings_choice", {"width": "150px"})
-    # build_spawn_menu()
-    diff = 1
+    gui_row("row-height: 1.5em;")
     gui_text(f"$text:{menu}")
-    gui_row("row-height: 0.2em;")
-    top = top + diff
-    height = height - diff
-    # gui_panel_widget_show(cid, left, top, width, height, "comms_control")
-    # path = "//comms/gamemaster/"+menu
-    # # comms_broadcast(0, path)
-    # # comms_navigate(path)
-    # ship = sbs.get_ship_of_client()
-    # if ship is None:
-    #    comms_broadcast(0, "ship is None")
-    # sel = gui_get_variable("gm_selection")
-    # if sel is None:
-    #    comms_broadcast(0, "sel is None")
-    # comms_navigate_override(ship, sel, path)
-    set_inventory_value(cid, "gm_menu", menu)
-    spawn_sides = get_sides()
-    if menu == "spawn":
-        build_spawn_menu()
 
-    elif menu == "spawn/ship":
-        build_menu(spawn_sides)
-        # gui_sub_task_schedule("gm_spawn_ship", data={"buttons":spawn_sides})
-        # buildButtons("ship",spawn_sides)
+    
+    spawn_sides = get_sides()
+    # if menu == "spawn":
+    #     build_spawn_menu()
+
+
+    # All of these use a very similar format, so we'll use spawn_with_side_common() to handle it
+    if menu == "spawn/ship":
+        buildButtons("ship",spawn_sides)
+        spawn_with_side_common(cid, [], ["ship","cockpit","station"])
     elif menu == "spawn/fleet":
         buildButtons("fleet",spawn_sides)
+        spawn_with_side_common(cid)
     elif menu == "spawn/starbase":
         buildButtons("starbase",spawn_sides)
-    elif menu == "spawn/terrain":
+        spawn_with_side_common(cid, ["station"], ["ship","cockpit"])
+
+
+    # These are more specific to each option
+    elif menu == "terrain":
         buildButtons("terrain",spawn_terrain)
-    elif menu == "spawn/monster":
+    elif menu == "monster":
         buildButtons("monster",spawn_monster)
     elif menu == "config/world":
-        gui_row("row-height: 4em;")
+        gui_row("row-height: 2em;")
         gui_button("Manage Sides", on_press="gamemaster_side_relations")
         gui_row()
-    # elif menu == "test_comms":
-    #     gui_panel_widget_show(cid, left, top, width, height, "comms_control")
-    #     path = "//comms/gamemaster/"+menu
-    #     # comms_broadcast(0, path)
-    #     # comms_navigate(path)
-    #     ship = sbs.get_ship_of_client(cid)
-    #     comms_broadcast(0, f"Ship: {ship}")
-    #     if ship is None:
-    #        comms_broadcast(0, "ship is None")
-    #     sel = gui_get_variable("gm_selection")
-    #     comms_broadcast(0, f"Selected: {sel}")
-    #     if sel is None:
-    #        comms_broadcast(0, "sel is None")
-    #     comms_navigate_override(ship, sel, path)
-    # elif menu == "spawn":
-    #     build_spawn_menu()
+        gui_button("Time Limit", "", on_press="gm_time_setup")
     else:
+        gm_set_menu_contents(cid, 1, [])
         pass
+    set_inventory_value(cid, "gm_menu", menu)
 
 def open_side_management_screen():
     signal_emit("side_management")
@@ -227,8 +210,9 @@ def build_menu(button_names, button_labels=None, button_height=10, width=100):
             op = None
             if button_labels is not None:
                 op = button_labels[button]
-            gui_button(button_names[button], style=f"row-height: {button_height}px;", on_press="gm_build_sub_menu")
             gui_row()
+            gui_button(button_names[button], style=f"row-height: {button_height}px;", on_press="GM_Button_Pressed")
+            # gui_row()
 
 def nothing(cid, left, top, width, height, widget=""):
     """Literally does nothing"""

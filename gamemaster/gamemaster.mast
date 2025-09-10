@@ -104,11 +104,14 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     section = gui_section(style="area:0,45px,100,100;")
     # Left
     
-    gui_update_widgets("3dview^science_data^comms_waterfall^comms_control","")
+    widget_list = "3dview^science_data^comms_waterfall^comms_control"
+    # if not GAMEMASTER_CONSOLE_BETA:
+    #     widget_list += "^comms_control"
+    gui_update_widgets(widget_list,"")
     #region Left Side
     
     gss = gui_sub_section(f"col-width:{info_panel_width};")
-
+    
     with gss:
         # This is the left hand info panel
         with gui_sub_section():
@@ -118,13 +121,13 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
             gui_info_panel_add("instruction", 82, gamemaster_panel_instructions, var= GM_LEFT)
             if GAMEMASTER_CONSOLE_BETA:
                 ~~ gui_info_panel_add("test_comms", 0, 
-                lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "test_comms"), 
-                lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, ""), 
+                lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_control"), 
+                lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
                 var=GM_LEFT ) ~~
-                ~~ gui_info_panel_add("spawn", 154, 
-                lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn"), 
-                lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, ""), 
-                var=GM_LEFT ) ~~
+                # ~~ gui_info_panel_add("spawn", 154, 
+                # lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn"), 
+                # lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, ""), 
+                # var=GM_LEFT ) ~~
             if GAMEMASTER_CONSOLE_BETA:
                 ~~ gui_info_panel_add("spawn_ship", 140, 
                 lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn/ship"), 
@@ -139,11 +142,11 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
                 lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, ""), 
                 var=GM_LEFT ) ~~
                 ~~ gui_info_panel_add("spawn_terrain", 51, 
-                lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn/terrain"), 
+                lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "terrain"), 
                 lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, ""), 
                 var=GM_LEFT ) ~~
                 ~~ gui_info_panel_add("spawn_monster", 78, 
-                lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn/monster"), 
+                lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "monster"), 
                 lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, ""), 
                 var=GM_LEFT ) ~~
             ~~ gui_info_panel_add("configure_world", 13, 
@@ -189,7 +192,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     #region Middle
     with gui_sub_section():
         gui_row()
-        # This is hopefully a band-aid solution so we don't cover up the 2d zoom controls
+        # This spacer is hopefully a temporary band-aid solution so we don't cover up the 2d zoom controls
         gui_spacer_row("60px;")
         if GAMEMASTER_CONSOLE_BETA:
             gui_sub_section(style="col-width: 100px;")
@@ -206,6 +209,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
 
             gui_sub_section(style="col-width: 100px;")
             glb4 = gui_list_box(items=[], style="", item_template=listbox_button, select=True)
+            # glb4 = ~~gui_list_box(items=["Test"], style="", item_template=lambda item: listbox_button(item, 4))~~
             set_inventory_value(client_id, "gm_list_box_4", glb4)
 
             gui_sub_section(style="col-width: 100px;")
@@ -216,7 +220,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     # Right
 
     #region Right Side
-    with gui_sub_section("col-width:200px;"):
+    with gui_sub_section(f"col-width:{info_panel_width};"):
         #region List Box
         gui_row("row-height: 10;")
         gui_property_list_box("options")
@@ -245,7 +249,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
         csl = gui_layout_widget("comms_sorted_list")
         gui_row()
         gui_row("tag:toggle;row-height: 1.5em;")
-        toggle = gui_button("Toggle Comms List") # Pressing this button will toggle the comms sorted list
+        toggle = gui_button("Toggle Comms List", style="justify: center") # Pressing this button will toggle the comms sorted list
         show = True
         on gui_message(toggle):
             show = not show
@@ -256,11 +260,12 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
         #endregion
     #endregion
     
-    # Putting the comms controls here for now
-    # TODO: Don't want to rely on gm comms too much long-term
-    gui_section("area: 0,50,200px,100")
-    gui_row()
-    gui_layout_widget("comms_control")
+    if not GAMEMASTER_CONSOLE_BETA:
+        # Putting the comms controls here for now
+        # TODO: Don't want to rely on gm comms too much long-term
+        gui_section("area: 0,50,200px,100")
+        gui_row()
+        gui_layout_widget("comms_control")
 
     gui_section("area: 200px,90,600px,100")
     gui_layout_widget("text_waterfall")
@@ -506,15 +511,25 @@ variable:
 === GM_Button_Pressed
     # Should have these variables available:
     # parent_category, item
-
-    comms_broadcast(0, "{parent_category}")
+    comms_broadcast(0, "GM Button Pressed")
+    print("GM BUtton pressed")
     comms_broadcast(0, "{item}")
-    print("Emitting Signal")
-    signal_emit("gm_button_selected",{"item":item})
-    set_inventory_value(client_id,"gm_menu_button",item)
+    default menu = get_inventory_value(client_id, "gm_menu")
+    comms_broadcast(0, f"{menu}")
     ->END
+
+=== GM_Side_Selection
+    comms_broadcast(0, "GM Side Selection")
+    comms_broadcast(0, "{name}")
+    default menu = get_inventory_value(client_id, "gm_menu")
+    comms_broadcast(0, f"{menu}")
+    ->END
+
 #endregion
 
+=== gm_time_setup
+    
+    ->END
 
 ==== gamemaster_move_camera_sync
     await delay_sim(3)

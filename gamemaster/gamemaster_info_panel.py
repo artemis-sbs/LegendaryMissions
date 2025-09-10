@@ -59,10 +59,18 @@ def show_gm_panel_gui(cid):
     # # gui_message(ship_roles_gui, update_ship_roles)
     # gui_row()
 from sbs_utils.procedural.style import apply_control_styles
-def listbox_button(item):
+def listbox_button(item, menu=1):
+    """
+    Build a listbox item.
+    Args:
+        item: A python dict. Should contain the following values:
+            name: str
+            on_press: label
+    """
     gui_row("row-height: 1.5em;")
-    task = FrameContext.task
-    layout_item = gui_button(item, on_press="GM_Button_Pressed", data={"item": item, "parent_category": "one"})
+    # task = FrameContext.task
+    layout_item = gui_button(f"{item['name']}", data=item)
+    gui_message(layout_item, "GM_Button_Pressed")
     # apply_control_styles(".button", "", layout_item, task)
     # gui_button()
 
