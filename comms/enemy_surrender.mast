@@ -39,6 +39,7 @@ shared _surrender_return = task_schedule(take_surrendered_home)
         sc_timer = 0
         set_inventory_value(COMMS_ORIGIN_ID, "sc_timer", sc_timer )
         await task_schedule(comms_do_surrender)
+        comms_navigate("//comms")
         ->END
 
     # get lowest shield value

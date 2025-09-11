@@ -11,7 +11,7 @@ Properties:
   Map:
     Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'
     Lethal Terrain: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, max", var="LETHAL_SELECT")'
-    Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, max", var="FRIENDLY_SELECT")'
+    Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none", var="FRIENDLY_SELECT")'
     Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, max", var="MONSTER_SELECT")'
     Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
@@ -48,7 +48,9 @@ Properties:
 
     new_pos = Vec3(20500,0,1800)
     tanker = to_id(npc_spawn(*new_pos, f"TSN Ganymede", "tsn, friendly, resupply_tanker", "transport_ship", "behav_npcship"))
-    set_face(tanker, random_terran())
+    tanker_face = random_terran()
+    set_face(tanker, tanker_face)
+    to_blob(tanker).set("torpedo_types_available", "")
 
     await task_schedule(spawn_players)
     await task_schedule(default_player_friendly_eyes)
@@ -64,6 +66,10 @@ Properties:
         #
         _side = role(player.side)
         docking_set_docking_logic(player.id, _side & role("resupply_tanker"), docking_dock_with_resupply_ship)
+        # 
+        # Add resupply tanker as friendly eyes
+        #
+        link(player, "extra_scan_source", tanker)
 
     ########################
     # Build out terrain etc.
@@ -78,11 +84,6 @@ Properties:
 
     #------------------------------------------------------------------------------------------------------------
     # Build enemy stations, generate fleets
-
-
-    enemy_station_list = []
-    navpoint_list = []
-    enemy_station_dict = {}
 
     pos = Vec3()
     startZ = -50000
@@ -117,15 +118,14 @@ Properties:
         name = "{station_prefix} {index+1}"
 
         if enemy1 == "Kralien":
-            enemy_station_object = npc_spawn(*pos, name, "kralien, enemy, station", station_type, "behav_station")
+            enemy_station_object = npc_spawn(*pos, name, "raider, kralien, enemy, delprox, station", station_type, "behav_station")
         if enemy1 == "Torgoth":
-            enemy_station_object = npc_spawn(*pos, name, "torgoth, enemy, station", station_type, "behav_station")
+            enemy_station_object = npc_spawn(*pos, name, "raider, torgoth, enemy, delprox, station", station_type, "behav_station")
         if enemy1 == "Arvonian":
-            enemy_station_object = npc_spawn(*pos, name, "arvonian, enemy, station", station_type, "behav_station")
-        nav_id = sim.add_navpoint(*pos, name, "#A44")
-        enemy_station_list.append(to_id(enemy_station_object))
-        navpoint_list.append(nav_id)
-        enemy_station_dict[to_id(enemy_station_object)] = nav_id
+            enemy_station_object = npc_spawn(*pos, name, "raider, arvonian, enemy, delprox, station", station_type, "behav_station")
+        eso_id = to_id(enemy_station_object)
+        nav_obj = sim.add_navproxy(eso_id, name, station_type, "#A44")
+        set_inventory_value(eso_id, "navprox_id", to_id(nav_obj))
 
         if enemy1 == "Kralien":
             set_face(to_id(enemy_station_object), random_kralien())
@@ -142,7 +142,7 @@ Properties:
 
         prefab_spawn(prefab_fleet_raider, {"race": enemy1,"fleet_difficulty": DIFFICULTY, "START_X": apos.x, "START_Y": apos.y, "START_Z": apos.z})
 
-
+    task_schedule(deepstrike_message)
     task_schedule(task_deepstrike_end_game)
 
     #------------------------------------------------------------------------------------------------------------
@@ -154,6 +154,11 @@ Properties:
     shared resupply_energy = 0
     shared resupply_nuke = 0
     -> END
+
+//enable/comms if has_roles(COMMS_SELECTED_ID, 'resupply_tanker')
+
+//comms if has_roles(COMMS_SELECTED_ID, 'resupply_tanker') 
+    + "Hail"  handle_resupply_hail
 
 //comms if has_roles(COMMS_SELECTED_ID, 'resupply_tanker') 
     + "Energy Cell":
@@ -167,7 +172,11 @@ Properties:
             resupply_energy = 5
             jump resupply_energy_delay
         else:
-            comms_receive_internal(f"""We're working on it, {COMMS_ORIGIN.name}. Energy Cell will be ready in {resupply_energy} minutes.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Energy Cell Not Ready", title_color="green")
+            if resupply_energy == 1:
+                min_txt = "minute"
+            else:
+                min_txt = "minutes"
+            comms_receive_internal(f"""We're working on it, {COMMS_ORIGIN.name}. Energy Cell will be ready in {resupply_energy} {min_txt}.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Energy Cell Not Ready", title_color="green")
 
 //comms if has_roles(COMMS_SELECTED_ID, 'resupply_tanker') 
     + "Transfer Nuke":
@@ -186,8 +195,47 @@ Properties:
                 resupply_nuke = 5
                 jump resupply_nuke_delay
         else:
-            comms_receive_internal(f"""We're working on it, {COMMS_ORIGIN.name}. Nuke will be ready in {resupply_nuke} minutes.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Nuke Not Ready", title_color="green")
+            if resupply_nuke == 1:
+                min_txt = "minute"
+            else:
+                min_txt = "minutes"
+            comms_receive_internal(f"""We're working on it, {COMMS_ORIGIN.name}. Nuke will be ready in {resupply_nuke} {min_txt}.""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Nuke Not Ready", title_color="green")
  
+=============== handle_resupply_hail  ===============
+    resupply_id = COMMS_SELECTED_ID
+    ship_id = COMMS_ORIGIN_ID
+    resupply_obj = to_object(COMMS_SELECTED_ID)
+    ->END if resupply_obj is None
+
+    set_inventory_value(ship_id,"priority_docking_id",resupply_id)
+    comms_id = to_object(COMMS_ORIGIN_ID).name
+    resupply_comms_id = resupply_obj.name
+
+    s_max_f = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 0))
+    s_cur_f = int(get_data_set_value(COMMS_SELECTED_ID, "shield_val", 0))
+    s_per_f = int(s_cur_f / s_max_f * 100)
+    s_max_r = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 1))
+    s_cur_r = int(get_data_set_value(COMMS_SELECTED_ID, "shield_val", 1))
+    s_per_r = int(s_cur_r / s_max_r * 100)
+
+    if resupply_energy == 0:
+        energy_msg = "HiDens Energy Cell is ready for deployment."
+    else:
+        energy_msg = "HiDens Energy Cell will be ready in " + str(resupply_energy) + " minutes."
+
+    if resupply_nuke == 0:
+        nuke_msg = "Nuclear torpedo is ready for transfer."
+    else:
+        nuke_msg = "Nuclear torpedo will be ready in " + str(resupply_nuke) + " minutes."
+
+    <<[green] "Hail"
+        " Hello, {comms_id}.  We stand ready to assist.
+        " ^Our front shields are at {s_cur_f} / {s_max_f} ({s_per_f} %).
+        " ^Our rear shields are at {s_cur_r} / {s_max_r} ({s_per_r} %).
+        " ^You have full docking privileges, and priority docking.
+        " ^{energy_msg}
+        " ^{nuke_msg}
+    yield success
 
 ====== resupply_energy_delay ======
     await delay_sim(seconds=60)
@@ -204,3 +252,8 @@ Properties:
         ->END
     else:
         jump resupply_nuke_delay
+
+===== deepstrike_message =====
+    await delay_sim(15)
+    send_general_message("TSN Ganymede", "You can dock with us to recharge your energy. We can also provide HiDens energy cells and nuclear torpedoes. It takes 5 minutes to generate a new energy cell or nuclear torpedo.", tanker_face, tanker)
+    ->END
