@@ -26,6 +26,7 @@ default gamemaster_face = random_terran()
     +^1[$gamemaster]"Back" //comms
     +[$gamemaster]"Ship" //comms/gamemaster/spawn/ship
     +[$gamemaster]"Friendly" //comms/gamemaster/spawn/friend
+    +[$gamemaster]"Fleet" //comms/gamemaster/spawn/fleet
     +[$gamemaster]"Station" //comms/gamemaster/spawn/station
     +[$gamemaster]"Terrain" //comms/gamemaster/spawn/terrain
     +[$gamemaster]"Player" //comms/gamemaster/spawn/player
@@ -103,6 +104,33 @@ default gamemaster_face = random_terran()
 # //comms/gamemaster/spawn/ship/
 
 
+//comms/gamemaster/spawn/fleet if has_role(COMMS_ORIGIN_ID, "gamemaster")
+    races = sorted(["Kralien", "Torgoth","Arvonian", "Skaraan", "Ximni", "Pirate"])
+    +^1[$gamemaster]"Back" //comms/gamemaster/spawn
+    for race in races:
+        +[$gamemaster]"{race}" {"race": race}:
+            set_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_race", race)
+            comms_navigate("//comms/gamemaster/spawn/fleet/side")
+
+//comms/gamemaster/spawn/fleet/side
+    # +^1[$gamemaster]"Root" //comms
+    +^1[$gamemaster]"Back" //comms/gamemaster/spawn/fleet
+    +[$gamemaster]"Small":
+        side = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_race")
+        diff = random.randint(1,4)
+        pos = get_pos(COMMS_ORIGIN_ID)
+        prefab_spawn(prefab_fleet_raider, {"race":side, "ship_roles": side, "fleet_difficulty":diff, "START_X":pos.x, "START_Y":pos.y, "START_Z":pos.z})
+    +[$gamemaster]"Medium":
+        side = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_race")
+        diff = random.randint(4,7)
+        pos = get_pos(COMMS_ORIGIN_ID)
+        prefab_spawn(prefab_fleet_raider, {"race":side, "ship_roles": side, "fleet_difficulty":diff, "START_X":pos.x, "START_Y":pos.y, "START_Z":pos.z})
+    +[$gamemaster]"Large":
+        side = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_race")
+        diff = random.randint(7,11)
+        pos = get_pos(COMMS_ORIGIN_ID)
+        prefab_spawn(prefab_fleet_raider, {"race":side, "ship_roles": side, "fleet_difficulty":diff, "START_X":pos.x, "START_Y":pos.y, "START_Z":pos.z})
+
 //comms/gamemaster/spawn/ship if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     # TODO use ship_data info instead of this list
     races = ["Arvonian", "Kralien", "Torgoth","Skaraan","Ximni", "Pirate", "TSN", "USFP" ]
@@ -117,6 +145,7 @@ default gamemaster_face = random_terran()
             # fleet_diff = get_shared_variable("DIFFICULTY", 4)
             # prefab_spawn(prefab_fleet_raider, {"race": race, "fleet_difficulty": fleet_diff,"START_X": pos.x, "START_Y": pos.y, "START_Z": pos.z})
 //comms/gamemaster/spawn/ship/side
+    # +^1[$gamemaster]"Root" //comms
     +^1[$gamemaster]"Back" //comms/gamemaster/spawn/ship
     race = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_race")
     ships = ship_data_filter_ship_data_by_side(None, race)
@@ -137,6 +166,7 @@ default gamemaster_face = random_terran()
             comms_navigate("//comms/gamemaster/spawn/ship/side/role")
 
 //comms/gamemaster/spawn/ship/side/role
+    # +^1[$gamemaster]"Root" //comms
     +^1[$gamemaster]"Back" //comms/gamemaster/spawn/ship/side
     race = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_race")
     selected_role = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_side_role")

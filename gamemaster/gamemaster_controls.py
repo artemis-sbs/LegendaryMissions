@@ -48,6 +48,32 @@ class GM_Gui_Tab(Button):
       super().__init__(tag, f"$text:{name}")
       pass
 
+def gm_convert_listbox_items(items):
+    """Converts a list of strings into a list of objects that allow a listbox to collapse if a header is clicked
+    To make a header, prefix the name with `>>`. 
+    Example usage:
+        ```python
+        item = [">>Header","Item1","Item2",">>Another Header","Another Item 1","Another Item 2"]
+        ret = gm_convert_listbox_items(item)
+        gui_list_box(items=ret, style="", select=True, collapsible=True)
+        ```
+    Args:
+        items (list(str)): A list of strings
+    Returns:
+        (list(str|LayoutListBoxHeader)): A list of LayoutListBoxHeader (for the headers) and strings (for the items)
+    """
+    # TODO: This maybe should be integrated into sbs_utils somehow?
+    ret = []
+    for k in items:
+        if isinstance(k,str):
+            collapse = False
+            if k.startswith(">>"):
+                k = k[2:]
+                ret.append(LayoutListBoxHeader(k, collapse))
+            else:
+                ret.append(k)
+    return ret
+
 # def buildButton(parent)
 def get_ship_data_for_side(side):
     ships = filter_ship_data_by_side(None, sides=side)
@@ -115,8 +141,15 @@ def gm_set_menu_contents(client_id, menu, contents):
         lb.items = []
         lb.represent(FakeEvent(client_id))
 
+from sbs_utils.pages.widgets.layout_listbox import LayoutListBoxHeader
+def buildListboxHeader(label, collabsible=True):
+    return LayoutListBoxHeader(label, collabsible)
 
 def spawn_with_side_common(client_id,required_roles = [], exclude_roles=[]):
+    sides = get_sides()
+    # side_dropdown = gui_drop_down(f"items:{','.join(sides)}")
+    race = get_inventory_value(client_id, "gm_spawn_menu_race")
+    # side_dropdown.value = race
     prev_menu = get_inventory_value(client_id, "gm_menu")
     if prev_menu is None:
         prev_menu = ""
@@ -154,6 +187,39 @@ def spawn_with_side_common(client_id,required_roles = [], exclude_roles=[]):
             # print(f"Adding {r}")
         gm_set_menu_contents(client_id, 1, newItems)
 
+
+def gm_get_ships_for_side(race, required_roles = [], exclude_roles=[]):
+    """
+    Get ships from shipData.yaml that match the race, required roles, and excluded roles
+    """
+    print(f"Race: {race}")
+    ships = filter_ship_data_by_side(None, race)
+    print(f"Lenght: {len(ships)}")
+    roles = list()
+    for ship in ships:
+        ship_roles = ship["roles"].split(",")
+        has_required = True
+        for rr in required_roles:
+            if ship_roles.count(rr) == 0:
+                has_required = False
+                break
+        if has_required:
+            roles.extend(ship_roles)
+    # remove duplicates
+    roles = set(roles)
+    for ex in exclude_roles:
+        roles.discard(ex)
+    roles.discard(race.lower())
+    # sort alphabetically
+    roles = sorted(list(roles))
+    print(f"{roles}")
+    return roles
+    # newItems = []
+    # for r in roles:
+    #     data = {"name": r, "on_press": "GM_Side_Selection"}
+    #     newItems.append(data)
+
+
 def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
     gui_row("row-height: 1.5em;")
     gui_text(f"$text:{menu}")
@@ -166,14 +232,17 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
 
     # All of these use a very similar format, so we'll use spawn_with_side_common() to handle it
     if menu == "spawn/ship":
-        buildButtons("ship",spawn_sides)
-        spawn_with_side_common(cid, [], ["ship","cockpit","station"])
+        pass
+        # buildButtons("ship",spawn_sides)
+        # spawn_with_side_common(cid, [], ["ship","cockpit","station"])
     elif menu == "spawn/fleet":
-        buildButtons("fleet",spawn_sides)
-        spawn_with_side_common(cid)
+        pass
+        # buildButtons("fleet",spawn_sides)
+        # spawn_with_side_common(cid)
     elif menu == "spawn/starbase":
-        buildButtons("starbase",spawn_sides)
-        spawn_with_side_common(cid, ["station"], ["ship","cockpit"])
+        pass
+        # buildButtons("starbase",spawn_sides)
+        # spawn_with_side_common(cid, ["station"], ["ship","cockpit"])
 
 
     # These are more specific to each option
@@ -184,8 +253,10 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
     elif menu == "config/world":
         gui_row("row-height: 2em;")
         gui_button("Manage Sides", on_press="gamemaster_side_relations")
+        # Uncomment these when the time limit system is working right? Works in comms buttons of course
+        # gui_row("row-height: 2em;")
+        # gui_button("Time Limit", "", on_press="gm_time_setup")
         gui_row()
-        gui_button("Time Limit", "", on_press="gm_time_setup")
     else:
         gm_set_menu_contents(cid, 1, [])
         pass
@@ -222,7 +293,7 @@ def gui_spacer_row(row_height="0.2em"):
     """Make a small spacer row between gui elements"""
     gui_row(f"row-height: {row_height};")
     gui_text(" ")
-    gui_row()
+    # gui_row()
 
 
 def spawn_sub_menu(button):

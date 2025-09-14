@@ -69,15 +69,37 @@ def listbox_button(item, menu=1):
     """
     gui_row("row-height: 1.5em;")
     # task = FrameContext.task
-    layout_item = gui_button(f"{item['name']}", data=item)
+    name = ""
+    if isinstance(item, str):
+        name = item
+    else:
+        name = item['name']
+    layout_item = gui_button(f"{name}", data=item)
     gui_message(layout_item, "GM_Button_Pressed")
     # apply_control_styles(".button", "", layout_item, task)
     # gui_button()
+
+def simple_listbox_button(item):
+    gui_row("row-height: 1.5em;")
+    task = FrameContext.task
+    
+    layout_item = gui_text(f"{item}")
+    apply_control_styles(".button", "", layout_item, task)
+
+def simple_listbox_title():
+    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
+    gui_text(f"$text:Ship;justify: left;")
 
 def listbox_item_pressed(button):
     print("listbox item pressed")
     signal_emit("gm_button_selected", {"button": button})
 
+def buildIcon(item):
+    """Probably won't use, but it's a possible depiction of an alternative to the Info Panel implementation"""
+    print(f"building icon: {item}")
+    gui_row("row-height:45px;")
+    gui_icon(f"icon_index:{item};color:white;")
+    gui_text(f"$text:{item}")
 
 def gm_panel_list_item(message_obj):
     task = FrameContext.client_task
