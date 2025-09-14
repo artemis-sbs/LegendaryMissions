@@ -2,33 +2,66 @@
 //comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and has_role(COMMS_SELECTED_ID,"__player__")
     +[$gamemaster] "Message" //comms/gamemaster/message
 
+//comms if has_role(COMMS_ORIGIN_ID, 'gamemaster') and not has_role(COMMS_SELECTED_ID, "__player__") and has_any_role(COMMS_SELECTED_ID, 'Station,ship')
+    +[$gamemaster] "NPC Send to All" //comms/gamemaster/message
+    +[$gamemaster] "NPC Send to Side" //comms/gamemaster/message/side
 
 //comms/gamemaster/message if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and has_role(COMMS_SELECTED_ID,"__player__")
     +[$gamemaster] "Back" //comms
     +[$gamemaster] "Message crew" //comms/gamemaster/message/crew
+//comms/gamemaster/message if has_role(COMMS_ORIGIN_ID, 'gamemaster') and not has_role(COMMS_SELECTED_ID, "__player__")
+    gui_sub_task_schedule(handle_gamemaster_message_properties)
+    +[$gamemaster] "Back" //comms
+    +[$gamemaster] "Send":
+        prop_message = gui_get_variable("prop_message", "")
+        comms_message(prop_message, COMMS_SELECTED_ID, role("__player__"))
 
+//comms/gamemaster/message/side if has_role(COMMS_ORIGIN_ID, 'gamemaster') and not has_role(COMMS_SELECTED_ID, "__player__")
+    +[$gamemaster] "Bacdk" //comms/gamemaster/message
+    +[$gamemaster] "Send to Side":
+        prop_message = gui_get_variable("prop_message", "")
+        side = get_side(COMMS_SELECTED_ID)
+        if side is None:
+            print("SIDE IS NONE")
+            jump END
+        to = role("__player__") & role(side)
+        comms_message(prop_message, COMMS_SELECTED_ID, to)
+
+# //comms/gamemaster/message/send
 
 === handle_gamemaster_message_properties
-    default side_select = "tsn"
-    default prop_message = gui_set_variable("prop_message", "ttt")
+    # default side_select = "tsn" # Not used - yet anyway
+    default prop_message = gui_get_variable("prop_message", "msg")
     p = """
     message: 'gui_input("desc: message;",var="prop_message")'
     """
-    print(p)
+    # print(p)
     # This is gui variable, this is why we need client scope!
     gui_properties_set(p)
     yield idle
 
+
 //comms/gamemaster/message/crew if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     gui_sub_task_schedule(handle_gamemaster_message_properties)
     
-
-    +[$gamemaster] "Back" //comms
+    +[$gamemaster] "Back" //comms/gamemaster/message
+    +[$gamemaster] "Paste from Clipboard":
+        ret = gui_clipboard_get()
+        gui_set_variable("prop_message",ret)
+        prop_message = gui_get_variable("prop_message")
+        p = """
+        message: 'gui_input("desc: message;",var="prop_message")'
+        """
+        # This is gui variable, this is why we need client scope!
+        gui_properties_set(p)
+        yield idle
+    
     +[$gamemaster] "All":
         prop_message = gui_get_variable("prop_message", "")
+        # prop_message = gui_clipboard_get()
         for console_client_id in role("console"):
             crew = get_inventory_value(console_client_id, "CREW_NAME")
-            continue if crew is None or crew == ""
+            continue if crew is None # or crew == "" # I think if it's being sent to all then why should this be here?
             comms_broadcast(console_client_id, prop_message)
 
 
@@ -47,4 +80,10 @@
             prop_message = gui_get_variable("prop_message", "")
             comms_broadcast(console_client_id, prop_message)
 
+# //comms/gamemaster/message/send if has_role(COMMS_ORIGIN_ID, "gamemaster")
+#     gui_sub_task_schedule(handle_gamemaster_message_properties)
+#     +[$gamemaster] "Back" //comms/gamemaster/message
+#     +[$gamemaster] "All":
+#         prop_message = gui_get_variable("prop_message", "")
+#         # comms_message
 
