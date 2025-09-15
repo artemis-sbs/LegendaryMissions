@@ -281,7 +281,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
         gui_layout_widget("comms_control")
 
     gui_section("area: 200px,90,800px,100")
-    gui_property_list_box("options")
+    gui_property_list_box("Comms Message")
     gui_layout_widget("text_waterfall")
 
 
@@ -519,6 +519,7 @@ buttons:
     ->END
 
 ==== update_gm_stats
+    jump END
 
     # await delay_sim(seconds=10)
 
