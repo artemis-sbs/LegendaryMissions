@@ -1,5 +1,6 @@
 default gamemaster_face = random_terran()
 =$gamemaster #0E0,white,gamemaster_face
+=$confirm #ff0000,white,gamemaster_face
 
 
 //enable/comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
@@ -250,6 +251,8 @@ default gamemaster_face = random_terran()
     +[$gamemaster]"Damage" //comms/gamemaster/selected/damage
     if COMMS_ORIGIN_ID != COMMS_SELECTED_ID:
         +[$gamemaster]"Delete":
+            if has_role(COMMS_SELECTED_ID, "__player__"):
+                comms_navigate("//comms/gamemaster/confirm_delete")
             sbs.delete_object(COMMS_SELECTED_ID)
     
 //comms/gamemaster/selected/set if has_roles(COMMS_ORIGIN_ID, 'gamemaster') 
@@ -392,14 +395,18 @@ default gamemaster_face = random_terran()
         for id in ids:
             sbs.delete_object(id)
 
-    +[$gamemaster]"Player":
+    +[$gamemaster]"Player" //comms/gamemaster/area/delete/players
+        
+
+//comms/gamemaster/area/delete/players if has_role(COMMS_ORIGIN_ID, "gamemaster")
+    +[$confirm]"Confirm Delete Players":
         pos = Vec3(COMMS_ORIGIN.pos)
         size = get_inventory_value(COMMS_ORIGIN_ID, f"GAMEMASTER_lmb_SIZE", 5000)
         ids = broad_test_around(COMMS_ORIGIN_ID, size*2, size*2, 0x20)
         for id in ids:
             continue if id == COMMS_ORIGIN_ID
             sbs.delete_object(id)
-
+        comms_navigate("//comms")
 
 
 //comms/gamemaster/commands if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
@@ -498,8 +505,25 @@ default gamemaster_face = random_terran()
     + "Delete {SCIENCE_POPUP.name}":
         so = to_object(SCIENCE_POPUP_ID)
         if so is not None:
-            sbs.delete_object(SCIENCE_POPUP_ID)
+            if has_role(SCIENCE_POPUP_ID, "__player__"):
+                if get_inventory_value(SCIENCE_POPUP_ID, "gm_confirm_delete", False):
+                    comms_broadcast(client_id, "Player ship deleted.")
+                    await delay_sim(2)
+                    sbs.delete_object(SCIENCE_POPUP_ID)
+                # gui_info_panel_send_message(client_id, "This is a player ship. Confirm that you want to delete it?", "#ff0000ff") # TODO: This is a better method if it'll pop up
+                comms_broadcast(client_id, "Warning! You have tried to delete a player ship. Please confirm you wish to delete the ship.", "#ff0000")
+                set_inventory_value(SCIENCE_POPUP_ID,"gm_confirm_delete",True)
+                # After one minute, if the ship still exists, reset the delete confirmation.
+                await delay_sim(60)
+                so = to_object(SCIENCE_POPUP_ID)
+                if so is not None:
+                    set_inventory_value(SCIENCE_POPUP_ID,"gm_confirm_delete",False)
+            else:
+                sbs.delete_object(SCIENCE_POPUP_ID)
 
+//comms/gamemaster/confirm_delete if has_role(COMMS_ORIGIN_ID, "gamemaster")
+    + [$confirm]"Delete {COMMS_SELECTED.name}":
+        sbs.delete_object(COMMS_SELECTED_ID)
 
 == gm_time_limit
 " Add time to the game. Can subtract by including a '-' before the number.
