@@ -27,6 +27,8 @@ def gm_panel_list_tick(cid):
     show_gm_panel_gui(cid)
 
 def show_gm_panel_gui(cid):
+    # Let user know how to fix the issue
+    comms_broadcast(cid, "NOTE: Comms Message textbox has broken and will not work until you refresh the console. You can still use Paste from Clipboard and Send functionality without issue.")
     task = gui_task_for_client(cid)
     if task is None:
         return

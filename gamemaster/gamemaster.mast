@@ -242,6 +242,10 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
         GM_RIGHT = gui_tabbed_panel([], tab_location=1, icon_size=GAMEMASTER_CONSOLE_ICON_SIZE)
         gui_info_panel_add("Close", 149, nothing, var=GM_RIGHT)
 
+        # ~~ gui_info_panel_add("ship_data", 140, 
+        #     lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "ship_data"), 
+        #     lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "ship_data"), 
+        #     var=GM_RIGHT ) ~~
         ~~ gui_info_panel_add("science_data", 63, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data"), 
