@@ -83,6 +83,7 @@ default gamemaster_face = random_terran()
             link(COMMS_ORIGIN_ID,"extra_scan_source" ,stations_friendly)
             for p in role("__player__") & role(side):
                 link(p,"extra_scan_source" ,stations_friendly)
+            task_schedule(docking_standard_player_station)
 
 
 
