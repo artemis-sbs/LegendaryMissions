@@ -13,12 +13,7 @@ default shared DOCKING_SHIELD_COEFF = DOCKING.get("shield_coeff", 2)
 
 
 === docking_standard_player_station
-    for player_id in role("__player__"):
-        player = to_object(player_id)
-        continue if player is None
-        side = player.side 
-        side = role(side)
-        docking_set_docking_logic(player_id, side & role("station"), docking_dock_with_friendly_station)
+    docking_set_docking_logic(role("__player__"), role("station"), docking_dock_with_friendly_station)
     ->END
 
 #
@@ -40,8 +35,8 @@ distance: 600
 # This is called every 1 second
 # System assures Objects exist
 +++ enable
-# additional testing
-# to cancel yield fail
+    yield fail if DOCKING_NPC_ID == 0
+    yield fail if  not role_are_allies(DOCKING_PLAYER_ID, DOCKING_NPC_ID)
 
 +++ undocking
 # This is called when docking is released
