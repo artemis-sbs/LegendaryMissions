@@ -30,8 +30,12 @@ default shared DOCKING_SHIELD_COEFF = DOCKING.get("shield_coeff", 2)
     ->END if dock_state_string == "undocked"
     set_weapons_selection(WEAPONS_ORIGIN_ID, 0)
 
-
-
+=== docking_dock_not_allowed
+" Prevent from docking
++++ enable
+    yield fail
++++ docking
+    yield fail
 
 === docking_dock_with_friendly_station
 metadata: ``` yaml

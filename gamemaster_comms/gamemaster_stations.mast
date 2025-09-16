@@ -1,0 +1,24 @@
+
+//enable/comms if has_role(COMMS_ORIGIN_ID, "gamemaster") and has_role(COMMS_SELECTED_ID,"station")
+
+//comms if has_role(COMMS_ORIGIN_ID, "gamemaster") and has_role(COMMS_SELECTED_ID,"station")
+    +[$gamemaster]"Docking" //comms/gamemaster/station/docking
+
+//comms/gamemaster/station/docking
+    +[$gamemaster]"Allow Docking" //comms/gamemaster/station/docking/allow
+    +[$gamemaster]"Prevent Docking" //comms/gamemaster/station/docking/prevent
+
+//comms/gamemaster/station/docking/allow
+    players = role("__player__")
+    for player in players:
+        name = to_object(player).name
+        +[$gamemaster]"Allow {name} to dock":
+            docking_set_docking_logic(player, COMMS_SELECTED_ID, docking_dock_with_friendly_station)
+//comms/gamemaster/station/docking/prevent
+    players = role("__player__")
+    for player in players:
+        name = to_object(player).name
+        +[$gamemaster]"Prevent {name} from docking":
+            docking_set_docking_logic(player, COMMS_SELECTED_ID, docking_dock_not_allowed)
+    
+
