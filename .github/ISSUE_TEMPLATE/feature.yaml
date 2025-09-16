@@ -16,6 +16,7 @@ body:
     attributes:
       label: What version of Artemis Cosmos would you like enhanced?
       options:
+        - v1.2.x
         - v1.1.x
         - v1.0.6
         - v1.0.1
