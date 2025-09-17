@@ -1,0 +1,31 @@
+# This file will be used for any general modifications to ship data, e.g. roles, name, hull_id, etc.
+
+//comms/gamemaster/selected/set if has_role(COMMS_SELECTED_ID, "ship") and has_role(COMMS_ORIGIN_ID, "gamemaster")
+    gui_sub_task_schedule(properties_ship_data, {"ship":COMMS_SELECTED_ID})
+    +^1[$gamemaster]"Back" //comms
+    +[$gamemaster]"Name":
+        
+    +[$gamemaster]"Side"
+
+
+=== properties_ship_data
+metadata: ```
+ship: None
+```
+    if ship is None:
+        yield fail
+    ship = to_object(ship)
+
+    gm_ship_name = gui_get_variable("gm_ship_name", ship.name)
+    gui_set_variable("gm_ship_name", gm_ship_name)
+    gm_ship_side = gui_get_variable("gm_ship_side", ship.side)
+    gui_set_variable("gm_ship_side", gm_ship_side)
+    sides = side_keys_set()
+    side_list = ",".join(sides)
+    p = """
+    type: 'gui_drop_down("$text:{gm_ship_side};list:{side_list}", var="gm_ship_side")'
+    count: 'gui_input("desc:count;",var="gm_ship_name")'
+    """
+    # This is gui variable, this is why we need client scope!
+    gui_properties_set(p)
+    yield idle
