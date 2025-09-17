@@ -36,3 +36,42 @@ brain:
     brain_add(fleet.id, brain, None, 0, None)
     yield result to_id(fleet)
 
+
+
+=== prefab_fleet_empty
+metadata: ```
+type: prefab/fleet/empty
+side_value: raider
+fleet_roles: raider_fleet
+brain:
+  SEQ:
+    - ai_fleet_init_blackboard
+    - SEL:
+        - ai_fleet_chase_best_anger
+        - label: ai_fleet_chase_roles
+          data:
+            test_roles: station
+        - label: ai_fleet_chase_roles
+          data:
+            test_roles: __player__
+        # Nothing close find a station
+        - label: ai_fleet_chase_roles
+          data:
+            use_arena: false
+            test_roles: station
+        # No Stations go for any player
+        - label: ai_fleet_chase_roles
+          data:
+            use_arena: false
+            test_roles: __player__
+    - ai_fleet_calc_forward_vector
+    - ai_fleet_scatter_formation
+```
+
+    pos = Vec3(START_X, START_Y, START_Z)
+    fleet = fleet_spawn(pos, side_value)
+    add_role(fleet, fleet_roles)
+    # Add fleet behavior tree
+    brain_add(fleet.id, brain, None, 0, None)
+    yield result to_id(fleet)
+
