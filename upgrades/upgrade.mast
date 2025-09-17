@@ -547,8 +547,8 @@ import upgrade.py
     gui_update_shared("sh-ho-timer", "$text: +300 to shields but may damage shield generators")
     ->END
 
-//signal/cockpit_dock_success
-    comms_broadcast(0, "Docking successful called")
+//shared/signal/cockpit_dock_success
+    #comms_broadcast(0, "Docking successful called")
     if to_object(craft_id) is None or to_object(home) is None:
         ->END
     if has_role(craft_id, "cockpit") and has_role(home, "__player__"): # Only transfer upgrades if it's a player controlled craft docking with a player ship
