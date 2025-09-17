@@ -249,6 +249,7 @@ default gamemaster_face = random_terran()
     +^1[$gamemaster]"Back" //comms
     +[$gamemaster]"Set attribute" //comms/gamemaster/selected/set
     # +[$gamemaster]"Set Objective" //comms/gamemaster/selected/objective
+    +[$gamemaster]"Loadout" //comms/gamemaster/selected/loadout
     +[$gamemaster]"Damage" //comms/gamemaster/selected/damage
     if COMMS_ORIGIN_ID != COMMS_SELECTED_ID:
         +[$gamemaster]"Delete":
@@ -275,6 +276,72 @@ default gamemaster_face = random_terran()
             grid_damage_system(did, _roles)
         i+=1
 
+//comms/gamemaster/selected/loadout if has_any_role(COMMS_SELECTED_ID, "ship, station")
+    gui_sub_task_schedule(handle_gamemaster_torp_properties, {"obj":COMMS_SELECTED_ID})
+    +[$gamemaster]"Back" //comms/gamemaster/selected
+    +[$gamemaster]"Fill to Max":
+        type = gui_get_variable("gm_torp_mod_type", "Homing")
+        maxTorps = get_data_set_value(COMMS_SELECTED_ID, f"{type}_MAX",0)
+        set_data_set_value(COMMS_SELECTED_ID, f"{type}_NUM", maxTorps)
+    +[$gamemaster]"Set Torp Count":
+        type = gui_get_variable("gm_torp_mod_type", "Homing")
+        count = gui_get_variable("gm_torp_mod_count", 0)
+        count = int(count)
+        if count < 0:
+            count = 0
+        set_data_set_value(COMMS_SELECTED_ID, f"{type}_NUM", count)
+    +[$gamemaster]"Add Torpedoes":
+        type = gui_get_variable("gm_torp_mod_type", "Homing")
+        count = gui_get_variable("gm_torp_mod_count", 0)
+        count = int(count)
+        newCount = get_data_set_value(COMMS_SELECTED_ID, f"{type}_NUM", 0) + count
+        set_data_set_value(COMMS_SELECTED_ID, f"{type}_NUM", newCount)
+    +[$gamemaster]"Remove Torpedoes":
+        type = gui_get_variable("gm_torp_mod_type", "Homing")
+        count = gui_get_variable("gm_torp_mod_count", 0)
+        count = int(count)
+        curCount = get_data_set_value(COMMS_SELECTED_ID, f"{type}_NUM", 0)
+        curCount = int(curCount)
+        newCount = curCount - count
+        if newCount < 0:
+            newCount = 0
+        print(COMMS_SELECTED_ID)
+        print(f"{type}_NUM")
+        print(f"{newCount}")
+        set_data_set_value(COMMS_SELECTED_ID, f"{type}_NUM", newCount)
+    +[$gamemaster]"Remove All Torpedoes":
+        set_data_set_value(COMMS_SELECTED_ID, "Homing_NUM", 0)
+        set_data_set_value(COMMS_SELECTED_ID, "EMP_NUM", 0)
+        set_data_set_value(COMMS_SELECTED_ID, "Mine_NUM", 0)
+        set_data_set_value(COMMS_SELECTED_ID, "Nuke_NUM", 0)
+    +[$gamemaster]"Fill All to Max":
+        maxTorps = get_data_set_value(COMMS_SELECTED_ID, f"Homing_MAX",0)
+        set_data_set_value(COMMS_SELECTED_ID, f"Homing_NUM", maxTorps)
+        maxTorps = get_data_set_value(COMMS_SELECTED_ID, f"EMP_MAX",0)
+        set_data_set_value(COMMS_SELECTED_ID, f"EMP_NUM", maxTorps)
+        maxTorps = get_data_set_value(COMMS_SELECTED_ID, f"Mine_MAX",0)
+        set_data_set_value(COMMS_SELECTED_ID, f"Mine_NUM", maxTorps)
+        maxTorps = get_data_set_value(COMMS_SELECTED_ID, f"Nuke_MAX",0)
+        set_data_set_value(COMMS_SELECTED_ID, f"Nuke_NUM", maxTorps)
+
+=== handle_gamemaster_torp_properties
+    # TODO: How to deal with custom torpedo types?
+    print("Test loadout")
+    print(obj)
+    default_count = get_data_set_value(obj, "Homing_NUM",0)
+    gm_torp_mod_count = gui_get_variable("gm_torp_mod_count", default_count)
+    gui_set_variable("gm_torp_mod_count", gm_torp_mod_count)
+    gm_torp_mod_type = gui_get_variable("gm_torp_mod_type", "Homing")
+    gui_set_variable("gm_torp_mod_type", gm_torp_mod_type)
+    # Seems that we can't use f-strings inside of these multi-quote strings?
+    p = """
+    type: 'gui_drop_down("$text:{gm_torp_mod_type};list:Homing,EMP,Mine,Nuke", var="gm_torp_mod_type")'
+    count: 'gui_input("desc:count;",var="gm_torp_mod_count")'
+    """
+    # print(p)
+    # This is gui variable, this is why we need client scope!
+    gui_properties_set(p)
+    yield idle
 
 //comms/gamemaster/selected/objective # WIP - not used yet
     
@@ -312,6 +379,9 @@ default gamemaster_face = random_terran()
             if _blob is not None:
                 energy = _blob.get("energy",0)
                 _blob.set("energy", energy-20)
+    +[$gamemaster]"Refill Fuel":
+        blob = to_blob(COMMS_SELECTED_ID)
+        blob.set("energy", 1000)
 
 
 //comms/gamemaster/area if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
