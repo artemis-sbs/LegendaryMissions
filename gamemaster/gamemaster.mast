@@ -250,7 +250,8 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data"), 
             var=GM_RIGHT ) ~~
-        gui_info_panel_add("ship_details", 31, gm_panel_list, tick=gm_panel_list_tick, var=GM_RIGHT)
+        # This one was causing issues when it was opened. Changed to use properties panel
+        # gui_info_panel_add("ship_details", 31, gm_panel_list, tick=gm_panel_list_tick, var=GM_RIGHT)
         ~~ gui_info_panel_add("gamemaster_camera", 13, 
             gamemaster_panel_camera_show, 
             gamemaster_panel_camera_hide, var=GM_RIGHT) ~~

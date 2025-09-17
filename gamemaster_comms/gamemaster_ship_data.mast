@@ -1,20 +1,25 @@
 # This file will be used for any general modifications to ship data, e.g. roles, name, hull_id, etc.
 
-//comms/gamemaster/selected/set if has_role(COMMS_SELECTED_ID, "ship") and has_role(COMMS_ORIGIN_ID, "gamemaster")
-    gui_sub_task_schedule(properties_ship_data, {"ship":COMMS_SELECTED_ID})
+# TODO: Duplicate this, but for black holes and monsters
+//comms/gamemaster/selected/set if has_any_role(COMMS_SELECTED_ID, "ship,station") and has_role(COMMS_ORIGIN_ID, "gamemaster")
+    gui_sub_task_schedule(properties_ship_data, {"obj":COMMS_SELECTED_ID})
     +^1[$gamemaster]"Back" //comms
-    +[$gamemaster]"Name":
-        
-    +[$gamemaster]"Side"
-
+    +[$gamemaster]"Confirm New Name" {"ship":COMMS_SELECTED_ID}:
+        name = gui_get_variable("gm_ship_name")
+        obj = to_object(ship)
+        if obj is not None:
+            obj.name = name
+            obj.data_set.set("name_tag", name)            
 
 === properties_ship_data
-metadata: ```
-ship: None
-```
+# metadata: ```
+# ship: None
+# ```
+    if obj is None:
+        yield fail
+    ship = to_object(obj)
     if ship is None:
         yield fail
-    ship = to_object(ship)
 
     gm_ship_name = gui_get_variable("gm_ship_name", ship.name)
     gui_set_variable("gm_ship_name", gm_ship_name)
@@ -28,4 +33,10 @@ ship: None
     """
     # This is gui variable, this is why we need client scope!
     gui_properties_set(p)
+    on change gui_get_variable("gm_ship_side"):
+        side = gui_get_variable("gm_ship_side")
+        ship.set_side(side)
+        # TODO: Should sbs_utils Agent.set_side() also change this blob data? Probably not, since not all Agents have blob info?
+        ship.data_set.set("hull_side", side)
+        side_set_ship_allies_and_enemies(ship)
     yield idle

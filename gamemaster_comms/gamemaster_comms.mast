@@ -258,7 +258,7 @@ default gamemaster_face = random_terran()
             sbs.delete_object(COMMS_SELECTED_ID)
     
 //comms/gamemaster/selected/set if has_roles(COMMS_ORIGIN_ID, 'gamemaster') 
-    +[$gamemaster]"Back" //comms
+    +^1[$gamemaster]"Back" //comms
 
 //comms/gamemaster/selected/set if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and has_role(get_science_selection(COMMS_ORIGIN),"__player__")
     +[$gamemaster]"Fuel" //comms/gamemaster/selected/set/fuel
