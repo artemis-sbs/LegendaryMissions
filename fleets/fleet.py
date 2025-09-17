@@ -1,14 +1,13 @@
 
 from sbs_utils.agent import Agent, get_story_id
-from sbs_utils.mast.label import label
-from sbs_utils.procedural.execution import jump, AWAIT, get_variable
-from sbs_utils.procedural.timers import delay_sim
-from sbs_utils.procedural.query import to_object, to_id, object_exists, get_side
-from sbs_utils.procedural.space_objects import target_pos, closest, broad_test_around
-from sbs_utils.procedural.roles import role
+from sbs_utils.procedural.execution import get_variable
+from sbs_utils.procedural.query import to_object, to_id
+from sbs_utils.procedural.links import link, unlink
+
+
 from sbs_utils.helpers import FrameContext
 
-from sbs_utils.procedural.inventory import get_inventory_value
+from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.vec import Vec3
 
 
@@ -130,6 +129,32 @@ def ship_takes_damage():#event):
 def fleet_spawn(position, side):
     return Fleet(position, side)
 
+
+def fleet_add(fleet_id, npc_id):
+    fleet_id = to_id(fleet_id)
+    fleet_obj = to_object(fleet_id)
+    
+
+    npc_id = to_id(npc_id)
+    npc_obj = to_object(npc_id)
+
+    if fleet_obj is None or npc_obj is None:
+        return
+    
+    # Make sure it is on the proper side
+    npc_obj.side = fleet_obj.side
+    
+    set_inventory_value(npc_id, "my_fleet_id", fleet_id)
+    link(fleet_id,"ship_list", npc_id)
+
+
+def fleet_remove(fleet_id, npc_id):
+    fleet_id = to_id(fleet_id)
+    npc_id = to_id(npc_id)
+
+    set_inventory_value(npc_id, "my_fleet_id", None)
+    unlink(fleet_id,"ship_list", npc_id)
+    
 
 
 
