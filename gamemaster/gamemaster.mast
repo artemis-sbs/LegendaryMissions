@@ -284,9 +284,14 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
         gui_row()
         gui_layout_widget("comms_control")
 
-    gui_section("area: 200px,90,800px,100")
-    gui_property_list_box("Comms Message")
+    # gui_section("area: 200px,85,800px,100")
+    gui_section("area: 0, 85, 100, 100")
+    with gui_sub_section(f"col-width: {info_panel_width}"):
+        gui_blank()
+    gui_property_list_box("GM Inputs")
     gui_layout_widget("text_waterfall")
+    with gui_sub_section(f"col-width: {info_panel_width}"):
+        gui_blank()
 
 
     #region Listboxes for Menus
@@ -650,7 +655,26 @@ variable:
     gui_cinematic_full_control(client_id, sel, source, sel, Vec3())
     ->END
 
-
+=== gamemaster_view_perspective
+metadata: ```
+ship: None
+```
+    g = sbs.get_ship_of_client(client_id)
+    # return the gm to omnicient view
+    ships = role("__npc__")&role("__player__") # I think this includes stations?
+    if ship is None:
+        link(g,"extra_scan_source" ,ships)
+    else:
+        # See from perspective of the object, which might not actually be a ship? Could be a station?
+        unlink(g, "extra_scan_source", ships)
+        links = linked_to(ship, "extra_scan_source")
+        link(g,"extra_scan_source",links)
+    ->END
+//comms/gamemaster/selected if has_role(COMMS_ORIGIN_ID, "gamemaster")
+    +[$gamemaster]"Set Perspective" //comms/gamemaster/selected/perspective
+//comms/gamemaster/selected/perspective
+    +[$gamemaster]"Set Omnicient" gamemaster_view_perspective
+    +[$gamemaster]"Set Ship Perspective" gamemaster_view_perspective {"ship":COMMS_SELECTED_ID}
 
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "gamemaster")
     #rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)
