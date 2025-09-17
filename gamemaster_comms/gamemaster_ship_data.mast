@@ -28,8 +28,8 @@
     sides = side_keys_set()
     side_list = ",".join(sides)
     p = """
-    type: 'gui_drop_down("$text:{gm_ship_side};list:{side_list}", var="gm_ship_side")'
-    count: 'gui_input("desc:count;",var="gm_ship_name")'
+    Name: 'gui_input("desc:count;",var="gm_ship_name")'
+    Side: 'gui_drop_down("$text:{gm_ship_side};list:{side_list}", var="gm_ship_side")'
     """
     # This is gui variable, this is why we need client scope!
     gui_properties_set(p)

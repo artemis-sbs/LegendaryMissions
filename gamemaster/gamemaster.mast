@@ -395,6 +395,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
             on gui_message(create):
                 print("New side created")
                 prefab_spawn(prefab_side_generic, data={"name":new_side.value, "key":new_side.value.lower()})
+                print(side_keys_set())
                 side = new_side.value
                 jump gamemaster_side_relations
     gui_row("col-width: 1.5em;")
@@ -411,15 +412,15 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
         side = to_side_id(selected_side.value)
         gui_row("row-height: 2em;")
         SIDE_NAME = side_display_name(side)
-        side_name = gui_input("$text: {SIDE_NAME}; desc: Name")
+        side_name = gui_input("$text:{SIDE_NAME}; desc: Name")
         gui_spacer_row()
         gui_row("row-height: 2em;")
         SIDE_KEY = get_inventory_value(side, "side_key")
-        side_key = gui_input("$text: {SIDE_KEY}; desc: Key")
+        side_key = gui_input("$text:{SIDE_KEY}; desc: Key")
         gui_spacer_row()
         gui_row("row-height: 4em;")
         SIDE_DESC = get_inventory_value(side, "side_desc")
-        side_desc = gui_input("$text: {SIDE_DESC}; desc: Description")
+        side_desc = gui_input("$text:{SIDE_DESC}; desc: Description")
         # TODO: Add functionality to add/remove races. Probably need a race prefab
         gui_row("row-height: 0.8em;")
         gui_text(" ")
@@ -433,12 +434,11 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
                 old_key = get_inventory_value(side, "side_key")
                 # Update all members of the side
                 side_members = side_members_set(side)
-                side_members.add(side)
                 add_role(side_members, side_key.value)
                 remove_role(side_members, old_key)
                 for m in side_members:
                     mo = to_object(m)
-                    mo.side = side_key.value
+                    mo.side = side_key.value # Here we assume that the object is a spaceobject.
                 set_inventory_value(side, "side_key", side_key.value)
             if get_inventory_value(side, "side_desc") != side_desc.value:
                 set_inventory_value(side, "side_desc", side_desc.value)
