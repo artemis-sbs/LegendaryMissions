@@ -6,14 +6,14 @@ default gamemaster_face = random_terran()
 //enable/comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
 
 
-//comms if gm_comms_path(COMMS_ORIGIN_ID, "test_comms")
-    +"Test1":
-        set_inventory_value(COMMS_ORIGIN_ID,"spawn/ship/single")
-    +"Test2":
-        set_inventory_value(COMMS_ORIGIN_ID, "spawn/ship/fleet")
+# //comms if gm_comms_path(COMMS_ORIGIN_ID, "test_comms")
+#     +"Test1":
+#         set_inventory_value(COMMS_ORIGIN_ID,"spawn/ship/single")
+#     +"Test2":
+#         set_inventory_value(COMMS_ORIGIN_ID, "spawn/ship/fleet")
 
-//comms if gm_comms_path(COMMS_ORIGIN_ID, "spawn/ship/single")
-    +"Single"
+# //comms if gm_comms_path(COMMS_ORIGIN_ID, "spawn/ship/single")
+#     +"Single"
 
 //comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     gui_set_variable("gm_selected", COMMS_SELECTED_ID)
@@ -610,6 +610,6 @@ minutes: 0 # minutes to add
     time = get_time_remaining(SHARED, "time_limit")
     set_timer(SHARED, "time_limit", time + time_diff)
     time = format_time_remaining(SHARED, "time_limit")
-    comms_broadcast(0,"Remaining Time: {time}")
+    comms_broadcast(client_id,"Remaining Time: {time}")
     ->END
 

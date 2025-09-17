@@ -561,41 +561,6 @@ buttons:
 
 #region GameMaster Ship Details Info Panel Stuff
 
-//comms/gamemaster/test_comms
-    +"Test1"
-    +"Test2"
-
-=== update_gm_ship_details
-metadata: ```
-variable: 
-```
-    if variable is None:
-        comms_broadcast(0, "var is None")
-    # on change variable:
-        
-=== update_ship_name
-    newname = get_variable("gm_ship_name")
-    sel = gui_get_variable("gm_selection")
-    ship = to_object(sel)
-    if ship is not None:
-        ship.name = newname
-        to_blob(ship).set("name_tag",newname)
-    ->END
-=== update_ship_side
-    new_side = get_variable("gm_ship_side")
-    sel = gui_get_variable("gm_selection")
-    ship = to_object(sel)
-    if ship is not None:
-        ship.set_side(new_side)
-        to_blob(ship).set("hull_side", new_side)
-        side_set_ship_allies_and_enemies(ship)
-    ->END
-=== gm_select_spawn_test1
-    # comms_broadcast(0, "test1")
-    jump END
-=== gm_select_spawn_test2
-    # comms_broadcast(0, "test2")
-    jump END
 
 === GM_Button_Pressed
     # Should have these variables available:
@@ -671,11 +636,12 @@ ship: None
         links = linked_to(ship, "extra_scan_source")
         link(g,"extra_scan_source",links)
     ->END
-//comms/gamemaster/selected if has_role(COMMS_ORIGIN_ID, "gamemaster")
-    +[$gamemaster]"Set Perspective" //comms/gamemaster/selected/perspective
-//comms/gamemaster/selected/perspective
-    +[$gamemaster]"Set Omnicient" gamemaster_view_perspective
-    +[$gamemaster]"Set Ship Perspective" gamemaster_view_perspective {"ship":COMMS_SELECTED_ID}
+# TODO: Not functional yet.
+# //comms/gamemaster/selected if has_role(COMMS_ORIGIN_ID, "gamemaster")
+#     +[$gamemaster]"Set Perspective" //comms/gamemaster/selected/perspective
+# //comms/gamemaster/selected/perspective
+#     +[$gamemaster]"Set Omnicient" gamemaster_view_perspective
+#     +[$gamemaster]"Set Ship Perspective" gamemaster_view_perspective {"ship":COMMS_SELECTED_ID}
 
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "gamemaster")
     #rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)

@@ -262,28 +262,29 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
         pass
     set_inventory_value(cid, "gm_menu", menu)
 
-def open_side_management_screen():
-    signal_emit("side_management")
-    
-def gm_comms_path(COMMS_ORIGIN_ID, path) -> bool:
-    if not has_role(COMMS_ORIGIN_ID, "gamemaster"):
-        return False
-    return get_inventory_value(COMMS_ORIGIN_ID, "gm_menu", "") == path
+# def open_side_management_screen():
+#     signal_emit("side_management")
 
-def buildShipPropsPanel(title, props_list):
-    gui_property_list_box(title)
-    gui_properties_set(props_list)
+# TODO: KEEP FOR NOW
+# def gm_comms_path(COMMS_ORIGIN_ID, path) -> bool:
+#     if not has_role(COMMS_ORIGIN_ID, "gamemaster"):
+#         return False
+#     return get_inventory_value(COMMS_ORIGIN_ID, "gm_menu", "") == path
+
+# def buildShipPropsPanel(title, props_list):
+#     gui_property_list_box(title)
+#     gui_properties_set(props_list)
     
-def build_menu(button_names, button_labels=None, button_height=10, width=100):
-    # with gui_sub_section(style=f"col-width: {width}px; row-height: {button_height*len(button_names)}px;"):
-    # with menu:
-        for button in range(len(button_names)):
-            op = None
-            if button_labels is not None:
-                op = button_labels[button]
-            gui_row()
-            gui_button(button_names[button], style=f"row-height: {button_height}px;", on_press="GM_Button_Pressed")
-            # gui_row()
+# def build_menu(button_names, button_labels=None, button_height=10, width=100):
+#     # with gui_sub_section(style=f"col-width: {width}px; row-height: {button_height*len(button_names)}px;"):
+#     # with menu:
+#         for button in range(len(button_names)):
+#             op = None
+#             if button_labels is not None:
+#                 op = button_labels[button]
+#             gui_row()
+#             gui_button(button_names[button], style=f"row-height: {button_height}px;", on_press="GM_Button_Pressed")
+#             # gui_row()
 
 def nothing(cid, left, top, width, height, widget=""):
     """Literally does nothing"""
@@ -296,14 +297,14 @@ def gui_spacer_row(row_height="0.2em"):
     # gui_row()
 
 
-def spawn_sub_menu(button):
-    bounds = button.bounds
-    if bounds is None:
-        from sbs_utils.pages.layout.bounds import Bounds
-        bounds = Bounds(0,0,150,100)#shouldn't be a thing
-    gui_section(f"area: {bounds.right}, {bounds.top}, {bounds.right + 150}, 100")
-    with gui_sub_section():
-        gui_button("Testing")
+# def spawn_sub_menu(button):
+#     bounds = button.bounds
+#     if bounds is None:
+#         from sbs_utils.pages.layout.bounds import Bounds
+#         bounds = Bounds(0,0,150,100)#shouldn't be a thing
+#     gui_section(f"area: {bounds.right}, {bounds.top}, {bounds.right + 150}, 100")
+#     with gui_sub_section():
+#         gui_button("Testing")
 
 # def type(obj):
 #     return (obj)

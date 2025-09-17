@@ -25,7 +25,7 @@
     gui_set_variable("gm_ship_name", gm_ship_name)
     gm_ship_side = gui_get_variable("gm_ship_side", ship.side)
     gui_set_variable("gm_ship_side", gm_ship_side)
-    sides = side_keys_set()
+    sides = sorted(list(side_keys_set()))
     side_list = ",".join(sides)
     p = """
     Name: 'gui_input("desc:count;",var="gm_ship_name")'
