@@ -255,7 +255,8 @@ default gamemaster_face = random_terran()
         +[$gamemaster]"Delete":
             if has_role(COMMS_SELECTED_ID, "__player__"):
                 comms_navigate("//comms/gamemaster/confirm_delete")
-            sbs.delete_object(COMMS_SELECTED_ID)
+            else:
+                sbs.delete_object(COMMS_SELECTED_ID)
     
 //comms/gamemaster/selected/set if has_roles(COMMS_ORIGIN_ID, 'gamemaster') 
     +^1[$gamemaster]"Back" //comms
@@ -470,6 +471,7 @@ default gamemaster_face = random_terran()
         
 
 //comms/gamemaster/area/delete/players if has_role(COMMS_ORIGIN_ID, "gamemaster")
+    +[$gamemaster]"Cancel Delete" //comm/gamemaster/area/delete
     +[$confirm]"Confirm Delete Players":
         pos = Vec3(COMMS_ORIGIN.pos)
         size = get_inventory_value(COMMS_ORIGIN_ID, f"GAMEMASTER_lmb_SIZE", 5000)
@@ -593,6 +595,7 @@ default gamemaster_face = random_terran()
                 sbs.delete_object(SCIENCE_POPUP_ID)
 
 //comms/gamemaster/confirm_delete if has_role(COMMS_ORIGIN_ID, "gamemaster")
+    +^1[$gamemaster]"Cancel Delete" //comms
     + [$confirm]"Delete {COMMS_SELECTED.name}":
         sbs.delete_object(COMMS_SELECTED_ID)
 

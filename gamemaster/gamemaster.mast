@@ -97,7 +97,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     #comms_navigate("//comms/gamemaster")
     # Whole screen
     # Putting the 2d view across the entire screen
-    gui_section(style="area:0,45px,100,100;")
+    gui_section(style="area:0,0,100,100;")
     gui_layout_widget("science_2d_view")
 
     # Whole screen
