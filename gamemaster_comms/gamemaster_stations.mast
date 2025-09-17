@@ -5,20 +5,26 @@
     +[$gamemaster]"Docking" //comms/gamemaster/station/docking
 
 //comms/gamemaster/station/docking
+    +[$gamemaster] "Back" //comms
     +[$gamemaster]"Allow Docking" //comms/gamemaster/station/docking/allow
     +[$gamemaster]"Prevent Docking" //comms/gamemaster/station/docking/prevent
 
 //comms/gamemaster/station/docking/allow
+    +[$gamemaster]"Back" //comms/gamemaster/station/docking
     players = role("__player__")
     for player in players:
         name = to_object(player).name
-        +[$gamemaster]"Allow {name} to dock":
+        +[$gamemaster]"Allow {name} to dock" {"player": player}:
+            comms_broadcast(client_id, f"{name} is now allowed to dock with this station")
             docking_set_docking_logic(player, COMMS_SELECTED_ID, docking_dock_with_friendly_station)
 //comms/gamemaster/station/docking/prevent
+    +[$gamemaster]"Back" //comms/gamemaster/station/docking
     players = role("__player__")
     for player in players:
         name = to_object(player).name
-        +[$gamemaster]"Prevent {name} from docking":
+        +[$gamemaster]"Prevent {name} from docking" {"player": player}:
+            # print(player)
+            comms_broadcast(client_id, f"{name} not allowed to dock with this station")
             docking_set_docking_logic(player, COMMS_SELECTED_ID, docking_dock_not_allowed)
     
 
