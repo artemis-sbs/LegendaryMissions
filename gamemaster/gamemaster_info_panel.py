@@ -20,7 +20,7 @@ def gm_panel_list(cid, left, top, width, height):
 
 def gm_panel_list_tick(cid):
     sel = gui_get_variable("gm_selection")
-    comms_broadcast(0, f"SEL: {sel}")
+    # comms_broadcast(0, f"SEL: {sel}")
     task = gui_task_for_client(cid)
     if task is None:
         return 1
@@ -184,9 +184,9 @@ def show_gm_stats(client_id, top, left, width, height):
     side_counts = list()
     for side in sides:
         r = side_members_set(side)-any_role("shuttle,fighter,gamemaster")
-        for m in r:
-            o = to_object(m)
-            comms_broadcast(0, o.name)
+        # for m in r:
+        #     o = to_object(m)
+            # comms_broadcast(0, o.name)
         # r = role("raider") 
         count=len(r)
         if count > 0:

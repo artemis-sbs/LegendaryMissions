@@ -25,7 +25,7 @@ def get_gm_label():
         if not l.startswith("gamemaster_menu"):
             continue
         m = all_labels[l]
-        comms_broadcast(0, f"Label path: {m.path}")
+        # comms_broadcast(0, f"Label path: {m.path}")
         if m.path == "__overview__":
             init_label = m
         else:

@@ -1,6 +1,6 @@
 # This file is for any SPAWN related code, particular via the comms menu.
 //comms/gamemaster/spawn if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and not has_any_role(COMMS_SELECTED_ID, "ship, station")
-    gui_sub_task_schedule(properties_gm_filter_ships, {"obj":COMMS_SELECTED_ID})
+    # gui_sub_task_schedule(properties_gm_filter_ships)
     +^1[$gamemaster]"Back" //comms
     +[$gamemaster]"Ship" //comms/gamemaster/spawn/ship
     +[$gamemaster]"Friendly" //comms/gamemaster/spawn/friend
@@ -9,10 +9,25 @@
     +[$gamemaster]"Terrain" //comms/gamemaster/spawn/terrain
     +[$gamemaster]"Player" //comms/gamemaster/spawn/player
 
-=== properties_gm_filter_ships
+# TODO: Use this to filter ship spawning
+# === properties_gm_filter_ships
 
+#     # default_filter = gui_get_variable(obj, "gm_ship_filter","")
+#     gm_ship_filter = gui_get_variable("gm_ship_filter", "")
+#     gui_set_variable("gm_ship_filter", gm_ship_filter)
 
-    yield idle
+#     gm_ship_side_filter = gui_get_variable("gm_ship_side_filter", "Kralien")
+#     gui_set_variable("gm_ship_side_filter", gm_ship_side_filter)
+
+#     sides = sorted(list(side_keys_set()))
+#     side_list = ",".join(sides)
+#     p = """
+#     side: 'gui_drop_down("$text:{gm_ship_filter};list:{side_list};",var="gm_ship_side_filter")'
+#     filter: 'gui_input("desc:filter text;",var="gm_ship_filter")'
+#     """
+#     # This is gui variable, this is why we need client scope!
+#     gui_properties_set(p)
+#     yield idle
 
 
 //comms/gamemaster/spawn/terrain if has_roles(COMMS_ORIGIN_ID, 'gamemaster') 
@@ -44,6 +59,7 @@
 
 
 //comms/gamemaster/spawn/station if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    # gui_sub_task_schedule(properties_gm_filter_ships)
     station_data = ship_data_filter_ship_data_by_side(None, None, "station", False)
 
     +^1[$gamemaster]"Back" //comms
@@ -115,6 +131,7 @@
         prefab_spawn(prefab_fleet_raider, {"race":side, "ship_roles": side, "fleet_difficulty":diff, "START_X":pos.x, "START_Y":pos.y, "START_Z":pos.z})
 
 //comms/gamemaster/spawn/ship if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    # gui_sub_task_schedule(properties_gm_filter_ships)
     # TODO use ship_data info instead of this list
     races = ["Arvonian", "Kralien", "Torgoth","Skaraan","Ximni", "Pirate", "TSN", "USFP" ]
     +^1[$gamemaster]"Back" //comms
