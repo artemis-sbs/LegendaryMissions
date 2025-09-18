@@ -82,6 +82,7 @@ default gamemaster_face = random_terran()
     yield FAIL if so is None
 
     old_art_id = get_inventory_value(BT_ID, "visible_art_id")
+    yield FAIL if old_art_id is None # This allows us to remove cloak while it's active, and the particle effect won't trigger when the timer runs out.
     #log(f"uncloak to {old_art_id}", "elites")
     so.set_art_id(old_art_id)
     sim.force_update_to_clients(BT_ID,0)
