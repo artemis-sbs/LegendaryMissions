@@ -5,11 +5,14 @@ dolly = 50
 orbit = 180.0
 do_move = 0
 property_pane = None
+info_panel_width = "200px"
 
 default SETTINGS = settings_get_defaults()
 default shared GAMEMASTER_CONSOLE = SETTINGS.get("GAMEMASTER", {"enable": True})
 default shared GAMEMASTER_CONSOLE_ENABLED = GAMEMASTER_CONSOLE.get("enable", True)
 default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
+default shared GAMEMASTER_CONSOLE_BETA = GAMEMASTER_CONSOLE.get("beta", False)
+default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_size", 45)
 
 @console/gamemaster !0 ^100 "Game Master" if GAMEMASTER_CONSOLE_ENABLED
 " Affect the overall battle
@@ -36,10 +39,17 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     jump login_screen
 
 --- full_console
+    # for testing Side management screen
+    # side = "tsn"
+    # jump gamemaster_side_relations# {"side": "tsn"}
+    # ->END
     GAMEMASTER_SKIP_PIN = False
 
     # Need Sci in the name for science selection
     gui_activate_console("gamemaster_sci")
+
+    on signal side_management:
+        jump gamemaster_side_relations
 
     _ship_id = sbs.get_ship_of_client(client_id) 
     faction_ship = to_object(_ship_id)
@@ -63,9 +73,15 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 
     last_sci = cambot_id
     #
-    # Should have a way to get all factions/side
+    # Should have a way to get all factions/side - now we do!
     #
-    #cambot.data_set.set("ally_list","tsn,civ,raider",0)
+    side = faction_ship.side
+    sel = get_inventory_value(cambot_id, "gm_last_selected_side")
+    if sel is not None:
+        side = sel
+    cambot.side = side
+    side_set_ship_allies_and_enemies(cambot)
+    #cambot.data_set.set("ally_list","tsn,civ,raider",0) # This is set by side_set_ship_allies_and_enemies()
     cambot.data_set.set("ship_base_scan_range", 15000,0)
     
     await delay_sim(1)
@@ -79,98 +95,495 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     follow_route_select_comms(camera_id, camera_id)
     
     #comms_navigate("//comms/gamemaster")
-
+    # Whole screen
+    # Putting the 2d view across the entire screen
+    gui_section(style="area:0,0,100,100;")
+    gui_layout_widget("science_2d_view")
 
     # Whole screen
-    gui_section(style="area:0,45px,100,100;")
+    section = gui_section(style="area:0,45px,100,100;")
     # Left
+    
+    widget_list = "3dview^science_data^comms_waterfall^comms_control"
+    # if not GAMEMASTER_CONSOLE_BETA:
+    #     widget_list += "^comms_control"
+    gui_update_widgets(widget_list,"")
+    #region Left Side
 
-    gui_update_widgets("3dview^science_data^comms_waterfall^comms_control","")
-    with gui_sub_section("col-width:350px;"):
+    # Just testing listboxe
+    # gui_sub_section(f"col-width: {info_panel_width}")
+    # gui_list_box([140, 10, 12], "", buildIcon, select=True)
+    
+    gss = gui_sub_section(f"col-width:{info_panel_width};")
+    
+    with gss:
+        # This is the left hand info panel
         with gui_sub_section():
             gui_row("row-height: 50;")
-            GM_LEFT = gui_tabbed_panel([], tab_location=0)
+            GM_LEFT = gui_tabbed_panel([], tab_location=0, icon_size=GAMEMASTER_CONSOLE_ICON_SIZE)
+            gui_info_panel_add("Close", 151, nothing, var=GM_LEFT)
             gui_info_panel_add("instruction", 82, gamemaster_panel_instructions, var= GM_LEFT)
+            if GAMEMASTER_CONSOLE_BETA:
+                ~~ gui_info_panel_add("test_comms", 0, 
+                lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_control"), 
+                lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+                var=GM_LEFT ) ~~
+                # ~~ gui_info_panel_add("spawn", 154, 
+                # lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn"), 
+                # lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, ""), 
+                # var=GM_LEFT ) ~~
+            if GAMEMASTER_CONSOLE_BETA:
+                ~~ gui_info_panel_add("spawn_ship", 140, 
+                lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn/ship"), 
+                lambda cid, left, top, width, height: nothing(cid, left, top, width, height, ""), 
+                var=GM_LEFT ) ~~
+                ~~ gui_info_panel_add("spawn_fleet", 98, 
+                lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn/fleet"), 
+                lambda cid, left, top, width, height: nothing(cid, left, top, width, height, ""), 
+                var=GM_LEFT ) ~~
+                ~~ gui_info_panel_add("spawn_starbase", 114, 
+                lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "spawn/starbase"), 
+                lambda cid, left, top, width, height: nothing(cid, left, top, width, height, ""), 
+                var=GM_LEFT ) ~~
+                ~~ gui_info_panel_add("spawn_terrain", 51, 
+                lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "terrain"), 
+                lambda cid, left, top, width, height: nothing(cid, left, top, width, height, ""), 
+                var=GM_LEFT ) ~~
+                ~~ gui_info_panel_add("spawn_monster", 78, 
+                lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "monster"), 
+                lambda cid, left, top, width, height: nothing(cid, left, top, width, height, ""), 
+                var=GM_LEFT ) ~~
+            ~~ gui_info_panel_add("configure_world", 13, 
+            lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "config/world"), 
+            lambda cid, left, top, width, height: nothing(cid, left, top, width, height, ""), 
+            var=GM_LEFT ) ~~
+                # ~~ gui_info_panel_add("comms_control", 137, 
+                # lambda cid, left, top, width, height: gm_gui_panel_widget_show(cid, left, top, width, height, "comms_control"), 
+                # lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
+                # var=GM_LEFT ) ~~
             gui_info_panel_add("message", 83, gui_panel_console_message, var= GM_LEFT)
             gui_info_panel_add("messages", 84, gui_panel_console_message_list,var=GM_LEFT)
             
             gui_row("row-height: 10;")
-            gui_layout_widget("text_waterfall")
+            gui_blank()
         gui_row()
-        with gui_sub_section():
-            if is_timer_set(SHARED, "time_limit"):
-                gui_row("row-height: 45px")
-                gui_text("$text: time left;justify: right;font:gui-3;")
-                t = format_time_remaining(SHARED, "time_limit")
-                gui_text(f"$text: {t};justify:left;font:gui-3;", style="tag: sh_game_time;padding:20px;")    
-
-            gui_row("row-height: 45px")
-            # Show remaining enemy count
-            r = role("raider") 
-            count=len(r)
-
-            gui_text("$text: raider count;justify:right;font:gui-3;")
-            gui_text(f"$text: {count};justify:left;font:gui-3;", style="tag: sh_raider_count;padding:20px;")
-  
+        
+            # gui_layout_widget("text_waterfall")
+            
+            # left = 0
+            # top = 300
+            # width = 100
+            # height = 100
+            # ~~sbs.send_client_widget_rects(
+            #     client_id,
+            #     "text_waterfall",
+            #     top,
+            #     left,
+            #     left + width,
+            #     top + height,
+            #     left,
+            #     top,
+            #     left + width,
+            #     top + height,
+            # )~~
+    # gui_row()
+        # with gui_sub_section():
+    
     task_schedule(gamemaster_move_camera_sync)
-
+    #endregion
 
     # Middle
+    #region Middle
     with gui_sub_section():
         gui_row()
-        #gui_layout_widget("science_2d_view")
-        gui_layout_widget("science_2d_view")
+        # This spacer is hopefully a temporary band-aid solution so we don't cover up the 2d zoom controls
+        # gui_spacer_row("60px;")
+        # if GAMEMASTER_CONSOLE_BETA:
+        #     test_item = {"name":"Test1","on_press":"Help"}
+        #     gui_sub_section()#style="col-width: 100px;")
+        #     glb = gui_list_box(items=["test","two","three","Four"], style="", select=True, collapsible=True)
+        #     # glb.items = list(("Testing"))
+        #     set_inventory_value(client_id, "gm_list_box_1", glb)
+        #     on change glb.get_value():
+        #         newVal = glb.get_value()
+        #         comms_broadcast(0, f"{newVal}")
+        #         print(f"{newVal}")
+        #         glb.items.append("hi")
+        #         gui_represent(glb)
+
+        #     gui_sub_section()#style="col-width: 100px;")
+        #     glb2 = gui_list_box(items=[], style="", item_template=listbox_button)#, select=True)
+        #     set_inventory_value(client_id, "gm_list_box_2", glb2)
+
+        #     gui_sub_section()#style="col-width: 100px;")
+        #     glb3 = gui_list_box(items=[], style="", item_template=listbox_button)#, select=True)
+        #     set_inventory_value(client_id, "gm_list_box_3", glb3)
+
+        #     gui_sub_section()#style="col-width: 100px;")
+        #     glb4 = gui_list_box(items=[], style="", item_template=listbox_button)#, select=True)
+        #     # glb4 = ~~gui_list_box(items=["Test"], style="", item_template=lambda item: listbox_button(item, 4))~~
+        #     set_inventory_value(client_id, "gm_list_box_4", glb4)
+
+        #     gui_sub_section()#style="col-width: 100px;")
+        #     glb5 = gui_list_box(items=[], style="", item_template=listbox_button)#, select=True)
+        #     set_inventory_value(client_id, "gm_list_box_5", glb5)
+    #endregion
 
     # Right
 
-    
-    with gui_sub_section("col-width:25;"):
+    #region Right Side
+    with gui_sub_section(f"col-width:{info_panel_width};"):
+        #region List Box
         gui_row("row-height: 10;")
-        gui_property_list_box("options")
+        # TODO: Find a use for property list boxes
+        # gui_property_list_box("options")
 
         gui_row("row-height:45;margin:0,0,0,10px;")
-        GM_RIGHT = gui_tabbed_panel([], tab_location=1)
+        GM_RIGHT = gui_tabbed_panel([], tab_location=1, icon_size=GAMEMASTER_CONSOLE_ICON_SIZE)
+        gui_info_panel_add("Close", 149, nothing, var=GM_RIGHT)
 
-        ~~ gui_info_panel_add("comms_control", 137, 
-            lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_control"), 
-            lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_control"), 
-            var=GM_RIGHT ) ~~
+        # ~~ gui_info_panel_add("ship_data", 140, 
+        #     lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "ship_data"), 
+        #     lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "ship_data"), 
+        #     var=GM_RIGHT ) ~~
         ~~ gui_info_panel_add("science_data", 63, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "science_data"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "science_data"), 
             var=GM_RIGHT ) ~~
+        # This one was causing issues when it was opened. Changed to use properties panel
+        # gui_info_panel_add("ship_details", 31, gm_panel_list, tick=gm_panel_list_tick, var=GM_RIGHT)
         ~~ gui_info_panel_add("gamemaster_camera", 13, 
             gamemaster_panel_camera_show, 
             gamemaster_panel_camera_hide, var=GM_RIGHT) ~~
+        gui_info_panel_add("game_stats", 15, show=show_gm_stats, hide=hide_gm_stats, var=GM_RIGHT)
         ~~ gui_info_panel_add("comms_waterfall", 112, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall"),
             var=GM_RIGHT ) ~~
-
-
+        #endregion
         
         gui_row()
-        gui_layout_widget("comms_sorted_list")
-
+        #region Comms Sorted List and associated code
+        csl = gui_layout_widget("comms_sorted_list")
+        gui_row()
+        gui_row("tag:toggle;row-height: 1.5em;")
+        toggle = gui_button("Toggle Comms List", style="justify: center") # Pressing this button will toggle the comms sorted list
+        show = True
+        on gui_message(toggle):
+            show = not show
+            if show:
+                gui_show(csl)
+            else:
+                gui_hide(csl)
+        #endregion
+    #endregion
     
+    if not GAMEMASTER_CONSOLE_BETA:
+        # Putting the comms controls here for now
+        # TODO: Don't want to rely on gm comms too much long-term
+        gui_section("area: 0,50,200px,100")
+        gui_row()
+        gui_layout_widget("comms_control")
+
+    # gui_section("area: 200px,85,800px,100")
+    gui_section("area: 0, 85, 100, 100")
+    with gui_sub_section(f"col-width: {info_panel_width}"):
+        gui_blank()
+    gui_property_list_box("GM Inputs")
+    gui_layout_widget("text_waterfall")
+    with gui_sub_section(f"col-width: {info_panel_width}"):
+        gui_blank()
+
+
+    #region Listboxes for Menus
+    # gui_section(f"area: {GAMEMASTER_CONSOLE_ICON_SIZE}px,100px,100,100")
+    # with gui_sub_section("col-width: 150px;"):
+    #     sides = get_sides()
+    #     gui_row("row-height: 1.4em;")
+    #     sides_list = ",".join(sides)
+    #     print(f"Sides[0]: {sides[0]}")
+    #     side_dropdown = gui_drop_down("$text:{sides[0]};list:{sides_list}")
+    #     side_dropdown.value =sides[0]
+    #     gui_spacer_row()
+    #     with gui_sub_section():
+    #         items = list()
+
+    #         # Ships
+    #         #TODO Try using custom function with buttons? Will need to figure out a way to get around the onclick issues
+    #         ships = gm_get_ships_for_side(side_dropdown.value, [], ["station","starbase","cockpit"])
+    #         items.append(buildListboxHeader("Ships",True))
+    #         for ship in ships:
+    #             items.append(ship)
+    #         print(f"Ship Items: {items}")
+
+    #         # Stations
+    #         items.append(buildListboxHeader("Stations",True))
+    #         ships = gm_get_ships_for_side(side_dropdown.value, ["station"], [])
+    #         for ship in ships:
+    #             items.append(ship)
+
+    #         # Fleets
+    #         items.append(buildListboxHeader("Stations",True))
+    #         ships = gm_get_ships_for_side(side_dropdown.value, ["station"], ["ship","cockpit"])
+    #         for ship in ships:
+    #             items.append(ship)
+
+    #         glb = gui_list_box(items=items, style="background: #0f284442", select=True, collapsible=True)
+    #         set_inventory_value(client_id, "gm_list_box_1", glb)
+    #         # gui_blank()
+    #         gui_row()
+    #         on change glb.get_value():
+    #             newVal = glb.get_value()
+    #             comms_broadcast(0, f"{newVal}")
+    #             print(f"{newVal}")
+    #             glb.items.append("hi")
+    #             gui_represent(glb)
+        
+    #         gui_blank()
+    #     with gui_sub_section():
+    #         items = [">>Greet", "Hello", "hi", ">>Yo", "new", "column"]
+    #         ret = gm_convert_listbox_items(items)
+    #         glb2 = gui_list_box(ret, "background: #0f284442", select=True, collapsible=True)
+    #     gui_blank()
+    #endregion
+
+
     task_schedule(update_gm_stats)
     await gui()
 
+
+
+--- gamemaster_side_relations
+    # print("Getting mast labels")
+    # labels = role("__MAST_LABEL__") #should get all mast labels
+    # for l in labels:
+    #     l = to_object(l)
+    #     if l.name.startswith("__route__signal"):
+    #         print(l.name)
+    default_side = side
+
+    print("--------------------gamemaster_side_relations------------------------")
+    print("{default_side}")
+    side_ids = sides_set()
+    side_names = set()
+    for s in side_ids:
+        side_names.add(side_display_name(s))
+    sides = sorted(list(side_names))
+    relations = list(("Allies", "Neutral", "Enemies"))
+    relations_value = list((1,0,-1))
+    # Left, Top, Right, Bottom
+    gui_region("area: 10,5,90,15")
+    gui_row()
+
+    #region Top Side Stuff
+    with gui_sub_section("row-height: 50px; col-width: 20;"):
+        # gui_row()
+        with gui_sub_section("col-width: 5em;"):
+            gui_text("Select Side: ")
+        with gui_sub_section("col-width: 8em;"):
+            side_list = ",".join(sides)
+            name = side_display_name(default_side)
+            selected_side = gui_drop_down("$text:{name};list:{side_list}")
+            selected_side.value = default_side
+        gui_blank()
+        with gui_sub_section("col-width: 5em;"):
+            gui_text("New Side: ")
+        with gui_sub_section("col-width: 8em;"):
+            new_side = gui_input("desc: Side Name")
+        with gui_sub_section("col-width: 5em;"):
+            create = gui_button("Create Side")
+            on gui_message(create):
+                print("New side created")
+                prefab_spawn(prefab_side_generic, data={"name":new_side.value, "key":new_side.value.lower()})
+                print(side_keys_set())
+                side = new_side.value
+                jump gamemaster_side_relations
+    gui_row("col-width: 1.5em;")
+    gui_text("  ")
+    # gui_row()
+    #endregion
+    region = gui_region("area: 5,20,20,90;")
+
+    #region Side Info, Left Panel
+    with gui_sub_section():
+        gui_row("row-height: 2em;")
+        gui_text("Side Info")
+        gui_spacer_row()
+        side = to_side_id(selected_side.value)
+        gui_row("row-height: 2em;")
+        SIDE_NAME = side_display_name(side)
+        side_name = gui_input("$text:{SIDE_NAME}; desc: Name")
+        gui_spacer_row()
+        gui_row("row-height: 2em;")
+        SIDE_KEY = get_inventory_value(side, "side_key")
+        side_key = gui_input("$text:{SIDE_KEY}; desc: Key")
+        gui_spacer_row()
+        gui_row("row-height: 4em;")
+        SIDE_DESC = get_inventory_value(side, "side_desc")
+        side_desc = gui_input("$text:{SIDE_DESC}; desc: Description")
+        # TODO: Add functionality to add/remove races. Probably need a race prefab
+        gui_row("row-height: 0.8em;")
+        gui_text(" ")
+        gui_row("row-height: 2em;")
+        update = gui_button("Update Side")
+        on gui_message(update):
+            
+            if get_inventory_value(side, "side_name") != side_name.value:
+                set_inventory_value(side, "side_name", side_name.value)
+            if get_inventory_value(side, "side_key") != side_key.value:
+                old_key = get_inventory_value(side, "side_key")
+                # Update all members of the side
+                side_members = side_members_set(side)
+                add_role(side_members, side_key.value)
+                remove_role(side_members, old_key)
+                for m in side_members:
+                    mo = to_object(m)
+                    mo.side = side_key.value # Here we assume that the object is a spaceobject.
+                set_inventory_value(side, "side_key", side_key.value)
+            if get_inventory_value(side, "side_desc") != side_desc.value:
+                set_inventory_value(side, "side_desc", side_desc.value)
+            side = side_display_name(side)
+            jump gamemaster_side_relations
+    #endregion
+    region = gui_region("area: 25,20,90,90; ")
+    #region Build the Relations Central Section
+    with gui_sub_section():
+        buttons = list()
+        for s in range(len(sides)):
+            print(f"Side: {sides[s]}")
+            default_side = side_display_name(default_side)
+            print(f"Default: {default_side}")
+            if sides[s] == default_side:
+                continue
+            gui_row("row-height: 0.2em;")
+            gui_text(" ")
+            gui_row()
+            name = side_display_name(sides[s])
+            gui_text(f"{name}")
+            side1 = sides[s]
+            side2 = selected_side.value
+            actual_relations = side_get_relations(side1, side2)
+            # print("{actual_relations}")
+            for x in range(len(relations)):
+                
+                rel = relations_value[x]
+                relation = relations[x]
+                style = None
+                if rel == actual_relations:
+                    style = "color:#40ff00"
+                button = gui_button(f"{relation}", style, data={"side1": side1, "side2": side2, "rel": rel}, on_press="update_side")
+    #endregion
+
+    set_inventory_value(client_id, "gm_side_relations_button_list", buttons)
+    on change selected_side.value:
+        side = selected_side.value
+        jump gamemaster_side_relations
+    # Add back button
+    with gui_section("area: 90,95,100,100"):
+        back = gui_button("Back")
+        on gui_message(back):
+            print("Back buttom pressed")
+            jump full_console
+    await gui()
+    ->END
+--- update_side
+    # __ITEM__ is the button object
+    side1 = __ITEM__.data["side1"]
+    side2 = __ITEM__.data["side2"]
+    rel = __ITEM__.data["rel"]
+    print(f"{side2}")
+    old = side_get_relations(side1, side2)
+    print(f"{old}")
+    side_set_relations(side1,side2,rel)
+    rel = side_get_relations(side1,side2)
+    print(f"{rel}")
+    jump gamemaster_side_relations
+
+
+== gm_build_spawn_menu
+    items = []
+    gui_list_box(items)
+
+
+== gm_spawn_ship
+metadata: ```
+buttons: 
+```
+    print(f"Spawning Ship: Nothing yet")
+    # gui_button("Hello 1")
+    # gui_button("Hello 2")
+    if buttons is None:
+        print(f"Buttons is None")
+        yield fail
+    print(f"buttons: {buttons}")
+    signal_emit("update_glb",{"update_contents":["hi","this","is","amazingly","working"]})
+    # for b in buttons:
+    #     gui_button(b)
+    #     gui_row()
+    # buildButtons("Test", buttons)
+
+
+
+=== test_buttons
+    comms_broadcast(0, "BUTTON PRESSED!")
+    ->END
+
 ==== update_gm_stats
+    jump END
 
-    await delay_sim(seconds=10)
+    # await delay_sim(seconds=10)
 
-    r = role("raider")
-    count = len(r)
-    gui_update_shared("sh_raider_count", f"$text:{count};justify:left;font:gui-3;")
+    # gm_side = get_inventory_value(client_id, "gamemaster_cur_side",None)
+    # if gm_side is None:
+    #     player = role("__player__").pop()
+    #     side = to_side_id(player)
+    #     gm_side = get_inventory_value(side, "side_key", "tsn")
+    #     set_inventory_value(client_id, "gamemaster_cur_side", gm_side)
+    # # print(f"{gm_side}")
+    # r = side_enemy_members_set(gm_side)
+    # # r = role("raider") 
+    # count=len(r)
+    # gui_update_shared("sh_raider_count", f"$text:{count};justify:left;font:gui-3;")
 
-    if is_timer_set(SHARED, "time_limit"):
-        t = format_time_remaining(SHARED, "time_limit")
-        gui_update_shared("sh_game_time",f"$text: {t};justify:left;font:gui-3;")
+    # if is_timer_set(SHARED, "time_limit") and get_inventory_value(client_id, "gm_show_stats", False):
+    #     t = format_time_remaining(SHARED, "time_limit")
+    #     gui_update_shared("sh_game_time",f"$text: {t};justify:left;font:gui-3;")
 
 
-    jump update_gm_stats
+    # jump update_gm_stats
 
+//spawn if has_role(SPAWNED_ID, "ship")
+    to_update = get_inventory_value(client_id, "gm_counts_list", None)
+    if to_update is not None:
+        # TODO: Finish this - need to change this to use a listbox I think
+        print("updating - to do")
+        
+
+#region GameMaster Ship Details Info Panel Stuff
+
+
+=== GM_Button_Pressed
+    # Should have these variables available:
+    # parent_category, item
+    # comms_broadcast(0, "GM Button Pressed")
+    print("GM BUtton pressed")
+    # comms_broadcast(0, f"{item}")
+    default menu = get_inventory_value(client_id, "gm_menu")
+    # comms_broadcast(0, f"{menu}")
+    ->END
+
+=== GM_Side_Selection
+    comms_broadcast(0, "GM Side Selection")
+    # comms_broadcast(0, f"{name}")
+    default menu = get_inventory_value(client_id, "gm_menu")
+    # comms_broadcast(0, f"{menu}")
+    ->END
+
+#endregion
+
+=== gm_time_setup
+    
+    ->END
 
 ==== gamemaster_move_camera_sync
     await delay_sim(3)
@@ -208,7 +621,27 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     gui_cinematic_full_control(client_id, sel, source, sel, Vec3())
     ->END
 
-
+=== gamemaster_view_perspective
+metadata: ```
+ship: None
+```
+    g = sbs.get_ship_of_client(client_id)
+    # return the gm to omnicient view
+    ships = role("__npc__")&role("__player__") # I think this includes stations?
+    if ship is None:
+        link(g,"extra_scan_source" ,ships)
+    else:
+        # See from perspective of the object, which might not actually be a ship? Could be a station?
+        unlink(g, "extra_scan_source", ships)
+        links = linked_to(ship, "extra_scan_source")
+        link(g,"extra_scan_source",links)
+    ->END
+# TODO: Not functional yet.
+# //comms/gamemaster/selected if has_role(COMMS_ORIGIN_ID, "gamemaster")
+#     +[$gamemaster]"Set Perspective" //comms/gamemaster/selected/perspective
+# //comms/gamemaster/selected/perspective
+#     +[$gamemaster]"Set Omnicient" gamemaster_view_perspective
+#     +[$gamemaster]"Set Ship Perspective" gamemaster_view_perspective {"ship":COMMS_SELECTED_ID}
 
 //focus/science if has_roles(SCIENCE_ORIGIN_ID, "gamemaster")
     #rang = SCIENCE_ORIGIN.data_set.get("ship_base_scan_range", 0)
@@ -223,6 +656,7 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
         comms_id = SCIENCE_SELECTED_ID
         if comms_id==0:
             comms_id = SCIENCE_ORIGIN_ID
+        gui_set_variable("gm_selection", SCIENCE_SELECTED_ID)
         set_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
         gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
         
@@ -247,3 +681,12 @@ default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
     science_set_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, "Default Scan")
 
 //enable/comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+
+# Always see everything - this should fix issue # 156 for ships and stations.
+# TODO: Figure out a solution for the gm to see all terrain
+# I think ideally we'd change the scan range for gm instead? But my testing with that hasn't worked yet.
+//spawn if has_any_role(SPAWNED_ID,"ship,station")
+    gms = role("gamemaster")
+    for g in gms:
+        link(g,"extra_scan_source" ,to_set(SPAWNED_ID))
+

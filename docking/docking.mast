@@ -25,8 +25,28 @@ default shared DOCKING_SHIELD_COEFF = DOCKING.get("shield_coeff", 2)
     ->END if dock_state_string == "undocked"
     set_weapons_selection(WEAPONS_ORIGIN_ID, 0)
 
-
-
+=== docking_dock_not_allowed
+" Prevent from docking
++++ enable
+    # This prevents anything when the Initiate Dock button is pressed.
+    # yield fail
++++ docking # This is what happens when Initiate Dock is pressed, if enable doesn't yield fail
+    with comms_override(DOCKING_NPC_ID, DOCKING_PLAYER_ID, from_name=""):
+        player_name = to_object(DOCKING_PLAYER_ID).name
+        if to_side_id(DOCKING_NPC_ID) == to_side_id(DOCKING_PLAYER_ID):
+            <<[red,white] "Can't Dock" 
+                % Greetings, {player_name}! I'm sorry, we can't let you dock right now
+                % You don't have permission to dock here
+                % Our docking systems aren't compatible with yours
+        elif side_are_enemies(DOCKING_NPC_ID,DOCKING_PLAYER_ID):
+            <<[red,white] "Enemy"
+                % Stay away from us!
+                % We won't let an enemy dock!
+                % Tread carefully, {player_name}!
+        else:
+            <<[red,white] "Can't Dock"
+                % You don't have the right permits to dock here.
+    yield fail
 
 === docking_dock_with_friendly_station
 metadata: ``` yaml
