@@ -72,17 +72,9 @@ default gamemaster_face = random_terran()
 
     set_inventory_value(BT_ID, "visible_art_id", so.art_id) # remember art id that's visible
     so.set_art_id("invisible") # cloaking!
-    sim.force_update_to_clients(BT_ID,0) # updates all clients
-
-    # Now make the ships reappear for the gamemasters
-    old_art_id = get_inventory_value(BT_ID, "visible_art_id")
-    so.set_art_id(old_art_id)
-    gm = role("gamemaster")
-    for g in gm:
-        sim.force_update_to_clients(BT_ID,g)
+    sim.force_update_to_clients(BT_ID,0)
     sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
 --- wait
-    # TODO: Make this able to be changed per ship?
     await delay_sim(30)
 
 ==== elite_cloak_clear ======
