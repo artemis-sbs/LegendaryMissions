@@ -341,12 +341,12 @@ ship:
         new_scan = ""
         # Does not already have elite abilities in the scan info
         if (current_scan.count("Warning: Elite abilities ")==0 or current_scan == ""):
-            new_scan = current_scan + "^" + elite_info
+            new_scan = current_scan + elite_info
 
         # If it did already have alite abilities, update it.
         else:
             loc = current_scan.find("Warning: Elite abilities ")
-            new_scan = current_scan[0:loc] + "^" + elite_info
+            new_scan = current_scan[0:loc] + elite_info
         # Now update the scan data
         science_update_scan_data(origin, ship, new_scan, "intel")
 #endregion
