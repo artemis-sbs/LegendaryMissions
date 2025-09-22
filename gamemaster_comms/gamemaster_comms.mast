@@ -156,7 +156,7 @@ default gamemaster_face = random_terran()
             _blob = to_blob(_other)
             if _blob is not None:
                 energy = _blob.get("energy",0)
-                _blob.set("energy", energy-20)
+                _blob.set("energy", max(0,energy-20)) # Limit minimum to zero
     +[$gamemaster]"Refill Fuel":
         blob = to_blob(COMMS_SELECTED_ID)
         blob.set("energy", 1000)
