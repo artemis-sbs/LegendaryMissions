@@ -25,7 +25,7 @@
     else:
         +[$gamemaster]"Force Unsurrender":
             task_schedule(gm_force_unsurrender, {"ship":COMMS_SELECTED_ID})
-    
+    +[$gamemaser]"Shields" //comms/gamemaster/selected/set/shields
 
 === gm_force_unsurrender
 metadata: ```
@@ -98,3 +98,111 @@ brain:
         ship.data_set.set("hull_side", side)
         side_set_ship_allies_and_enemies(ship)
     yield idle
+
+
+#region Shield Manipulation
+//comms/gamemaster/selected/set/shields
+    # gui_sub_task_schedule(properties_gm_shield_values)
+    +[$gamemaster]"Add 20 Shields" gm_add_shield_value {"ship": COMMS_SELECTED_ID, "shield_arc": -1, "value": 20}
+    +[$gamemaster]"Remove 20 Shields" gm_add_shield_value {"ship": COMMS_SELECTED_ID, "shield_arc": -1, "value": -20}
+    +[$gamemaster]"Refill All Shields" gm_refill_shield_value {"ship":COMMS_SELECTED_ID, "refill":True}
+    +[$gamemaster]"Remove All Shields" gm_refill_shield_value {"ship":COMMS_SELECTED_ID, "refill":False}
+
+# WIP Properties list usage.
+# === properties_gm_shield_values
+# metadata: ```
+# ship:
+# ```
+#     yield fail if ship is None
+#     props = """
+# Shields:
+# """
+#     blob = to_blob(ship)
+#     yield fail if blob is None
+#     arcs = blob.get("shield_count",0)
+#     for a in range(0,arcs):
+#         cur = blob.get("shield_val",a)
+#         sMax = blob.get("shield_max_val",a)
+#         gui_set_variable(f"gm_shield_current_{a}",cur)
+#         gui_set_variable(f"gm_shield_max_{a}",sMax)
+#         # gm_shield_current = gui_get_variable(f"gm_shield_current_{a}",0)
+#         # gm_shield_max = gui_get_variable(f"gm_shield_max_{a}",0)
+#         # Indentation apparently matters for this...
+#         props += """
+#     "{a}":
+#         "Current": 'gui_input("desc:current;", var="gm_shield_current_{a}")'
+#         "Max": 'gui_input("desc:value;",var="gm_shield_max_{a}")'
+#     """
+        
+#     # print(props)
+#     gui_properties_set(props)
+#     # blob.set(Key, Value, Index)
+#     for a in range(0, arcs):
+#         on change gui_get_variable("gm_shield_current_{a}"):
+#             newVal = gui_get_variable("gm_shield_current_{a}")
+#             print(newVal)
+#             blob.set("shield_val",newVal,a)
+#         on change gui_get_variable("gm_shield_max_{a}"):
+#             newVal = gui_get_variable("gm_shield_max_{a}")
+#             print(newVal)
+#             blob.set("shield_max_val",newVal,a)
+#     yield idle
+
+=== gm_refill_shield_value
+" Refill the target's shields, if `refill` is true, or empty them completely if false. 
+metadata: ```
+ship:
+refill: true
+```
+    yield fail if ship is None
+    blob = to_blob(ship)
+    arcs = blob.get("shield_count", 0)
+    for x in range(0,arcs):
+        val = blob.get("shield_val", x)
+        if refill:
+            maxVal = blob.get("shield_max_val",x)
+            blob.set("shield_val",maxVal,x)
+        else:
+            # Empty the shield value
+            blob.set("shield_val",0,x)
+    yield success
+
+=== gm_add_shield_value
+metadata: ```
+ship:
+# if shield_arc == -1, then add value to all shield arcs
+shield_arc: 0
+value: 20
+```
+    yield fail if ship is None
+    blob = to_blob(ship)
+    if shield_arc == -1:
+        count = blob.get("shield_count", 0)
+        for x in range(0,count):
+            val = blob.get("shield_val", x)
+            maxVal = blob.get("shield_max_val",x)
+            if val is None or maxVal is None:
+                print(f"shield val for index {x} is None")
+                continue
+            newVal = val + value
+            if newVal > maxVal:
+                newVal = maxVal
+            if newVal < 0:
+                newVal = 0
+            blob.set("shield_val", newVal, x)
+    else:
+        val = blob.get("shield_val", shield_arc)
+        maxVal = blob.get("shield_max_val",shield_arc)
+        if val is not None or maxVal is None:
+            print(f"shield val for index {shield_arc} is None")
+            yield fail
+        newVal = val + value
+        if newVal > maxVal:
+            newVal = maxVal
+        if newVal < 0:
+            newVal = 0
+        blob.set("shield_val", newVal, shield_arc)
+    yield success
+#endregion Shield Manipulation
+
+
