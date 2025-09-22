@@ -10,6 +10,64 @@
         if obj is not None:
             obj.name = name
             obj.data_set.set("name_tag", name)            
+    if not has_role(COMMS_SELECTED_ID, "surrendered"):
+        +[$gamemaster]"Force Surrender":
+            add_role(COMMS_SELECTED_ID, "surrendered")
+            remove_role(COMMS_SELECTED_ID, "raider") # Why do this?
+            set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
+            fleet_remove_ship(COMMS_SELECTED_ID)
+        if has_role(COMMS_SELECTED_ID, "never_surrender"):
+            +[$gamemaster]"Allow Surrender":
+                remove_role(COMMS_SELECTED_ID, "never_surrender")
+        else:
+            +[$gamemaster]"Prevent Surrender":
+                add_role(COMMS_SELECTED_ID, "never_surrender")
+    else:
+        +[$gamemaster]"Force Unsurrender":
+            task_schedule(gm_force_unsurrender, {"ship":COMMS_SELECTED_ID})
+    
+
+=== gm_force_unsurrender
+metadata: ```
+ship:
+brain:
+  SEQ:
+    - ai_fleet_init_blackboard
+    - SEL:
+        - ai_fleet_chase_best_anger
+        - label: ai_fleet_chase_roles
+          data:
+            test_roles: station
+        - label: ai_fleet_chase_roles
+          data:
+            test_roles: __player__
+        # No player nearby, chase nearest enemy
+        - label: ai_fleet_chase_roles
+          data:
+            test_roles: ship
+        # Nothing close find a station
+        - label: ai_fleet_chase_roles
+          data:
+            use_arena: false
+            test_roles: station
+        # No Stations go for any player
+        - label: ai_fleet_chase_roles
+          data:
+            use_arena: false
+            test_roles: __player__
+    - ai_fleet_calc_forward_vector
+    - ai_fleet_scatter_formation
+```
+    yield fail if ship is None
+    remove_role(ship, "surrendered")
+    add_role(ship, "raider")
+    set_data_set_value(ship, "surrender_flag", 0)
+    obj = to_object(ship)
+    fleet_obj = fleet_spawn(Vec3(obj.pos), "ship_fleet")
+    set_inventory_value(ship, "my_fleet_id", fleet_obj.id)
+    link(fleet_obj.id,"ship_list", ship)
+    brain_add(fleet_obj.id, brain, None, 0, None)
+    yield success
 
 === properties_ship_data
 # metadata: ```
