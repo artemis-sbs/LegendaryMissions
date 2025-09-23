@@ -19,7 +19,7 @@ stop_dist: 500
     yield fail if sbs.distance_id(BRAIN_AGENT_ID, current_target) > distance
     #print("CHASE CUR {distance} {current_target}")
     BRAIN_AGENT.set_inventory_value("blackboard:target", current_target)
-    shoot = role_are_allies(BRAIN_AGENT_ID, current_target)
+    shoot = not role_are_allies(BRAIN_AGENT_ID, current_target)
     target(BRAIN_AGENT_ID, current_target, shoot, throttle, stop_dist=stop_dist)
     yield success
 
