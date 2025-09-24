@@ -192,6 +192,7 @@ def ship_inventory_item(item):
         if not isinstance(val, int) and not isinstance(val, float): # Or if it's None
             print(f"{item.key} is not a number! Skipping!")
             return
+        gui_row("row-height: 5px;")
         gui_row("row-height: 2em;")
         # First Icon button
         sub = gui_icon_button("icon_index:155;color:white;")
