@@ -1,6 +1,7 @@
 default gamemaster_face = random_terran()
 =$gamemaster #0E0,white,gamemaster_face
 =$confirm #ff0000,white,gamemaster_face
+=$careful #eea300,white,gamemaster_face
 
 
 //enable/comms if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
@@ -20,7 +21,13 @@ default gamemaster_face = random_terran()
     +[$gamemaster]"Spawn" //comms/gamemaster/spawn if not has_any_role(COMMS_SELECTED_ID, "ship, station")
     +[$gamemaster]"Selected" //comms/gamemaster/selected if has_any_role(COMMS_SELECTED_ID, "ship, station")
     +[$gamemaster]"Area" //comms/gamemaster/area
-    +[$gamemaster]"Commands" //comms/gamemaster/commands
+    +[$gamemaster]"Commands" //comms/gamemaster/commands if COMMS_SELECTED_ID is not None and not has_role(COMMS_SELECTED_ID, "gamemaster")
+    if COMMS_ORIGIN_ID != COMMS_SELECTED_ID:
+        +[$careful]"Delete":
+            if has_role(COMMS_SELECTED_ID, "__player__"):
+                comms_navigate("//comms/gamemaster/confirm_delete")
+            else:
+                sbs.delete_object(COMMS_SELECTED_ID)
 
 //comms/gamemaster/selected if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     +^1[$gamemaster]"Back" //comms
@@ -28,12 +35,7 @@ default gamemaster_face = random_terran()
     # +[$gamemaster]"Set Objective" //comms/gamemaster/selected/objective
     +[$gamemaster]"Loadout" //comms/gamemaster/selected/loadout
     +[$gamemaster]"Damage" //comms/gamemaster/selected/damage
-    if COMMS_ORIGIN_ID != COMMS_SELECTED_ID:
-        +[$gamemaster]"Delete":
-            if has_role(COMMS_SELECTED_ID, "__player__"):
-                comms_navigate("//comms/gamemaster/confirm_delete")
-            else:
-                sbs.delete_object(COMMS_SELECTED_ID)
+    
     
 //comms/gamemaster/selected/set if has_roles(COMMS_ORIGIN_ID, 'gamemaster') 
     +^1[$gamemaster]"Back" //comms
@@ -156,7 +158,7 @@ default gamemaster_face = random_terran()
             _blob = to_blob(_other)
             if _blob is not None:
                 energy = _blob.get("energy",0)
-                _blob.set("energy", energy-20)
+                _blob.set("energy", max(0,energy-20)) # Limit minimum to zero
     +[$gamemaster]"Refill Fuel":
         blob = to_blob(COMMS_SELECTED_ID)
         blob.set("energy", 1000)
