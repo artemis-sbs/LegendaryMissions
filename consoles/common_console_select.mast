@@ -190,7 +190,7 @@ route_change_console(on_change_console)
     # Ready state
     #
     gui_section( style="area: 80,100-60px, 99,100;row-height: 50px;")
-    if not GAME_STARTED and not console_ready:
+    if not GAME_STARTED:
         gui_checkbox("ready", var="console_ready")
     else:
         on gui_message(gui_button("ready")):
