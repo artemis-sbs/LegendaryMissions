@@ -4,3 +4,4 @@ import gamemaster_info_panel.py
 import gamemaster.py
 
 import move_to_lib.py
+import gamemaster_ship_data_panel.py

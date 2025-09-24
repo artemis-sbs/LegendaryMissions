@@ -296,6 +296,36 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
 
 
     #region Listboxes for Menus
+    gui_section(f"area: {GAMEMASTER_CONSOLE_ICON_SIZE}px,50px,100,100")
+    with gui_sub_section(f"col-width: {info_panel_width};"):
+
+        # items = []
+        # gui_list_box(items=items, style="background: #0f284442", select=True, collapsible=True)
+        agent = role("__player__").pop()
+        shield_count = to_blob(agent).get("shield_count",0)
+        print("Adding ship inventory")
+        si = gui_ship_inventory()
+        
+        if shield_count == 2:
+            # If there's only 2 shield facings
+            si.add_item("Forward Shields","shield_val",agent,True,10,"Shields",0)
+            si.add_item("Aft Shields","shield_val",agent,True,10,"Shields",1)
+        else: 
+            # Otherwise we'll handle shield facings by index
+            for x in range(0,shield_count):
+                si.add_item(f"Shield {x+1}","shield_val",agent,True,10,"Shields",x)
+        
+        # Now for torpedoes. Theoretically we shoudl be able to dynamically add these
+        si.add_item("Homings", "Homing_NUM", agent, True,1,"Torps")
+        si.add_item("EMP", "EMP_NUM", agent, True, 1, "Torps")
+        si.add_item("Nuke", "Nuke_NUM", agent, True, 1, "Torps")
+        si.add_item("Mine", "Mine_NUM", agent, True, 1, "Torps")
+        lb = si.build_list_box()
+        gui_sub_task_schedule(ship_inventory_updates, {"inventory":lb})
+        
+
+
+
     # gui_section(f"area: {GAMEMASTER_CONSOLE_ICON_SIZE}px,100px,100,100")
     # with gui_sub_section("col-width: 150px;"):
     #     sides = get_sides()
@@ -498,6 +528,13 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     rel = side_get_relations(side1,side2)
     print(f"{rel}")
     jump gamemaster_side_relations
+
+
+=== ship_inventory_updates
+" This updates the ship information screen.
+    await delay_sim(5)
+    gui_represent(inventory)
+    jump ship_inventory_updates
 
 
 == gm_build_spawn_menu
