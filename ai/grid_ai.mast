@@ -28,7 +28,6 @@ default shared grid_data = grid_get_grid_data()
     warp_nodes = to_object_list(grid_objects(SPAWNED_ID) & role("warp"))
     #
     _jump_nodes = to_object_list(grid_objects(SPAWNED_ID) & role("jump"))
-    _jump_nodes = role("jump")
 
     is_warp = len(warp_nodes) > 0
     is_jump = len(_jump_nodes) > 0
