@@ -120,6 +120,7 @@ route_change_console(on_change_console)
 
     if len(PLAYER_LIST) >0:
         ship_type_def = PLAYER_LIST[client_selected_index].art_id
+        ship_type = ship_type_def
         ship_name = PLAYER_LIST[client_selected_index].name
         client_select_ship = ship_name.lower()
 
