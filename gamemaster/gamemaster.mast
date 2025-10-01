@@ -123,6 +123,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
             GM_LEFT = gui_tabbed_panel([], tab_location=0, icon_size=GAMEMASTER_CONSOLE_ICON_SIZE)
             gui_info_panel_add("Close", 151, nothing, var=GM_LEFT)
             gui_info_panel_add("instruction", 82, gamemaster_panel_instructions, var= GM_LEFT)
+            gui_info_panel_add("ship_info", 26, gm_show_ship_info, gm_hide_ship_info, var=GM_LEFT)
             if GAMEMASTER_CONSOLE_BETA:
                 ~~ gui_info_panel_add("test_comms", 0, 
                 lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_control"), 
@@ -296,32 +297,50 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
 
 
     #region Listboxes for Menus
-    gui_section(f"area: {GAMEMASTER_CONSOLE_ICON_SIZE}px,50px,100,100")
+    gui_section(f"area: {GAMEMASTER_CONSOLE_ICON_SIZE}px,50px,100,50")
     with gui_sub_section(f"col-width: {info_panel_width};"):
 
         # items = []
         # gui_list_box(items=items, style="background: #0f284442", select=True, collapsible=True)
-        agent = role("__player__").pop()
-        shield_count = to_blob(agent).get("shield_count",0)
-        print("Adding ship inventory")
-        si = gui_ship_inventory()
         
-        if shield_count == 2:
-            # If there's only 2 shield facings
-            si.add_item("Forward Shields","shield_val",agent,True,10,"Shields",0)
-            si.add_item("Aft Shields","shield_val",agent,True,10,"Shields",1)
-        else: 
-            # Otherwise we'll handle shield facings by index
-            for x in range(0,shield_count):
-                si.add_item(f"Shield {x+1}","shield_val",agent,True,10,"Shields",x)
+        # agent = role("gamemaster").pop()
+        # agent = role("__player__").pop()
+        agent = None
+
+        # Shields are not being set properly because gm doesn't have shields
+        blob = to_blob(agent)
+
+        gui_set_variable("gm_selected", agent)
+        # shield_count = to_blob(agent).get("shield_count",0)
+        print("Adding ship inventory")
+        si = gui_ship_inventory(agent)
+        # gui_set_variable("GM_SHIP_INVENTORY",si) # Just in case we need to access it from elsewhere
+        
+        
+
+        add_ship_inventory_item("Energy","energy",True,20,"Status",0)
+
+        add_ship_inventory_item("Forward Shields","shield_val",True,10,"Shields",0)
+        add_ship_inventory_item("Aft Shields","shield_val",True,10,"Shields",1)
         
         # Now for torpedoes. Theoretically we shoudl be able to dynamically add these
-        si.add_item("Homings", "Homing_NUM", agent, True,1,"Torps")
-        si.add_item("EMP", "EMP_NUM", agent, True, 1, "Torps")
-        si.add_item("Nuke", "Nuke_NUM", agent, True, 1, "Torps")
-        si.add_item("Mine", "Mine_NUM", agent, True, 1, "Torps")
+        add_ship_inventory_item("Homings", "Homing_NUM", True,1,"Torps")
+        add_ship_inventory_item("EMP", "EMP_NUM", True, 1, "Torps")
+        add_ship_inventory_item("Nuke", "Nuke_NUM", True, 1, "Torps")
+        add_ship_inventory_item("Mine", "Mine_NUM", True, 1, "Torps")
         lb = si.build_list_box()
         gui_sub_task_schedule(ship_inventory_updates, {"inventory":lb})
+        
+        on change gui_get_variable("gm_selected"):
+            gms = gui_get_variable("gm_selected")
+            if gms is None or has_role(gms,"gamemaster"):
+                lb.items = []
+            else:
+                si.change_agent(gms)
+                si.rebuild()
+            # print(si.items)
+            si.represent()
+                
         
 
 
@@ -532,8 +551,12 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
 
 === ship_inventory_updates
 " This updates the ship information screen.
+    default inventory = None
+    if inventory is None:
+        ->END
     await delay_sim(5)
-    gui_represent(inventory)
+    if not inventory.is_hidden:
+        gui_represent(inventory)
     jump ship_inventory_updates
 
 
