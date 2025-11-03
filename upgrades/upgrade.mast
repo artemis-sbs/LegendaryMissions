@@ -592,12 +592,14 @@ import upgrade.py
     upgrade_list = get_anom_data()
     +[$gamemaster]"Back" //comms/gamemaster/spawn/terrain
     +[$gamemaster]"Random":
-        item = random.randint(0, len(upgrade_list.keys()))
-        upgrade = upgrade_list.keys()[item]
+        pos = Vec3(COMMS_ORIGIN.pos)
+        keys = list(upgrade_list.keys())
+        item = random.randint(0, len(keys)-1)
+        upgrade = keys[item]
         pickup_spawn(pos.x, pos.y, pos.z, upgrade)
-    pos = Vec3(COMMS_ORIGIN.pos)
     keys = upgrade_list.keys()
     for upgrade in keys:
         +[$gamemaster]"{upgrade}" {"upgrade_name": upgrade}:
+            pos = Vec3(COMMS_ORIGIN.pos)
             pickup_spawn(pos.x, pos.y, pos.z, upgrade_name)
 
