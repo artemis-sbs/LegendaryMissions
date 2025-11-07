@@ -82,6 +82,7 @@ default gamemaster_face = random_terran()
     yield FAIL if so is None
 
     old_art_id = get_inventory_value(BT_ID, "visible_art_id")
+    yield FAIL if old_art_id is None # This allows us to remove cloak while it's active, and the particle effect won't trigger when the timer runs out.
     #log(f"uncloak to {old_art_id}", "elites")
     so.set_art_id(old_art_id)
     sim.force_update_to_clients(BT_ID,0)
@@ -340,12 +341,12 @@ ship:
         new_scan = ""
         # Does not already have elite abilities in the scan info
         if (current_scan.count("Warning: Elite abilities ")==0 or current_scan == ""):
-            new_scan = current_scan + "^" + elite_info
+            new_scan = current_scan + elite_info
 
         # If it did already have alite abilities, update it.
         else:
             loc = current_scan.find("Warning: Elite abilities ")
-            new_scan = current_scan[0:loc] + "^" + elite_info
+            new_scan = current_scan[0:loc] + elite_info
         # Now update the scan data
         science_update_scan_data(origin, ship, new_scan, "intel")
 #endregion
