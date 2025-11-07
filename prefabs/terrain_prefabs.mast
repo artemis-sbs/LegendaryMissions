@@ -57,6 +57,31 @@ display_text: Nebula sphere
 ```
     co = terrain_spawn(START_X, START_Y, START_Z, None, "#,gasgiant", "planet", "behav_planet")
     co.engine_object.exclusion_radius = 400
+
+
+    cur_tick = sim.time_tick_counter
+    co.data_set.set("planet_last_changed",cur_tick,0) # this flag tells the game to process the data below
+
+    #to get these numbers, I used the built-in Nebula Visualizer, pressing
+    #the Edit Mode button to get the the planet controls
+    co.data_set.set("planet_radius", co.engine_object.exclusion_radius/2.0, 0)
+    co.data_set.set("planet_baseColorR", 0.55)
+    co.data_set.set("planet_baseColorG", 0.16)
+    co.data_set.set("planet_baseColorB", 0.28)
+    co.data_set.set("planet_emissiveColorR", 0.48)
+    co.data_set.set("planet_emissiveColorG", 0.24)
+    co.data_set.set("planet_emissiveColorB", 0.16)
+    co.data_set.set("planet_upperCloudColorR", 1.19)
+    co.data_set.set("planet_upperCloudColorG", 1.18)
+    co.data_set.set("planet_upperCloudColorB", 1.2)
+    co.data_set.set("planet_fresnel", 11.96)
+    co.data_set.set("planet_fresnelBias", 0.42)
+    co.data_set.set("planet_bandScale", 3.72, 0)
+    co.data_set.set("planet_windSpeed1", 1000)
+    co.data_set.set("planet_windSpeed2", 1000)
+    co.data_set.set("planet_upperCloudStrength", 3.12)
+    co.data_set.set("planet_upperCloudExponent", 3.96)
+
     ->END
 
 
