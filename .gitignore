@@ -1,6 +1,6 @@
 /lib/
 **/__pycache__/**
-.vscode/
+# .vscode/
 /sphinx/_build/
 *.sbslib
 *.mastlib
