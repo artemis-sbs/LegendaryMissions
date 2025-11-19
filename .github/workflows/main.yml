@@ -50,11 +50,23 @@ jobs:
           #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
           path: "${{ matrix.item }}"
 
-      - name: Upload Release
-        uses: ncipollo/release-action@v1
+
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@v1.3.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use the default GITHUB_TOKEN
         with:
-          artifacts: '${{ matrix.item }}.${{ steps.get_version.outputs.VERSION }}.mastlib'
-          token: ${{ secrets.GITHUB_TOKEN }}
+          upload_url: ${{ steps.get_release.outputs.upload_url}} # Get the upload URL from the release event
+          asset_path: '${{ matrix.item }}.${{ steps.get_version.outputs.VERSION }}.mastlib'
+          asset_name: '${{ matrix.item }}.${{ steps.get_version.outputs.VERSION }}.mastlib'
+          asset_content_type: application/zip
 
 
   build_media:
@@ -72,9 +84,21 @@ jobs:
           filename: 'media.${{ steps.get_version.outputs.VERSION }}.zip'
           path: "media"
 
-      - name: Upload Release
-        uses: ncipollo/release-action@v1
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@v1.3.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use the default GITHUB_TOKEN
         with:
-          artifacts: "*.zip*"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          upload_url: ${{ steps.get_release.outputs.upload_url }} # Get the upload URL from the release event
+          asset_path: 'media.${{ steps.get_version.outputs.VERSION }}.zip'
+          asset_name: 'media.${{ steps.get_version.outputs.VERSION }}.zip'
+          asset_content_type: application/zip
+
+
 
