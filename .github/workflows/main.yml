@@ -50,6 +50,13 @@ jobs:
           #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
           path: "${{ matrix.item }}"
 
+      - name: Upload Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: '${{ matrix.item }}.${{ steps.get_version.outputs.VERSION }}.mastlib'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+
   build_media:
     runs-on: ubuntu-latest
     steps:
@@ -65,19 +72,9 @@ jobs:
           filename: 'media.${{ steps.get_version.outputs.VERSION }}.zip'
           path: "media"
 
-  make_release:
-    runs-on: ubuntu-latest
-    needs: 
-      - build
-      - build_media
-    steps:
-      - name: Set env version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-  
       - name: Upload Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "*.${{ steps.get_version.outputs.VERSION }}.*"
+          artifacts: "*.zip*"
           token: ${{ secrets.GITHUB_TOKEN }}
 
