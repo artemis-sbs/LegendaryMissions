@@ -38,6 +38,7 @@ jobs:
     steps:
       - name: Set env version
         id: get_version
+        #run: echo "{VERSION}={${GITHUB_REF/refs\/tags\//}}" >> $GITHUB_OUTPUT
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
         
       - uses: actions/checkout@master
@@ -50,33 +51,22 @@ jobs:
           #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
           path: "${{ matrix.item }}"
 
-
-      - name: Get release
-        id: get_release
-        uses: bruceadams/get-release@v1.3.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use the default GITHUB_TOKEN
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ steps.get_release.outputs.upload_url}} # Get the upload URL from the release event
-          asset_path: '${{ matrix.item }}.${{ steps.get_version.outputs.VERSION }}.mastlib'
-          asset_name: '${{ matrix.item }}.${{ steps.get_version.outputs.VERSION }}.mastlib'
-          asset_content_type: application/zip
-
+          name: '${{ matrix.item }}'
+          path: '${{ matrix.item }}.${{ steps.get_version.outputs.VERSION }}.mastlib'
+          retention-days: 1
 
   build_media:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@master
       - name: Set env version
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-        
-      - uses: actions/checkout@master
+        # run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo "{VERSION}={${GITHUB_REF/refs\/tags\//}}" >> $GITHUB_OUTPUT
+
       - name: Archive media zip
         uses: thedoctor0/zip-release@main
         with:
@@ -84,21 +74,32 @@ jobs:
           filename: 'media.${{ steps.get_version.outputs.VERSION }}.zip'
           path: "media"
 
-      - name: Get release
-        id: get_release
-        uses: bruceadams/get-release@v1.3.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use the default GITHUB_TOKEN
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ steps.get_release.outputs.upload_url }} # Get the upload URL from the release event
-          asset_path: 'media.${{ steps.get_version.outputs.VERSION }}.zip'
-          asset_name: 'media.${{ steps.get_version.outputs.VERSION }}.zip'
-          asset_content_type: application/zip
+          name: media
+          path: 'media.${{ steps.get_version.outputs.VERSION }}.zip'
+          retention-days: 1
 
+  build_release: 
+    runs-on: ubuntu-latest
+    needs:
+      - build_media
+      - build
 
-
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts # Download all artifacts to this directory
+      #- name: Display structure of downloaded files
+      #  run: ls -R artifacts
+    
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: artifacts/*/*
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
