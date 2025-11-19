@@ -52,15 +52,16 @@ jobs:
 
   build_media:
     runs-on: ubuntu-latest
-    needs: build
     steps:
+      - name: Set env version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
       - name: Archive media zip
         uses: thedoctor0/zip-release@main
         with:
           type: 'zip'
           filename: 'media.${{ steps.get_version.outputs.VERSION }}.zip'
-          #directory: 'sbs_utils'
-          #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
           path: "media"
 
   make_release:
