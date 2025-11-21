@@ -227,6 +227,7 @@ default HANGAR_CONSOLE_ENABLED = True
     #
     gui_section(style="area: 35,100-50px, 75,100;")
     stats = hangar_get_stats(client_id, ride_choice)
+
     gui_text(f"{stats[0]}", style="tag:stats-1")
     gui_row()
     gui_text(f"{stats[1]}", style="tag:stats-2")
