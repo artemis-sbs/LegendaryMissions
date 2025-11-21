@@ -1,0 +1,49 @@
+
+=== gm_ship_edit
+" Effectively a separate console for the GM to modify a specific ship, particularly player ships.
+    print("client:")
+    print(client_id)
+    gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT")
+    print("GM:")
+    print(gm)
+    ship = get_inventory_value(gm, "gamemaster_prev_selection")
+    print("2d_select:")
+    print(ship)
+    ship = to_object(ship)
+    if ship is None:
+        # If the ship is None, then we just stay on the main GM screen.
+        print("Ship is NONE")
+        yield fail
+    sbs.assign_client_to_ship(client_id, ship.id)
+    gui_section("area: 0,0,100,100")
+    with gui_sub_section("area: 0,0,20,30"):
+        # stuff
+        name = ship.name
+        change_name = gui_input(f"desc:Ship Name; text:{name};", "area: 10px,10px,100px,20px;")
+        on gui_message(change_name):
+            ship.name = change_name.value
+        gui_row()
+        sides = ",".join(list(side_keys_set()))
+        change_side = gui_drop_down(f"text:{ship.side}; list:{sides};")
+        on gui_message(change_side):
+            ship.side = change_side.value
+            ship.data_set.set("hull_side",change_side.value)
+            side_set_ship_allies_and_enemies(ship)
+        gui_row()
+
+    with gui_sub_section("area: 20,0,100,100"):
+        gui_layout_widget("ship_internal_view")
+        gui_layout_widget("comms_control")
+    with gui_sub_section("area: 95,0,100,5"):
+        close = gui_button("text:X; font:gui-3;")
+        on gui_message(close):
+            # sbs.assign_client_to_ship(client_id,gm)
+            gui_reroute_client(client_id, "gm_full_console")
+    await gui()
+
+//comms/grid if has_role(COMMS_ORIGIN_ID,"__player__")
+    if get_dedicated_link(client_id, "gm") is not None:
+        +"Repair Damage"
+        +"Damage System"
+        +"Damcons Refresh"
+
