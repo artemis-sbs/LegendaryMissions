@@ -2,7 +2,7 @@
 task_schedule(spawn_default_sides)
 
 === prefab_side_generic
-" Generic definition of a Side or Faction. If a side has enemies or allies, the side will be added to the enemy/ally list for 
+" Generic definition of a Side. If a side has enemies or allies, the side will be added to the enemy/ally list for 
 " the applicable sides. Defaults are the TSN values.
 metadata: ```
 type: prefab/side
@@ -54,7 +54,7 @@ races: terran
     set_inventory_value(id, "side_races", races_list)
     set_inventory_value(id, "side_desc", desc)
 
-    # Now we need to update the other factions' ally and enemy lists
+    # Now we need to update the other sides' ally and enemy lists
     for item in ally_list:
         side_set_relations(key, item, 1)
     for item in enemy_list:

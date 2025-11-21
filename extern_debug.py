@@ -5,7 +5,7 @@
 
 import sys
 # Make the main i.e. command line module the script module
-sys.path.append("../__lib__/artemis-sbs.sbs_utils.v1.0.1.sbslib")
+sys.path.append("../__lib__/artemis-sbs.sbs_utils.v1.3.0.sbslib")
 
 def mock_sbs_runtime(file):
     sys.modules['script'] = sys.modules.get('__main__')

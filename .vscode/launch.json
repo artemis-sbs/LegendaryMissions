@@ -1,0 +1,24 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+
+        {
+            "name": "Poc",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "extern_debug.py",
+            "console": "integratedTerminal",
+            // Not sure why but I needed to hard code the path
+            // When using a workspace with multiplef folder
+            // Should still work if just in legendary missions
+            "cwd": "${workspaceFolder}/../LegendaryMissions",
+            "args": [
+            
+            ]
+        }
+    ]
+}

@@ -3,8 +3,7 @@
 
 
 === prefab_lifeform_generic
-" Generic definition of a Side or Faction.
-" Defaults are the TSN values
+" Generic definition of a lifeform.
 metadata: ```
 type: prefab/lifeform
 name: Lifeform

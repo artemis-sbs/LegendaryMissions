@@ -71,7 +71,7 @@ distance: 600
         # comms_message("Attempting dock when enemies is ill advised.", DOCKING_PLAYER_ID, DOCKING_PLAYER_ID,  "Enemies near", None, "white", "red", from_name="Docking")
         with comms_override(DOCKING_PLAYER_ID, DOCKING_PLAYER_ID, from_name="Docking"):
             <<[red,white] "Enemies Near"
-                % Attempting dock when enemies is ill advised.
+                % Attempting dock when enemies are near is ill advised.
         comms_broadcast(DOCKING_PLAYER_ID, "docking disable, enemy near")
         yield fail
 

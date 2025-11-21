@@ -1,16 +1,18 @@
 from sbs_utils.fs import load_json_data, get_mission_dir_filename
 from random import randint
 from sbs_utils.procedural.spawn import player_spawn
-from sbs_utils.procedural.query import set_science_selection, to_object, to_id, object_exists, to_data_set, to_object_list
+from sbs_utils.procedural.query import set_science_selection, to_space_object, to_id, object_exists, to_data_set, to_space_object_list
 from sbs_utils.procedural.links import link, unlink, get_dedicated_link, set_dedicated_link, linked_to, has_link
 from sbs_utils.procedural.roles import has_role, remove_role, any_role, role, all_roles
 from sbs_utils.procedural.space_objects import broad_test_around, closest, get_pos, set_pos
 from sbs_utils.procedural.routes import RouteDamageDestroy
+from sbs_utils.procedural.sides import to_side_object
+from sbs_utils.procedural.ship_data import get_ship_data_for
 
 from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished
 from sbs_utils.procedural.execution import set_shared_variable, get_shared_variable, get_variable
 from sbs_utils.agent import Agent
-from sbs_utils.procedural.query import get_science_selection, to_object
+from sbs_utils.procedural.query import get_science_selection
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.comms import comms_broadcast
 import random
@@ -27,7 +29,7 @@ def hangar_bump_version():
 
 @RouteDamageDestroy
 def hangar_handle_destroy():
-    so = to_object(get_variable("DESTROYED_ID"))
+    so = to_space_object(get_variable("DESTROYED_ID"))
     if so is None:
         return
     #
@@ -54,7 +56,7 @@ def hangar_handle_destroy():
     hangar_bump_version()    
 
 def hangar_get_stats(client_id, fighter):
-    fighter = to_object(fighter)
+    fighter = to_space_object(fighter)
     if fighter is None:
         return ["", ""]
     
@@ -72,7 +74,9 @@ def hangar_get_stats(client_id, fighter):
     s = get_inventory_value(client_id, "sortie", 0)
     c = get_inventory_value(client_id, "completed_objectives", 0)
     call_sign = get_inventory_value(client_id, "call_sign", "pilot")
-    line1 = f"{f}: TORP {t} BEAM {bs:.2f} SHLDS {front_shield_max_val}" # | {rear_shield_max_val}"
+    line1 = "bad ship data key or data_set values"
+    if bs is not None and front_shield_max_val is not None:
+        line1 = f"{f}: TORP {t} BEAM {bs:.2f} SHLDS {front_shield_max_val}" # | {rear_shield_max_val}"
     line2 = f"{call_sign}: sorties {s} objectives {c}"
     return [line1, line2]
     
@@ -94,7 +98,50 @@ def hangar_set_dock(craft_id, docked_id):
     set_science_selection(craft_id, docked_id) # This is effectively a waypoint home for the craft
     hangar_bump_version()
 
-def hangar_craft_spawn(docked_id, art, roles, prefix):
+
+def hangar_get_ship_data_keys(docked_id, roles):
+    so = to_space_object(docked_id)
+
+    origin = so.origin if so is not None else None
+    terran_keys = ["tsn_fighter", "tsn_bomber", "tsn_shuttle"]
+    if not origin:
+        return terran_keys
+    
+    # Side overrides for keys
+    # side_id = so.side_id
+    # keys = get_inventory_value(side_id, "CRAFT_OVERRIDE_ARRAY")
+    # Home Dock overrides
+    side_agent = to_side_object(docked_id)
+    keys = get_inventory_value(side_agent, "CRAFT_OVERRIDE_ARRAY")
+    keys = get_inventory_value(docked_id, "CRAFT_OVERRIDE_ARRAY", keys)
+    if  bool(keys) and all(isinstance(elem, str) for elem in keys) and len(keys)==3:
+        return keys
+    
+    terran_keys = ["tsn_fighter", "tsn_bomber", "tsn_shuttle"]
+    origin_keys = {
+        "terran": terran_keys,
+        "ximni": ["xim_avenger", "xim_avenger", "tsn_shuttle"],
+        "pirate": ["pirate_fighter", "pirate_fighter", "tsn_shuttle"],
+        "arvonian": ["arvonian_fighter", "arvonian_fighter", "tsn_shuttle"],
+    }
+    keys = origin_keys.get(origin, terran_keys)
+    if  bool(keys) and all(isinstance(elem, str) for elem in keys) and len(keys)==3:
+        return keys
+    return terran_keys
+
+
+def hangar_get_ship_data_key(docked_id, roles):
+    craft_type = 2 if "shuttle" in roles  else 1 if "bomber" in roles else 0
+    craft_type_strings = [ "Fighter", "Bomber","Shuttle"]
+    keys = hangar_get_ship_data_keys(docked_id, roles)
+    key = keys[craft_type]
+    sd = get_ship_data_for(key)
+    return (key, sd, craft_type_strings[craft_type])
+    
+
+
+
+def hangar_craft_spawn(docked_id, roles):
     """
     Spawns a new hangar craft in the hangar of the specified ship or station.  
     You probably don't need to use this, because in hangar.mast, when a ship or station is spawned, this function is called to create all the necessary shuttles, fighters, and bombers needed.
@@ -113,12 +160,19 @@ def hangar_craft_spawn(docked_id, art, roles, prefix):
     else:
         roles += ",cockpit,standby"
 
-    docked_id = to_id(docked_id) 
-        
+    docked_id = to_id(docked_id)
+    so = to_space_object(docked_id)
 
-    so = to_object(docked_id)
+    sd_key, sd, name = hangar_get_ship_data_key(docked_id, roles)
+    origin = so.origin
+    if sd is not None:
+        name = sd.get("name", name)
+        origin = sd.get("origin", origin)
+
+    
     _pos = so.engine_object.pos
-    craft = player_spawn(_pos.x, _pos.y,_pos.z, f"{prefix} {_craft_id}", roles, art)
+    name = f"{origin} {name} {_craft_id}"
+    craft = player_spawn(_pos.x, _pos.y,_pos.z, name, roles, sd_key)
     _craft_id += 1
     hm = sbs.get_hull_map(craft.id,True)
     # Not counted for end game
@@ -144,7 +198,7 @@ def hangar_objective_started(CRAFT_ID, OBJECTIVE_ID, objective):
 
 def hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, objective):
     # Get the current load
-    origin_o = to_object(CRAFT_ID)
+    origin_o = to_space_object(CRAFT_ID)
     pilot = "A craft "
     if origin_o is not None:
         pilot = origin_o.name
@@ -180,6 +234,7 @@ def hangar_random_craft_spawn(docked_id, roles):
     
     return hangar_fighter_spawn(docked_id, roles)
 
+
 def hangar_fighter_spawn(docked_id, roles):
     """
     Spawn a fighter with the given roles in the hangar of the ship or station with the specified ID.  
@@ -189,13 +244,14 @@ def hangar_fighter_spawn(docked_id, roles):
         docked_id (int): the id of the ship or station in which the craft will spawn
         roles (str): a comma-separated list of roles to add to the craft
     Returns:
-        SpawnData: The SpawnData object associated with the craft you've spawned.
+        SpawnData: The SpawnData object associated with the craft in you've spawned.
     """
     if roles is None:
         roles = "fighter"
     else:
-        roles += ",fighter" 
-    return hangar_craft_spawn(docked_id, "tsn_fighter", roles, "FX")
+        roles += ",fighter"
+    
+    return hangar_craft_spawn(docked_id, roles)
 
 def hangar_bomber_spawn(docked_id, roles):
     """
@@ -212,7 +268,7 @@ def hangar_bomber_spawn(docked_id, roles):
         roles = "bomber"
     else:
         roles += ",bomber" 
-    return hangar_craft_spawn(docked_id, "tsn_bomber", roles, "BX")
+    return hangar_craft_spawn(docked_id, roles)
 
 def hangar_shuttle_spawn(docked_id, roles):
     """
@@ -229,11 +285,11 @@ def hangar_shuttle_spawn(docked_id, roles):
         roles = "shuttle"
     else:
         roles += ",shuttle" 
-    return hangar_craft_spawn(docked_id, "tsn_shuttle", roles, "SX")
+    return hangar_craft_spawn(docked_id, roles)
 
 def hangar_launch_craft(craft_id, client_id):
     if craft_id is None: return
-    craft = to_object(craft_id)
+    craft = to_space_object(craft_id)
     if craft is None: return
     if not has_role(craft_id, "standby"): return
     if not is_timer_finished(craft_id, "refit"): return
@@ -253,7 +309,6 @@ def hangar_launch_craft(craft_id, client_id):
     #
     hm = sbs.get_hull_map(craft.id, True)
 
-
     craft.set_inventory_value("craft_name", craft.name)
     call_sign = get_inventory_value(client_id, "call_sign", None)
     sortie = get_inventory_value(client_id, "sortie", 0)
@@ -269,6 +324,7 @@ def hangar_launch_craft(craft_id, client_id):
     blob = to_data_set(craft.id)
     if blob is not None and has_role(craft.id, "fighter"):
         h = blob.get( "Homing_MAX", 0)
+        h = h if h is not None else 10
         blob.set("Homing_NUM", h, 0)
     #
     # NOTE: Bomber has fighter role from ship_data
@@ -291,7 +347,7 @@ def hangar_launch_craft(craft_id, client_id):
 
     home_id = get_dedicated_link(craft.id, "home_dock")
     set_science_selection(craft_id, home_id)
-    home = to_object(home_id)
+    home = to_space_object(home_id)
     if home is not None:
         # set the position on launch, because if home
         # is a ship it could have moved
@@ -315,7 +371,7 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     """
     if craft_id is None: return
     if has_role(craft_id, "standby"): return
-    craft = to_object(craft_id)
+    craft = to_space_object(craft_id)
     if craft is None: return
     
     
@@ -397,7 +453,7 @@ def get_dock_name(so):
     dock = get_science_selection(so)
     if not dock:
         return ""
-    dock = to_object(dock)
+    dock = to_space_object(dock)
     if not dock:
         return ""
     return f"{dock.name}"
@@ -437,7 +493,7 @@ def hangar_get_docks(side):
     #     dock = get_science_selection(c)
     #     if dock is not None:
     #         docks.add(dock)
-    return to_object_list(docks)
+    return to_space_object_list(docks)
 
 def hangar_get_crafts_at(dock_id):
     """
@@ -455,7 +511,7 @@ def hangar_get_crafts_at(dock_id):
     for c in all_crafts:
         dock = get_science_selection(c)
         if dock == dock_id:
-            crafts.append(to_object(c))
+            crafts.append(to_space_object(c))
     return crafts
 
 

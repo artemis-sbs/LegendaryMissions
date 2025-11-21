@@ -1,0 +1,32 @@
+{
+    "version": "v1.3.0",
+    "mastlib": [
+        "autoplay",
+        "ai",
+        "comms",
+        "commerce",
+        "consoles",
+        "damage",
+        "docking",
+        "fleets",
+        "grid_comms",
+        "hangar",
+        "internal_comms",
+        "operator",
+        "science_scans",
+        "side_missions",
+        "upgrades",
+        "admiral",
+        "admiral_comms",
+        "gamemaster",
+        "gamemaster_comms",
+        "prefabs",
+        "basic_player_destroy",
+        "basic_random_skybox",
+        "collisions",
+        "data_panels"
+    ],
+    "zip": [
+        "media"
+    ]
+}
