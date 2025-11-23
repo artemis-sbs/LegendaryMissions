@@ -8,6 +8,8 @@ shared next_call_sign = 0
 #
 shared find_stray = task_schedule(find_stray_crafts)
 default HANGAR_CONSOLE_ENABLED = True
+# Just make sure the data loads
+hangar_get_craft_data("terran")
 #
 # The route_spawn label is the entry point 
 # it examines the SPAWNED_ID to either
@@ -42,10 +44,10 @@ default HANGAR_CONSOLE_ENABLED = True
     set_inventory_value(SPAWNED_ID, "MAX_FIGHTER", fighter_count)
 
     for x in range(0,fighter_count):
-        hangar_fighter_spawn(SPAWNED_ID, SPAWNED.side)
+        hangar_random_craft_spawn(SPAWNED_ID, "fighter")
 
     for x in range(0,shuttle_count):
-        hangar_shuttle_spawn(SPAWNED_ID, SPAWNED.side)
+        hangar_random_craft_spawn(SPAWNED_ID, "shuttle")
 
 
 //spawn if has_roles(SPAWNED_ID, "tsn, station")
@@ -60,7 +62,7 @@ default HANGAR_CONSOLE_ENABLED = True
 
     am = max(1,random.randint(0,fighter_count+shuttle_count))
     for x in range(0,am):
-        hangar_random_craft_spawn(SPAWNED_ID, "tsn")
+        hangar_random_craft_spawn(SPAWNED_ID)
 
     #for x in range(0,shuttle_count):
     #    hangar_shuttle_spawn(SPAWNED_ID, "tsn")

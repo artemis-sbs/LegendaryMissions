@@ -7,6 +7,7 @@ from sbs_utils.procedural.roles import has_role, remove_role, any_role, role, al
 from sbs_utils.procedural.space_objects import broad_test_around, closest, get_pos, set_pos
 from sbs_utils.procedural.routes import RouteDamageDestroy
 from sbs_utils.procedural.sides import to_side_object
+from sbs_utils.procedural.media import media_read_relative_file
 from sbs_utils.procedural.ship_data import get_ship_data_for
 
 from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished
@@ -19,6 +20,7 @@ import random
 
 from sbs_utils.procedural.internal_damage import grid_rebuild_grid_objects
 from sbs_utils.procedural.grid import grid_delete_objects
+from sbs_utils.fs import load_yaml_string
 import sbs
 
 _craft_id = 1
@@ -99,49 +101,63 @@ def hangar_set_dock(craft_id, docked_id):
     hangar_bump_version()
 
 
-def hangar_get_ship_data_keys(docked_id, roles):
+_craft_database = None
+def hangar_get_craft_data(origin):
+    global _craft_database
+    if _craft_database is None:
+        # The use of media read relative may not work?
+        _craft_database = load_yaml_string(media_read_relative_file("hangar_crafts.yaml"))
+    if _craft_database is None:
+        return None
+    
+    ret = _craft_database.get(origin)
+    if ret is not None:
+        return ret
+    return None
+
+
+
+def hangar_get_ship_data_keys(docked_id):
+    over_ride = get_inventory_value(docked_id, "HANGAR_ORIGIN_OVERRIDE", None)
+    if over_ride is not None:
+        craft_data = hangar_get_craft_data(over_ride)
+        if craft_data is not None:
+            return craft_data
+
+
     so = to_space_object(docked_id)
+    side_agent = to_side_object(docked_id)
+    over_ride = get_inventory_value(side_agent, "HANGAR_ORIGIN_OVERRIDE", None)
+    if over_ride is not None:
+        craft_data = hangar_get_craft_data(over_ride)
+        if craft_data is not None:
+            return craft_data
 
     origin = so.origin if so is not None else None
-    terran_keys = ["tsn_fighter", "tsn_bomber", "tsn_shuttle"]
-    if not origin:
-        return terran_keys
+    craft_data = hangar_get_craft_data(origin)
+    if craft_data is not None:
+        return craft_data
+
+    craft_data = hangar_get_craft_data("terran")
+    if craft_data is not None:
+        return craft_data
     
-    # Side overrides for keys
-    # side_id = so.side_id
-    # keys = get_inventory_value(side_id, "CRAFT_OVERRIDE_ARRAY")
-    # Home Dock overrides
-    side_agent = to_side_object(docked_id)
-    keys = get_inventory_value(side_agent, "CRAFT_OVERRIDE_ARRAY")
-    keys = get_inventory_value(docked_id, "CRAFT_OVERRIDE_ARRAY", keys)
-    if  bool(keys) and all(isinstance(elem, str) for elem in keys) and len(keys)==3:
-        return keys
-    
-    terran_keys = ["tsn_fighter", "tsn_bomber", "tsn_shuttle"]
-    origin_keys = {
-        "terran": terran_keys,
-        "ximni": ["xim_avenger", "xim_avenger", "tsn_shuttle"],
-        "pirate": ["pirate_fighter", "pirate_fighter", "tsn_shuttle"],
-        "arvonian": ["arvonian_fighter", "arvonian_fighter", "tsn_shuttle"],
-    }
-    keys = origin_keys.get(origin, terran_keys)
-    if  bool(keys) and all(isinstance(elem, str) for elem in keys) and len(keys)==3:
-        return keys
-    return terran_keys
+    print("WARNING: There is no hangar craft data")
+    return []
 
 
-def hangar_get_ship_data_key(docked_id, roles):
-    craft_type = 2 if "shuttle" in roles  else 1 if "bomber" in roles else 0
-    craft_type_strings = [ "Fighter", "Bomber","Shuttle"]
-    keys = hangar_get_ship_data_keys(docked_id, roles)
-    key = keys[craft_type]
-    sd = get_ship_data_for(key)
-    return (key, sd, craft_type_strings[craft_type])
+# def hangar_get_ship_data_key(docked_id, roles):
+#     craft_type = 2 if "shuttle" in roles  else 1 if "bomber" in roles else 0
+#     craft_type_strings = [ "Fighter", "Bomber","Shuttle"]
+#     keys = hangar_get_ship_data_keys(docked_id, roles)
+#     key = keys[craft_type]
+#     sd = get_ship_data_for(key)
+#     return (key, sd, craft_type_strings[craft_type])
     
 
 
 
-def hangar_craft_spawn(docked_id, roles):
+def hangar_craft_spawn(docked_id, craft_data):
     """
     Spawns a new hangar craft in the hangar of the specified ship or station.  
     You probably don't need to use this, because in hangar.mast, when a ship or station is spawned, this function is called to create all the necessary shuttles, fighters, and bombers needed.
@@ -155,20 +171,20 @@ def hangar_craft_spawn(docked_id, roles):
         SpawnData: The SpawnData object associated with the craft
     """
     global _craft_id
-    if roles is None:
-        roles = "cockpit,standby"
-    else:
-        roles += ",cockpit,standby"
-
+    
     docked_id = to_id(docked_id)
     so = to_space_object(docked_id)
 
-    sd_key, sd, name = hangar_get_ship_data_key(docked_id, roles)
+    sd_key = craft_data.get("key", "tsn_fighter")
+    sd = get_ship_data_for(sd_key)
+    name = "Fighter"
     origin = so.origin
     if sd is not None:
         name = sd.get("name", name)
         origin = sd.get("origin", origin)
 
+    roles = craft_data.get("roles","" )
+    roles = f"{so.side},{roles},cockpit,standby"
     
     _pos = so.engine_object.pos
     name = f"{origin} {name} {_craft_id}"
@@ -177,11 +193,26 @@ def hangar_craft_spawn(docked_id, roles):
     hm = sbs.get_hull_map(craft.id,True)
     # Not counted for end game
     craft.py_object.remove_role("PlayerShip,__player__")
+
+    style = craft_data.get("display_text", "Fighter")
+    set_inventory_value(craft.id, "CRAFT_TYPE", style )
+
+    #
+    # 
+    torp_types = craft_data.get("torp_types", {})
+    for t, count in torp_types.items():
+        craft.blob.set(f"{t}_MAX", count, 0)
+        craft.blob.set(f"{t}_VAL", count, 0)
+    
+    torp_available = ",".join(torp_types.keys())
+    craft.blob.set("torpedo_types_available", torp_available, 0)
+    shields = craft_data.get("shields", [-1,-1])
+
     c = craft.blob.get("shield_count", 0)
     for x in range(c):
-        m = craft.blob.get("shield_max_val", x)
+        m = shields[c] if c<len(shields) else craft.blob.get("shield_max_val", x)
         craft.blob.set("shield_max_val", m*4, x)
-        v = craft.blob.get("shield_val", x)
+        v = shields[c] if c<len(shields) else craft.blob.get("shield_val", x)
         craft.blob.set("shield_val", v*4, x)
     #
     # Cross links
@@ -214,7 +245,7 @@ def hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, objective):
     comms_broadcast(OBJECTIVE_ID, f"{pilot} {objective}",  "#090")
 
 
-def hangar_random_craft_spawn(docked_id, roles):
+def hangar_random_craft_spawn(docked_id, craft_type=None):
     """
     Spawns a random shuttle, bomber, or fighter.  
     30% chance of spawning a shuttle.  
@@ -227,65 +258,23 @@ def hangar_random_craft_spawn(docked_id, roles):
     Returns:
         SpawnData: The SpawnData object associated with the craft you've spawned.
     """
-    if randint(0,3) == 1:
-        return hangar_shuttle_spawn(docked_id, roles)
-    if randint(0,5) == 1:
-        return hangar_bomber_spawn(docked_id, roles)
+    craft_data_list = hangar_get_ship_data_keys(docked_id)
+
+    if craft_type is None and randint(0,3) == 1:
+        # get all shuttles
+        craft_type = "shuttle"
+    if craft_type is None and randint(0,5) == 1:
+        # get all shuttles
+        craft_type = "bomber"
+
+    filtered = craft_data_list
+    if craft_type is not None:
+        filtered = [x for x in craft_data_list if craft_type in x.get("roles","")]
     
-    return hangar_fighter_spawn(docked_id, roles)
+    one  = random.choice(filtered)
+    return hangar_craft_spawn(docked_id, one)
 
 
-def hangar_fighter_spawn(docked_id, roles):
-    """
-    Spawn a fighter with the given roles in the hangar of the ship or station with the specified ID.  
-    The fighter will spawn with the prefix "FX".
-
-    Args:
-        docked_id (int): the id of the ship or station in which the craft will spawn
-        roles (str): a comma-separated list of roles to add to the craft
-    Returns:
-        SpawnData: The SpawnData object associated with the craft in you've spawned.
-    """
-    if roles is None:
-        roles = "fighter"
-    else:
-        roles += ",fighter"
-    
-    return hangar_craft_spawn(docked_id, roles)
-
-def hangar_bomber_spawn(docked_id, roles):
-    """
-    Spawn a bomber with the given roles in the hangar of the ship or station with the specified ID.  
-    The fighter will spawn with the prefix "BX".
-
-    Args:
-        docked_id (int): the id of the ship or station in which the craft will spawn
-        roles (str): a comma-separated list of roles to add to the craft
-    Returns:
-        SpawnData: The SpawnData object associated with the craft you've spawned.
-    """
-    if roles is None:
-        roles = "bomber"
-    else:
-        roles += ",bomber" 
-    return hangar_craft_spawn(docked_id, roles)
-
-def hangar_shuttle_spawn(docked_id, roles):
-    """
-    Spawn a shuttle with the given roles in the hangar of the ship or station with the specified ID.  
-    The fighter will spawn with the prefix "SX".
-
-    Args:
-        docked_id (int): the id of the ship or station in which the craft will spawn
-        roles (str): a comma-separated list of roles to add to the craft
-    Returns:
-        SpawnData: The SpawnData object associated with the craft you've spawned.
-    """
-    if roles is None:
-        roles = "shuttle"
-    else:
-        roles += ",shuttle" 
-    return hangar_craft_spawn(docked_id, roles)
 
 def hangar_launch_craft(craft_id, client_id):
     if craft_id is None: return
@@ -319,29 +308,24 @@ def hangar_launch_craft(craft_id, client_id):
 
     if hm is None: return False
     grid_rebuild_grid_objects(craft.id)
-    
 
     blob = to_data_set(craft.id)
-    if blob is not None and has_role(craft.id, "fighter"):
-        h = blob.get( "Homing_MAX", 0)
-        h = h if h is not None else 10
-        blob.set("Homing_NUM", h, 0)
-    #
-    # NOTE: Bomber has fighter role from ship_data
-    #
-    if has_role(craft.id, "bomber"):
-        h = blob.get( "Homing_MAX", 0)
-        blob.set("Homing_NUM", h, 0)
-        h = blob.get( "Nuke_MAX", 0)
-        h = max(2,h)
-        blob.set("Nuke_NUM", h, 0)
-        h = blob.get( "Mine_MAX", 0)
-        #
-        # Demo to show multiple torps
-        #
-        h = max(15,h)
-        blob.set("Mine_NUM", h, 0)
-        
+
+    # Use the torp blob dat to refill
+    avail = blob.get("torpedo_types_available", 0)
+    if not isinstance(avail, str):
+        avail = ""
+    avail = avail.split(",")
+    for t in avail:
+        t = t.strip()
+        h = blob.get( f"{t}_MAX", 0)
+        blob.set(f"{t}_NUM", h, 0)
+
+    # Reset shields
+    c = blob.get("shield_count", 0)
+    for x in range(c):
+        m = blob.get("shield_max_val", x)
+        blob.set("shield_val", m, x)
 
     remove_role(craft.id, "standby")
 
@@ -518,6 +502,10 @@ def hangar_get_crafts_at(dock_id):
 def hangar_console_ship_template(item):
     gui_row("row-height: 1.2em;padding:13px;")
     gui_text(f"$text:{item.name};justify: left;")
+    t = item.get_inventory_value("CRAFT_TYPE", "Fighter")
+    gui_row("row-height: 1.2em;padding:13px;")
+    gui_text(f"$text:{t};justify: left;font:gui-1")
+
     
 
 def hangar_console_title_template():
