@@ -414,3 +414,25 @@ $t on ship {client_select_ship}
 
     await gui()
 
+#
+# Allow the tabs to be available
+#
+//gui/tab/helm
+    CONSOLE_SELECT= "helm"
+    jump console_selected 
+
+//gui/tab/comms
+    CONSOLE_SELECT= "comms"
+    jump console_selected 
+
+//gui/tab/engineering
+    CONSOLE_SELECT= "engineering"
+    jump console_selected 
+
+//gui/tab/science
+    CONSOLE_SELECT= "science"
+    jump console_selected 
+
+//gui/tab/weapons
+    CONSOLE_SELECT= "weapons"
+    jump console_selected 

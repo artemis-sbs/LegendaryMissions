@@ -12,7 +12,8 @@ default SCIENCE_CONSOLE_ENABLED = True
 default MAINSCREEN_CONSOLE_ENABLED = True
 default CINEMATIC_CONSOLE_ENABLED = True
 
-gui_tab_add_top("helm,comms,science,weapons,engineering")
+if is_dev_build():
+    gui_tab_add_top("helm,comms,science,weapons,engineering")
 
 @console/helm !0 ^5 "Helm" if HELM_CONSOLE_ENABLED
     " Pilot the ship
