@@ -29,7 +29,7 @@ brain_to_watch = None
         sub_task_schedule(brain_scan_update)
     
 
-    gui_activate_console("brain_sci")
+    gui_activate_console("brain")
 
     # Whole screen
     gui_section(style="area:0,45px,100,100;")
