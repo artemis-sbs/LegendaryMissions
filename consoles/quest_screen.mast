@@ -5,7 +5,6 @@ brain_to_watch = None
 
 
 if is_dev_build():
-    quest_create_test_data()
     gui_tab_add_top("quest")
 
 //gui/tab/quest if is_dev_build()
@@ -19,10 +18,13 @@ if is_dev_build():
     # Whole screen
     gui_section(style="area:0,45px,100,100;")
 
+    if is_dev_build():
+        quest_create_test_data()
+
     quest_list = quest_flatten_list()
 
     # Left
-    with gui_sub_section("col-width:25;"):
+    with gui_sub_section("col-width:35;"):
         gui_row()
         obj_list = gui_list_box(quest_list,"row-height: 0.1em; background:#1572;", item_template=quest_item, title_template=quest_title, select=True)
 
@@ -31,7 +33,9 @@ $t Select a quest
 
 
 """
-    text = gui_text_area(t, "padding:20px,0, 0,0") #"$h1 Hello\n\nTest\n\n\n\n")
+    with gui_sub_section("col-width:65;padding:20px,0, 0,0"):
+        text = gui_text_area(t) #"$h1 Hello\n\nTest\n\n\n\n")
+
     header = """
 =$t font:gui-6;color:#bbb;
 =$h1 font:gui-5;color:#55b; | I > 0;
@@ -46,11 +50,12 @@ $t Select a quest
 =$_ font:gui-2;color:white;
 """
 #=$ul font:gui-2;color:#933; | \x01 > 4;
-    #text.parse_header(header)
+    text.parse_header(header)
     
     obj_list.title_section_style += "background:#1578;"
     on change obj_list.get_value():
         item = obj_list.get_value()
+
         t = """
 $t {item.display_text}
 

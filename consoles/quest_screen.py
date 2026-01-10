@@ -11,8 +11,12 @@ def quest_item(item):
     
     if not gui_list_box_is_header(item):
         gui_row("row-height: 1em;padding:5px,0,5px,0;")
-        display_text = item.get("display_text")
-        gui_text(f"$text:{display_text};justify: left;","padding:0,0,0.1em,0;")
+        id = item.get("id")
+        indent = id.count("/") * 15
+        
+
+        display_text = "  "*indent + item.get("display_text")
+        gui_text(f"$text:{display_text};justify: left;",f"padding:{indent}px,0,0.1em,0;")
     else:
         gui_row("row-height: 1em;padding:5px,0,5px,0;")
         if not item.collapse:
@@ -42,23 +46,29 @@ def quest_flatten_list():
 
     ret = []
 
-    def append_quests(quests, header):
+    def append_quests(quests, header=None):
         active = []
         idle = []
         completed = []
+        
         if len(quests)>0:
-            active.append(gui_list_box_header(header))
+            if header is not None:
+                active.append(gui_list_box_header(header))
 
             for q in quests.values():
                 state = q.get("state", QuestState.IDLE)
                 if  state == QuestState.ACTIVE:
                     active.append(q)
+                    active.extend(append_quests(q.children))
                 if  state == QuestState.IDLE:
                     idle.append(q)
+                    idle.extend(append_quests(q.children))
                 if state == QuestState.COMPLETE:
                     completed.append(q)
+                    completed.extend(append_quests(q.children))
             active.extend(idle)
             active.extend(completed)
+            
         return active
 
 
@@ -67,6 +77,8 @@ def quest_flatten_list():
     ret.extend(append_quests(ship_quests, "Ship"))
 
     return ret
+
+
 
 
 def quest_create_test_data():
