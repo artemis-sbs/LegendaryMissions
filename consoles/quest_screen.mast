@@ -27,30 +27,8 @@ if is_dev_build():
         obj_list = gui_list_box(quest_list,"row-height: 0.1em; background:#1572;", item_template=quest_item, title_template=quest_title, select=True)
 
     t = """
-$p2 A Game mode that you don't blow things up
+$t Select a quest
 
-$h3 Heading three
-
-$p3 A list:
-
-$ol
-one
-two
-three
-
-$p3 Second List:
-
-$ol
-one
-two
-three
-
-$p3 Unordered List:
-
-$ul
-one
-two
-three
 
 """
     text = gui_text_area(t, "padding:20px,0, 0,0") #"$h1 Hello\n\nTest\n\n\n\n")
@@ -61,13 +39,14 @@ three
 =$h3 font:gui-3;color:#b55; | a > 4;
 =$p2 font:gui-2;color:#11f; | > 2;
 =$p3 font:gui-2;color:#11f; | > 4;
-=$ul font:gui-2;color:#933; | \x01 > 4;
 =$ol font:gui-2;color:#393; | 1 > 6;
+=$ul font:gui-2;color:#11f; | * > 6;
 =$c font:gui-2;color:#339;justify:center; 
 =$r font:gui-2;color:#339;justify:right;
-=$ font:gui-2;color:black;
+=$_ font:gui-2;color:white;
 """
-    text.parse_header(header)
+#=$ul font:gui-2;color:#933; | \x01 > 4;
+    #text.parse_header(header)
     
     obj_list.title_section_style += "background:#1578;"
     on change obj_list.get_value():
