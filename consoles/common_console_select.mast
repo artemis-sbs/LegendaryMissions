@@ -345,6 +345,7 @@ route_change_console(on_change_console)
 
 
     set_inventory_value(client_id, "CONSOLE_TYPE", CONSOLE_SELECT)
+    
     # Remove any console roles
     for k in consoles:
         remove_role(client_id, k.path)

@@ -227,7 +227,8 @@ Main:
     ship_id = sbs.get_ship_of_client(client_id)
 
     gui_console("mainscreen")
-    # link(ship_id,"consoles", client_id)
+    set_inventory_value(client_id, "CONSOLE_TYPE", "mainscreen")
+    link(ship_id,"consoles", client_id)
     # add_role(client_id, "console, mainscreen")
 
 
