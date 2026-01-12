@@ -73,7 +73,7 @@ shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
 
     jump reassign_to_console_select if len(players)>0
 
-    jump reassign_to_hangar if False
+    ->END
 
 
 ---- reassign_to_hangar
