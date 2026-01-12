@@ -1,9 +1,3 @@
-import brain_scan.py
-brain_scan_tick = 0
-brain_scan_task = None
-brain_to_watch = None
-
-
 if is_dev_build():
     gui_tab_add_top("quest")
 

@@ -343,7 +343,8 @@ hangar_get_craft_data("terran")
         #
         # check if this is the correct fighter
         #
-        continue if craft == get_dedicated_link(cid, "craft_id") and get_inventory_value(cid, "CONSOLE_TYPE") == "cockpit"
+        c_type = sbs.get_type_of_client(cid)
+        continue if craft == get_dedicated_link(cid, "craft_id") and c_type == "cockpit"
         so = to_object(craft)
         continue if so is None
 
