@@ -12,6 +12,9 @@ default SCIENCE_CONSOLE_ENABLED = True
 default MAINSCREEN_CONSOLE_ENABLED = True
 default CINEMATIC_CONSOLE_ENABLED = True
 
+if is_dev_build():
+    gui_tab_add_top("helm,comms,science,weapons,engineering")
+
 @console/helm !0 ^5 "Helm" if HELM_CONSOLE_ENABLED
     " Pilot the ship
 
@@ -19,13 +22,16 @@ default CINEMATIC_CONSOLE_ENABLED = True
     CONSOLE_SELECT = "helm"
 
     _ship_id = sbs.get_ship_of_client(client_id) 
+    jump select_console_clear_ready if _ship_id == 0 or not has_role(_ship_id, "__player__")
     #
     # Handle jump vs Warp drive
     #
     blob = to_blob(_ship_id)
     is_jump = blob.get("jump_drive_active", 0) == 1
 
-    gui_add_console_tab(_ship_id, CONSOLE_SELECT, CONSOLE_SELECT, None)
+    #gui_add_console_tab(_ship_id, CONSOLE_SELECT, CONSOLE_SELECT, None)
+    gui_tab_enable_top()
+    gui_tab_back(CONSOLE_SELECT)
     gui_console(CONSOLE_SELECT, is_jump)
 
     await gui()
@@ -64,8 +70,13 @@ default CINEMATIC_CONSOLE_ENABLED = True
 
 
 ===== common_console_show ====
-    _ship_id = sbs.get_ship_of_client(client_id) 
-    gui_add_console_tab(_ship_id, CONSOLE_SELECT, CONSOLE_SELECT, None)
+    _ship_id = sbs.get_ship_of_client(client_id)
+
+    print(f"SHIP ID {_ship_id}")
+    jump select_console_clear_ready if _ship_id == 0 or not has_role(_ship_id, "__player__")
+    #gui_add_console_tab(_ship_id, CONSOLE_SELECT, CONSOLE_SELECT, None)
+    gui_tab_enable_top()
+    gui_tab_back(CONSOLE_SELECT)
     gui_console(CONSOLE_SELECT)
 
     await gui()

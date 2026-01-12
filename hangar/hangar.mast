@@ -343,9 +343,16 @@ hangar_get_craft_data("terran")
         #
         # check if this is the correct fighter
         #
-        continue if craft == get_dedicated_link(cid, "craft_id") and get_inventory_value(cid, "CONSOLE_TYPE") == "cockpit"
+
+        #TODO: This could cause issues if alternate tabs are added to cockpit
+
+        c_type = sbs.get_type_of_client(cid)
+        continue if craft == get_dedicated_link(cid, "craft_id") and c_type == "cockpit"
         so = to_object(craft)
         continue if so is None
+
+        #TODO: Some people want the crafts to be left and need to be retrieved
+        print("Craft console changed returning craft to hanger")
 
         redocked = hangar_attempt_dock_craft(craft, None)
         #if redocked:

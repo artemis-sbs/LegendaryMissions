@@ -9,11 +9,13 @@ import upgrade.py
 #gui_add_console_tab(SHARED, "upgrade", "__back_tab__", "console_selected")
 
 
-@gui/tab/upgrade
+gui_tab_add_top("upgrade")
+
+//gui/tab/upgrade
     jump upgrade_screen
 
 === upgrade_screen
-
+    gui_tab_back(CONSOLE_SELECT)
     # Get inventory values for upgrade counts and timers.
 
 

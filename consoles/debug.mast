@@ -2,35 +2,21 @@ import debug.py
 
 shared allow_debug = True
 
-
-
+if is_dev_build():
+    gui_tab_add_top("debug")
 #  gui_active_path("console/helm, console/comms, console/engineering, console/science, console/weapons" )
 
-//gui/tab/helm if is_dev_build()
-    CONSOLE_SELECT= "helm"
-    jump console_selected 
 
-//gui/tab/comms if is_dev_build()
-    CONSOLE_SELECT= "comms"
-    jump console_selected 
-
-//gui/tab/engineering if is_dev_build()
-    CONSOLE_SELECT= "engineering"
-    jump console_selected 
-
-//gui/tab/science if is_dev_build()
-    CONSOLE_SELECT= "science"
-    jump console_selected 
-
-//gui/tab/weapons if is_dev_build()
-    CONSOLE_SELECT= "weapons"
-    jump console_selected 
-
-
-//gui/tab/debug if is_dev_build()
+//gui/tab/debug
     jump debug_screen
 
+//gui/tab/mast
+    jump mast_debug_screen
+
+
 === debug_screen
+    gui_tab_back(CONSOLE_SELECT)
+    gui_tab_enable("brain,mast")
 
     gui_section(style="area:10,15,35,100;row-height:35px;")
     gui_row()
@@ -234,6 +220,7 @@ shared allow_debug = True
     jump debug_screen
 
 ===== mast_debug_screen ======
+    gui_tab_back("debug")
 
     gui_section(style="area: 10,10,90,90;")
 

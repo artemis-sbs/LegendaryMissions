@@ -75,7 +75,9 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     #
     # Should have a way to get all sides - now we do!
     #
-    side = side_ship.side
+    side = "tsn"
+    if side_ship is not None:
+        side = side_ship.side
     sel = get_inventory_value(cambot_id, "gm_last_selected_side")
     if sel is not None:
         side = sel

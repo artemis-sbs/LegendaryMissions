@@ -58,22 +58,26 @@ shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
 #
 //signal/player_ship_destroyed
 
+## remember state
+    ship_id = sbs.get_ship_of_client(client_id)
+    is_hangar_craft =  has_role(DESTROYED_ID,"cockpit")
+
 ## Wait for delete to be processed    
     await delay_sim(0)
-    ship_id = sbs.get_ship_of_client(client_id)
+
     yield success if ship_id == 0 or ship_id != DESTROYED_ID
     yield success if PLAYER_SHIP_RESPAWN
 
     jump reassign_to_main if has_role(client_id, "mainscreen")
 
     jump reassign_to_main if client_id == 0
-    jump reassign_to_hangar if has_role(DESTROYED_ID,"cockpit")
+    jump reassign_to_hangar if is_hangar_craft 
 
     players = to_object_list(role("__player__") - role("exploded"))
 
     jump reassign_to_console_select if len(players)>0
 
-    jump reassign_to_hangar if False
+    ->END
 
 
 ---- reassign_to_hangar

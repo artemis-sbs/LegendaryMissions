@@ -48,6 +48,9 @@ class GM_Gui_Tab(Button):
       super().__init__(tag, f"$text:{name}")
       pass
 
+#
+# TODO: This is now in the library as gui_listbox_items_convert_headers
+#
 def gm_convert_listbox_items(items):
     """Converts a list of strings into a list of objects that allow a listbox to collapse if a header is clicked
     To make a header, prefix the name with `>>`. 
@@ -141,6 +144,9 @@ def gm_set_menu_contents(client_id, menu, contents):
         lb.items = []
         lb.represent(FakeEvent(client_id))
 
+#
+# TODO: This is now in the library as gui_list_box_header
+#
 from sbs_utils.pages.widgets.layout_listbox import LayoutListBoxHeader
 def buildListboxHeader(label, collabsible=True):
     return LayoutListBoxHeader(label, collabsible)

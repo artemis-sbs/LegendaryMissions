@@ -30,9 +30,14 @@ route_change_console(on_change_console)
 
     console_ready = False
     console_read_only = False
-    ship_name = PLAYER_LIST[0].name
+
+    ship_name = "No Player Ships"
+    ship_type = "invisible"
+    if len(PLAYER_LIST)>0:
+        ship_name = PLAYER_LIST[0].name
+        ship_type = PLAYER_LIST[0].art_id
+
     client_select_ship = ship_name.lower()
-    ship_type = PLAYER_LIST[0].art_id
     ship_type_def = ship_type
 
     shared ship_list = ""
@@ -166,10 +171,14 @@ route_change_console(on_change_console)
     # List of available ships
     # ship_sec2 = gui_region(style="area: 1,110px,500px,520px")
     gui_section( style="area: 10px,550px,500px,100-60px;")
-    ship_list = player_list_all[:PLAYER_COUNT]
+    if len(player_list_all)>0:
+        ship_list = player_list_all[:PLAYER_COUNT]
+    else:
+        ship_list = []
     ship_select_lb = gui_list_box(ship_list,"background:#1572;tag:sh_ship_list;", item_template=console_ship_select_template, title_template=console_ship_select_title_template, select=True)
 
-    ship_select_lb.set_selected_index(client_selected_index)
+    if len(ship_list)>0:
+        ship_select_lb.set_selected_index(client_selected_index)
 
 
     #
@@ -237,30 +246,31 @@ route_change_console(on_change_console)
         await delay_app(0)
         jump select_console_clear_ship
 
-    on change ship_select_lb.get_value():
-        client_select_ship_item = ship_select_lb.get_value()
-        client_selected_index = ship_select_lb.get_selected_index()
-        if client_select_ship_item is not None:
-            client_select_ship = client_select_ship_item.name
-            ship_name = client_select_ship
-            ship_type = client_select_ship_item.art_id
+    if len(ship_list) >0:
+        on change ship_select_lb.get_value():
+            client_select_ship_item = ship_select_lb.get_value()
+            client_selected_index = ship_select_lb.get_selected_index()
+            if client_select_ship_item is not None:
+                client_select_ship = client_select_ship_item.name
+                ship_name = client_select_ship
+                ship_type = client_select_ship_item.art_id
+                gui_update("sh_ship_picker", ship_type)
+                gui_update("sh_ship_name", ship_name)
+                
+                
+        on change ship_select_lb.get_value().art_id:
+            ship_type = ship_select_lb.get_value().art_id
             gui_update("sh_ship_picker", ship_type)
-            gui_update("sh_ship_name", ship_name)
+            gui_update("sh_ship_list", None)
+                
+        on change ship_select_lb.get_value().name:
+            ship_name = ship_select_lb.get_value().name
+            _input.value = ship_name
+            _display.value = ship_name
+            gui_represent(ship_sec_not)
+            gui_represent(ship_sec)
+            gui_update("sh_ship_list", None)
             
-            
-    on change ship_select_lb.get_value().art_id:
-        ship_type = ship_select_lb.get_value().art_id
-        gui_update("sh_ship_picker", ship_type)
-        gui_update("sh_ship_list", None)
-            
-    on change ship_select_lb.get_value().name:
-        ship_name = ship_select_lb.get_value().name
-        _input.value = ship_name
-        _display.value = ship_name
-        gui_represent(ship_sec_not)
-        gui_represent(ship_sec)
-        gui_update("sh_ship_list", None)
-        
         
             
     await gui()
@@ -270,6 +280,10 @@ route_change_console(on_change_console)
     jump  select_console
 
 # Multiple labels to call to get here
+========== select_console_clear_ready
+    console_ready = False
+    jump  select_console
+
 
 ====== game_started_console ====
     if not console_ready:
@@ -283,6 +297,8 @@ route_change_console(on_change_console)
     await delay_sim(1)
 
 ====== console_selected ====
+    jump show_console_selected if len(PLAYER_LIST) ==0
+
     if CONSOLE_SELECT is None or client_select_ship is None:
         jump select_console
 
@@ -329,6 +345,7 @@ route_change_console(on_change_console)
 
 
     set_inventory_value(client_id, "CONSOLE_TYPE", CONSOLE_SELECT)
+    
     # Remove any console roles
     for k in consoles:
         remove_role(client_id, k.path)
@@ -398,3 +415,25 @@ $t on ship {client_select_ship}
 
     await gui()
 
+#
+# Allow the tabs to be available
+#
+//gui/tab/helm
+    CONSOLE_SELECT= "helm"
+    jump console_selected 
+
+//gui/tab/comms
+    CONSOLE_SELECT= "comms"
+    jump console_selected 
+
+//gui/tab/engineering
+    CONSOLE_SELECT= "engineering"
+    jump console_selected 
+
+//gui/tab/science
+    CONSOLE_SELECT= "science"
+    jump console_selected 
+
+//gui/tab/weapons
+    CONSOLE_SELECT= "weapons"
+    jump console_selected 

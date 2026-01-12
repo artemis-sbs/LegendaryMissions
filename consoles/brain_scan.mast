@@ -9,7 +9,7 @@ brain_to_watch = None
 === brain_scan_update
     await delay_sim(5)
     still_active = sbs.get_type_of_client(client_id)
-    jump brain_scan_update if still_active != "brain_sci"
+    jump brain_scan_update if still_active != "brain"
 
     await sub_task_schedule(brain_scan_update_text)
     jump brain_scan_update
@@ -28,8 +28,8 @@ brain_to_watch = None
     if brain_scan_task is None:
         sub_task_schedule(brain_scan_update)
     
-
-    gui_activate_console("brain_sci")
+    gui_tab_back("debug")
+    gui_activate_console("brain")
 
     # Whole screen
     gui_section(style="area:0,45px,100,100;")
