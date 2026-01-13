@@ -27,7 +27,7 @@ $t Select a quest
 
 
 """
-    with gui_sub_section("col-width:65;padding:20px,0, 0,0"):
+    with gui_sub_section("col-width:62-25px;padding:10px,0, 0,0"):
         text = gui_text_area(t) #"$h1 Hello\n\nTest\n\n\n\n")
 
     header = """

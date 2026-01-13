@@ -111,7 +111,24 @@ quest2:
         Green
 
         $h3 This is H3
+
+        # Heading one
+
+        ## Heading 2
+
+        ### Heading 3
         
+        1. This
+        1. Is
+        1. ordered
+
+        - This
+        - is 
+        - unordered
+
+        # End
+        
+
 kills:
     display_text: kills
     description: Track the number of kills
