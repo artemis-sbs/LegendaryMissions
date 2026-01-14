@@ -103,15 +103,50 @@ quest2:
         Two
         Three
 
+        ## Ship
+        
+        ![](ship://tsn_light_cruiser?height=200&align=center)
+
+
+        ![](face://ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=right)
+        
+
         $h3 This is H3
 
         $ul
         Blue
         Red 
         Green
+        Test
+
+        ![](image://test?scale=0.25&fill=center)
+
+        ![](image://ball?scale=0.25&fill=center&color=blue)
+
+        
+
 
         $h3 This is H3
+
+        # Heading one
+
+        ## Heading 2
+
+        ![](image://test2?scale=0.5&fill=center)
+
+        ### Heading 3
         
+        1. This
+        1. Is
+        1. ordered
+
+        - This
+        - is 
+        - unordered
+
+        # End
+        
+
 kills:
     display_text: kills
     description: Track the number of kills

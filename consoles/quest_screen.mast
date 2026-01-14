@@ -1,5 +1,10 @@
 if is_dev_build():
     gui_tab_add_top("quest")
+    # Example images
+    gui_image_add_atlas("test", "media/LegendaryMissions/operator")
+    gui_image_add_atlas("test2", "media/LegendaryMissions/operator", 645,570, 950,820)
+
+
 
 //gui/tab/quest if is_dev_build()
     jump quest_screen
@@ -27,7 +32,9 @@ $t Select a quest
 
 
 """
-    with gui_sub_section("col-width:65;padding:20px,0, 0,0"):
+    #"col-width:62-25px;padding:10px,0, 0,0"):
+    with gui_sub_section(): 
+        gui_row("col-width:62-25px;padding:10px,0, 0,0")
         text = gui_text_area(t) #"$h1 Hello\n\nTest\n\n\n\n")
 
     header = """
