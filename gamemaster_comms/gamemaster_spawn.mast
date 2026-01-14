@@ -180,7 +180,11 @@
             +[$gamemaster]"{side_name} {ship['name']}" {"ship_data": ship, "gm": COMMS_ORIGIN}:
                 # Get vec3 of gamemaster
                 pos = Vec3(gm.pos)
-                prefab_spawn(prefab_single_ship, {"START_X":pos.x, "START_Y":pos.y, "START_Z":pos.z, "ship_art":ship_data["key"], "side_value":side_name.lower(), "ship_role":selected_role})
+                spawn_side = side_name.lower()
+                # This will force all enemies to spawn as raiders.
+                if side_are_allies(side_name,"raider"):
+                    spawn_side = "raider"
+                prefab_spawn(prefab_single_ship, {"START_X":pos.x, "START_Y":pos.y, "START_Z":pos.z, "ship_art":ship_data["key"], "side_value":spawn_side, "ship_role":selected_role})
                 # npc = npc_spawn(pos.x,pos.y,pos.z,ship_name,side_name.lower(), ship_data["key"], behav)
 
                 # TODO: DOUG I NEED HELP WITH THIS! Fixed using prefab but need to learn it better

@@ -66,15 +66,16 @@ races: terran
 
 == spawn_default_sides
 " Create the standard sides for the Artemis universe: TSN, USFP, Kralien, Arvonian, Torgoth, Skaraan, Ximni, Pirate, and the generic Raider
-    await prefab_spawn(prefab_side_generic, {"name": "TSN", "key":"tsn", "desc":"Terran Stellar Navy", "allies":"usfp", "enemies":"kralien, arvonian, torgoth, skaraan, pirate"})
-    await prefab_spawn(prefab_side_generic, {"name": "USFP", "key":"usfp", "desc":"USFP", "allies":"tsn", "enemies":"kralien, arvonian, torgoth, skaraan, pirate"})
-    await prefab_spawn(prefab_side_generic, {"name": "Kralien", "key":"kralien", "desc":"Kralien Emprie", "allies":"arvonian, torgoth, skaraan", "enemies":"tsn,usfp", "races":"kralien"})
-    await prefab_spawn(prefab_side_generic, {"name": "Arvonian", "key":"arvonian", "desc":"Arvonian", "allies":"kralien, torgoth, skaraan", "enemies":"tsn,usfp", "races":"arvonian"})
-    await prefab_spawn(prefab_side_generic, {"name": "Torgoth", "key":"torgoth", "desc":"Torgoth", "allies":"kralien, arvonian, skaraan", "enemies":"tsn,usfp", "races":"torgoth"})
-    await prefab_spawn(prefab_side_generic, {"name": "Skaraan", "key":"skaraan", "desc":"Skaraan", "allies":"arvonian, torgoth, kralien", "enemies":"tsn,usfp", "races":"skaraan"})
-    await prefab_spawn(prefab_side_generic, {"name": "Ximni", "key":"ximni", "desc":"Ximni", "allies":"", "enemies":"", "races":"ximni"})
-    await prefab_spawn(prefab_side_generic, {"name": "Pirate", "key":"pirate", "enemies":"tsn,usfp,kralien,arvonian,torgoth,ximni", "races":"terran,ximni"}) #Excluding Skaraan as enemy because they might cooperate sometimes.
+    await prefab_spawn(prefab_side_generic, {"name": "TSN", "key":"tsn", "desc":"Terran Stellar Navy", "allies":"usfp", "enemies":"kralien, arvonian, torgoth, skaraan, pirate, raider"})
+    await prefab_spawn(prefab_side_generic, {"name": "USFP", "key":"usfp", "desc":"USFP", "allies":"tsn", "enemies":"kralien, arvonian, torgoth, skaraan, pirate, raider"})
+    await prefab_spawn(prefab_side_generic, {"name": "Kralien", "key":"kralien", "desc":"Kralien Emprie", "allies":"arvonian, torgoth, skaraan, raider", "enemies":"tsn,usfp", "races":"kralien"})
+    await prefab_spawn(prefab_side_generic, {"name": "Arvonian", "key":"arvonian", "desc":"Arvonian", "allies":"kralien, torgoth, skaraan, raider", "enemies":"tsn,usfp", "races":"arvonian"})
+    await prefab_spawn(prefab_side_generic, {"name": "Torgoth", "key":"torgoth", "desc":"Torgoth", "allies":"kralien, arvonian, skaraan, raider", "enemies":"tsn,usfp", "races":"torgoth"})
+    await prefab_spawn(prefab_side_generic, {"name": "Skaraan", "key":"skaraan", "desc":"Skaraan", "allies":"arvonian, torgoth, kralien, raider", "enemies":"tsn,usfp", "races":"skaraan"})
+    await prefab_spawn(prefab_side_generic, {"name": "Ximni", "key":"ximni", "desc":"Ximni", "allies":"raider", "enemies":"", "races":"ximni"})
+    await prefab_spawn(prefab_side_generic, {"name": "Pirate", "key":"pirate", "allies":"raider","enemies":"tsn,usfp,kralien,arvonian,torgoth,ximni", "races":"terran,ximni"}) #Excluding Skaraan as enemy because they might cooperate sometimes.
     await prefab_spawn(prefab_side_generic, {"name": "Raider", "key":"raider", "allies":"kralien,arvonian,torgoth,skaraan","enemies":"tsn,usfp"})
+    await prefab_spawn(prefab_side_generic, {"name": "Civ", "key":"civ", "desc":"Civilian", "allies":"tsn,usfp", "enemies":"kralien, arvonian, torgoth, skaraan, pirate, raider", "races":"terran"})
     
     # Debugging
     # await delay_sim(1)
