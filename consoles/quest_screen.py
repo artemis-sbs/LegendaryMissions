@@ -110,11 +110,17 @@ quest2:
         Red 
         Green
 
+        !test?scale=0.25&fill=center
+        
+
+
         $h3 This is H3
 
         # Heading one
 
         ## Heading 2
+
+        !test2?scale=0.5&fill=center
 
         ### Heading 3
         
