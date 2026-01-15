@@ -10,32 +10,47 @@ from sbs_utils.agent import Agent
 def quest_item(item):
     
     if not gui_list_box_is_header(item):
-        gui_row("row-height: 1.5em;padding:5px,0,5px,0;")
+        gui_row("row-height: 1.5em;padding:8px,0,0,0;")
         if item.state == QuestState.COMPLETE:
             gui_icon("icon_index:101;color:#151;", "padding:0,0,5px,0;")
         else:
             gui_icon("icon_index:121;color:#eee;", "padding:0,0,5px,0;")
-
         display_text = item.get("display_text")
-        if len(item.children)>0:
-            display_text = "Overview"
-        gui_text(f"$text:{display_text};justify: left;draw_layer:1000;")
-    else:
+        gui_text(f"$text:{display_text};justify: left;draw_layer:1000;","padding:5px,6px,0,0;")
 
-        gui_row("row-height: 1.5em;padding:5px,0,5px,0;")
-        if not item.collapse:
-            gui_icon("icon_index:155;color:#000;", "padding:0,0,5px,0;background: #FFFC;")
-            label = f"{item.label}"
-            gui_text(f"$text:{label};justify: left;color:#222;", "background: #FFFC")
-        else:
-            gui_icon("icon_index:154;color:#eee;", "padding:0,0,5px,0;background: #0173;")
-            label = f"{item.label}"
-            gui_text(f"$text:{label};justify: left;color:#eee;", "background: #0173")
-        return
+        
+
+    else:
+        gui_row("row-height: 1.5em;padding:8px,0,0,0;")
+
+        data = item.data
+        if data is not None:
+            if data.state == QuestState.COMPLETE:
+                gui_icon("icon_index:101;color:#151;", "padding:0,0,5px,0;")
+            else:
+                gui_icon("icon_index:121;color:#eee;", "padding:0,0,5px,0;")
+            
+        icon_index = 155 if not item.collapse else 154
+
+        
+        text = gui_text(f"$text:{item.label};justify: left;color:#fff;", "padding:5px,6px,0,0;background: #1578")
+        icon = gui_icon(f"icon_index:{icon_index};color:#fff;", "padding:0,0,5px,0;background: #1578;")
+        if item.selectable:
+            icon.click_text = ""
+            icon.click_tag = item.collapse_tag
+            icon.click_background = "#aaaa"
+            icon.click_color = "black"
+            icon.background_color = "#1576"
+            text.background_color = "#1576"
+            
+
+        
+        
+    return
     
 def quest_title():
-    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
-    gui_text(f"$text:QUESTS;justify: left;")
+    gui_row("row-height: 1.5em;padding:3px;background:#157e;")
+    gui_text(f"$text:QUESTS;justify: center;")
 
 
 def quest_flatten_list():
@@ -52,14 +67,14 @@ def quest_flatten_list():
 
     ret = []
 
-    def append_quests(quests, header=None, indent=0):
+    def append_quests(quests, header=None, indent=0, data=None):
         active = []
         idle = []
         completed = []
         
         if len(quests)>0:
             if header is not None:
-                active.append(gui_list_box_header(header,False,indent))
+                active.append(gui_list_box_header(header,False,indent, data is not None,data))
 
             for q in quests.values():
                 q.indent = indent
@@ -68,10 +83,8 @@ def quest_flatten_list():
                     active.append(q)
                     active.extend(append_quests(q.children))
                 if  state == QuestState.IDLE:
-                    c = append_quests(q.children, q.display_text, indent+1)
-                    if len(c)>=2:
-                        q.indent = indent+1
-                        c.insert(1,q)
+                    c = append_quests(q.children, q.display_text, indent+1, q)
+                    if len(c)>0:
                         idle.extend(c)
                     else:
                         idle.append(q)
