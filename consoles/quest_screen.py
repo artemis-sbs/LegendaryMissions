@@ -11,12 +11,6 @@ def quest_item(item):
     
     if not gui_list_box_is_header(item):
         gui_row("row-height: 1.5em;padding:5px,0,5px,0;")
-        id = item.get("id")
-        indent = item.get("indent",0) #id.count("/")
-        if indent:
-            gui_blank(1,f"col-width:{indent*25}px")
-
-        
         if item.state == QuestState.COMPLETE:
             gui_icon("icon_index:101;color:#151;", "padding:0,0,5px,0;")
         else:
@@ -25,13 +19,10 @@ def quest_item(item):
         display_text = item.get("display_text")
         if len(item.children)>0:
             display_text = "Overview"
-        gui_text(f"$text:{display_text};justify: left;draw_layer:1000;",f"padding:{indent}px,0,0.1em,1em;")
+        gui_text(f"$text:{display_text};justify: left;draw_layer:1000;")
     else:
 
         gui_row("row-height: 1.5em;padding:5px,0,5px,0;")
-        if item.indent:
-            gui_blank(1,f"col-width:{item.indent*25}px")
-
         if not item.collapse:
             gui_icon("icon_index:155;color:#000;", "padding:0,0,5px,0;background: #FFFC;")
             label = f"{item.label}"
