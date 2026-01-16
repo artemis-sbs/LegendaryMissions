@@ -20,6 +20,11 @@ OPERATOR_MODE:
     show_logo_on_main: true
     pin: "000000"
 
+#
+# Additional Lock down settings
+#
+SHIP_PICK_READ_ONLY: false
+CAN_CHANGE_CONSOLE: true
 
 GAMEMASTER: 
     enable: true

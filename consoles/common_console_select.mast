@@ -2,8 +2,11 @@ import common_console_selection.py
 
 crew_name = ""
 default shared grid_data = grid_get_grid_data()
+shared SHIP_PICK_READ_ONLY  = SETTINGS.get("SHIP_PICK_READ_ONLY", False)
+shared CAN_CHANGE_CONSOLE  = SETTINGS.get("CAN_CHANGE_CONSOLE", False)
 
-route_change_console(on_change_console)
+if CAN_CHANGE_CONSOLE:
+    route_change_console(on_change_console)
 
 ==== on_change_console
 
@@ -159,7 +162,7 @@ route_change_console(on_change_console)
             PLAYER_LIST[client_selected_index].art_id = ship_type
             gui_update_shared("sh_ship_list", None)
 
-    if sbs.is_demo() or console_select_item.path != "helm" or GAME_STARTED:
+    if sbs.is_demo() or console_select_item.path != "helm" or GAME_STARTED or SHIP_PICK_READ_ONLY:
         gui_hide(ship_sec)
         gui_show(ship_sec_not)
         spick.read_only = True
