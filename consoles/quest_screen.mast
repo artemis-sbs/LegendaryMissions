@@ -4,9 +4,12 @@ if is_dev_build():
     gui_image_add_atlas("test", "media/LegendaryMissions/operator")
     gui_image_add_atlas("test2", "media/LegendaryMissions/operator", 645,570, 950,820)
 
+default CONSOLE_SELECT = "" # Make sure variable exist at startup
 
+if is_dev_build():
+    quest_console_enable("helm,comms")
 
-//gui/tab/quest if is_dev_build()
+//gui/tab/quest if quest_is_console_enabled(CONSOLE_SELECT)
     jump quest_screen
 
 
