@@ -112,7 +112,17 @@ def quest_create_test_data():
     yaml_text = """
 quest1:
     display_text: quest1
-    description: Track the number of quest1
+    description: |+ 
+        Track the number of quest1
+
+        $$font:gui-2;color:blue;background:white This is white on blue
+
+        $$font:gui-2;color:green;background:white 
+        This is green on white
+        still is
+        and now
+
+        but not now
 quest2:
     display_text: quest2
     description: |+

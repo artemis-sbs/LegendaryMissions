@@ -39,7 +39,7 @@ $t Select a quest
 
     header = """
 =$t font:gui-6;color:#bbb;
-=$h1 font:gui-5;color:#55b; | I > 0;
+=$h1 font:gui-5;color:#55b;background:#115; | I > 0;
 =$h2 font:gui-4;color:#5b5; | A > 2;
 =$h3 font:gui-3;color:#b55; | a > 4;
 =$p2 font:gui-2;color:#11f; | > 2;
