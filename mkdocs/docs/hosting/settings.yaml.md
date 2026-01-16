@@ -27,6 +27,14 @@ Start options will be in the admin console.
 string needed to be typed to gain access to the operator and startup screen.
 The default is 000000
 
+# SHIP_PICK_READ_ONLY
+Set true to disable helms ability to change ship values.
+Set false (default) allows helm to change the ship properties.
+
+# CAN_CHANGE_CONSOLE
+Set true (default) to allow clients access to ship change console
+Set to false will not allow clients change consoles
+
 
 ## Default selections
 You set the default selection values for the startup settings screen.
