@@ -13,6 +13,8 @@ def quest_item(item):
         gui_row("row-height: 1.5em;padding:8px,0,0,0;")
         if item.state == QuestState.COMPLETE:
             gui_icon("icon_index:101;color:#151;", "padding:0,0,5px,0;")
+        elif item.state == QuestState.FAILED:
+            gui_icon("icon_index:101;color:#a22;", "padding:0,0,5px,0;")
         else:
             gui_icon("icon_index:121;color:#eee;", "padding:0,0,5px,0;")
         display_text = item.get("display_text")
@@ -71,6 +73,7 @@ def quest_flatten_list():
         active = []
         idle = []
         completed = []
+        failed = []
         
         if len(quests)>0:
             if header is not None:
@@ -93,8 +96,13 @@ def quest_flatten_list():
                 if state == QuestState.COMPLETE:
                     completed.append(q)
                     completed.extend(append_quests(q.children))
+                if state == QuestState.FAILED:
+                    failed.append(q)
+                    failed.extend(append_quests(q.children))
+
             active.extend(idle)
             active.extend(completed)
+            active.extend(failed)
             
         return active
 
@@ -198,6 +206,7 @@ kills:
             display_text: kill 50
         kills100:
             display_text: kill 100
+            state: FAILED
 """
     # signal_register("quest_activated", quest_activated)
     quest_add_yaml(Agent.SHARED_ID, yaml_text)
