@@ -233,9 +233,9 @@ Properties:
         new_good2 = _cargo2.pop()
         new_cont2 = _cargo2.pop()
         _cargo3.remove(new_good1)
-        _cargo3_remove(new_cont1)
+        _cargo3.remove(new_cont1)
         _cargo3.remove(new_good2)
-        _cargo3_remove(new_cont2)
+        _cargo3.remove(new_cont2)
         tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] + " and Container " + _cargo2[xfer_idx2 - 1] + ": " + _cargo2[xfer_idx2]
         tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
         _cargo2[xfer_idx1 - 1] = new_cont1
