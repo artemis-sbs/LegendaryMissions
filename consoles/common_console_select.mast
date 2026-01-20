@@ -4,7 +4,7 @@ crew_name = ""
 default shared grid_data = grid_get_grid_data()
 default SETTINGS = settings_get_defaults()
 shared SHIP_PICK_READ_ONLY  = SETTINGS.get("SHIP_PICK_READ_ONLY", False)
-shared CAN_CHANGE_CONSOLE  = SETTINGS.get("CAN_CHANGE_CONSOLE", False)
+shared CAN_CHANGE_CONSOLE  = SETTINGS.get("CAN_CHANGE_CONSOLE", True)
 
 if CAN_CHANGE_CONSOLE:
     route_change_console(on_change_console)
