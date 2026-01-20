@@ -74,7 +74,7 @@
 
     # note: changed to not use side or exact origin to avoid logic conflicts
     # the role of side/origin wasn't used but confused other logic
-    wr = terrain_spawn(dest_posx, dest_posy, dest_posz, "Wreck", f"wreck, wreck_{dest_origin}", "wreck", "behav_asteroid")
+    wr = terrain_spawn(dest_posx, dest_posy, dest_posz, "Wreck", f"wreck, wreck_{dest_origin}", "wreck", "behav_wreck")
     temp_yaw = random.uniform(0.001, 0.003)
     temp_pitch = random.uniform(0.002, 0.004)
     wr.engine_object.steer_yaw = temp_yaw
