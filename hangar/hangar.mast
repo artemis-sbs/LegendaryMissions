@@ -275,6 +275,7 @@ hangar_get_craft_data("terran")
     sbs.assign_client_to_ship(client_id,to_id(ride_select))
     set_inventory_value(ride_select, "client_id", client_id)
     set_dedicated_link(client_id, "craft_id", ride_select)
+    sbs.send_grid_selection_info(ride_select.id, "", "white", "")
 
     mission_objective = get_inventory_value(ride_select, "current_objective")
     if mission_objective:

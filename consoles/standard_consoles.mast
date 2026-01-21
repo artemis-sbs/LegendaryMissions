@@ -45,6 +45,14 @@ if is_dev_build():
 @console/engineering !0 ^15 "Engineering" if ENGINEERING_CONSOLE_ENABLED
     " Keep the ship running optimally
     CONSOLE_SELECT = "engineering"
+    _ship = sbs.get_ship_of_client(client_id)
+    sbs.send_grid_selection_info(_ship, "", "white", "")
+    sel = get_grid_selection(_ship)
+    if to_space_object(_ship) is not None:
+        if sel is None:
+            sel  = 0
+        follow_route_select_grid(_ship,sel)
+
     jump common_console_show
 
 
@@ -53,6 +61,7 @@ if is_dev_build():
 
 
     ship = sbs.get_ship_of_client(client_id)
+    sbs.send_comms_selection_info(ship, "", "white", "static")
     sel = get_comms_selection(ship)
     if ship is not None:
         if sel is None:
@@ -60,7 +69,6 @@ if is_dev_build():
         follow_route_select_comms(ship,sel)
     # Clear Comms Info
     CONSOLE_SELECT = "comms"
-    comms_info("static")
     jump common_console_show
 
 @console/science !0 ^20 "Science" if SCIENCE_CONSOLE_ENABLED
