@@ -259,6 +259,8 @@ def gm_gui_panel_widget_show(cid, left, top, width, height, menu):
     elif menu == "config/world":
         gui_row("row-height: 2em;")
         gui_button("Manage Sides", on_press="gamemaster_side_relations")
+        gui_row("row-height: 2em;")
+        gui_button("Settings", on_press="config_settings_gui")
         # Uncomment these when the time limit system is working right? Works in comms buttons of course
         # gui_row("row-height: 2em;")
         # gui_button("Time Limit", "", on_press="gm_time_setup")

@@ -1,6 +1,8 @@
 import gamemaster.mast
+import client_settings_panel.mast
 import gamemaster_controls.py
 import gamemaster_info_panel.py
 import gamemaster.py
 
 import move_to_lib.py
+import client_settings.py

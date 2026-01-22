@@ -1,0 +1,101 @@
+# TODO: This could be moved to consoles folder instead of gamemaster? To be more generic.
+
+=== config_settings_gui
+" Settings panel for per-client settings, based on profile name.
+" This allows for different clients to have different settings stored, but also for 
+" clients to use others' existing profiles if desired. 
+" By default, the player's name (from `CREW_NAME` inventory value) is used as the profile name. 
+" The settings are saved on a per-mission basis, in `{mission_name}\client_settings.json`. This could be changed to be global if desired.
+    settings_add_setting("test_dropdown", "select", "A test dropdown setting.", "One", "UI", ["One", "Two", "Three"])
+    # Simple per-client settings panel
+    gui_row("row-height: 1.5em;")
+    # Get the existing selected profile, if it exists.
+    player_name = get_inventory_value(client_id, "CREW_NAME", crew_name)
+    if player_name is None or player_name == "":
+        player_name = "Default"
+    # Default settings name is based on the player's name.
+    settings_name = gui_get_variable("gui_settings_name", player_name)
+    
+    gui_blank()
+    settings_name_in = gui_input(f"$text:{settings_name}; desc:Profile Name;")
+    
+    ## TODO: Could make this a dropdown instead?
+    settings_get = gui_button("Load Settings")
+    apply = gui_button("Apply and Leave", style="col-width: 10em;")#,on_press="gm_full_console")
+    leave = gui_button("Back", on_press="return_to_console")
+    gui_row("row-height: 1.5em;")
+    gui_blank()
+    gui_row("row-height: 1.5em;")
+    gui_text("Per-Client Settings", style="font:gui-2;")
+    
+    settings_schema = settings_get_schema()
+    client_settings = settings_get_client_settings(settings_name_in.value)
+    controls = {}
+    # Debug
+    print(f"gm_settings: client={client_id} registered_settings={len(settings_schema)}")
+
+    # Show each registered setting
+    for _name in settings_schema:
+        name = _name
+        print(f"Setting name: {name}")
+        meta = settings_schema[name]
+        stype = meta.get("type", "string")
+        desc = meta.get("description", "")
+        defaultMeta = meta.get("default")
+        current = client_settings.get(name, defaultMeta)
+        gui_row("row-height: 1.5em;")
+        # Label
+        gui_text(f"{name}","")
+        gui_text(f"{desc}")
+        # gui_text()
+        if stype == "bool":
+            temp_control = gui_checkbox("", var="temp_control_{name}")
+            controls[name] = temp_control
+
+        elif stype in ["int", "float", "string"]:
+            temp_control = gui_input(f"desc:Value;$text:{current};", var="temp_control_{name}")
+            controls[name] = temp_control
+
+        elif stype == "select":
+            choices = meta.get("choices", "None Found") # This is always a comma-separated string.
+            text = meta.get("default")
+            text = client_settings.get(name, text)
+            temp_control = gui_drop_down(f"$text:{text}; list:{choices};", var="temp_control_{name}")
+            controls[name] = temp_control
+
+    gui_row()
+    on gui_message(apply):
+        # TODO: Add confirmation dialog?
+        gui_set_variable("gui_settings_name", settings_name_in.value)
+        # Apply all settings
+        for sname in controls:
+            control = controls[sname]
+            value = control.value
+            print(f"gm_settings: Applying setting {sname}={value} for client={settings_name_in.value}")
+            settings_set_client_value(settings_name_in.value, sname, value)
+        # Leave panel
+        jump return_to_console
+
+    on gui_message(settings_get):
+        print(f"Load Settings width: {width}")
+        print(settings_get.bounds.__repr__())
+        gui_set_variable("gui_settings_name", settings_name_in.value)
+        jump config_settings_gui
+
+    #Use `settings_add_setting()` to add a setting.
+
+    await gui()
+
+== return_to_console
+" Return to the main console, determined by the client's inventory value for 'CONSOLE_TYPE'. 
+" Should only be called on the gui task.
+# If there's a better way to to this, like tabs, I'm open to that, but am not familiar with
+# how to do so yet.
+    CONSOLE_SELECT = get_inventory_value(client_id, "CONSOLE_TYPE")
+    console = gui_get_console_type(CONSOLE_SELECT)
+    if console is not None:
+        jump(console.label)
+    else:
+        """ Invalid Console defined and selected"""
+        await gui()
+
