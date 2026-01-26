@@ -6,6 +6,7 @@
 " clients to use others' existing profiles if desired. 
 " By default, the player's name (from `CREW_NAME` inventory value) is used as the profile name. 
 " The settings are saved on a per-mission basis, in `{mission_name}\client_settings.json`. This could be changed to be global if desired.
+    # A test setting. Should be removed at some point.
     settings_add_setting("test_dropdown", "select", "A test dropdown setting.", "One", "UI", ["One", "Two", "Three"])
     # Simple per-client settings panel
     gui_row("row-height: 1.5em;")
@@ -21,7 +22,7 @@
     
     ## TODO: Could make this a dropdown instead?
     settings_get = gui_button("Load Settings")
-    apply = gui_button("Apply and Leave", style="col-width: 10em;")#,on_press="gm_full_console")
+    apply = gui_button("Apply and Leave", style="col-width: 10em;")
     leave = gui_button("Back", on_press="return_to_console")
     gui_row("row-height: 1.5em;")
     gui_blank()
@@ -31,37 +32,61 @@
     settings_schema = settings_get_schema()
     client_settings = settings_get_client_settings(settings_name_in.value)
     controls = {}
-    # Debug
-    print(f"gm_settings: client={client_id} registered_settings={len(settings_schema)}")
+    tabs = {}
+    default current_tab = None # Tag of current tab
+
+    gui_section(style="area:10,10,90,20; ")
+    tab_region = gui_sub_section()
+    gui_row("row-height: 1.5em;")
+    # cat = category for the following sections
+    cats = set()
+    for _name in settings_schema:
+        meta= settings_schema[_name]
+        cat = meta.get("group", "General")
+        cats.add(cat)
+    for cat in cats: 
+        style = ""
+        if current_tab is None:
+            current_tab = cat
+        if current_tab == cat:
+            style = "background-color: #123456"
+        tab_button = gui_button(f"{cat}", style=style, data={"ct": cat}) # Gotta use data, otherwise cat will get overriden with the for loop.
+        on gui_message(tab_button):
+            current_tab = ct
+            jump config_settings_gui
 
     # Show each registered setting
+    region = gui_region(style="area:10,20,90,90; ")
     for _name in settings_schema:
         name = _name
         print(f"Setting name: {name}")
         meta = settings_schema[name]
-        stype = meta.get("type", "string")
-        desc = meta.get("description", "")
-        defaultMeta = meta.get("default")
-        current = client_settings.get(name, defaultMeta)
-        gui_row("row-height: 1.5em;")
-        # Label
-        gui_text(f"{name}","")
-        gui_text(f"{desc}")
-        # gui_text()
-        if stype == "bool":
-            temp_control = gui_checkbox("", var="temp_control_{name}")
-            controls[name] = temp_control
+        
+        cat = meta.get("group", "General")
+        if cat == current_tab:
+            stype = meta.get("type", "string")
+            desc = meta.get("description", "")
+            defaultMeta = meta.get("default")
+            current = client_settings.get(name, defaultMeta)
+            gui_row("row-height: 1.5em;")
+            # Label
+            gui_text(f"{name}","")
+            gui_text(f"{desc}")
+            # gui_text()
+            if stype == "bool":
+                temp_control = gui_checkbox("", var="temp_control_{name}")
+                controls[name] = temp_control
 
-        elif stype in ["int", "float", "string"]:
-            temp_control = gui_input(f"desc:Value;$text:{current};", var="temp_control_{name}")
-            controls[name] = temp_control
+            elif stype in ["int", "float", "string"]:
+                temp_control = gui_input(f"desc:Value;$text:{current};", var="temp_control_{name}")
+                controls[name] = temp_control
 
-        elif stype == "select":
-            choices = meta.get("choices", "None Found") # This is always a comma-separated string.
-            text = meta.get("default")
-            text = client_settings.get(name, text)
-            temp_control = gui_drop_down(f"$text:{text}; list:{choices};", var="temp_control_{name}")
-            controls[name] = temp_control
+            elif stype == "select":
+                choices = meta.get("choices", "None Found") # This is always a comma-separated string.
+                text = meta.get("default")
+                text = client_settings.get(name, text)
+                temp_control = gui_drop_down(f"$text:{text}; list:{choices};", var="temp_control_{name}")
+                controls[name] = temp_control
 
     gui_row()
     on gui_message(apply):
@@ -77,8 +102,6 @@
         jump return_to_console
 
     on gui_message(settings_get):
-        print(f"Load Settings width: {width}")
-        print(settings_get.bounds.__repr__())
         gui_set_variable("gui_settings_name", settings_name_in.value)
         jump config_settings_gui
 
