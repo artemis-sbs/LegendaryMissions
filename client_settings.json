@@ -1,16 +1,10 @@
 {"__schema__":
  {"show_grid":
- {"type": "bool","default": true,"group": "Display","description": "Show the Grid."},
+ {"type": "bool","default": true,"group": "Display","description": "Show the Grid. Placeholder."},
 "hud_scale":
- {"type": "float","default": 1.0,"group": "Display","description": "HUD Scale."},
+ {"type": "float","default": 1.0,"group": "Display","description": "HUD Scale. Placeholder."},
 "nameplate":
- {"type": "string","default": "","group": "UI","description": "Nameplate Text"},
+ {"type": "string","default": "","group": "UI","description": "Placeholder Text"},
 "test_dropdown":
- {"type": "select","default": "One","group": "UI","description": "A test dropdown setting.","choices": "One,Two,Three"}},
-"astrolamb":
- {"show_grid": false,"test_dropdown": "UI"},
-"MRH; desc:Profile Name":
- {"show_grid": false,"test_dropdown": "Two"},
-"MRH; desc:Profile Name; desc:Profile Name":
- {"show_grid": false,"test_dropdown": "Two"}
+ {"type": "select","default": "One","group": "UI","description": "A test dropdown setting.","choices": "One,Two,Three"}}
 }
