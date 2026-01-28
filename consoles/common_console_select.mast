@@ -140,7 +140,8 @@ if CAN_CHANGE_CONSOLE:
 
         _input = gui_input("desc:Ship Name", var="ship_name")
         on gui_message(_input):
-            PLAYER_LIST[client_selected_index].name = ship_name
+            if len(PLAYER_LIST)>0:
+                PLAYER_LIST[client_selected_index].name = ship_name
             client_select_ship = ship_name
             #gui_update_shared("sh_ship_list", None)
 
@@ -160,7 +161,8 @@ if CAN_CHANGE_CONSOLE:
         gui_content(spick, style="tag:sh_ship_picker", var="ship_type")
         on change ship_type:
             #if not GAME_STARTED:
-            PLAYER_LIST[client_selected_index].art_id = ship_type
+            if len(PLAYER_LIST)>0:
+                PLAYER_LIST[client_selected_index].art_id = ship_type
             gui_update_shared("sh_ship_list", None)
 
     if sbs.is_demo() or console_select_item.path != "helm" or GAME_STARTED or SHIP_PICK_READ_ONLY:
