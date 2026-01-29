@@ -9,3 +9,5 @@
 /.vs
 /addons/
 /.addons/
+mast.compile.log
+mast.runtime.log
