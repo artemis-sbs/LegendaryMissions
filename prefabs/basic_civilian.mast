@@ -238,7 +238,7 @@ type: objective
     obj = to_object(object_id)
     if obj is not None:
       loc = get_location_text(None,  obj.pos, "")
-      OBJECTIVE.set_inventory_value("desc", f"Exploring Nebula at {loc}")
+      OBJECTIVE.set_inventory_value("desc", f"Exploring Asteroids at {loc}")
   jump goto_random_object
   
 
