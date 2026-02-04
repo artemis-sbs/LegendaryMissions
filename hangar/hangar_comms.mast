@@ -52,20 +52,8 @@
 //enable/grid/comms if has_role(COMMS_ORIGIN_ID, "cockpit")
 
 //comms/grid if has_role(COMMS_ORIGIN_ID, "cockpit") and has_role(COMMS_SELECTED_ID,"computer") and is_grid_object_id(COMMS_SELECTED_ID)
-
+    + "back" hangar_clear_comms
     + "set dock" //comms/grid/set_dock
-    + "eject":
-        COMMS_ORIGIN.data_set.set("fighter_thrust_flag", 0,0)
-        COMMS_ORIGIN.data_set.set("fighter_shoot_flag", 0,0)
-        COMMS_ORIGIN.data_set.set("fighter_boost_flag", 0,0)
-        COMMS_ORIGIN.data_set.set("throttle", 0.0,0)
-        # Reset to just the craft name
-        COMMS_ORIGIN.name = COMMS_ORIGIN.get_inventory_value("craft_name", COMMS_ORIGIN.name)
-
-        fighter_client = get_inventory_value(COMMS_ORIGIN_ID, "client_id")
-        if fighter_client is not None:
-            set_dedicated_link(fighter_client, "craft_id", None)    
-            gui_reroute_client(fighter_client, show_hangar)
 
 
 //comms/grid/set_dock if has_role(COMMS_ORIGIN_ID, "cockpit")
@@ -80,23 +68,9 @@
 
 
 
-//comms/grid if has_role(COMMS_ORIGIN_ID, "cockpit") and has_role(COMMS_SELECTED_ID,"shield")  and is_grid_object_id(COMMS_SELECTED_ID)
-    + "Balanced":
-        set_engineering_value(COMMS_ORIGIN_ID, "front shield", 1.0)
-        set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 1.0)
+=== hangar_clear_comms
+    _ship_id = COMMS_ORIGIN_ID
+    ->END if to_space_object(_ship_id) is None or _ship_id==0
 
-    + "All Fwd":
-        set_engineering_value(COMMS_ORIGIN_ID, "front shield", 2.0)
-        set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 0.0)
-
-    + "All Aft":
-        set_engineering_value(COMMS_ORIGIN_ID, "front shield", 0.0)
-        set_engineering_value(COMMS_ORIGIN_ID, "rear shield", 2.0)
-
-//comms/grid if has_role(COMMS_ORIGIN_ID, "bomber") and has_roles(COMMS_SELECTED_ID,"system,weapon,torpedo") and is_grid_object_id(COMMS_SELECTED_ID)
-    + "Homing":
-        COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Homing",0)
-    + "Nuke":
-        COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Nuke",0)
-    + "Mine":
-        COMMS_ORIGIN.data_set.set("torpedoTubeCurrentType", "Mine",0)
+    set_grid_selection(_ship_id,0)
+    sbs.send_grid_selection_info(_ship_id, "","", "")
