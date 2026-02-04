@@ -284,7 +284,7 @@ hangar_get_craft_data("terran")
     # Buttons
     gui_section(style="area:0,0,50px,100;orientation:BT;")
     gui_row(style="row-height:50px;")
-    brain = gui_button("icon_index:5;color:#fff", on_press="hangar_grid_select", data={"sel_role":"computer"}, is_sub_task=True)
+    brain = gui_button("icon_index:134;color:#fff", on_press="hangar_grid_select", data={"sel_role":"computer"}, is_sub_task=True)
     
 
 
