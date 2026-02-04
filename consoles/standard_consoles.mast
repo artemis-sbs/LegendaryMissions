@@ -12,8 +12,8 @@ default SCIENCE_CONSOLE_ENABLED = True
 default MAINSCREEN_CONSOLE_ENABLED = True
 default CINEMATIC_CONSOLE_ENABLED = True
 
-if is_dev_build():
-    gui_tab_add_top("helm,comms,science,weapons,engineering")
+#if is_dev_build():
+#    gui_tab_add_top("helm,comms,science,weapons,engineering")
 
 @console/helm !0 ^5 "Helm" if HELM_CONSOLE_ENABLED
     " Pilot the ship
@@ -30,11 +30,14 @@ if is_dev_build():
     is_jump = blob.get("jump_drive_active", 0) == 1
 
     #gui_add_console_tab(_ship_id, CONSOLE_SELECT, CONSOLE_SELECT, None)
+    
+    gui_console(CONSOLE_SELECT, is_jump)
+    
     gui_tab_enable_top()
     gui_tab_back(CONSOLE_SELECT)
-    gui_console(CONSOLE_SELECT, is_jump)
 
     await gui()
+
 
 @console/weapons !0 ^10 "Weapons" if WEAPONS_CONSOLE_ENABLED
     " Protect the ship from enemies

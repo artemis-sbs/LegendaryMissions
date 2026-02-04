@@ -1,13 +1,41 @@
-from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section, gui_checkbox, gui_message_callback, gui_represent, gui_task_for_client, gui_icon
 from sbs_utils import fs
 from sbs_utils.procedural import ship_data
+from sbs_utils.helpers import FrameContext
+from sbs_utils.procedural.gui import gui_tab_get_list
 
-def console_select_template(item):
+def console_select_template(item, **kwargs):
     gui_row("row-height: 1.2em;padding:13px;")
     gui_text(f"$text:{item.display_name};justify: left;font:gui-3;")
     gui_row("row-height: 1.2em;padding:13px;")
     gui_text(f"$text:{item.description};justify: left;font:gui-2;color:#bbb;")
-    # gui_text(f"$text:Hello;justify: left;font:gui-2;")
+
+    if not FrameContext.client_task.get_variable("TAB_CONSOLES_ENABLE", False):
+        return
+
+    console = item.path.upper()
+    if item.path in gui_tab_get_list():
+        selected = kwargs.get("selected")
+        if selected:
+            cb = gui_icon(f"icon_index: 101;color:white;")
+        else:
+            cb = gui_checkbox(f"icon_index: 101;color:white;", var=f"{console}_TAB_ENABLED")
+            listbox = kwargs.get("listbox")
+            cb._lb = listbox
+            cb._console = console
+            gui_message_callback(cb, console_click_cb)
+        
+def console_click_cb(event, item):
+    # Need to represent the whole listbox
+    # Because the engine doesn't allow repainting
+    # individual items that are in a sub region
+    # and that just is silly
+    gui_represent(item._lb)
+    
+
+   
+    
+
     
 
 def console_select_title_template():
@@ -85,4 +113,5 @@ def console_comms_swap_panels(cid,left,top,width,height, water):
     
 
 
-
+def console_tab_toggle():
+    pass

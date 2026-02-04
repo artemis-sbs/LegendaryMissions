@@ -1,15 +1,8 @@
 import upgrade.py
 
-#gui_add_console_tab(SHARED, "helm", "upgrade", "upgrade_screen")
-#gui_add_console_tab(SHARED, "comms", "upgrade", "upgrade_screen")
-#gui_add_console_tab(SHARED, "engineering", "upgrade", "upgrade_screen")
-#gui_add_console_tab(SHARED, "science", "upgrade", "upgrade_screen")
-#gui_add_console_tab(SHARED, "weapons", "upgrade", "upgrade_screen")
-#gui_add_console_tab(SHARED, "upgrade", "upgrade", None)
-#gui_add_console_tab(SHARED, "upgrade", "__back_tab__", "console_selected")
-
 
 gui_tab_add_top("upgrade")
+shared UPGRADE_TAB_ENABLED = True
 
 //gui/tab/upgrade
     jump upgrade_screen

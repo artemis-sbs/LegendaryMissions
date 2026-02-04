@@ -3,6 +3,7 @@ import debug.py
 shared allow_debug = True
 
 if is_dev_build():
+    shared DEBUG_TAB_ENABLED = True
     gui_tab_add_top("debug")
 #  gui_active_path("console/helm, console/comms, console/engineering, console/science, console/weapons" )
 

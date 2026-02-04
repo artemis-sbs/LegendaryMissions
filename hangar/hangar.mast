@@ -74,6 +74,7 @@ hangar_get_craft_data("terran")
     jump show_hangar # This could be replaced with a new command gui_navigate("//console/hangar")
 
 === show_hangar ==
+    
     # This is need for black hole, need to clear any ship assigned
     _original =  sbs.get_ship_of_client(client_id)
     side = "tsn"
@@ -145,6 +146,10 @@ hangar_get_craft_data("terran")
 
 
     gui_activate_console("hangar")
+    gui_tab_enable_top()
+    
+    gui_tab_back(CONSOLE_SELECT)
+
     gui_section(style="area: 36+1em,0, 100,100-50px;")
     gui_layout_widget("2dview")
 
