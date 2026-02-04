@@ -129,6 +129,7 @@ if CAN_CHANGE_CONSOLE:
 
     if len(PLAYER_LIST) >0:
         ship_type_def = PLAYER_LIST[client_selected_index].art_id
+        ship_type = ship_type_def
         ship_name = PLAYER_LIST[client_selected_index].name
         client_select_ship = ship_name.lower()
 
@@ -205,7 +206,7 @@ if CAN_CHANGE_CONSOLE:
     # Ready state
     #
     gui_section( style="area: 80,100-60px, 99,100;row-height: 50px;")
-    if not GAME_STARTED and not console_ready:
+    if not GAME_STARTED:
         gui_checkbox("ready", var="console_ready")
     else:
         on gui_message(gui_button("ready")):
