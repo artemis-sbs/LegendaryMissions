@@ -172,7 +172,7 @@ if CAN_CHANGE_CONSOLE:
         spick.read_only = True
     elif console_select_item.path == "helm" and not GAME_STARTED:
         gui_show(ship_sec_not)
-        spick.read_only = False
+        spick.read_only = not SHIP_PICK_READ_ONLY
         
     #
     # List of available ships
@@ -205,9 +205,10 @@ if CAN_CHANGE_CONSOLE:
     #
     # Ready state
     #
+    default cb_ready = None
     gui_section( style="area: 80,100-60px, 99,100;row-height: 50px;")
     if not GAME_STARTED:
-        gui_checkbox("ready", var="console_ready")
+        cb_ready = gui_checkbox("ready", var="console_ready")
     else:
         on gui_message(gui_button("ready")):
             console_ready = True
@@ -235,10 +236,14 @@ if CAN_CHANGE_CONSOLE:
         #
         console_select_item = console_select_lb.get_value()
         CONSOLE_SELECT = console_select_item.path
+        if not GAME_STARTED:
+            console_ready = False
+            cb_ready.value = False
+            gui_represent(cb_ready)
         if console_select_item.path == "helm" and not GAME_STARTED:
             gui_show(ship_sec)
             gui_hide(ship_sec_not)
-            spick.read_only = False
+            spick.read_only =not SHIP_PICK_READ_ONLY
             gui_represent(ship_sec2)
         elif OPERATOR_MODE_enabled and console_select_item.path == "admin":
             console_ready = True
