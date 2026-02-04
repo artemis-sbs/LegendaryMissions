@@ -221,6 +221,9 @@
     # Something else selected get out of give orders
     #
     comms_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
+
+    name = COMMS_ORIGIN.name
+    selected_name = COMMS_SELECTED.name
     if COMMS_SELECTED.has_role('tsn'):
         ()[blue] "Unused"
             % ready
@@ -229,8 +232,63 @@
             % Yes, sir
     elif COMMS_SELECTED.has_role('raider') and not science_is_unknown(COMMS_ORIGIN_ID, COMMS_SELECTED_ID):
         ()[red] "Unused"
-            % Piss off
             % Eat my beams
             % You shall perish
             % You gonna die
+            % Prepare to be space dust
+            % You're finished
+            % Target locked
+            % No mercy
+            % End of line
+            % You're outmatched
+            % This ends now
+            % Last warning
+            % Time's up
+            % Say goodbye
+            % Not taking calls right now
+            % You again? Hard pass
+            % Go bother someone else
+            % We're done here
+            % New comms policy: Nope
+            % Please hold... forever
+            % Wrong number, captain
+            % Try again never
+            % Unsubscribe
+            % Talk to my lasers
+            % Weapons hot
+            % Shields won't save you
+            % Your surrender is overdue
+            % Running won't help
+            % You're in our sights
+            % This sector is ours
+            % You've crossed the line
+            % You'll regret that call
+            % Final transmission received
+            % You should have stayed silent
+            % Communications terminated
+            % Channel closed
+            % Transmission ended
+            % No further response
+            % Signal lost (on purpose)
+            % We have nothing to discuss
+            % Your message has been rejected
+            % This frequency is restricted
+            % Return to your territory
+            % Stand down or be fired upon
+            % Taste photon torpedo justice
+            % Meet my emp/nuke combo
+            % Eat my plasma
+            % Enjoy a torpedo handshake
+            % Say hello to my beam array
+            % We bring the boom
+            % Prepare for a hull inspection (explosive)
+            % Incoming 'diplomacy'
+            % Negotiations have... ended
+            % Your ship will make a fine debris field
+            % {name}, I'm done talking to you.
+            % {name}, you're exhausting.
+            % {name}, channel closed.
+            % {name}, the next message is a torpedo.
+            % {name}, keep talking and start running. 
+            % If your name is {name}, just no already.
 
