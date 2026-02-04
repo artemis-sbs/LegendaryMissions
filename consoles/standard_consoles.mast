@@ -80,7 +80,6 @@ if is_dev_build():
 ===== common_console_show ====
     _ship_id = sbs.get_ship_of_client(client_id)
 
-    print(f"SHIP ID {_ship_id}")
     jump select_console_clear_ready if _ship_id == 0 or not has_role(_ship_id, "__player__")
     #gui_add_console_tab(_ship_id, CONSOLE_SELECT, CONSOLE_SELECT, None)
     gui_tab_enable_top()

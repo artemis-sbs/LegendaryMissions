@@ -1,23 +1,21 @@
 
 # Enable ultra beam and ship internal
-//enable/comms if has_roles(COMMS_ORIGIN_ID, "__player__") and COMMS_SELECTED_ID == 0
+//enable/comms
 # Enable comms badges internally and with alias
 //enable/comms if has_roles(COMMS_ORIGIN_ID, "__player__") and COMMS_ORIGIN_ID == COMMS_SELECTED_ID
 
-//comms if has_role(COMMS_ORIGIN_ID, "__player__") and (has_role(COMMS_SELECTED_ID, "__player__") or COMMS_SELECTED_ID == 0)
+//comms 
     if COMMS_SELECTED_ID == 0:
         comms_badges = role("comms_badge") & role("ultra_beam")
         yield fail if len(comms_badges)==0
         + "Ultra-Beam" //comms/ultra_beam
-    elif COMMS_ORIGIN_ID == COMMS_SELECTED_ID:
+    else:
         comms_badges = role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")
         yield fail if len(comms_badges)==0
         + "Comms Badge" //comms/comms_badge
-    elif role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID):
-        comms_badges = role("comms_badge_alias") & role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")
-        yield fail if len(comms_badges)==0
-        + "Comms Badge" //comms/comms_badge
-
+    # Used to limit to allies but why do so
+    # The Comms should handle that themselves
+    # You may want a spy etc.
 
 #
 # Handle Comms comms badges
