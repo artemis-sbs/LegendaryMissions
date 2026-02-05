@@ -186,7 +186,7 @@ if CAN_CHANGE_CONSOLE:
         spick.read_only = True
     elif console_select_item.path == "helm" and not GAME_STARTED:
         gui_show(ship_sec_not)
-        spick.read_only = not SHIP_PICK_READ_ONLY
+        spick.read_only = SHIP_PICK_READ_ONLY
         
     #
     # List of available ships
@@ -257,7 +257,7 @@ if CAN_CHANGE_CONSOLE:
         if console_select_item.path == "helm" and not GAME_STARTED:
             gui_show(ship_sec)
             gui_hide(ship_sec_not)
-            spick.read_only =not SHIP_PICK_READ_ONLY
+            spick.read_only = SHIP_PICK_READ_ONLY
             gui_represent(ship_sec2)
         elif OPERATOR_MODE_enabled and console_select_item.path == "admin":
             console_ready = True
