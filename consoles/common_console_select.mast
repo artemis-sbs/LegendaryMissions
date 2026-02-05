@@ -11,7 +11,7 @@ shared CAN_CHANGE_CONSOLE  = SETTINGS.get("CAN_CHANGE_CONSOLE", True)
 ### IT WILL CHANGE BASED ON OTHER FEATURES PLANNED
 shared TAB_CONSOLES = gui_tab_get_list() 
 # Remember these also need a //gui/tab to work
-shared TAB_CONSOLES_ENABLE = SETTINGS.get("ALLOW_CONSOLE_TABS", False)
+shared TAB_CONSOLES_ENABLE = SETTINGS.get("ALLOW_CONSOLE_TABS", True)
 
 
 if CAN_CHANGE_CONSOLE:
@@ -241,7 +241,6 @@ if CAN_CHANGE_CONSOLE:
             ship_list = player_list_all[:PLAYER_COUNT]
             ship_select_lb.items = ship_list
             ship_select_lb.set_selected_index(min(client_selected_index, len(ship_list)))
-            gui_represent(ship_select_lb)
         
 
     on change console_select_lb.get_value():
@@ -253,12 +252,10 @@ if CAN_CHANGE_CONSOLE:
         if not GAME_STARTED:
             console_ready = False
             cb_ready.value = False
-            gui_represent(cb_ready)
         if console_select_item.path == "helm" and not GAME_STARTED:
             gui_show(ship_sec)
             gui_hide(ship_sec_not)
             spick.read_only = SHIP_PICK_READ_ONLY
-            gui_represent(ship_sec2)
         elif OPERATOR_MODE_enabled and console_select_item.path == "admin":
             console_ready = True
             jump(console_select_item.label)
@@ -266,7 +263,6 @@ if CAN_CHANGE_CONSOLE:
             gui_hide(ship_sec)
             gui_show(ship_sec_not)
             spick.read_only = True
-            gui_represent(ship_sec2)
 
     on signal player_ship_destroyed:
         await delay_app(0)
@@ -293,8 +289,6 @@ if CAN_CHANGE_CONSOLE:
             ship_name = ship_select_lb.get_value().name
             _input.value = ship_name
             _display.value = ship_name
-            gui_represent(ship_sec_not)
-            gui_represent(ship_sec)
             gui_update("sh_ship_list", None)
             
         

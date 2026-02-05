@@ -35,22 +35,7 @@ def console_select_template(item, **kwargs):
             cb = gui_icon(f"icon_index: 101;color:white;")
         else:
             cb = gui_checkbox(f"icon_index: 101;color:white;", var=f"{console}_TAB_ENABLED")
-            listbox = kwargs.get("section")
-            cb._lb = listbox
-            cb._console = console
-            gui_message_callback(cb, console_click_cb)
-        
-def console_click_cb(event, item):
-    # Need to represent the whole listbox
-    # Because the engine doesn't allow repainting
-    # individual items that are in a sub region
-    # and that just is silly
-    gui_represent(item._lb)
-    
-
-   
-    
-
+            
     
 
 def console_select_title_template():

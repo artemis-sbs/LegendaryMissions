@@ -69,7 +69,5 @@ $t {item.display_text}
 {item.description}
 """
         text.value = t
-        gui_represent(text)
-
 
     await gui()

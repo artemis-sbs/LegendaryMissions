@@ -20,7 +20,6 @@ brain_to_watch = None
     
     _text = brain_scan_get_text(obj)
     brain_text.value = _text
-    gui_represent(brain_text)
     ->END
 
 
