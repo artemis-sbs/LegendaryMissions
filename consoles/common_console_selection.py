@@ -5,10 +5,25 @@ from sbs_utils.helpers import FrameContext
 from sbs_utils.procedural.gui import gui_tab_get_list
 
 def console_select_template(item, **kwargs):
-    gui_row("row-height: 1.2em;padding:13px;")
-    gui_text(f"$text:{item.display_name};justify: left;font:gui-3;")
-    gui_row("row-height: 1.2em;padding:13px;")
-    gui_text(f"$text:{item.description};justify: left;font:gui-2;color:#bbb;")
+    gui_row("row-height: 2.5em;")
+    sec = kwargs.get("section")
+    # Too coupled for now just  test
+    click_color = "#fff1"
+    if sec:
+        sec.click_text = None
+        sec.click_tag = None
+        click_color = sec.click_background
+
+    con = gui_sub_section()
+    with con:
+        gui_row("row-height: 1.2em;padding:13px;")
+        gui_text(f"$text:{item.display_name};justify: left;font:gui-3;")
+        gui_row("row-height: 1.2em;padding:13px;")
+        gui_text(f"$text:{item.description};justify: left;font:gui-2;color:#bbb;")
+
+    con.sub_section.click_tag = kwargs.get("click_tag")
+    con.sub_section.click_text = ""
+    con.sub_section.click_background = click_color
 
     if not FrameContext.client_task.get_variable("TAB_CONSOLES_ENABLE", False):
         return

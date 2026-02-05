@@ -8,6 +8,7 @@ default CONSOLE_SELECT = "" # Make sure variable exist at startup
 
 if is_dev_build():
     quest_console_enable("helm,comms")
+    shared QUEST_TAB_ENABLED = True
 
 //gui/tab/quest if quest_is_console_enabled(CONSOLE_SELECT)
     jump quest_screen
