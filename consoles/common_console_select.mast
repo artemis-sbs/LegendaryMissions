@@ -11,7 +11,7 @@ shared CAN_CHANGE_CONSOLE  = SETTINGS.get("CAN_CHANGE_CONSOLE", True)
 ### IT WILL CHANGE BASED ON OTHER FEATURES PLANNED
 shared TAB_CONSOLES = gui_tab_get_list() 
 # Remember these also need a //gui/tab to work
-shared TAB_CONSOLES_ENABLE = SETTINGS.get("ALLOW_CONSOLE_TABS", True)
+shared TAB_CONSOLES_ENABLE = SETTINGS.get("ALLOW_CONSOLE_TABS", False)
 
 
 if CAN_CHANGE_CONSOLE:
