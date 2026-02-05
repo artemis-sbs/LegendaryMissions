@@ -180,7 +180,6 @@ hangar_get_craft_data("terran")
         if dock_choice is not None:
             crafts = hangar_get_crafts_at(dock_choice)
             ride_picker.items = crafts
-            gui_represent(ride_picker)
             # set twice to make sure it catches a changes
             sbs.assign_client_to_ship(client_id, to_id(dock_choice))
             ride_picker.set_selected_index(0)

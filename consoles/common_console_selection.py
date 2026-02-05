@@ -1,4 +1,4 @@
-from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section, gui_checkbox, gui_message_callback, gui_represent, gui_task_for_client, gui_icon
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section, gui_checkbox, gui_task_for_client, gui_icon
 from sbs_utils import fs
 from sbs_utils.procedural import ship_data
 from sbs_utils.helpers import FrameContext
