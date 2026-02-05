@@ -20,7 +20,7 @@ def console_select_template(item, **kwargs):
             cb = gui_icon(f"icon_index: 101;color:white;")
         else:
             cb = gui_checkbox(f"icon_index: 101;color:white;", var=f"{console}_TAB_ENABLED")
-            listbox = kwargs.get("listbox")
+            listbox = kwargs.get("section")
             cb._lb = listbox
             cb._console = console
             gui_message_callback(cb, console_click_cb)
