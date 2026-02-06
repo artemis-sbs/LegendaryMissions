@@ -44,7 +44,7 @@ def console_select_title_template():
     
 
 def console_ship_select_template(item):
-    gui_row("row-height:3em;padding:13px;")
+    gui_row("row-height:2.5em;padding:13px;")
     gui_ship(f"{item.art_id}", style="col-width:50px;padding:0,0,5px,0;")
     dat = ship_data.get_ship_data_for(item.art_id)
     desc = "A fine ship"
@@ -57,8 +57,9 @@ def console_ship_select_template(item):
             desc = f"{desc}"
 
     with gui_sub_section():
+        gui_row("row-height:1.2em;")
         gui_text(f"$text:{item.name} - {item.side};justify: left;font:gui-3;")
-        gui_row()
+        gui_row("row-height:1em;")
         gui_text(f"$text:{desc};justify: left;font:gui-2;color:#bbb;")
     # gui_text(f"$text:Hello;justify: left;font:gui-2;")
     
