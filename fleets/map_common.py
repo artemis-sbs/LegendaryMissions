@@ -12,6 +12,7 @@ from sbs_utils.names import name_random_hostile
 from sbs_utils.vec import Vec3
 import random
 from fleet import fleet_spawn
+from elite_abilitites import elite_get_all_abilities, elite_is_engine_ability, random_bits
 
 
 
@@ -34,28 +35,6 @@ def player_ship_update_friendly(player_id, friends, initial_scan = False):
 
 
 
-engine_abilities = {
-        # Blob flags (Always On)
-        "elite_low_vis": "LowVis",
-        "elite_main_scn_invis": "Invs",
-        "elite_drone_launcher": "Drones",
-        "elite_anti_mine": "AntiMine",
-        "elite_anti_torpedo": "AntiTorp"
-}
-abilities = {
-
-    "elite_cloak": "Cloak",
-    "elite_jump_back": "Teleport Back",
-    "elite_jump_forward": "Teleport Forward",
-    "elite_warp": "Warp",
-    "elite_het_turn": "HET",
-    # Blob Flags Randomize
-    "elite_tractor": "Tractor",  # also needs to set tractor_target_uid
-    "elite_shield_drain": "Shield Drain",
-    "elite_shield_vamp": "Shield Vamp", # Drain is also assumed
-    "elite_shield_scramble": "Sensor Scramble",
-}
-all_abilities = abilities | engine_abilities
 
 siege_kralien_fleet = [
     # DIFFICULTY 1
@@ -484,28 +463,7 @@ siege_pirate_fleet = [
 
 
 
-def elite_is_engine_ability(ab):
-    return ab in engine_abilities.keys()
 
-def elite_get_non_engine():
-    script_abilities = get_shared_variable("elite_script_abilities", {})
-    return abilities | script_abilities
-
-def elite_get_all_abilities():
-    script_abilities = get_shared_variable("elite_script_abilities", {})
-    return all_abilities | script_abilities
-
-def elite_get_abilities_scan(id_or_obj):
-    ship_obj = to_object(id_or_obj)
-    if ship_obj is None:
-        return ""
-    abi = []
-    roles = ship_obj.get_roles()
-    for role in roles:
-        ab = all_abilities.get(role, None)
-        if ab is not None:
-            abi.append(ab)
-    return ",".join(abi)
 
 def fleet_remove_ship(id_or_obj):
     ship_id = to_id(id_or_obj)
@@ -513,20 +471,6 @@ def fleet_remove_ship(id_or_obj):
         return
     fleet_id = get_inventory_value(ship_id, "my_fleet_id")
     unlink(fleet_id,"ship_list", ship_id)
-
-#all_bits = [2**x for x in range(len(all_abilities))]
-# Adding extra for script created elite
-all_bits = [2**x for x in range(32)]
-def random_bits(bits, count):
-    bits = min(bits, len(all_bits))
-    pick = list(all_bits[:bits])
-    ret = 0
-    random.shuffle(pick)
-    p = pick[:count]
-    for b in p:
-        ret |= b
-        
-    return ret
 
 
 

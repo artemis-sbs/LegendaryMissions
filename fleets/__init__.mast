@@ -3,6 +3,7 @@ import fleet.mast
 import brain_fleet.mast
 import npc_cag.py
 import map_common.mast
+import elite_abilitites.py
 import elite_abilities.mast
 import map_common.py
 

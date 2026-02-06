@@ -1,6 +1,7 @@
 default gamemaster_face = random_terran()
 =$gamemaster #0E0,white,gamemaster_face
 
+elite_build_abilities()
 
 //spawn if has_role(SPAWNED_ID, "elite")
     task_schedule(handle_elite_abilities)
@@ -20,7 +21,6 @@ default gamemaster_face = random_terran()
         await delay_sim(seconds=20)
         jump handle_elite_abilities
 
-
     # Get the abilities managed by script
     all_abilities = elite_get_non_engine()
     abilities = []
@@ -30,6 +30,8 @@ default gamemaster_face = random_terran()
             abilities.append(ab)
 
     # Don't need this is there are no scripted abilities
+    # TODO: Maybe we do if GM/Script adds abilities, Handle this better
+
     -> END if len(abilities) == 0
 
     ab = random.choice(abilities)
@@ -38,27 +40,40 @@ default gamemaster_face = random_terran()
     # This will run a sequence based on the elite type
     # awaiting will wait until the sequence is finished
     #
+    #TODO: This should by more dynamic and use the labels, so new abilities can be added
+    #
+    # This also maybe should not await, but be more active and allow it to change its mind
+    # Abilities maybe need a --- clear label if it need to be cleared
+    #
     data={"BT_ID": SPAWNED_ID}
-    if ab == "elite_cloak":
+    print(f"ELITE {ab}")
+
+    l = all_abilities.get(ab)
+    if l is not None: # and l not isinstance(l, str):
         await task_schedule(elite_cloak_start, data={"BT_ID": SPAWNED_ID})
-    elif ab == "elite_jump_forward":
-        await task_schedule(elite_jump_drive, data={"BT_ID": SPAWNED_ID, "distance": 5000})
-    elif ab == "elite_jump_back":
-        await task_schedule(elite_jump_drive, data={"BT_ID": SPAWNED_ID, "distance": -5000})
-    elif ab == "elite_warp":
-        await task_schedule(elite_warp_start, data =data)
-    elif ab == "elite_het_turn":
-        await task_schedule(elite_turn_start, data={"BT_ID": SPAWNED_ID})
-    elif ab == "elite_tractor":
-        await task_schedule(elite_tractor_start, data={"BT_ID": SPAWNED_ID})
-    elif ab == "elite_shield_drain":
-        await task_schedule(elite_shield_drain_start, data=data)
-    elif ab == "elite_shield_vamp":
-        await task_schedule(elite_shield_drain_start, data={"BT_ID": SPAWNED_ID, "vamp": True})
-    elif ab == "elite_shield_scramble":
-        await task_schedule(elite_shield_scramble_start, data={"BT_ID": SPAWNED_ID})        
     else:
+        print(f"SKIPPED ELITE {ab}")
         await delay_sim(seconds=30)
+    # if ab == "elite/cloak":
+    #     await task_schedule(elite_cloak_start, data={"BT_ID": SPAWNED_ID})
+    # elif ab == "elite/jump_forward":
+    #     await task_schedule(elite_jump_drive, data={"BT_ID": SPAWNED_ID, "distance": 5000})
+    # elif ab == "elite/jump_back":
+    #     await task_schedule(elite_jump_drive, data={"BT_ID": SPAWNED_ID, "distance": -5000})
+    # elif ab == "elite/warp":
+    #     await task_schedule(elite_warp_start, data =data)
+    # elif ab == "elite/het_turn":
+    #     await task_schedule(elite_turn_start, data={"BT_ID": SPAWNED_ID})
+    # elif ab == "elite/tractor":
+    #     await task_schedule(elite_tractor_start, data={"BT_ID": SPAWNED_ID})
+    # elif ab == "elite/shield_drain":
+    #     await task_schedule(elite_shield_drain_start, data=data)
+    # elif ab == "elite/shield_vamp":
+    #     await task_schedule(elite_shield_drain_start, data={"BT_ID": SPAWNED_ID, "is_vamp": True})
+    # elif ab == "elite/shield_scramble":
+    #     await task_schedule(elite_shield_scramble_start, data={"BT_ID": SPAWNED_ID})        
+    # else:
+    #     await delay_sim(seconds=30)
 
     # Add at least on delay
     await delay_sim(seconds=1)
@@ -67,6 +82,11 @@ default gamemaster_face = random_terran()
 
 
 ==== elite_cloak_start ======
+" The ability to cloak
+metadata: ```
+type: elite/cloak
+display_name: Cloak
+```
     old_art_id = get_inventory_value(BT_ID, "visible_art_id")
     yield FAIL if None != old_art_id #if I'm currently cloaked
 
@@ -77,7 +97,7 @@ default gamemaster_face = random_terran()
 --- wait
     await delay_sim(30)
 
-==== elite_cloak_clear ======
+--- clear
     so = to_object(BT_ID)
     yield FAIL if so is None
 
@@ -92,14 +112,36 @@ default gamemaster_face = random_terran()
     await delay_sim(10)
     yield SUCCESS
 
-==== elite_jump_drive ======
+
+
+==== elite_jump_forward    
+" Activate jump drive forward
+metadata: ```
+type: elite/jump/forward
+display_name: Teleport Forward
+distance: 5000
+```
+    jump elite_jump_drive
+
+==== elite_jump_drive_back
+" Activate jump drive forward
+metadata: ```
+type: elite/jump/back
+display_name: Teleport Back
+distance: -5000
+```
+    jump elite_jump_drive
+
+
+==== elite_jump_drive
     so = to_object(BT_ID)
     yield FAIL if so is None
 
     eo = to_engine_object(BT_ID)
     _pos_eo = eo.pos
     sbs.particle_at(_pos_eo, "align:False; offset:0,0,200;color:blue; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
-    distance = get_variable("distance")
+    # Assumes the distance is set but if not use this default
+    default distance = 5000
 
     _forward = Vec3(eo.forward_vector())
     _pos = Vec3(_pos_eo) + (_forward * distance)
@@ -112,6 +154,12 @@ default gamemaster_face = random_terran()
 
 
 === elite_warp_start === 
+" Activate warp drive forward
+metadata: ```
+type: elite/warp
+display_name: Warp
+```
+
     blob = to_blob(BT_ID)
     yield FAIL if blob is None
     # Set the current Value
@@ -123,8 +171,7 @@ default gamemaster_face = random_terran()
 
     await delay_sim(5)
 
-
-=== elite_warp_clear === 
+--- clear
     blob = to_blob(BT_ID)
     yield FAIL if blob is None
     # Set the current Value
@@ -137,6 +184,11 @@ default gamemaster_face = random_terran()
 
 
 === elite_turn_start === 
+" Activate highly efficient turn
+metadata: ```
+type: elite/eft
+display_name: HET
+```
 
     blob = to_blob(BT_ID)
     yield FAIL if blob is None
@@ -148,9 +200,10 @@ default gamemaster_face = random_terran()
     set_variable("turn_upgrade_coeff", tru)
     # Triple it 
     blob.set("turn_upgrade_coeff", tru*3.0, 0)
+
     await delay_sim(30)
 
-=== elite_turn_clear === 
+--- clear
 
     blob = to_blob(BT_ID)
     yield FAIL if blob is None
@@ -163,18 +216,50 @@ default gamemaster_face = random_terran()
     yield SUCCESS
 
 ==== elite_tractor_start === 
+" Activate tractor
+metadata: ```
+type: elite/tractor
+display_name: Tractor
+```
+
     # Fail early if nothing is near
+
+    #TODO: set tractor_target_uid
+    await delay_sim(10)
 
 
     yield SUCCESS
 
-==== elite_tractor_clear === 
+--- clear
     # Fail early if nothing is near
 
+    #TODO: Clear tractor_target_uid
 
     yield SUCCESS
 
 ==== elite_shield_drain_start === 
+" Activate shield drain
+metadata: ```
+type: elite/shield_drain
+display_name: Shield Drain
+```
+    is_vamp = False
+    jump elite_shield_drain_vamp
+
+
+==== elite_shield_vamp_start === 
+" Activate shield vamp
+metadata: ```
+type: elite/shield_vamp
+display_name: Shield Vamp
+```
+    is_vamp = True
+    jump elite_shield_drain_vamp
+
+
+==== elite_shield_drain_vamp
+    default is_vamp = False
+
     # Fail early if nothing is near
     yield FAIL if BT_ID is None or not object_exists(BT_ID)
     local = broad_test_around(BT_ID, 2500,2500, 0xF0) # Find ships around here
@@ -194,7 +279,7 @@ default gamemaster_face = random_terran()
     emittor_id = sbs.add_particle_emittor(target_eo, -1, f"align:True; shape:hull; color:{color}; lifespan:4; image_cell:0,3; size:0.8; speed: 5; count:10")
     count = 5
 
-==== elite_shield_drain_cycle === 
+--- elite_shield_drain_cycle 
     # Fail early if nothing is near
     yield FAIL if BT_ID is None or not object_exists(BT_ID)
     target_id = get_variable("target_id")
@@ -222,7 +307,7 @@ default gamemaster_face = random_terran()
         sv = max(0, sv)
         r_blob.set("shield_val", sv, s)
 
-    is_vamp = get_variable("vamp", False)
+
     if is_vamp:
         r_blob = to_blob(BT_ID)
         jump elite_shield_drain_clean_up if r_blob is None
@@ -240,7 +325,8 @@ default gamemaster_face = random_terran()
     count += 1
     jump elite_shield_drain_cycle if count < 5
 
-==== elite_shield_drain_clean_up =====
+---  elite_shield_drain_clean_up
+--- clear
     sbs.delete_particle_emittor(emittor_id)
     await delay_sim(10)
     yield SUCCESS
@@ -248,6 +334,14 @@ default gamemaster_face = random_terran()
 
 
 ==== elite_shield_scramble_start === 
+" Activate Sensor Scramble
+metadata: ```
+type: elite/shield_scramble
+display_name: Shield Drain
+```
+    #TODO: This should be sensor scramble
+    # Change when we know new system works
+
     # Fail early if nothing is near
     blob = to_blob(BT_ID)
     yield FAIL if blob is None
@@ -259,6 +353,8 @@ default gamemaster_face = random_terran()
 
     await delay_sim(30)
     yield success
+
+
 
 #region Game Master Stuff
 //comms/gamemaster/selected/set if not has_role(COMMS_SELECTED_ID, "__player__") and has_role(COMMS_ORIGIN_ID, "gamemaster")
