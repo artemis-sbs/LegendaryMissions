@@ -185,7 +185,8 @@ if CAN_CHANGE_CONSOLE:
         gui_show(ship_sec_not)
         spick.read_only = True
     elif console_select_item.path == "helm" and not GAME_STARTED:
-        gui_show(ship_sec_not)
+        gui_show(ship_sec)
+        gui_hide(ship_sec_not)
         spick.read_only = SHIP_PICK_READ_ONLY
         
     #
