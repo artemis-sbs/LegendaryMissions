@@ -15,7 +15,7 @@ def mock_sbs_runtime(file):
     sys.path.append("../sbs_utils/mock")
 
     # this loads all the sbs libs in story.json
-    import sbs
+    import sbs_utils.mock.sbs as sbs
 
 
 
