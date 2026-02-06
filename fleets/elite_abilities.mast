@@ -45,35 +45,13 @@ elite_build_abilities()
     # This also maybe should not await, but be more active and allow it to change its mind
     # Abilities maybe need a --- clear label if it need to be cleared
     #
-    data={"BT_ID": SPAWNED_ID}
-    print(f"ELITE {ab}")
-
+    data={"ELITE_ID": SPAWNED_ID}
     l = all_abilities.get(ab)
+    debug_print(f"ELITE {ab}")
     if l is not None: # and l not isinstance(l, str):
-        await task_schedule(elite_cloak_start, data={"BT_ID": SPAWNED_ID})
+        await task_schedule(elite_cloak_start, data={"ELITE_ID": SPAWNED_ID})
     else:
-        print(f"SKIPPED ELITE {ab}")
         await delay_sim(seconds=30)
-    # if ab == "elite/cloak":
-    #     await task_schedule(elite_cloak_start, data={"BT_ID": SPAWNED_ID})
-    # elif ab == "elite/jump_forward":
-    #     await task_schedule(elite_jump_drive, data={"BT_ID": SPAWNED_ID, "distance": 5000})
-    # elif ab == "elite/jump_back":
-    #     await task_schedule(elite_jump_drive, data={"BT_ID": SPAWNED_ID, "distance": -5000})
-    # elif ab == "elite/warp":
-    #     await task_schedule(elite_warp_start, data =data)
-    # elif ab == "elite/het_turn":
-    #     await task_schedule(elite_turn_start, data={"BT_ID": SPAWNED_ID})
-    # elif ab == "elite/tractor":
-    #     await task_schedule(elite_tractor_start, data={"BT_ID": SPAWNED_ID})
-    # elif ab == "elite/shield_drain":
-    #     await task_schedule(elite_shield_drain_start, data=data)
-    # elif ab == "elite/shield_vamp":
-    #     await task_schedule(elite_shield_drain_start, data={"BT_ID": SPAWNED_ID, "is_vamp": True})
-    # elif ab == "elite/shield_scramble":
-    #     await task_schedule(elite_shield_scramble_start, data={"BT_ID": SPAWNED_ID})        
-    # else:
-    #     await delay_sim(seconds=30)
 
     # Add at least on delay
     await delay_sim(seconds=1)
@@ -87,26 +65,26 @@ metadata: ```
 type: elite/cloak
 display_name: Cloak
 ```
-    old_art_id = get_inventory_value(BT_ID, "visible_art_id")
+    old_art_id = get_inventory_value(ELITE_ID, "visible_art_id")
     yield FAIL if None != old_art_id #if I'm currently cloaked
 
-    set_inventory_value(BT_ID, "visible_art_id", so.art_id) # remember art id that's visible
+    set_inventory_value(ELITE_ID, "visible_art_id", so.art_id) # remember art id that's visible
     so.set_art_id("invisible") # cloaking!
-    sim.force_update_to_clients(BT_ID,0)
+    sim.force_update_to_clients(ELITE_ID,0)
     sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
 --- wait
     await delay_sim(30)
 
 --- clear
-    so = to_object(BT_ID)
+    so = to_object(ELITE_ID)
     yield FAIL if so is None
 
-    old_art_id = get_inventory_value(BT_ID, "visible_art_id")
+    old_art_id = get_inventory_value(ELITE_ID, "visible_art_id")
     yield FAIL if old_art_id is None # This allows us to remove cloak while it's active, and the particle effect won't trigger when the timer runs out.
     #log(f"uncloak to {old_art_id}", "elites")
     so.set_art_id(old_art_id)
-    sim.force_update_to_clients(BT_ID,0)
-    set_inventory_value(BT_ID, "visible_art_id", None)
+    sim.force_update_to_clients(ELITE_ID,0)
+    set_inventory_value(ELITE_ID, "visible_art_id", None)
     sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
 
     await delay_sim(10)
@@ -134,10 +112,10 @@ distance: -5000
 
 
 ==== elite_jump_drive
-    so = to_object(BT_ID)
+    so = to_object(ELITE_ID)
     yield FAIL if so is None
 
-    eo = to_engine_object(BT_ID)
+    eo = to_engine_object(ELITE_ID)
     _pos_eo = eo.pos
     sbs.particle_at(_pos_eo, "align:False; offset:0,0,200;color:blue; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
     # Assumes the distance is set but if not use this default
@@ -160,7 +138,7 @@ type: elite/warp
 display_name: Warp
 ```
 
-    blob = to_blob(BT_ID)
+    blob = to_blob(ELITE_ID)
     yield FAIL if blob is None
     # Set the current Value
 
@@ -172,7 +150,7 @@ display_name: Warp
     await delay_sim(5)
 
 --- clear
-    blob = to_blob(BT_ID)
+    blob = to_blob(ELITE_ID)
     yield FAIL if blob is None
     # Set the current Value
     cur = get_variable("speed_coeff", 1.0)
@@ -190,7 +168,7 @@ type: elite/eft
 display_name: HET
 ```
 
-    blob = to_blob(BT_ID)
+    blob = to_blob(ELITE_ID)
     yield FAIL if blob is None
     # Set the current Value
     tru = blob.get("turn_upgrade_coeff", 0)
@@ -205,7 +183,7 @@ display_name: HET
 
 --- clear
 
-    blob = to_blob(BT_ID)
+    blob = to_blob(ELITE_ID)
     yield FAIL if blob is None
     # Set the current Value
     tru = get_variable("turn_upgrade_coeff", 1.0)
@@ -261,12 +239,12 @@ display_name: Shield Vamp
     default is_vamp = False
 
     # Fail early if nothing is near
-    yield FAIL if BT_ID is None or not object_exists(BT_ID)
-    local = broad_test_around(BT_ID, 2500,2500, 0xF0) # Find ships around here
+    yield FAIL if ELITE_ID is None or not object_exists(ELITE_ID)
+    local = broad_test_around(ELITE_ID, 2500,2500, 0xF0) # Find ships around here
     #
     # Target 
     #
-    target_id = closest(BT_ID, local - role(get_side(BT_ID)))
+    target_id = closest(ELITE_ID, local - role(get_side(ELITE_ID)))
 
     yield FAIL if target_id is None
     target_eo = to_engine_object(target_id)
@@ -281,7 +259,7 @@ display_name: Shield Vamp
 
 --- elite_shield_drain_cycle 
     # Fail early if nothing is near
-    yield FAIL if BT_ID is None or not object_exists(BT_ID)
+    yield FAIL if ELITE_ID is None or not object_exists(ELITE_ID)
     target_id = get_variable("target_id")
     yield FAIL if target_id is None
     emittor_id = get_variable("emittor_id")
@@ -309,7 +287,7 @@ display_name: Shield Vamp
 
 
     if is_vamp:
-        r_blob = to_blob(BT_ID)
+        r_blob = to_blob(ELITE_ID)
         jump elite_shield_drain_clean_up if r_blob is None
 
         shield_count = r_blob.get("shield_count", 0)
@@ -343,7 +321,7 @@ display_name: Shield Drain
     # Change when we know new system works
 
     # Fail early if nothing is near
-    blob = to_blob(BT_ID)
+    blob = to_blob(ELITE_ID)
     yield FAIL if blob is None
     m = 100.0
     for s in range(5):
