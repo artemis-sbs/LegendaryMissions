@@ -1,7 +1,10 @@
+shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 
 #=== layout_comms_engine_widgets
 //gui/normal_comm
 
+    jump mike_comms if COMMS_PROTOTYPE
+        
     # Left
     gui_section(style="area:0,45px,100,100;")
     
@@ -203,3 +206,171 @@
         gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
+
+
+
+
+####################################################################################
+## Prototype consoles
+=== mike_comms
+    # Left
+    gui_section(style="area:0,45px,100,100;")
+    
+    default tab = 1
+    # Top Left
+    
+    with gui_sub_section("col-width:280px;"):
+        gui_row("row-height: 400px;")
+        #gui_layout_widget("ship_data")
+        gui_info_panel(tab=tab)
+        gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
+
+        gui_row()
+        gui_blank()
+        
+        gui_row("row-height: 45px;margin:0,0,0,10px;")
+
+        follow_tag = get_inventory_value(client_id, "2d_follow", True)
+        # Set back in case of default
+        set_inventory_value(client_id, "2d_follow", follow_tag)
+        gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+        on change follow_tag:
+            ship = sbs.get_ship_of_client(client_id)
+            _sel = get_comms_selection(ship)
+            set_inventory_value(client_id, "2d_follow", follow_tag)
+            comms_set_2dview_focus(client_id, _sel)
+
+        gui_row("row-height: 40px;")
+        gui_layout_widget("red_alert")
+
+
+
+    # Middle
+    recent_list = []
+    message_list = []
+
+    with gui_sub_section():
+        gui_row("row-height:30;")
+        with gui_sub_section():
+            water = gui_layout_widget("comms_waterfall")
+            gui_hide(water)
+            recent_listbox = gui_list_box(recent_list,"row-height: 0.1em; background:#1572;", item_template=comms_recent_item, select=True)
+            history_listbox = gui_list_box(message_list,"row-height: 0.1em; background:#1572;", item_template=comms_message_item, select=False)
+
+        gui_row()
+        gui_layout_widget("comms_2d_view")
+
+    await gui_sub_task_schedule(mike_comms_update)
+
+        
+    # Right
+    ss = gui_screen_size(client_id)
+
+    default select_2d = False
+    _widget = "comms_2d_view"
+    #if select_2d:
+    #    _widget = "comms_2d_view"
+    with gui_sub_section("col-width:25;"):
+        gui_row("row-height:100px;")
+        gui_layout_widget("comms_face")
+
+        gui_row("row-height:15;")
+        gui_property_list_box("Options")
+
+        gui_row()
+        gui_layout_widget("comms_control")
+
+
+
+        if ss.x < 1600:
+            gui_row("row-height: 35px;col-width:25px;")
+        else:
+            gui_row("row-height: 35px;col-width:45px;")
+
+
+        gui_row("row-height:20px;")
+        gui_blank()
+        gui_row() #"padding:0,25px,10px,0")
+        gui_layout_widget("comms_sorted_list")
+    
+    on signal comms_message:
+        # Let shared signal get processed
+        await delay_sim(0)
+        await gui_sub_task_schedule(mike_comms_update, {"cm":COMMS_MESSAGE})
+
+    on change recent_listbox.get_value():
+        item = recent_listbox.get_value()
+        await gui_sub_task_schedule(mike_comms_update_history, {"other_id":item.other_id})
+
+    yield idle
+
+=== mike_comms_update
+    default shared comms_recents = {}
+    default shared comms_history = {}
+    default cm = None
+
+    yield fail if cm is None
+    _ship_id = sbs.get_ship_of_client(client_id)
+    yield fail if _ship_id == 0 or to_space_object(_ship_id) is None
+    yield fail if _ship_id != cm.player_id
+    # OK the new message is for our ship
+    ship_recent = comms_recents.get(_ship_id, {})
+    
+    l = list(ship_recent.values())
+    recent_list = sorted(l, key=lambda cm: -cm.time)
+    recent_listbox.items = recent_list
+
+    yield success
+
+
+=== mike_comms_update_history
+    default shared comms_recents = {}
+    default shared comms_history = {}
+
+    _ship_id = sbs.get_ship_of_client(client_id)
+    yield fail if _ship_id == 0 or to_space_object(_ship_id) is None
+    
+    # OK the new message is for our ship
+    ship_history = comms_history.get(_ship_id, {})
+    ship_history_with_other = ship_history.get(other_id, [])
+    
+    history_listbox.items = ship_history_with_other
+
+    yield success
+
+//shared/signal/comms_message
+    default shared comms_recents = {}
+    default shared comms_history = {}
+    yield success if not COMMS_PROTOTYPE
+    
+    cm = COMMS_MESSAGE
+    player_id = cm.player_id
+    other_id = cm.other_id
+    
+
+    r = comms_recents.get(player_id, {})
+    r[other_id] = cm
+    comms_recents[player_id] = r
+
+    ph = comms_history.get(player_id, {})
+    comms_history[player_id] = ph
+    oh = ph.get(other_id, [])
+    ph[other_id]=  oh
+    
+    oh.append(cm)
+    
+
+
+
+# "player_id": from_id, 
+# "other_id": to_id,
+# "life_form_from__id": life_form_from__id,
+# "life_form_to__id": life_form_to__id,
+# "receive": is_receive,
+# "from_name": from_name_now, 
+# "face": face,
+# "title": raw_title,
+# "title_color": title_color,
+# "message": msg,
+# "message_color": title_color,
+# "time": FrameContext.co

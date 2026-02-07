@@ -1,4 +1,4 @@
-from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section, gui_checkbox, gui_task_for_client, gui_icon
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section, gui_checkbox, gui_task_for_client, gui_icon, gui_blank
 from sbs_utils import fs
 from sbs_utils.procedural import ship_data
 from sbs_utils.helpers import FrameContext
@@ -116,3 +116,65 @@ def console_comms_swap_panels(cid,left,top,width,height, water):
 
 def console_tab_toggle():
     pass
+
+
+
+def comms_recent_sort(items):
+    return sorted(items, key=lambda cm: cm.get("time"))
+
+from sbs_utils.procedural.gui import gui_face
+def comms_recent_item(item):
+
+    gui_row("row-height:2em")
+
+    gui_face(f"{item.face}")
+    # Is storing the face expensive to memory
+    with gui_sub_section():
+        gui_row("row-height:1em")
+        title = item.title
+        title_color = item.title_color
+        msg = item.message
+        msg = msg[:20] + ".."
+        msg_color = item.message_color
+        title = f"$text:{title};font:gui-2;color:{title_color};"
+        msg = f"$text:{msg};font:gui-1;color:{msg_color};"
+        
+        gui_text(title)
+        gui_row()
+        gui_text(msg)
+
+        
+
+        
+
+def comms_message_item(item):
+    gui_row("row-height:2em")
+
+    if item.receive:
+        gui_face(f"{item.face}")
+    else:
+        gui_blank(1,"col-width:2em")
+    # Is storing the face expensive to memory
+    with gui_sub_section():
+        gui_row("row-height:1em")
+        title = item.title
+        title_color = item.title_color
+        msg = item.message
+
+        msg_color = item.message_color
+        title = f"$text:{title};font:gui-2;color:{title_color};"
+        msg = f"$text:{msg};font:gui-1;;color:{msg_color};"
+
+        if not item.receive:
+            title += "justify:right;"
+            msg += "justify:right;"
+        
+        gui_text(title)
+        gui_row()
+        gui_text(msg)
+
+    if not item.receive:
+        gui_face(f"{item.face}")
+    else:
+        gui_blank(1,"col-width:2em")
+    
