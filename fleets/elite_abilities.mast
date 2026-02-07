@@ -4,10 +4,10 @@ default gamemaster_face = random_terran()
 elite_build_abilities()
 
 //spawn if has_role(SPAWNED_ID, "elite")
-    task_schedule(handle_elite_abilities)
+    task_schedule(handle_elite_abilities, {"ELITE_ID": SPAWNED_ID})
 
 ==== handle_elite_abilities
-    so = to_object(SPAWNED_ID)
+    so = to_object(ELITE_ID)
     -> END if None == so
 
     #
@@ -26,15 +26,28 @@ elite_build_abilities()
     abilities = []
 
     for ab in all_abilities:
-        if has_role(SPAWNED_ID, ab):
+        if has_role(ELITE_ID, ab):
             abilities.append(ab)
 
     # Don't need this is there are no scripted abilities
     # TODO: Maybe we do if GM/Script adds abilities, Handle this better
 
     -> END if len(abilities) == 0
+    default x = 0
 
+    #
+    # Condier alllowing a brain here to 
+    # detewmine elite abilties 
+    #
     ab = random.choice(abilities)
+    t = get_time_remaining(ELITE_ID, f"{ab}_cooldown")
+    if x >= 150:
+        print(f"Time remiaing {t} for {ab}")
+        x = 0
+
+    if not is_timer_finished(ELITE_ID, f"{ab}_cooldown"):
+        await delay_sim(1)
+        jump handle_elite_abilities 
 
     #
     # This will run a sequence based on the elite type
@@ -45,292 +58,28 @@ elite_build_abilities()
     # This also maybe should not await, but be more active and allow it to change its mind
     # Abilities maybe need a --- clear label if it need to be cleared
     #
-    data={"ELITE_ID": SPAWNED_ID}
+    data={"ELITE_ID": ELITE_ID}
     l = all_abilities.get(ab)
     debug_print(f"ELITE {ab}")
     if l is not None: # and l not isinstance(l, str):
-        await task_schedule(elite_cloak_start, data={"ELITE_ID": SPAWNED_ID})
+        # Store the task to make it possible 
+        # for it to be canceled. e.g. spcial torp that cancel elite
+        # canceling should make sure it calls clear
+        # call it elite_scramble, set science status
+        elite_task = task_schedule(elite_cloak_start, data={"ELITE_ID": ELITE_ID})
+        set_inventory_value(ELITE_ID, "ELITE_TASK", elite_task)
+        signal_emit("elite_ability_start", {"ELITE_ID": ELITE_ID, "ability": ab})
+        e = await elite_task
+        set_inventory_value(ELITE_ID, "ELITE_TASK", None)
+        signal_emit("elite_ability_end", {"ELITE_ID": ELITE_ID, "ability": ab})
     else:
+        print(f"Picked {ab}")
         await delay_sim(seconds=30)
 
     # Add at least on delay
     await delay_sim(seconds=1)
     -> handle_elite_abilities
 
-
-
-==== elite_cloak_start ======
-" The ability to cloak
-metadata: ```
-type: elite/cloak
-display_name: Cloak
-```
-    old_art_id = get_inventory_value(ELITE_ID, "visible_art_id")
-    yield FAIL if None != old_art_id #if I'm currently cloaked
-
-    set_inventory_value(ELITE_ID, "visible_art_id", so.art_id) # remember art id that's visible
-    so.set_art_id("invisible") # cloaking!
-    sim.force_update_to_clients(ELITE_ID,0)
-    sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
---- wait
-    await delay_sim(30)
-
---- clear
-    so = to_object(ELITE_ID)
-    yield FAIL if so is None
-
-    old_art_id = get_inventory_value(ELITE_ID, "visible_art_id")
-    yield FAIL if old_art_id is None # This allows us to remove cloak while it's active, and the particle effect won't trigger when the timer runs out.
-    #log(f"uncloak to {old_art_id}", "elites")
-    so.set_art_id(old_art_id)
-    sim.force_update_to_clients(ELITE_ID,0)
-    set_inventory_value(ELITE_ID, "visible_art_id", None)
-    sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
-
-    await delay_sim(10)
-    yield SUCCESS
-
-
-
-==== elite_jump_forward    
-" Activate jump drive forward
-metadata: ```
-type: elite/jump/forward
-display_name: Teleport Forward
-distance: 5000
-```
-    jump elite_jump_drive
-
-==== elite_jump_drive_back
-" Activate jump drive forward
-metadata: ```
-type: elite/jump/back
-display_name: Teleport Back
-distance: -5000
-```
-    jump elite_jump_drive
-
-
-==== elite_jump_drive
-    so = to_object(ELITE_ID)
-    yield FAIL if so is None
-
-    eo = to_engine_object(ELITE_ID)
-    _pos_eo = eo.pos
-    sbs.particle_at(_pos_eo, "align:False; offset:0,0,200;color:blue; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
-    # Assumes the distance is set but if not use this default
-    default distance = 5000
-
-    _forward = Vec3(eo.forward_vector())
-    _pos = Vec3(_pos_eo) + (_forward * distance)
-    _pos.y = _pos_eo.y
-    so.pos = _pos
-
-    await delay_sim(30)
-
-    yield SUCCESS
-
-
-=== elite_warp_start === 
-" Activate warp drive forward
-metadata: ```
-type: elite/warp
-display_name: Warp
-```
-
-    blob = to_blob(ELITE_ID)
-    yield FAIL if blob is None
-    # Set the current Value
-
-    cur = blob.get("speed_coeff", 0)
-    set_variable("speed_coeff", cur)
-    # double it 
-    blob.set("speed_coeff", cur*2.0, 0)
-
-    await delay_sim(5)
-
---- clear
-    blob = to_blob(ELITE_ID)
-    yield FAIL if blob is None
-    # Set the current Value
-    cur = get_variable("speed_coeff", 1.0)
-    # Restore
-    blob.set("speed_coeff", cur, 0)
-
-    await delay_sim(30)
-    yield SUCCESS
-
-
-=== elite_turn_start === 
-" Activate highly efficient turn
-metadata: ```
-type: elite/eft
-display_name: HET
-```
-
-    blob = to_blob(ELITE_ID)
-    yield FAIL if blob is None
-    # Set the current Value
-    tru = blob.get("turn_upgrade_coeff", 0)
-    if tru is None:
-        tru = 1.0
-
-    set_variable("turn_upgrade_coeff", tru)
-    # Triple it 
-    blob.set("turn_upgrade_coeff", tru*3.0, 0)
-
-    await delay_sim(30)
-
---- clear
-
-    blob = to_blob(ELITE_ID)
-    yield FAIL if blob is None
-    # Set the current Value
-    tru = get_variable("turn_upgrade_coeff", 1.0)
-    # Restore
-    blob.set("turn_upgrade_coeff", tru, 0)
-
-    await delay_sim(10)
-    yield SUCCESS
-
-==== elite_tractor_start === 
-" Activate tractor
-metadata: ```
-type: elite/tractor
-display_name: Tractor
-```
-
-    # Fail early if nothing is near
-
-    #TODO: set tractor_target_uid
-    await delay_sim(10)
-
-
-    yield SUCCESS
-
---- clear
-    # Fail early if nothing is near
-
-    #TODO: Clear tractor_target_uid
-
-    yield SUCCESS
-
-==== elite_shield_drain_start === 
-" Activate shield drain
-metadata: ```
-type: elite/shield_drain
-display_name: Shield Drain
-```
-    is_vamp = False
-    jump elite_shield_drain_vamp
-
-
-==== elite_shield_vamp_start === 
-" Activate shield vamp
-metadata: ```
-type: elite/shield_vamp
-display_name: Shield Vamp
-```
-    is_vamp = True
-    jump elite_shield_drain_vamp
-
-
-==== elite_shield_drain_vamp
-    default is_vamp = False
-
-    # Fail early if nothing is near
-    yield FAIL if ELITE_ID is None or not object_exists(ELITE_ID)
-    local = broad_test_around(ELITE_ID, 2500,2500, 0xF0) # Find ships around here
-    #
-    # Target 
-    #
-    target_id = closest(ELITE_ID, local - role(get_side(ELITE_ID)))
-
-    yield FAIL if target_id is None
-    target_eo = to_engine_object(target_id)
-    yield FAIL if target_eo is None
-    is_vamp = get_variable("vamp", False)
-    color = "cyan,blue"
-    if is_vamp:
-        color = "yellow,brown"
-
-    emittor_id = sbs.add_particle_emittor(target_eo, -1, f"align:True; shape:hull; color:{color}; lifespan:4; image_cell:0,3; size:0.8; speed: 5; count:10")
-    count = 5
-
---- elite_shield_drain_cycle 
-    # Fail early if nothing is near
-    yield FAIL if ELITE_ID is None or not object_exists(ELITE_ID)
-    target_id = get_variable("target_id")
-    yield FAIL if target_id is None
-    emittor_id = get_variable("emittor_id")
-    yield FAIL if emittor_id is None
-
-    if not object_exists(target_id):
-        sbs.delete_particle_emittor(emittor_id)
-        yield FAIL
-
-    #
-    # Hit shield
-    #
-
-    r_blob = to_blob(target_id)
-    jump elite_shield_drain_clean_up if r_blob is None
-    shield_count = r_blob.get("shield_count", 0)
-    jump elite_shield_drain_clean_up if shield_count is None
-
-    for s in range(shield_count):
-        sm = r_blob.get("shield_max_val", s)
-        sv = r_blob.get("shield_val", s)
-        sv -= 4
-        sv = max(0, sv)
-        r_blob.set("shield_val", sv, s)
-
-
-    if is_vamp:
-        r_blob = to_blob(ELITE_ID)
-        jump elite_shield_drain_clean_up if r_blob is None
-
-        shield_count = r_blob.get("shield_count", 0)
-        for s in range(shield_count):
-            sm = r_blob.get("shield_max_val", s)
-            sv = r_blob.get("shield_val", s)
-            sv += 3
-            sv = min(sm,sv)
-            r_blob.set("shield_val", sv, s)
-            
-    await delay_sim(5)
-
-    count += 1
-    jump elite_shield_drain_cycle if count < 5
-
----  elite_shield_drain_clean_up
---- clear
-    sbs.delete_particle_emittor(emittor_id)
-    await delay_sim(10)
-    yield SUCCESS
-
-
-
-==== elite_shield_scramble_start === 
-" Activate Sensor Scramble
-metadata: ```
-type: elite/shield_scramble
-display_name: Shield Drain
-```
-    #TODO: This should be sensor scramble
-    # Change when we know new system works
-
-    # Fail early if nothing is near
-    blob = to_blob(ELITE_ID)
-    yield FAIL if blob is None
-    m = 100.0
-    for s in range(5):
-        feq = random.uniform(m*0.1, m*0.8)
-        # m -= feq
-        blob.set("shield_freq_strength", feq, s)
-
-    await delay_sim(30)
-    yield success
 
 
 
@@ -345,16 +94,22 @@ display_name: Shield Drain
     abilities = elite_get_all_abilities()
     ship_abilities = elite_get_abilities_scan(COMMS_SELECTED_ID)
     for a in abilities.keys():
+        ab = abilities[a]
+        if not isinstance(ab,str):
+                ab = ab.name 
+
         # Only add the button if the ship doesn't have the ability
-        if (ship_abilities.count(abilities[a]) == 0):
-            +[$gamemaster]"{abilities[a]}" {"ship": COMMS_SELECTED_ID, "ability": a, "origin": COMMS_ORIGIN_ID}:
+        if (ship_abilities.count(ab) == 0):
+            
+            
+            +[$gamemaster]"{ab}" {"ship": COMMS_SELECTED_ID, "ability": a, "origin": COMMS_ORIGIN_ID}:
                 if to_object(ship) is None:
                     ->END
                 if elite_is_engine_ability(ability):
                     # Change blob data
                     set_data_set_value(ship, ability, 1)
                 add_role(ship, ability)
-                task_schedule(handle_elite_abilities, {"SPAWNED_ID": COMMS_SELECTED_ID})
+                task_schedule(handle_elite_abilities, {"ELITE_ID": COMMS_SELECTED_ID})
                 # TODO: Check if the shipp has been scanned already
                 # get_data_set_value(COMMS_SELECTED_ID, "scan_type_list",0)
                 # science_set_scan_data(role("__player__"), COMMS_SELECTED_ID, "intel")
@@ -385,9 +140,14 @@ display_name: Shield Drain
         jump update_elite_scan_info {"origin": origin, "ship": ship}
     ship_abilities = elite_get_abilities_scan(COMMS_SELECTED_ID)
     for a in abilities.keys():
+        ab = abilities[a]
+        if not isinstance(ab,str):
+            ab = ab.name 
+
         # Only add the button for the ability if it has the ability
-        if ship_abilities.count(abilities[a]) > 0:
-            +[$gamemaster]"{abilities[a]}" {"ship": COMMS_SELECTED_ID, "ability": a, "origin": COMMS_ORIGIN_ID}:
+        if ship_abilities.count(ab) > 0:
+            
+            +[$gamemaster]"{ab}" {"ship": COMMS_SELECTED_ID, "ability": a, "origin": COMMS_ORIGIN_ID}:
                 if to_object(ship) is None:
                     ->END
                 if elite_is_engine_ability(ability):
