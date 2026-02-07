@@ -5,7 +5,6 @@ type: elite/cloak
 display_name: Cloak
 range: close or far
 ```
-    print("CLOAK")
     set_timer(ELITE_ID, "WARMUP", 25)
 --- warmup
     so = to_object(ELITE_ID)
@@ -26,7 +25,6 @@ range: close or far
 
 
 ---- ready
-    debug_print("CLOAK READY")
     old_art_id = get_inventory_value(ELITE_ID, "visible_art_id")
     yield FAIL if None != old_art_id #if I'm currently cloaked
     
@@ -39,7 +37,6 @@ range: close or far
     await delay_sim(30)
 
 --- clear
-    debug_print("CLOAK CLEAR")
     so = to_object(ELITE_ID)
     yield FAIL if so is None
 
