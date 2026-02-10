@@ -304,13 +304,13 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         await delay_sim(0)
         await gui_sub_task_schedule(mike_comms_update, {"cm":COMMS_MESSAGE})
 
+
         # # this needs library help
         # if history_bounds is None:
         #     history_bounds = history_listbox.bounds
     
 
     on change recent_listbox.click_time:
-
         item = recent_listbox.get_value()
         await gui_sub_task_schedule(mike_comms_update_history, {"other_id":item.other_id})
         gui_hide(history_text)
@@ -362,16 +362,28 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     default shared comms_history = {}
     default cm = None
 
-    yield fail if cm is None
+    
     _ship_id = sbs.get_ship_of_client(client_id)
     yield fail if _ship_id == 0 or to_space_object(_ship_id) is None
-    yield fail if _ship_id != cm.player_id
+    yield fail if cm is not None and _ship_id != cm.player_id
     # OK the new message is for our ship
     ship_recent = comms_recents.get(_ship_id, {})
     
+
+    
     l = list(ship_recent.values())
     recent_list = sorted(l, key=lambda cm: -cm.time)
+    cur = recent_listbox.value
+    new_sel = cur
+    if cm is not None and cur is None:
+        new_sel = cm
+
     recent_listbox.items = recent_list
+    if new_sel is None:
+        yield success
+    # Reset the selection 
+    recent_listbox.value = new_sel
+    await gui_sub_task_schedule(mike_comms_update_history, {"other_id":new_sel.other_id})
 
     yield success
 
