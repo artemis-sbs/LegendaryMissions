@@ -62,49 +62,49 @@ shared game_stats = ~~{
 
     gui_row()
     gui_hole(5)
-    """color:yellow;justify: right;$text:Terran Destroyed"""
+    """color:yellow;justify: right;$text:Terran destroyed"""
     gui_blank(style="col-width: 1;")
     gui_hole(5)
     """color:yellow;justify: left;$text:{game_stats["tsn_destroyed"]}"""
 ##
     gui_row()
     gui_hole(5)
-    """color:yellow; justify: right;$text:arvonian ships destroyed"""
+    """color:yellow; justify: right;$text:Arvonian ships destroyed"""
     gui_blank(style="col-width: 1;")
     gui_hole(5)
     """color:yellow;justify: left;$text:{game_stats["arvonian_ships_destroyed"]}"""
 
     gui_row()
     gui_hole(5)
-    """color:yellow; justify: right;$text:kralien ships destroyed"""
+    """color:yellow; justify: right;$text:Kralien ships destroyed"""
     gui_blank(style="col-width: 1;")
     gui_hole(5)
     """color:yellow;justify: left;$text:{game_stats["kralien_ships_destroyed"]}"""
 
     gui_row()
     gui_hole(5)
-    """color:yellow; justify: right;$text:skaraan ships destroyed"""
+    """color:yellow; justify: right;$text:Skaraan ships destroyed"""
     gui_blank(style="col-width: 1;")
     gui_hole(5)
     """color:yellow;justify: left;$text:{game_stats["skaraan_ships_destroyed"]}"""
 
     gui_row()
     gui_hole(5)
-    """color:yellow; justify: right;$text:ximni ships destroyed"""
+    """color:yellow; justify: right;$text:Ximni ships destroyed"""
     gui_blank(style="col-width: 1;")
     gui_hole(5)
     """color:yellow;justify: left;$text:{game_stats["ximni_ships_destroyed"]}"""
 
     gui_row()
     gui_hole(5)
-    """color:yellow; justify: right;$text:torgoth ships destroyed"""
+    """color:yellow; justify: right;$text:Torgoth ships destroyed"""
     gui_blank(style="col-width: 1;")
     gui_hole(5)
     """color:yellow;justify: left;$text:{game_stats["torgoth_ships_destroyed"]}"""
 
     gui_row()
     gui_hole(5)
-    """color:yellow; justify: right;$text:ships surrendered"""
+    """color:yellow; justify: right;$text:Enemies surrendered"""
     gui_blank(style="col-width: 1;")
     gui_hole(5)
     """color:yellow;justify: left;$text:{game_stats["ships_surrender"]}"""
