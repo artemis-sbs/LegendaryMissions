@@ -255,7 +255,10 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
             water = gui_layout_widget("comms_waterfall")
             gui_hide(water)
             recent_listbox = gui_list_box(recent_list,"row-height: 0.1em; background:#1572;", item_template=comms_recent_item, select=True)
-            history_listbox = gui_list_box(message_list,"row-height: 0.1em; background:#1572;", item_template=comms_message_item, select=False)
+            history_listbox = gui_list_box(message_list,"row-height: 0.1em; background:#1572;", item_template=comms_message_item, select=True)
+            ### Need library help to make better click area
+            history_text = gui_text_area("", "click_text:"";click_background:#0000:")
+            gui_hide(history_text)
 
         gui_row()
         gui_layout_widget("comms_2d_view")
@@ -293,14 +296,64 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row() #"padding:0,25px,10px,0")
         gui_layout_widget("comms_sorted_list")
     
+    # Want to tetx and list box to occupy the same space
+    default history_bounds = None
+
     on signal comms_message:
         # Let shared signal get processed
         await delay_sim(0)
         await gui_sub_task_schedule(mike_comms_update, {"cm":COMMS_MESSAGE})
 
-    on change recent_listbox.get_value():
+        # # this needs library help
+        # if history_bounds is None:
+        #     history_bounds = history_listbox.bounds
+    
+
+    on change recent_listbox.click_time:
+
         item = recent_listbox.get_value()
         await gui_sub_task_schedule(mike_comms_update_history, {"other_id":item.other_id})
+        gui_hide(history_text)
+        gui_show(history_listbox)
+        
+        
+    on signal comms_select:
+        if SIGNAL_ORIGIN_ID == sbs.get_ship_of_client(client_id):
+            e = SIGNAL_SELECTED_ID
+            prev = recent_listbox.value
+            recent_listbox.value = None
+            for i in recent_list:
+                #TODO: If statements do not use the PushData
+                # so if i.other_id == SIGNAL_SELECTED_ID was crashing
+                
+                if i.other_id == e:
+                    recent_listbox.value = i
+            if prev != recent_listbox.value:
+                await gui_sub_task_schedule(mike_comms_update_history, {"other_id":e})
+                gui_hide(history_text)
+                gui_show(history_listbox)
+
+
+    
+    on change history_listbox.click_time:
+        ht = history_listbox.get_value()
+        if ht is not None:
+            face =""
+            if ht.face is not None and ht.face!="":
+                face = f"![](face://{ht.face}?align=center)\n\n"
+            history_text.value = f"{face}$$color:{ht.title_color} {ht.title}\n\n$$color:{ht.message_color} {ht.message}\n\n"
+            # this needs library help
+            if history_bounds is None:
+                history_bounds = history_listbox.bounds
+                history_text.set_bounds(history_bounds)
+            gui_show(history_text)
+            gui_hide(history_listbox)
+    
+    on gui_message(history_text):
+        gui_hide(history_text)
+        gui_show(history_listbox)
+
+
 
     yield idle
 
@@ -329,6 +382,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 
     _ship_id = sbs.get_ship_of_client(client_id)
     yield fail if _ship_id == 0 or to_space_object(_ship_id) is None
+
+    other_obj = to_space_object(other_id)
+    if other_obj is None:
+        sbs.send_comms_selection_info(_ship_id, "", "white", "--static--")
+    else:
+        follow_route_select_comms(_ship_id, other_id)
     
     # OK the new message is for our ship
     ship_history = comms_history.get(_ship_id, {})
@@ -358,8 +417,6 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     ph[other_id]=  oh
     
     oh.append(cm)
-    
-
 
 
 # "player_id": from_id, 

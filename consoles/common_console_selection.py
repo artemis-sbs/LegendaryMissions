@@ -118,7 +118,8 @@ def console_tab_toggle():
     pass
 
 
-
+############################################
+## These are for the comms prototype
 def comms_recent_sort(items):
     return sorted(items, key=lambda cm: cm.get("time"))
 
@@ -132,9 +133,10 @@ def comms_recent_item(item):
     with gui_sub_section():
         gui_row("row-height:1em")
         title = item.title
+        title = title[:20] + " .."
         title_color = item.title_color
         msg = item.message
-        msg = msg[:20] + ".."
+        msg = msg[:20] + " .."
         msg_color = item.message_color
         title = f"$text:{title};font:gui-2;color:{title_color};"
         msg = f"$text:{msg};font:gui-1;color:{msg_color};"
@@ -160,6 +162,9 @@ def comms_message_item(item):
         title = item.title
         title_color = item.title_color
         msg = item.message
+
+        title = title[:16] + " .."
+        msg = msg[:16] + " .."
 
         msg_color = item.message_color
         title = f"$text:{title};font:gui-2;color:{title_color};"
