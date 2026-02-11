@@ -201,16 +201,16 @@ This is an example of a quest document.
 ``` md
 # [Quest One](quest1)
 
-    Track the number of quest1
+Track the number of quest1
 
-    [](style://font:gui-2;color:blue;background:white) This is white on blue
+[](style://font:gui-2;color:blue;background:white) This is white on blue
 
-    [](style://font:gui-2;color:green;background:white) 
-    This is green on white
-    still is
-    and now
+[](style://font:gui-2;color:green;background:white) 
+This is green on white
+still is
+and now
 
-    but not now
+but not now
 
 # [Quest Two](quest2)
 
