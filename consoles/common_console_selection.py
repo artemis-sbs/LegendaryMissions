@@ -129,15 +129,32 @@ def comms_recent_item(item):
     gui_row("row-height:2em")
 
     gui_face(f"{item.face}")
+    
+
     # Is storing the face expensive to memory
     with gui_sub_section():
         gui_row("row-height:1em")
         title = item.title
-        title = title[:20] + " .."
         title_color = item.title_color
         msg = item.message
-        msg = msg[:20] + " .."
         msg_color = item.message_color
+
+        if item.other_id == 0:
+            msg = title
+            msg_color = title_color
+            title = "Ultra Band"
+            title_color = "white"
+        elif item.player_id == item.other_id:
+            msg = title
+            msg_color = title_color
+            title = "Internal Comms"
+            title_color = "white"
+            
+        title = title[:20] + " .."
+        
+        
+        msg = msg[:20] + " .."
+        
         title = f"$text:{title};font:gui-2;color:{title_color};"
         msg = f"$text:{msg};font:gui-1;color:{msg_color};"
         

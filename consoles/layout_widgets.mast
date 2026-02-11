@@ -314,8 +314,10 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         
         
     on signal comms_select:
+        # Had weird issues where it forgets SIGNAL_SELECT_ID
+        e = SIGNAL_SELECTED_ID
         if SIGNAL_ORIGIN_ID == sbs.get_ship_of_client(client_id):
-            gui_sub_task_schedule(mike_comms_update_select, {"other_id":SIGNAL_SELECTED_ID})    
+            gui_sub_task_schedule(mike_comms_update_select, {"other_id":e})    
 
 
 
@@ -346,12 +348,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     prev = recent_listbox.value
     recent_listbox.value = None
     for i in recent_list:
-        if i.other_id == SIGNAL_SELECTED_ID:
+        if i.other_id == other_id:
             recent_listbox.value = i
     if prev != recent_listbox.value:
         gui_hide(history_text)
         gui_show(history_listbox)
-        gui_sub_task_schedule(mike_comms_update_history, {"other_id":SIGNAL_SELECTED_ID })
+        gui_sub_task_schedule(mike_comms_update_history, {"other_id":other_id })
     yield success
 
 === mike_comms_update
@@ -394,7 +396,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 
     other_obj = to_space_object(other_id)
     cur = get_comms_selection(_ship_id)
-    if other_obj is None:
+    if other_obj is None and other_id != 0:
         sbs.send_comms_selection_info(_ship_id, "", "white", "--static--")
 
     # OK the new message is for our ship
@@ -413,7 +415,6 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     cm = COMMS_MESSAGE
     player_id = cm.player_id
     other_id = cm.other_id
-    
 
     r = comms_recents.get(player_id, {})
     r[other_id] = cm
