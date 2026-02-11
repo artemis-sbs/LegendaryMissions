@@ -203,9 +203,9 @@ This is an example of a quest document.
 
     Track the number of quest1
 
-    $$font:gui-2;color:blue;background:white This is white on blue
+    [](style://font:gui-2;color:blue;background:white) This is white on blue
 
-    $$font:gui-2;color:green;background:white 
+    [](style://font:gui-2;color:green;background:white) 
     This is green on white
     still is
     and now
