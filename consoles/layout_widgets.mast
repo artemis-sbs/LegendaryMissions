@@ -312,6 +312,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_hide(history_text)
         gui_show(history_listbox)
         
+        item = recent_listbox.get_value()
+        _ship_id = sbs.get_ship_of_client(client_id)
+        cur = get_comms_selection(_ship_id)
+        if cur != item.other_id:
+            follow_route_select_comms(_ship_id, item.other_id)
+        
         
     on signal comms_select:
         # Had weird issues where it forgets SIGNAL_SELECT_ID
@@ -395,7 +401,6 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     yield fail if _ship_id == 0 or to_space_object(_ship_id) is None
 
     other_obj = to_space_object(other_id)
-    cur = get_comms_selection(_ship_id)
     if other_obj is None and other_id != 0:
         sbs.send_comms_selection_info(_ship_id, "", "white", "--static--")
 

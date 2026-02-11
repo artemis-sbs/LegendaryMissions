@@ -27,7 +27,7 @@ SHIP_PICK_READ_ONLY: false
 CAN_CHANGE_CONSOLE: true
 
 ### Very rough prototype of a comms interaction change 
-# COMMS_PROTOTYPE: true
+COMMS_PROTOTYPE: true
 
 GAMEMASTER: 
     enable: true
