@@ -75,35 +75,38 @@ def quest_flatten_list():
         completed = []
         failed = []
         
-        if len(quests)>0:
-            if header is not None:
-                active.append(gui_list_box_header(header,False,indent, data is not None,data))
+        if header is not None:
+            header_indent = max(indent-1,0)
+        # root headers have no data
+        # when data is not None this is adding the 
+        # Parent so the indent is one less
+        if data is None:
+            active.append(gui_list_box_header(header,False,header_indent, data is not None,data))
+        elif len(quests)>0:
+            active.append(gui_list_box_header(header,False,header_indent, data is not None,data))
+        
+        if len(quests)==0 and data is not None:
+            return [data]
 
-            for q in quests.values():
-                q.indent = indent
-                state = q.get("state", QuestState.IDLE)
-                if  state == QuestState.ACTIVE:
-                    active.append(q)
-                    active.extend(append_quests(q.children))
-                if  state == QuestState.IDLE:
-                    c = append_quests(q.children, q.display_text, indent+1, q)
-                    if len(c)>0:
-                        idle.extend(c)
-                    else:
-                        idle.append(q)
-                    
-                    
-                if state == QuestState.COMPLETE:
-                    completed.append(q)
-                    completed.extend(append_quests(q.children))
-                if state == QuestState.FAILED:
-                    failed.append(q)
-                    failed.extend(append_quests(q.children))
+        for q in quests.values():
+            q.indent = indent
+            state = q.get("state", QuestState.IDLE)
+            if  state == QuestState.ACTIVE:
+                active.extend(append_quests(q.children, q.display_text, indent+1, q))
+            if  state == QuestState.IDLE:
+                c = append_quests(q.children, q.display_text, indent+1, q)
+                idle.extend(c)
+                
+                
+            if state == QuestState.COMPLETE:
+                completed.extend(append_quests(q.children, q.display_text, indent+1, q))
+            if state == QuestState.FAILED:
+                failed.extend(append_quests(q.children, q.display_text, indent+1, q))
 
-            active.extend(idle)
-            active.extend(completed)
-            active.extend(failed)
-            
+        active.extend(idle)
+        active.extend(completed)
+        active.extend(failed)
+        
         return active
 
 
