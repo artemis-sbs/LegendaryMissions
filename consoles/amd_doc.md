@@ -1,12 +1,17 @@
 # Artemis Markdown language
 The Artemis Markdown language is based on markdown
+
 It uses syntax based on the markdown language
 The abbreviation AMD will be used to refer to Artemis Markdown
 
-It does not support all of markdown
-It uses markdown syntax where it makes sense
-It adds syntax
-It repurposes some markdown concepts to 
+AMD does not support all of markdown
+<br>
+AMD uses markdown syntax where it makes sense
+<br>
+AM adds syntax
+<br>
+AMD repurposes some markdown concepts to 
+<br>
 e.g. The table of contents is used to build a Document Tree NOT used for in document hyperlinks
 
 
