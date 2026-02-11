@@ -303,12 +303,8 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # Let shared signal get processed
         await delay_sim(0)
         await gui_sub_task_schedule(mike_comms_update, {"cm":COMMS_MESSAGE})
+        await gui_sub_task_schedule(mike_comms_update_select, {"other_id":COMMS_MESSAGE.other_id})
 
-
-        # # this needs library help
-        # if history_bounds is None:
-        #     history_bounds = history_listbox.bounds
-    
 
     on change recent_listbox.click_time:
         item = recent_listbox.get_value()
@@ -319,19 +315,8 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         
     on signal comms_select:
         if SIGNAL_ORIGIN_ID == sbs.get_ship_of_client(client_id):
-            e = SIGNAL_SELECTED_ID
-            prev = recent_listbox.value
-            recent_listbox.value = None
-            for i in recent_list:
-                #TODO: If statements do not use the PushData
-                # so if i.other_id == SIGNAL_SELECTED_ID was crashing
-                
-                if i.other_id == e:
-                    recent_listbox.value = i
-            if prev != recent_listbox.value:
-                await gui_sub_task_schedule(mike_comms_update_history, {"other_id":e})
-                gui_hide(history_text)
-                gui_show(history_listbox)
+            gui_sub_task_schedule(mike_comms_update_select, {"other_id":SIGNAL_SELECTED_ID})    
+
 
 
     
@@ -356,6 +341,18 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 
 
     yield idle
+
+=== mike_comms_update_select
+    prev = recent_listbox.value
+    recent_listbox.value = None
+    for i in recent_list:
+        if i.other_id == SIGNAL_SELECTED_ID:
+            recent_listbox.value = i
+    if prev != recent_listbox.value:
+        gui_hide(history_text)
+        gui_show(history_listbox)
+        gui_sub_task_schedule(mike_comms_update_history, {"other_id":SIGNAL_SELECTED_ID })
+    yield success
 
 === mike_comms_update
     default shared comms_recents = {}
@@ -396,11 +393,10 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     yield fail if _ship_id == 0 or to_space_object(_ship_id) is None
 
     other_obj = to_space_object(other_id)
+    cur = get_comms_selection(_ship_id)
     if other_obj is None:
         sbs.send_comms_selection_info(_ship_id, "", "white", "--static--")
-    else:
-        follow_route_select_comms(_ship_id, other_id)
-    
+
     # OK the new message is for our ship
     ship_history = comms_history.get(_ship_id, {})
     ship_history_with_other = ship_history.get(other_id, [])
