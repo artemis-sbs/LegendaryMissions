@@ -17,6 +17,7 @@ if is_dev_build():
         quest_create_test_data()
 
     document = quest_flatten_list()
+    document_type = "quest"
 
     jump document_screen
 
@@ -31,8 +32,9 @@ if is_dev_build():
 
 
 === document_screen
+    default document_type = "document"
     gui_tab_back(CONSOLE_SELECT)
-    gui_activate_console("quest")
+    gui_activate_console(document_type)
 
     # Whole screen
     gui_section(style="area:0,45px,100,100;")
