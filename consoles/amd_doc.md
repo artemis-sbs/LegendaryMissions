@@ -76,7 +76,7 @@ Image links specify a key from the image atlas.
 This can be a file path. Or a key defined in the image atlas allowing for subimages.
 
 ``` md
-![](image://operator)
+![](image:operator)
 ```
 
 Images support two configuration options:
@@ -88,7 +88,7 @@ The link follows url syntax. So the optional arguments start with a ? then a key
 
 
 ``` md
-![](image://operator?scale=0.5&fill=center)
+![](image:operator?scale=0.5&fill=center)
 ```
 
 
@@ -101,7 +101,7 @@ Optional properties:
 - height: in pixels
 
 ``` md
-![](face://ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=left)
+![](face:ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=left)
 ```
 
 ### Ship links
@@ -113,7 +113,7 @@ Optional properties:
 - height: in pixels
 
 ``` md
-ship://tsn_light_cruiser?height=100&align=center
+ship:tsn_light_cruiser?height=100&align=center
 ```
 
 ### style links
@@ -123,8 +123,8 @@ note: older method had style define by !$name and references via $name
 
 
 ``` md
-[p1]: style://font:gui-2;color:blue;justify:right;
-[bold]: style://font:gui-4;color:yellow;justify:center;
+[p1]: style:font:gui-2;color:blue;justify:right;
+[bold]: style:font:gui-4;color:yellow;justify:center;
 ```
 
 Old style (deprecated)
@@ -155,8 +155,8 @@ $p1 This is formatted with p1
 A style link without the key value will try to load styles Referencing a file or script inserted styles set
 
 ``` 
-[]: style://some_styles
-[]: style://folder/some_styles
+[]: style:some_styles
+[]: style:folder/some_styles
 ```
 
 
@@ -165,8 +165,8 @@ A style link without the key value will try to load styles Referencing a file or
 
 
 ``` md
-[logo]: image://operator
-[captain]: face://ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=left
+[logo]: image:operator
+[captain]: face:ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=left
 ```
 
 
@@ -203,9 +203,9 @@ This is an example of a quest document.
 
 Track the number of quest1
 
-[](style://font:gui-2;color:blue;background:white) This is white on blue
+[](style:font:gui-2;color:blue;background:white) This is white on blue
 
-[](style://font:gui-2;color:green;background:white) 
+[](style:font:gui-2;color:green;background:white) 
 This is green on white
 still is
 and now
@@ -229,16 +229,16 @@ Track the number of quest2
 
 ## Example sub image
 
-![](image://test2?scale=0.5&fill=center)
+![](image:test2?scale=0.5&fill=center)
 
 
 ## Ship
 
-![](ship://tsn_light_cruiser?height=100&align=center)
+![](ship:tsn_light_cruiser?height=100&align=center)
 
 ## Face
 
-![](face://ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=left)
+![](face:ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=left)
 
 ### This is H3
 
@@ -248,9 +248,9 @@ Track the number of quest2
 - Green
 - Test
 
-![](image://test?scale=0.25&fill=center)
+![](image:test?scale=0.25&fill=center)
 
-![](image://ball?scale=0.25&fill=center&color=blue)
+![](image:ball?scale=0.25&fill=center&color=blue)
 
 
 
