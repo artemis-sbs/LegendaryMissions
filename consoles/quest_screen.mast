@@ -5,31 +5,43 @@ if is_dev_build():
     gui_image_add_atlas("test2", "media/LegendaryMissions/operator", 645,570, 950,820)
 
 default CONSOLE_SELECT = "" # Make sure variable exist at startup
+if is_dev_build():
+    gui_tab_add_top("help")
 
 if is_dev_build():
     quest_console_enable("helm,comms")
     shared QUEST_TAB_ENABLED = True
 
 //gui/tab/quest if quest_is_console_enabled(CONSOLE_SELECT)
-    jump quest_screen
+    if is_dev_build():
+        quest_create_test_data()
+
+    document = quest_flatten_list()
+
+    jump document_screen
+
+//gui/tab/help if quest_is_console_enabled(CONSOLE_SELECT)
+    doc = document_get_amd_file(get_mission_dir_filename("consoles/help_docs.amd"))
+    doc["root"]=True
+    document = document_flatten(doc, "Overview", 0, doc)
+    
+    document_type = "help"
+
+    jump document_screen
 
 
-=== quest_screen
+=== document_screen
     gui_tab_back(CONSOLE_SELECT)
     gui_activate_console("quest")
 
     # Whole screen
     gui_section(style="area:0,45px,100,100;")
 
-    if is_dev_build():
-        quest_create_test_data()
-
-    quest_list = document_flatten_list()
-
+    
     # Left
     with gui_sub_section("col-width:35;"):
         gui_row()
-        obj_list = gui_list_box(quest_list,"row-height: 0.1em; background:#1572;", item_template=quest_item, title_template=quest_title, select=True)
+        obj_list = gui_list_box(document,"row-height: 0.1em; background:#1572;", item_template=quest_item, title_template=document_type, select=True)
 
     t = """
 $t Select a quest
@@ -64,9 +76,9 @@ $t Select a quest
             item = item.data
 
         t = """
-$t {item.display_text}
+$t {item.get("display_text", "")}
 
-{item.description}
+{item.get("description", "")}
 """
         text.value = t
 
