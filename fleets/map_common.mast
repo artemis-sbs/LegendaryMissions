@@ -3,6 +3,19 @@
 
 //signal/game_started
     start_npc_cag()
+    #CREATE Sides and diplomacy
+    sim.set_side_relationship("tsn","tsn",sbs.DIPLOMACY.ALLIED)
+    sim.set_side_relationship("tsn","raider",sbs.DIPLOMACY.HOSTILE)
+
+    sim.set_side_relationship("raider","raider",sbs.DIPLOMACY.ALLIED)
+    sim.set_side_relationship("raider","tsn",sbs.DIPLOMACY.HOSTILE)
+
+    sim.set_side_icon_color("tsn","#07f")
+    sim.set_side_icon_color("raider","#F00")
+    sim.set_side_icon_color("civ","white")
+
+    sim.set_diplomacy_color(sbs.DIPLOMACY.HOSTILE,"#F00")
+
 
 =========== spawn_friendly_npc ===========
 

@@ -101,6 +101,8 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     # Putting the 2d view across the entire screen
     gui_section(style="area:0,0,100,100;")
     gui_layout_widget("science_2d_view")
+    gui_section(style="area:50-200px,0,50+200px,50px;")
+    gui_layout_widget("radar_zoom_ctrl")
 
     # Whole screen
     section = gui_section(style="area:0,45px,100,100;")
