@@ -113,7 +113,7 @@ Optional properties:
 - height: in pixels
 
 ``` md
-ship:tsn_light_cruiser?height=100&align=center
+![](ship:tsn_light_cruiser?height=100&align=center)
 ```
 
 ### style links
