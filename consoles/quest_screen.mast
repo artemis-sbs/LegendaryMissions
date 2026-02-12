@@ -24,7 +24,7 @@ if is_dev_build():
     if is_dev_build():
         quest_create_test_data()
 
-    quest_list = quest_flatten_list()
+    quest_list = document_flatten_list()
 
     # Left
     with gui_sub_section("col-width:35;"):
