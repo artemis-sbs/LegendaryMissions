@@ -1,0 +1,95 @@
+// This is an example/test file for a quest document
+
+# [Quest One](quest1)
+
+Track the number of quest1
+
+[](style://font:gui-2;color:blue;background:white) This is white on blue
+
+[](style://font:gui-2;color:green;background:white) 
+This is green on white
+still is
+and now
+
+but not now
+
+# [Quest Two](quest2)
+
+Track the number of quest2
+
+## This is heading 2
+
+# Title
+
+### This is H3
+
+    
+1. One
+1. Two
+1. Three
+
+## Example sub image
+
+![](image://test2?scale=0.5&fill=center)
+
+
+## Ship
+
+![](ship://tsn_light_cruiser?height=100&align=center)
+
+## Face
+
+![](face://ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=left)
+
+### This is H3
+
+
+- Blue
+- Red 
+- Green
+- Test
+
+![](image://test?scale=0.25&fill=center)
+
+![](image://ball?scale=0.25&fill=center&color=blue)
+
+
+
+
+### This is H3
+
+# Heading one
+
+### Heading 3
+
+1. This
+1. Is
+1. ordered
+
+- This
+- is 
+- unordered
+
+# End
+        
+
+# [Kills](kills)
+
+Track the number of kills.
+
+## [Kill 25 enemies](kills25?state=COMPLETE)
+
+A quest that will be complete after 25 kills
+
+## [Kill 50 enemies](kills50)
+
+A quest that will be complete after 50 kills
+
+## [Kill 100 enemies](kills100?state=FAILED)
+
+A quest that will be complete after 100 kills
+
+## [Kill 200 enemies](kills200?state=SECRET)
+
+A quest that will be complete after 200 kills
+

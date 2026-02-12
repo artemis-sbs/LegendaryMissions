@@ -3,8 +3,9 @@ from sbs_utils.procedural.quest import quest_agent_quests, QuestState, quest_add
 from sbs_utils.helpers import FrameContext
 from sbs_utils.procedural.gui.listbox import gui_list_box_header, gui_list_box_is_header
 from sbs_utils.agent import Agent
-
-
+from sbs_utils.mast.mast_node import MastDataObject
+from sbs_utils.procedural.inventory import set_inventory_value
+from sbs_utils import fs
 
 
 def quest_item(item):
@@ -19,9 +20,6 @@ def quest_item(item):
             gui_icon("icon_index:121;color:#eee;", "padding:0,0,5px,0;")
         display_text = item.get("display_text")
         gui_text(f"$text:{display_text};justify: left;draw_layer:1000;","padding:5px,6px,0,0;")
-
-        
-
     else:
         gui_row("row-height: 1.5em;padding:8px,0,0,0;")
 
@@ -44,10 +42,6 @@ def quest_item(item):
             icon.click_color = "black"
             icon.background_color = "#1576"
             text.background_color = "#1576"
-            
-
-        
-        
     return
     
 def quest_title():
@@ -57,6 +51,7 @@ def quest_title():
 
 def quest_flatten_list():
     game_quests = quest_agent_quests(Agent.SHARED_ID)
+    # game_quests = document_get_amd_file("consoles/quest.amd")
     client_id = FrameContext.client_id
     client_quests = None
     ship_quests = None
@@ -74,34 +69,44 @@ def quest_flatten_list():
         idle = []
         completed = []
         failed = []
-        
+
+        if quests is None:
+            return []
+
         if header is not None:
             header_indent = max(indent-1,0)
         # root headers have no data
         # when data is not None this is adding the 
         # Parent so the indent is one less
+        
+        children = quests.get("children")
         if data is None:
             active.append(gui_list_box_header(header,False,header_indent, data is not None,data))
-        elif len(quests)>0:
+        elif len(children)>0:
             active.append(gui_list_box_header(header,False,header_indent, data is not None,data))
         
-        if len(quests)==0 and data is not None:
+        if len(children)==0 and data is not None:
             return [data]
 
-        for q in quests.values():
+        for q in children:
+            q = MastDataObject(q)
             q.indent = indent
+
             state = q.get("state", QuestState.IDLE)
+            if isinstance(state, str):
+                try:
+                    state = QuestState[state]
+                    q.state = state
+                except Exception:
+                    state = QuestState.IDLE
             if  state == QuestState.ACTIVE:
-                active.extend(append_quests(q.children, q.display_text, indent+1, q))
+                active.extend(append_quests(q, q.display_text, indent+1, q))
             if  state == QuestState.IDLE:
-                c = append_quests(q.children, q.display_text, indent+1, q)
-                idle.extend(c)
-                
-                
+                idle.extend( append_quests(q, q.display_text, indent+1, q))
             if state == QuestState.COMPLETE:
-                completed.extend(append_quests(q.children, q.display_text, indent+1, q))
+                completed.extend(append_quests(q, q.display_text, indent+1, q))
             if state == QuestState.FAILED:
-                failed.extend(append_quests(q.children, q.display_text, indent+1, q))
+                failed.extend(append_quests(q, q.display_text, indent+1, q))
 
         active.extend(idle)
         active.extend(completed)
@@ -120,99 +125,9 @@ def quest_flatten_list():
 
 
 def quest_create_test_data():
-    yaml_text = """
-quest1:
-    display_text: quest1
-    description: |+ 
-        Track the number of quest1
-
-        $$font:gui-2;color:blue;background:white This is white on blue
-
-        $$font:gui-2;color:green;background:white 
-        This is green on white
-        still is
-        and now
-
-        but not now
-quest2:
-    display_text: quest2
-    description: |+
-
-        Track the number of quest2
-
-        $h2 This is headind 2
-
-        $t Title
-
-        $h3 This is H3
-
-        $ol 
-        One
-        Two
-        Three
-
-        ## Example sub image
-
-        ![](image://test2?scale=0.5&fill=center)
-
-    
-
-        ## Ship
-        
-        ![](ship://tsn_light_cruiser?height=100&align=center)
-
-        ## Face
-
-        ![](face://ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=left)
-        
-
-        $h3 This is H3
-
-        $ul
-        Blue
-        Red 
-        Green
-        Test
-
-        ![](image://test?scale=0.25&fill=center)
-
-        ![](image://ball?scale=0.25&fill=center&color=blue)
-
-        
-
-
-        $h3 This is H3
-
-        # Heading one
-
-        ### Heading 3
-        
-        1. This
-        1. Is
-        1. ordered
-
-        - This
-        - is 
-        - unordered
-
-        # End
-        
-
-kills:
-    display_text: kills
-    description: Track the number of kills
-    children:
-        kills25:
-            display_text: kill 25
-            state: COMPLETE
-        kills50:
-            display_text: kill 50
-        kills100:
-            display_text: kill 100
-            state: FAILED
-"""
     # signal_register("quest_activated", quest_activated)
-    quest_add_yaml(Agent.SHARED_ID, yaml_text)
+    doc = document_get_amd_file(fs.get_mission_dir_filename("consoles/quest.amd"))
+
     client_id = FrameContext.client_id
     if client_id == 0:
         return
@@ -221,6 +136,76 @@ kills:
     if ship_id == 0:
         return
     
-    quest_add_yaml(client_id, yaml_text)
-    quest_add_yaml(ship_id, yaml_text)
+    set_inventory_value(Agent.SHARED_ID,"__quests__", doc)
+    set_inventory_value(client_id,"__quests__", doc)
+    set_inventory_value(ship_id, "__quests__",doc)
   
+
+import re
+def document_get_amd_file(file_path, strip_comments=True):
+    toc = {"children": [], "description":""}
+    toc_stack = [toc]
+    rule_section = re.compile(r"#+[ \t]+\[(?P<display_text>.*)\]\((?P<urn>.*)\)[ \t]*")
+
+    lines = []
+    try:
+        with open(file_path, "r") as file:
+            lines = file.readlines()
+    except Exception as e:
+        print("no file")
+
+    for i, line in enumerate(lines):
+        m = rule_section.match(line)
+
+        #
+        # Check for
+        #
+        if m is not None:
+            level = line.split(None, 1)
+            level = len(level[0])
+
+            data = m.groupdict()
+            display_text = data.get("display_text")
+            
+            urn = data.get("urn")
+            urn = urn.split("?", 1)
+            key = urn[0]
+            
+            section = {"key": key, "display_text": display_text, "children": [], "description":"", "state": 0}
+
+            if len(urn) == 2:
+                query_string = urn[1].split("&")
+                for kvalue in query_string:
+                    kvalue = kvalue.split("=")
+                    if len(kvalue) != 2:
+                        raise Exception(f"ERROR: URN invalid line Line {i}\n{line}")
+                    this_key = kvalue[0]
+                    value = kvalue[1]
+                    section[this_key] = value
+            elif len(urn) != 1:
+                raise Exception(f"ERROR: URN invalid line Line {i}\n{line}")
+
+            # The root is level 0
+            if level == len(toc_stack):
+                toc_stack.append(section)
+            elif level == len(toc_stack) + 1:
+                toc_stack[level] = section
+            elif level < len(toc_stack):
+                toc_stack = toc_stack[: level + 1]
+                toc_stack[level] = section
+            else:
+                raise Exception(f"ERROR: Document structure error Line {i}\n{line}")
+            root = toc_stack[level - 1]
+            children = root.get("children")
+            children.append(section)
+        elif strip_comments and line.startswith("//"):
+            continue
+        else:
+            section = toc_stack[-1]
+            desc = section.get("description", "")
+            if len(desc)>0:
+                desc += "\n"
+            desc += line
+            section["description"] = desc
+    # fs.save_json_data(file_path+".json", toc)
+    return toc
