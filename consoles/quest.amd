@@ -2,6 +2,9 @@
 
 # [Quest One](quest1)
 
+
+![b]: image:ball?color=blue 
+
 Track the number of quest1
 
 [](style:font:gui-2;color:blue;background:white) This is blue on white
@@ -13,6 +16,22 @@ still is
 and now
 
 but not now
+
+=$test font:gui-6;color:yellow
+
+Not yellow
+
+$test This is yellow
+so is This
+
+This is not
+
+![b]
+
+The next line should be blank
+<br>
+Now is there a blank above
+
 
 # [Quest Two](quest2)
 
@@ -77,6 +96,8 @@ Track the number of quest2
 # [Kills](kills)
 
 Track the number of kills.
+
+
 
 ## [Kill 25 enemies](kills25?state=COMPLETE)
 
