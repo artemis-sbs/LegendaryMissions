@@ -70,5 +70,6 @@ def quest_create_test_data():
     set_inventory_value(Agent.SHARED_ID,"__quests__", doc)
     set_inventory_value(client_id,"__quests__", doc)
     set_inventory_value(ship_id, "__quests__",doc)
+    return doc
 
 

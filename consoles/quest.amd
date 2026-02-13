@@ -1,5 +1,21 @@
 // This is an example/test file for a quest document
 
+// These are setting styles
+// Many override the default
+
+[t]: style:font:gui-6;color:#bbb;
+[h1]: style:font:gui-5;color:#55b;background:#115; | I > 0;
+[h2]: style:font:gui-4;color:#5b5; | A > 2;
+[h3]: style:font:gui-3;color:#b55; | a > 4;
+[p2]: style:font:gui-2;color:#11f; | > 2;
+[p3]: style:font:gui-2;color:#11f; | > 4;
+[ol]: style:font:gui-2;color:#393; | 1 > 6;
+[ul]: style:font:gui-2;color:#11f; | * > 6;
+[c]: style:font:gui-2;color:#339;justify:center; 
+[r]: style:font:gui-2;color:#339;justify:right;
+[_]: style:font:gui-2;color:white;
+
+
 # [Quest One](quest1)
 
 
