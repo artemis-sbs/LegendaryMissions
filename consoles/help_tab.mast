@@ -1,0 +1,12 @@
+gui_tab_add_top("help")
+
+
+//gui/tab/help
+    document_file_path = get_mission_dir_filename("consoles/help_docs.amd")
+    document_type = "help"
+    document_topic = CONSOLE_SELECT.lower()
+    document_back_tab = CONSOLE_SELECT
+
+    jump document_viewer
+
+

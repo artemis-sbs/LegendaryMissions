@@ -1,0 +1,25 @@
+default CONSOLE_SELECT = "" # Make sure variable exist at startup
+
+if is_dev_build():
+    gui_tab_add_top("quest")
+    # Example images
+    gui_image_add_atlas("test", "media/LegendaryMissions/operator")
+    gui_image_add_atlas("test2", "media/LegendaryMissions/operator", 645,570, 950,820)
+
+    quest_console_enable("helm,comms")
+    shared QUEST_TAB_ENABLED = True
+
+
+//gui/tab/quest if quest_is_console_enabled(CONSOLE_SELECT)
+    if is_dev_build():
+        doc = quest_create_test_data()
+
+    document = quest_flatten_list()
+    document_type = "quest"
+    document_back_tab = CONSOLE_SELECT
+
+    document_back_tab = CONSOLE_SELECT
+
+
+    jump document_screen
+

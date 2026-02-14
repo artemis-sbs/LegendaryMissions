@@ -24,7 +24,8 @@
         "basic_player_destroy",
         "basic_random_skybox",
         "collisions",
-        "data_panels"
+        "data_panels",
+        "documents"
     ],
     "zip": [
         "media"
