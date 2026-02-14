@@ -5,7 +5,7 @@ Select from topics below.
 
 Describe what stations are
 
-## [Helm](helm)
+## [Helm](helm?icon_index=110)
 
 The Helm console steers the ship using the maneuvering system and moves the ship using impulse and warp drive (for Terrans) or jump drive (for Ximni). 
 <br>
@@ -17,7 +17,7 @@ To make the ship turn faster, ask Engineering for more power to maneuvering.
 <br>
 To make the ship move faster, ask Engineering for more power to the impulse or warp drive.
 
-## [Weapons](weapons)
+## [Weapons](weapons?icon_index=117)
 
 The Weapons console controls your beam weapons and your torpedoes.
 <br>
@@ -31,19 +31,20 @@ To make your beam weapons hit harder, ask Engineering to increase power to beams
 <br>
 To make your torpedo tubes load faster, ask Engineering to increase power to torpedo tubes.
 
-## [Communications](comms)
+## [Engineering](engineering?icon_index=28)
 
-The Communications console has a text scroll of incoming and outgoing messages, and is the voice of the ship.
+The Engineering console has two main functions: to distribute power to the ship's systems and to direct damage control teams to repair damage to the ship.
 <br>
-Comms can taunt enemies, choosing from many biting insults, but each enemy will respond to only one taunt. The wrong taunt will get the enemy to laugh at you and cut off communications, so ask Science for advice on which taunt to use.
+If Helm, Weapons, and Science are doing their jobs well, they will all be demanding then you transfer more power to their systems.
 <br>
-Comms can order friendly ships to change course, attacking or evading enemies.
+Systems like sensors, weapons, and engines can overheat. If a system overheats beyond its limits it will be damaged and require repairs.
 <br>
-Comms can request that friendly bases construct torpedo weapons and expedite refueling, rearming, and repairing your ship.
+Every system can dissipate some heat naturally, so systems you set to 100% (normal) power do not overheat. When you increase power above 100% heat will build up toward an overheat.
 <br>
-The comms station has a 'RED ALERT' button which will keep your crew on their toes.
+Engineering has a pool of coolant available to cool down overheated systems. You don't have enough coolant to cool everything all at once, so distribute it carefully.
 
-## [Science](science)
+
+## [Science](science?icon_index=63)
 
 The Science console is the eyes of the ship, locating and scanning virtually anything in the sector. The crew is counting on you to tell them what is going on out there, so don't play Science if you can't speak up!
 <br>
@@ -55,14 +56,21 @@ The further away an object is the longer it takes to scan.
 <br>
 To make your sensors scan faster, ask Engineering to increase power to sensors.
 
-## [Engineering](engineering)
+## [Communications](comms?icon_index=34)
 
-The Engineering console has two main functions: to distribute power to the ship's systems and to direct damage control teams to repair damage to the ship.
+The Communications console has a text scroll of incoming and outgoing messages, and is the voice of the ship.
 <br>
-If Helm, Weapons, and Science are doing their jobs well, they will all be demanding then you transfer more power to their systems.
+Comms can taunt enemies, choosing from many biting insults, but each enemy will respond to only one taunt. The wrong taunt will get the enemy to laugh at you and cut off communications, so ask Science for advice on which taunt to use.
 <br>
-Systems like sensors, weapons, and engines can overheat. If a system overheats beyond its limits it will be damaged and require repairs.
+Comms can order friendly ships to change course, attacking or evading enemies.
 <br>
-Every system can dissipate some heat naturally, so systems you set to 100% (normal) power do not overheat. When you increase power above 100% heat will build up toward an overheat.
+Comms can request that friendly bases construct torpedo weapons and expedite refueling, rearming, and repairing your ship.
 <br>
-Engineering has a pool of coolant available to cool down overheated systems. You don't have enough coolant to cool everything all at once, so distribute it carefully.
+The comms station has a 'RED ALERT' button which will keep your crew on their toes.
+
+## [Flight Hangar](hangar?icon_index=140)
+
+The Flight Hangar allows player the wish to fly single craft (fighter, shuttle, bomber) missions. They can join the lgh hangar.
+<br>
+Select from several station, and ship hangar. Grab a craft. Select a mission and Fly.
+

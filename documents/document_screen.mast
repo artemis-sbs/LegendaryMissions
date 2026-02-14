@@ -1,13 +1,6 @@
 # This setting when true allows doc editor to see changes when the occur
 shared ALLOW_DOC_REFRESH  = SETTINGS.get("ALLOW_DOC_REFRESH", is_dev_build())
 
-if is_dev_build():
-    gui_tab_add_top("quest")
-    # Example images
-    gui_image_add_atlas("test", "media/LegendaryMissions/operator")
-    gui_image_add_atlas("test2", "media/LegendaryMissions/operator", 645,570, 950,820)
-
-
 
 === document_viewer
     # Maybe this should default to an error file
@@ -26,7 +19,7 @@ if is_dev_build():
     if ALLOW_DOC_REFRESH:
         if document_watch_task is not None:
             document_watch_task.cancel()
-        document_watch_task = task_schedule(document_watch)
+        document_watch_task = gui_sub_task_schedule(document_watch)
 
     gui_tab_back(document_back_tab )
     gui_activate_console(document_type)
@@ -35,7 +28,7 @@ if is_dev_build():
     gui_section(style="area:0,45px,100,100;")
 
     topic = None
-    root_topic = None
+    root_topic = doc
     for item in document:
         if gui_list_box_is_header(item):
             item = item.data
@@ -57,7 +50,7 @@ if is_dev_build():
     # Left
     with gui_sub_section("col-width:35;"):
         gui_row()
-        obj_list = gui_list_box(document,"row-height: 0.1em; background:#1572;", item_template=quest_item, title_template=document_type, select=True)
+        obj_list = gui_list_box(document,"row-height: 0.1em; background:#1572;", item_template=document_item, title_template=document_type, select=True)
         if topic is not None:
             obj_list.value = topic
 

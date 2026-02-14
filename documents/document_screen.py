@@ -8,17 +8,24 @@ from sbs_utils import fs
 from sbs_utils.agent import Agent
 
 
-def quest_item(item):
+def document_item(item):
     
     if not gui_list_box_is_header(item):
         gui_row("row-height: 1.5em;padding:8px,0,0,0;")
+        icon_index = item.get("icon_index")
+        icon_color = item.get("icon_color","white")
         if item.get("state"):
             if item.state == QuestState.COMPLETE:
-                gui_icon("icon_index:101;color:#151;", "padding:0,0,5px,0;")
+                icon_index = 101
+                icon_color = "#151"
             elif item.state == QuestState.FAILED:
-                gui_icon("icon_index:101;color:#a22;", "padding:0,0,5px,0;")
+                icon_index = 101
+                icon_color = "#a22"
             else:
-                gui_icon("icon_index:121;color:#eee;", "padding:0,0,5px,0;")
+                icon_index = 121
+                icon_color = "#eee"
+        if icon_index is not None:
+            gui_icon(f"icon_index:{icon_index};color:{icon_color};", "padding:5px,0,5px,0;")
         display_text = item.get("display_text")
         gui_text(f"$text:{display_text};justify: left;draw_layer:1000;","padding:5px,6px,0,0;")
     else:
@@ -49,10 +56,6 @@ def quest_item(item):
                 text.background_color = "#1576"
     return
     
-def quest_title():
-    gui_row("row-height: 1.5em;padding:3px;background:#157e;")
-    gui_text(f"$text:QUESTS;justify: center;")
-
 
 
 def quest_create_test_data():
