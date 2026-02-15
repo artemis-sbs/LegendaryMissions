@@ -94,29 +94,30 @@ if is_dev_build():
         print("{d:1.1.2f}")
         
 
+    default elite_get_all_abilities = None
+    if elite_get_all_abilities is not None:
+        gui_section(style="area:50,15,80,15+35px;row-height:35px;")
+        gui_row()
+        on gui_message(gui_button("Test Enemy")):
+            abis = lb_abilities.get_value()
+            if len(abis)>0:
+                abis = "elite,"+",".join(abis)
+            else:
+                abis = None
+            await task_schedule(spawn_test_enemy,data={"abi": abis})
 
-    gui_section(style="area:50,15,80,15+35px;row-height:35px;")
-    gui_row()
-    on gui_message(gui_button("Test Enemy")):
-        abis = lb_abilities.get_value()
-        if len(abis)>0:
-            abis = "elite,"+",".join(abis)
-        else:
-            abis = None
-        await task_schedule(spawn_test_enemy,data={"abi": abis})
+        gui_section(style="area:50,25,80,75;")
+        abilities = elite_get_all_abilities()
+        lb_abilities = ~~gui_list_box(list(abilities), "row-height: 0.1em; background:#1572;",
+                                    item_template=lambda item: None if gui_row("row-height: 1.1em;") and gui_text(f'$text:{item};justify: left;') else None,
+                                    title_template = lambda: None if gui_row("row-height: 1.1em;background:#1578;") and gui_text("$text:Elite Abilities;justify:center;") else None,
+                                    multi=True)~~
 
-    gui_section(style="area:50,25,80,75;")
-    abilities = elite_get_all_abilities()
-    lb_abilities = ~~gui_list_box(list(abilities), "row-height: 0.1em; background:#1572;",
-                                item_template=lambda item: None if gui_row("row-height: 1.1em;") and gui_text(f'$text:{item};justify: left;') else None,
-                                title_template = lambda: None if gui_row("row-height: 1.1em;background:#1578;") and gui_text("$text:Elite Abilities;justify:center;") else None,
-                                multi=True)~~
-
-    gui_section(style="area:50,76,80,76+35px;")
-    on gui_message(gui_button("clear")):
-        lb_abilities.select_none()
-    on gui_message(gui_button("all")):
-        lb_abilities.select_all()
+        gui_section(style="area:50,76,80,76+35px;")
+        on gui_message(gui_button("clear")):
+            lb_abilities.select_none()
+        on gui_message(gui_button("all")):
+            lb_abilities.select_all()
 
 
     gui_activate_console("debug")
