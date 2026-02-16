@@ -113,15 +113,15 @@ hangar_get_craft_data("terran")
         if ride_choice not in crafts:
             ride_choice = crafts[0]
 
-    gui_section(style="area: 0,0, 36,100-150px;background: #fff1;")
+    gui_section(style="area: 0,0, 41,100-150px;background: #fff1;")
 
     call_sign = get_inventory_value(client_id, "call_sign", "Selene")
-    gui_section(style="area: 20px,6,35,6+40px;")
+    gui_section(style="area: 20px,6,40,6+40px;")
     gui_input("desc:Call sign", var="call_sign")
     on change call_sign:
         set_inventory_value(client_id, "call_sign", call_sign)
 
-    gui_section(style="area: 20px,6+50px, 36, 49;")
+    gui_section(style="area: 20px,6+50px, 40, 49;")
     
     dock_picker = gui_list_box(docks,"background:#1572;padding:0,0,10px,0;", item_template=hangar_console_dock_template, title_template=hangar_console_dock_title_template, select=True)
     ride_picker = gui_list_box(crafts,"background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)
@@ -134,10 +134,10 @@ hangar_get_craft_data("terran")
         
     # ride_picker.title_background = "#1578"
     
-    gui_section(style="area: 20px,50, 36,50+20px;")
+    gui_section(style="area: 20px,50, 40,50+20px;")
     gui_row(style="row-height:20px;")
     gui_text("$text:Mission Briefing;color: white;justify: center;", style="background: #1578;")
-    gui_section(style="area: 20px,50+20px, 36,100-160px;background: #1572;")
+    gui_section(style="area: 20px,50+20px, 40,100-160px;background: #1572;")
 
     briefing = get_inventory_value(ride_choice, "briefing", "No fighters")
     """
@@ -150,7 +150,7 @@ hangar_get_craft_data("terran")
     
     gui_tab_back(CONSOLE_SELECT)
 
-    gui_section(style="area: 36+1em,0, 100,100-50px;")
+    gui_section(style="area: 41+1em,0, 100,100-50px;")
     gui_layout_widget("2dview")
 
     fighter_change = 0
