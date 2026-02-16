@@ -247,34 +247,36 @@ def hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, objective):
 
 def hangar_random_craft_spawn(docked_id, craft_type=None):
     """
-    Spawns a random shuttle, bomber, or fighter.  
-    30% chance of spawning a shuttle.  
-    50% chance of spawning a bomber.  
-    If neither of these occur, a fighter is spawned.  
-
+    Spawns a random shuttle, bomber, or fighter.
+    Pass craft_type to narrow the possibile crafts down to only the available shuttles,
+    available fighters, or available bombers. (Usually there is only one available shuttle,
+    one available fighter, and one available bomber.)
+    If craft_type is not specified, then there is a 20% chance of spawning a shuttle,
+    60% chance of spawning a fighter, and a 20% chance of spawning a bomber.
     Args:
         docked_id (int): the id of the ship or station in which the craft will spawn
-        roles (str): a comma-separated list of roles to add to the craft
+        craft_type (str | None): Which type of craft to spawn. Valid values are "shuttle",
+            "fighter", "bomber", and None. See main function description for details.
     Returns:
-        SpawnData: The SpawnData object associated with the craft you've spawned.
+        SpawnData: The SpawnData object associated with the craft that was spawned.
     """
-    craft_data_list = hangar_get_ship_data_keys(docked_id)
-
-    if craft_type is None and randint(0,3) == 1:
-        # get all shuttles
-        craft_type = "shuttle"
-    if craft_type is None and randint(0,5) == 1:
-        # get all shuttles
-        craft_type = "bomber"
-
-    filtered = craft_data_list
-    if craft_type is not None:
-        filtered = [x for x in craft_data_list if craft_type in x.get("roles","")]
+    if craft_type is None:
+        craft_type_d10_roll = randint(1, 10)
+        # 20% chance of shuttle
+        if craft_type_d10_roll <= 2:
+            craft_type = "shuttle"
+        # 60% chance of fighter
+        elif craft_type_d10_roll <= 8:
+            craft_type = "fighter"
+        # 20% chance of bomber
+        else:
+            craft_type = "bomber"
     
-    one  = random.choice(filtered)
-    return hangar_craft_spawn(docked_id, one)
+    craft_data_list = hangar_get_ship_data_keys(docked_id)
+    filtered = [craft_data for craft_data in craft_data_list if craft_type in craft_data.get("roles", "")]
+    craft_data_to_spawn = random.choice(filtered)
 
-
+    return hangar_craft_spawn(docked_id, craft_data_to_spawn)
 
 def hangar_launch_craft(craft_id, client_id):
     if craft_id is None: return

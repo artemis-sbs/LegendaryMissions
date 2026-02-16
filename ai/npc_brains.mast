@@ -39,9 +39,9 @@ stop_dist: 500
     # Clear the target
     clear_target(BRAIN_AGENT.id)
     if SIZE_X is None:
-        _target = closest(BRAIN_AGENT_ID, role('ship')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, any_role('ship,shuttle,fighter,bomber,station')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
     else:
-        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role('ship')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&any_role('ship,shuttle,fighter,bomber,station')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
     _target = to_object(_target)
     if _target is not None:
         _target_id = to_id(_target)

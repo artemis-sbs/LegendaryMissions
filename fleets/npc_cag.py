@@ -4,7 +4,7 @@ from sbs_utils.procedural.execution import task_schedule, jump, AWAIT
 from sbs_utils.procedural.timers import delay_sim, is_timer_finished, set_timer, is_timer_set, clear_timer
 from sbs_utils.procedural.query import to_object, to_id, object_exists, to_object_list, get_side
 from sbs_utils.procedural.space_objects import target, closest, broad_test_around, target_pos
-from sbs_utils.procedural.roles import role, all_roles, add_role, remove_role
+from sbs_utils.procedural.roles import role, all_roles, add_role, remove_role, any_role
 from sbs_utils.procedural.spawn import npc_spawn
 from sbs_utils.procedural.links import get_dedicated_link, set_dedicated_link
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
@@ -53,13 +53,14 @@ class NpcCAG(Agent):
         the_target = None
         local_arena = broad_test_around(fighter_id, 8000,8000, 0xF0)
 
-        # Look for a player near 
+        # Look for a player capital ship or single-seat craft nearby
         if None is the_target:
-            the_target = closest(fighter_id, local_arena & role("__player__") & role("cockpit") - role(get_side(fighter_id)))
+            the_target = closest(fighter_id, local_arena & any_role("__player__,cockpit") - role(get_side(fighter_id)))
 
-        # Look for a station near 
+        # Look for a station or friendly npc ship nearby
         if None == the_target:
-            the_target = closest(fighter_id, local_arena & role("Station") - role(get_side(fighter_id)))
+            # Can't use the TSN role currently because that includes the gamemaster ship
+            the_target = closest(fighter_id, local_arena & any_role("station,defender,civilian") - role(get_side(fighter_id)))
 
         return to_id(the_target)
 
