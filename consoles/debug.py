@@ -1,4 +1,6 @@
 from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text
+from sbs_utils.procedural.roles import role
+from sbs_utils.procedural.query import to_data_set
 
 def debug_menu_template(item):
     gui_row("row-height: 48px;padding:3px")
@@ -36,6 +38,14 @@ def debug_dump_mast():
         print(f"Label: {l} count: {c}")
 
 
+def debug_dump_nebula():
+    with open("nebula_dump.log", "w") as f:
+        for n in role("nebula"):
+            blob = to_data_set(n)
+            size = blob.get("display_size", 0)
+            denisty = blob.get("density", 0)
+            f.write(f"{size:0.2f} {denisty:0.2f}\n")
+        
 
 
 

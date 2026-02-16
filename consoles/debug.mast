@@ -92,6 +92,10 @@ if is_dev_build():
     on gui_message(gui_button("Format error")):
         d = 3
         print("{d:1.1.2f}")
+
+    gui_row()
+    on gui_message(gui_button("Dump Nebula")):
+        debug_dump_nebula()
         
 
     default elite_get_all_abilities = None

@@ -47,7 +47,7 @@ display_text: Nebula sphere
 ```
     default cluster_color = None
     default density_scale  = terrain_to_value(TERRAIN_SELECT)
-    terrain_spawn_nebula_sphere(START_X, START_Y, START_Z, SIZE_X//2, density_scale=density_scale, cluster_color=cluster_color)
+    terrain_spawn_nebula_sphere(START_X, START_Y, START_Z, SIZE_X, density_scale=density_scale, cluster_color=cluster_color)
     ->END
 
 
