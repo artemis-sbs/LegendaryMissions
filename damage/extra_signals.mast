@@ -1,0 +1,35 @@
+# By inherit=False means it does not get all the data from the main task
+shared nebula_singal_watcher = task_schedule_server(nebula_signal_watch, defer=True, inherit=False)
+shared counting_nebula_updates = 0
+
+==== nebula_signal_watch
+    await delay_sim(1)
+    
+    players = to_space_object_list(role("__player__"))
+    for p in players:
+        neb = to_id(closest(p, role("nebula_marker"), 10_000))
+        # force count to be just one
+        inside = p.data_set.get("inside_nebula_count",0) != 0
+
+        prev = get_inventory_value(p.id, "NEBULA_ID")
+        prev_inside = get_inventory_value(p.id, "NEBULA_INSIDE")
+        continue if neb == prev and inside == prev_inside
+        set_inventory_value(p.id, "NEBULA_ID", neb)
+        set_inventory_value(p.id, "NEBULA_INSIDE", inside)
+
+        signal_emit("nebula_within_change", {"PLAYER_ID": p.id, "ENTER_ID": neb, "LEAVE_ID": prev} )
+
+    jump nebula_signal_watch
+
+#
+# Example listen for nebula changes
+#
+
+# //shared/signal/nebula_within_change
+#     if ENTER_ID is not None:
+#         color = get_inventory_value(ENTER_ID, "cluster_color", "None")
+#         comms_broadcast(0, "Entering {color} Nebula {counting_nebula_updates}", "orange")
+#     if LEAVE_ID is not None:
+#         color = get_inventory_value(ENTER_ID, "cluster_color", "None")
+#         comms_broadcast(0, "Leaving {color} Nebula {counting_nebula_updates}", "orange")
+#     counting_nebula_updates+=1
