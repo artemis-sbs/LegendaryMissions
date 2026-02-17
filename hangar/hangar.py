@@ -279,11 +279,11 @@ def hangar_random_craft_spawn(docked_id, craft_type=None):
     return hangar_craft_spawn(docked_id, craft_data_to_spawn)
 
 def hangar_launch_craft(craft_id, client_id):
-    if craft_id is None: return
+    if craft_id is None: return False
     craft = to_space_object(craft_id)
-    if craft is None: return
-    if not has_role(craft_id, "standby"): return
-    if not is_timer_finished(craft_id, "refit"): return
+    if craft is None: return False
+    if not has_role(craft_id, "standby"): return False
+    if not is_timer_finished(craft_id, "refit"): return False
 
     hangar_bump_version()
     #
@@ -355,10 +355,10 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     Returns: 
         boolean | None
     """
-    if craft_id is None: return
-    if has_role(craft_id, "standby"): return
+    if craft_id is None: return False
+    if has_role(craft_id, "standby"): return False
     craft = to_space_object(craft_id)
-    if craft is None: return
+    if craft is None: return False
     
     
     #
@@ -491,7 +491,7 @@ def hangar_get_crafts_at(dock_id):
     """
     dock_id = to_id(dock_id)
     if dock_id is None:
-        return
+        return []
     crafts = []
     all_crafts = all_roles(f"cockpit,standby")
     for c in all_crafts:
