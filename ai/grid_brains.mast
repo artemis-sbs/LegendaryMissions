@@ -116,32 +116,30 @@ brain:
       idle_time: 60
       upgrade: upgrade_damcon_speed_quarters
 ```
-    i = 4
+    color = COLOR
+    name = NAME
     v = sbs.vec3(0.5,0,0.5)
-    point = sbs.find_valid_unoccupied_grid_point_for_vector3(ship_id, v, 5)
+    # Try 
+
 
     item_theme_data = grid_get_item_theme_data("damcons")
     rally_theme_data = grid_get_item_theme_data("rally_point")
     #
     # Get Colors from theme
     # 
-    colors  = item_theme_data.color
-    color_count = len(colors)
-    damage_colors  = item_theme_data.damage_color
-    default name = f"DC{i+1}"
-    
-    ->END if len(point) == 0
+    default name = f"{NAME} intern"
         
     icon = 2 # item_theme_data.icon
     scale = item_theme_data.scale
-    dc = grid_spawn(ship_id, name, name, point[0],point[1],icon, colors[i%color_count], "crew,damcons,lifeform")
+    point = [START_X, START_Y]
+    dc = grid_spawn(ship_id, name, name, point[0],point[1],icon, color, "crew,damcons,lifeform,intern")
 
     dc.engine_object.layer = 4
     dc.blob.set("icon_scale", scale,0 )
     _id = to_id(dc)
     _go = to_object(dc)
-    set_inventory_value(_id, "color", colors[i%color_count])
-    set_inventory_value(_id, "damage_color", damage_colors[i%color_count])
+    set_inventory_value(_id, "color", color)
+    set_inventory_value(_id, "damage_color", DAMAGE_COLOR)
     set_inventory_value(_id, "blackboard:idle_pos", (point[0], point[1]) )
     # Hit points == MAX_HP
     set_inventory_value(_id, "HP", grid_get_max_hp() )
@@ -160,7 +158,7 @@ brain:
     set_inventory_value(_id, "idle_marker", to_id(idle_marker))
 
     brain_add(_go, brain)
-    ->END
+    yield result dc
 
 === ai_lifeform_move_keep_going
 metadata: ``` yaml

@@ -161,6 +161,7 @@ def grid_damcons_handle_idling_boost_finish(id_or_obj):
     current_room_ids = set(hm.get_objects_at_point(x,y))
     _go_id = BRAIN_AGENT.id
     
+    hp = get_inventory_value(_go_id, "HP", 0)
     if len(current_room_ids & role("sickbay")) > 0:
         hp += 1
         ship = BRAIN_AGENT.host_id # obj defined in previous labels
