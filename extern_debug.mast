@@ -5,7 +5,7 @@ task_schedule(debug_mission)
     await delay_app(2)
     # Run a map
     mission_list = maps_get_list()
-    map_to_run = 1
+    map_to_run = 0
     print("Running map "+mission_list[map_to_run].path)
     # p = map_get_properties(mission_list)
     

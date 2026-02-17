@@ -25,17 +25,30 @@ Properties:
 
     #------------------------------------------------------------------------------------------------------------
 
-    terrain_spawn_stations(DIFFICULTY, lethal_value)
+    # Should yield 16 points
+    spawn_points = scatter_simple_noise(0, 0, 0, 0, 80_000, 750, 80_000, 20_000, 750,20_000, centered=True, drift=0.8)
+
+    # Add stations
+    stations = terrain_spawn_stations(DIFFICULTY, lethal_value, points=spawn_points)
+    
+
     await task_schedule(spawn_friendly_npc)
     await task_schedule(spawn_players)
     await task_schedule(default_player_friendly_eyes)
     await task_schedule(docking_standard_player_station)
-    
+
+    # Grab a set of points that are not over lapping
+    spawn_points = scatter_simple_noise(0, 0,0, 0, 100_000, 750, 100_000, 1000, 100_000,1000, centered=True)
+    # Clear points around stations
+    spawn_points = terrain_remove_points_near(spawn_points, stations, 10_000)
+
+    # Nebula and asteroids can be over other points
+    terrain_spawn_nebula_clusters(terrain_value, points=spawn_points)
     terrain_asteroid_clusters(terrain_value)
-    terrain_spawn_nebula_clusters(terrain_value)
-    terrain_spawn_pickups(upgrade_value)
-    terrain_spawn_monsters(monster_value)
-    terrain_spawn_black_holes(lethal_value)
+    # These should remove points / sample
+    terrain_spawn_pickups(upgrade_value, points=spawn_points)
+    terrain_spawn_monsters(monster_value, points=spawn_points)
+    terrain_spawn_black_holes(lethal_value, points=spawn_points)
 
 
 
@@ -50,14 +63,28 @@ Properties:
     fleet_count = 3 + int(DIFFICULTY/2)
     fleet_index = int(DIFFICULTY - 1)
 
+    # Now try to make it so enemies don't spawn on stations
+    spawn_points = terrain_remove_points_near(spawn_points, stations, 25_000)
+    # times to for skarrans
+    if len(spawn_points) < fleet_count*2:
+      # There should be enough points, but if not
+      spawn_points = None
+      
     for a in range(fleet_count):
         enemy_temp = random.choices(enemyTypeNameList, weights=diff_weight[fleet_index])
         enemy = enemy_temp[0]
-        fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
+        if spawn_points is None:
+          fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
+        else:
+          fleet_pos = random.sample(spawn_points, 1)[0]
+
         prefab_spawn(prefab_fleet_raider, {"race": enemy, "fleet_difficulty": DIFFICULTY,"START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
         if a > 1 and DIFFICULTY > 2:
+          if spawn_points is None:
             fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
-            prefab_spawn(prefab_fleet_raider, {"race": "Skaraan", "fleet_difficulty": DIFFICULTY, "START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
+          else:
+            fleet_pos = random.sample(spawn_points, 1)[0]
+          prefab_spawn(prefab_fleet_raider, {"race": "Skaraan", "fleet_difficulty": DIFFICULTY, "START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
 
     #------------------------------------------------------------------------------------------------------------
 

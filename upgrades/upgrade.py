@@ -41,12 +41,13 @@ def pickup_spawn(x, y, z, roles, blink=None, yaw=None, name=None, art_id=None,):
     sd.engine_object.blink_state = int(blink)
 
 
-def terrain_spawn_pickups(upgrade_value, center=None):
+def terrain_spawn_pickups(upgrade_value, center=None, points=None):
     """
     Spawn pickups around the given position.
     Args:
         upgrade_value (int): The density of upgrades to spwan. Acceptable values are 1-4.
         center (Vec3): The point around which to spawn the upgrades. If None, turns into Vec3(0,0,0). Default is None.
+        points iter: Optional is passed it will sample points 
     """
     if center is None:
         center = Vec3(0,0,0)
@@ -66,6 +67,12 @@ def terrain_spawn_pickups(upgrade_value, center=None):
     # upg = random.randint(1, len(anom_data.values()))
     # for upg in anom_data.values()):
     #     pickup_spawn(v.x, v.y, v.z, anom_data[upg])
+    if points is not None:
+        try:
+            spawn_points = random.sample(points, num_upgrade)
+        except Exception:
+            return
+
     spawn_points = scatter.box(num_upgrade, *center.xyz, 75000, 1000, 75000, centered=True)
     for v in spawn_points:
         upg = random.randint(1,9)
