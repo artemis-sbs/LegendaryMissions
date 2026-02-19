@@ -24,9 +24,9 @@ if taunt_data is not None:
         set_inventory_value(SPAWNED_ID, "taunt_trait", random.randrange(c))
 
 
-//enable/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_any_role(COMMS_SELECTED_ID, 'Station,ship')
+//enable/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and side_are_enemies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_any_role(COMMS_SELECTED_ID, 'Station,ship')
 
-//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered') and has_any_role(COMMS_SELECTED_ID, 'Station,ship')
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and side_are_enemies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered') and has_any_role(COMMS_SELECTED_ID, 'Station,ship')
 + "Hail":
     if has_roles(COMMS_SELECTED_ID, 'kralien'):
         <<[$raider] "Hail"
@@ -104,7 +104,7 @@ if taunt_data is not None:
         <<[$raider] "Hail"
             % Go away, {COMMS_ORIGIN.name}! You talk too much!
 
-//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and not role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and side_are_enemies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not has_roles(COMMS_SELECTED_ID, 'surrendered')
 + "Taunt"  handle_comms_taunt_raider_top
 
 

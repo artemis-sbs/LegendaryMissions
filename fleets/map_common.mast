@@ -124,7 +124,7 @@
     #------------------------------------------------------------------------------------------------------------
     for player_ship in player_ships:
         side = player_ship.side
-        stations_friendly = to_object_list(role(side)  & role("station"))
+        stations_friendly = to_object_list(side_members_set(side)  & role("station"))
 
         if c>= PLAYER_COUNT:
             # make sure the id is cleared dry docked ships
@@ -153,13 +153,11 @@
             assign_client_to_ship(0,to_id(player_ship))
             first = False
 
-        role_ally_add(player_ship, "civ")
-        test = player_ship.data_set.get("ally_list", 0)
         # 
         # schedule and set friendly eyes
         # link or unlink extra_scan_source
         #
-        friendly_eyes = role_allies(player_ship)  & (role("station")|role("defender"))
+        friendly_eyes = side_ally_members_set(player_ship)  & (role("station")|role("defender"))
         link(player_ship, "extra_scan_source", friendly_eyes)
 
         #player_ship_update_friendly(player_ship, stations_friendly, True)

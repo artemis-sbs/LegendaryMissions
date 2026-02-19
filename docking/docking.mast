@@ -56,7 +56,7 @@ distance: 600
 # System assures Objects exist
 +++ enable
     yield fail if DOCKING_NPC_ID == 0
-    yield fail if  not role_are_allies(DOCKING_PLAYER_ID, DOCKING_NPC_ID)
+    yield fail if  not side_are_allies(DOCKING_PLAYER_ID, DOCKING_NPC_ID)
 
 +++ undocking
 # This is called when docking is released

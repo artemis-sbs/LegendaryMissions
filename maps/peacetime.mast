@@ -169,7 +169,6 @@ Properties:
         
         set_face(c_ship, random_terran(civilian=True))
         suspect.append(c_ship)
-        s_obj.data_set.set("ally_list","tsn",0)
         s_count += 1
 
     suspect_list = to_object_list(role('suspect'))
@@ -883,13 +882,10 @@ yield success
     side = "tsn"
     _obj = to_object(kidnapper_id)
     _obj.spawn_pos = Vec3(90000,0,90000)
-    _obj.side = "pirate"
 
-    allies = _obj.data_set.get("ally_list",0)
-    items = allies.split(",")
-    items.remove(side)
-    allies = ",".join(items)
-    _obj.data_set.set("ally_list", allies, 0)
+    # TODO: Should a new side be used instead of raider? Given that it's a peacetime mission, probably not necessary.
+    side_set_object_side(_obj, "raider")
+
     target_pos(kidnapper_id, 90000, 0, 90000, throttle=1.5, target_id=0)
 
 //enable/comms if has_roles(COMMS_SELECTED_ID, "discovered")

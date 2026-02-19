@@ -1,5 +1,5 @@
 
-//comms if role_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "Station") and not has_role(COMMS_ORIGIN_ID, "gamemaster")
+//comms if side_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "Station") and not has_role(COMMS_ORIGIN_ID, "gamemaster")
     + "Request Priority Docking" handle_comms_station_priority_docking
 
 

@@ -19,7 +19,9 @@ stop_dist: 500
     yield fail if sbs.distance_id(BRAIN_AGENT_ID, current_target) > distance
     #print("CHASE CUR {distance} {current_target}")
     BRAIN_AGENT.set_inventory_value("blackboard:target", current_target)
-    shoot = not role_are_allies(BRAIN_AGENT_ID, current_target)
+
+    # Do we want them to be able to target other non-allies? Neutrals and unknowns?
+    shoot = side_are_enemies(BRAIN_AGENT_ID, current_target)
     target(BRAIN_AGENT_ID, current_target, shoot, throttle, stop_dist=stop_dist)
     yield success
 
@@ -39,9 +41,9 @@ stop_dist: 500
     # Clear the target
     clear_target(BRAIN_AGENT.id)
     if SIZE_X is None:
-        _target = closest(BRAIN_AGENT_ID, any_role('ship,shuttle,fighter,bomber,station')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, any_role('ship,shuttle,fighter,bomber,station')-role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
     else:
-        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&any_role('ship,shuttle,fighter,bomber,station')-role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&any_role('ship,shuttle,fighter,bomber,station')-role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
     _target = to_object(_target)
     if _target is not None:
         _target_id = to_id(_target)
@@ -64,9 +66,9 @@ stop_dist: 500
     clear_target(BRAIN_AGENT.id)
     # The role "#" is an invisible e.g. admiral, operator
     if SIZE_X is None:
-        _target = closest(BRAIN_AGENT_ID, role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
     else:
-        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role("__player__")-role_allies(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
 
     _target = to_object(_target)
     if _target is not None:
@@ -91,9 +93,9 @@ stop_dist: 500
     clear_target(BRAIN_AGENT.id)
     # The role "#" is an invisible e.g. admiral, operator
     if SIZE_X is None:
-        _target = closest(BRAIN_AGENT_ID, role("station")-role_allies(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, role("station")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
     else:
-        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role("station")-role_allies(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role("station")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
 
     _target = to_object(_target)
     #print(f"PAST CLOSEST {l} {r} {_target} {ss} {st} {s} ")
