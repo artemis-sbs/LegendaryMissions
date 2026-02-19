@@ -4,22 +4,39 @@
 //signal/game_started
     start_npc_cag()
     #CREATE Sides and diplomacy
-    sim.set_side_relationship("tsn","tsn",sbs.DIPLOMACY.ALLIED)
-    sim.set_side_relationship("tsn","civ",sbs.DIPLOMACY.NEUTRAL)
-    sim.set_side_relationship("civ","tsn",sbs.DIPLOMACY.NEUTRAL)
-    sim.set_side_relationship("tsn","raider",sbs.DIPLOMACY.HOSTILE)
 
-    sim.set_side_relationship("raider","raider",sbs.DIPLOMACY.ALLIED)
-    sim.set_side_relationship("raider","tsn",sbs.DIPLOMACY.HOSTILE)
+    # Some examples of different ways to set up a new side.
 
-    sim.set_side_icon_color("tsn","#07f")
-    sim.set_side_icon_color("raider","#F00")
-    sim.set_side_icon_color("civ","white")
+    #region Spawn TSN side
+    tsn = await prefab_spawn(prefab_side_generic, data={"key":"TSN"}) #Spawn using only the key
+    # Add a display name, description and color programatically
+    side_set_display_name(tsn, "TSN") 
+    side_set_description(tsn, "The Terran Stellar Navy")
+    side_set_icon_color(tsn, "#07F")
+    #endregion
 
+    #region Spawn Raider side
+    # Everything can be set in the prefab data.
+    raider = await prefab_spawn(prefab_side_generic, data={"key":"raider", "name": "Raider", "color_2d": "#F00", "desc":"Hostile Aliens"})
+    #endregion
+
+    #region Spawn Civ side
+    # Some combination of prefab and functions can be nice.
+    civ = await prefab_spawn(prefab_side_generic, data={"key":"civ","name": "Civ"})
+    side_set_description(civ, "Civilians. Protect them from attack.")
+    side_set_icon_color(civ, "white") #NOTE that you can use color names in addition to hexidecimal
+    #endregion
+
+    # Now we set the relationships between the sides.
+    side_set_relations(tsn, raider, sbs.DIPLOMACY.HOSTILE)
+    side_set_relations(raider, civ, sbs.DIPLOMACY.HOSTILE)
+    side_set_relations(civ, tsn, sbs.DIPLOMACY.NEUTRAL)
+
+    #The colors for diplomatic relations can be set via script.
     sim.set_diplomacy_color(sbs.DIPLOMACY.HOSTILE,"#F00")
     sim.set_diplomacy_color(sbs.DIPLOMACY.NEUTRAL,"#077")
 
-
+    # We intentionally don't jump to END here; it will fall-through and run the spawn_friendly_npc label without further instruction.
 =========== spawn_friendly_npc ===========
 
     print(f"World Select: {WORLD_SELECT.path}")
