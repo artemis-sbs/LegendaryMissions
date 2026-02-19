@@ -7,15 +7,18 @@ shared counting_nebula_updates = 0
     
     players = to_space_object_list(role("__player__"))
     for p in players:
-        neb = to_id(closest(p, role("nebula_marker"), 10_000))
-        # force count to be just one
-        inside = p.data_set.get("inside_nebula_count",0) != 0
+        # Find closest nebula
+        neb_count = p.data_set.get("inside_nebula_count",0)
+        neb_set = set()
+        neb = None
+        for n in range(neb_count):
+            id = p.data_set.get("inside_nebula_id",n)
+            neb_set.add(id)
+            neb = to_id(closest(p,neb_set))
 
         prev = get_inventory_value(p.id, "NEBULA_ID")
-        prev_inside = get_inventory_value(p.id, "NEBULA_INSIDE")
-        continue if neb == prev and inside == prev_inside
+        continue if neb == prev
         set_inventory_value(p.id, "NEBULA_ID", neb)
-        set_inventory_value(p.id, "NEBULA_INSIDE", inside)
 
         signal_emit("nebula_within_change", {"PLAYER_ID": p.id, "ENTER_ID": neb, "LEAVE_ID": prev} )
 
@@ -26,10 +29,12 @@ shared counting_nebula_updates = 0
 #
 
 # //shared/signal/nebula_within_change
+#     enter_color = None
+#     leave_color = None
 #     if ENTER_ID is not None:
-#         color = get_inventory_value(ENTER_ID, "cluster_color", "None")
-#         comms_broadcast(0, "Entering {color} Nebula {counting_nebula_updates}", "orange")
+#         enter_color = get_inventory_value(ENTER_ID, "cluster_color", "None")
 #     if LEAVE_ID is not None:
-#         color = get_inventory_value(ENTER_ID, "cluster_color", "None")
-#         comms_broadcast(0, "Leaving {color} Nebula {counting_nebula_updates}", "orange")
+#         leave_color = get_inventory_value(LEAVE_ID, "cluster_color", "None")
+        
+#     comms_broadcast(0, "Entering {enter_color} Nebula,  Leaving {leave_color} {counting_nebula_updates}", "orange")
 #     counting_nebula_updates+=1

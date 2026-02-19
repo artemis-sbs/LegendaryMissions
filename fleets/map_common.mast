@@ -17,7 +17,7 @@
 
     #region Spawn Raider side
     # Everything can be set in the prefab data.
-    raider = await prefab_spawn(prefab_side_generic, data={"key":"raider", "name": "Raider", "color_2d": "#F00", "desc":"Hostile Aliens"})
+    raider = await prefab_spawn(prefab_side_generic, data={"key":"raider", "name": "Raider", "color": "#F00", "desc":"Hostile Aliens"})
     #endregion
 
     #region Spawn Civ side
