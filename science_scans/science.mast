@@ -3,7 +3,7 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
 
 //shared/signal/science_auto_scan if DEFAULT_SCIENCE_AUTO_SCAN
     tab = "scan"
-    if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID):
+    if side_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID):
         tab = "*"
     science_ensure_scan(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, tab)
     
@@ -11,9 +11,9 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
 
 
 
-//enable/science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
+//enable/science if side_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
 
-//science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
+//science if side_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
 
     + "scan":
         <scan>
@@ -141,8 +141,8 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
 
 
 
-//enable/science if not role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
-//science if not role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_any_role(SCIENCE_SELECTED_ID, "ship,cockpit")
+//enable/science if side_are_enemies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+//science if side_are_enemies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_any_role(SCIENCE_SELECTED_ID, "ship,cockpit")
 
 
     taunt_trait=get_inventory_value(SCIENCE_SELECTED_ID, "taunt_trait")
@@ -226,8 +226,8 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
             % Black hole - 'A rip in the very fabric of space and time.' 
 
 
-//enable/science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "__player__")
-//science if role_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "__player__")
+//enable/science if side_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "__player__")
+//science if side_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "__player__")
 
     + "scan":
         <scan>

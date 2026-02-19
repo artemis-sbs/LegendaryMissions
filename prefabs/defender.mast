@@ -59,7 +59,8 @@ valid_for: any
     # Need to clear any values we depend on
     set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
     set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
-    shoot = role_are_allies(OBJECTIVE_AGENT_ID, objective_target)
+    # Why would allies shoot? Just a Go To, so no real target?
+    shoot = side_are_allies(OBJECTIVE_AGENT_ID, objective_target)
     #
     brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": objective_target, "force_target_point": objective_target_point, "clear_when_reached": False, "shoot": shoot})
     brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)

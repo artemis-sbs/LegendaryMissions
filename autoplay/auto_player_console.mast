@@ -69,7 +69,6 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
         cambot = to_object(player_spawn(0,0,0, "Colossus", "tsn,AUTO_PLAY", "tsn_light_cruiser")) 
         camera_id = to_id(cambot)
         cambot_id = camera_id
-        cambot.data_set.set("ally_list","tsn,raider",0)
         cambot.data_set.set("ship_base_scan_range", 35000,0)
         
         await delay_sim(1)

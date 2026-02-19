@@ -76,7 +76,7 @@
     label_type = get_inventory_value(COMMS_SELECTED_ID, "give_orders_type")
 
     orders = labels_get_type(label_type)
-    ally = role_are_allies(COMMS_SELECTED_ID, COMMS_POPUP_ID)
+    ally = side_are_allies(COMMS_SELECTED_ID, COMMS_POPUP_ID)
     for order in orders:
         valid_for = order.get_inventory_value("valid_for", "any")
         if valid_for == "allies" and not ally:
