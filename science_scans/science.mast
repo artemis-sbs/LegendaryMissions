@@ -247,3 +247,14 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
         <scan>
             % They seem just like us
             % Passes all bio scans. It is safe to dock with
+
+
+//enable/science if has_role(SCIENCE_SELECTED_ID, "nebula_marker")
+//science if has_role(SCIENCE_SELECTED_ID,  "nebula_marker")
+
+    + "scan":
+        colors = SCIENCE_SELECTED.get_inventory_value("cluster_color", "Unknown")
+        <scan>
+            % The nebula is full of {colors}
+            % Rich with {colors}
+            % Beautiful {colors} cloud, but they slow you down
