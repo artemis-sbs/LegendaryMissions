@@ -29,12 +29,36 @@ Properties:
     # The stations are placed in one of these slots
     # The points are moved within the slot but stay in the slot
     # the 0.8 drift mean that the startion can drift from the center point by up to 80% of 20,000 = 16,000
-    spawn_points = scatter_simple_noise(0, 0, 0, 0, 80_000, 750, 80_000, 20_000, 750,20_000, centered=True, drift=0.6)
+    if DIFFICULTY > 7:
+      # 4 slots
+      spawn_points = scatter_simple_noise(0, 0, 0, 0, 20_000, 750, 20_000, 10_000, 750, 10_000, centered=True, drift=0.7)
+    if DIFFICULTY > 3:
+      # nine slots
+      spawn_points = scatter_simple_noise(0, 0, 0, 0, 60_000, 750, 60_000, 20_000, 750, 20_000, centered=True, drift=0.7)
+    else:
+      # 16  slots
+      spawn_points = scatter_simple_noise(0, 0, 0, 0, 60_000, 750, 60_000, 15_000, 750, 15_000, centered=True, drift=0.7)
 
     # Add stations
     # This return the object create
     # These will be used later to prune a set of points
     stations = terrain_spawn_stations(DIFFICULTY, lethal_value, points=spawn_points)
+    for s in stations:
+      pos = s.pos
+      print(f"STATION: {pos}")
+
+    # Use this to see the cneter point and boundaries
+    # marker_obj = terrain_spawn(0,0,0, "center", "map", "generic-sphere", "behav_selection")
+    # marker_obj.data_set.set("radar_color_override", "cyan" ,0)
+
+    # marker_obj = terrain_spawn(-50_000,0,-50_000, "center", "map", "generic-sphere", "behav_selection")
+    # marker_obj.data_set.set("radar_color_override", "lime" ,0)
+    # marker_obj = terrain_spawn(50_000,0,-50_000, "center", "map", "generic-sphere", "behav_selection")
+    # marker_obj.data_set.set("radar_color_override", "lime" ,0)
+    # marker_obj = terrain_spawn(-50_000,0,50_000, "center", "map", "generic-sphere", "behav_selection")
+    # marker_obj.data_set.set("radar_color_override", "lime" ,0)
+    # marker_obj = terrain_spawn(50_000,0,50_000, "center", "map", "generic-sphere", "behav_selection")
+    # marker_obj.data_set.set("radar_color_override", "lime" ,0)
     
 
     await task_schedule(spawn_friendly_npc)
@@ -75,6 +99,16 @@ Properties:
 
     # Now try to make it so enemies don't spawn on stations
     spawn_points = terrain_remove_points_near(spawn_points, stations, 25_000)
+    # Create 4 spawn emitter blocks
+    enemy_emitters = []
+    enemy_emitters.append( terrain_random_point_box(spawn_points, -60_000, -500, -30_000,-60_000 , 500, -30_000) )
+    enemy_emitters.append( terrain_random_point_box(spawn_points, -60_000, -500, -30_000, 30_000 , 500, 60_000) )
+    enemy_emitters.append( terrain_random_point_box(spawn_points, 30_000, -500, 60_000,-60_000 , 500, -30_000) )
+    enemy_emitters.append( terrain_random_point_box(spawn_points, 30_000, -500, 60_000, 30_000 , 500, 60_000) )
+
+    emitters = random.sample(enemy_emitters, len(enemy_emitters))
+    
+
     # times to for skarrans
     if len(spawn_points) < fleet_count*2:
       # There should be enough points, but if not
@@ -82,18 +116,29 @@ Properties:
       
     for a in range(fleet_count):
         enemy_temp = random.choices(enemyTypeNameList, weights=diff_weight[fleet_index])
+        
         enemy = enemy_temp[0]
         if spawn_points is None:
           fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
         else:
-          fleet_pos = random.sample(spawn_points, 1)[0]
+          if len(emitters)==0:
+            emitters = random.sample(enemy_emitters, len(enemy_emitters))
+          em = emitters.pop()
+          # Get the next random point from teh emitter
+          fleet_pos = next(em)
 
         prefab_spawn(prefab_fleet_raider, {"race": enemy, "fleet_difficulty": DIFFICULTY,"START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
         if a > 1 and DIFFICULTY > 2:
           if spawn_points is None:
             fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
           else:
-            fleet_pos = random.sample(spawn_points, 1)[0]
+            # Rote emitters reshuffle after each has been used
+            if len(emitters)==0:
+              emitters  = random.sample(enemy_emitters, len(enemy_emitters))
+            em = emitters.pop()
+            # Get the next random point from teh emitter
+            fleet_pos = next(em)
+            
           prefab_spawn(prefab_fleet_raider, {"race": "Skaraan", "fleet_difficulty": DIFFICULTY, "START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
 
     #------------------------------------------------------------------------------------------------------------
