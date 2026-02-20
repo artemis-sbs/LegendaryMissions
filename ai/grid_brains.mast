@@ -178,7 +178,7 @@ brain:
     # 
     default name = f"{NAME} intern"
         
-    icon = 2 # item_theme_data.icon
+    icon = item_theme_data.icon
     scale = item_theme_data.scale
     point = [START_X, START_Y]
     dc = grid_spawn(ship_id, name, name, point[0],point[1],icon, color, "crew,damcons,lifeform,intern")
@@ -346,7 +346,7 @@ hp_speed_up: False
 
     # OK we reached the idle_time
     # Don't inherit 
-    task_schedule(upgrade, data={"BRAIN_AGENT_ID": BRAIN_AGENT_ID, "ROOM_ID": this_room, "type": room }, inherit=False)
+    task_schedule(upgrade, data={"BRAIN_AGENT_ID": BRAIN_AGENT_ID,"BRAIN_AGENT": BRAIN_AGENT, "ROOM_ID": this_room, "type": room }, inherit=False)
     BRAIN_AGENT.set_inventory_value("idle_state", "done")
     # We fail so other things can run
     yield fail

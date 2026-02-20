@@ -24,10 +24,16 @@ OPERATOR_MODE:
 # Additional Lock down settings
 #
 SHIP_PICK_READ_ONLY: false
-CAN_CHANGE_CONSOLE: true
+CAN_CHANGE_CONSOLE: false
 
 ### Very rough prototype of a comms interaction change 
 # COMMS_PROTOTYPE: true
+
+# Use Brain based Damcons
+# This is a temporary setting 
+# The old version will be removed
+# after further play testing
+NEW_DAMCONS: true
 
 GAMEMASTER: 
     enable: true
