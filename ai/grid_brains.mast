@@ -39,6 +39,7 @@ metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
+    yield fail if not is_timer_finished(BRAIN_AGENT_ID, "ripped_speed_coeff")
     grid_short_status(BRAIN_AGENT_ID, "Whoo good workout.", "blue", seconds=3)
     # Apply the upgrade
     sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "increment"})
@@ -58,6 +59,7 @@ metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
+    yield fail if not is_timer_finished(BRAIN_AGENT_ID, "fed_speed_coeff")
     grid_short_status(BRAIN_AGENT_ID, "I ate good.", "blue", seconds=3)
     # Apply the upgrade
     sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "increment"})
@@ -78,6 +80,7 @@ metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
+    yield fail if not is_timer_finished(BRAIN_AGENT_ID, "rested_speed_coeff")
     grid_short_status(BRAIN_AGENT_ID, "I feel rested.", "blue", seconds=3)
     # Apply the upgrade
     sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "increment"})
@@ -115,9 +118,11 @@ dataset: move_speed
 --- apply
     count = max(0,count)
     AGENT.set_inventory_value("SPEED_UPGRADE_COUNT", count)
-    current = AGENT.data_set.get("move_speed", 0)
-    current *= count
-    current = AGENT.data_set.set("move_speed", current,0)
+    # Speed goes up 125% for each bump
+    current = 1
+    for i in range(count):
+        current *= 1.25
+    AGENT.data_set.set("move_speed", current,0)
     yield success
 
 --- warning
