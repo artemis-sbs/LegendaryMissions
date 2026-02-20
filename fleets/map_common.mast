@@ -8,7 +8,7 @@
     # Some examples of different ways to set up a new side.
 
     #region Spawn TSN side
-    tsn = await prefab_spawn(prefab_side_generic, data={"key":"TSN"}) #Spawn using only the key
+    tsn = await prefab_spawn(prefab_side_generic, data={"key":"tsn"}) #Spawn using only the key
     # Add a display name, description and color programatically
     side_set_display_name(tsn, "TSN") 
     side_set_description(tsn, "The Terran Stellar Navy")
