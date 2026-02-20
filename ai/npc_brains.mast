@@ -48,7 +48,8 @@ stop_dist: 500
     if _target is not None:
         _target_id = to_id(_target)
         BRAIN_AGENT.set_inventory_value("blackboard:target", _target_id)
-        target(BRAIN_AGENT_ID, _target_id, True, throttle, stop_dist=stop_dist)
+        shoot = side_are_enemies(BRAIN_AGENT_ID, _target_id)
+        target(BRAIN_AGENT_ID, _target_id, shoot, throttle, stop_dist=stop_dist)
         yield success
     BRAIN_AGENT.set_inventory_value("blackboard:target", None)
     yield fail
@@ -114,10 +115,10 @@ stop_dist: 500
 % Pedal is to the metal
 metadata: ``` 
 type: brain/npc
-shoot: False
+shoot: false
 throttle: 1.0
 stop_dist: 500
-clear_when_reached: True
+clear_when_reached: true
 set_when_reached: brain_target_reached
 force_target: null
 force_target_point: null
