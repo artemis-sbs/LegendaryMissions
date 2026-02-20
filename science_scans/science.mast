@@ -253,7 +253,14 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
 //science if has_role(SCIENCE_SELECTED_ID,  "nebula_marker")
 
     + "scan":
-        colors = SCIENCE_SELECTED.get_inventory_value("cluster_color", "Unknown")
+        
+        color_counts = SCIENCE_SELECTED.get_inventory_value("cluster_counts", {})
+        colors = ""
+        for k in color_counts.keys():
+            v = color_counts[k]
+            if len(colors)!=0:
+                colors+= ","
+            colors += f"{k}:{v}"
         <scan>
             % The nebula is full of {colors}
             % Rich with {colors}
