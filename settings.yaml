@@ -24,7 +24,7 @@ OPERATOR_MODE:
 # Additional Lock down settings
 #
 SHIP_PICK_READ_ONLY: false
-CAN_CHANGE_CONSOLE: false
+CAN_CHANGE_CONSOLE: true
 
 ### Very rough prototype of a comms interaction change 
 # COMMS_PROTOTYPE: true
