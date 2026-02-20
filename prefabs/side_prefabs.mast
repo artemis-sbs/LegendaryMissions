@@ -63,7 +63,7 @@ color: #000FFF
         side_set_relations(key, item, sbs.DIPLOMACY.HOSTILE)
     
     # Why is this necessary? Seems really redundant? But it was in the code I've been using for reference...
-    sim.set_side_relationship(key,key,sbs.DIPLOMACY.ALLIED)
+    side_set_relations(key,key,sbs.DIPLOMACY.ALLIED)
 
     yield result id
     ->END
