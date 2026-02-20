@@ -181,7 +181,7 @@ brain:
     icon = item_theme_data.icon
     scale = item_theme_data.scale
     point = [START_X, START_Y]
-    dc = grid_spawn(ship_id, name, name, point[0],point[1],icon, color, "crew,damcons,lifeform,intern")
+    dc = grid_spawn(ship_id, name, name, point[0],point[1],icon, color, "crew,damcons,lifeform")
 
     dc.engine_object.layer = 4
     dc.blob.set("icon_scale", scale,0 )

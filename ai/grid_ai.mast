@@ -56,7 +56,8 @@ default shared grid_data = grid_get_grid_data()
 
 
 ========== damcon_ai  ================= 
-    ->END
+    use_new = settings_get_defaults().get("NEW_DAMCONS", is_dev_build())
+    ->END if use_new
     #if has_role(SPAWNED_ID, "intern")
 
     this_blob = to_blob(SPAWNED_ID)# check for garbage and mop up
