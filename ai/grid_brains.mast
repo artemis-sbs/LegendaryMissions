@@ -24,7 +24,8 @@ type: upgrade/damcons
     set_inventory_value(BRAIN_AGENT_ID, "HP", hp)
     if hp < max_hp:
         comms_broadcast(ship, f"{BRAIN_AGENT.name} recovering {hp}", "blue")
-        set_timer(BRAIN_AGENT_ID, "boost_timer", minutes=2)
+        # Allow it to go again
+        start_counter(BRAIN_AGENT_ID, "idle_boost_counter")
     else:
         color = get_inventory_value(BRAIN_AGENT_ID, "color", "purple")
         go_blob = to_blob(BRAIN_AGENT_ID)
@@ -39,9 +40,18 @@ type: upgrade/damcons
 dataset: move_speed
 ```
     grid_short_status(BRAIN_AGENT_ID, "Whoo good workout.", "blue", seconds=3)
-    set_timer(BRAIN_AGENT_ID, "ripped_speed_coeff", minutes=random.randint(10,16))
-    set_inventory_value(BRAIN_AGENT_ID, "ripped_speed_coeff", 1.25)
-    jump upgrade_damcon_speed
+    # Apply the upgrade
+    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "increment"})
+    time = random.randint(10,16)
+    # For display
+    set_timer(BRAIN_AGENT_ID, "ripped_speed_coeff", minutes=time)
+    # Cool down
+    await delay_sim(minutes=time)
+    clear_timer(BRAIN_AGENT_ID, "ripped_speed_coeff")
+    # Remove the upgrade
+    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "decrement"})
+    yield success
+
 
 === upgrade_damcon_speed_mess
 metadata: ``` yaml
@@ -49,9 +59,18 @@ type: upgrade/damcons
 dataset: move_speed
 ```
     grid_short_status(BRAIN_AGENT_ID, "I ate good.", "blue", seconds=3)
-    set_inventory_value(BRAIN_AGENT_ID, "fed_speed_coeff", 1.25)
-    set_timer(BRAIN_AGENT_ID, "fed_speed_coeff", minutes=random.randint(10,16))
-    jump upgrade_damcon_speed
+    # Apply the upgrade
+    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "increment"})
+    time = random.randint(10,16)
+    # For display
+    set_timer(BRAIN_AGENT_ID, "fed_speed_coeff", minutes=time)
+    # Cool down
+    await delay_sim(minutes=time)
+    clear_timer(BRAIN_AGENT_ID, "fed_speed_coeff")
+    # Remove the upgrade
+    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "decrement"})
+    yield success
+
 
 
 === upgrade_damcon_speed_quarters
@@ -60,22 +79,51 @@ type: upgrade/damcons
 dataset: move_speed
 ```
     grid_short_status(BRAIN_AGENT_ID, "I feel rested.", "blue", seconds=3)
-    set_inventory_value(BRAIN_AGENT_ID, "rested_speed_coeff", 1.25)
-    set_timer(BRAIN_AGENT_ID, "rested_speed_coeff", minutes=random.randint(10,16))
-    jump upgrade_damcon_speed
+    # Apply the upgrade
+    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "increment"})
+    time = random.randint(10,16)
+    # For display
+    set_timer(BRAIN_AGENT_ID, "rested_speed_coeff", minutes=time)
 
+    # Cool down
+    await delay_sim(minutes=time)
+    clear_timer(BRAIN_AGENT_ID, "rested_speed_coeff")
+    # Remove the upgrade
+    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "decrement"})
+    yield success
 
 === upgrade_damcon_speed
 metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
-    AGENT = to_object(AGENT_ID)
+    AGENT = to_object(BRAIN_AGENT_ID)
     yield fail if AGENT is None
+    default upgrade_state = "warning"
+    count = AGENT.get_inventory_value("SPEED_UPGRADE_COUNT",0)
+    jump(upgrade_state)
+    
+
+--- increment
+    count += 1
+    jump apply
+
+--- decrement
+    count -= 1
+    jump apply
+
+--- apply
+    count = max(0,count)
+    AGENT.set_inventory_value("SPEED_UPGRADE_COUNT", count)
     current = AGENT.data_set.get("move_speed", 0)
-    current *= 1.25
+    current *= count
     current = AGENT.data_set.set("move_speed", current,0)
     yield success
+
+--- warning
+    print(f"BAD STATE {upgrade_state}")
+    yield success
+
 
 
 === prefab_lifeform_damcons
@@ -83,6 +131,7 @@ metadata: ``` yaml
 type: prefab/lifeform/damcons
 brain:
   - SEQ: # movement
+    - ai_damcons_update_status
     - SEL:
       - ai_lifeform_move_to_work_order
       - ai_lifeform_move_to_damage
@@ -159,6 +208,17 @@ brain:
 
     brain_add(_go, brain)
     yield result dc
+
+
+=== ai_damcons_update_status
+metadata: ``` yaml
+type: upgrade/damcons
+dataset: move_speed
+```
+    grid_damcons_detailed_status(BRAIN_AGENT_ID)
+    # This is intended to succeed to fall though part of a SEQ
+    yield success
+
 
 === ai_lifeform_move_keep_going
 metadata: ``` yaml
@@ -271,6 +331,8 @@ hp_speed_up: False
         BRAIN_AGENT.set_inventory_value("idle_room", this_room)
         BRAIN_AGENT.set_inventory_value("idle_state", "idling")
         start_counter(BRAIN_AGENT_ID, "idle_boost_counter")
+        # For display
+        set_timer(BRAIN_AGENT_ID, "idle_boost_timer", idle_time)
         yield success
     # continue idling
     target_time = idle_time
@@ -283,7 +345,8 @@ hp_speed_up: False
     yield fail if idle_state == "done"
 
     # OK we reached the idle_time
-    task_schedule(upgrade, data={"AGENT_ID": BRAIN_AGENT_ID, "ROOM_ID": this_room, "type": room })
+    # Don't inherit 
+    task_schedule(upgrade, data={"BRAIN_AGENT_ID": BRAIN_AGENT_ID, "ROOM_ID": this_room, "type": room }, inherit=False)
     BRAIN_AGENT.set_inventory_value("idle_state", "done")
     # We fail so other things can run
     yield fail

@@ -48,17 +48,17 @@ def grid_damcons_detailed_status(id_or_obj, short_status=None, short_color=None,
     hp = get_inventory_value(_go_id, "HP", 1)
 
     rested = "tired"
-    if get_inventory_value(_go_id, "rested_speed_coeff",1.0) > 1.0:
+    if not is_timer_finished(_go_id, "rested_speed_coeff"):
         left = format_time_remaining(_go_id, "rested_speed_coeff")
         rested = f"rested for {left}"
     
     food = "hungry"
-    if get_inventory_value(_go_id, "fed_speed_coeff", 1.0) > 1.0:
+    if not is_timer_finished(_go_id, "fed_speed_coeff"):
         left = format_time_remaining(_go_id, "fed_speed_coeff")
         food = f"fed for {left}"
 
     fit = "weak"
-    if get_inventory_value(_go_id, "ripped_speed_coeff", 1.0) > 1.0:
+    if not is_timer_finished(_go_id, "ripped_speed_coeff"):
         left = format_time_remaining(_go_id, "ripped_speed_coeff")
         fit = f"fit for {left}"
 
@@ -70,10 +70,10 @@ def grid_damcons_detailed_status(id_or_obj, short_status=None, short_color=None,
     health_status = f"{hp}^{rested}^{food}^{fit}"
     work_item_status = f"{work_count} assign work"
 
-    boost_time = get_time_remaining(_go_id, "boost_timer")
+    boost_time = get_time_remaining(_go_id, "idle_boost_timer")
     boost = "for boost idle in gym,mess, or quarters"
     if boost_time > 0:
-        boost_time = format_time_remaining(_go_id, "boost_timer")
+        boost_time = format_time_remaining(_go_id, "idle_boost_timer")
         boost = f"boost in {boost_time}"
 
         
@@ -111,15 +111,15 @@ def grid_damcons_handle_idling_boost(id_or_obj, room_id):
         return
 
 
-    if not is_timer_set(_go_id, "boost_timer"):
-        set_timer(_go_id, "boost_timer", minutes=1)
+    if not is_timer_set(_go_id, "idle_boost_timer"):
+        set_timer(_go_id, "idle_boost_timer", minutes=1)
     
 
-    if not is_timer_finished(_go_id, "boost_timer"): return
+    if not is_timer_finished(_go_id, "idle_boost_timer"): return
     #
     # OK - waited long enough
     #
-    clear_timer(_go_id, "boost_timer")
+    clear_timer(_go_id, "idle_boost_timer")
     if has_role(room_id, "sickbay"):
         hp += 1
         ship = obj.host_id # obj defined in previous labels
@@ -127,7 +127,7 @@ def grid_damcons_handle_idling_boost(id_or_obj, room_id):
         set_inventory_value(_go_id, "HP", hp)
         if hp < grid_get_max_hp():
             comms_broadcast(ship, f"{obj.name} recovering {hp}", "blue")
-            set_timer(_go_id, "boost_timer", minutes=2)
+            set_timer(_go_id, "idle_boost_timer", minutes=2)
         else:
             color = get_inventory_value(_go_id, "color", "purple")
             go_blob = to_blob(_go_id)
@@ -169,7 +169,7 @@ def grid_damcons_handle_idling_boost_finish(id_or_obj):
         set_inventory_value(_go_id, "HP", hp)
         if hp < grid_get_max_hp():
             comms_broadcast(ship, f"{BRAIN_AGENT.name} recovering {hp}", "blue")
-            set_timer(_go_id, "boost_timer", minutes=2)
+            set_timer(_go_id, "idle_boost_timer", minutes=2)
         else:
             color = get_inventory_value(_go_id, "color", "purple")
             go_blob = to_blob(_go_id)

@@ -43,9 +43,7 @@ Properties:
     # This return the object create
     # These will be used later to prune a set of points
     stations = terrain_spawn_stations(DIFFICULTY, lethal_value, points=spawn_points)
-    for s in stations:
-      pos = s.pos
-      print(f"STATION: {pos}")
+    
 
     # Use this to see the cneter point and boundaries
     # marker_obj = terrain_spawn(0,0,0, "center", "map", "generic-sphere", "behav_selection")

@@ -97,7 +97,7 @@
     idle_marker = get_inventory_value(d.id, "idle_marker", None)
     #
     #
-    clear_timer(d.id, "boost_timer")
+    clear_timer(d.id, "idle_boost_timer")
 
     if idle_marker is not None:
         _blob = to_blob(idle_marker)
