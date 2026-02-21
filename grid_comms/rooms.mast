@@ -15,18 +15,18 @@
         else:
             dcs.append(dc)
 
-    print("")
-
     #  Need to figure out colors 
     #  color=f"{get_inventory_value(d.id, 'color')}", data=
     #
     sorted_dcs = sorted(dcs, key=lambda d: d.name)
     for d in sorted_dcs:
-        + "assign {d.name}" {"d": d, "dcs": dcs, "workers": workers}:
+        color = d.get_inventory_value("color")
+        + [{color}] "assign {d.name}" {"d": d, "dcs": dcs, "workers": workers, "color":color}:
             link(d.id, "work-order", COMMS_SELECTED_ID)
     sorted_workers = sorted(workers, key=lambda d: d.name)
     for d in sorted_workers:
-        + "cancel {d.name}" {"d": d, "dcs": dcs, "workers": workers}:
+        color = d.get_inventory_value("color")
+        + [{color}] "cancel {d.name}" {"d": d, "dcs": dcs, "workers": workers, "color":color}:
             unlink(d.id, "work-order", COMMS_SELECTED_ID)
 
 
@@ -37,7 +37,8 @@
     dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
     sorted_dcs = sorted(dcs, key=lambda d: d.name)
     for d in sorted_dcs:
-        + "set {d.name} rally point" comms_room_rally_dc {"d": d}
+        color = d.get_inventory_value("color")
+        + [{color}] "set {d.name} rally point" comms_room_rally_dc {"d": d, "color": color}
 
 
 ===== comms_room_rally_dc =======

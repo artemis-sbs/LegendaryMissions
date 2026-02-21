@@ -4,6 +4,10 @@
     ->END if any_damage is None
     grid_repair_grid_objects(BRAIN_AGENT.host_id, any_damage.id, BRAIN_AGENT_ID)
     grid_damcons_handle_idling_boost_finish(BRAIN_AGENT)
+    # Remove work order
+    unlink(BRAIN_AGENT_ID, "work-order", any_damage.id)
+    set_inventory_value(BRAIN_AGENT_ID, "blackboard:prev_target_pos", None)
+
     ->END
 
 
@@ -239,8 +243,10 @@ room: __damaged__
 metadata: ``` yaml
 room: __damaged__
 ```
-    the_target =  to_object(grid_closest(BRAIN_AGENT_ID, linked_to(BRAIN_AGENT_ID, "work-order")))
+    # Clear any work orders 
+    the_target =  to_object(grid_closest(BRAIN_AGENT_ID, linked_to(BRAIN_AGENT_ID, "work-order") & role(room)))
     yield fail if the_target is None
+    
     x = the_target.data_set.get("curx",0)
     y = the_target.data_set.get("cury",0)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:target_pos", (x,y))
