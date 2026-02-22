@@ -121,6 +121,7 @@ brain:
     - ai_lifeform_move_to_location
   # Do any Idle
   - SEL:
+    - ai_done_boosting
     - label: ai_idle_at_room
       data:
         room: __damaged__
@@ -303,6 +304,7 @@ hp_speed_up: False
     BRAIN_AGENT.set_inventory_value("idle_room", None)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:prev_target_pos", _pos)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:idle_pos", None)
+    BRAIN_AGENT.set_inventory_value("idle_state", "moving")
     grid_target_pos(BRAIN_AGENT_ID, _pos[0], _pos[1], speed)
     #grid_damcons_detailed_status(SPAWNED_ID, f"Heading to {target_name}", "orange", 3)
     grid_damcons_detailed_status(BRAIN_AGENT_ID, f"Heading to location {_pos[0]},{_pos[1]}", "blue", 3)
@@ -364,6 +366,11 @@ hp_speed_up: False
     BRAIN_AGENT.set_inventory_value("idle_state", "done")
     # We fail so other things can run
     yield fail
+
+=== ai_done_boosting
+    idle_state = BRAIN_AGENT.get_inventory_value("idle_state", "done")
+    yield fail if idle_state != "done"
+    yield success
 
 
 
