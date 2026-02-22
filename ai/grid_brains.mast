@@ -50,20 +50,20 @@ dataset: move_speed
     #@arg: The duration  the boost lasts
     default name = "ripped"
 
-    yield fail if not is_timer_finished(UPGRADE_AGENT_ID, name)
+    yield fail if not is_timer_finished(UPGRADE_AGENT_ID, name+"_speed_coeff")
     grid_short_status(UPGRADE_AGENT_ID, message, "blue", seconds=3)
     #TODO: Remove when you figure out modifiers
 
     #TODO: A todo in MAST
-    UPGRADE_AGENT.set_inventory_value(name+"coeff", 1.25)
+    UPGRADE_AGENT.set_inventory_value(name+"_speed_coeff", 1.25)
     # Apply the upgrade
     task_schedule(upgrade_damcon_speed, {"add": name})
     # For display
-    set_timer(UPGRADE_AGENT_ID, name, minutes=time)
+    set_timer(UPGRADE_AGENT_ID, name+"_speed_coeff", minutes=time)
 
     # Cool down
     await delay_sim(minutes=time)
-    clear_timer(UPGRADE_AGENT_ID, name)
+    clear_timer(UPGRADE_AGENT_ID, name+"_speed_coeff")
     # Remove the upgrade
     task_schedule(upgrade_damcon_speed, {"remove": name})
     yield success
@@ -120,41 +120,42 @@ brain:
       - ai_lifeform_move_to_idle_pos
     - ai_lifeform_move_to_location
   # Do any Idle
-  - label: ai_idle_at_room
-    data:
-      room: __damaged__
-      idle_time: 60
-      upgrade: ai_fix_damage
-      hp_speed_up: True
-  - label: ai_idle_at_room
-    data:
-      room: sickbay
-      idle_time: 120
-      upgrade: upgrade_damcon_inc_hp
-  - label: ai_idle_at_room
-    data:
-      room: gym
-      idle_time: 60
-      upgrade: 
-        label: upgrade_damcon_speed_idle
-        message: Whoo good workout.
-        name: ripped
-  - label: ai_idle_at_room
-    data:
-      room: mess
-      idle_time: 60
-      upgrade:
-        label: upgrade_damcon_speed_idle
-        message: I ate good.
-        name: fed
-  - label: ai_idle_at_room
-    data:
-      room: quarters
-      idle_time: 60
-      upgrade: 
-        label: upgrade_damcon_speed_idle
-        message: I feel rested.
-        name: rested
+  - SEL:
+    - label: ai_idle_at_room
+      data:
+        room: __damaged__
+        idle_time: 60
+        upgrade: ai_fix_damage
+        hp_speed_up: True
+    - label: ai_idle_at_room
+      data:
+        room: sickbay
+        idle_time: 120
+        upgrade: upgrade_damcon_inc_hp
+    - label: ai_idle_at_room
+      data:
+        room: gym
+        idle_time: 60
+        upgrade: 
+            label: upgrade_damcon_speed_idle
+            message: Whoo good workout.
+            name: ripped
+    - label: ai_idle_at_room
+      data:
+        room: mess
+        idle_time: 60
+        upgrade:
+            label: upgrade_damcon_speed_idle
+            message: I ate good.
+            name: fed
+    - label: ai_idle_at_room
+      data:
+        room: quarters
+        idle_time: 60
+        upgrade: 
+            label: upgrade_damcon_speed_idle
+            message: I feel rested.
+            name: rested
 ```
     color = COLOR
     name = NAME
