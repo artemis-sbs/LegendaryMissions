@@ -1,61 +1,104 @@
 
 === ai_fix_damage
-    any_damage = to_grid_object(grid_closest(BRAIN_AGENT_ID,role("__damaged__")))
+    any_damage = to_grid_object(grid_closest(UPGRADE_AGENT_ID,role("__damaged__")))
     ->END if any_damage is None
-    grid_repair_grid_objects(BRAIN_AGENT.host_id, any_damage.id, BRAIN_AGENT_ID)
-    grid_damcons_handle_idling_boost_finish(BRAIN_AGENT)
+    grid_repair_grid_objects(UPGRADE_AGENT.host_id, any_damage.id, UPGRADE_AGENT_ID)
+    grid_damcons_handle_idling_boost_finish(UPGRADE_AGENT)
     # Remove work order
-    unlink(BRAIN_AGENT_ID, "work-order", any_damage.id)
-    set_inventory_value(BRAIN_AGENT_ID, "blackboard:prev_target_pos", None)
+    unlink(UPGRADE_AGENT_ID, "work-order", any_damage.id)
+    set_inventory_value(UPGRADE_AGENT_ID, "blackboard:prev_target_pos", None)
 
     ->END
-
 
 
 === upgrade_damcon_inc_hp
 metadata: ``` yaml
 type: upgrade/damcons
 ```
-    hp = get_inventory_value(AGENT_ID, "HP", 0)
-    max_hp = get_inventory_value(AGENT_ID, "HP_MAX", 6)
+    hp = get_inventory_value(UPGRADE_AGENT_ID, "HP", 0)
+    max_hp = get_inventory_value(UPGRADE_AGENT_ID, "HP_MAX", 6)
     # hp = min(HP_MAX, hp+1)
     # set_inventory_value(AGENT_ID, "HP", hp)
     hp += 1
     yield success if hp==max_hp
 
-    ship = BRAIN_AGENT.host_id # obj defined in previous labels
+    ship = UPGRADE_AGENT.host_id # obj defined in previous labels
     hp %= (max_hp+1)
-    set_inventory_value(BRAIN_AGENT_ID, "HP", hp)
+    set_inventory_value(UPGRADE_AGENT_ID, "HP", hp)
     if hp < max_hp:
-        comms_broadcast(ship, f"{BRAIN_AGENT.name} recovering {hp}", "blue")
+        comms_broadcast(ship, f"{UPGRADE_AGENT.name} recovering {hp}", "blue")
         # Allow it to go again
-        start_counter(BRAIN_AGENT_ID, "idle_boost_counter")
+        start_counter(UPGRADE_AGENT_ID, "idle_boost_counter")
     else:
         color = get_inventory_value(BRAIN_AGENT_ID, "color", "purple")
-        go_blob = to_blob(BRAIN_AGENT_ID)
+        go_blob = to_blob(UPGRADE_AGENT_ID)
         if go_blob is not None:
             go_blob.set("icon_color", color)
-        comms_broadcast(ship, f"{BRAIN_AGENT.name} fully recovered", "green")
+        comms_broadcast(ship, f"{UPGRADE_AGENT.name} fully recovered", "green")
     yield success
+
+
+=== upgrade_damcon_speed_idle
+metadata: ``` yaml
+type: upgrade/damcons
+dataset: move_speed
+```
+    #@arg: The message to present 
+    default message = "Whoo good workout."
+    #@arg: The duration  the boost lasts
+    default time = random.randint(10,16)
+    #@arg: The duration  the boost lasts
+    default name = "ripped"
+
+    yield fail if not is_timer_finished(UPGRADE_AGENT_ID, name)
+    grid_short_status(UPGRADE_AGENT_ID, message, "blue", seconds=3)
+    #TODO: Remove when you figure out modifiers
+
+    #TODO: A todo in MAST
+    UPGRADE_AGENT.set_inventory_value(name+"coeff", 1.25)
+    # Apply the upgrade
+    task_schedule(upgrade_damcon_speed, {"add": name})
+    # For display
+    set_timer(UPGRADE_AGENT_ID, name, minutes=time)
+
+    # Cool down
+    await delay_sim(minutes=time)
+    clear_timer(UPGRADE_AGENT_ID, name)
+    # Remove the upgrade
+    task_schedule(upgrade_damcon_speed, {"remove": name})
+    yield success
+
+
 
 === upgrade_damcon_speed_gym
 metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
-    yield fail if not is_timer_finished(BRAIN_AGENT_ID, "ripped_speed_coeff")
-    grid_short_status(BRAIN_AGENT_ID, "Whoo good workout.", "blue", seconds=3)
-    # Apply the upgrade
-    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "increment"})
+    message = "Whoo good workout."
+    #@arg: The duration  the boost lasts
     time = random.randint(10,16)
-    # For display
-    set_timer(BRAIN_AGENT_ID, "ripped_speed_coeff", minutes=time)
-    # Cool down
-    await delay_sim(minutes=time)
-    clear_timer(BRAIN_AGENT_ID, "ripped_speed_coeff")
-    # Remove the upgrade
-    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "decrement"})
-    yield success
+    name = "ripped"
+    jump upgrade_damcon_speed_idle
+
+    # #@arg: The message to present 
+    # default message = "Whoo good workout."
+    # #@arg: The duration  the boost lasts
+    # default time = random.randint(10,16)
+
+    # yield fail if not is_timer_finished(UPGRADE_AGENT_ID, "ripped_speed_coeff")
+    # grid_short_status(UPGRADE_AGENT_ID, message, "blue", seconds=3)
+    # # Apply the upgrade
+    # task_schedule(upgrade_damcon_speed, {"add": "ripped"})
+    # # For display
+    # set_timer(UPGRADE_AGENT_ID, "ripped", minutes=time)
+
+    # # Cool down
+    # await delay_sim(minutes=time)
+    # clear_timer(UPGRADE_AGENT_ID, "ripped")
+    # # Remove the upgrade
+    # task_schedule(upgrade_damcon_speed, {"remove": "ripped"})
+    # yield success
 
 
 === upgrade_damcon_speed_mess
@@ -63,19 +106,26 @@ metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
-    yield fail if not is_timer_finished(BRAIN_AGENT_ID, "fed_speed_coeff")
-    grid_short_status(BRAIN_AGENT_ID, "I ate good.", "blue", seconds=3)
-    # Apply the upgrade
-    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "increment"})
+    message = "I ate good."
+    #@arg: The duration  the boost lasts
     time = random.randint(10,16)
-    # For display
-    set_timer(BRAIN_AGENT_ID, "fed_speed_coeff", minutes=time)
-    # Cool down
-    await delay_sim(minutes=time)
-    clear_timer(BRAIN_AGENT_ID, "fed_speed_coeff")
-    # Remove the upgrade
-    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "decrement"})
-    yield success
+    name = "fed"
+    jump upgrade_damcon_speed_idle
+
+
+    # yield fail if not is_timer_finished(UPGRADE_AGENT_ID, "fed_speed_coeff")
+    # grid_short_status(UPGRADE_AGENT_ID, "I ate good.", "blue", seconds=3)
+    # # Apply the upgrade
+    # task_schedule(upgrade_damcon_speed, {"add": "fed_speed_coeff"})
+    # time = random.randint(10,16)
+    # # For display
+    # set_timer(UPGRADE_AGENT_ID, "fed_speed_coeff", minutes=time)
+    # # Cool down
+    # await delay_sim(minutes=time)
+    # clear_timer(UPGRADE_AGENT_ID, "fed_speed_coeff")
+    # # Remove the upgrade
+    # task_schedule(upgrade_damcon_speed, {"remove": "fed_speed_coeff"})
+    # yield success
 
 
 
@@ -84,54 +134,60 @@ metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
-    yield fail if not is_timer_finished(BRAIN_AGENT_ID, "rested_speed_coeff")
-    grid_short_status(BRAIN_AGENT_ID, "I feel rested.", "blue", seconds=3)
-    # Apply the upgrade
-    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "increment"})
+    message = "I feel rested."
+    #@arg: The duration  the boost lasts
     time = random.randint(10,16)
-    # For display
-    set_timer(BRAIN_AGENT_ID, "rested_speed_coeff", minutes=time)
+    name = "rested"
+    jump upgrade_damcon_speed_idle
 
-    # Cool down
-    await delay_sim(minutes=time)
-    clear_timer(BRAIN_AGENT_ID, "rested_speed_coeff")
-    # Remove the upgrade
-    sub_task_schedule(upgrade_damcon_speed, {"upgrade_state": "decrement"})
-    yield success
+    
+    # yield fail if not is_timer_finished(UPGRADE_AGENT_ID, "rested_speed_coeff")
+    # grid_short_status(UPGRADE_AGENT_ID, "I feel rested.", "blue", seconds=3)
+    # # Apply the upgrade
+    # task_schedule(upgrade_damcon_speed, {"add": "rested_speed_coeff"})
+    # time = random.randint(10,16)
+    # # For display
+    # set_timer(UPGRADE_AGENT_ID, "rested_speed_coeff", minutes=time)
+
+    # # Cool down
+    # await delay_sim(minutes=time)
+    # clear_timer(UPGRADE_AGENT_ID, "rested_speed_coeff")
+    # # Remove the upgrade
+    # task_schedule(upgrade_damcon_speed, {"remove": "rested_speed_coeff"})
+    # yield success
 
 === upgrade_damcon_speed
+" This is a update that manages the speed of a grid object
+" Other updates can contibute to this value
 metadata: ``` yaml
 type: upgrade/damcons
 dataset: move_speed
 ```
-    AGENT = to_object(BRAIN_AGENT_ID)
-    yield fail if AGENT is None
-    default upgrade_state = "warning"
-    count = AGENT.get_inventory_value("SPEED_UPGRADE_COUNT",0)
-    jump(upgrade_state)
-    
+    default add = None
+    default remove = None
+    default base_speed = 0.002
 
---- increment
-    count += 1
-    jump apply
+    add = to_list(add)
+    remove = to_list(remove)
 
---- decrement
-    count -= 1
-    jump apply
+    upgrades = UPGRADE_AGENT.get_inventory_value("SPEED_UPGRADES", set())
+    for a in add:
+        upgrades.add(a)
+    for r in remove:
+        upgrades.discard(r)
 
---- apply
-    count = max(0,count)
-    AGENT.set_inventory_value("SPEED_UPGRADE_COUNT", count)
-    # Speed goes up 125% for each bump
-    current = 1
-    for i in range(count):
-        current *= 1.25
-    AGENT.data_set.set("move_speed", current,0)
+    # Speed 
+    current = base_speed
+    for key in upgrades:
+        coeff = UPGRADE_AGENT.get_inventory_value(key+"coeff", 1.0)
+        count = UPGRADE_AGENT.get_inventory_value(key, 1)
+        #print(f"GRID SPEED {key} {coeff} {count}")
+        current *= count * coeff
+
+    current = max(0,current)
+    UPGRADE_AGENT.data_set.set("move_speed", current,0)
     yield success
 
---- warning
-    print(f"BAD STATE {upgrade_state}")
-    yield success
 
 
 
@@ -141,6 +197,7 @@ type: prefab/lifeform/damcons
 brain:
   - SEQ: # movement
     - ai_damcons_update_status
+    - ai_damcons_update_speed
     - SEL:
       - ai_lifeform_move_to_work_order
       - ai_lifeform_move_to_damage
@@ -162,17 +219,26 @@ brain:
     data:
       room: gym
       idle_time: 60
-      upgrade: upgrade_damcon_speed_gym
+      upgrade: 
+        label: upgrade_damcon_speed_idle
+        message: Whoo good workout.
+        name: ripped
   - label: ai_idle_at_room
     data:
       room: mess
       idle_time: 60
-      upgrade: upgrade_damcon_speed_mess
+      upgrade:
+        label: upgrade_damcon_speed_idle
+        message: I ate good.
+        name: fed
   - label: ai_idle_at_room
     data:
       room: quarters
       idle_time: 60
-      upgrade: upgrade_damcon_speed_quarters
+      upgrade: 
+        label: upgrade_damcon_speed_idle
+        message: I feel rested.
+        name: rested
 ```
     color = COLOR
     name = NAME
@@ -221,11 +287,31 @@ brain:
 
 === ai_damcons_update_status
 metadata: ``` yaml
-type: upgrade/damcons
+type: brain/damcons
 dataset: move_speed
 ```
     grid_damcons_detailed_status(BRAIN_AGENT_ID)
     # This is intended to succeed to fall though part of a SEQ
+    yield success
+
+
+=== ai_damcons_update_speed
+metadata: ``` yaml
+type: brain/damcons
+dataset: move_speed
+```
+    hp = BRAIN_AGENT.get_inventory_value("HP", grid_get_max_hp())
+    add = "HP"
+    remove = "red_alert"
+    red_alert = get_inventory_value(BRAIN_AGENT.host_id, "red_alert", False)
+    if red_alert:
+        # Make sure red alert has
+        add = ["HP", "red_alert"]
+        remove = None
+        red_alert_coeff = get_inventory_value(BRAIN_AGENT.host_id, "red_alert_coeff", 0.75)
+        set_inventory_value(BRAIN_AGENT.host_id, "red_alert_coeff", red_alert_coeff)
+    sub_task_schedule(upgrade_damcon_speed, {"UPGRADE_AGENT_ID":BRAIN_AGENT_ID, "UPGRADE_AGENT": BRAIN_AGENT, "add": add, "remove": remove})
+
     yield success
 
 
@@ -356,8 +442,8 @@ hp_speed_up: False
     yield fail if idle_state == "done"
 
     # OK we reached the idle_time
-    # Don't inherit 
-    task_schedule(upgrade, data={"BRAIN_AGENT_ID": BRAIN_AGENT_ID,"BRAIN_AGENT": BRAIN_AGENT, "ROOM_ID": this_room, "type": room }, inherit=False)
+    # task_schedule(upgrade, data={"UPGRADE_AGENT_ID": BRAIN_AGENT_ID,"UPGRADE_AGENT": BRAIN_AGENT, "ROOM_ID": this_room, "type": room }, inherit=False)
+    upgrade_add(BRAIN_AGENT_ID, upgrade, {"ROOM_ID": this_room, "type": room }, True)
     BRAIN_AGENT.set_inventory_value("idle_state", "done")
     # We fail so other things can run
     yield fail
@@ -371,4 +457,10 @@ hp_speed_up: False
 #     last_room_id = BRAIN_AGENT.set_inventory_value("idle_room", None)
 #     # yield fail 
 #     yield fail
+
+
+
+
+
+
 
