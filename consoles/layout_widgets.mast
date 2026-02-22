@@ -141,20 +141,18 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 //gui/normal_engi
     default tab = 1
     # Ship Data, 
-    gui_section(style="area:0,45px,55,100;")
+    gui_section(style="area:0,45px,55,50-50px;")
     with gui_sub_section("col-width:280px;"):
         gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
     with gui_sub_section():
-        gui_row("row-height: 300px;")
+        gui_row()
         # gui_section(style="area:285px,90px,800px,390px;")
         gui_layout_widget("eng_heat_controls")
 
-    gui_row()
-    gui_blank()
-    #gui_section(style="area:15px,100-25,800px,100;")
-    gui_row("row-height: 300px")
+    gui_section(style="area:0,50+50px,55,100;")
+    
     gui_layout_widget("eng_power_controls")
     gui_row("row-height: 35px")
     #gui_section(style="area:285px,45px,45,85px;")
