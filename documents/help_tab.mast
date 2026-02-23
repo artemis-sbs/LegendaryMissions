@@ -2,11 +2,14 @@ gui_tab_add_top("help")
 
 
 //gui/tab/help
-    document_file_path = get_mission_dir_filename("documents/help_docs.amd")
+    # This way the file in an addon will work
+    document_content = media_read_relative_file("help_docs.amd")
+    document_root = document_get_amd_file(None, "Overview", content=document_content)
+    document = document_flatten(document_root)
     document_type = "help"
     document_topic = CONSOLE_SELECT.lower()
     document_back_tab = CONSOLE_SELECT
 
-    jump document_viewer
+    jump document_screen
 
 

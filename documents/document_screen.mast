@@ -1,16 +1,11 @@
-# This setting when true allows doc editor to see changes when the occur
+# This setting when true allows document_root editor to see changes when the occur
 shared ALLOW_DOC_REFRESH  = SETTINGS.get("ALLOW_DOC_REFRESH", is_dev_build())
 
 
-=== document_viewer
-    # Maybe this should default to an error file
-    default document_file_path = get_mission_dir_filename("consoles/help_docs.amd")
-    doc = document_get_amd_file(document_file_path, "Overview")
-    document = document_flatten(doc)
 
 === document_screen
     
-    default doc = {}
+    default document_root = {}
     default document_type = "document"
     default document_topic = "__root__"
     default document_watch_task = None
@@ -28,7 +23,7 @@ shared ALLOW_DOC_REFRESH  = SETTINGS.get("ALLOW_DOC_REFRESH", is_dev_build())
     gui_section(style="area:0,45px,100,100;")
 
     topic = None
-    root_topic = doc
+    root_topic = document_root
     for item in document:
         if gui_list_box_is_header(item):
             item = item.data
@@ -90,9 +85,9 @@ $t {item.get("display_text", "")}
 === document_watch
 
     default last_file_time = None
-    # If the doc doesn't have a file path 
+    # If the document_root doesn't have a file path 
     # it is script defined so don't support watching
-    file_path = doc.get("file_path")
+    file_path = document_root.get("file_path")
     if file_path is None:
         ->END
 
@@ -100,7 +95,7 @@ $t {item.get("display_text", "")}
     cur_file_time = file_get_time(file_path)
 
     if cur_file_time != last_file_time is not None:
-        gui_task_jump(document_viewer)
+        gui_task_jump(document_screen)
     last_file_time = cur_file_time
 
     jump document_watch

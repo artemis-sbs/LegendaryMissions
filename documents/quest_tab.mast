@@ -12,7 +12,7 @@ if is_dev_build():
 
 //gui/tab/quest if quest_is_console_enabled(CONSOLE_SELECT)
     if is_dev_build():
-        doc = quest_create_test_data()
+        document_root = quest_create_test_data()
 
     document = quest_flatten_list()
     document_type = "quest"
