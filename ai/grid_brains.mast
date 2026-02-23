@@ -125,51 +125,48 @@ brain:
   - ai_done_boosting
   # Maybe this should be SEL apply boost, is waiting, pick rooms
   - SEL test: 
-     -  label: ai_idle_at_room
-        data:
+    - label: ai_idle_at_room
+      data:
           room: __damaged__
           idle_time: 60
           upgrade: ai_fix_damage
           hp_speed_up: True
+    - label: ai_idle_at_room
+      data:
+        room: __damaged__
+        idle_time: 60
+        upgrade: ai_fix_damage
+        hp_speed_up: True
+    - label: ai_idle_at_room
+      data:
+        room: sickbay
+        idle_time: 120
+        upgrade: upgrade_damcon_inc_hp
+    - label: ai_idle_at_room
+      data:
+        room: gym
+        idle_time: 60
+        upgrade: 
+            label: upgrade_damcon_speed_idle
+            message: Whoo good workout.
+            name: ripped
+    - label: ai_idle_at_room
+      data:
+        room: mess
+        idle_time: 60
+        upgrade:
+            label: upgrade_damcon_speed_idle
+            message: I ate good.
+            name: fed
+    - label: ai_idle_at_room
+      data:
+        room: quarters
+        idle_time: 60
+        upgrade: 
+            label: upgrade_damcon_speed_idle
+            message: I feel rested.
+            name: rested
 ```
-
-
-#       - label: ai_idle_at_room
-#         data:
-#           room: __damaged__
-#           idle_time: 60
-#           upgrade: ai_fix_damage
-#           hp_speed_up: True
-#       - label: ai_idle_at_room
-#         data:
-#           room: sickbay
-#           idle_time: 120
-#           upgrade: upgrade_damcon_inc_hp
-#       - label: ai_idle_at_room
-#         data:
-#             room: gym
-#             idle_time: 60
-#             upgrade: 
-#                 label: upgrade_damcon_speed_idle
-#                 message: Whoo good workout.
-#                 name: ripped
-#       - label: ai_idle_at_room
-#         data:
-#             room: mess
-#             idle_time: 60
-#             upgrade:
-#                 label: upgrade_damcon_speed_idle
-#                 message: I ate good.
-#                 name: fed
-#       - label: ai_idle_at_room
-#         data:
-#             room: quarters
-#             idle_time: 60
-#             upgrade: 
-#                 label: upgrade_damcon_speed_idle
-#                 message: I feel rested.
-#                 name: rested
-# ```
     color = COLOR
     name = NAME
     v = sbs.vec3(0.5,0,0.5)
