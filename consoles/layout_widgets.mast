@@ -141,7 +141,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 //gui/normal_engi
     default tab = 1
     # Ship Data, 
-    gui_section(style="area:0,45px,55,50-50px;")
+    gui_section(style="area:0,45px,min(55,900px),50-50px;")
     with gui_sub_section("col-width:280px;"):
         gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
@@ -151,7 +151,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # gui_section(style="area:285px,90px,800px,390px;")
         gui_layout_widget("eng_heat_controls")
 
-    gui_section(style="area:0,50+50px,55,100;")
+    gui_section(style="area:0,50+50px,min(55,900px),100;")
     
     gui_layout_widget("eng_power_controls")
     gui_row("row-height: 35px")
@@ -159,11 +159,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     gui_layout_widget("eng_presets")
     # gui_row("row-height:100-100px;")
 
-    gui_section(style="area:55,45px,100,100;")
+    gui_section(style="area:min(55,850px),45px,100,100;")
     with gui_sub_section():
         gui_layout_widget("ship_internal_view")
     # Right
-    with gui_sub_section("col-width:200px;"):
+    with gui_sub_section("col-width:max(200px,14);"):
     # with gui_sub_section():
         gui_row("row-height:200px;margin:0,0,0,10px;")
         gui_layout_widget("grid_face")
