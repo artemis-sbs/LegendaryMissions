@@ -46,7 +46,7 @@ def brain_scan_get_text_brain(b, indent):
             res = "[FAIL]"
         elif b.result == 99:
             res = "[SUCCESS]"
-        _ret = f"{i} {res} SEQ {c} children"
+        _ret = f"{i} {res} {b.label} {c} children"
         for c in b.children:
             _ret += "\n"
             _ret += brain_scan_get_text_brain(c, indent+1)
@@ -60,7 +60,7 @@ def brain_scan_get_text_brain(b, indent):
             res = "[FAIL]"
         elif b.result == 99:
             res = "[SUCCESS]"
-        _ret = f"{i} {res} SEL {c} children"
+        _ret = f"{i} {res} {b.label} {c} children"
         for c in b.children:
             _ret += "\n"
             _ret += brain_scan_get_text_brain(c, indent+1)

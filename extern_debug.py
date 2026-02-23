@@ -10,7 +10,7 @@ sys.path.append("../__lib__/artemis-sbs.sbs_utils.v1.3.0.sbslib")
 def mock_sbs_runtime(file):
     sys.modules['script'] = sys.modules.get('__main__')
     # import sbslibs
-    #sys.path.append("../../../PyAddons")
+    sys.path.append("../../../PyAddons")
     #import sbslibs
     sys.path.append("../sbs_utils/mock")
 
@@ -65,6 +65,6 @@ def mock_sbs_runtime(file):
     while True:
         cosmos_event_handler(sim,event)
         sim._time_tick_counter += 1
-        time.sleep(0.001)
+        time.sleep(0)
 
 mock_sbs_runtime("extern_debug.mast")

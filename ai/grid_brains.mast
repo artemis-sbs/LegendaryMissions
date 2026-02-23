@@ -3,11 +3,10 @@
     any_damage = to_grid_object(grid_closest(UPGRADE_AGENT_ID,role("__damaged__")))
     ->END if any_damage is None
     grid_repair_grid_objects(UPGRADE_AGENT.host_id, any_damage.id, UPGRADE_AGENT_ID)
-    grid_damcons_handle_idling_boost_finish(UPGRADE_AGENT)
+    # grid_damcons_handle_idling_boost_finish(UPGRADE_AGENT)
     # Remove work order
     unlink(UPGRADE_AGENT_ID, "work-order", any_damage.id)
     set_inventory_value(UPGRADE_AGENT_ID, "blackboard:prev_target_pos", None)
-
     ->END
 
 
@@ -111,53 +110,66 @@ dataset: move_speed
 metadata: ``` yaml
 type: prefab/lifeform/damcons
 brain:
-  - SEQ: # movement
-    - ai_damcons_update_status
-    - ai_damcons_update_speed
-    - SEL:
-      - ai_lifeform_move_to_work_order
-      - ai_lifeform_move_to_damage
-      - ai_lifeform_move_to_idle_pos
-    - ai_lifeform_move_to_location
-  # Do any Idle
-  - SEL:
-    - ai_done_boosting
-    - label: ai_idle_at_room
-      data:
-        room: __damaged__
-        idle_time: 60
-        upgrade: ai_fix_damage
-        hp_speed_up: True
-    - label: ai_idle_at_room
-      data:
-        room: sickbay
-        idle_time: 120
-        upgrade: upgrade_damcon_inc_hp
-    - label: ai_idle_at_room
-      data:
-        room: gym
-        idle_time: 60
-        upgrade: 
-            label: upgrade_damcon_speed_idle
-            message: Whoo good workout.
-            name: ripped
-    - label: ai_idle_at_room
-      data:
-        room: mess
-        idle_time: 60
-        upgrade:
-            label: upgrade_damcon_speed_idle
-            message: I ate good.
-            name: fed
-    - label: ai_idle_at_room
-      data:
-        room: quarters
-        idle_time: 60
-        upgrade: 
-            label: upgrade_damcon_speed_idle
-            message: I feel rested.
-            name: rested
+- SEQ Handle Movement:
+  - ai_damcons_update_status
+  - ai_damcons_update_speed
+  - SEL movement:
+    - ai_lifeform_move_to_work_order
+    - ai_lifeform_move_to_damage
+    - ai_lifeform_move_to_idle_pos
+  - ai_lifeform_move_to_location
+  - ai_grid_moving
+  # Do any Idle, The SEL could be removed
+  # SEL Tries each until one succeeds
+  # Don't do anything below if boost is done
+  - ai_done_boosting
+  # Maybe this should be SEL apply boost, is waiting, pick rooms
+  - SEL test: 
+     -  label: ai_idle_at_room
+        data:
+          room: __damaged__
+          idle_time: 60
+          upgrade: ai_fix_damage
+          hp_speed_up: True
 ```
+
+
+#       - label: ai_idle_at_room
+#         data:
+#           room: __damaged__
+#           idle_time: 60
+#           upgrade: ai_fix_damage
+#           hp_speed_up: True
+#       - label: ai_idle_at_room
+#         data:
+#           room: sickbay
+#           idle_time: 120
+#           upgrade: upgrade_damcon_inc_hp
+#       - label: ai_idle_at_room
+#         data:
+#             room: gym
+#             idle_time: 60
+#             upgrade: 
+#                 label: upgrade_damcon_speed_idle
+#                 message: Whoo good workout.
+#                 name: ripped
+#       - label: ai_idle_at_room
+#         data:
+#             room: mess
+#             idle_time: 60
+#             upgrade:
+#                 label: upgrade_damcon_speed_idle
+#                 message: I ate good.
+#                 name: fed
+#       - label: ai_idle_at_room
+#         data:
+#             room: quarters
+#             idle_time: 60
+#             upgrade: 
+#                 label: upgrade_damcon_speed_idle
+#                 message: I feel rested.
+#                 name: rested
+# ```
     color = COLOR
     name = NAME
     v = sbs.vec3(0.5,0,0.5)
@@ -367,6 +379,11 @@ hp_speed_up: False
     # We fail so other things can run
     yield fail
 
+=== ai_grid_moving
+    length = BRAIN_AGENT.data_set.get("path_length",0)
+    yield fail if length is None or length < 0.01
+    yield success
+
 === ai_done_boosting
     idle_state = BRAIN_AGENT.get_inventory_value("idle_state", "done")
     yield fail if idle_state != "done"
@@ -387,4 +404,58 @@ hp_speed_up: False
 
 
 
-
+# === old_brain
+# metadata: ``` yaml
+# type: prefab/lifeform/damcons
+# brain:
+#   - SEQ: # movement, SEQ if any fail it skips this
+#     - ai_damcons_update_status
+#     - ai_damcons_update_speed
+#     - SEL:
+#       - ai_lifeform_move_to_work_order
+#       - ai_lifeform_move_to_damage
+#       - ai_lifeform_move_to_idle_pos
+#     - ai_lifeform_move_to_location
+#     - ai_grid_moving
+#     # Do any Idle, The SEL could be removed
+#     # SEL Tries each until one succeeds
+#     # Don't do anything below if boost is done
+#     - ai_done_boosting
+#     # Maybe this should be SEL apply boost, is waiting, pick rooms
+#     - SEL:
+#         - label: ai_idle_at_room
+#         data:
+#             room: __damaged__
+#             idle_time: 60
+#             upgrade: ai_fix_damage
+#             hp_speed_up: True
+#         - label: ai_idle_at_room
+#         data:
+#             room: sickbay
+#             idle_time: 120
+#             upgrade: upgrade_damcon_inc_hp
+#         - label: ai_idle_at_room
+#         data:
+#             room: gym
+#             idle_time: 60
+#             upgrade: 
+#                 label: upgrade_damcon_speed_idle
+#                 message: Whoo good workout.
+#                 name: ripped
+#         - label: ai_idle_at_room
+#         data:
+#             room: mess
+#             idle_time: 60
+#             upgrade:
+#                 label: upgrade_damcon_speed_idle
+#                 message: I ate good.
+#                 name: fed
+#         - label: ai_idle_at_room
+#         data:
+#             room: quarters
+#             idle_time: 60
+#             upgrade: 
+#                 label: upgrade_damcon_speed_idle
+#                 message: I feel rested.
+#                 name: rested
+# ```

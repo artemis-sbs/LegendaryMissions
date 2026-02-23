@@ -7,9 +7,9 @@ ship_roles: raider
 fleet_roles: raider_fleet
 fleet_difficulty: 5
 brain:
-  SEQ:
+  SEQ Movement:
     - ai_fleet_init_blackboard
-    - SEL:
+    - SEL Choose Target:
         - ai_fleet_chase_best_anger
         - label: ai_fleet_chase_roles
           data:
