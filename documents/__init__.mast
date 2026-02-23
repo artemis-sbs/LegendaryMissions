@@ -1,2 +1,5 @@
 import document_screen.mast
 import document_screen.py
+
+import quest_tab.mast
+import help_tab.mast

@@ -60,7 +60,7 @@ def document_item(item):
 
 def quest_create_test_data():
     # signal_register("quest_activated", quest_activated)
-    doc = document_get_amd_file(fs.get_mission_dir_filename("consoles/quest.amd"))
+    doc = document_get_amd_file(fs.get_mission_dir_filename("documents/quest.amd"))
 
     client_id = FrameContext.client_id
     if client_id == 0:

@@ -11,5 +11,3 @@ import layout_widgets.mast
 
 import debug.mast #want debug tabs left of upgrade
 import brain_scan.mast
-import quest_tab.mast
-import help_tab.mast
