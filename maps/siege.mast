@@ -134,12 +134,10 @@ Properties:
     # 6
     enemy_emitters.append( terrain_random_point_box(spawn_points, right-size, -500, top-size, right, 500, bottom+size) )
     # 8
-    enemy_emitters.append( terrain_random_point_box(spawn_points, left+size, -500, bottom-size, right-size, 500, bottom) )
+    enemy_emitters.append( terrain_random_point_box(spawn_points, left+size, -500, bottom+size, right-size, 500, bottom) )
 
     random.shuffle(enemy_emitters)
     emitters = list(enemy_emitters)
-    l = len(emitters)
-    print(f"{l}")
     
 
     # times to for skarrans
