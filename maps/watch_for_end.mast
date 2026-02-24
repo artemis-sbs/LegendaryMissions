@@ -1,3 +1,43 @@
+
+//shared/signal/game_started
+    #CREATE Sides and diplomacy
+    #
+    # These are the side used for LegendaryMissions
+    #
+    # Some examples of different ways to set up a new side.
+
+    #region Spawn TSN side
+    tsn = await prefab_spawn(prefab_side_generic, data={"key":"tsn"}) #Spawn using only the key
+    # Add a display name, description and color programatically
+    side_set_display_name(tsn, "TSN") 
+    side_set_description(tsn, "The Terran Stellar Navy")
+    side_set_icon_color(tsn, "#07F")
+    #endregion
+
+    #region Spawn Raider side
+    # Everything can be set in the prefab data.
+    raider = await prefab_spawn(prefab_side_generic, data={"key":"raider", "name": "Raider", "color": "#F00", "desc":"Hostile Aliens"})
+    #endregion
+
+    #region Spawn Civ side
+    # Some combination of prefab and functions can be nice.
+    civ = await prefab_spawn(prefab_side_generic, data={"key":"civ","name": "Civ"})
+    side_set_description(civ, "Civilians. Protect them from attack.")
+    side_set_icon_color(civ, "white") #NOTE that you can use color names in addition to hexidecimal
+    #endregion
+
+    # Now we set the relationships between the sides.
+    side_set_relations(tsn, raider, sbs.DIPLOMACY.HOSTILE)
+    side_set_relations(raider, civ, sbs.DIPLOMACY.HOSTILE)
+    side_set_relations(civ, tsn, sbs.DIPLOMACY.NEUTRAL)
+
+    #The colors for diplomatic relations can be set via script.
+    sim.set_diplomacy_color(sbs.DIPLOMACY.HOSTILE,"#F00")
+    sim.set_diplomacy_color(sbs.DIPLOMACY.NEUTRAL,"#077")
+
+
+
+
 ============ task_end_game ======= 
 
     await delay_sim(4)
