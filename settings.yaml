@@ -33,7 +33,7 @@ CAN_CHANGE_CONSOLE: true
 # This is a temporary setting 
 # The old version will be removed
 # after further play testing
-NEW_DAMCONS: true
+NEW_DAMCONS: false
 
 GAMEMASTER: 
     enable: true
