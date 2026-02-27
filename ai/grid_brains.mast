@@ -122,45 +122,33 @@ brain:
   # Do any Idle, The SEL could be removed
   # SEL Tries each until one succeeds
   # Don't do anything below if boost is done
-  - ai_done_boosting
-  # Maybe this should be SEL apply boost, is waiting, pick rooms
-  - SEL test: 
-    - label: ai_idle_at_room
-      data:
-          room: __damaged__
-          idle_time: 60
-          upgrade: ai_fix_damage
-          hp_speed_up: True
-    - label: ai_idle_at_room
-      data:
-        room: __damaged__
+  # - ai_done_boosting
+  #
+  # List of rooms in priority order
+  #
+- label: ai_idle_at_room
+  data:
+    rooms:
+      - room: __damaged__
         idle_time: 60
         upgrade: ai_fix_damage
         hp_speed_up: True
-    - label: ai_idle_at_room
-      data:
-        room: sickbay
+      - room: sickbay
         idle_time: 120
         upgrade: upgrade_damcon_inc_hp
-    - label: ai_idle_at_room
-      data:
-        room: gym
+      - room: gym
         idle_time: 60
         upgrade: 
             label: upgrade_damcon_speed_idle
             message: Whoo good workout.
             name: ripped
-    - label: ai_idle_at_room
-      data:
-        room: mess
+      - room: mess
         idle_time: 60
         upgrade:
             label: upgrade_damcon_speed_idle
             message: I ate good.
             name: fed
-    - label: ai_idle_at_room
-      data:
-        room: quarters
+      - room: quarters
         idle_time: 60
         upgrade: 
             label: upgrade_damcon_speed_idle
@@ -267,12 +255,6 @@ room: __damaged__
 
 
 === ai_lifeform_move_to_damage
-metadata: ``` yaml
-room: __damaged__
-upgrade: ai_fix_damage
-idle_time: 60
-hp_speed_up: False
-```
     yield fail if to_object(BRAIN_AGENT.host_id) is None
     any_damage = to_object(grid_closest(BRAIN_AGENT_ID,role("__damaged__")))
     yield fail if any_damage is None
@@ -327,6 +309,8 @@ upgrade: ai_fix_damage
 idle_time: 60
 hp_speed_up: False
 ```
+    # A list of rooms type is expected
+    default rooms = []
     # Verify everything is still valid
     yield fail if to_object(BRAIN_AGENT.host_id) is None
     hm = sbs.get_hull_map(BRAIN_AGENT.host_id)
@@ -334,32 +318,58 @@ hp_speed_up: False
     # 
     x = BRAIN_AGENT.data_set.get("curx",0)
     y = BRAIN_AGENT.data_set.get("cury",0)
+    #percent = BRAIN_AGENT.data_set.get("percent",0)
+    #yield fail if percent > 0.001
 
     _pos = get_inventory_value(BRAIN_AGENT_ID, "blackboard:boost_pos", (-1,-1))
-    # See if we're at 
+    # See if we're at the same location
     new_location = x != _pos[0] or y != _pos[1]
     
-
-    current_room_ids = set(hm.get_objects_at_point(x,y))
-    boost_here = current_room_ids & role(room)
-    # If not in previous room
-    # yield fail if last_room_id is not None and last_room_id not in boost_here
-        
-    elapsed = get_counter_elapsed_seconds(BRAIN_AGENT_ID, "idle_boost_counter")
-    this_room = list(boost_here)
-    yield fail if len(this_room) == 0
-    this_room = this_room[0]
-
     # Set the idle_room
     if new_location:
+        current_room_ids = set(hm.get_objects_at_point(x,y))
+
+        #
+        # Search through each room type to find the active room
+        #
+        this_room = None
+        this_room_data = None
+        for room_data in rooms:
+            room_type = room_data.get("room")
+            continue if room_type is None
+            boost_here = current_room_ids & role(room_type)
+            if len(boost_here) != 0:
+                this_room = list(boost_here)
+                this_room = this_room[0]
+                this_room_data = room_data
+                break
+        # No room boost found
+        yield fail if this_room is None
+  
+        elapsed = get_counter_elapsed_seconds(BRAIN_AGENT_ID, "idle_boost_counter")
         set_inventory_value(BRAIN_AGENT_ID, "blackboard:boost_pos", (x,y))
         BRAIN_AGENT.set_inventory_value("idle_room", this_room)
+        BRAIN_AGENT.set_inventory_value("idle_room_data", this_room_data)
         BRAIN_AGENT.set_inventory_value("idle_state", "idling")
         start_counter(BRAIN_AGENT_ID, "idle_boost_counter")
         # For display
+        t_idle_time = this_room_data.get("idle_time", 60)
+        print(f"IDLE TIME  {t_idle_time}")
+
+
+
         set_timer(BRAIN_AGENT_ID, "idle_boost_timer", idle_time)
         yield success
-    # continue idling
+
+    elapsed = get_counter_elapsed_seconds(BRAIN_AGENT_ID, "idle_boost_counter")
+    this_room = BRAIN_AGENT.get_inventory_value("idle_room")
+    room_data = BRAIN_AGENT.get_inventory_value("idle_room_data")
+    yield fail if this_room is None or room_data is None
+    # It is OK if there in no hp speedup 
+    hp_speed_up = room_data.get("hp_speed_up")
+    #idle_time = room_data.get("idle_time",idle_time)
+    # HP Speed up changes over time if HP change
+    # this could make the boost time display wrong
     target_time = idle_time
     if hp_speed_up:
         hp = BRAIN_AGENT.get_inventory_value("HP", 1)
@@ -368,10 +378,13 @@ hp_speed_up: False
     yield success if elapsed < target_time
     idle_state = BRAIN_AGENT.get_inventory_value("idle_state")
     yield fail if idle_state == "done"
-
     # OK we reached the idle_time
-    # task_schedule(upgrade, data={"UPGRADE_AGENT_ID": BRAIN_AGENT_ID,"UPGRADE_AGENT": BRAIN_AGENT, "ROOM_ID": this_room, "type": room }, inherit=False)
-    upgrade_add(BRAIN_AGENT_ID, upgrade, {"ROOM_ID": this_room, "type": room }, True)
+    
+    # Some upgrade are dict, but upgrade_handles that
+    upgrade = room_data.get("upgrade")
+    yield fail if upgrade is None
+    
+    upgrade_add(BRAIN_AGENT_ID, upgrade, {"ROOM_ID": this_room, "type": room}, True)
     BRAIN_AGENT.set_inventory_value("idle_state", "done")
     # We fail so other things can run
     yield fail

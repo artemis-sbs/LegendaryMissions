@@ -3,6 +3,10 @@
 
 //comms/grid if has_roles(COMMS_ORIGIN_ID, "__player__") and len(to_set(COMMS_SELECTED_ID) & any_role("room,system,access,hallway")) and is_grid_object_id(COMMS_SELECTED_ID)
     + "set rally point" //comms/grid/room/rally
+    + "damage" if is_dev_build():
+        grid_damage_grid_object(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, "yellow")
+
+        
 
     yield success if not has_role(COMMS_SELECTED_ID, "__damaged__")
 
@@ -65,3 +69,6 @@
     set_inventory_value(d.id, "idle_state", "start" )
 
     comms_navigate("//comms")
+
+
+    
