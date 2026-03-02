@@ -23,7 +23,8 @@ type: upgrade/damcons
 
     ship = UPGRADE_AGENT.host_id # obj defined in previous labels
     hp %= (max_hp+1)
-    set_inventory_value(UPGRADE_AGENT_ID, "HP", hp)
+    grid_set_hp(ship, UPGRADE_AGENT_ID, hp)
+
     if hp < max_hp:
         comms_broadcast(ship, f"{UPGRADE_AGENT.name} recovering {hp}", "blue")
         # Allow it to go again
@@ -52,20 +53,11 @@ dataset: move_speed
     yield fail if not is_timer_finished(UPGRADE_AGENT_ID, name+"_speed_coeff")
     grid_short_status(UPGRADE_AGENT_ID, message, "blue", seconds=3)
     #TODO: Remove when you figure out modifiers
-
-    #TODO: A todo in MAST
-    UPGRADE_AGENT.set_inventory_value(name+"_speed_coeff", 1.25)
-    # Apply the upgrade
-    task_schedule(upgrade_damcon_speed, {"add": name})
-    # For display
-    set_timer(UPGRADE_AGENT_ID, name+"_speed_coeff", minutes=time)
-
-    # Cool down
-    await delay_sim(minutes=time)
-    clear_timer(UPGRADE_AGENT_ID, name+"_speed_coeff")
-    # Remove the upgrade
-    task_schedule(upgrade_damcon_speed, {"remove": name})
+    mod = modifier_add(UPGRADE_AGENT_ID, "move_speed", 0.25, name+"_speed_coeff",2, time*60)
+    #print(f"MODIFIER {mod}")
+    UPGRADE_AGENT.set_inventory_value(name+"_modifier", mod)
     yield success
+
 
 
 
@@ -112,7 +104,6 @@ type: prefab/lifeform/damcons
 brain:
 - SEQ Handle Movement:
   - ai_damcons_update_status
-  - ai_damcons_update_speed
   - SEL movement:
     - ai_lifeform_move_to_work_order
     - ai_lifeform_move_to_damage
@@ -180,8 +171,12 @@ brain:
     set_inventory_value(_id, "color", color)
     set_inventory_value(_id, "damage_color", DAMAGE_COLOR)
     set_inventory_value(_id, "blackboard:idle_pos", (point[0], point[1]) )
+    #set_inventory_value(_id, "HP", grid_get_max_hp() )
+    mv = 0.002
+    dc.blob.set("move_speed", mv, 0)
     # Hit points == MAX_HP
-    set_inventory_value(_id, "HP", grid_get_max_hp() )
+    grid_set_hp(ship_id, _id, grid_get_max_hp())
+    
     #
     # Create idle/rally point
     #
@@ -194,6 +189,7 @@ brain:
     idle_marker = grid_spawn(ship_id, marker_tag, marker_tag, point[0],point[1], icon, dc_color, "#,rally_point") 
     _blob = to_blob(idle_marker)
     _blob.set("icon_scale", scale, 0)
+    
     set_inventory_value(_id, "idle_marker", to_id(idle_marker))
 
     brain_add(_go, brain)
@@ -205,29 +201,29 @@ metadata: ``` yaml
 type: brain/damcons
 dataset: move_speed
 ```
-    grid_damcons_detailed_status(BRAIN_AGENT_ID)
+    grid_damcons_detailed_status_update(BRAIN_AGENT_ID)
     # This is intended to succeed to fall though part of a SEQ
     yield success
 
 
-=== ai_damcons_update_speed
-metadata: ``` yaml
-type: brain/damcons
-dataset: move_speed
-```
-    hp = BRAIN_AGENT.get_inventory_value("HP", grid_get_max_hp())
-    add = "HP"
-    remove = "red_alert"
-    red_alert = get_inventory_value(BRAIN_AGENT.host_id, "red_alert", False)
-    if red_alert:
-        # Make sure red alert has
-        add = ["HP", "red_alert"]
-        remove = None
-        red_alert_coeff = get_inventory_value(BRAIN_AGENT.host_id, "red_alert_coeff", 0.75)
-        set_inventory_value(BRAIN_AGENT.host_id, "red_alert_coeff", red_alert_coeff)
-    sub_task_schedule(upgrade_damcon_speed, {"UPGRADE_AGENT_ID":BRAIN_AGENT_ID, "UPGRADE_AGENT": BRAIN_AGENT, "add": add, "remove": remove})
+# === ai_damcons_update_speed
+# metadata: ``` yaml
+# type: brain/damcons
+# dataset: move_speed
+# ```
+#     hp = BRAIN_AGENT.get_inventory_value("HP", grid_get_max_hp())
+#     add = "HP"
+#     remove = "red_alert"
+#     red_alert = get_inventory_value(BRAIN_AGENT.host_id, "red_alert", False)
+#     if red_alert:
+#         # Make sure red alert has
+#         add = ["HP", "red_alert"]
+#         remove = None
+#         red_alert_coeff = get_inventory_value(BRAIN_AGENT.host_id, "red_alert_coeff", 0.75)
+#         set_inventory_value(BRAIN_AGENT.host_id, "red_alert_coeff", red_alert_coeff)
+#     sub_task_schedule(upgrade_damcon_speed, {"UPGRADE_AGENT_ID":BRAIN_AGENT_ID, "UPGRADE_AGENT": BRAIN_AGENT, "add": add, "remove": remove})
 
-    yield success
+#     yield success
 
 
 === ai_lifeform_move_keep_going
@@ -285,20 +281,19 @@ room: __damaged__
     if prev_pos is not None and length is not None and length < 0.01:
         set_inventory_value(BRAIN_AGENT_ID, "blackboard:prev_target_pos", None)
         set_inventory_value(BRAIN_AGENT_ID, "blackboard:idle_pos", _pos)
-        grid_damcons_detailed_status(BRAIN_AGENT_ID, f"Idling at {_pos[0]},{_pos[1]}", "blue", 3)
+        grid_damcons_detailed_status_update(BRAIN_AGENT_ID, f"Idling at {_pos[0]},{_pos[1]}", "blue", 3)
         yield fail
     
     yield success if _pos == prev_pos
     # Already been here
     yield fail if _pos == idle_pos
-    speed = grid_calc_speed(BRAIN_AGENT_ID)
+    # speed = grid_calc_speed(BRAIN_AGENT_ID)
     BRAIN_AGENT.set_inventory_value("idle_room", None)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:prev_target_pos", _pos)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:idle_pos", None)
     BRAIN_AGENT.set_inventory_value("idle_state", "moving")
-    grid_target_pos(BRAIN_AGENT_ID, _pos[0], _pos[1], speed)
-    #grid_damcons_detailed_status(SPAWNED_ID, f"Heading to {target_name}", "orange", 3)
-    grid_damcons_detailed_status(BRAIN_AGENT_ID, f"Heading to location {_pos[0]},{_pos[1]}", "blue", 3)
+    grid_target_pos(BRAIN_AGENT_ID, _pos[0], _pos[1], None)
+    grid_damcons_detailed_status_update(BRAIN_AGENT_ID, f"Heading to location {_pos[0]},{_pos[1]}", "blue", 3)
     yield success
 
 
@@ -379,7 +374,7 @@ hp_speed_up: False
     idle_state = BRAIN_AGENT.get_inventory_value("idle_state")
     yield fail if idle_state == "done"
     # OK we reached the idle_time
-    
+
     # Some upgrade are dict, but upgrade_handles that
     upgrade = room_data.get("upgrade")
     yield fail if upgrade is None
@@ -400,72 +395,24 @@ hp_speed_up: False
     yield success
 
 
+# signal_emit("red_alert_change", {"SHIP_ID": ship_id, "RED_ALERT_STATUS": event.value_tag == "on"})
+//shared/signal/red_alert_change
+    # Add/remove modifiers for red alert
+    if RED_ALERT_STATUS:
+        gos = grid_objects(SHIP_ID) & role("lifeform")
+        for _id in gos:
+            mod = modifier_add(_id, "move_speed", -0.25, "RED_ALERT",2)
+        print("MODIFIER FOR RED ALERT ADD")
+    else:
+        gos = grid_objects(SHIP_ID) & role("lifeform")
+        for _id in gos:
+            mod = modifier_remove(_id , "move_speed", "RED_ALERT")
+        print("MODIFIER FOR RED ALERT remove")
 
-# === ai_clear_idle_at_room
-# " used after checking all idle 
-# # metadata: ``` yaml
-# # ```
-#     last_room_id = BRAIN_AGENT.set_inventory_value("idle_room", None)
-#     # yield fail 
-#     yield fail
-
-
-
-
-
-
-# === old_brain
-# metadata: ``` yaml
-# type: prefab/lifeform/damcons
-# brain:
-#   - SEQ: # movement, SEQ if any fail it skips this
-#     - ai_damcons_update_status
-#     - ai_damcons_update_speed
-#     - SEL:
-#       - ai_lifeform_move_to_work_order
-#       - ai_lifeform_move_to_damage
-#       - ai_lifeform_move_to_idle_pos
-#     - ai_lifeform_move_to_location
-#     - ai_grid_moving
-#     # Do any Idle, The SEL could be removed
-#     # SEL Tries each until one succeeds
-#     # Don't do anything below if boost is done
-#     - ai_done_boosting
-#     # Maybe this should be SEL apply boost, is waiting, pick rooms
-#     - SEL:
-#         - label: ai_idle_at_room
-#         data:
-#             room: __damaged__
-#             idle_time: 60
-#             upgrade: ai_fix_damage
-#             hp_speed_up: True
-#         - label: ai_idle_at_room
-#         data:
-#             room: sickbay
-#             idle_time: 120
-#             upgrade: upgrade_damcon_inc_hp
-#         - label: ai_idle_at_room
-#         data:
-#             room: gym
-#             idle_time: 60
-#             upgrade: 
-#                 label: upgrade_damcon_speed_idle
-#                 message: Whoo good workout.
-#                 name: ripped
-#         - label: ai_idle_at_room
-#         data:
-#             room: mess
-#             idle_time: 60
-#             upgrade:
-#                 label: upgrade_damcon_speed_idle
-#                 message: I ate good.
-#                 name: fed
-#         - label: ai_idle_at_room
-#         data:
-#             room: quarters
-#             idle_time: 60
-#             upgrade: 
-#                 label: upgrade_damcon_speed_idle
-#                 message: I feel rested.
-#                 name: rested
-# ```
+#signal_emit("life_form_hp_changed", {"SHIP_ID": ship_id, "LIFE_FORM_ID": _id, "HP": hp})
+//shared/signal/life_form_hp_changed
+    mv = get_data_set_value(LIFE_FORM_ID, "move_speed", 0)
+    print(f"MODIFIER FOR HP before {mv}")
+    mod = modifier_add(LIFE_FORM_ID, "move_speed", HP, "HP_SPEED",2)
+    mv = get_data_set_value(LIFE_FORM_ID, "move_speed", 0)
+    print(f"MODIFIER FOR HP {mv}")

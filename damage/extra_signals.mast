@@ -9,6 +9,7 @@ shared counting_nebula_updates = 0
     for p in players:
         # Find closest nebula
         neb_count = p.data_set.get("inside_nebula_count",0)
+        continue if neb_count is None
         neb_set = set()
         neb = None
         for n in range(neb_count):
