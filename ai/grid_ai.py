@@ -215,17 +215,18 @@ def grid_damcons_detailed_status_update(id_or_obj, short_status=None, short_colo
     health_status = f"{hp}"
 
     # This should be less Hard coded
-    speed_off = ["tired", "hungry", "weak"]
-    speed_ups = ["rested", "fed", "ripped"]
-    for i,speed_up in enumerate(speed_ups):
-        rested_modifier = get_inventory_value(_go_id, f"{speed_up}_modifier")
-        status = speed_off[i]
-        if rested_modifier is not None and not rested_modifier.expired():
-            left = rested_modifier.format_time_remaining()
-            status = f"{speed_up} for {left}"
-        health_status += "^" + status
+    speed_modifiers = get_inventory_value(_go_id, f"speed_modifiers", {})
+    new_speed_modifiers = {}
+    for k,speed_up in speed_modifiers.items():
+        #print(f"{k}")
+        if speed_up is not None and not speed_up.expired():
+            left = speed_up.format_time_remaining()
+            status = f"{k} for {left}"
+            health_status += "^" + status
+            new_speed_modifiers[k]=speed_up
+    set_inventory_value(_go_id, f"speed_modifiers", new_speed_modifiers)
     
-    work_item_status = f"{work_count} assign work"
+    work_item_status = f"{work_count} work items"
 
     boost_time = get_time_remaining(_go_id, "idle_boost_timer")
     boost = "for boost idle in gym,mess, or quarters"
