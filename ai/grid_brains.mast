@@ -60,9 +60,6 @@ dataset: move_speed
         
     speed_mods[name] = mod
     UPGRADE_AGENT.set_inventory_value("speed_modifiers", speed_mods)
-
-    speed_mods = UPGRADE_AGENT.get_inventory_value("speed_modifiers")
-    mod = speed_mods.get(name)
     yield success
 
 
