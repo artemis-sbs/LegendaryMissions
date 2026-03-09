@@ -381,7 +381,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
         side_names.add(side_display_name(s))
     sides = sorted(list(side_names))
     relations = list(("Allies", "Neutral", "Enemies"))
-    relations_value = list((1,0,-1))
+    relations_value = list((sbs.DIPLOMACY.ALLIED, sbs.DIPLOMACY.NEUTRAL, sbs.DIPLOMACY.HOSTILE, sbs.DIPLOMACY.UNKNOWN))
     # Left, Top, Right, Bottom
     gui_region("area: 10,5,90,15")
     gui_row()

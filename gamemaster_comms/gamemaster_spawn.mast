@@ -172,8 +172,10 @@
     selected_role = get_inventory_value(COMMS_ORIGIN_ID, "gm_spawn_menu_side_role")
     # print("Selected Role: {selected_role}")
     side = to_side_id(race)
-    side_name = get_inventory_value(side, "side_name")
-    ships = ship_data_filter_ship_data_by_side(None, side_name, selected_role)
+    if side is None:
+        side = to_side_id("Raider")
+    side_name = race #get_inventory_value(side, "side_name")
+    ships = ship_data_filter_ship_data_by_side(None, race, selected_role)
     for ship in ships:
         # name = ship["name"]
         if ship["roles"].find("station") == -1:
@@ -181,8 +183,8 @@
                 # Get vec3 of gamemaster
                 pos = Vec3(gm.pos)
                 spawn_side = side_name.lower()
-                # This will force all enemies to spawn as raiders.
-                if side_are_allies(side_name,"raider"):
+                # This will force all enemies to spawn as raiders, unless the GM or script sets up the side.
+                if to_side_id(side_name) is None:
                     spawn_side = "raider"
                 prefab_spawn(prefab_single_ship, {"START_X":pos.x, "START_Y":pos.y, "START_Z":pos.z, "ship_art":ship_data["key"], "side_value":spawn_side, "ship_role":selected_role})
                 # npc = npc_spawn(pos.x,pos.y,pos.z,ship_name,side_name.lower(), ship_data["key"], behav)
