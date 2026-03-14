@@ -11,6 +11,7 @@ allies:
 enemies:
 races: terran
 color: #000FFF
+icon_index:
 ```
     if key is None:
         # key is the only critical property
@@ -54,7 +55,8 @@ color: #000FFF
     # If the color is specified, set the icon color
     if color is not None:
         side_set_icon_color(id, color) # This also sets the side color inventory value, so we don't need to set that here.
-
+    if icon_index is not None:
+        side_set_side_icon_index(id, icon_index)
     # Now we need to update the other sides' ally and enemy lists
     # This does assume that the other side has been defined already.
     for item in ally_list:
