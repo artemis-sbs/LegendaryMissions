@@ -59,14 +59,14 @@ elite_build_abilities()
     # Abilities maybe need a --- clear label if it need to be cleared
     #
     data={"ELITE_ID": ELITE_ID}
-    l = all_abilities.get(ab)
-    debug_print(f"ELITE {ab}")
-    if l is not None: # and l not isinstance(l, str):
+    elite_label = all_abilities.get(ab)
+    debug_print(f"ELITE {ab} {elite_label}")
+    if elite_label is not None: # and l not isinstance(l, str):
         # Store the task to make it possible 
         # for it to be canceled. e.g. spcial torp that cancel elite
         # canceling should make sure it calls clear
         # call it elite_scramble, set science status
-        elite_task = task_schedule(elite_cloak_start, data={"ELITE_ID": ELITE_ID})
+        elite_task = task_schedule(elite_label, data={"ELITE_ID": ELITE_ID})
         set_inventory_value(ELITE_ID, "ELITE_TASK", elite_task)
         signal_emit("elite_ability_start", {"ELITE_ID": ELITE_ID, "ability": ab})
         e = await elite_task

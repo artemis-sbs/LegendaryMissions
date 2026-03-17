@@ -93,10 +93,11 @@ brain:
     gui_properties_set(p)
     on change gui_get_variable("gm_ship_side"):
         side = gui_get_variable("gm_ship_side")
-        ship.set_side(side)
-        # TODO: Should sbs_utils Agent.set_side() also change this blob data? Probably not, since not all Agents have blob info?
-        ship.data_set.set("hull_side", side)
-        side_set_ship_allies_and_enemies(ship)
+        if side is not None:
+            ship.set_side(side)
+            # TODO: Should sbs_utils Agent.set_side() also change this blob data? Probably not, since not all Agents have blob info?
+            ship.data_set.set("hull_side", side)
+            side_set_ship_allies_and_enemies(ship)
     yield idle
 
 
