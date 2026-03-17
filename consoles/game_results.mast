@@ -40,11 +40,17 @@ shared game_stats = ~~{
 
 //signal/show_game_results
 
+
     sim_pause()
+
     GAME_ENDED = True
     START_TEXT = START_TEXT.strip()
     if START_TEXT == "":
         START_TEXT = "Game Over"
+    gui_task_jump(show_game_results_gui)
+
+
+=== show_game_results_gui
         
     gui_section(style="area: 10, 10, 90, 90;")
 
