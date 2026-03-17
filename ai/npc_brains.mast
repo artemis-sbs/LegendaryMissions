@@ -6,6 +6,7 @@ type: brain/npc
 distance: 5000
 throttle: 1.0
 stop_dist: 500
+force_shoot: false
 ```
     # Clear the target
     clear_target(BRAIN_AGENT.id)
@@ -26,7 +27,7 @@ stop_dist: 500
     BRAIN_AGENT.set_inventory_value("blackboard:target", current_target)
 
     # Do we want them to be able to target other non-allies? Neutrals and unknowns?
-    shoot = side_are_enemies(BRAIN_AGENT_ID, current_target) and not surrendered
+    shoot = side_are_enemies(BRAIN_AGENT_ID, current_target) or force_shoot
     target(BRAIN_AGENT_ID, current_target, shoot, throttle, stop_dist=stop_dist)
     yield success
 
@@ -38,6 +39,7 @@ metadata: ```
 type: brain/npc
 throttle: 1.0
 stop_dist: 500
+force_shoot: false
 ```
     default SIZE_X = None
     default SIZE_Z = SIZE_X
@@ -57,7 +59,7 @@ stop_dist: 500
         yield fail if _target.data_set.get("surrender_flag",0) == 1
         _target_id = to_id(_target)
         BRAIN_AGENT.set_inventory_value("blackboard:target", _target_id)
-        shoot = side_are_enemies(BRAIN_AGENT_ID, _target_id)
+        shoot = side_are_enemies(BRAIN_AGENT_ID, _target)  or force_shoot
         target(BRAIN_AGENT_ID, _target_id, shoot, throttle, stop_dist=stop_dist)
         yield success
     BRAIN_AGENT.set_inventory_value("blackboard:target", None)
@@ -69,6 +71,7 @@ metadata: ```
 type: brain/npc
 throttle: 1.0
 stop_dist: 500
+force_shoot: false
 ```
     default SIZE_X = None
     default SIZE_Z = SIZE_X
@@ -85,7 +88,8 @@ stop_dist: 500
         yield fail if _target.data_set.get("surrender_flag",0) == 1
         _target_id = to_id(_target)
         BRAIN_AGENT.set_inventory_value("blackboard:target", _target_id)
-        target(BRAIN_AGENT_ID, _target_id, True, throttle, stop_dist=stop_dist)
+        shoot = side_are_enemies(BRAIN_AGENT_ID, _target)  or force_shoot
+        target(BRAIN_AGENT_ID, _target_id, shoot, throttle, stop_dist=stop_dist)
         yield success
     BRAIN_AGENT.set_inventory_value("blackboard:target", None)
     yield fail
@@ -97,6 +101,7 @@ metadata: ```
 type: brain/npc
 throttle: 1.0
 stop_dist: 500
+force_shoot: false
 ```
     default SIZE_X = None
     default SIZE_Z = SIZE_X
@@ -114,7 +119,8 @@ stop_dist: 500
         yield fail if _target.data_set.get("surrender_flag",0) == 1
         _target_id = to_id(_target)
         BRAIN_AGENT.set_inventory_value("blackboard:target", _target_id)
-        target(BRAIN_AGENT_ID, _target_id, True, throttle, stop_dist=stop_dist)
+        shoot = side_are_enemies(BRAIN_AGENT_ID, _target)  or force_shoot
+        target(BRAIN_AGENT_ID, _target_id, shoot, throttle, stop_dist=stop_dist)
         yield success
     BRAIN_AGENT.set_inventory_value("blackboard:target", None)
     yield fail
@@ -210,6 +216,7 @@ type: brain/npc
 distance: 5000
 throttle: 1.0
 stop_dist: 500
+force_shoot: false
 ```
     # Can't use the target from the engine, because that 
     # can clear with stop distance
@@ -225,7 +232,7 @@ stop_dist: 500
     yield fail if dist < distance/2
     # Do a Jump to keep it close
     BRAIN_AGENT.pos = current_target_obj.pos
-    target(BRAIN_AGENT_ID, current_target_obj, True, 1.0, stop_dist)
+    target(BRAIN_AGENT_ID, current_target_obj, force_shoot, 1.0, stop_dist)
     # Clearing the target lets the other logic find a new one next pass
     BRAIN_AGENT.set_inventory_value("blackboard:target",0)
     yield success

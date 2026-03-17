@@ -3,19 +3,24 @@
 metadata: ```
 type: prefab/monster
 brain:
-    - ai_stay_close
+    - Label: ai_stay_close
+      data:
+        force_shoot: true
     - label: ai_chase_npc
       data:
         SIZE_X: 10000
         throttle: 2.6
+        force_shoot: true
     - label: ai_chase_player
       data:
         SIZE_X: 10000
-        throttle: 3.6
+        throttle: 2.9
+        force_shoot: true
     - label: ai_chase_station
       data:
         SIZE_X: 10000
         throttle: 1.6
+        force_shoot: true
 ```
     monster = npc_spawn(START_X,START_Y,START_Z,"ZZ", "monster,typhon,classic", "-", "behav_typhon")
     monster.engine_object.exclusion_radius = 200
