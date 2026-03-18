@@ -4,7 +4,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 //gui/normal_comm
 
     jump mike_comms if COMMS_PROTOTYPE
-        
+
+    
+    gui_section(style="area:300px,30+50px, 700px,30+100px;")    
+    gui_layout_widget("radar_zoom_ctrl")
+            
     # Left
     gui_section(style="area:0,45px,100,100;")
     
