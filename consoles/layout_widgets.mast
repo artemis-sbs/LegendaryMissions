@@ -102,7 +102,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 
     # Right
     with gui_sub_section("col-width:30;"):
-        gui_row("row-height:35;margin:0,0,0,10px;")
+        gui_row("row-height:70px;")
+        gui_layout_widget("science_data_tabs")
+        gui_row("row-height:40px;")
+        gui_layout_widget("science_data_freq")
+        gui_row("row-height:30;")
         gui_layout_widget("science_data")
         gui_row("row-height: 35px;")
         default follow_tag = False
