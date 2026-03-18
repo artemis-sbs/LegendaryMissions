@@ -106,7 +106,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_layout_widget("science_data_tabs")
         gui_row("row-height:40px;")
         gui_layout_widget("science_data_freq")
-        gui_row("row-height:30;")
+        gui_row("row-height:200px;")
         gui_layout_widget("science_data")
         gui_row("row-height: 35px;")
         default follow_tag = False
