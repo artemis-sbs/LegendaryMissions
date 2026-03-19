@@ -178,7 +178,7 @@ metadata: ``` yaml
 room: __damaged__
 ```
     # Clear any work orders 
-    the_target =  to_object(grid_closest(BRAIN_AGENT_ID, linked_to(BRAIN_AGENT_ID, "work-order") & role(room)))
+    the_target =  to_object(grid_closest(BRAIN_AGENT_ID, linked_to(BRAIN_AGENT_ID, "work-order") & role(room) & role("__damaged__")))
     yield fail if the_target is None
     
     x = the_target.data_set.get("curx",0)
