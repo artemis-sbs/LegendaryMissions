@@ -1,8 +1,19 @@
-from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section, gui_checkbox, gui_task_for_client, gui_icon, gui_blank
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section, gui_button, gui_task_for_client, gui_icon, gui_blank, gui_message_callback
+from sbs_utils.procedural.gui import gui_tab_is_top, gui_tab_add_top, gui_tab_remove_top
 from sbs_utils import fs
 from sbs_utils.procedural import ship_data
 from sbs_utils.helpers import FrameContext
 from sbs_utils.procedural.gui import gui_tab_get_list
+
+
+def console_select_tab(event, sender):
+    console = sender.__console
+    en = FrameContext.client_task.get_variable(f"{console}_TAB_ENABLED", False)
+    if en:
+        sender.value = "TAB^OFF"
+    else:
+        sender.value = "$text:TAB^ON;color:lime;"
+    FrameContext.client_task.set_variable(f"{console}_TAB_ENABLED", not en)
 
 def console_select_template(item, **kwargs):
     gui_row("row-height: 2.5em;")
@@ -25,17 +36,27 @@ def console_select_template(item, **kwargs):
     con.sub_section.click_text = ""
     con.sub_section.click_background = click_color
 
-    if not FrameContext.client_task.get_variable("TAB_CONSOLES_ENABLE", False):
+    if not FrameContext.client_task.get_variable("ALLOW_CONSOLE_TABS", False):
         return
 
     console = item.path.upper()
     if item.path in gui_tab_get_list():
         selected = kwargs.get("selected")
         if selected:
-            cb = gui_icon(f"icon_index: 101;color:white;")
-        else:
-            cb = gui_checkbox(f"icon_index: 101;color:white;", var=f"{console}_TAB_ENABLED")
-            
+            return
+            # cb = gui_icon(f"icon_index: 101;color:white;")
+        #else:
+        #    cb = gui_checkbox(f"icon_index: 101;color:white;", var=f"{console}_TAB_ENABLED")
+
+        en = FrameContext.client_task.get_variable(f"{console}_TAB_ENABLED", False)
+        t = "$text:TAB^ON;color:lime;" if en else  "TAB^OFF"
+        b = gui_button(t, "col-width:2.5em")
+        b.__console = console
+
+        gui_message_callback(b, console_select_tab)
+
+
+        
     
 
 def console_select_title_template():

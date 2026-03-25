@@ -184,7 +184,7 @@ def hangar_craft_spawn(docked_id, craft_data):
         origin = sd.get("origin", origin)
 
     roles = craft_data.get("roles","" )
-    roles = f"{so.side},{roles},cockpit,standby"
+    roles = f"{so.side},{roles},cockpit,standby,hangar"
     
     _pos = so.engine_object.pos
     name = f"{origin} {name} {_craft_id}"
@@ -493,7 +493,7 @@ def hangar_get_crafts_at(dock_id):
     if dock_id is None:
         return []
     crafts = []
-    all_crafts = all_roles(f"cockpit,standby")
+    all_crafts = all_roles(f"cockpit,standby,hangar")
     for c in all_crafts:
         dock = get_science_selection(c)
         if dock == dock_id:

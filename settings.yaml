@@ -28,6 +28,7 @@ CAN_CHANGE_CONSOLE: true
 
 ### Very rough prototype of a comms interaction change 
 # COMMS_PROTOTYPE: true
+# ALLOW_CONSOLE_TABS: true
 
 # Use Brain based Damcons
 # This is a temporary setting 

@@ -362,7 +362,7 @@ hangar_get_craft_data("terran")
 --- find_stray_craft_loop  --
     # TODO: Should this be converted to trigger on a client console change or client disconnect signal instead of a loop?
     await delay_sim(seconds=3) # Run every 23 seconds
-    launched_crafts = role("cockpit") & role("tsn") - role("standby")
+    launched_crafts = role("hangar") & role("tsn") - role("standby")
     for craft in launched_crafts:
         cid = get_inventory_value(craft, "client_id")
         cid_obj = to_object(cid) # Clients are also treated as Agents by MAST
