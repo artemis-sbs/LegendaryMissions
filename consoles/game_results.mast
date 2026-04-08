@@ -134,8 +134,10 @@ shared game_stats = ~~{
         same = True
         start_mission = mission
 
+    show_replay = IS_SERVER or CONSOLE_SELECT == "operator" or CONSOLE_SELECT == "gamemaster"
+
     await gui():
-        + "replay":
+        + "replay" if show_replay:
             sbs.run_next_mission(mission)
         + "run startup" if not same:
             sbs.run_next_mission(start_mission)
