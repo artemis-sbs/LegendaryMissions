@@ -3,3 +3,5 @@ import document_screen.py
 
 import quest_tab.mast
 import help_tab.mast
+import library_tab.mast
+
