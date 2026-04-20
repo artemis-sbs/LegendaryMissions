@@ -308,7 +308,8 @@ hp_speed_up: False
         target_time = 10
     if hp_speed_up:
         hp = BRAIN_AGENT.get_inventory_value("HP", 1)
-        target_time /= hp
+        if hp>0:
+            target_time /= hp
     elapsed = get_counter_elapsed_seconds(BRAIN_AGENT_ID, "idle_boost_counter")
     # Success but keep running
     yield success if elapsed < target_time
