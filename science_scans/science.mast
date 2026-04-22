@@ -171,7 +171,7 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
             " Enemy vessel. Exercise caution.
     + "status":
         <scan>
-            " Dynamic properties of enemy vessels cannot be scanned in this software.
+            " Dynamic properties will appear in this area.
 
     + "intel" {"taunt_intel": taunt_intel, "elite_intel": elite_intel}:
         <scan>

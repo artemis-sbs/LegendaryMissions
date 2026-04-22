@@ -7,3 +7,6 @@ Mast is a runtime written in python. It can be used via python. MAST also includ
 
 ---------------
 
+std::string scanType = obj->blob.Get("cur_scan_type");
+obj->blob.Set("cur_scan_ID",0);
+obj->blob.Set("cur_scan_percent",0);

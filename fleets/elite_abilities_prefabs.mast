@@ -22,7 +22,12 @@ range: close or far
         so.data_set.set("tsnstatus", f"cloak charging in {t}",0)
     await delay_sim(0.8)
     jump warmup
+    sci = so.data_set.get("tsnstatus", 0)
+    if sci is not None and sci != "" and sci != "no data":
+        so.data_set.set("tsnstatus", f"cloak activated",0)
 
+
+#TODO: Major Make it so science scan is not hard coded to tsn
 
 ---- ready
     old_art_id = get_inventory_value(ELITE_ID, "visible_art_id")
@@ -48,7 +53,7 @@ range: close or far
     set_inventory_value(ELITE_ID, "visible_art_id", None)
     sbs.particle_on(so.engine_object, "align:False; offset:0,0,200;color:pink; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
 
-    # Set cooldown timer
+# Set cooldown timer
     set_timer(ELITE_ID, f"{type}_cooldown", 10)
     yield SUCCESS
 
@@ -74,9 +79,28 @@ distance: -5000
 
 
 ==== elite_jump_drive
+    set_timer(ELITE_ID, "WARMUP", 30)
+--- warmup
     so = to_object(ELITE_ID)
     yield FAIL if so is None
+    
+    jump ready if is_timer_finished(ELITE_ID, "WARMUP")
+    t = format_time_remaining(ELITE_ID, "WARMUP")
+    #
+    # This is hard coded science key value
+    # which is bad to do
+    #
+    # But demo setting science
+    sci = so.data_set.get("tsnstatus", 0)
+    if sci is not None and sci != "" and sci != "no data":
+        so.data_set.set("tsnstatus", f"Jump drive charging in {t}",0)
+    await delay_sim(0.8)
+    jump warmup
+    if sci is not None and sci != "" and sci != "no data":
+        so.data_set.set("tsnstatus", f"Jump drive activated",0)
 
+--- ready
+# Execute the jump
     eo = to_engine_object(ELITE_ID)
     _pos_eo = eo.pos
     sbs.particle_at(_pos_eo, "align:False; offset:0,0,200;color:blue; lifespan:50; image_cell:9; size:10; speed: 2; count:1000")
@@ -88,8 +112,8 @@ distance: -5000
     _pos.y = _pos_eo.y
     so.pos = _pos
 
-    await delay_sim(30)
-
+# Set cooldown timer
+    set_timer(ELITE_ID, f"{type}_cooldown", 30)
     yield SUCCESS
 
 
@@ -100,26 +124,60 @@ type: elite/warp
 display_name: Warp
 ```
 
+    set_timer(ELITE_ID, "WARMUP", 25)
+--- warmup
+    so = to_object(ELITE_ID)
+    yield FAIL if so is None
+    target = so.data_set.get("target_id")
+    if target != 0:
+        d = sbs.distance_id(ELITE_ID, target)
+        yield fail if d <= 500
+
+    
+    jump ready if is_timer_finished(ELITE_ID, "WARMUP")
+    t = format_time_remaining(ELITE_ID, "WARMUP")
+    #
+    # This is hard coded science key value
+    # which is bad to do
+    #
+    # But demo setting science
+    sci = so.data_set.get("tsnstatus", 0)
+    if sci is not None and sci != "" and sci != "no data":
+        so.data_set.set("tsnstatus", f"Preparing to Warp in {t}",0)
+    await delay_sim(0.8)
+    jump warmup
+    if sci is not None and sci != "" and sci != "no data":
+        so.data_set.set("tsnstatus", f"Warp drive activated",0)
+
+--- ready
     blob = to_blob(ELITE_ID)
     yield FAIL if blob is None
-    # Set the current Value
-
+# get the warp multiplier and time
+    warp_factor = get_inventory_value(ELITE_ID, "elite_warp_multiplier", 2)
+    warp_time = get_inventory_value(ELITE_ID, "elite_warp_time", 60)
+# Save the current Value
     cur = blob.get("speed_coeff", 0)
-    set_variable("speed_coeff", cur)
-    # double it 
-    blob.set("speed_coeff", cur*2.0, 0)
-
-    await delay_sim(5)
-
---- clear
+    debug_print(f"ELITE WARP {cur}")
+    #set_variable("speed_coeff", cur)
+    # increase it by factor
+    blob.set("speed_coeff", max(cur*warp_factor,warp_factor), 0)
+    
+# wait for the warp time
+    await delay_sim(warp_time)
+#restore the val
     blob = to_blob(ELITE_ID)
     yield FAIL if blob is None
     # Set the current Value
-    cur = get_variable("speed_coeff", 1.0)
+    #cur = get_variable("speed_coeff", 1.0)
     # Restore
     blob.set("speed_coeff", cur, 0)
+    debug_print(f"ELITE WARP {cur}")
+    after = blob.set("speed_coeff", 0)
+    debug_print(f"ELITE WARP after {after}")
 
-    await delay_sim(30)
+
+# Set cooldown timer
+    set_timer(ELITE_ID, f"{type}_cooldown", 30)
     yield SUCCESS
 
 
@@ -130,6 +188,7 @@ type: elite/eft
 display_name: HET
 ```
 
+--- ready
     blob = to_blob(ELITE_ID)
     yield FAIL if blob is None
     # Set the current Value
@@ -274,22 +333,41 @@ display_name: Shield Vamp
 
 
 ==== elite_shield_scramble_start === 
-" Activate Sensor Scramble
+" Activate Shield Scramble
 metadata: ```
 type: elite/shield_scramble
-display_name: Shield Drain
+display_name: Shield Scramble
 ```
-    #TODO: This should be sensor scramble
-    # Change when we know new system works
-
-    # Fail early if nothing is near
+    set_timer(ELITE_ID, "WARMUP", 25)
+--- warmup
+    so = to_object(ELITE_ID)
+    yield FAIL if so is None
+    
+    jump ready if is_timer_finished(ELITE_ID, "WARMUP")
+    t = format_time_remaining(ELITE_ID, "WARMUP")
+    #
+    # This is hard coded science key value
+    # which is bad to do
+    #
+    # But demo setting science
+    sci = so.data_set.get("tsnstatus", 0)
+    if sci is not None and sci != "" and sci != "no data":
+        so.data_set.set("tsnstatus", f"Shield scramble in {t}",0)
+    await delay_sim(0.8)
+    jump warmup
+    if sci is not None and sci != "" and sci != "no data":
+        so.data_set.set("tsnstatus", f"Shields scrambled",0)
+--- ready
+# do it
     blob = to_blob(ELITE_ID)
     yield FAIL if blob is None
-    m = 100.0
+
+    #m = 100.0
     for s in range(5):
-        feq = random.uniform(m*0.1, m*0.8)
-        # m -= feq
+        feq = random.randint(10, 80)
         blob.set("shield_freq_strength", feq, s)
 
-    await delay_sim(30)
-    yield success
+# Set cool down timer
+    set_timer(ELITE_ID, f"{type}_cooldown", 10)
+    yield SUCCESS
+

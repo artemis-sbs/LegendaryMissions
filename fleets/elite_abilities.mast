@@ -34,15 +34,22 @@ elite_build_abilities()
 
     -> END if len(abilities) == 0
     default x = 0
+    #
+    # A tag for temporarily disabling all scripted abilities
+    # Should be set elsewhere this just allows it
+    # 
+    if not is_timer_finished(ELITE_ID, f"elite_all_cooldown"):
+        await delay_sim(1)
+        jump handle_elite_abilities 
 
     #
-    # Condier alllowing a brain here to 
-    # detewmine elite abilties 
+    # Consider allowing a brain here to 
+    # determine elite abilities 
     #
     ab = random.choice(abilities)
     t = get_time_remaining(ELITE_ID, f"{ab}_cooldown")
     if x >= 150:
-        print(f"Time remiaing {t} for {ab}")
+        print(f"Time remaining {t} for {ab}")
         x = 0
 
     if not is_timer_finished(ELITE_ID, f"{ab}_cooldown"):
@@ -63,9 +70,10 @@ elite_build_abilities()
     debug_print(f"ELITE {ab} {elite_label}")
     if elite_label is not None: # and l not isinstance(l, str):
         # Store the task to make it possible 
-        # for it to be canceled. e.g. spcial torp that cancel elite
-        # canceling should make sure it calls clear
-        # call it elite_scramble, set science status
+        # for it to be canceled. e.g. special torp that cancel elite
+        # 
+        # e.g. elite_scramble, set science status, set time "elite_all_cooldown"
+        #   Disable engine abilities TODO (how?)
         elite_task = task_schedule(elite_label, data={"ELITE_ID": ELITE_ID})
         set_inventory_value(ELITE_ID, "ELITE_TASK", elite_task)
         signal_emit("elite_ability_start", {"ELITE_ID": ELITE_ID, "ability": ab})
