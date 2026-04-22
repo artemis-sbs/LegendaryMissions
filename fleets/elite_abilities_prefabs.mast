@@ -128,9 +128,9 @@ display_name: Warp
 --- warmup
     so = to_object(ELITE_ID)
     yield FAIL if so is None
-    target = so.data_set.get("target_id")
-    if target != 0:
-        d = sbs.distance_id(ELITE_ID, target)
+    target_id = so.data_set.get("target_id")
+    if target_id != 0:
+        d = sbs.distance_id(ELITE_ID, target_id)
         yield fail if d <= 500
 
     
