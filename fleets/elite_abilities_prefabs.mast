@@ -17,22 +17,16 @@ range: close or far
     # which is bad to do
     #
     # But demo setting science
-    sci = so.data_set.get("tsnstatus", 0)
-    if sci is not None and sci != "" and sci != "no data":
-        so.data_set.set("tsnstatus", f"cloak charging in {t}",0)
+    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Clock charging in {t}"})
     await delay_sim(0.8)
     jump warmup
-    sci = so.data_set.get("tsnstatus", 0)
-    if sci is not None and sci != "" and sci != "no data":
-        so.data_set.set("tsnstatus", f"cloak activated",0)
-
-
-#TODO: Major Make it so science scan is not hard coded to tsn
 
 ---- ready
+    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Clock was activated"})
     old_art_id = get_inventory_value(ELITE_ID, "visible_art_id")
     yield FAIL if None != old_art_id #if I'm currently cloaked
-    
+
+    # Clear selections???
 
     set_inventory_value(ELITE_ID, "visible_art_id", so.art_id) # remember art id that's visible
     so.set_art_id("invisible") # cloaking!
@@ -91,15 +85,13 @@ distance: -5000
     # which is bad to do
     #
     # But demo setting science
-    sci = so.data_set.get("tsnstatus", 0)
-    if sci is not None and sci != "" and sci != "no data":
-        so.data_set.set("tsnstatus", f"Jump drive charging in {t}",0)
+    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Jump drive charging in {t}"})
     await delay_sim(0.8)
     jump warmup
-    if sci is not None and sci != "" and sci != "no data":
-        so.data_set.set("tsnstatus", f"Jump drive activated",0)
+    
 
 --- ready
+    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Jump drive was activated"})
 # Execute the jump
     eo = to_engine_object(ELITE_ID)
     _pos_eo = eo.pos
@@ -128,7 +120,7 @@ display_name: Warp
 --- warmup
     so = to_object(ELITE_ID)
     yield FAIL if so is None
-    target_id = so.data_set.get("target_id")
+    target_id = so.data_set.get("target_id",0)
     if target_id != 0:
         d = sbs.distance_id(ELITE_ID, target_id)
         yield fail if d <= 500
@@ -141,15 +133,13 @@ display_name: Warp
     # which is bad to do
     #
     # But demo setting science
-    sci = so.data_set.get("tsnstatus", 0)
-    if sci is not None and sci != "" and sci != "no data":
-        so.data_set.set("tsnstatus", f"Preparing to Warp in {t}",0)
+    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Preparing to warp in {t}"})
     await delay_sim(0.8)
     jump warmup
-    if sci is not None and sci != "" and sci != "no data":
-        so.data_set.set("tsnstatus", f"Warp drive activated",0)
+
 
 --- ready
+    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Warp drive was activated"})
     blob = to_blob(ELITE_ID)
     yield FAIL if blob is None
 # get the warp multiplier and time
@@ -157,7 +147,7 @@ display_name: Warp
     warp_time = get_inventory_value(ELITE_ID, "elite_warp_time", 60)
 # Save the current Value
     cur = blob.get("speed_coeff", 0)
-    debug_print(f"ELITE WARP {cur}")
+    #debug_print(f"ELITE WARP {cur}")
     #set_variable("speed_coeff", cur)
     # increase it by factor
     blob.set("speed_coeff", max(cur*warp_factor,warp_factor), 0)
@@ -171,9 +161,9 @@ display_name: Warp
     #cur = get_variable("speed_coeff", 1.0)
     # Restore
     blob.set("speed_coeff", cur, 0)
-    debug_print(f"ELITE WARP {cur}")
-    after = blob.set("speed_coeff", 0)
-    debug_print(f"ELITE WARP after {after}")
+    #debug_print(f"ELITE WARP {cur}")
+    after = blob.get("speed_coeff", 0)
+    #debug_print(f"ELITE WARP after {after}")
 
 
 # Set cooldown timer
@@ -350,14 +340,12 @@ display_name: Shield Scramble
     # which is bad to do
     #
     # But demo setting science
-    sci = so.data_set.get("tsnstatus", 0)
-    if sci is not None and sci != "" and sci != "no data":
-        so.data_set.set("tsnstatus", f"Shield scramble in {t}",0)
+    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Shield scramble in {t}"})
     await delay_sim(0.8)
     jump warmup
-    if sci is not None and sci != "" and sci != "no data":
-        so.data_set.set("tsnstatus", f"Shields scrambled",0)
+    
 --- ready
+    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Shield scrambled"})
 # do it
     blob = to_blob(ELITE_ID)
     yield FAIL if blob is None
@@ -371,3 +359,27 @@ display_name: Shield Scramble
     set_timer(ELITE_ID, f"{type}_cooldown", 10)
     yield SUCCESS
 
+=== elite_update_science_status
+    default status = ""
+    ->END if status == ""
+
+    for player_id in role("__player__"):
+        # Get the current scan data
+        current_scan = science_get_scan_data(player_id, ELITE_ID, "status")
+        continue if current_scan is None
+        if current_scan.startswith("Dynamic"):
+            current_scan = ""
+            
+        new_scan = ""
+        prefix = "Elite Status: "
+        elite_info = prefix + status
+
+        # Does not already have elite abilities in the scan info
+        if (current_scan.count(prefix)==0 or current_scan == ""):
+            new_scan = current_scan + elite_info
+        # If it did already have alite abilities, update it.
+        else:
+            loc = current_scan.find(prefix)
+            new_scan = current_scan[0:loc] + elite_info
+        # Now update the scan data
+        science_update_scan_data(player_id, ELITE_ID, new_scan, "status")

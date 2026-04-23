@@ -67,7 +67,7 @@ elite_build_abilities()
     #
     data={"ELITE_ID": ELITE_ID}
     elite_label = all_abilities.get(ab)
-    debug_print(f"ELITE {ab} {elite_label}")
+    #debug_print(f"ELITE {ab} {elite_label}")
     if elite_label is not None: # and l not isinstance(l, str):
         # Store the task to make it possible 
         # for it to be canceled. e.g. special torp that cancel elite
