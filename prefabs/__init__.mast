@@ -6,3 +6,5 @@ import side_prefabs.mast
 import terrain_prefabs.mast
 import station_prefabs.mast
 import lifeform_prefabs.mast
+
+import torpedo_prefabs.mast

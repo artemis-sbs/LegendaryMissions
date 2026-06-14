@@ -30,11 +30,14 @@ shared surrender_color = "yellow"
 //comms/station/build
     comms_id = COMMS_ORIGIN.name
     + !0 "Back" //comms
-    + "Build Homing" station_build_weapon {"build_type": "Homing", "comms_id": comms_id, "weapon_text": "Homing"}
-    + "Build Nuke" station_build_weapon {"build_type": "Nuke", "comms_id": comms_id, "weapon_text": "Nuke"}
-    + "Build EMP" station_build_weapon {"build_type": "EMP", "comms_id": comms_id, "weapon_text": "EMP"}
-    + "Build Mine" station_build_weapon {"build_type": "Mine", "comms_id": comms_id, "weapon_text": "Mine"}
-    
+    torp_keys = get_inventory_value(COMMS_SELECTED_ID, "torpedo_production_keys")
+    for t in torp_keys:
+        text = torp_get_attribute_value(t, "gui_text")
+        + "Build {text}" station_build_weapon {"build_type": t, "comms_id": comms_id, "weapon_text": text}
+    # + "Build Nuke" station_build_weapon {"build_type": "Nuke", "comms_id": comms_id, "weapon_text": "Nuke"}
+    # + "Build EMP" station_build_weapon {"build_type": "EMP", "comms_id": comms_id, "weapon_text": "EMP"}
+    # + "Build Mine" station_build_weapon {"build_type": "Mine", "comms_id": comms_id, "weapon_text": "Mine"}
+
 
 
 =============== handle_comms_station_hail  ===============
@@ -47,7 +50,7 @@ shared surrender_color = "yellow"
     station_comms_id = station_obj.name
 
     #   HOMING : 0, NUKE : 1, EMP : 2, MINE : 3
-    station_build_times = get_build_times(station_id)
+    # station_build_times = get_build_times(station_id)
     torpedo_build_type = get_inventory_value(station_id, "build_type", 0)
 
     s_max = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 0))
@@ -63,6 +66,16 @@ shared surrender_color = "yellow"
     mine = get_data_set_value(COMMS_SELECTED_ID, "Mine_NUM", )
     build_time = format_time_remaining(COMMS_SELECTED_ID, "build_time")
 
+    torp_keys = get_inventory_value(station_id, "torpedo_production_keys")
+
+    stats = ""
+    for t in torp_keys:
+        count = get_data_set_value(COMMS_SELECTED_ID, f"{t}_NUM", 0)
+        if count is None:
+            count = 0
+        time = get_build_time_for(COMMS_SELECTED_ID, t)
+        stats += """ ^{t: <10}{count: >5}{"": >16}{time}:00"""
+
     <<[green] "Hail"
         " Hello, {comms_id}.  We stand ready to assist.
         " ^Our shields are at {s_cur} / {s_max} ({s_per} %).
@@ -70,10 +83,11 @@ shared surrender_color = "yellow"
         " ^You have full docking privileges.
         " ^^{torpedo_build_type} in production. Completion in {build_time}
         " ^{"type":<10}{"ready": >5}{"time to produce": >20}
-        " ^{"Homing": <10}{homing: >5}{"": >16}{station_build_times["Homing"]}:00 
-        " ^{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times["Nuke"]}:00
-        " ^{"EMP": <10}{emp: >5}{"": >16}{station_build_times["EMP"]}:00
-        " ^{"Mine": <10}{mine: >5}{"": >16}{station_build_times["Mine"]}:00
+        " {stats}
+        # " ^{"Homing": <10}{homing: >5}{"": >16}{station_build_times["Homing"]}:00 
+        # " ^{"Nuke": <10}{nuke: >5}{"": >16}{station_build_times["Nuke"]}:00
+        # " ^{"EMP": <10}{emp: >5}{"": >16}{station_build_times["EMP"]}:00
+        # " ^{"Mine": <10}{mine: >5}{"": >16}{station_build_times["Mine"]}:00
     yield success
 
 
@@ -113,6 +127,8 @@ shared surrender_color = "yellow"
 
 
     cur_count = get_data_set_value(station_id, f"{torpedo_build_type}_NUM", 0)
+    if cur_count is None:
+        cur_count = 0
     set_data_set_value(station_id, f"{torpedo_build_type}_NUM", cur_count+1, 0)
 
     side = station.side
