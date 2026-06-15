@@ -1,6 +1,6 @@
 
 === ai_fix_damage
-    any_damage = to_grid_object(grid_closest(UPGRADE_AGENT_ID,role("__damaged__")))
+    any_damage = to_grid_object(grid_closest(UPGRADE_AGENT_ID,role("__damaged__")& grid_objects(UPGRADE_AGENT.host_id)))
     ->END if any_damage is None
     grid_repair_grid_objects(UPGRADE_AGENT.host_id, any_damage.id, UPGRADE_AGENT_ID)
     # grid_damcons_handle_idling_boost_finish(UPGRADE_AGENT)
@@ -178,7 +178,7 @@ metadata: ``` yaml
 room: __damaged__
 ```
     # Clear any work orders 
-    the_target =  to_object(grid_closest(BRAIN_AGENT_ID, linked_to(BRAIN_AGENT_ID, "work-order") & role(room) & role("__damaged__")))
+    the_target =  to_object(grid_closest(BRAIN_AGENT_ID, linked_to(BRAIN_AGENT_ID, "work-order") & role(room) & role("__damaged__") & grid_objects(BRAIN_AGENT.host_id)))
     yield fail if the_target is None
     
     x = the_target.data_set.get("curx",0)
@@ -189,7 +189,7 @@ room: __damaged__
 
 === ai_lifeform_move_to_damage
     yield fail if to_object(BRAIN_AGENT.host_id) is None
-    any_damage = to_object(grid_closest(BRAIN_AGENT_ID,role("__damaged__")))
+    any_damage = to_object(grid_closest(BRAIN_AGENT_ID,role("__damaged__") & grid_objects(BRAIN_AGENT.host_id)))
     yield fail if any_damage is None
     x = any_damage.data_set.get("curx",0)
     y = any_damage.data_set.get("cury",0)
