@@ -99,7 +99,10 @@
             player_ship.art_id = "invisible"
             player_ship.remove_role("__player__")
             player_ship.remove_role("tsn")
-            player_ship.side = "unused"
+            # NOTE: do NOT set an unregistered side here (was side = "unused").
+            # The ship is de-roled and about to be deleted; tagging it with a
+            # side key that isn't a real side made downstream lookups (e.g. the
+            # hangar's hangar_get_ship_data_keys) spam "Side not found: unused".
             # Delay the delete
             task_schedule(player_ships_remove_unused, {"_ship_id": player_ship.id})
             continue

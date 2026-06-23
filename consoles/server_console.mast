@@ -64,6 +64,12 @@ gui_reroute_clients("client_main")
     shared mission_overview = maps_get_init()
     shared WORLD_SELECT_path  = SETTINGS.get("WORLD_SELECT")
     sim_create()
+    #
+    # Create the sides + diplomacy BEFORE player ships and before any map runs,
+    # so side keys like "tsn" resolve. The //signal/create_sides route is
+    # synchronous (no await), so sides exist when this returns. (Was a
+    # //shared/signal/game_started route that raced spawn_players.)
+    signal_emit("create_sides")
     # Create standard missile types - NEW use prefab system
     # sbs.set_shared_string("Homing","gui_text:Homing;  speed:10; lifetime:25; flare_color:white; trail_color:white;warhead:standard;damage:35; explosion_size:10;explosion_color:fire; behavior:homing; energy_conversion_value:100")
     # sbs.set_shared_string("Nuke"  ,"gui_text:Nuke  ;  speed:10; lifetime:25; flare_color:white; trail_color:#99f;warhead:blast; blast_radius:1000; damage:5; explosion_size:20;explosion_color:fire; behavior:homing; energy_conversion_value:200")
@@ -81,6 +87,8 @@ gui_reroute_clients("client_main")
     # 
 
     if PLAYER_CREATE_DEFAULT:
+        # This could cause an side error
+        # if it does the side creation awaited
         for player_ship_data in PLAYER_LIST:
             player_ship = to_id(player_spawn(0,0,0, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
             player_ship_data["id"] = player_ship

@@ -1,35 +1,44 @@
 
-//shared/signal/game_started
+//signal/create_sides
     #CREATE Sides and diplomacy
     #
     # These are the side used for LegendaryMissions
     #
+    # Fired (signal_emit "create_sides") from server_console start_server BEFORE
+    # player ships and before any map runs, so side keys like "tsn" resolve.
+    #
+    # IMPORTANT: this route MUST NOT await. server_console relies on it
+    # completing synchronously within signal_emit. prefab_side_generic creates
+    # the side within prefab_spawn (no await), so the returned id isn't needed —
+    # sides are addressed by KEY below. Adding an await here re-introduces the
+    # side/player ordering race this was written to fix.
+    #
     # Some examples of different ways to set up a new side.
 
     #region Spawn TSN side
-    tsn = await prefab_spawn(prefab_side_generic, data={"key":"tsn"}) #Spawn using only the key
-    # Add a display name, description and color programatically
-    side_set_display_name(tsn, "TSN") 
-    side_set_description(tsn, "The Terran Stellar Navy")
-    side_set_icon_color(tsn, "#07F")
+    prefab_spawn(prefab_side_generic, data={"key":"tsn"}) #Spawn using only the key
+    # Add a display name, description and color programatically (by key)
+    side_set_display_name("tsn", "TSN")
+    side_set_description("tsn", "The Terran Stellar Navy")
+    side_set_icon_color("tsn", "#07F")
     #endregion
 
     #region Spawn Raider side
     # Everything can be set in the prefab data.
-    raider = await prefab_spawn(prefab_side_generic, data={"key":"raider", "name": "Raider", "color": "#F00", "desc":"Hostile Aliens"})
+    prefab_spawn(prefab_side_generic, data={"key":"raider", "name": "Raider", "color": "#F00", "desc":"Hostile Aliens"})
     #endregion
 
     #region Spawn Civ side
     # Some combination of prefab and functions can be nice.
-    civ = await prefab_spawn(prefab_side_generic, data={"key":"civ","name": "Civ"})
-    side_set_description(civ, "Civilians. Protect them from attack.")
-    side_set_icon_color(civ, "white") #NOTE that you can use color names in addition to hexidecimal
+    prefab_spawn(prefab_side_generic, data={"key":"civ","name": "Civ"})
+    side_set_description("civ", "Civilians. Protect them from attack.")
+    side_set_icon_color("civ", "white") #NOTE that you can use color names in addition to hexidecimal
     #endregion
 
-    # Now we set the relationships between the sides.
-    side_set_relations(tsn, raider, sbs.DIPLOMACY.HOSTILE)
-    side_set_relations(raider, civ, sbs.DIPLOMACY.HOSTILE)
-    side_set_relations(civ, tsn, sbs.DIPLOMACY.NEUTRAL)
+    # Now we set the relationships between the sides (by key).
+    side_set_relations("tsn", "raider", sbs.DIPLOMACY.HOSTILE)
+    side_set_relations("raider", "civ", sbs.DIPLOMACY.HOSTILE)
+    side_set_relations("civ", "tsn", sbs.DIPLOMACY.NEUTRAL)
 
     #The colors for diplomatic relations can be set via script.
     sim.set_diplomacy_color(sbs.DIPLOMACY.HOSTILE,"#F00")
