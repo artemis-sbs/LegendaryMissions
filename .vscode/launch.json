@@ -1,24 +1,32 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
 
         {
-            "name": "Poc",
+            "name": "Dbg w/Gui",
             "type": "debugpy",
             "request": "launch",
-            "program": "extern_debug.py",
+            "module": "cosmos_dev.mission_runner",
             "console": "integratedTerminal",
             // Not sure why but I needed to hard code the path
-            // When using a workspace with multiplef folder
-            // Should still work if just in legendary missions
+            // When using a workspace with multiple folders
+            // Should still work if just in LegendaryMissions
             "cwd": "${workspaceFolder}/../LegendaryMissions",
-            "args": [
-            
-            ]
+            "envFile": "${workspaceFolder}/../LegendaryMissions/.env",
+            "args": [".", "--gui"],
+            "subProcess": false
+        },
+        {
+            "name": "Dbg no Gui",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "cosmos_dev.mission_runner",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/../LegendaryMissions",
+            "envFile": "${workspaceFolder}/../LegendaryMissions/.env",
+            "args": [".", "--map", "0"],
+            "subProcess": false
         }
+
     ]
 }
