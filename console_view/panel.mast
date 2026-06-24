@@ -1,89 +1,89 @@
-# Console View panel (single console).
+# Director panel (single console).
 #
-# Highlight: pick a program/stream screen, a ship, and a console (three list
-# boxes); the chosen program screen is rerouted to show that console. Carousel
-# auto-cycles consoles on the program screen.
+# Multiview highlight: multi-select Program screens, Ships, and Consoles, then
+# Apply. Screens are paired with consoles (and ships) by index with round-robin:
+#   screen[i] shows console[i % nConsoles] for ship[i % nShips].
+# So 1 console + N screens = mirror; N screens + N consoles = a multiview wall;
+# fewer consoles than screens = they repeat. Carousel rotates the console->screen
+# mapping over time.
 #
-# Screen shots (dev only): capture buttons that ALWAYS drive the SERVER screen
-# (client 0) - the only surface gui_screenshot can grab - settle, then save
-# shot_<console>.bmp in the mission folder. Single-PC, Windows, BMP.
+# Screen shots (dev only): capture the selected consoles (or ALL) for the first
+# selected ship, ALWAYS via the SERVER screen (client 0) - the only surface
+# gui_screenshot can grab. Files: shot_<console>.bmp in the mission folder.
 #
 # Reuses cv_show from __init__.mast. cv_ui is top-level so the capture tour can
-# reroute client 0 back to it.
+# reroute client 0 back to it. cv_apply_views does the reroute work (run via
+# task_schedule - MAST labels are scheduled, not called like functions).
 
-default shared cv_target   = None        # program/stream screen client id (highlight)
-default shared cv_ship_id  = None        # ship to mirror (highlight + capture)
-default shared cv_console  = "mainscreen"
+default shared cv_ship_id  = None        # fallback ship when none selected
+default shared cv_console  = "mainscreen"  # fallback console when none selected
 default shared cv_carousel = False
-default shared cv_dwell    = 6           # carousel seconds per console
+default shared cv_dwell    = 6           # carousel seconds per step
 default shared cv_settle   = 2           # screenshot render-settle seconds
 default shared cv_status   = ""
+# Applied multiview state (set on Apply / carousel-enable; read by the carousel).
+default shared cv_screens       = None   # list of program-screen client ids
+default shared cv_view_consoles = None   # list of console names
+default shared cv_view_ships    = None   # list of ship ids
 
 @console/director !0 ^94 "Director" if DIRECTOR_enabled
-    " Highlight a console on a program screen; capture screenshots (dev).
+    " Direct which console (per ship) shows on one or more program/stream screens: multi-select + Apply for a multiview wall, carousel to rotate, screenshots (dev).
     jump cv_ui
 
 === cv_ui
     my_id = client_id
-    screen_ids = []
     screen_items = []
+    screen_ids = []
     for tid in role("console"):
         if tid != my_id:
-            screen_ids.append(tid)
             screen_items.append("client " + str(tid))
-    ship_ids = []
+            screen_ids.append(tid)
     ship_items = []
+    ship_ids = []
     for sid in role("__player__"):
-        ship_ids.append(sid)
         ship_items.append(to_object(sid).name)
-    if cv_ship_id is None and len(ship_ids) > 0:
-        cv_ship_id = ship_ids[0]
+        ship_ids.append(sid)
+    # item-string -> id maps (get_selected returns the item strings)
+    screen_by_item = ~~ dict(zip(screen_items, screen_ids)) ~~
+    ship_by_item   = ~~ dict(zip(ship_items, ship_ids)) ~~
 
-    gui_section("area: 3, 3, 97, 9;")
-    """Director - highlight a console on a program screen; capture (dev)"""
+    gui_section("area: 3, 3, 97, 8;")
+    """Director - multi-select screens, ships, consoles; Apply for a multiview"""
 
-    # ---- program screen (highlight target) ----
-    gui_section("area: 3, 10, 33, 70;")
-    screen_lb = gui_list_box(screen_items, "row-height:1.6em;", title_template="Program screen", select=True)
-    if cv_target in screen_ids:
-        screen_lb.set_selected_index(screen_ids.index(cv_target), False)
-    on change screen_lb.get_selected_index():
-        _i = screen_lb.get_selected_index()
-        if _i is not None and _i < len(screen_ids):
-            cv_target = screen_ids[_i]
+    gui_section("area: 3, 9, 33, 66;")
+    screen_lb = gui_list_box(screen_items, "row-height:1.6em;", title_template="Program screens", select=True, multi=True)
+    gui_section("area: 35, 9, 65, 66;")
+    ship_lb = gui_list_box(ship_items, "row-height:1.6em;", title_template="Ships", select=True, multi=True)
+    gui_section("area: 67, 9, 97, 66;")
+    console_lb = gui_list_box(CV_CONSOLES, "row-height:1.6em;", title_template="Consoles", select=True, multi=True)
 
-    # ---- ship to mirror ----
-    gui_section("area: 35, 10, 65, 70;")
-    ship_lb = gui_list_box(ship_items, "row-height:1.6em;", title_template="Ship", select=True)
-    if cv_ship_id in ship_ids:
-        ship_lb.set_selected_index(ship_ids.index(cv_ship_id), False)
-    on change ship_lb.get_selected_index():
-        _j = ship_lb.get_selected_index()
-        if _j is not None and _j < len(ship_ids):
-            cv_ship_id = ship_ids[_j]
-
-    # ---- console (selecting highlights the program screen) ----
-    gui_section("area: 67, 10, 97, 70;")
-    console_lb = gui_list_box(CV_CONSOLES, "row-height:1.6em;", title_template="Console", select=True)
-    if cv_console in CV_CONSOLES:
-        console_lb.set_selected_index(CV_CONSOLES.index(cv_console), False)
-    on change console_lb.get_selected_index():
-        _k = console_lb.get_selected_index()
-        if _k is not None and _k < len(CV_CONSOLES):
-            cv_console = CV_CONSOLES[_k]
-            if cv_target is not None:
-                gui_reroute_client(cv_target, cv_show, {"cv_ship_id": cv_ship_id, "cv_console": cv_console})
-
-    # ---- carousel (highlight) ----
-    gui_section("area: 3, 71, 97, 80;")
+    # ---- apply + carousel ----
+    gui_section("area: 3, 67, 97, 80;")
     gui_row()
-    car = gui_checkbox("text: Carousel program screen; state: {cv_carousel}")
+    applyb = gui_button("Apply to program screens")
+    on gui_message(applyb):
+        cv_screens = []
+        for it in screen_lb.get_selected():
+            cv_screens.append(screen_by_item[it])
+        cv_view_ships = []
+        for it in ship_lb.get_selected():
+            cv_view_ships.append(ship_by_item[it])
+        cv_view_consoles = console_lb.get_selected()
+        task_schedule(cv_apply_views, {"screens": cv_screens, "consoles": cv_view_consoles, "ships": cv_view_ships, "offset": 0})
+    car = gui_checkbox("text: Carousel; state: {cv_carousel}")
     on gui_message(car):
         cv_carousel = not cv_carousel
-        if cv_carousel and cv_target is not None:
+        if cv_carousel:
+            cv_screens = []
+            for it in screen_lb.get_selected():
+                cv_screens.append(screen_by_item[it])
+            cv_view_ships = []
+            for it in ship_lb.get_selected():
+                cv_view_ships.append(ship_by_item[it])
+            cv_view_consoles = console_lb.get_selected()
             gui_sub_task_schedule(cv_carousel_task)
     gui_row()
-    """Dwell (s):"""
+    """Carousel dwell (s):"""
     gui_int_slider("$text:int;low:2;high:20;", var="cv_dwell")
 
     # ---- screen shots (dev only) - always the SERVER screen (client 0) ----
@@ -91,12 +91,20 @@ default shared cv_status   = ""
         gui_section("area: 3, 81, 97, 95;")
         """Screen shots capture the SERVER screen (client 0) - single-PC, Windows, BMP -> shot_<console>.bmp"""
         gui_row()
-        capsel = gui_button("Capture selected")
+        capsel = gui_button("Capture selected consoles")
         on gui_message(capsel):
-            task_schedule(cv_shot_one, {"ship_id": cv_ship_id, "settle": cv_settle, "console": cv_console, "restore": True})
-        capall = gui_button("Capture ALL")
+            shot_ship = cv_ship_id
+            _sel_ships = ship_lb.get_selected()
+            if len(_sel_ships) > 0:
+                shot_ship = ship_by_item[_sel_ships[0]]
+            task_schedule(cv_shot_set, {"ship_id": shot_ship, "settle": cv_settle, "consoles": console_lb.get_selected()})
+        capall = gui_button("Capture ALL consoles")
         on gui_message(capall):
-            task_schedule(cv_shot_tour, {"ship_id": cv_ship_id, "settle": cv_settle})
+            shot_ship = cv_ship_id
+            _sel_ships = ship_lb.get_selected()
+            if len(_sel_ships) > 0:
+                shot_ship = ship_by_item[_sel_ships[0]]
+            task_schedule(cv_shot_set, {"ship_id": shot_ship, "settle": cv_settle, "consoles": CV_CONSOLES})
         gui_row()
         """Settle (s):"""
         gui_int_slider("$text:int;low:1;high:5;", var="cv_settle")
@@ -106,31 +114,62 @@ default shared cv_status   = ""
     await gui()
 
 
+# Reroute each applied program screen to its paired console/ship (round-robin,
+# rotated by offset). Run via task_schedule with the lists passed in `data`.
+=== cv_apply_views
+    default screens  = None
+    default consoles = None
+    default ships    = None
+    default offset   = 0
+    ->END if screens is None
+    _nc = 0
+    if consoles is not None:
+        _nc = len(consoles)
+    _ns = 0
+    if ships is not None:
+        _ns = len(ships)
+    _i = 0
+    for scr in screens:
+        if _nc > 0:
+            con = consoles[(_i + offset) % _nc]
+        else:
+            con = cv_console
+        if _ns > 0:
+            shp = ships[_i % _ns]
+        else:
+            shp = cv_ship_id
+        gui_reroute_client(scr, cv_show, {"cv_ship_id": shp, "cv_console": con})
+        _i = _i + 1
+    ->END
+
+
 === cv_carousel_task
-    consoles = CV_CONSOLES
+    off = 0
 --- cv_carousel_loop
     ->END if not cv_carousel
-    ->END if cv_target is None
-    for con in consoles:
-        ->END if not cv_carousel
-        gui_reroute_client(cv_target, cv_show, {"cv_ship_id": cv_ship_id, "cv_console": con})
-        await delay_app(cv_dwell)
+    ->END if cv_screens is None
+    task_schedule(cv_apply_views, {"screens": cv_screens, "consoles": cv_view_consoles, "ships": cv_view_ships, "offset": off})
+    off = off + 1
+    await delay_app(cv_dwell)
     jump cv_carousel_loop
 
 
-=== cv_shot_tour
-    default ship_id = None
-    default settle  = 2
-    for con in CV_CONSOLES:
+=== cv_shot_set
+    default ship_id  = None
+    default settle   = 2
+    default consoles = None
+    if consoles is None or len(consoles) == 0:
+        consoles = CV_CONSOLES
+    for con in consoles:
         await task_schedule(cv_shot_one, {"ship_id": ship_id, "settle": settle, "console": con, "restore": False})
     gui_reroute_client(0, cv_ui)          # back to the controller on the server screen
     ->END
 
 === cv_shot_one
-    default ship_id = None
-    default settle  = 2
-    default console = "helm"
-    default restore = False
+    default ship_id  = None
+    default settle   = 2
+    default console  = "helm"
+    default restore  = False
     # Select a target so weapons/science/comms data widgets populate.
     tgt = closest(ship_id, any_role("raider,enemy,monster")) if ship_id is not None else None
     if tgt is not None:
