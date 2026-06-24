@@ -1,5 +1,5 @@
 {
-    "version": "v1.3.0",
+    "version": "v1.4.0_dev",
     "mastlib": [
         "autoplay",
         "ai",
@@ -26,7 +26,7 @@
         "collisions",
         "data_panels",
         "documents",
-        "console_view"
+        "director"
     ],
     "zip": [
         "media"

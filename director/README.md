@@ -1,4 +1,4 @@
-# console_view addon
+# director addon
 
 One console ("Director", `@console/director`) sharing a single primitive
 (`cv_show` - "show console X for ship Y on a screen"):

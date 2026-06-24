@@ -1,4 +1,4 @@
-# console_view addon
+# director addon
 #
 # One console ("Director") with two functions sharing the cv_show primitive:
 #   * Highlight  (shippable) - show a chosen console for a chosen ship on a chosen

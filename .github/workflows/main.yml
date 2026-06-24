@@ -35,6 +35,7 @@ jobs:
           - side_missions
           - upgrades
           - documents
+          - director
 
     steps:
       - name: Set env version
