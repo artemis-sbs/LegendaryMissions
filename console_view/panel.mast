@@ -43,9 +43,8 @@ default shared cv_view_ships    = None   # list of ship ids
     for sid in role("__player__"):
         ship_items.append(to_object(sid).name)
         ship_ids.append(sid)
-    # item-string -> id maps (get_selected returns the item strings)
-    screen_by_item = ~~ dict(zip(screen_items, screen_ids)) ~~
-    ship_by_item   = ~~ dict(zip(ship_items, ship_ids)) ~~
+    # get_selected() returns the item strings; map back to ids via list.index()
+    # (dict/zip are not in the MAST eval globals, but list.index is a method).
 
     gui_section("area: 3, 3, 97, 8;")
     """Director - multi-select screens, ships, consoles; Apply for a multiview"""
@@ -64,10 +63,10 @@ default shared cv_view_ships    = None   # list of ship ids
     on gui_message(applyb):
         cv_screens = []
         for it in screen_lb.get_selected():
-            cv_screens.append(screen_by_item[it])
+            cv_screens.append(screen_ids[screen_items.index(it)])
         cv_view_ships = []
         for it in ship_lb.get_selected():
-            cv_view_ships.append(ship_by_item[it])
+            cv_view_ships.append(ship_ids[ship_items.index(it)])
         cv_view_consoles = console_lb.get_selected()
         task_schedule(cv_apply_views, {"screens": cv_screens, "consoles": cv_view_consoles, "ships": cv_view_ships, "offset": 0})
     car = gui_checkbox("text: Carousel; state: {cv_carousel}")
@@ -76,10 +75,10 @@ default shared cv_view_ships    = None   # list of ship ids
         if cv_carousel:
             cv_screens = []
             for it in screen_lb.get_selected():
-                cv_screens.append(screen_by_item[it])
+                cv_screens.append(screen_ids[screen_items.index(it)])
             cv_view_ships = []
             for it in ship_lb.get_selected():
-                cv_view_ships.append(ship_by_item[it])
+                cv_view_ships.append(ship_ids[ship_items.index(it)])
             cv_view_consoles = console_lb.get_selected()
             gui_sub_task_schedule(cv_carousel_task)
     gui_row()
@@ -96,14 +95,14 @@ default shared cv_view_ships    = None   # list of ship ids
             shot_ship = cv_ship_id
             _sel_ships = ship_lb.get_selected()
             if len(_sel_ships) > 0:
-                shot_ship = ship_by_item[_sel_ships[0]]
+                shot_ship = ship_ids[ship_items.index(_sel_ships[0])]
             task_schedule(cv_shot_set, {"ship_id": shot_ship, "settle": cv_settle, "consoles": console_lb.get_selected()})
         capall = gui_button("Capture ALL consoles")
         on gui_message(capall):
             shot_ship = cv_ship_id
             _sel_ships = ship_lb.get_selected()
             if len(_sel_ships) > 0:
-                shot_ship = ship_by_item[_sel_ships[0]]
+                shot_ship = ship_ids[ship_items.index(_sel_ships[0])]
             task_schedule(cv_shot_set, {"ship_id": shot_ship, "settle": cv_settle, "consoles": CV_CONSOLES})
         gui_row()
         """Settle (s):"""
