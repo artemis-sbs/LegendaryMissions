@@ -1,0 +1,28 @@
+# console_view addon
+#
+# Two consoles that share one primitive ("show console X for ship Y on a screen"):
+#   * Director (shippable)    — highlight a console view on a program / stream
+#                               screen from a separate control window. Streamer
+#                               "director": one window directs what the stream shows.
+#   * Screen Shots (dev only) — drive the SERVER screen (client 0) through the
+#                               consoles and capture the desktop via gui_screenshot.
+#
+# See README.md. EXPERIMENTAL: engine behaviour (rendering gameplay widgets on a
+# rerouted screen, screenshot capture) needs in-engine verification.
+
+# Set False (e.g. in settings.yaml-driven code) to hide the Director console.
+default shared DIRECTOR_enabled = True
+
+import director.mast
+import screenshots.mast
+
+# --- shared primitive --------------------------------------------------------
+# Show <cv_console> for <cv_ship_id> on whichever client runs this label.
+# Entered via gui_reroute_client(target, cv_show, {"cv_ship_id":.., "cv_console":..}).
+=== cv_show
+    default cv_ship_id = None
+    default cv_console = "mainscreen"
+    if cv_ship_id is not None:
+        assign_client_to_ship(client_id, cv_ship_id)
+    gui_console(cv_console)
+    await gui()

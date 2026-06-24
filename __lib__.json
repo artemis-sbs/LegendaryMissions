@@ -25,7 +25,8 @@
         "basic_random_skybox",
         "collisions",
         "data_panels",
-        "documents"
+        "documents",
+        "console_view"
     ],
     "zip": [
         "media"
