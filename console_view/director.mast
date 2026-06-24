@@ -1,84 +1,90 @@
-# Director console — pick a program/stream screen, a ship, and a console; the
-# chosen screen is rerouted to show that console (the "highlight"). A carousel
-# can auto-cycle the consoles on the program screen for unattended streams.
+# Director console — pick a program/stream screen, a ship, and a console (three
+# list boxes); the chosen screen is rerouted to show that console (the
+# "highlight"). A carousel can auto-cycle the consoles on the program screen.
 #
-# Controller and target are DIFFERENT clients, so the director window keeps
-# showing these controls while the program screen shows the gameplay console.
+# Controller and target are DIFFERENT clients, so the director window keeps its
+# controls while the program screen shows the gameplay console.
 
 default shared cv_target   = None        # client id of the program/stream screen
 default shared cv_ship_id  = None        # ship whose console to mirror
-default shared cv_console   = "mainscreen"
+default shared cv_console  = "mainscreen"
 default shared cv_carousel = False
 default shared cv_dwell    = 6           # carousel seconds per console
 
 @console/director !0 ^94 "Director" if DIRECTOR_enabled
-    " Direct which console view appears on the program / stream screen(s).
---- cv_director_ui
+    " Direct which console view appears on the program / stream screen.
     my_id = client_id
-    # default the ship to the first player if unset
-    if cv_ship_id is None:
-        for _sid in role("__player__"):
-            cv_ship_id = _sid
-            jump cv_director_set_ship_done
---- cv_director_set_ship_done
 
-    gui_section("area: 3, 8, 97, 94;")
-    """🎬 Director — choose program screen, ship, console"""
-
-    # ---- program screen (other connected consoles) ----
-    gui_row()
-    """Program screen:"""
+    # Parallel display/id lists for the pickers (explicit loops — no comprehensions).
+    screen_ids = []
+    screen_items = []
     for tid in role("console"):
         if tid != my_id:
-            sel = ">" if cv_target == tid else " "
-            tb = gui_button("{sel} client {tid}", data={"the_tid": tid})
-            on gui_message(tb):
-                cv_target = the_tid
-                jump cv_director_ui
+            screen_ids.append(tid)
+            screen_items.append("client " + str(tid))
+    ship_ids = []
+    ship_items = []
+    for sid in role("__player__"):
+        ship_ids.append(sid)
+        ship_items.append(to_object(sid).name)
+    if cv_ship_id is None and len(ship_ids) > 0:
+        cv_ship_id = ship_ids[0]
+
+    gui_section("area: 3, 3, 97, 10;")
+    """🎬 Director — select a program screen, ship, and console"""
+
+    # ---- program screen ----
+    gui_section("area: 3, 11, 33, 82;")
+    """Program screen"""
+    screen_lb = gui_list_box(screen_items, "row-height:1.6em;", select=True)
+    if cv_target in screen_ids:
+        screen_lb.set_selected_index(screen_ids.index(cv_target), False)
+    on change screen_lb.get_selected_index():
+        _i = screen_lb.get_selected_index()
+        if _i is not None and _i < len(screen_ids):
+            cv_target = screen_ids[_i]
 
     # ---- ship to mirror ----
-    gui_row()
-    """Ship:"""
-    for sid in role("__player__"):
-        so = to_object(sid)
-        sel = ">" if cv_ship_id == sid else " "
-        sb = gui_button("{sel} {so.name}", data={"the_sid": sid})
-        on gui_message(sb):
-            cv_ship_id = the_sid
-            jump cv_director_ui
+    gui_section("area: 35, 11, 65, 82;")
+    """Ship"""
+    ship_lb = gui_list_box(ship_items, "row-height:1.6em;", select=True)
+    if cv_ship_id in ship_ids:
+        ship_lb.set_selected_index(ship_ids.index(cv_ship_id), False)
+    on change ship_lb.get_selected_index():
+        _j = ship_lb.get_selected_index()
+        if _j is not None and _j < len(ship_ids):
+            cv_ship_id = ship_ids[_j]
 
-    # ---- console to show ----
-    gui_row()
-    """Console:"""
-    for con in ["helm", "weapons", "science", "engineering", "comms", "mainscreen"]:
-        sel = ">" if cv_console == con else " "
-        cb = gui_button("{sel} {con}", data={"the_con": con})
-        on gui_message(cb):
-            cv_console = the_con
+    # ---- console to show (selecting reroutes the program screen) ----
+    gui_section("area: 67, 11, 97, 82;")
+    """Console"""
+    console_lb = gui_list_box(CV_CONSOLES, "row-height:1.6em;", select=True)
+    if cv_console in CV_CONSOLES:
+        console_lb.set_selected_index(CV_CONSOLES.index(cv_console), False)
+    on change console_lb.get_selected_index():
+        _k = console_lb.get_selected_index()
+        if _k is not None and _k < len(CV_CONSOLES):
+            cv_console = CV_CONSOLES[_k]
             if cv_target is not None:
                 gui_reroute_client(cv_target, cv_show, {"cv_ship_id": cv_ship_id, "cv_console": cv_console})
-            jump cv_director_ui
 
     # ---- carousel ----
+    gui_section("area: 3, 83, 97, 95;")
     gui_row()
     car = gui_checkbox("text: Carousel program screen; state: {cv_carousel}")
     on gui_message(car):
         cv_carousel = not cv_carousel
-        jump cv_director_ui
+        if cv_carousel and cv_target is not None:
+            gui_sub_task_schedule(cv_carousel_task)
     gui_row()
     """Dwell (s):"""
     gui_int_slider("$text:int;low:2;high:20;", var="cv_dwell")
-
-    # (Re)start the carousel sub-task when enabled. A repaint cancels GUI
-    # sub-tasks, so scheduling here re-arms it each build.
-    if cv_carousel and cv_target is not None:
-        gui_sub_task_schedule(cv_carousel_task)
 
     await gui()
 
 
 === cv_carousel_task
-    consoles = ["helm", "weapons", "science", "engineering", "comms"]
+    consoles = CV_CONSOLES
 --- cv_carousel_loop
     ->END if not cv_carousel
     ->END if cv_target is None

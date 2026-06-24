@@ -13,6 +13,9 @@
 # Set False (e.g. in settings.yaml-driven code) to hide the Director console.
 default shared DIRECTOR_enabled = True
 
+# Consoles the director/screenshots can show (shared so both files + their tasks see it).
+default shared CV_CONSOLES = ["helm", "weapons", "science", "engineering", "comms", "mainscreen"]
+
 import director.mast
 import screenshots.mast
 
