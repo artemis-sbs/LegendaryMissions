@@ -1,6 +1,6 @@
 # console_view addon
 
-One console ("Console View", `@console/console_view`) sharing a single primitive
+One console ("Director", `@console/director`) sharing a single primitive
 (`cv_show` - "show console X for ship Y on a screen"):
 
 - **Highlight** (shippable) - three list-box pickers: **Program screen** (another
@@ -36,6 +36,6 @@ selection, which is only for highlighting. The UI notes this.
 
 ## Use it
 Auto-loads in dev (mission dir is on the MAST path); listed in `__lib__.json` for
-packaging. Pick "Console View" from the console selector. Disable with
-`default shared CONSOLE_VIEW_enabled = False`. The capture section only appears in
-dev builds.
+packaging. Pick "Director" from the console selector. Disable with
+`default shared DIRECTOR_enabled = False`. The capture section only appears in
+dev builds. Console choices include `cinematic` (the 3D cinematic view).

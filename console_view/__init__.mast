@@ -1,6 +1,6 @@
 # console_view addon
 #
-# One console ("Console View") with two functions sharing the cv_show primitive:
+# One console ("Director") with two functions sharing the cv_show primitive:
 #   * Highlight  (shippable) - show a chosen console for a chosen ship on a chosen
 #                              program/stream screen; carousel to auto-cycle.
 #                              Great as a streamer "director": one control window.
@@ -10,11 +10,11 @@
 # See README.md. EXPERIMENTAL: rendering gameplay widgets on a rerouted screen and
 # the screenshot grab itself need in-engine verification.
 
-# Set False to hide the Console View console.
-default shared CONSOLE_VIEW_enabled = True
+# Set False to hide the Director console.
+default shared DIRECTOR_enabled = True
 
 # Consoles the panel can show/capture (shared so the panel + its tasks see it).
-default shared CV_CONSOLES = ["helm", "weapons", "science", "engineering", "comms", "mainscreen"]
+default shared CV_CONSOLES = ["helm", "weapons", "science", "engineering", "comms", "mainscreen", "cinematic"]
 
 import panel.mast
 

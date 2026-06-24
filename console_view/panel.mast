@@ -19,7 +19,7 @@ default shared cv_dwell    = 6           # carousel seconds per console
 default shared cv_settle   = 2           # screenshot render-settle seconds
 default shared cv_status   = ""
 
-@console/console_view !0 ^94 "Console View" if CONSOLE_VIEW_enabled
+@console/director !0 ^94 "Director" if DIRECTOR_enabled
     " Highlight a console on a program screen; capture screenshots (dev).
     jump cv_ui
 
@@ -40,12 +40,11 @@ default shared cv_status   = ""
         cv_ship_id = ship_ids[0]
 
     gui_section("area: 3, 3, 97, 9;")
-    """Console View - highlight a console on a program screen; capture (dev)"""
+    """Director - highlight a console on a program screen; capture (dev)"""
 
     # ---- program screen (highlight target) ----
     gui_section("area: 3, 10, 33, 70;")
-    """Program screen"""
-    screen_lb = gui_list_box(screen_items, "row-height:1.6em;", select=True)
+    screen_lb = gui_list_box(screen_items, "row-height:1.6em;", title_template="Program screen", select=True)
     if cv_target in screen_ids:
         screen_lb.set_selected_index(screen_ids.index(cv_target), False)
     on change screen_lb.get_selected_index():
@@ -55,8 +54,7 @@ default shared cv_status   = ""
 
     # ---- ship to mirror ----
     gui_section("area: 35, 10, 65, 70;")
-    """Ship"""
-    ship_lb = gui_list_box(ship_items, "row-height:1.6em;", select=True)
+    ship_lb = gui_list_box(ship_items, "row-height:1.6em;", title_template="Ship", select=True)
     if cv_ship_id in ship_ids:
         ship_lb.set_selected_index(ship_ids.index(cv_ship_id), False)
     on change ship_lb.get_selected_index():
@@ -66,8 +64,7 @@ default shared cv_status   = ""
 
     # ---- console (selecting highlights the program screen) ----
     gui_section("area: 67, 10, 97, 70;")
-    """Console"""
-    console_lb = gui_list_box(CV_CONSOLES, "row-height:1.6em;", select=True)
+    console_lb = gui_list_box(CV_CONSOLES, "row-height:1.6em;", title_template="Console", select=True)
     if cv_console in CV_CONSOLES:
         console_lb.set_selected_index(CV_CONSOLES.index(cv_console), False)
     on change console_lb.get_selected_index():
