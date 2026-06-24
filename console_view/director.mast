@@ -31,7 +31,7 @@ default shared cv_dwell    = 6           # carousel seconds per console
         cv_ship_id = ship_ids[0]
 
     gui_section("area: 3, 3, 97, 10;")
-    """🎬 Director — select a program screen, ship, and console"""
+    """Director - select a program screen, ship, and console"""
 
     # ---- program screen ----
     gui_section("area: 3, 11, 33, 82;")

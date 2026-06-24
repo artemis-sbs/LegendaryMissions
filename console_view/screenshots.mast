@@ -34,8 +34,8 @@ default shared cvs_status   = ""
         ship_items.append(to_object(sid).name)
 
     gui_section("area: 3, 3, 97, 10;")
-    """📷 Screen Shots — drives the SERVER screen (client 0), grabs the desktop"""
-    """single-PC · Windows · BMP · saved as shot_<console>.bmp in the mission folder"""
+    """Screen Shots - drives the SERVER screen (client 0), grabs the desktop"""
+    """single-PC, Windows, BMP - saved as shot_<console>.bmp in the mission folder"""
 
     # ---- ship to mirror ----
     gui_section("area: 3, 11, 48, 82;")
