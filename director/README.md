@@ -26,17 +26,20 @@ the server screen (client 0) to be captured - independent of the Program-screen
 selection, which is only for highlighting. The UI notes this.
 
 ## Constraints / status
-- **EXPERIMENTAL - needs in-engine verification.** Compile-checked in the mock,
-  but rendering a gameplay widget list on a rerouted screen and the screenshot
-  grab were not run in the engine.
+- **Confirmed working in-engine** (highlight + rendering a gameplay console on a
+  rerouted screen). Screenshot grab still assumes the conditions below.
 - All on-screen text is ASCII (engine renders ASCII only).
 - Screen shots: **single-PC** playtest, **Windows**, **BMP**, server window
   visible (ideally fullscreen - whole-desktop grab).
-- **Open question**: do all gameplay widgets render on `client_id 0` (server
-  screen)? If a widget refuses, sit a real console on the server screen instead.
 - Highlight reassigns the program screen's ship (`assign_client_to_ship`) to
   mirror the chosen ship - use a **dedicated spectator screen** as program out,
   not an active player's console.
+
+## Future polish (deferred)
+- The picker lists are built once when the console opens; they don't yet refresh
+  as consoles **connect/disconnect** mid-session. Doing that cleanly likely needs
+  client connect/disconnect **signals** to re-fire `cv_ui`. Deferred to a later
+  polish pass.
 
 ## Use it
 Auto-loads in dev (mission dir is on the MAST path); listed in `__lib__.json` for
