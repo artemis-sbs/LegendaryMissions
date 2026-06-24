@@ -3,9 +3,10 @@
 # Multiview highlight: multi-select Program screens, Ships, and Consoles, then
 # Apply. Screens are paired with consoles (and ships) by index with round-robin:
 #   screen[i] shows console[i % nConsoles] for ship[i % nShips].
-# So 1 console + N screens = mirror; N screens + N consoles = a multiview wall;
-# fewer consoles than screens = they repeat. Carousel rotates the console->screen
-# mapping over time.
+# So 1 console + N screens = mirror; N screens + N consoles = a multiview wall.
+# Multi-select implies the mode: if MORE consoles than screens are selected they
+# can't all show at once, so Apply auto-rotates them (carousel); equal/fewer is a
+# static wall. No separate carousel toggle - the selection shape decides.
 #
 # Screen shots (dev only): capture the selected consoles (or ALL) for the first
 # selected ship, ALWAYS via the SERVER screen (client 0) - the only surface
@@ -56,7 +57,9 @@ default shared cv_view_ships    = None   # list of ship ids
     gui_section("area: 67, 9, 97, 66;")
     console_lb = gui_list_box(CV_CONSOLES, "row-height:1.6em;", title_template="Consoles", select=True, multi=True)
 
-    # ---- apply + carousel ----
+    # ---- apply ----
+    # Multi-select implies the mode: more consoles than screens can't all show at
+    # once, so Apply rotates them (auto-carousel); equal/fewer = a static wall.
     gui_section("area: 3, 67, 97, 80;")
     gui_row()
     applyb = gui_button("Apply to program screens")
@@ -68,21 +71,13 @@ default shared cv_view_ships    = None   # list of ship ids
         for it in ship_lb.get_selected():
             cv_view_ships.append(ship_ids[ship_items.index(it)])
         cv_view_consoles = console_lb.get_selected()
-        task_schedule(cv_apply_views, {"screens": cv_screens, "consoles": cv_view_consoles, "ships": cv_view_ships, "offset": 0})
-    car = gui_checkbox("text: Carousel; state: {cv_carousel}")
-    on gui_message(car):
-        cv_carousel = not cv_carousel
-        if cv_carousel:
-            cv_screens = []
-            for it in screen_lb.get_selected():
-                cv_screens.append(screen_ids[screen_items.index(it)])
-            cv_view_ships = []
-            for it in ship_lb.get_selected():
-                cv_view_ships.append(ship_ids[ship_items.index(it)])
-            cv_view_consoles = console_lb.get_selected()
-            gui_sub_task_schedule(cv_carousel_task)
+        if len(cv_view_consoles) > len(cv_screens):
+            cv_carousel = True
+        else:
+            cv_carousel = False
+            task_schedule(cv_apply_views, {"screens": cv_screens, "consoles": cv_view_consoles, "ships": cv_view_ships, "offset": 0})
     gui_row()
-    """Carousel dwell (s):"""
+    """Rotate dwell (s) - used when more consoles than screens are selected:"""
     gui_int_slider("$text:int;low:2;high:20;", var="cv_dwell")
 
     # ---- screen shots (dev only) - always the SERVER screen (client 0) ----
@@ -110,6 +105,9 @@ default shared cv_view_ships    = None   # list of ship ids
         gui_row()
         """{cv_status}"""
 
+    # One persistent rotator for this console (idles unless cv_carousel is on);
+    # scheduling once avoids duplicate rotators when Apply is pressed repeatedly.
+    gui_sub_task_schedule(cv_carousel_task)
     await gui()
 
 
@@ -145,11 +143,12 @@ default shared cv_view_ships    = None   # list of ship ids
 === cv_carousel_task
     off = 0
 --- cv_carousel_loop
-    ->END if not cv_carousel
-    ->END if cv_screens is None
-    task_schedule(cv_apply_views, {"screens": cv_screens, "consoles": cv_view_consoles, "ships": cv_view_ships, "offset": off})
-    off = off + 1
-    await delay_app(cv_dwell)
+    if cv_carousel and cv_screens is not None:
+        task_schedule(cv_apply_views, {"screens": cv_screens, "consoles": cv_view_consoles, "ships": cv_view_ships, "offset": off})
+        off = off + 1
+        await delay_app(cv_dwell)
+    else:
+        await delay_app(1)
     jump cv_carousel_loop
 
 
