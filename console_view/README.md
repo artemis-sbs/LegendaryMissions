@@ -3,12 +3,16 @@
 One console ("Director", `@console/director`) sharing a single primitive
 (`cv_show` - "show console X for ship Y on a screen"):
 
-- **Highlight** (shippable) - three list-box pickers: **Program screen** (another
-  connected console), **Ship**, **Console**. Selecting a console reroutes the
-  chosen program screen to show it. **Carousel** auto-cycles consoles on the
-  program screen. Intended as a streamer "director": one control window directs
-  what the program/stream screen shows. Controller and target are *different*
-  clients, so the control window keeps its UI.
+- **Highlight / multiview** (shippable) - three **multi-select** list-box pickers:
+  **Program screens**, **Ships**, **Consoles**. Apply pairs them by index with
+  round-robin (`screen[i]` shows `console[i % nCon]` for `ship[i % nShip]`): one
+  console + N screens = mirror; N screens + N consoles = a multiview wall. The
+  selection shape sets the mode - if MORE consoles than screens are selected they
+  can't all show at once, so Apply **auto-rotates** them (dwell slider sets the
+  speed); equal/fewer is a static wall. No separate carousel toggle. Intended as a
+  streamer "director": one control window directs what the program/stream screens
+  show. Controller and targets are *different* clients, so the control window
+  keeps its UI.
 
 - **Screen shots** (dev only, `is_dev_build()`) - capture buttons in the lower
   section. These ALWAYS drive the **server screen (client 0)**, because
