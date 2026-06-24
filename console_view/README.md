@@ -1,41 +1,41 @@
 # console_view addon
 
-Two consoles sharing one primitive (`cv_show` — "show console X for ship Y on a
-screen"):
+One console ("Console View", `@console/console_view`) sharing a single primitive
+(`cv_show` - "show console X for ship Y on a screen"):
 
-- **Director** (`@console/director`, shippable) — from one control window, pick a
-  **program / stream screen** (another connected console), a **ship**, and a
-  **console**, and that screen is rerouted to show it. A **carousel** auto-cycles
-  the consoles on the program screen. Intended as a streamer "director": one
-  window directs what the stream shows. Controller and target are *different*
-  clients, so the director keeps its controls while the program screen shows the
-  gameplay console.
+- **Highlight** (shippable) - three list-box pickers: **Program screen** (another
+  connected console), **Ship**, **Console**. Selecting a console reroutes the
+  chosen program screen to show it. **Carousel** auto-cycles consoles on the
+  program screen. Intended as a streamer "director": one control window directs
+  what the program/stream screen shows. Controller and target are *different*
+  clients, so the control window keeps its UI.
 
-- **Screen Shots** (`@console/screenshots`, dev-only, `is_dev_build()`) — captures
-  engine console screenshots. `gui_screenshot` grabs the desktop of the machine
-  running the script (the **server**), so this drives the **server screen
-  (client 0)** through each console, lets it render, then grabs. One-click "tour"
-  or per-console. Files: `shot_<console>.bmp` in the mission folder.
+- **Screen shots** (dev only, `is_dev_build()`) - capture buttons in the lower
+  section. These ALWAYS drive the **server screen (client 0)**, because
+  `gui_screenshot` can only grab the desktop of the machine running the script
+  (the server). Per-console ("Capture selected") or all ("Capture ALL"); files
+  saved as `shot_<console>.bmp` in the mission folder.
 
-## Why the two differ
-`gui_screenshot` can only capture the server's own desktop, so screenshots must
-target client 0. Highlighting has no such limit — it can drive any client — which
-is what makes the director useful across windows/machines.
+## Why screenshots use the server screen
+`gui_screenshot` captures the server's own desktop, so a console must be put on
+the server screen (client 0) to be captured - independent of the Program-screen
+selection, which is only for highlighting. The UI notes this.
 
 ## Constraints / status
-- **EXPERIMENTAL — needs in-engine verification.** Built and compile-checked, but
-  rendering a gameplay widget list on a rerouted screen and the screenshot grab
-  itself were not run in the engine.
-- Screen Shots: **single-PC** playtest, **Windows**, **BMP**, server window
-  visible (ideally fullscreen — it's a whole-desktop grab).
+- **EXPERIMENTAL - needs in-engine verification.** Compile-checked in the mock,
+  but rendering a gameplay widget list on a rerouted screen and the screenshot
+  grab were not run in the engine.
+- All on-screen text is ASCII (engine renders ASCII only).
+- Screen shots: **single-PC** playtest, **Windows**, **BMP**, server window
+  visible (ideally fullscreen - whole-desktop grab).
 - **Open question**: do all gameplay widgets render on `client_id 0` (server
-  screen)? If a widget refuses, sit a real console on the server screen and use
-  the director/manual flow instead.
-- The director reassigns the program screen's ship (`assign_client_to_ship`) to
-  mirror the chosen ship — use a **dedicated spectator screen** as the program
-  out, not an active player's console.
+  screen)? If a widget refuses, sit a real console on the server screen instead.
+- Highlight reassigns the program screen's ship (`assign_client_to_ship`) to
+  mirror the chosen ship - use a **dedicated spectator screen** as program out,
+  not an active player's console.
 
 ## Use it
-The addon auto-loads in dev (mission dir is on the MAST path) and is listed in
-`__lib__.json` for packaging. Pick "Director" or "Screen Shots" from the console
-selector. Disable the director with `default shared DIRECTOR_enabled = False`.
+Auto-loads in dev (mission dir is on the MAST path); listed in `__lib__.json` for
+packaging. Pick "Console View" from the console selector. Disable with
+`default shared CONSOLE_VIEW_enabled = False`. The capture section only appears in
+dev builds.

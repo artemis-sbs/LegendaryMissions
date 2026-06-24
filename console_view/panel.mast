@@ -1,0 +1,150 @@
+# Console View panel (single console).
+#
+# Highlight: pick a program/stream screen, a ship, and a console (three list
+# boxes); the chosen program screen is rerouted to show that console. Carousel
+# auto-cycles consoles on the program screen.
+#
+# Screen shots (dev only): capture buttons that ALWAYS drive the SERVER screen
+# (client 0) - the only surface gui_screenshot can grab - settle, then save
+# shot_<console>.bmp in the mission folder. Single-PC, Windows, BMP.
+#
+# Reuses cv_show from __init__.mast. cv_ui is top-level so the capture tour can
+# reroute client 0 back to it.
+
+default shared cv_target   = None        # program/stream screen client id (highlight)
+default shared cv_ship_id  = None        # ship to mirror (highlight + capture)
+default shared cv_console  = "mainscreen"
+default shared cv_carousel = False
+default shared cv_dwell    = 6           # carousel seconds per console
+default shared cv_settle   = 2           # screenshot render-settle seconds
+default shared cv_status   = ""
+
+@console/console_view !0 ^94 "Console View" if CONSOLE_VIEW_enabled
+    " Highlight a console on a program screen; capture screenshots (dev).
+    jump cv_ui
+
+=== cv_ui
+    my_id = client_id
+    screen_ids = []
+    screen_items = []
+    for tid in role("console"):
+        if tid != my_id:
+            screen_ids.append(tid)
+            screen_items.append("client " + str(tid))
+    ship_ids = []
+    ship_items = []
+    for sid in role("__player__"):
+        ship_ids.append(sid)
+        ship_items.append(to_object(sid).name)
+    if cv_ship_id is None and len(ship_ids) > 0:
+        cv_ship_id = ship_ids[0]
+
+    gui_section("area: 3, 3, 97, 9;")
+    """Console View - highlight a console on a program screen; capture (dev)"""
+
+    # ---- program screen (highlight target) ----
+    gui_section("area: 3, 10, 33, 70;")
+    """Program screen"""
+    screen_lb = gui_list_box(screen_items, "row-height:1.6em;", select=True)
+    if cv_target in screen_ids:
+        screen_lb.set_selected_index(screen_ids.index(cv_target), False)
+    on change screen_lb.get_selected_index():
+        _i = screen_lb.get_selected_index()
+        if _i is not None and _i < len(screen_ids):
+            cv_target = screen_ids[_i]
+
+    # ---- ship to mirror ----
+    gui_section("area: 35, 10, 65, 70;")
+    """Ship"""
+    ship_lb = gui_list_box(ship_items, "row-height:1.6em;", select=True)
+    if cv_ship_id in ship_ids:
+        ship_lb.set_selected_index(ship_ids.index(cv_ship_id), False)
+    on change ship_lb.get_selected_index():
+        _j = ship_lb.get_selected_index()
+        if _j is not None and _j < len(ship_ids):
+            cv_ship_id = ship_ids[_j]
+
+    # ---- console (selecting highlights the program screen) ----
+    gui_section("area: 67, 10, 97, 70;")
+    """Console"""
+    console_lb = gui_list_box(CV_CONSOLES, "row-height:1.6em;", select=True)
+    if cv_console in CV_CONSOLES:
+        console_lb.set_selected_index(CV_CONSOLES.index(cv_console), False)
+    on change console_lb.get_selected_index():
+        _k = console_lb.get_selected_index()
+        if _k is not None and _k < len(CV_CONSOLES):
+            cv_console = CV_CONSOLES[_k]
+            if cv_target is not None:
+                gui_reroute_client(cv_target, cv_show, {"cv_ship_id": cv_ship_id, "cv_console": cv_console})
+
+    # ---- carousel (highlight) ----
+    gui_section("area: 3, 71, 97, 80;")
+    gui_row()
+    car = gui_checkbox("text: Carousel program screen; state: {cv_carousel}")
+    on gui_message(car):
+        cv_carousel = not cv_carousel
+        if cv_carousel and cv_target is not None:
+            gui_sub_task_schedule(cv_carousel_task)
+    gui_row()
+    """Dwell (s):"""
+    gui_int_slider("$text:int;low:2;high:20;", var="cv_dwell")
+
+    # ---- screen shots (dev only) - always the SERVER screen (client 0) ----
+    if is_dev_build():
+        gui_section("area: 3, 81, 97, 95;")
+        """Screen shots capture the SERVER screen (client 0) - single-PC, Windows, BMP -> shot_<console>.bmp"""
+        gui_row()
+        capsel = gui_button("Capture selected")
+        on gui_message(capsel):
+            task_schedule(cv_shot_one, {"ship_id": cv_ship_id, "settle": cv_settle, "console": cv_console, "restore": True})
+        capall = gui_button("Capture ALL")
+        on gui_message(capall):
+            task_schedule(cv_shot_tour, {"ship_id": cv_ship_id, "settle": cv_settle})
+        gui_row()
+        """Settle (s):"""
+        gui_int_slider("$text:int;low:1;high:5;", var="cv_settle")
+        gui_row()
+        """{cv_status}"""
+
+    await gui()
+
+
+=== cv_carousel_task
+    consoles = CV_CONSOLES
+--- cv_carousel_loop
+    ->END if not cv_carousel
+    ->END if cv_target is None
+    for con in consoles:
+        ->END if not cv_carousel
+        gui_reroute_client(cv_target, cv_show, {"cv_ship_id": cv_ship_id, "cv_console": con})
+        await delay_app(cv_dwell)
+    jump cv_carousel_loop
+
+
+=== cv_shot_tour
+    default ship_id = None
+    default settle  = 2
+    for con in CV_CONSOLES:
+        await task_schedule(cv_shot_one, {"ship_id": ship_id, "settle": settle, "console": con, "restore": False})
+    gui_reroute_client(0, cv_ui)          # back to the controller on the server screen
+    ->END
+
+=== cv_shot_one
+    default ship_id = None
+    default settle  = 2
+    default console = "helm"
+    default restore = False
+    # Select a target so weapons/science/comms data widgets populate.
+    tgt = closest(ship_id, any_role("raider,enemy,monster")) if ship_id is not None else None
+    if tgt is not None:
+        set_weapons_selection(ship_id, tgt)
+        set_science_selection(ship_id, tgt)
+        set_comms_selection(ship_id, tgt)
+    # Put the console on the SERVER screen, let it render, then grab the desktop.
+    gui_reroute_client(0, cv_show, {"cv_ship_id": ship_id, "cv_console": console})
+    await delay_app(settle)
+    gui_screenshot(get_mission_dir_filename(f"shot_{console}.bmp"))
+    cv_status = f"saved shot_{console}.bmp"
+    if restore:
+        gui_reroute_client(0, cv_ui)
+    ->END

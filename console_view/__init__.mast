@@ -1,23 +1,22 @@
 # console_view addon
 #
-# Two consoles that share one primitive ("show console X for ship Y on a screen"):
-#   * Director (shippable)    — highlight a console view on a program / stream
-#                               screen from a separate control window. Streamer
-#                               "director": one window directs what the stream shows.
-#   * Screen Shots (dev only) — drive the SERVER screen (client 0) through the
-#                               consoles and capture the desktop via gui_screenshot.
+# One console ("Console View") with two functions sharing the cv_show primitive:
+#   * Highlight  (shippable) - show a chosen console for a chosen ship on a chosen
+#                              program/stream screen; carousel to auto-cycle.
+#                              Great as a streamer "director": one control window.
+#   * Screen shots (dev only) - capture buttons that drive the SERVER screen
+#                              (client 0 - the only surface gui_screenshot grabs).
 #
-# See README.md. EXPERIMENTAL: engine behaviour (rendering gameplay widgets on a
-# rerouted screen, screenshot capture) needs in-engine verification.
+# See README.md. EXPERIMENTAL: rendering gameplay widgets on a rerouted screen and
+# the screenshot grab itself need in-engine verification.
 
-# Set False (e.g. in settings.yaml-driven code) to hide the Director console.
-default shared DIRECTOR_enabled = True
+# Set False to hide the Console View console.
+default shared CONSOLE_VIEW_enabled = True
 
-# Consoles the director/screenshots can show (shared so both files + their tasks see it).
+# Consoles the panel can show/capture (shared so the panel + its tasks see it).
 default shared CV_CONSOLES = ["helm", "weapons", "science", "engineering", "comms", "mainscreen"]
 
-import director.mast
-import screenshots.mast
+import panel.mast
 
 # --- shared primitive --------------------------------------------------------
 # Show <cv_console> for <cv_ship_id> on whichever client runs this label.
