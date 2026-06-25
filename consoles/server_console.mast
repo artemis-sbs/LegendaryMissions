@@ -304,9 +304,15 @@ Main:
         else:
             gui_show(resume_controls)
     ######################
-    view = get_variable("MAIN_SCREEN_VIEW", "3d_view")
-    facing = get_variable("MAIN_SCREEN_FACING", "front")
-    mode = get_variable("MAIN_SCREEN_MODE", "chase")
+    # view = get_variable("MAIN_SCREEN_VIEW", "3d_view")
+    # facing = get_variable("MAIN_SCREEN_FACING", "front")
+    # mode = get_variable("MAIN_SCREEN_MODE", "chase")
+
+    # Rework of mainscreen stuff:
+
+    view = get_inventory_value(ship_id, "MAIN_SCREEN_VIEW", "3d_view")
+    facing = get_inventory_value(ship_id, "MAIN_SCREEN_FACING", "front")
+    mode = get_inventory_value(ship_id, "MAIN_SCREEN_MODE", "chase")
     ###
     ### TODO: This is a fix for 
     ### Clients sending THEIR mode, not 
