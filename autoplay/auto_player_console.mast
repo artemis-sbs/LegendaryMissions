@@ -200,12 +200,26 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
             speed = 5
 
 
-        ship.data_set.set("steerToDirDX", diff.x,0) 
-        ship.data_set.set("steerToDirDY", diff.y,0) 
+        ship.data_set.set("steerToDirDX", diff.x,0)
+        ship.data_set.set("steerToDirDY", diff.y,0)
         ship.data_set.set("steerToDirDZ", diff.z,0)
         ship.data_set.set("steeringToDirFlag", 1,0)
         if last != t:
-            comms_broadcast(client_id, "{ship.name} > {t.name} at {speed:.1f} Dock {last_go_dock} {ln:.0f}") 
+            comms_broadcast(client_id, "{ship.name} > {t.name} at {speed:.1f} Dock {last_go_dock} {ln:.0f}")
+    else:
+        # Anti-degeneracy: nothing to chase (no raiders/upgrades/wrecks and not
+        # docking). Wander toward a roaming point so attract never looks frozen on
+        # a lobby screen; pick a new point once we get near the current one.
+        wander = get_inventory_value(_ship_id, "wander_target", None)
+        if wander is None or (wander - ship.pos).length() < 2000:
+            wander = Vec3.rand_in_sphere(8000, 25000, False, True)
+            set_inventory_value(_ship_id, "wander_target", wander)
+        diff = wander - ship.pos
+        ship.data_set.set("playerThrottle", 1.0, 0)
+        ship.data_set.set("steerToDirDX", diff.x, 0)
+        ship.data_set.set("steerToDirDY", diff.y, 0)
+        ship.data_set.set("steerToDirDZ", diff.z, 0)
+        ship.data_set.set("steeringToDirFlag", 1, 0)
 
     await delay_sim(1)
     jump automated_player_helm_ai
