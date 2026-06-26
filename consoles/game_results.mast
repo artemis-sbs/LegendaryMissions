@@ -190,3 +190,10 @@ shared game_stats = ~~{
     save_yaml_data(results_file, results)
     log(f"game results saved ({len(results)} games) -> {results_file}", "game_results")
     ->END
+
+//signal/show_game_results if SETTINGS.get("AUTO_START")
+    # Wall-clock delay (delay_app, not delay_sim): the sim is paused at game end,
+    # so sim time is frozen and delay_sim would never fire.
+    await delay_app(SETTINGS.get("AUTO_START_DELAY", 10))
+    mission = get_mission_name()
+    sbs.run_next_mission(mission)

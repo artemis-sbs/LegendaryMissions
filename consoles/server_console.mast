@@ -43,12 +43,13 @@ gui_reroute_clients("client_main")
     shared GAME_ENDED  = SETTINGS.get("GAME_ENDED")
     shared GAME_TIME_LIMIT  = str(SETTINGS.get("GAME_TIME_LIMIT", ""))
     shared WAR_TIME_DELAY  = str(SETTINGS.get("WAR_TIME_DELAY", ""))
-    shared DIFFICULTY=   SETTINGS.get("DIFFICULTY")
-    shared PLAYER_CREATE_DEFAULT  = SETTINGS.get("PLAYER_CREATE_DEFAULT")
-    shared PLAYER_COUNT  = SETTINGS.get("PLAYER_COUNT")
-    shared PLAYER_LIST  =  SETTINGS.get("PLAYER_LIST")
+    # Default in case story.mast set these?
+    default shared DIFFICULTY=   SETTINGS.get("DIFFICULTY")
+    default shared PLAYER_CREATE_DEFAULT  = SETTINGS.get("PLAYER_CREATE_DEFAULT")
+    default shared PLAYER_COUNT  = SETTINGS.get("PLAYER_COUNT")
+    default shared PLAYER_LIST  =  SETTINGS.get("PLAYER_LIST")
 
-    shared AUTO_START = SETTINGS.get("AUTO_START", False)
+    default shared AUTO_START = SETTINGS.get("AUTO_START", False)
 
     shared OPERATOR_MODE = SETTINGS.get("OPERATOR_MODE", {"enable": False})
     shared OPERATOR_MODE_enabled = OPERATOR_MODE.get("enable", False)

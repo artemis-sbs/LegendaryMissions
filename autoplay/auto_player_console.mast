@@ -3,12 +3,7 @@
 #
 settings_add_defaults({"AUTO_PLAY": {"enable": False}})
 
-//signal/show_game_results if SETTINGS["AUTO_PLAY"]["enable"]
-    await delay_app(2)
-    mission = get_mission_name()
-    sbs.run_next_mission(mission)
-
-//signal/game_started if SETTINGS["AUTO_PLAY"]["enable"]
+//signal/game_started if SETTINGS.get("AUTO_PLAY", {}).get("enable")
     await delay_sim(2)
     jump automated_player_ai
 

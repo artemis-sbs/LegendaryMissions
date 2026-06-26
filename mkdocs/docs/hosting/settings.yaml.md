@@ -10,6 +10,13 @@ A file that can be used to set the default operating settings for Legendary Miss
 
 ## AUTO_START
 This will skip startup selection and start the mission as soon as it is selected.
+When set, the game-results screen also auto-restarts the mission after a delay
+(see AUTO_START_DELAY), so the mission loops unattended.
+
+## AUTO_START_DELAY
+Seconds to wait on the game-results screen before AUTO_START restarts the mission.
+Defaults to 10. Measured in real (wall-clock) time, because the simulation is
+paused at game end.
 
 ## OPERATOR_MODE
 
