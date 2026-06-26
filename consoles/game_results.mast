@@ -159,6 +159,10 @@ shared game_stats = ~~{
     ->END if RESULTS_SAVED
     RESULTS_SAVED = True
 
+    # Keep only the most recent games (~0.4 KiB each) so the file stays small and
+    # quick to open. 200 ~= 76 KiB; raise/lower to taste.
+    default shared GAME_RESULTS_MAX = 200
+
     results_file = get_artemis_data_dir_filename("game_results.yaml")
     results = load_yaml_data(results_file)
     if results is None or not isinstance(results, list):
@@ -174,6 +178,8 @@ shared game_stats = ~~{
         "stats": dict(game_stats),
     }~~
     results.append(record)
+    if len(results) > GAME_RESULTS_MAX:
+        results = results[-GAME_RESULTS_MAX:]
     save_yaml_data(results_file, results)
     log(f"game results saved ({len(results)} games) -> {results_file}", "game_results")
     ->END
