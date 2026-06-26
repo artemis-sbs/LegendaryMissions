@@ -39,9 +39,15 @@ GameCode:
     monster_value = terrain_to_value(MONSTER_SELECT)
     upgrade_value = terrain_to_value(UPGRADE_SELECT)
 
+    # Build the map in phases, each re-seeded from seed_value + a fixed offset
+    # (only when a seed is set). Giving each phase its own RNG stream keeps the
+    # map as consistent as possible when other options change: changing monsters,
+    # lethal terrain, friendly ships, or player count no longer shifts the
+    # station layout or the asteroid/nebula field, because those phases draw from
+    # independent streams. (Difficulty still changes the station-slot count and
+    # fleet size by design.)
     if seed_value != 0:
-        random.seed(seed_value)
-        print(f"Seed Value: {seed_value}")
+        random.seed(seed_value)        # phase 0: station layout
 
     #------------------------------------------------------------------------------------------------------------
 
@@ -89,6 +95,10 @@ GameCode:
     await task_schedule(default_player_friendly_eyes)
     await task_schedule(docking_standard_player_station)
 
+    # phase 1: the asteroid / nebula field (the visible "map"), re-seeded so it
+    # is the same regardless of friendly / player / monster / lethal choices.
+    if seed_value != 0:
+        random.seed(seed_value + 1)
     # Grab a set of points that are not over lapping
     # This is the 100k x 100k in 100x100 grid of 1000x1000 squares
     spawn_points = scatter_simple_noise(0, 0,0, 0, 120_000, 750, 120_000, 120, 1,120, centered=True)
@@ -101,12 +111,19 @@ GameCode:
     # Nebula and asteroids can be over other points
     terrain_spawn_nebula_clusters(terrain_value, points=t_spawn_points)
     terrain_asteroid_clusters(terrain_value, points=t_spawn_points)
+    # phase 2: pickups / upgrades
+    if seed_value != 0:
+        random.seed(seed_value + 2)
     # These should remove points / sample
     terrain_spawn_pickups(upgrade_value, points=t_spawn_points)
-    # Monsters
+    # phase 3: monsters
+    if seed_value != 0:
+        random.seed(seed_value + 3)
     m_points = terrain_spawn_monsters(monster_value, points=t_spawn_points)
     t_spawn_points = terrain_remove_points_near(t_spawn_points, m_points, 7_000)
-    # Black holes
+    # phase 4: black holes (lethal terrain)
+    if seed_value != 0:
+        random.seed(seed_value + 4)
     b_points = terrain_spawn_black_holes(lethal_value, points=t_spawn_points)
     # Remove monster and blck hole from main pool
     spawn_points = terrain_remove_points_near(spawn_points, m_points, 7_000)
@@ -118,6 +135,9 @@ GameCode:
     # Generate Siege Fleets - These fleets are weighted towards Kraliens (based on DIFFICULTY), from 85% Kralien at DIFFICULTY 1 
     # to 22% Kralien at DIFFICULTY 10. The fleet lists can be found in 'map_common.py'. Skaraans are generated separately, as these 
     # 'independent contractors' tend to operate better on their own. The idea is to hopefully match the 'feel' of Artemis 2.x. 
+    # phase 5: enemy fleets
+    if seed_value != 0:
+        random.seed(seed_value + 5)
     enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
 
     diff_weight = [ [85, 5, 5, 5], [82, 6, 6, 6], [79, 7, 7, 7], [76, 8, 8, 8], [70, 10, 10, 10], [64, 12, 12, 12], [58, 14, 14, 14], [46, 18, 18, 18], [34, 22, 22, 22], [22, 26, 26, 26], [10, 30, 30, 30]]
