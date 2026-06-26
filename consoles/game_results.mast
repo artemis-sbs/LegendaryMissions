@@ -163,7 +163,7 @@ shared game_stats = ~~{
     # quick to open. 200 ~= 76 KiB; raise/lower to taste.
     default shared GAME_RESULTS_MAX = 200
 
-    results_file = get_artemis_data_dir_filename("game_results.yaml")
+    results_file = get_missions_dir() + "/game_results.yaml"
     results = load_yaml_data(results_file)
     if results is None or not isinstance(results, list):
         results = []
@@ -172,9 +172,12 @@ shared game_stats = ~~{
     # Timestamp comes from a python helper (results_helpers.py): datetime's strftime
     # can't run inside MAST's restricted-builtins eval, but a module function can.
     stamp = game_results_timestamp()
+    default WORLD_SELECT = None
+    map_name = game_results_map(WORLD_SELECT)
     record = ~~{
         "time": stamp,
         "mission": get_mission_name(),
+        "map": map_name,
         "outcome": START_TEXT,
         "difficulty": DIFFICULTY,
         "game_minutes": int(end_ticks / 30 / 60),
