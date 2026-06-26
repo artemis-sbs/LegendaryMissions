@@ -6,9 +6,11 @@ and regenerates the neighbour. So the whole universe is "stored" in its seed
 plus the current coordinates (persistence of player-made changes comes later).
 """
 import math
+import os
 
 from sbs_utils import scatter
 from sbs_utils.vec import Vec3
+from sbs_utils.fs import get_mission_dir, save_yaml_data, load_yaml_data
 from sbs_utils.procedural.terrain import terrain_spawn_field_keyed
 from sbs_utils.procedural.space_objects import delete_objects_box
 from sbs_utils.procedural.roles import role
@@ -57,3 +59,46 @@ def universe_reposition_players():
     for idx, p in enumerate(players):
         ang = (idx / n) * 2.0 * math.pi
         p.pos = Vec3(2000.0 * math.cos(ang), 0.0, 2000.0 * math.sin(ang))
+
+
+# --- Persistence (procedural + delta) ---------------------------------------
+# The base universe regenerates from the seed; only player-made changes are
+# stored. One shared save file under data/missions/common_data.
+def universe_save_path():
+    """Path to the single universe save file, creating common_data if needed."""
+    common = os.path.join(os.path.dirname(get_mission_dir()), "common_data")
+    os.makedirs(common, exist_ok=True)
+    return os.path.join(common, "universe_save.yaml")
+
+
+def universe_save(seed, i, j, sectors):
+    """Persist the universe seed, current sector, and the sparse delta map."""
+    save_yaml_data(universe_save_path(),
+                   {"universe_seed": seed, "current_sector": [i, j], "sectors": sectors})
+
+
+def universe_load():
+    """Load the saved universe, or None if there is no valid save."""
+    data = load_yaml_data(universe_save_path())
+    return data if isinstance(data, dict) else None
+
+
+def universe_sector_flag(sectors, i, j, flag):
+    """True if a per-sector delta flag (e.g. station_destroyed) is set."""
+    if not isinstance(sectors, dict):
+        return False
+    s = sectors.get(f"{i},{j}")
+    return bool(s.get(flag)) if isinstance(s, dict) else False
+
+
+def universe_set_sector_flag(sectors, i, j, flag, value=True):
+    """Set a per-sector delta flag; returns the (possibly new) sectors dict."""
+    if not isinstance(sectors, dict):
+        sectors = {}
+    k = f"{i},{j}"
+    s = sectors.get(k)
+    if not isinstance(s, dict):
+        s = {}
+    s[flag] = value
+    sectors[k] = s
+    return sectors
