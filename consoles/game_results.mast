@@ -47,6 +47,7 @@ shared game_stats = ~~{
     START_TEXT = START_TEXT.strip()
     if START_TEXT == "":
         START_TEXT = "Game Over"
+    task_schedule(save_game_results_yaml)
     gui_task_jump(show_game_results_gui)
 
 
@@ -143,3 +144,36 @@ shared game_stats = ~~{
             sbs.run_next_mission(start_mission)
 
     # Kind of need to restart, which is good for now since cleanup is not guaranteed
+
+
+=== save_game_results_yaml
+    #
+    # Append this game's outcome + stats to a YAML file (one record per completed
+    # game) in the Artemis data dir. Useful for soak / overnight runs - the record
+    # count is the number of games played - and for reviewing balance over time.
+    # Runs in its own task and is best-effort, so a write error never blocks the
+    # results screen. Guarded by a shared flag so a double-emitted signal saves once
+    # (the flag resets naturally when run_next_mission reloads shared state).
+    #
+    default shared RESULTS_SAVED = False
+    ->END if RESULTS_SAVED
+    RESULTS_SAVED = True
+
+    results_file = get_artemis_data_dir_filename("game_results.yaml")
+    results = load_yaml_data(results_file)
+    if results is None or not isinstance(results, list):
+        results = []
+
+    end_ticks = sim.time_tick_counter - game_stats.get("start_time", sim.time_tick_counter)
+    record = ~~{
+        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "mission": get_mission_name(),
+        "outcome": START_TEXT,
+        "difficulty": DIFFICULTY,
+        "game_minutes": int(end_ticks / 30 / 60),
+        "stats": dict(game_stats),
+    }~~
+    results.append(record)
+    save_yaml_data(results_file, results)
+    log(f"game results saved ({len(results)} games) -> {results_file}", "game_results")
+    ->END
