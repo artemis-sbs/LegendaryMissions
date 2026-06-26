@@ -33,6 +33,7 @@ gui_reroute_clients("client_main")
 
     default shared SETTINGS = settings_get_defaults()
     shared WORLD_SELECT  = SETTINGS.get("WORLD_SELECT")
+    shared MAP_SIZE  = SETTINGS.get("MAP_SIZE", "Medium")
     shared TERRAIN_SELECT  = SETTINGS.get("TERRAIN_SELECT")
     shared LETHAL_SELECT  = SETTINGS.get("LETHAL_SELECT")
     shared FRIENDLY_SELECT  = SETTINGS.get("FRIENDLY_SELECT")

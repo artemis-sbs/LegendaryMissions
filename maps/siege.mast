@@ -8,6 +8,7 @@ Properties:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
     Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
   Map:
+    Map Size: 'gui_drop_down("$text: {MAP_SIZE};list: Small, Medium, Large", var="MAP_SIZE")'
     Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'
     Lethal Terrain: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, max", var="LETHAL_SELECT")'
     Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, max", var="FRIENDLY_SELECT")'
@@ -23,6 +24,7 @@ Properties:
 GameCode:
   - PLAYER_COUNT
   - DIFFICULTY
+  - MAP_SIZE
   - TERRAIN_SELECT
   - LETHAL_SELECT
   - FRIENDLY_SELECT
@@ -38,6 +40,21 @@ GameCode:
     friendly_value = terrain_to_value(FRIENDLY_SELECT)
     monster_value = terrain_to_value(MONSTER_SELECT)
     upgrade_value = terrain_to_value(UPGRADE_SELECT)
+
+    # Map size -> playable half-extent R, and a concrete key so the keyed field
+    # is reproducible (0 = a fresh random map). inner = terrain/content area,
+    # outer = fleet spawn area; the station slot box scales with the map too.
+    default MAP_SIZE = "Medium"
+    R = 50_000
+    if MAP_SIZE == "Small":
+        R = 35_000
+    elif MAP_SIZE == "Large":
+        R = 70_000
+    map_key = seed_value if seed_value != 0 else random.randrange(1, 2_000_000_000)
+    inner = R * 0.9
+    outer = R * 1.3
+    st_box = R * 1.2
+    st_box_small = R * 0.4
 
     # Build the map in phases, each re-seeded from seed_value + a fixed offset
     # (only when a seed is set). Giving each phase its own RNG stream keeps the
@@ -57,13 +74,13 @@ GameCode:
     # the 0.8 drift mean that the startion can drift from the center point by up to 80% of 20,000 = 16,000
     if DIFFICULTY > 7:
         # 4 slots
-        spawn_points = scatter_simple_noise(0, 0, 0, 0, 20_000, 750, 20_000, 2, 1, 2, centered=True, drift=0.7)
+        spawn_points = scatter_simple_noise(0, 0, 0, 0, st_box_small, 750, st_box_small, 2, 1, 2, centered=True, drift=0.7)
     elif DIFFICULTY > 3:
         # nine slots
-        spawn_points = scatter_simple_noise(0, 0, 0, 0, 60_000, 750, 60_000, 3, 1, 3, centered=True, drift=0.7)
+        spawn_points = scatter_simple_noise(0, 0, 0, 0, st_box, 750, st_box, 3, 1, 3, centered=True, drift=0.7)
     else:
         # 16  slots
-        spawn_points = scatter_simple_noise(0, 0, 0, 0, 60_000, 750, 60_000, 4, 1, 4, centered=True, drift=0.7)
+        spawn_points = scatter_simple_noise(0, 0, 0, 0, st_box, 750, st_box, 4, 1, 4, centered=True, drift=0.7)
 
     # Add stations
     # This return the object create
@@ -95,22 +112,20 @@ GameCode:
     await task_schedule(default_player_friendly_eyes)
     await task_schedule(docking_standard_player_station)
 
-    # phase 1: the asteroid / nebula field (the visible "map"), re-seeded so it
-    # is the same regardless of friendly / player / monster / lethal choices.
+    # phase 1: position-keyed asteroid / nebula field. A pure function of
+    # (map_key, position), so a small map is the centered subset of a large one
+    # and is unaffected by friendly / player / monster / lethal choices.
+    neb_chance = terrain_value * 0.0010
+    ast_chance = terrain_value * 0.0008
+    terrain_spawn_field_keyed(map_key, 1000, -inner, -inner, inner, inner, terrain_value, neb_chance, ast_chance, exclude=stations, exclude_radius=15_000)
+
+    # Keyed candidate pool for pickups / monsters / black holes (clear of
+    # stations). They sample the pool, so they need not match across sizes.
     if seed_value != 0:
         random.seed(seed_value + 1)
-    # Grab a set of points that are not over lapping
-    # This is the 100k x 100k in 100x100 grid of 1000x1000 squares
-    spawn_points = scatter_simple_noise(0, 0,0, 0, 120_000, 750, 120_000, 120, 1,120, centered=True)
-    
-    # Remove points around stations so no points near 10,000
-    # of a station
+    spawn_points = scatter_grid_keyed(map_key, 2000, -outer, -outer, outer, outer, -375, 375)
     spawn_points = terrain_remove_points_near(spawn_points, stations, 15_000)
-    # Shrink Terrain area a bit
-    t_spawn_points = list(terrain_random_point_box(spawn_points, -45_000, -500, 45_000, 45_000, 500, -45_000))
-    # Nebula and asteroids can be over other points
-    terrain_spawn_nebula_clusters(terrain_value, points=t_spawn_points)
-    terrain_asteroid_clusters(terrain_value, points=t_spawn_points)
+    t_spawn_points = list(terrain_random_point_box(spawn_points, -inner, -500, inner, inner, 500, -inner))
     # phase 2: pickups / upgrades
     if seed_value != 0:
         random.seed(seed_value + 2)
@@ -148,11 +163,11 @@ GameCode:
     # Now try to make it so enemies don't spawn on stations
     spawn_points = terrain_remove_points_near(spawn_points, stations, 20_000)
 
-    top = 65_000
-    left = -65_000
-    right = 65_000
-    bottom = -65_000
-    size = 32_500
+    top = outer
+    left = -outer
+    right = outer
+    bottom = -outer
+    size = outer * 0.5
 
     # Create 4 spawn emitter blocks
     enemy_emitters = []
@@ -162,7 +177,7 @@ GameCode:
     # 1
     enemy_emitters.append( terrain_random_point_box(spawn_points, left, -500, top, left+size , 500, top-size) )
     # 3
-    enemy_emitters.append( terrain_random_point_box(spawn_points, right-30_000, -500, top, right , 500, top-size) )
+    enemy_emitters.append( terrain_random_point_box(spawn_points, right-size, -500, top, right , 500, top-size) )
     # 7
     enemy_emitters.append( terrain_random_point_box(spawn_points, left, -500, bottom+size, left+size , 500, bottom) )
     # 9
