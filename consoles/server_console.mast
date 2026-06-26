@@ -161,16 +161,48 @@ gui_reroute_clients("client_main")
     # Demo only has DIFFICULTY
     #
     #
-    gui_property_list_box(name="Options")
-    p = map_get_properties(WORLD_SELECT)
-    
-    if sbs.is_demo():
-        p = """
+    with gui_sub_section():
+        # Game code controls, stacked above the options in the same column: pick
+        # a saved preset to load it instantly; the Save / Copy / Load icon
+        # buttons store the current setup as a per-map preset or move the code
+        # to/from the clipboard to share. Presets persist (separated by map) in
+        # game_code_presets.yaml. See procedural/maps.py game_code_*.
+        # NOTE: icon_index values are placeholders - change them to the
+        # save/copy/load glyphs you want from the icon atlas.
+        default GAME_CODE_PRESET = ""
+        presets = game_code_presets_for_map(WORLD_SELECT.path)
+        preset_labels = [game_code_label(code) for code in presets]
+        gui_row("row-height: 30px;")
+        preset_dd = gui_drop_down(f"text: Presets ({len(presets)}); list: {','.join(preset_labels)}", var="GAME_CODE_PRESET")
+        on gui_message(preset_dd):
+            for code in presets:
+                if game_code_label(code) == preset_dd.value:
+                    game_code_decode(code)
+                    jump game_code_reload
+
+        save_ic = gui_icon("icon_index: 94; color: white;", "click_tag: gc_save;")
+        on gui_message(save_ic):
+            game_code_presets_save_code(game_code_encode(WORLD_SELECT))
+            jump game_code_reload
+        # copy_ic = gui_icon("icon_index: 134; color: white;", "click_tag: gc_copy;")
+        # on gui_message(copy_ic):
+        #     gui_clipboard_put(game_code_encode(WORLD_SELECT))
+        # load_ic = gui_icon("icon_index: 95; color: white;", "click_tag: gc_load;")
+        # on gui_message(load_ic):
+        #     loaded = game_code_decode(gui_clipboard_get())
+        #     if loaded is not None and loaded in mission_list:
+        #         mission_index = mission_list.index(loaded)
+        #         jump show_server_menu
+
+        gui_row()
+        gui_property_list_box(name="Options")
+        p = map_get_properties(WORLD_SELECT)
+        if sbs.is_demo():
+            p = """
 Main:
     Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0", var="DIFFICULTY")'
 """
-
-    gui_properties_set(p)
+        gui_properties_set(p)
 
 
     
@@ -181,6 +213,17 @@ Main:
         + "Start Mission":
             -> start
 
+
+#
+# Rebuild the server menu one frame after applying/saving a game code. A
+# same-frame rebuild (jump straight from the dropdown's on-message) can race
+# the event and leave the property panel showing the old values; waiting a
+# frame lets it repaint with the loaded values. delay_app (wall clock) is used
+# because the start screen's sim may be paused, which would stall delay_sim.
+#
+===== game_code_reload =====
+    await delay_app(1)
+    jump show_server_menu
 
 
 ===== start ======

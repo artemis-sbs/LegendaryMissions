@@ -19,6 +19,7 @@ Properties:
     Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
     Minutes to War: 'gui_input("desc: Minutes;", var="WAR_TIME_DELAY")'
     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
+    Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
 ```
 
 
@@ -27,6 +28,10 @@ Properties:
     friendly_value = terrain_to_value(FRIENDLY_SELECT)
     monster_value = terrain_to_value(MONSTER_SELECT)
     upgrade_value = terrain_to_value(UPGRADE_SELECT)
+
+    if seed_value != 0:
+        random.seed(seed_value)
+        print(f"Seed Value: {seed_value}")
 
     num_upgrade = 0
     if upgrade_value != "none":

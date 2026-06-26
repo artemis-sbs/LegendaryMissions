@@ -11,3 +11,5 @@
 /.addons/
 mast.compile.log
 mast.runtime.log
+# Runtime-generated saved game codes (per-host presets, not source)
+game_code_presets.yaml
