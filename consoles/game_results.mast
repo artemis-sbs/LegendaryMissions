@@ -169,8 +169,11 @@ shared game_stats = ~~{
         results = []
 
     end_ticks = sim.time_tick_counter - game_stats.get("start_time", sim.time_tick_counter)
+    # Timestamp comes from a python helper (results_helpers.py): datetime's strftime
+    # can't run inside MAST's restricted-builtins eval, but a module function can.
+    stamp = game_results_timestamp()
     record = ~~{
-        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "time": stamp,
         "mission": get_mission_name(),
         "outcome": START_TEXT,
         "difficulty": DIFFICULTY,
