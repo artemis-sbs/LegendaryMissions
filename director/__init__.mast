@@ -10,8 +10,15 @@
 # See README.md. EXPERIMENTAL: rendering gameplay widgets on a rerouted screen and
 # the screenshot grab itself need in-engine verification.
 
-# Set False to hide the Director console.
-default shared DIRECTOR_enabled = True
+# Enable/disable + optional pin via SETTINGS, like OPERATOR_MODE. The defaults are
+# registered here so the addon works without editing settings.yaml; a DIRECTOR block
+# in settings.yaml overrides them. Set pin to "" (empty) to skip the pin prompt.
+#   DIRECTOR:
+#       enable: true
+#       pin: "000000"
+settings_add_defaults({"DIRECTOR": {"enable": True, "pin": "000000"}})
+shared DIRECTOR = settings_get_defaults().get("DIRECTOR", {"enable": True, "pin": "000000"})
+shared DIRECTOR_enabled = DIRECTOR.get("enable", True)
 
 # Consoles the panel can show/capture (shared so the panel + its tasks see it).
 default shared CV_CONSOLES = ["helm", "weapons", "science", "engineering", "comms", "mainscreen", "cinematic"]

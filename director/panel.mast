@@ -29,7 +29,20 @@ default shared cv_view_ships    = None   # list of ship ids
 
 @console/director !0 ^94 "Director" if DIRECTOR_enabled
     " Direct which console (per ship) shows on one or more program/stream screens: multi-select + Apply for a multiview wall, carousel to rotate, screenshots (dev).
-    jump cv_ui
+    jump director_pin_gate
+
+=== director_pin_gate
+    # Optional pin, like OPERATOR_MODE. No pin configured (empty/None) -> straight in.
+    jump cv_ui if not DIRECTOR.get("pin")
+    gui_section(style="area: 20, 40, 80, 40+40px;")
+    pin = ""
+    """Director pin"""
+    _in = gui_input("""desc: Enter pin;password:True;""", var="pin")
+    on gui_message(_in):
+        jump cv_ui if pin == DIRECTOR.get("pin")
+    await gui():
+        + "cancel":
+            jump select_console
 
 === cv_ui
     my_id = client_id
