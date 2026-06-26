@@ -178,7 +178,8 @@ shared game_stats = ~~{
         "outcome": START_TEXT,
         "difficulty": DIFFICULTY,
         "game_minutes": int(end_ticks / 30 / 60),
-        "stats": dict(game_stats),
+        # drop start_time (an internal sim-tick marker, not a stat; game_minutes covers duration)
+        "stats": {k: v for k, v in game_stats.items() if k != "start_time"},
     }~~
     results.append(record)
     if len(results) > GAME_RESULTS_MAX:
