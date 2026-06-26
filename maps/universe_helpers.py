@@ -102,3 +102,69 @@ def universe_set_sector_flag(sectors, i, j, flag, value=True):
     s[flag] = value
     sectors[k] = s
     return sectors
+
+
+# --- Sector kind + galaxy map ------------------------------------------------
+# Named landmarks at fixed coords; these override the procedural kind and are
+# shown on the galaxy map even before you visit them. Add more here freely.
+UNIVERSE_POIS = {
+    (0, 0): ("Home Base", "home"),
+    (5, 3): ("Trade Nexus", "station"),
+    (-4, 6): ("The Maelstrom", "anomaly"),
+    (8, -5): ("Raider Den", "enemy"),
+    (-7, -7): ("Derelict Drift", "nebula"),
+}
+
+_KIND_ABBR = {"home": "Home", "station": "Base", "enemy": "Foe",
+              "nebula": "Neb", "anomaly": "!!", "empty": "."}
+
+
+def universe_sector_name(i, j):
+    """The named-POI label for a sector, or '' if it's procedural."""
+    poi = UNIVERSE_POIS.get((int(i), int(j)))
+    return poi[0] if poi else ""
+
+
+def universe_sector_kind(seed, i, j, danger="Quiet"):
+    """The deterministic kind of any sector (pure - does not spawn anything).
+
+    Named POIs win; (0,0) is always home; otherwise a keyed roll against the
+    Danger thresholds. Both the generator and the galaxy map call this, so what
+    you see on the map is exactly what spawns when you arrive.
+    """
+    i = int(i)
+    j = int(j)
+    poi = UNIVERSE_POIS.get((i, j))
+    if poi:
+        return poi[1]
+    if i == 0 and j == 0:
+        return "home"
+    roll = scatter.cell_roll(seed, 1, i, j, 7)
+    t_station, t_enemy, t_nebula, t_anomaly = 0.15, 0.15, 0.12, 0.08
+    if danger == "Balanced":
+        t_station, t_enemy, t_nebula, t_anomaly = 0.20, 0.25, 0.15, 0.10
+    elif danger == "Dangerous":
+        t_station, t_enemy, t_nebula, t_anomaly = 0.15, 0.40, 0.15, 0.10
+    if roll < t_station:
+        return "station"
+    if roll < t_station + t_enemy:
+        return "enemy"
+    if roll < t_station + t_enemy + t_nebula:
+        return "nebula"
+    if roll < t_station + t_enemy + t_nebula + t_anomaly:
+        return "anomaly"
+    return "empty"
+
+
+def universe_map_cell_text(seed, i, j, danger, sectors, reveal):
+    """Short label for a galaxy-map cell.
+
+    Named POIs always show; otherwise unvisited sectors read '?' under fog of
+    war ("Full Chart" reveals everything, since it's all deterministic).
+    """
+    name = universe_sector_name(i, j)
+    if name:
+        return name
+    if reveal != "Full Chart" and not universe_sector_flag(sectors, i, j, "visited"):
+        return "?"
+    return _KIND_ABBR.get(universe_sector_kind(seed, i, j, danger), ".")

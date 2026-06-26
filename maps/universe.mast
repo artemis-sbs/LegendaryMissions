@@ -19,6 +19,7 @@ default shared ENCOUNTERS = "On Arrival"
 default shared universe_kind = "home"
 default shared START_MODE = "Continue"
 default shared universe_sectors = {}
+default shared MAP_REVEAL = "Fog of War"
 
 
 @map/universe "Open Universe"
@@ -35,6 +36,7 @@ Properties:
     Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max", var="TERRAIN_SELECT")'
     Danger: 'gui_drop_down("$text: {DANGER};list: Quiet, Balanced, Dangerous", var="DANGER")'
     Encounters: 'gui_drop_down("$text: {ENCOUNTERS};list: On Arrival, Dormant", var="ENCOUNTERS")'
+    Galaxy Map: 'gui_drop_down("$text: {MAP_REVEAL};list: Fog of War, Full Chart", var="MAP_REVEAL")'
     Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
 GameCode:
   - PLAYER_COUNT
@@ -70,35 +72,32 @@ GameCode:
 # Navigation console: jump between sectors (only shown in the universe map).
 #
 @console/jump !0 ^9 "Navigation" if UNIVERSE_ACTIVE
-    " Jump drive - travel between sectors of the universe.
+    " Galaxy map and jump drive (only shown in the universe map).
     default JUMP_I = "0"
     default JUMP_J = "0"
-    gui_section(style="area: 10, 8, 90, 92; background:#1578;")
-    """justify:center; font:gui-5; $text:Sector ({universe_i}, {universe_j}) - {universe_kind}"""
+--- repaint
+    prev_i = universe_i
+    prev_j = universe_j
+    sec_name = universe_sector_name(universe_i, universe_j)
+    gui_section(style="area: 5, 5, 95, 95; background:#1578;")
+    """justify:center; font:gui-5; $text:Sector ({universe_i}, {universe_j})  {sec_name}  [{universe_kind}]"""
 
-    gui_row("row-height: 3em;")
-    gui_blank()
-    nbtn = gui_button("$text:North;justify:center;")
-    on gui_message(nbtn):
-        task_schedule(universe_jump_to, {"ti": universe_i, "tj": universe_j + 1})
-    gui_blank()
+    # Galaxy map: a 7x7 grid centered on the current sector (north = +j on top).
+    # Click any cell to jump there. Adjacent cells double as N/S/E/W.
+    for dj in [3, 2, 1, 0, -1, -2, -3]:
+        gui_row("row-height: 2em;")
+        for di in [-3, -2, -1, 0, 1, 2, 3]:
+            ci = universe_i + di
+            cj = universe_j + dj
+            txt = universe_map_cell_text(universe_seed, ci, cj, DANGER, universe_sectors, MAP_REVEAL)
+            cell_bg = "#0006"
+            if di == 0 and dj == 0:
+                cell_bg = "#0a6"
+            cell = gui_button(f"$text:{txt};font:gui-1;justify:center;", style=f"background:{cell_bg};", data={"ti": ci, "tj": cj})
+            on gui_message(cell):
+                task_schedule(universe_jump_to, {"ti": ti, "tj": tj})
 
-    gui_row("row-height: 3em;")
-    wbtn = gui_button("$text:West;justify:center;")
-    on gui_message(wbtn):
-        task_schedule(universe_jump_to, {"ti": universe_i - 1, "tj": universe_j})
-    ebtn = gui_button("$text:East;justify:center;")
-    on gui_message(ebtn):
-        task_schedule(universe_jump_to, {"ti": universe_i + 1, "tj": universe_j})
-
-    gui_row("row-height: 3em;")
-    gui_blank()
-    sbtn = gui_button("$text:South;justify:center;")
-    on gui_message(sbtn):
-        task_schedule(universe_jump_to, {"ti": universe_i, "tj": universe_j - 1})
-    gui_blank()
-
-    gui_row("row-height: 3em;")
+    gui_row("row-height: 2.5em;")
     """justify:right; $text:Jump to (i, j):"""
     ji = gui_input("desc: i;", var="JUMP_I")
     jj = gui_input("desc: j;", var="JUMP_J")
@@ -106,7 +105,16 @@ GameCode:
     on gui_message(gobtn):
         task_schedule(universe_jump_to, {"ti": safe_int(JUMP_I), "tj": safe_int(JUMP_J)})
 
+    gui_sub_task_schedule("nav_watch")
     await gui()
+
+--- nav_watch
+    # Repaint the map when a jump changes our sector.
+    await delay_sim(1)
+    ->END if not UNIVERSE_ACTIVE
+    if prev_i != universe_i or prev_j != universe_j:
+        gui_task_jump("repaint")
+    jump nav_watch
 
 
 #
@@ -118,36 +126,12 @@ GameCode:
 #
 === universe_enter_sector
     key = universe_sector_key(universe_seed, universe_i, universe_j)
-
-    kind = "home"
-    if universe_i != 0 or universe_j != 0:
-        roll = scatter_cell_roll(universe_seed, 1, universe_i, universe_j, 7)
-        # thresholds by Danger (remainder is "empty")
-        t_station = 0.15
-        t_enemy = 0.15
-        t_nebula = 0.12
-        t_anomaly = 0.08
-        if DANGER == "Balanced":
-            t_station = 0.20
-            t_enemy = 0.25
-            t_nebula = 0.15
-            t_anomaly = 0.10
-        elif DANGER == "Dangerous":
-            t_station = 0.15
-            t_enemy = 0.40
-            t_nebula = 0.15
-            t_anomaly = 0.10
-        if roll < t_station:
-            kind = "station"
-        elif roll < t_station + t_enemy:
-            kind = "enemy"
-        elif roll < t_station + t_enemy + t_nebula:
-            kind = "nebula"
-        elif roll < t_station + t_enemy + t_nebula + t_anomaly:
-            kind = "anomaly"
-        else:
-            kind = "empty"
+    # Kind is computed by the same pure helper the galaxy map uses, so what the
+    # map shows is exactly what spawns here.
+    kind = universe_sector_kind(universe_seed, universe_i, universe_j, DANGER)
     universe_kind = kind
+    # Remember we've been here (drives the galaxy-map fog of war).
+    universe_sectors = universe_set_sector_flag(universe_sectors, universe_i, universe_j, "visited")
 
     # Terrain (denser in nebula sectors)
     tv = universe_terrain_value
