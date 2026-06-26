@@ -1,5 +1,6 @@
 import mission_story.mast
 import mission_helper_functions.py
+import universe_helpers.py
 
 import siege.mast
 import singlefront.mast
@@ -9,5 +10,6 @@ import peacetime.mast
 import borderwar.mast
 import watch_for_end.mast
 import sandbox.mast
+import universe.mast
 import legendary_comms.mast
 

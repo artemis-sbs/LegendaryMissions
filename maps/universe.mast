@@ -1,0 +1,120 @@
+#
+# Open Universe - a procedurally generated, jump-between-sectors map.
+#
+# A sector's contents are a pure function of (universe_seed, i, j), so the whole
+# universe is "stored" in its seed. Only the current sector is instantiated,
+# always at the origin (full float precision, tiny memory); jumping clears the
+# sector and regenerates the destination at the origin. See universe_helpers.py.
+#
+# This is step 3a: keyed terrain + travel. Sector features (stations, enemies,
+# anomalies) and persistence come in later steps.
+#
+
+# Gate the Navigation console to this map only (other maps leave it False).
+default shared UNIVERSE_ACTIVE = False
+
+
+@map/universe "Open Universe"
+" Explore an endless, procedurally generated universe. Engage the jump drive on
+" the Navigation console to travel between sectors - the same seed always
+" regenerates the same stars and fields.
+metadata:``` yaml
+Properties:
+  Main:
+    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
+  Map:
+    Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max", var="TERRAIN_SELECT")'
+    Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
+GameCode:
+  - PLAYER_COUNT
+  - DIFFICULTY
+  - TERRAIN_SELECT
+  - seed_value
+```
+    UNIVERSE_ACTIVE = True
+    # 0 = a fresh random universe; any other value is reproducible.
+    shared universe_seed = seed_value if seed_value != 0 else random.randrange(1, 2_000_000_000)
+    shared universe_i = 0
+    shared universe_j = 0
+    shared universe_terrain_value = terrain_to_value(TERRAIN_SELECT)
+
+    universe_generate_sector(universe_seed, universe_i, universe_j, universe_terrain_value)
+
+    await task_schedule(spawn_players)
+    ->END
+
+
+#
+# Navigation console: jump between sectors (only shown in the universe map).
+#
+@console/jump !0 ^9 "Navigation" if UNIVERSE_ACTIVE
+    " Jump drive - travel between sectors of the universe.
+    default JUMP_I = "0"
+    default JUMP_J = "0"
+    gui_section(style="area: 10, 8, 90, 92; background:#1578;")
+    """justify:center; font:gui-5; $text:Sector ({universe_i}, {universe_j})"""
+
+    gui_row("row-height: 3em;")
+    gui_blank()
+    nbtn = gui_button("$text:North;justify:center;")
+    on gui_message(nbtn):
+        task_schedule(universe_jump_to, {"ti": universe_i, "tj": universe_j + 1})
+    gui_blank()
+
+    gui_row("row-height: 3em;")
+    wbtn = gui_button("$text:West;justify:center;")
+    on gui_message(wbtn):
+        task_schedule(universe_jump_to, {"ti": universe_i - 1, "tj": universe_j})
+    ebtn = gui_button("$text:East;justify:center;")
+    on gui_message(ebtn):
+        task_schedule(universe_jump_to, {"ti": universe_i + 1, "tj": universe_j})
+
+    gui_row("row-height: 3em;")
+    gui_blank()
+    sbtn = gui_button("$text:South;justify:center;")
+    on gui_message(sbtn):
+        task_schedule(universe_jump_to, {"ti": universe_i, "tj": universe_j - 1})
+    gui_blank()
+
+    gui_row("row-height: 3em;")
+    """justify:right; $text:Jump to (i, j):"""
+    ji = gui_input("desc: i;", var="JUMP_I")
+    jj = gui_input("desc: j;", var="JUMP_J")
+    gobtn = gui_button("$text:Jump;justify:center;")
+    on gui_message(gobtn):
+        task_schedule(universe_jump_to, {"ti": safe_int(JUMP_I), "tj": safe_int(JUMP_J)})
+
+    await gui()
+
+
+#
+# Perform a jump: hyperspace screen on, recenter on the destination sector at
+# the origin, reposition the ships, hyperspace screen off.
+#
+=== universe_jump_to
+    default ti = universe_i
+    default tj = universe_j
+    ->END if ti == universe_i and tj == universe_j
+
+    # Hyperspace screen on for every console
+    for c in to_object_list(role("console")):
+        ship = to_object(sbs.get_ship_of_client(c.client_id))
+        hull = ship.art_id if ship is not None else ""
+        sbs.super_hyper_warp_mode(c.client_id, hull, 1)
+
+    await delay_sim(2)
+
+    # Recenter on the destination sector (generated at the origin)
+    universe_i = ti
+    universe_j = tj
+    universe_clear_sector()
+    universe_generate_sector(universe_seed, universe_i, universe_j, universe_terrain_value)
+    universe_reposition_players()
+
+    await delay_sim(1)
+
+    # Hyperspace screen off
+    for c in to_object_list(role("console")):
+        sbs.super_hyper_warp_mode(c.client_id, "", 0)
+    ->END
