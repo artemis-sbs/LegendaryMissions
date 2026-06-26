@@ -12,6 +12,11 @@
 
 # Gate the Navigation console to this map only (other maps leave it False).
 default shared UNIVERSE_ACTIVE = False
+# Sector-generation options (host-selectable). Declared top-level so they exist
+# when the start-screen property panel renders.
+default shared DANGER = "Quiet"
+default shared ENCOUNTERS = "On Arrival"
+default shared universe_kind = "home"
 
 
 @map/universe "Open Universe"
@@ -25,11 +30,15 @@ Properties:
     Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
   Map:
     Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max", var="TERRAIN_SELECT")'
+    Danger: 'gui_drop_down("$text: {DANGER};list: Quiet, Balanced, Dangerous", var="DANGER")'
+    Encounters: 'gui_drop_down("$text: {ENCOUNTERS};list: On Arrival, Dormant", var="ENCOUNTERS")'
     Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
 GameCode:
   - PLAYER_COUNT
   - DIFFICULTY
   - TERRAIN_SELECT
+  - DANGER
+  - ENCOUNTERS
   - seed_value
 ```
     UNIVERSE_ACTIVE = True
@@ -39,8 +48,7 @@ GameCode:
     shared universe_j = 0
     shared universe_terrain_value = terrain_to_value(TERRAIN_SELECT)
 
-    universe_generate_sector(universe_seed, universe_i, universe_j, universe_terrain_value)
-
+    await task_schedule(universe_enter_sector)
     await task_schedule(spawn_players)
     ->END
 
@@ -53,7 +61,7 @@ GameCode:
     default JUMP_I = "0"
     default JUMP_J = "0"
     gui_section(style="area: 10, 8, 90, 92; background:#1578;")
-    """justify:center; font:gui-5; $text:Sector ({universe_i}, {universe_j})"""
+    """justify:center; font:gui-5; $text:Sector ({universe_i}, {universe_j}) - {universe_kind}"""
 
     gui_row("row-height: 3em;")
     gui_blank()
@@ -89,6 +97,77 @@ GameCode:
 
 
 #
+# Generate the current sector: pick a deterministic kind (keyed by the sector),
+# build the keyed terrain (denser for nebula sectors), then spawn the kind's
+# features (all re-seeded from the sector key so a sector is the same each
+# visit). (0,0) is always a safe home with a station. No persistence yet, so a
+# revisited sector regenerates its station/enemies (deltas come in 3c).
+#
+=== universe_enter_sector
+    key = universe_sector_key(universe_seed, universe_i, universe_j)
+
+    kind = "home"
+    if universe_i != 0 or universe_j != 0:
+        roll = scatter_cell_roll(universe_seed, 1, universe_i, universe_j, 7)
+        # thresholds by Danger (remainder is "empty")
+        t_station = 0.15
+        t_enemy = 0.15
+        t_nebula = 0.12
+        t_anomaly = 0.08
+        if DANGER == "Balanced":
+            t_station = 0.20
+            t_enemy = 0.25
+            t_nebula = 0.15
+            t_anomaly = 0.10
+        elif DANGER == "Dangerous":
+            t_station = 0.15
+            t_enemy = 0.40
+            t_nebula = 0.15
+            t_anomaly = 0.10
+        if roll < t_station:
+            kind = "station"
+        elif roll < t_station + t_enemy:
+            kind = "enemy"
+        elif roll < t_station + t_enemy + t_nebula:
+            kind = "nebula"
+        elif roll < t_station + t_enemy + t_nebula + t_anomaly:
+            kind = "anomaly"
+        else:
+            kind = "empty"
+    universe_kind = kind
+
+    # Terrain (denser in nebula sectors)
+    tv = universe_terrain_value
+    if kind == "nebula":
+        tv = max(tv, 4)
+    universe_generate_sector(universe_seed, universe_i, universe_j, tv)
+
+    # Features, each re-seeded from the sector key for determinism
+    if kind == "home" or kind == "station":
+        random.seed(key + 1)
+        st_type = random.choice(["starbase_command", "starbase_civil", "starbase_science", "starbase_industry"])
+        npc_spawn(0, 0, 0, "Starbase", "tsn, station", st_type, "behav_station")
+        await task_schedule(docking_standard_player_station)
+    elif kind == "enemy":
+        random.seed(key + 3)
+        races = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
+        count = 1 + int(DIFFICULTY / 3)
+        near = 20_000
+        far = 40_000
+        if ENCOUNTERS == "Dormant":
+            # Spawn at the far edge so arrival isn't an immediate swarm.
+            near = 42_000
+            far = 49_000
+        for n in range(count):
+            pos = Vec3.rand_in_sphere(near, far, False, True)
+            prefab_spawn(prefab_fleet_raider, {"race": random.choice(races), "fleet_difficulty": DIFFICULTY, "START_X": pos.x, "START_Y": pos.y, "START_Z": pos.z})
+    elif kind == "anomaly":
+        random.seed(key + 4)
+        terrain_spawn_black_holes(1 + int(DIFFICULTY / 4))
+    ->END
+
+
+#
 # Perform a jump: hyperspace screen on, recenter on the destination sector at
 # the origin, reposition the ships, hyperspace screen off.
 #
@@ -109,7 +188,7 @@ GameCode:
     universe_i = ti
     universe_j = tj
     universe_clear_sector()
-    universe_generate_sector(universe_seed, universe_i, universe_j, universe_terrain_value)
+    await task_schedule(universe_enter_sector)
     universe_reposition_players()
 
     await delay_sim(1)
