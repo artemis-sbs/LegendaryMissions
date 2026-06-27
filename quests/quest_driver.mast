@@ -1,0 +1,25 @@
+#
+# Quest driver signal hooks (server-side). Reuses existing game signals to
+# advance active quests; also writes state for the API's activate/complete
+# signals (which only emit). Add more hooks (docking, comms, universe arrival)
+# as the trigger vocabulary grows.
+#
+
+# The quest API only emits these; the driver writes the stored state.
+//signal/quest_activated
+    quest_mark_active(AGENT_ID, QUEST_ID)
+    ->END
+
+//signal/quest_completed
+    quest_mark_complete(AGENT_ID, QUEST_ID)
+    ->END
+
+//damage/destroy
+    quest_on_kill(DAMAGE_SOURCE_ID, DESTROYED_ID)
+    if DAMAGE_PARENT_ID != DAMAGE_SOURCE_ID:
+        quest_on_kill(DAMAGE_PARENT_ID, DESTROYED_ID)
+    ->END
+
+//signal/item_collected
+    quest_on_collect(holder_id, key)
+    ->END
