@@ -1,3 +1,6 @@
+# Gate the siege bonus-objective routes to this map only.
+default shared SIEGE_ACTIVE = False
+
 @map/siege "Siege"
 " In this scenario, bases will be located in the center of the sector, 
 " with minefields ringing the center, and enemies advancing from every 
@@ -35,6 +38,7 @@ GameCode:
 ```
 
 
+    SIEGE_ACTIVE = True
     terrain_value = terrain_to_value(TERRAIN_SELECT)
     lethal_value =  terrain_to_value(LETHAL_SELECT)
     friendly_value = terrain_to_value(FRIENDLY_SELECT)
@@ -243,6 +247,34 @@ GameCode:
     #------------------------------------------------------------------------------------------------------------
 
     task_schedule(task_end_game)
+    task_schedule(siege_bonus_objectives)
 
     #------------------------------------------------------------------------------------------------------------
+
+
+#
+# Optional siege bonus objectives (lean - reuses the quest driver for rewards):
+#  - Ace: rack up raider kills (per-player, on_kill).
+#  - Guardian: finish without losing a starbase (fails on station loss; completes
+#    at game end via the siege_survived signal).
+#
+=== siege_bonus_objectives
+    ace_target = 8 + int(DIFFICULTY)
+    for p in to_object_list(role("__player__")):
+        quest_add(p.id, "siege_ace", f"Ace: {ace_target} raider kills", f"Optional: destroy {ace_target} raiders this siege.", state=1, data={"on_kill": {"role": "raider", "count": ace_target}, "reward": {"credits": 300, "items": {"tech": 1}}})
+        quest_add(p.id, "siege_guardian", "Guardian: keep every starbase", "Optional: finish the siege without losing a starbase.", state=1, data={"on_signal": {"name": "siege_survived"}, "reward": {"credits": 500}})
+    ->END
+
+
+# A starbase fell: the Guardian bonus is lost for everyone.
+//damage/destroy if SIEGE_ACTIVE and has_role(DESTROYED_ID, "station")
+    for p in to_object_list(role("__player__")):
+        quest_mark_failed(p.id, "siege_guardian")
+    ->END
+
+
+# Game over: any still-active Guardian bonus survived - complete it.
+//signal/show_game_results if SIEGE_ACTIVE
+    signal_emit("quest_signal", {"SIGNAL_NAME": "siege_survived"})
+    ->END
 

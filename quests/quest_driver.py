@@ -94,6 +94,12 @@ def quest_reveal(agent_id, reveal):
         quest_mark_active(agent_id, qid)
 
 
+def quest_mark_failed(agent_id, quest_id):
+    """Fail an active quest (idempotent)."""
+    if quest_get_state(agent_id, quest_id) == QuestState.ACTIVE:
+        quest_set_key(agent_id, quest_id, "state", QuestState.FAILED)
+
+
 def _active_quests(agent_id):
     """(quest_id, data) for each ACTIVE quest on the agent."""
     tree = quest_agent_quests(agent_id)
