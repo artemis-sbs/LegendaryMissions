@@ -163,16 +163,51 @@ def market_stock(station_id, key):
     return get_inventory_value(station_id, "stock_" + key, 0)
 
 
+def _disposition_for(seed_key, idx):
+    """Per-(sector, item) price multiplier in [0.5, 1.5): low = producer
+    (cheap, well-stocked), high = consumer (dear, wants it). Deterministic."""
+    return 0.5 + random.Random(scatter._mix(int(seed_key), idx + 1000)).random()
+
+
+def _purchasable_index(key):
+    for i, lbl in enumerate(market_purchasable()):
+        if lbl.get_inventory_value("key") == key:
+            return i
+    return None
+
+
+def market_disposition(station_id, key):
+    """Station's price disposition for an item (1.0 if not finite-seeded)."""
+    seed_key = get_inventory_value(station_id, "market_seed_key", None)
+    if seed_key is None:
+        return 1.0
+    idx = _purchasable_index(key)
+    return 1.0 if idx is None else _disposition_for(int(seed_key), idx)
+
+
+def market_price(station_id, key):
+    """Current buy price = base price x the station's disposition."""
+    lbl = item_get(key)
+    base = (lbl.get_inventory_value("price", 0) or 0) if lbl is not None else 0
+    return int(round(base * market_disposition(station_id, key)))
+
+
+def market_sell_price(station_id, key):
+    """What a station pays to buy an item from the player."""
+    return int(market_price(station_id, key) * MARKET_SELL_FACTOR)
+
+
 def market_seed(station_id, seed_key):
     """Deterministically stock a station's market (finite), keyed by seed_key.
 
-    Same seed_key (e.g. a sector key) reproduces the same stock. ~30% of priced
-    items are out of stock; the rest carry 1-5 units.
+    Same seed_key (e.g. a sector key) reproduces the same stock and prices.
+    Producers (low disposition) are well-stocked; consumers (high) near-empty.
     """
+    set_inventory_value(station_id, "market_seed_key", int(seed_key))
     for i, lbl in enumerate(market_purchasable()):
         k = lbl.get_inventory_value("key")
-        rng = random.Random(scatter._mix(int(seed_key), i))
-        qty = 0 if rng.random() < 0.3 else rng.randint(1, 5)
+        disp = _disposition_for(int(seed_key), i)
+        qty = max(0, round((1.6 - disp) * 4))
         set_inventory_value(station_id, "stock_" + k, qty)
     set_inventory_value(station_id, "market_seeded", 1)
 
@@ -202,10 +237,9 @@ def _ship_side_id(ship_id):
 
 def market_buy(ship_id, station_id, key):
     """Buy one `key` for the ship from the station, paying side credits."""
-    lbl = item_get(key)
-    if lbl is None:
+    if item_get(key) is None:
         return False
-    price = lbl.get_inventory_value("price", 0) or 0
+    price = market_price(station_id, key)
     sid = _ship_side_id(ship_id)
     if sid is None or price <= 0:
         return False
@@ -233,8 +267,7 @@ def market_sell(ship_id, station_id, key):
     sid = _ship_side_id(ship_id)
     if sid is None:
         return False
-    price = lbl.get_inventory_value("price", 0) or 0
-    payout = int(price * MARKET_SELL_FACTOR)
+    payout = market_sell_price(station_id, key)
     set_inventory_value(sid, "credits", get_inventory_value(sid, "credits", 0) + payout)
     set_inventory_value(ship_id, key, owned - 1)
     if market_is_seeded(station_id):
@@ -243,9 +276,3 @@ def market_sell(ship_id, station_id, key):
     signal_emit("item_sold", {"holder_id": ship_id, "station_id": station_id, "key": key})
     signal_emit("item_changed", {"holder_id": ship_id})
     return True
-
-
-def market_sell_price(key):
-    lbl = item_get(key)
-    p = (lbl.get_inventory_value("price", 0) or 0) if lbl is not None else 0
-    return int(p * MARKET_SELL_FACTOR)

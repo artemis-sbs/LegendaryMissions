@@ -1,6 +1,8 @@
 import items.py
 import item_defs.mast
+import trade_goods.mast
 import item_collect.mast
 import item_activate.mast
 import item_gui.mast
 import item_market.mast
+import item_salvage.mast

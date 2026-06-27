@@ -1,0 +1,66 @@
+#
+# Trade goods: commodities for the economy (no activation effect). They are
+# bought/sold at station markets at prices that vary by sector disposition, so
+# buying cheap at a producer and selling dear at a consumer turns a profit.
+# Discovered like everything via type: item/trade/...
+#
+
+=== prefab_trade_ore
+metadata:``` yaml
+type: item/trade/ore
+key: ore
+display_text: Raw Ore
+art: container_small_6a
+mode: resource
+price: 40
+desc: Common mineral ore. A bulk trade commodity.
+```
+    ->END
+
+=== prefab_trade_gas
+metadata:``` yaml
+type: item/trade/gas
+key: gas
+display_text: Volatile Gas
+art: container_4a
+mode: resource
+price: 60
+desc: Compressed industrial gas. Trade commodity.
+```
+    ->END
+
+=== prefab_trade_provisions
+metadata:``` yaml
+type: item/trade/provisions
+key: provisions
+display_text: Provisions
+art: container_1a
+mode: resource
+price: 30
+desc: Food and supplies. Always in demand somewhere.
+```
+    ->END
+
+=== prefab_trade_tech
+metadata:``` yaml
+type: item/trade/tech
+key: tech
+display_text: Tech Components
+art: container_2a
+mode: resource
+price: 120
+desc: Advanced components. A high-value trade good.
+```
+    ->END
+
+=== prefab_trade_contraband
+metadata:``` yaml
+type: item/trade/contraband
+key: contraband
+display_text: Contraband
+art: container_small_6a
+mode: resource
+price: 200
+desc: Illicit cargo. Lucrative where there is demand.
+```
+    ->END

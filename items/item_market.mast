@@ -17,12 +17,12 @@
     for market_lbl in market_purchasable():
         mk = market_lbl.get_inventory_value("key")
         mname = market_lbl.get_inventory_value("display_text", mk)
-        mprice = market_lbl.get_inventory_value("price", 0)
+        mprice = market_price(COMMS_SELECTED_ID, mk)
         mstock = market_stock(COMMS_SELECTED_ID, mk)
         mowned = get_inventory_value(COMMS_ORIGIN_ID, mk, 0)
         + "Buy {mname} - {mprice}cr (stock {mstock})" if mstock > 0 and market_credits >= mprice:
             market_buy(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, mk)
             comms_navigate("//comms/market")
-        + "Sell {mname} - +{market_sell_price(mk)}cr (have {mowned})" if mowned > 0:
+        + "Sell {mname} - +{market_sell_price(COMMS_SELECTED_ID, mk)}cr (have {mowned})" if mowned > 0:
             market_sell(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, mk)
             comms_navigate("//comms/market")
