@@ -95,6 +95,12 @@ GameCode:
     ->END
 
 
+# Apply a completed quest's declarative rep: block to the captain (universe).
+//signal/quest_finished if UNIVERSE_ACTIVE
+    reputation_apply(AGENT_ID, DATA.get("rep"))
+    ->END
+
+
 # Station quest-giver: offer this sector's deterministic cargo run. The
 # destination is keyed to the sector (same station, same run); reaching it
 # completes the quest (on_reach) and pays out. Persists on the player ship.

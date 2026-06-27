@@ -16,6 +16,7 @@ from sbs_utils.procedural.query import to_object, to_object_list, to_id
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.sides import to_side_id
 from sbs_utils.procedural.comms import comms_broadcast
+from sbs_utils.procedural.signal import signal_emit
 from sbs_utils.procedural.gui import gui_row, gui_text
 from sbs_utils.mast.mast_node import MastDataObject
 from sbs_utils.agent import Agent
@@ -51,6 +52,13 @@ def quest_mark_complete(agent_id, quest_id):
     data = quest_get_data(agent_id, quest_id) or {}
     quest_grant_reward(agent_id, data.get("reward"))
     quest_reveal(agent_id, data.get("reveal"))
+    # On-complete actions: emit an optional custom signal (e.g. to flip
+    # diplomacy), and a generic quest_finished carrying the data so addons can
+    # react (the universe applies the declarative rep: block from it).
+    sig = data.get("signal")
+    if sig:
+        signal_emit(sig, {"AGENT_ID": agent_id, "QUEST_ID": quest_id})
+    signal_emit("quest_finished", {"AGENT_ID": agent_id, "QUEST_ID": quest_id, "DATA": data})
     name = quest_get_display_name(agent_id, quest_id) or quest_id
     comms_broadcast(agent_id, "Mission complete: " + str(name), "#0f0")
 
