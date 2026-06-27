@@ -47,6 +47,12 @@ GameCode:
   - seed_value
 ```
     UNIVERSE_ACTIVE = True
+    # Load and spawn the universe's clans as sides (see clans.amd). The player
+    # side (tsn) already exists from the server-start create_sides signal, so
+    # foe clans' enemies:"tsn" relation resolves.
+    shared UNIVERSE_CLANS = universe_parse_clans(media_read_relative_file("clans.amd"))
+    for _clan in UNIVERSE_CLANS:
+        await prefab_spawn(prefab_side_generic, {"key": _clan.key, "name": _clan.name, "desc": _clan.desc, "color": _clan.color, "enemies": _clan.enemies})
     shared universe_terrain_value = terrain_to_value(TERRAIN_SELECT)
     # Continue loads the saved universe (seed + position + deltas); New Game
     # starts fresh from the Seed property (0 = random) and overwrites the save.
