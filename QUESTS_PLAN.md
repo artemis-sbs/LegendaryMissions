@@ -119,6 +119,45 @@ quest tab (gate by setting, not dev-only) with accept/abandon + narrative view.
 - Quest state persists in the universe save (per ship/side), like items/credits.
 - Galaxy map marks quest objectives. Quests become the universe's content layer.
 
+### 8a. Save format & migration (universe_save.yaml)
+
+The save format is unreleased and *will* change. The design keeps migration cheap:
+
+**Procedural base, delta-only save.** A sector's contents are a pure function of
+`(universe_seed, i, j)`. The save stores only what can't be regenerated: the seed,
+the current sector, per-sector **deltas** (`visited`, `station_destroyed`,
+`enemy_cleared`, `market` stock, quest flags), per-ship state (items, installs,
+quests), per-side credits. **So most future changes need no migration at all** -
+new sector kinds, terrain types, POIs, and danger tables regenerate from the seed
+the moment the code ships. Migration only ever concerns the stored deltas.
+
+**Version stamp + migration ladder.** The save carries `save_version` (int,
+`UNIVERSE_SAVE_VERSION`). `universe_load()` runs `universe_migrate(data)`, which
+applies ordered, single-step migration functions (`_migrate_1_to_2`,
+`_migrate_2_to_3`, ...) until `data["save_version"] == UNIVERSE_SAVE_VERSION`,
+then returns the upgraded dict. Each migration is a small pure
+`dict -> dict` (rename/restructure a key, backfill a default). A pre-1 save (no
+stamp) is treated as version 1.
+
+**Additive changes don't bump the version.** New optional fields are read with
+`.get(field, default)`, so old saves simply lack them and behave as default.
+Reserve `save_version` bumps and migrations for *breaking restructures* (renaming
+or reshaping an existing key). Adding `quests` to each player record (Q3) is
+additive - no bump.
+
+**Forward-compat & tolerance.** `universe_save` merges into the loaded dict, so
+fields written by a newer build that an older build doesn't understand are
+preserved, not dropped. A `save_version` **newer** than the running code is
+treated as load-best-effort/read-only (don't silently rewrite a newer structure
+with older code). `universe_load` already returns `None` for a non-dict; wrap
+migration in try/except and, on failure, fall back to "no save" (New Game) rather
+than crash. Write a `.bak` copy before an in-place upgrade so a bad migration is
+recoverable.
+
+**Stable migration anchors.** Per-sector deltas are keyed by the `"i,j"` string;
+per-ship records by ship **name**; per-side by side **key**. These keys are the
+contract migrations rely on - change them only with a migration step.
+
 ---
 
 ## 9. Siege

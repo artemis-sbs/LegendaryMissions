@@ -7,6 +7,7 @@ plus the current coordinates (persistence of player-made changes comes later).
 """
 import math
 import os
+import shutil
 
 from sbs_utils import scatter
 from sbs_utils.vec import Vec3
@@ -19,9 +20,22 @@ from sbs_utils.procedural.execution import labels_get_type
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.sides import to_side_id
 from sbs_utils.procedural.upgrades import upgrade_add
+from sbs_utils.procedural.quest import quest_agent_quests, quest_add, quest_set_key
+from sbs_utils.agent import Agent
 
 # Half-extent of a sector's playable area (world units).
 UNIVERSE_SECTOR_R = 50_000
+
+# --- Save format version + migration ----------------------------------------
+# The universe is mostly procedural (regenerated from the seed); the save stores
+# only deltas, so most changes need NO migration. Bump this only for a breaking
+# restructure of a stored field, and add a matching _MIGRATIONS step. Additive
+# fields are read with .get(default) and don't need a bump. See QUESTS_PLAN 8a.
+UNIVERSE_SAVE_VERSION = 1
+
+# Ordered single-step migrations: _MIGRATIONS[v] upgrades a v save to v+1.
+# e.g. _MIGRATIONS = {1: _migrate_1_to_2}
+_MIGRATIONS = {}
 
 
 def universe_sector_key(universe_seed, i, j):
@@ -76,8 +90,33 @@ def universe_save_path():
 
 
 def universe_save_state(data):
-    """Write the full save dict (low-level)."""
+    """Write the full save dict (low-level), stamped with the current version."""
+    data["save_version"] = UNIVERSE_SAVE_VERSION
     save_yaml_data(universe_save_path(), data)
+
+
+def universe_migrate(data):
+    """Bring a loaded save up to UNIVERSE_SAVE_VERSION via the migration ladder.
+
+    Only stored deltas are ever migrated (procedural content regenerates from the
+    seed). Returns the upgraded dict, the dict unchanged if it is NEWER than this
+    build understands (load best-effort, don't rewrite), or None if it cannot be
+    migrated - which the callers treat as "no save" (New Game). See QUESTS_PLAN 8a.
+    """
+    if not isinstance(data, dict):
+        return None
+    v = data.get("save_version", 1)
+    if v > UNIVERSE_SAVE_VERSION:
+        return data
+    try:
+        while v < UNIVERSE_SAVE_VERSION and v in _MIGRATIONS:
+            data = _MIGRATIONS[v](data)
+            v += 1
+        data["save_version"] = v
+        return data
+    except Exception as e:
+        print(f"universe_migrate failed: {e}")
+        return None
 
 
 def universe_save(seed, i, j, sectors):
@@ -111,8 +150,40 @@ def _item_label(key):
     return None
 
 
+# Quests persist alongside items: per-ship quests by ship name, plus the
+# shared/game quest tree. Flat quests only (matches current usage); serialized
+# fields are YAML-safe (state/progress are ints, data is the AMD yaml dict).
+def _serialize_quests(agent_id):
+    tree = quest_agent_quests(agent_id)
+    out = {}
+    if tree is None:
+        return out
+    children = tree.get("children") or {}
+    for qid, q in children.items():
+        out[qid] = {
+            "display_text": q.get("display_text", ""),
+            "description": q.get("description", ""),
+            "state": int(q.get("state", 0) or 0),
+            "data": q.get("data"),
+            "progress": q.get("progress", 0),
+        }
+    return out
+
+
+def _restore_quests(agent_id, quests):
+    if not isinstance(quests, dict):
+        return
+    for qid, rec in quests.items():
+        quest_add(agent_id, qid, rec.get("display_text", ""),
+                  rec.get("description", ""), state=rec.get("state", 0),
+                  data=rec.get("data"))
+        prog = rec.get("progress", 0)
+        if prog:
+            quest_set_key(agent_id, qid, "progress", prog)
+
+
 def universe_save_players():
-    """Persist per-ship item counts/installs and shared per-side credits."""
+    """Persist per-ship items/installs/quests, shared credits, and game quests."""
     data = universe_load() or {}
     players = {}
     side_credits = {}
@@ -123,12 +194,14 @@ def universe_save_players():
             if c:
                 items[k] = c
         installs = get_inventory_value(ship.id, "installs", [])
-        players[ship.name] = {"items": items, "installs": list(installs)}
+        players[ship.name] = {"items": items, "installs": list(installs),
+                              "quests": _serialize_quests(ship.id)}
         side = ship.side
         if side:
             side_credits[side] = get_inventory_value(to_side_id(side), "credits", 0)
     data["players"] = players
     data["side_credits"] = side_credits
+    data["shared_quests"] = _serialize_quests(Agent.SHARED_ID)
     universe_save_state(data)
 
 
@@ -141,6 +214,7 @@ def universe_load_players():
     players = data.get("players", {})
     side_credits = data.get("side_credits", {})
     seen_sides = set()
+    _restore_quests(Agent.SHARED_ID, data.get("shared_quests"))
     for ship in to_object_list(role("__player__")):
         side = ship.side
         if side and side not in seen_sides:
@@ -158,12 +232,28 @@ def universe_load_players():
             lbl = _item_label(k)
             if lbl is not None:
                 upgrade_add(ship.id, lbl, data={"key": k}, activate=True)
+        _restore_quests(ship.id, pdata.get("quests"))
 
 
 def universe_load():
-    """Load the saved universe, or None if there is no valid save."""
-    data = load_yaml_data(universe_save_path())
-    return data if isinstance(data, dict) else None
+    """Load the saved universe (migrated to the current version), or None.
+
+    Backs up the file once before an upgrading migration so a bad migration is
+    recoverable (universe_save.yaml.bak).
+    """
+    raw = load_yaml_data(universe_save_path())
+    if not isinstance(raw, dict):
+        return None
+    before = raw.get("save_version", 1)
+    data = universe_migrate(raw)
+    if data is not None and data.get("save_version", 1) > before:
+        path = universe_save_path()
+        if not os.path.exists(path + ".bak"):
+            try:
+                shutil.copyfile(path, path + ".bak")
+            except Exception:
+                pass
+    return data
 
 
 def universe_sector_flag(sectors, i, j, flag):
