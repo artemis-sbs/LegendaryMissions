@@ -209,6 +209,11 @@ GameCode:
     elif kind == "anomaly":
         random.seed(key + 4)
         terrain_spawn_black_holes(1 + int(DIFFICULTY / 4))
+        # The anomaly beams a signal: offer each player the mystery once.
+        for p in to_object_list(role("__player__")):
+            if universe_mystery_available(p.id, universe_i, universe_j):
+                universe_grant_mystery(p.id, universe_seed, universe_i, universe_j)
+        universe_save_players()
 
     # Tell the quest driver we've arrived (completes on_reach cargo runs).
     signal_emit("universe_arrived", {"ARRIVE_I": universe_i, "ARRIVE_J": universe_j})

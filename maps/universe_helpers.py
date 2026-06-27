@@ -330,6 +330,39 @@ def universe_grant_delivery(ship_id, seed, i, j):
     return qid, ti, tj
 
 
+def universe_mystery_quest_id(i, j):
+    return f"mystery_{int(i)}_{int(j)}"
+
+
+def universe_mystery_available(ship_id, i, j):
+    """True if this anomaly's mystery hasn't been offered to the ship yet."""
+    return quest_get_state(ship_id, universe_mystery_quest_id(i, j)) == QuestState.IDLE
+
+
+def universe_mystery_target(seed, i, j):
+    """Deterministic sector the anomaly's signal points to."""
+    rng = _random.Random(universe_sector_key(seed, i, j) + 555)
+    di = rng.choice([-4, -3, 3, 4])
+    dj = rng.choice([-4, -3, 3, 4])
+    return int(i) + di, int(j) + dj
+
+
+def universe_grant_mystery(ship_id, seed, i, j):
+    """Offer (activate) the anomaly's 'follow the signal' mystery to the ship.
+
+    Reaching the target sector completes it (on_reach) for a larger payout than a
+    cargo run. Returns (quest_id, target_i, target_j).
+    """
+    ti, tj = universe_mystery_target(seed, i, j)
+    qid = universe_mystery_quest_id(i, j)
+    quest_add(ship_id, qid, f"Anomaly Signal to ({ti}, {tj})",
+              f"The anomaly in sector ({int(i)}, {int(j)}) is beaming a coded signal "
+              f"toward sector ({ti}, {tj}). Follow it to uncover what waits there.",
+              state=QuestState.ACTIVE,
+              data={"on_reach": {"sector": [ti, tj]}, "reward": {"credits": 600}})
+    return qid, ti, tj
+
+
 def universe_quest_target_sectors():
     """(i,j) target sectors of all players' ACTIVE on_reach quests (map markers)."""
     out = set()
