@@ -121,7 +121,7 @@ hangar_get_craft_data("terran")
             ride_choice = None
     
 
-    gui_section(style="area: 0,0, 41,100-150px;background: #fff1;")
+    gui_section(style="area: 0,0, 41,60;x-background: #fff1;")
 
     call_sign = get_inventory_value(client_id, "call_sign", "Selene")
     gui_section(style="area: 20px,6,40,6+40px;")
@@ -129,7 +129,7 @@ hangar_get_craft_data("terran")
     on change call_sign:
         set_inventory_value(client_id, "call_sign", call_sign)
 
-    gui_section(style="area: 20px,6+50px, 40, 49;")
+    gui_section(style="area: 20px,6+50px, 40, 60;")
     
     dock_picker = gui_list_box(docks,"background:#1572;padding:0,0,10px,0;", item_template=hangar_console_dock_template, title_template=hangar_console_dock_title_template, select=True)
     ride_picker = gui_list_box(crafts,"background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)
@@ -142,24 +142,32 @@ hangar_get_craft_data("terran")
         
     # ride_picker.title_background = "#1578"
     
-    gui_section(style="area: 20px,50, 40,50+20px;")
-    gui_row(style="row-height:20px;")
-    gui_text("$text:Mission Briefing;color: white;justify: center;", style="background: #1578;")
-    gui_section(style="area: 20px,50+20px, 40,100-160px;background: #1572;")
-
-    briefing = get_inventory_value(ride_choice, "briefing", "No fighters")
-    """
-    {briefing}
-    """ style="tag:briefing-text;padding: 10px,15px,10px,0;"
-
-
     gui_activate_console("hangar")
     gui_tab_enable_top()
     
     gui_tab_back(CONSOLE_SELECT)
 
-    gui_section(style="area: 41+1em,0, 100,100-50px;")
+    gui_section(style="area: 41+1em,0, 100,60;")
     gui_layout_widget("2dview")
+
+    # Sortie board: the quest LIST and its briefing share one full-width band
+    # below the 2D view, side by side. The list carries its own "Sortie Orders"
+    # title; the text_area wraps + scrolls. The band sits above the bottom bar.
+    cockpit_type = hangar_cockpit_type(ride_choice)
+    quest_choice = None
+    quest_brief = "Select a sortie order"
+
+    gui_section(style="area: 20px,60, 50,100-90px;background: #1572;")
+    quest_box = gui_list_box(hangar_quest_items(HANGAR_QUEST_DOC, cockpit_type), "padding:0,0,10px,0;", item_template=hangar_quest_template, title_template=hangar_quest_title_template, select=True)
+
+    gui_section(style="area: 50,60, 100,100-90px;background: #1572;")
+    quest_brief_area = gui_text_area("{quest_brief}", style="tag:quest-brief;padding: 10px,15px,10px,15px;")
+    on change quest_box.get_value():
+        sel = quest_box.get_value()
+        if sel is not None:
+            quest_choice = sel.get("key")
+            quest_brief = sel.get("desc")
+            quest_brief_area.value = quest_brief
 
     fighter_change = 0
     ship_change_count = 0
@@ -173,9 +181,13 @@ hangar_get_craft_data("terran")
     
             if dock is not None:
                 sbs.assign_client_to_ship(client_id, dock.id)
-                defa = f"Protect {dock.name}"
-                briefing = get_inventory_value(fighter, "briefing", defa)
-                gui_update("briefing-text", "$text: {briefing}")
+
+            # Cockpit type can change (fighter <-> shuttle); refresh the board.
+            cockpit_type = hangar_cockpit_type(ride_choice)
+            quest_box.items = hangar_quest_items(HANGAR_QUEST_DOC, cockpit_type)
+            quest_choice = None
+            quest_brief = "Select a sortie order"
+            quest_brief_area.value = quest_brief
 
             stats = hangar_get_stats(client_id, fighter)
             gui_update("stats-1", "$text: {stats[0]}")
@@ -234,7 +246,7 @@ hangar_get_craft_data("terran")
     on change hangar_version:
         jump show_hangar
 
-    gui_section(style="area: 0,100-150px, 35,100;")
+    gui_section(style="area: 0,100-90px, 35,100;")
     gui_layout_widget("text_waterfall")
     #
     # Fighter stats
@@ -260,6 +272,8 @@ hangar_get_craft_data("terran")
             unlink(old_ship_id, "consoles", client_id)
             ride_select = ride_choice
             link(ride_select , "consoles", client_id)
+            if quest_choice is not None:
+                hangar_assign_quest(to_id(ride_select), HANGAR_QUEST_DOC, cockpit_type, quest_choice)
             jump launch_to_cockpit
         jump show_hangar
 

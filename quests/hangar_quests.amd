@@ -1,0 +1,43 @@
+// Hangar sortie quests. Each heading is a quest; its --- data --- section
+// carries the cockpit type, trigger, and reward; the prose below is the
+// briefing shown on the hangar quest board. Add more freely.
+
+# [Patrol the Approaches](hq_patrol)
+---
+cockpit: fighter
+objective: Destroy 5 raiders
+on_kill: { role: raider, count: 5 }
+reward: { credits: 300 }
+---
+Command needs the approaches swept. Hunt down the raider probes harassing
+our shipping lanes, then return to dock.
+
+# [Hunt the Pack](hq_hunt)
+---
+cockpit: fighter
+objective: Destroy 10 raiders
+on_kill: { role: raider, count: 10 }
+reward: { credits: 600, items: { tech: 1 } }
+---
+A raider wolfpack is massing on our flank. Thin their numbers before they
+can strike the station.
+
+# [Supply Run](hq_supply)
+---
+cockpit: shuttle
+objective: Recover 3 crates of provisions
+on_collect: { key: provisions, count: 3 }
+reward: { credits: 250 }
+---
+The forward bases are low. Gather provision crates adrift in the sector and
+bring them home.
+
+# [Salvage Sweep](hq_salvage)
+---
+cockpit: shuttle
+objective: Recover 2 tech components
+on_collect: { key: tech, count: 2 }
+reward: { credits: 500 }
+---
+Recover advanced components from the debris fields - the quartermaster pays
+well for working tech.

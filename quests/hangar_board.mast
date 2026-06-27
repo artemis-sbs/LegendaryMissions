@@ -1,0 +1,5 @@
+#
+# Loads the hangar sortie quests once (parsed AMD tree, shared) so the hangar
+# quest board and assignment can read them. See hangar_quests.amd.
+#
+shared HANGAR_QUEST_DOC = document_get_amd_file(None, "Hangar", content=media_read_relative_file("hangar_quests.amd"))

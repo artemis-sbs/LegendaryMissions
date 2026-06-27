@@ -502,26 +502,26 @@ def hangar_get_crafts_at(dock_id):
 
 
 def hangar_console_ship_template(item):
-    gui_row("row-height: 1.2em;padding:13px;")
+    gui_row("row-height: 1.0em;padding:13px;")
     gui_text(f"$text:{item.name};justify: left;")
     t = item.get_inventory_value("CRAFT_TYPE", "Fighter")
-    gui_row("row-height: 1.2em;padding:13px;")
+    gui_row("row-height: 1.0em;padding:13px;")
     gui_text(f"$text:{t};justify: left;font:gui-1")
 
     
 
 def hangar_console_title_template():
-    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
+    gui_row("row-height: 1.0em;padding:13px;background:#1578;")
     gui_text(f"$text:Ship;justify: left;")
 
 
 def hangar_console_dock_template(item):
-    gui_row("row-height: 1.2em;padding:13px;")
+    gui_row("row-height: 1.0em;padding:13px;")
     gui_text(f"$text:{item.name};justify: left;")
     
 
 def hangar_console_dock_title_template():
-    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
+    gui_row("row-height: 1.0em;padding:13px;background:#1578;")
     gui_text(f"$text:Hangar Location;justify: left;")
 
 

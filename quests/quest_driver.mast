@@ -16,7 +16,8 @@
 
 //damage/destroy
     quest_on_kill(DAMAGE_SOURCE_ID, DESTROYED_ID)
-    if DAMAGE_PARENT_ID != DAMAGE_SOURCE_ID:
+    # Also credit the owning ship (e.g. a fighter's carrier); parent 0 = none.
+    if DAMAGE_PARENT_ID and DAMAGE_PARENT_ID != DAMAGE_SOURCE_ID:
         quest_on_kill(DAMAGE_PARENT_ID, DESTROYED_ID)
     ->END
 
