@@ -87,6 +87,17 @@ GameCode:
     ->END
 
 
+# Station quest-giver: offer this sector's deterministic cargo run. The
+# destination is keyed to the sector (same station, same run); reaching it
+# completes the quest (on_reach) and pays out. Persists on the player ship.
+//comms if UNIVERSE_ACTIVE and has_role(COMMS_SELECTED_ID, "station")
+    ship_id = COMMS_ORIGIN_ID
+    + "Accept Cargo Run" if universe_delivery_available(ship_id, universe_i, universe_j):
+        universe_grant_delivery(ship_id, universe_seed, universe_i, universe_j)
+        universe_save_players()
+        >> "Cargo loaded. The destination is marked on your galaxy map."
+
+
 #
 # Navigation console: jump between sectors (only shown in the universe map).
 #
@@ -103,13 +114,19 @@ GameCode:
 
     # Galaxy map: a 7x7 grid centered on the current sector (north = +j on top).
     # Click any cell to jump there. Adjacent cells double as N/S/E/W.
+    quest_targets = universe_quest_target_sectors()
     for dj in [3, 2, 1, 0, -1, -2, -3]:
         gui_row("row-height: 2em;")
         for di in [-3, -2, -1, 0, 1, 2, 3]:
             ci = universe_i + di
             cj = universe_j + dj
+            is_target = (ci, cj) in quest_targets
             txt = universe_map_cell_text(universe_seed, ci, cj, DANGER, universe_sectors, MAP_REVEAL)
+            if is_target:
+                txt = "* " + txt
             cell_bg = "#0006"
+            if is_target:
+                cell_bg = "#a60"
             if di == 0 and dj == 0:
                 cell_bg = "#0a6"
             cell = gui_button(f"$text:{txt};font:gui-1;justify:center;", style=f"background:{cell_bg};", data={"ti": ci, "tj": cj})
@@ -192,6 +209,9 @@ GameCode:
     elif kind == "anomaly":
         random.seed(key + 4)
         terrain_spawn_black_holes(1 + int(DIFFICULTY / 4))
+
+    # Tell the quest driver we've arrived (completes on_reach cargo runs).
+    signal_emit("universe_arrived", {"ARRIVE_I": universe_i, "ARRIVE_J": universe_j})
     ->END
 
 

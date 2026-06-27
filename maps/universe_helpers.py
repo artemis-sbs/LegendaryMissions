@@ -20,8 +20,10 @@ from sbs_utils.procedural.execution import labels_get_type
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.sides import to_side_id
 from sbs_utils.procedural.upgrades import upgrade_add
-from sbs_utils.procedural.quest import quest_agent_quests, quest_add, quest_set_key
+from sbs_utils.procedural.quest import (quest_agent_quests, quest_add, quest_set_key,
+                                        quest_get_state, QuestState)
 from sbs_utils.agent import Agent
+import random as _random
 
 # Half-extent of a sector's playable area (world units).
 UNIVERSE_SECTOR_R = 50_000
@@ -288,6 +290,61 @@ def universe_set_sector_value(sectors, i, j, field, value):
     s[field] = value
     sectors[k] = s
     return sectors
+
+
+# --- Sector quests (deterministic givers) ------------------------------------
+# Station sectors offer a deterministic cargo run whose destination is keyed to
+# the giving sector, so the same station always offers the same run. The quest
+# is granted to the player ship and persists (see _serialize_quests); reaching
+# the destination completes it via the on_reach trigger in the quest driver.
+def universe_delivery_target(seed, i, j):
+    """Deterministic delivery destination sector for a station at (i,j)."""
+    rng = _random.Random(universe_sector_key(seed, i, j) + 99)
+    di = rng.choice([-3, -2, 2, 3])
+    dj = rng.choice([-3, -2, 2, 3])
+    return int(i) + di, int(j) + dj
+
+
+def universe_delivery_quest_id(i, j):
+    return f"cargo_{int(i)}_{int(j)}"
+
+
+def universe_delivery_available(ship_id, i, j):
+    """True if this station's cargo run hasn't been taken/finished by the ship."""
+    return quest_get_state(ship_id, universe_delivery_quest_id(i, j)) == QuestState.IDLE
+
+
+def universe_grant_delivery(ship_id, seed, i, j):
+    """Grant (activate) this station's deterministic cargo run to the ship.
+
+    Returns (quest_id, target_i, target_j). Reaching the target sector completes
+    it via the on_reach trigger (quest driver), paying credits.
+    """
+    ti, tj = universe_delivery_target(seed, i, j)
+    qid = universe_delivery_quest_id(i, j)
+    quest_add(ship_id, qid, f"Cargo Run to ({ti}, {tj})",
+              f"Haul cargo from sector ({int(i)}, {int(j)}) to sector ({ti}, {tj}). "
+              f"Engage the jump drive on Navigation to make the run.",
+              state=QuestState.ACTIVE,
+              data={"on_reach": {"sector": [ti, tj]}, "reward": {"credits": 400}})
+    return qid, ti, tj
+
+
+def universe_quest_target_sectors():
+    """(i,j) target sectors of all players' ACTIVE on_reach quests (map markers)."""
+    out = set()
+    for ship in to_object_list(role("__player__")):
+        tree = quest_agent_quests(ship.id)
+        children = tree.get("children") if tree is not None else None
+        for qid, q in (children or {}).items():
+            if quest_get_state(ship.id, qid) != QuestState.ACTIVE:
+                continue
+            reach = (q.get("data") or {}).get("on_reach")
+            if isinstance(reach, dict):
+                sec = reach.get("sector")
+                if sec and len(sec) == 2:
+                    out.add((int(sec[0]), int(sec[1])))
+    return out
 
 
 # --- Sector kind + galaxy map ------------------------------------------------

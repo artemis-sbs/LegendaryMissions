@@ -11,12 +11,11 @@ quest_activated/quest_completed signals so manual activation still updates state
 from sbs_utils.procedural.quest import (
     quest_agent_quests, quest_get_state, quest_get_data,
     quest_get_key, quest_set_key, quest_get_display_name, quest_add, QuestState)
-from sbs_utils.procedural.roles import has_role
-from sbs_utils.procedural.query import to_object
+from sbs_utils.procedural.roles import has_role, role
+from sbs_utils.procedural.query import to_object, to_object_list, to_id
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.sides import to_side_id
 from sbs_utils.procedural.comms import comms_broadcast
-from sbs_utils.procedural.query import to_id
 from sbs_utils.procedural.gui import gui_row, gui_text
 from sbs_utils.mast.mast_node import MastDataObject
 
@@ -85,6 +84,20 @@ def quest_on_kill(killer_id, destroyed_id):
         if role and not has_role(destroyed_id, role):
             continue
         _advance_count(killer_id, qid, data, trig.get("count", 1))
+
+
+def quest_on_arrive(i, j):
+    """Complete on_reach(sector) quests for every player arriving at (i,j).
+
+    Reaching a place is a single event (not a count), so it completes the
+    objective. Used by the Open Universe (signal universe_arrived).
+    """
+    target = [int(i), int(j)]
+    for ship in to_object_list(role("__player__")):
+        for qid, data in _active_quests(ship.id):
+            trig = data.get("on_reach")
+            if isinstance(trig, dict) and list(trig.get("sector") or []) == target:
+                quest_mark_complete(ship.id, qid)
 
 
 def quest_on_collect(holder_id, key):

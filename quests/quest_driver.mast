@@ -24,3 +24,8 @@
 //signal/item_collected
     quest_on_collect(holder_id, key)
     ->END
+
+# Open Universe arrival - completes on_reach(sector) quests (cargo runs etc.)
+//signal/universe_arrived
+    quest_on_arrive(ARRIVE_I, ARRIVE_J)
+    ->END
