@@ -106,7 +106,7 @@ def universe_system_clan(clans, seed, i, j, base_kind):
     A clan home -> that clan + 'station' (a clan presence); a keyed 'enemy'
     system -> a foe clan (still 'enemy'); otherwise no clan. Both the map and the
     generator call this so naming/ownership match what spawns. base_kind comes
-    from universe_sector_kind (clan-agnostic) - passed in to avoid a cross-import.
+    from universe_system_kind (clan-agnostic) - passed in to avoid a cross-import.
     """
     home = clan_home_owner(clans, i, j)
     if home is not None:

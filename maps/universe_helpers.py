@@ -26,7 +26,7 @@ from sbs_utils.agent import Agent
 import random as _random
 
 # Half-extent of a sector's playable area (world units).
-UNIVERSE_SECTOR_R = 50_000
+UNIVERSE_SYSTEM_R = 50_000
 
 # --- Save format version + migration ----------------------------------------
 # The universe is mostly procedural (regenerated from the seed); the save stores
@@ -40,7 +40,7 @@ UNIVERSE_SAVE_VERSION = 1
 _MIGRATIONS = {}
 
 
-def universe_sector_key(universe_seed, i, j):
+def universe_system_key(universe_seed, i, j):
     """Stable per-sector seed derived from the universe seed and logical coords.
 
     Uses the same position-keyed mix as the scatter lattice, so a sector's
@@ -49,21 +49,21 @@ def universe_sector_key(universe_seed, i, j):
     return scatter._mix(int(universe_seed), int(i), int(j))
 
 
-def universe_generate_sector(universe_seed, i, j, terrain_value=2):
+def universe_generate_system(universe_seed, i, j, terrain_value=2):
     """Spawn a sector's keyed asteroid/nebula field at the origin.
 
     Pure function of (universe_seed, i, j): the same sector always regenerates
     the same field. Features (stations, enemies, anomalies) come in a later step.
     """
-    key = universe_sector_key(universe_seed, i, j)
-    r = UNIVERSE_SECTOR_R
+    key = universe_system_key(universe_seed, i, j)
+    r = UNIVERSE_SYSTEM_R
     nebula_chance = terrain_value * 0.0012
     asteroid_chance = terrain_value * 0.0010
     terrain_spawn_field_keyed(key, 1000, -r, -r, r, r, terrain_value,
                               nebula_chance, asteroid_chance)
 
 
-def universe_clear_sector():
+def universe_clear_system():
     """Remove the current sector's terrain and NPCs, keeping player ships.
 
     broad_type 0x1F = terrain (0x0f) + NPC (0x10); PLAYER (0x20) is excluded, so
@@ -258,7 +258,7 @@ def universe_load():
     return data
 
 
-def universe_sector_flag(sectors, i, j, flag):
+def universe_system_flag(sectors, i, j, flag):
     """True if a per-sector delta flag (e.g. station_destroyed) is set."""
     if not isinstance(sectors, dict):
         return False
@@ -266,12 +266,12 @@ def universe_sector_flag(sectors, i, j, flag):
     return bool(s.get(flag)) if isinstance(s, dict) else False
 
 
-def universe_set_sector_flag(sectors, i, j, flag, value=True):
+def universe_set_system_flag(sectors, i, j, flag, value=True):
     """Set a per-sector delta flag; returns the (possibly new) sectors dict."""
-    return universe_set_sector_value(sectors, i, j, flag, value)
+    return universe_set_system_value(sectors, i, j, flag, value)
 
 
-def universe_sector_value(sectors, i, j, field, default=None):
+def universe_system_value(sectors, i, j, field, default=None):
     """Read an arbitrary per-sector delta field (e.g. market stock)."""
     if not isinstance(sectors, dict):
         return default
@@ -279,7 +279,7 @@ def universe_sector_value(sectors, i, j, field, default=None):
     return s.get(field, default) if isinstance(s, dict) else default
 
 
-def universe_set_sector_value(sectors, i, j, field, value):
+def universe_set_system_value(sectors, i, j, field, value):
     """Set an arbitrary per-sector delta field; returns the sectors dict."""
     if not isinstance(sectors, dict):
         sectors = {}
@@ -299,7 +299,7 @@ def universe_set_sector_value(sectors, i, j, field, value):
 # the destination completes it via the on_reach trigger in the quest driver.
 def universe_delivery_target(seed, i, j):
     """Deterministic delivery destination sector for a station at (i,j)."""
-    rng = _random.Random(universe_sector_key(seed, i, j) + 99)
+    rng = _random.Random(universe_system_key(seed, i, j) + 99)
     di = rng.choice([-3, -2, 2, 3])
     dj = rng.choice([-3, -2, 2, 3])
     return int(i) + di, int(j) + dj
@@ -341,7 +341,7 @@ def universe_mystery_available(ship_id, i, j):
 
 def universe_mystery_target(seed, i, j):
     """Deterministic sector the anomaly's signal points to."""
-    rng = _random.Random(universe_sector_key(seed, i, j) + 555)
+    rng = _random.Random(universe_system_key(seed, i, j) + 555)
     di = rng.choice([-4, -3, 3, 4])
     dj = rng.choice([-4, -3, 3, 4])
     return int(i) + di, int(j) + dj
@@ -388,13 +388,13 @@ _KIND_ABBR = {"home": "Home", "station": "Base", "enemy": "Foe",
               "nebula": "Neb", "anomaly": "!!", "empty": "."}
 
 
-def universe_sector_name(i, j):
+def universe_system_name(i, j):
     """Deprecated: procedural names removed - clans name their home systems.
     Kept (returns '') so existing callers don't break."""
     return ""
 
 
-def universe_sector_kind(seed, i, j, danger="Quiet"):
+def universe_system_kind(seed, i, j, danger="Quiet"):
     """The deterministic kind of any sector (pure - does not spawn anything).
 
     (0,0) is always home; otherwise a keyed roll against the Danger thresholds.
@@ -428,9 +428,9 @@ def universe_map_cell_text(seed, i, j, danger, sectors, reveal):
     Named POIs always show; otherwise unvisited sectors read '?' under fog of
     war ("Full Chart" reveals everything, since it's all deterministic).
     """
-    name = universe_sector_name(i, j)
+    name = universe_system_name(i, j)
     if name:
         return name
-    if reveal != "Full Chart" and not universe_sector_flag(sectors, i, j, "visited"):
+    if reveal != "Full Chart" and not universe_system_flag(sectors, i, j, "visited"):
         return "?"
-    return _KIND_ABBR.get(universe_sector_kind(seed, i, j, danger), ".")
+    return _KIND_ABBR.get(universe_system_kind(seed, i, j, danger), ".")

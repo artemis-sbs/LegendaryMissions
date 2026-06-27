@@ -71,7 +71,7 @@ GameCode:
         shared universe_sectors = {}
     universe_save(universe_seed, universe_i, universe_j, universe_sectors)
 
-    await task_schedule(universe_enter_sector)
+    await task_schedule(universe_enter_system)
     await task_schedule(spawn_players)
     universe_load_players()
     ->END
@@ -85,12 +85,12 @@ GameCode:
 
 # Persist a station's market stock to the sector delta on buy/sell.
 //signal/item_bought if UNIVERSE_ACTIVE
-    universe_sectors = universe_set_sector_value(universe_sectors, universe_i, universe_j, "market", market_snapshot(station_id))
+    universe_sectors = universe_set_system_value(universe_sectors, universe_i, universe_j, "market", market_snapshot(station_id))
     universe_save(universe_seed, universe_i, universe_j, universe_sectors)
     ->END
 
 //signal/item_sold if UNIVERSE_ACTIVE
-    universe_sectors = universe_set_sector_value(universe_sectors, universe_i, universe_j, "market", market_snapshot(station_id))
+    universe_sectors = universe_set_system_value(universe_sectors, universe_i, universe_j, "market", market_snapshot(station_id))
     universe_save(universe_seed, universe_i, universe_j, universe_sectors)
     ->END
 
@@ -120,10 +120,10 @@ GameCode:
 --- repaint
     prev_i = universe_i
     prev_j = universe_j
-    cur_owner = universe_system_clan(UNIVERSE_CLANS, universe_seed, universe_i, universe_j, universe_sector_kind(universe_seed, universe_i, universe_j, DANGER))[0]
+    cur_owner = universe_system_clan(UNIVERSE_CLANS, universe_seed, universe_i, universe_j, universe_system_kind(universe_seed, universe_i, universe_j, DANGER))[0]
     sec_name = clan_name(UNIVERSE_CLANS, cur_owner) if cur_owner is not None else ""
     gui_section(style="area: 5, 5, 95, 95; background:#1578;")
-    """justify:center; font:gui-5; $text:Sector ({universe_i}, {universe_j})  {sec_name}  [{universe_kind}]"""
+    """justify:center; font:gui-5; $text:System ({universe_i}, {universe_j})  {sec_name}  [{universe_kind}]"""
 
     # Galaxy map: a 7x7 grid centered on the current sector (north = +j on top).
     # Click any cell to jump there. Adjacent cells double as N/S/E/W.
@@ -139,8 +139,8 @@ GameCode:
             # Clan overlay: homes are always named + colored; other clan-owned
             # systems are colored once revealed (fog of war otherwise).
             home_owner = clan_home_owner(UNIVERSE_CLANS, ci, cj)
-            cell_owner = universe_system_clan(UNIVERSE_CLANS, universe_seed, ci, cj, universe_sector_kind(universe_seed, ci, cj, DANGER))[0]
-            cell_revealed = MAP_REVEAL == "Full Chart" or universe_sector_flag(universe_sectors, ci, cj, "visited")
+            cell_owner = universe_system_clan(UNIVERSE_CLANS, universe_seed, ci, cj, universe_system_kind(universe_seed, ci, cj, DANGER))[0]
+            cell_revealed = MAP_REVEAL == "Full Chart" or universe_system_flag(universe_sectors, ci, cj, "visited")
             if home_owner is not None:
                 txt = clan_name(UNIVERSE_CLANS, home_owner)
                 cell_bg = clan_color(UNIVERSE_CLANS, home_owner)
@@ -182,29 +182,29 @@ GameCode:
 # visit). (0,0) is always a safe home with a station. No persistence yet, so a
 # revisited sector regenerates its station/enemies (deltas come in 3c).
 #
-=== universe_enter_sector
-    key = universe_sector_key(universe_seed, universe_i, universe_j)
+=== universe_enter_system
+    key = universe_system_key(universe_seed, universe_i, universe_j)
     # Base kind (clan-agnostic) + clan overlay: a clan home -> that clan + a
     # station; a keyed enemy system -> a foe clan. Map and spawn use the same
     # helper so they agree.
-    base_kind = universe_sector_kind(universe_seed, universe_i, universe_j, DANGER)
+    base_kind = universe_system_kind(universe_seed, universe_i, universe_j, DANGER)
     res = universe_system_clan(UNIVERSE_CLANS, universe_seed, universe_i, universe_j, base_kind)
     owner = res[0]
     kind = res[1]
     universe_kind = kind
     # Remember we've been here (drives the galaxy-map fog of war).
-    universe_sectors = universe_set_sector_flag(universe_sectors, universe_i, universe_j, "visited")
+    universe_sectors = universe_set_system_flag(universe_sectors, universe_i, universe_j, "visited")
 
     # Terrain (denser in nebula sectors)
     tv = universe_terrain_value
     if kind == "nebula":
         tv = max(tv, 4)
-    universe_generate_sector(universe_seed, universe_i, universe_j, tv)
+    universe_generate_system(universe_seed, universe_i, universe_j, tv)
 
     # Features, each re-seeded from the sector key for determinism
     if kind == "home" or kind == "station":
         # Skip a station the players have destroyed (persisted).
-        if not universe_sector_flag(universe_sectors, universe_i, universe_j, "station_destroyed"):
+        if not universe_system_flag(universe_sectors, universe_i, universe_j, "station_destroyed"):
             random.seed(key + 1)
             st_type = random.choice(["starbase_command", "starbase_civil", "starbase_science", "starbase_industry"])
             # Clan-owned systems get the clan's station; else a friendly tsn base.
@@ -216,7 +216,7 @@ GameCode:
             station = npc_spawn(0, 0, 0, st_name, f"{st_side}, station", st_type, "behav_station")
             station_id = to_id(station)
             # Market: restore this sector's saved stock, else seed deterministically.
-            saved_market = universe_sector_value(universe_sectors, universe_i, universe_j, "market", None)
+            saved_market = universe_system_value(universe_sectors, universe_i, universe_j, "market", None)
             if saved_market is not None:
                 market_restore(station_id, saved_market)
             else:
@@ -226,7 +226,7 @@ GameCode:
                 await task_schedule(docking_standard_player_station)
     elif kind == "enemy":
         # Skip enemies in a sector the players have already cleared (persisted).
-        if not universe_sector_flag(universe_sectors, universe_i, universe_j, "enemy_cleared"):
+        if not universe_system_flag(universe_sectors, universe_i, universe_j, "enemy_cleared"):
             random.seed(key + 3)
             races = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
             count = 1 + int(DIFFICULTY / 3)
@@ -265,7 +265,7 @@ GameCode:
 # are stored (see universe_save in universe_helpers.py).
 #
 //damage/destroy if UNIVERSE_ACTIVE and has_role(DESTROYED_ID, "station")
-    universe_sectors = universe_set_sector_flag(universe_sectors, universe_i, universe_j, "station_destroyed")
+    universe_sectors = universe_set_system_flag(universe_sectors, universe_i, universe_j, "station_destroyed")
     universe_save(universe_seed, universe_i, universe_j, universe_sectors)
     ->END
 
@@ -278,7 +278,7 @@ GameCode:
     await delay_sim(5)
     ->END if ei != universe_i or ej != universe_j
     if len(to_object_list(role("raider") - role("raider_fleet"))) == 0:
-        universe_sectors = universe_set_sector_flag(universe_sectors, ei, ej, "enemy_cleared")
+        universe_sectors = universe_set_system_flag(universe_sectors, ei, ej, "enemy_cleared")
         universe_save(universe_seed, ei, ej, universe_sectors)
         ->END
     jump wait
@@ -304,8 +304,8 @@ GameCode:
     # Recenter on the destination sector (generated at the origin)
     universe_i = ti
     universe_j = tj
-    universe_clear_sector()
-    await task_schedule(universe_enter_sector)
+    universe_clear_system()
+    await task_schedule(universe_enter_system)
     universe_reposition_players()
     universe_save(universe_seed, universe_i, universe_j, universe_sectors)
     universe_save_players()
