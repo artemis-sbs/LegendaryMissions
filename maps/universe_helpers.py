@@ -197,7 +197,8 @@ def universe_save_players():
                 items[k] = c
         installs = get_inventory_value(ship.id, "installs", [])
         players[ship.name] = {"items": items, "installs": list(installs),
-                              "quests": _serialize_quests(ship.id)}
+                              "quests": _serialize_quests(ship.id),
+                              "reputation": get_inventory_value(ship.id, "reputation", {})}
         side = ship.side
         if side:
             side_credits[side] = get_inventory_value(to_side_id(side), "credits", 0)
@@ -235,6 +236,7 @@ def universe_load_players():
             if lbl is not None:
                 upgrade_add(ship.id, lbl, data={"key": k}, activate=True)
         _restore_quests(ship.id, pdata.get("quests"))
+        set_inventory_value(ship.id, "reputation", pdata.get("reputation", {}))
 
 
 def universe_load():
