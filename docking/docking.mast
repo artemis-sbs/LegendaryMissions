@@ -60,6 +60,7 @@ distance: 600
 
 +++ undocking
 # This is called when docking is released
+    set_inventory_value(DOCKING_PLAYER_ID, "_docked_fired", False)
 
 
 # Call while the tractor is 
@@ -87,7 +88,12 @@ distance: 600
     start_counter(DOCKING_PLAYER_ID, "torps")
     start_counter(DOCKING_PLAYER_ID, "shields")
     start_counter(DOCKING_PLAYER_ID, "interior")
-    
+    # One-shot dock signal (this route runs every second while docked) so quests
+    # with an on_dock trigger fire once per dock; reset on undock above.
+    if not get_inventory_value(DOCKING_PLAYER_ID, "_docked_fired", False):
+        set_inventory_value(DOCKING_PLAYER_ID, "_docked_fired", True)
+        signal_emit("ship_docked", {"DOCK_SHIP_ID": DOCKING_PLAYER_ID, "DOCK_STATION_ID": DOCKING_NPC_ID})
+
 +++ refit
     set_weapons_selection(DOCKING_PLAYER_ID, 0)
 ###  Add Energy

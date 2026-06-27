@@ -29,3 +29,18 @@
 //signal/universe_arrived
     quest_on_arrive(ARRIVE_I, ARRIVE_J)
     ->END
+
+# Science scan - advances on_scan quests (recon/survey objectives).
+//science
+    quest_on_scan(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+    ->END
+
+# Ship docked a station - advances on_dock quests (return-to-base etc.).
+//signal/ship_docked
+    quest_on_dock(DOCK_SHIP_ID, DOCK_STATION_ID)
+    ->END
+
+# Generic named trigger - on_signal / on_comms (mission/comms escape hatch).
+//signal/quest_signal
+    quest_on_signal(SIGNAL_NAME)
+    ->END

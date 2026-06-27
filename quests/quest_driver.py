@@ -18,6 +18,7 @@ from sbs_utils.procedural.sides import to_side_id
 from sbs_utils.procedural.comms import comms_broadcast
 from sbs_utils.procedural.gui import gui_row, gui_text
 from sbs_utils.mast.mast_node import MastDataObject
+from sbs_utils.agent import Agent
 
 
 def quest_grant_reward(agent_id, reward):
@@ -49,8 +50,23 @@ def quest_mark_complete(agent_id, quest_id):
     quest_set_key(agent_id, quest_id, "state", QuestState.COMPLETE)
     data = quest_get_data(agent_id, quest_id) or {}
     quest_grant_reward(agent_id, data.get("reward"))
+    quest_reveal(agent_id, data.get("reveal"))
     name = quest_get_display_name(agent_id, quest_id) or quest_id
     comms_broadcast(agent_id, "Mission complete: " + str(name), "#0f0")
+
+
+def quest_reveal(agent_id, reveal):
+    """Activate sub-quests revealed on completion (reveal: id, or [ids]).
+
+    The revealed quests must already exist on the agent (added SECRET/IDLE when
+    the parent story was granted); this flips them ACTIVE so their triggers go
+    live - the next step(s) of a multi-step bridge story.
+    """
+    if not reveal:
+        return
+    ids = reveal if isinstance(reveal, list) else [reveal]
+    for qid in ids:
+        quest_mark_active(agent_id, qid)
 
 
 def _active_quests(agent_id):
@@ -84,6 +100,57 @@ def quest_on_kill(killer_id, destroyed_id):
         if role and not has_role(destroyed_id, role):
             continue
         _advance_count(killer_id, qid, data, trig.get("count", 1))
+
+
+def quest_on_scan(scanner_id, scanned_id):
+    """Advance the scanner's on_scan quests when science scans a target.
+    on_scan {role: <role>} (optional) filters by the scanned object's role."""
+    if scanner_id is None:
+        return
+    for qid, data in _active_quests(scanner_id):
+        trig = data.get("on_scan")
+        if not isinstance(trig, dict):
+            continue
+        want = trig.get("role")
+        if want and not has_role(scanned_id, want):
+            continue
+        _advance_count(scanner_id, qid, data, trig.get("count", 1))
+
+
+def quest_on_dock(ship_id, station_id):
+    """Advance the ship's on_dock quests when it docks a station.
+    on_dock {role: <role>} (optional) filters by the station's role."""
+    if ship_id is None:
+        return
+    for qid, data in _active_quests(ship_id):
+        trig = data.get("on_dock")
+        if not isinstance(trig, dict):
+            continue
+        want = trig.get("role")
+        if want and not has_role(station_id, want):
+            continue
+        _advance_count(ship_id, qid, data, trig.get("count", 1))
+
+
+def quest_on_signal(name):
+    """Generic named trigger for on_signal / on_comms quests (escape hatch).
+
+    A mission/comms route fires signal_emit("quest_signal", {"SIGNAL_NAME": ...});
+    this advances any ACTIVE quest (players + SHARED) whose on_signal {name} or
+    on_comms {option} matches. Lets authors add beats with no new driver code.
+    """
+    agents = [Agent.SHARED_ID]
+    for s in to_object_list(role("__player__")):
+        agents.append(s.id)
+    for aid in agents:
+        for qid, data in _active_quests(aid):
+            trig = data.get("on_signal") or data.get("on_comms")
+            if not isinstance(trig, dict):
+                continue
+            want = trig.get("name") or trig.get("option")
+            if want and want != name:
+                continue
+            _advance_count(aid, qid, data, trig.get("count", 1))
 
 
 def quest_on_arrive(i, j):
