@@ -80,11 +80,14 @@ def quest_grant_amd(agent_id, doc):
         return
     for n in doc.get("children", []):
         qid = n.get("key")
-        if quest_get_state(agent_id, qid) != QuestState.IDLE:
-            continue  # already granted/in-progress
         data = n.get("data") or {}
+        # scope: shared -> grant to the game (SHARED) agent, so the whole crew
+        # shares the arc; otherwise to the given agent (ship).
+        target = Agent.SHARED_ID if data.get("scope") == "shared" else agent_id
+        if quest_get_state(target, qid) != QuestState.IDLE:
+            continue  # already granted/in-progress
         st = _STATE_NAMES.get(str(data.get("state", "idle")).lower(), QuestState.IDLE)
-        quest_add(agent_id, qid, n.get("display_text"),
+        quest_add(target, qid, n.get("display_text"),
                   (n.get("description") or "").strip(), state=st, data=data)
 
 
@@ -100,6 +103,11 @@ def quest_reveal(agent_id, reveal):
     ids = reveal if isinstance(reveal, list) else [reveal]
     for qid in ids:
         quest_mark_active(agent_id, qid)
+
+
+def quest_shared_state(quest_id):
+    """State of a game-level (SHARED) quest - convenience for narrative arcs."""
+    return int(quest_get_state(Agent.SHARED_ID, quest_id) or 0)
 
 
 def quest_mark_failed(agent_id, quest_id):
@@ -141,34 +149,43 @@ def quest_on_kill(killer_id, destroyed_id):
         _advance_count(killer_id, qid, data, trig.get("count", 1))
 
 
+def quest_on_kill_shared(destroyed_id):
+    """Advance game-level (SHARED) on_kill quests for any kill. Called once per
+    kill (separate from per-killer credit) so SHARED counts aren't doubled by the
+    source+parent calls."""
+    quest_on_kill(Agent.SHARED_ID, destroyed_id)
+
+
 def quest_on_scan(scanner_id, scanned_id):
-    """Advance the scanner's on_scan quests when science scans a target.
-    on_scan {role: <role>} (optional) filters by the scanned object's role."""
+    """Advance the scanner's (and game/SHARED) on_scan quests when science scans
+    a target. on_scan {role: <role>} (optional) filters by the scanned role."""
     if scanner_id is None:
         return
-    for qid, data in _active_quests(scanner_id):
-        trig = data.get("on_scan")
-        if not isinstance(trig, dict):
-            continue
-        want = trig.get("role")
-        if want and not has_role(scanned_id, want):
-            continue
-        _advance_count(scanner_id, qid, data, trig.get("count", 1))
+    for aid in (scanner_id, Agent.SHARED_ID):
+        for qid, data in _active_quests(aid):
+            trig = data.get("on_scan")
+            if not isinstance(trig, dict):
+                continue
+            want = trig.get("role")
+            if want and not has_role(scanned_id, want):
+                continue
+            _advance_count(aid, qid, data, trig.get("count", 1))
 
 
 def quest_on_dock(ship_id, station_id):
-    """Advance the ship's on_dock quests when it docks a station.
-    on_dock {role: <role>} (optional) filters by the station's role."""
+    """Advance the ship's (and game/SHARED) on_dock quests when it docks a
+    station. on_dock {role: <role>} (optional) filters by the station's role."""
     if ship_id is None:
         return
-    for qid, data in _active_quests(ship_id):
-        trig = data.get("on_dock")
-        if not isinstance(trig, dict):
-            continue
-        want = trig.get("role")
-        if want and not has_role(station_id, want):
-            continue
-        _advance_count(ship_id, qid, data, trig.get("count", 1))
+    for aid in (ship_id, Agent.SHARED_ID):
+        for qid, data in _active_quests(aid):
+            trig = data.get("on_dock")
+            if not isinstance(trig, dict):
+                continue
+            want = trig.get("role")
+            if want and not has_role(station_id, want):
+                continue
+            _advance_count(aid, qid, data, trig.get("count", 1))
 
 
 def quest_on_signal(name):
@@ -199,24 +216,27 @@ def quest_on_arrive(i, j):
     objective. Used by the Open Universe (signal universe_arrived).
     """
     target = [int(i), int(j)]
-    for ship in to_object_list(role("__player__")):
-        for qid, data in _active_quests(ship.id):
+    agents = [s.id for s in to_object_list(role("__player__"))]
+    agents.append(Agent.SHARED_ID)
+    for aid in agents:
+        for qid, data in _active_quests(aid):
             trig = data.get("on_reach")
             if isinstance(trig, dict) and list(trig.get("sector") or []) == target:
-                quest_mark_complete(ship.id, qid)
+                quest_mark_complete(aid, qid)
 
 
 def quest_on_collect(holder_id, key):
-    """Advance the holder's on_collect quests when an item is collected."""
+    """Advance the holder's (and game/SHARED) on_collect quests on collection."""
     if holder_id is None:
         return
-    for qid, data in _active_quests(holder_id):
-        trig = data.get("on_collect")
-        if not isinstance(trig, dict):
-            continue
-        if trig.get("key") and trig.get("key") != key:
-            continue
-        _advance_count(holder_id, qid, data, trig.get("count", 1))
+    for aid in (holder_id, Agent.SHARED_ID):
+        for qid, data in _active_quests(aid):
+            trig = data.get("on_collect")
+            if not isinstance(trig, dict):
+                continue
+            if trig.get("key") and trig.get("key") != key:
+                continue
+            _advance_count(aid, qid, data, trig.get("count", 1))
 
 
 # --- Hangar quest board ------------------------------------------------------
