@@ -7,13 +7,16 @@ state. (Confirmed: physics/replication iterate sim.space_objects; standby pulls
 the object out of it.)
 
 Brains are MAST tasks independent of the sim, so a parked NPC's brain would keep
-acting on a non-simulated object. Therefore only park brain-less STATIC objects
-here - terrain (asteroid/nebula), which is also the bulk of objects. A parked
-object isn't in normal space, so its position is cached at park time.
+acting on a non-simulated object - so the culler pauses a parked object's brain
+(brain_pause) and resumes it on retrieve. That makes terrain AND self-brained
+NPCs/POIs safe to cull. (Fleet ships are the exception: their brain lives on the
+fleet agent, not the ship, so culling a fleet still needs fleet-agent handling -
+a follow-up.) A parked object isn't in normal space, so its position is cached.
 """
 import sbs
 from sbs_utils.procedural.query import to_object_list
 from sbs_utils.procedural.roles import role
+from sbs_utils.procedural.brain import brain_pause, brain_resume
 
 # id -> (x, y, z), captured when parked (parked objects aren't in normal space).
 _parked_pos = {}
@@ -37,7 +40,9 @@ def universe_cull_step(candidates, radius):
         if parked:
             x, y, z = _parked_pos[oid]
         else:
-            pp = obj.pos
+            pp = getattr(obj, "pos", None)
+            if pp is None:
+                continue   # skip non-space agents that share a role
             x, y, z = pp.x, pp.y, pp.z
         near = False
         for (px, py, pz) in pts:
@@ -47,9 +52,11 @@ def universe_cull_step(candidates, radius):
                 break
         if near and parked:
             sbs.retrieve_from_standby_list_id(oid)
+            brain_resume(oid)            # no-op if the object has no brain
             _parked_pos.pop(oid, None)
         elif (not near) and not parked:
             _parked_pos[oid] = (x, y, z)
+            brain_pause(oid)             # a self-brained NPC stops acting while parked
             sbs.push_to_standby_list_id(oid)
 
 
@@ -59,6 +66,7 @@ def universe_cull_clear():
     the rest (delete-by-box only sees objects in normal space, not standby)."""
     for oid in list(_parked_pos.keys()):
         sbs.retrieve_from_standby_list_id(oid)
+        brain_resume(oid)
     _parked_pos.clear()
 
 

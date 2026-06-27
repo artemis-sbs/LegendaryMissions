@@ -94,7 +94,7 @@ GameCode:
     await delay_sim(3)
     ->END if not UNIVERSE_ACTIVE
     if UNIVERSE_CULL:
-        universe_cull_step(to_object_list(role("asteroid") | role("nebula")), UNIVERSE_CULL_RADIUS)
+        universe_cull_step(to_object_list(role("asteroid") | role("nebula") | role("black_hole") | role("mine")), UNIVERSE_CULL_RADIUS)
     jump culloop
 
 
