@@ -111,7 +111,29 @@ all state changes run on the server.**
 - Persisted in the Open Universe **delta save**; **installs re-apply** their
   modifiers on load / jump; **station** inventories / markets persist per sector.
 
-### 3.7 Market & economy
+### 3.7 Signals / events (decoupling & extension points)
+
+Lean on signals so producers (collect / activate / market) are decoupled from
+reactors (effects, GUI repaint, quests, economy, sfx), and so activation stays
+server-authoritative (§3.5): the client **emits intent**, a server `//signal`
+route **does the work** and **emits a result event** anyone can hook.
+
+Event vocabulary (all data dicts carry `holder_id` + `key`):
+
+| Signal | Emitted by | Typical reactors |
+|---|---|---|
+| `item_collected` | collect route (after crediting) | GUI repaint, quests, sfx |
+| `item_activate` | GUI button (intent, client) | server `//signal/item_activate` route (runs the item label) |
+| `item_activated` | activation (server) | GUI repaint, effects, sfx (mirrors `upgrade_activated`) |
+| `item_expired` | timed modifier ending | GUI repaint, "buff ended" notice |
+| `item_bought` / `item_sold` | market route | credits/stock deltas, economy, persistence save |
+| `item_changed` | any of the above (generic) | upgrade panel `on signal item_changed:` repaint |
+
+This makes the system extensible like consoles/maps: a mission or addon adds a
+`//signal/item_*` route to react - no edits to the item core. Activation never
+runs in a client task; the button only `signal_emit`s.
+
+### 3.8 Market & economy
 
 - Station service: buy / sell from the registry (filtered to purchasable) for
   **credits**.
