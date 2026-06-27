@@ -97,6 +97,13 @@ def universe_save_state(data):
     save_yaml_data(universe_save_path(), data)
 
 
+def universe_save_diplomacy(diplomacy):
+    """Persist the per-pair diplomacy deltas (merges into the save)."""
+    data = universe_load() or {}
+    data["diplomacy"] = diplomacy
+    universe_save_state(data)
+
+
 def universe_migrate(data):
     """Bring a loaded save up to UNIVERSE_SAVE_VERSION via the migration ladder.
 

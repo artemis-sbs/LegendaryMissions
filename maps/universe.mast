@@ -21,6 +21,7 @@ default shared START_MODE = "Continue"
 default shared universe_sectors = {}
 default shared MAP_REVEAL = "Fog of War"
 default shared UNIVERSE_SELECT = "Default"
+default shared universe_diplomacy = {}
 
 
 @map/universe "Open Universe"
@@ -64,12 +65,16 @@ GameCode:
         shared universe_i = saved.get("current_sector", [0, 0])[0]
         shared universe_j = saved.get("current_sector", [0, 0])[1]
         shared universe_sectors = saved.get("sectors", {})
+        shared universe_diplomacy = saved.get("diplomacy", {})
     else:
         shared universe_seed = seed_value if seed_value != 0 else random.randrange(1, 2_000_000_000)
         shared universe_i = 0
         shared universe_j = 0
         shared universe_sectors = {}
+        shared universe_diplomacy = {}
     universe_save(universe_seed, universe_i, universe_j, universe_sectors)
+    # Re-apply any negotiated relation changes (clans/sides now exist).
+    universe_apply_dip(universe_diplomacy)
 
     await task_schedule(universe_enter_system)
     await task_schedule(spawn_players)
@@ -98,6 +103,15 @@ GameCode:
 # Apply a completed quest's declarative rep: block to the captain (universe).
 //signal/quest_finished if UNIVERSE_ACTIVE
     reputation_apply(AGENT_ID, DATA.get("rep"))
+    ->END
+
+
+# Change + persist a diplomacy relation (negotiation / quest-driven flips).
+# data: REL_A, REL_B, REL_VALUE (a sbs.DIPLOMACY int).
+=== universe_set_relation
+    side_set_relations(REL_A, REL_B, REL_VALUE)
+    universe_diplomacy = universe_set_dip(universe_diplomacy, REL_A, REL_B, REL_VALUE)
+    universe_save_diplomacy(universe_diplomacy)
     ->END
 
 

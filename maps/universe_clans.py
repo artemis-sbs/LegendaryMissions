@@ -8,7 +8,33 @@ among foe clans - so the galaxy map and what spawns agree. See UNIVERSE_CHANGES.
 from sbs_utils import scatter
 from sbs_utils.procedural.quest import document_get_amd_file
 from sbs_utils.procedural.execution import labels_get_type
+from sbs_utils.procedural.sides import side_set_relations
 from sbs_utils.mast.mast_node import MastDataObject
+
+
+# --- Diplomacy deltas (persisted per side/clan pair) -------------------------
+# Authored defaults come from clans.amd (foe/neutral); these deltas override them
+# (e.g. a negotiated ceasefire) and persist in the save. Keyed by a sorted pair.
+def universe_dip_key(a, b):
+    return "|".join(sorted([str(a), str(b)]))
+
+
+def universe_set_dip(dip, a, b, relation):
+    """Record a per-pair relation override; returns the (possibly new) dict."""
+    if not isinstance(dip, dict):
+        dip = {}
+    dip[universe_dip_key(a, b)] = int(relation)
+    return dip
+
+
+def universe_apply_dip(dip):
+    """Re-apply saved per-pair relation overrides (call after sides exist)."""
+    if not isinstance(dip, dict):
+        return
+    for k, relation in dip.items():
+        parts = k.split("|")
+        if len(parts) == 2:
+            side_set_relations(parts[0], parts[1], relation)
 
 
 # --- Universe registry (start-screen dropdown) -------------------------------
