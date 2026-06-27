@@ -1,0 +1,30 @@
+#
+# Server-side item activation. The GUI only emits the intent signal
+# "item_activate" {holder_id, key, client_id}; this route (which runs on the
+# server) validates and applies the effect, so activation is authoritative and
+# never runs in a client task (the bug class that broke the old system).
+#
+//signal/item_activate
+    item_label = item_get(key)
+    ->END if item_label is None
+    have = get_inventory_value(holder_id, key, 0)
+    ->END if have <= 0
+    # Console gating (server-validated, not just GUI-hidden)
+    ctype = get_inventory_value(client_id, "CONSOLE_TYPE", "")
+    item_consoles = item_meta(key, "consoles", "")
+    ->END if item_consoles != "" and ctype not in item_consoles
+    # Cooldown: a per-item timer (== effect duration) blocks re-use while active
+    ->END if not is_timer_finished(holder_id, "item_cd_" + key)
+    # Consume one (installs are permanent and not consumed)
+    item_mode = item_meta(key, "mode", "consumable")
+    if item_mode != "install":
+        set_inventory_value(holder_id, key, have - 1)
+    # Run the effect label on the server (applies modifiers etc.)
+    upgrade_add(holder_id, item_label, data={"key": key}, activate=True)
+    # Start the cooldown for timed effects
+    dur = item_meta(key, "duration", 0)
+    if dur and dur > 0:
+        set_timer(holder_id, "item_cd_" + key, seconds=dur)
+    signal_emit("item_activated", {"holder_id": holder_id, "key": key})
+    signal_emit("item_changed", {"holder_id": holder_id})
+    ->END

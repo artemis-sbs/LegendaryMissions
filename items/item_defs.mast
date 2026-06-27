@@ -1,11 +1,13 @@
 #
-# Item definitions for the discoverable item system (Phase 1).
+# Item definitions for the discoverable item system.
 #
 # Each item is a prefab-style label tagged `type: item/<category>/<sub>` so it
-# is found by labels_get_type("item/") - no new syntax. These re-express the 9
-# legacy anomaly upgrades (same keys + art) as data. Effects, prices, and tiers
-# are refined in later phases (Phase 3 activation, Phase 5/6 economy); the
-# bodies are stubs for now so the registry can be exercised first.
+# is found by labels_get_type("item/") - no new syntax. The body is the effect:
+# it runs server-side (via upgrade_add in item_activate.mast) with UPGRADE_AGENT_ID
+# (the holder) and the metadata fields available as variables (key, duration...).
+# Effects use modifier_add on the engine's *_upgrade_coeff keys (default 1.0,
+# additive value = bonus fraction) and auto-expire after `duration` - replacing
+# the old console-side delay_app loops (which had reset typos).
 #
 # metadata fields:
 #   type      item/<category>/<sub>   (category: upgrade | resource | ...)
@@ -30,8 +32,9 @@ consoles: weapons, engineering
 duration: 300
 tier: 2
 price: 250
-desc: Reinforces shields for a time.
+desc: Reinforces shields (3x) for a time.
 ```
+    modifier_add(UPGRADE_AGENT_ID, "all_shield_upgrade_coeff", 2.0, key, duration=duration)
     ->END
 
 === prefab_item_infusion_pcoils
@@ -46,8 +49,10 @@ consoles: helm
 duration: 300
 tier: 2
 price: 250
-desc: Boosts impulse/maneuvering for a time.
+desc: Boosts impulse and turn (3x) for a time.
 ```
+    modifier_add(UPGRADE_AGENT_ID, "impulse_upgrade_coeff", 2.0, key, duration=duration)
+    modifier_add(UPGRADE_AGENT_ID, "turn_upgrade_coeff", 2.0, key, duration=duration)
     ->END
 
 === prefab_item_tauron_focuser
@@ -62,8 +67,10 @@ consoles: weapons
 duration: 300
 tier: 2
 price: 250
-desc: Sharpens beam focus for a time.
+desc: Boosts beam and tube (2x) for a time.
 ```
+    modifier_add(UPGRADE_AGENT_ID, "all_beam_upgrade_coeff", 1.0, key, duration=duration)
+    modifier_add(UPGRADE_AGENT_ID, "all_tube_upgrade_coeff", 1.0, key, duration=duration)
     ->END
 
 === prefab_item_secret_codecase
@@ -78,8 +85,10 @@ consoles: comms
 duration: 300
 tier: 3
 price: 400
-desc: Unlocks special comms options for a time.
+desc: Arms a one-shot enemy auto-surrender (used from comms).
 ```
+    set_inventory_value(UPGRADE_AGENT_ID, "sc_armed", 1)
+    signal_emit("item_codecase_armed", {"holder_id": UPGRADE_AGENT_ID})
     ->END
 
 === prefab_item_hidens_powercell
@@ -90,8 +99,11 @@ display_text: HiDens Power Cell
 art: container_2a
 mode: resource
 targets: ship, cockpit
-desc: Instantly restores ship energy when used.
+desc: Instantly restores 500 ship energy when used.
 ```
+    blob = to_blob(UPGRADE_AGENT_ID)
+    if blob is not None:
+        blob.set("energy", blob.get("energy", 0) + 500, 0)
     ->END
 
 === prefab_item_vigoranium_nodule
@@ -108,6 +120,7 @@ tier: 2
 price: 250
 desc: Restores damage-control team strength.
 ```
+    signal_emit("item_restore_damcon", {"holder_id": UPGRADE_AGENT_ID})
     ->END
 
 === prefab_item_cetrocite_crystal
@@ -122,8 +135,9 @@ consoles: engineering
 duration: 300
 tier: 2
 price: 250
-desc: Improves system cooling for a time.
+desc: Improves system cooling (2x) for a time.
 ```
+    modifier_add(UPGRADE_AGENT_ID, "coolant_upgrade_coeff", 1.0, key, duration=duration)
     ->END
 
 === prefab_item_lateral_array
@@ -138,8 +152,9 @@ consoles: science
 duration: 300
 tier: 2
 price: 250
-desc: Extends sensor range for a time.
+desc: Boosts sensors (2x) for a time.
 ```
+    modifier_add(UPGRADE_AGENT_ID, "sensor_upgrade_coeff", 1.0, key, duration=duration)
     ->END
 
 === prefab_item_haplix_overcharger
@@ -154,6 +169,7 @@ consoles: engineering, weapons
 duration: 300
 tier: 3
 price: 400
-desc: Overcharges weapons systems for a time.
+desc: Overcharges beams (3x) for a time.
 ```
+    modifier_add(UPGRADE_AGENT_ID, "all_beam_upgrade_coeff", 2.0, key, duration=duration)
     ->END
