@@ -83,6 +83,37 @@ GameCode:
     ->END
 
 
+# Capture: hold a foe clan station's space clear of its ships to take it. Once
+# the garrison is gone and the area stays clear long enough, the station morphs
+# to the player's side (persisted). Ends if you leave or it is destroyed.
+=== universe_capture_watch
+    default cap_station = None
+    default cap_clan = None
+    default cap_hold = 0
+    ->END if cap_station is None
+    cap_i = universe_i
+    cap_j = universe_j
+--- cwatch
+    await delay_sim(2)
+    ->END if not UNIVERSE_ACTIVE
+    ->END if not object_exists(cap_station)
+    ->END if cap_i != universe_i or cap_j != universe_j
+    near = closest(cap_station, role(cap_clan) - role("station"), 12000)
+    if near is None:
+        cap_hold += 2
+    else:
+        cap_hold = 0
+    if cap_hold >= 20:
+        cap_obj = to_object(cap_station)
+        cap_obj.set_side("tsn")
+        universe_sectors = universe_set_system_flag(universe_sectors, cap_i, cap_j, "captured")
+        universe_save(universe_seed, universe_i, universe_j, universe_sectors)
+        comms_broadcast(role("__player__"), "Starbase captured!", "#0f0")
+        await task_schedule(docking_standard_player_station)
+        ->END
+    jump cwatch
+
+
 # Ambient chatter: occasional clan lines while in their space (flavor only).
 === universe_chatter_loop
 --- loop
@@ -246,10 +277,12 @@ GameCode:
         if not universe_system_flag(universe_sectors, universe_i, universe_j, "station_destroyed"):
             random.seed(key + 1)
             st_type = random.choice(["starbase_command", "starbase_civil", "starbase_science", "starbase_industry"])
-            # Clan-owned systems get the clan's station; else a friendly tsn base.
+            # Clan-owned systems get the clan's station; a captured one flies the
+            # player's flag; otherwise a friendly tsn base.
+            captured = universe_system_flag(universe_sectors, universe_i, universe_j, "captured")
             st_side = "tsn"
             st_name = "Starbase"
-            if owner is not None:
+            if owner is not None and not captured:
                 st_side = owner
                 st_name = clan_name(UNIVERSE_CLANS, owner)
             station = npc_spawn(0, 0, 0, st_name, f"{st_side}, station", st_type, "behav_station")
@@ -260,8 +293,14 @@ GameCode:
                 market_restore(station_id, saved_market)
             else:
                 market_seed(station_id, key)
-            # Only friendly stations offer player docking.
-            if not side_are_enemies(st_side, "tsn"):
+            if side_are_enemies(st_side, "tsn"):
+                # Foe clan home: a defending garrison; clear its space and hold to
+                # capture the station (universe_capture_watch).
+                random.seed(key + 7)
+                gpos = Vec3.rand_in_sphere(4000, 9000, False, True)
+                prefab_spawn(prefab_fleet_raider, {"race": "Kralien", "fleet_difficulty": DIFFICULTY, "ship_roles": owner + ", raider", "START_X": gpos.x, "START_Y": gpos.y, "START_Z": gpos.z})
+                task_schedule(universe_capture_watch, {"cap_station": station_id, "cap_clan": owner})
+            else:
                 await task_schedule(docking_standard_player_station)
     elif kind == "enemy":
         # Skip enemies in a sector the players have already cleared (persisted).
