@@ -268,3 +268,69 @@ def hangar_quest_template(item):
 def hangar_quest_title_template():
     gui_row("row-height: 1.2em;padding:13px;background:#1578;")
     gui_text("$text:Sortie Orders;justify: left;")
+
+
+# --- Quest log tab (accept/abandon) ------------------------------------------
+_QUEST_STATE_LABEL = {
+    int(QuestState.ACTIVE): "Active", int(QuestState.IDLE): "Available",
+    int(QuestState.COMPLETE): "Done", int(QuestState.FAILED): "Failed",
+}
+# Display order: active, available, complete, failed.
+_QUEST_STATE_ORDER = {
+    int(QuestState.ACTIVE): 0, int(QuestState.IDLE): 1,
+    int(QuestState.COMPLETE): 2, int(QuestState.FAILED): 3,
+}
+
+
+def quest_state_label(state):
+    return _QUEST_STATE_LABEL.get(int(state or 0), "")
+
+
+def quest_tab_items(client_id, ship_id):
+    """Quest rows for the log tab: shared/game + client + ship quests, each
+    tagged with its owning agent (for accept/abandon). SECRET quests are hidden."""
+    items = []
+    sources = [("Game", Agent.SHARED_ID)]
+    if client_id and client_id != 0:
+        sources.append(("You", client_id))
+    if ship_id and ship_id != 0:
+        sources.append(("Ship", ship_id))
+    for label, aid in sources:
+        tree = quest_agent_quests(aid)
+        children = tree.get("children") if tree is not None else None
+        for qid, q in (children or {}).items():
+            st = int(q.get("state", QuestState.IDLE) or 0)
+            if st == int(QuestState.SECRET):
+                continue
+            items.append(MastDataObject({
+                "agent_id": aid, "key": qid, "group": label,
+                "title": q.get("display_text", qid), "state": st,
+                "progress": q.get("progress", 0),
+                "desc": (q.get("description") or "").strip(),
+            }))
+    items.sort(key=lambda it: _QUEST_STATE_ORDER.get(it.get("state"), 9))
+    return items
+
+
+def quest_tab_template(item):
+    gui_row("row-height: 1.2em;padding:6px;")
+    gui_text(f"$text:{item.title};justify: left;")
+    gui_row("row-height: 1.0em;padding:6px;")
+    gui_text(f"$text:[{item.group}] {quest_state_label(item.get('state'))};justify: left;font:gui-1")
+
+
+def quest_tab_log_title():
+    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
+    gui_text("$text:Quest Log;justify: left;")
+
+
+def quest_tab_accept(item):
+    """Accept an available (IDLE) quest."""
+    if item is not None and item.get("state") == int(QuestState.IDLE):
+        quest_mark_active(item.get("agent_id"), item.get("key"))
+
+
+def quest_tab_abandon(item):
+    """Abandon an active quest (-> FAILED)."""
+    if item is not None and item.get("state") == int(QuestState.ACTIVE):
+        quest_set_key(item.get("agent_id"), item.get("key"), "state", QuestState.FAILED)
