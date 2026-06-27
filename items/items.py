@@ -10,7 +10,10 @@ from sbs_utils import scatter
 from sbs_utils.vec import Vec3
 from sbs_utils.procedural.execution import labels_get_type
 from sbs_utils.procedural.spawn import terrain_spawn
-from sbs_utils.procedural.inventory import set_inventory_value
+from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+from sbs_utils.procedural.query import to_object
+from sbs_utils.procedural.sides import to_side_id
+from sbs_utils.procedural.signal import signal_emit
 
 
 def items_get_list():
@@ -132,3 +135,117 @@ def terrain_spawn_pickups(upgrade_value, center=None, points=None):
     """Legacy shim onto the registry-driven spawner."""
     terrain_spawn_items(upgrade_value, center=center, points=points,
                         categories=["upgrade", "resource"])
+
+
+# --- Market / economy --------------------------------------------------------
+# Credits are a shared per-side pool. Station stock lives on the station agent
+# (stock_<key>); a station is "seeded" finite, or treated as unlimited if not.
+MARKET_SELL_FACTOR = 0.5
+
+
+def market_purchasable():
+    """Item labels with a positive price (buyable/sellable)."""
+    ret = []
+    for lbl in labels_get_type("item/"):
+        if (lbl.get_inventory_value("price", 0) or 0) > 0:
+            ret.append(lbl)
+    return ret
+
+
+def market_is_seeded(station_id):
+    return get_inventory_value(station_id, "market_seeded", 0) == 1
+
+
+def market_stock(station_id, key):
+    """Units of `key` a station has; a large number when not finite-seeded."""
+    if not market_is_seeded(station_id):
+        return 9999
+    return get_inventory_value(station_id, "stock_" + key, 0)
+
+
+def market_seed(station_id, seed_key):
+    """Deterministically stock a station's market (finite), keyed by seed_key.
+
+    Same seed_key (e.g. a sector key) reproduces the same stock. ~30% of priced
+    items are out of stock; the rest carry 1-5 units.
+    """
+    for i, lbl in enumerate(market_purchasable()):
+        k = lbl.get_inventory_value("key")
+        rng = random.Random(scatter._mix(int(seed_key), i))
+        qty = 0 if rng.random() < 0.3 else rng.randint(1, 5)
+        set_inventory_value(station_id, "stock_" + k, qty)
+    set_inventory_value(station_id, "market_seeded", 1)
+
+
+def market_snapshot(station_id):
+    """Current stock as {key: qty} (for persistence)."""
+    snap = {}
+    for lbl in market_purchasable():
+        k = lbl.get_inventory_value("key")
+        snap[k] = get_inventory_value(station_id, "stock_" + k, 0)
+    return snap
+
+
+def market_restore(station_id, snapshot):
+    """Apply a saved stock snapshot to a station (marks it finite-seeded)."""
+    if not isinstance(snapshot, dict):
+        return
+    for k, qty in snapshot.items():
+        set_inventory_value(station_id, "stock_" + k, qty)
+    set_inventory_value(station_id, "market_seeded", 1)
+
+
+def _ship_side_id(ship_id):
+    ship = to_object(ship_id)
+    return to_side_id(ship.side) if ship is not None and ship.side else None
+
+
+def market_buy(ship_id, station_id, key):
+    """Buy one `key` for the ship from the station, paying side credits."""
+    lbl = item_get(key)
+    if lbl is None:
+        return False
+    price = lbl.get_inventory_value("price", 0) or 0
+    sid = _ship_side_id(ship_id)
+    if sid is None or price <= 0:
+        return False
+    credits = get_inventory_value(sid, "credits", 0)
+    if credits < price or market_stock(station_id, key) <= 0:
+        return False
+    set_inventory_value(sid, "credits", credits - price)
+    set_inventory_value(ship_id, key, get_inventory_value(ship_id, key, 0) + 1)
+    if market_is_seeded(station_id):
+        set_inventory_value(station_id, "stock_" + key,
+                            get_inventory_value(station_id, "stock_" + key, 0) - 1)
+    signal_emit("item_bought", {"holder_id": ship_id, "station_id": station_id, "key": key})
+    signal_emit("item_changed", {"holder_id": ship_id})
+    return True
+
+
+def market_sell(ship_id, station_id, key):
+    """Sell one `key` from the ship to the station for side credits."""
+    lbl = item_get(key)
+    if lbl is None:
+        return False
+    owned = get_inventory_value(ship_id, key, 0)
+    if owned <= 0:
+        return False
+    sid = _ship_side_id(ship_id)
+    if sid is None:
+        return False
+    price = lbl.get_inventory_value("price", 0) or 0
+    payout = int(price * MARKET_SELL_FACTOR)
+    set_inventory_value(sid, "credits", get_inventory_value(sid, "credits", 0) + payout)
+    set_inventory_value(ship_id, key, owned - 1)
+    if market_is_seeded(station_id):
+        set_inventory_value(station_id, "stock_" + key,
+                            get_inventory_value(station_id, "stock_" + key, 0) + 1)
+    signal_emit("item_sold", {"holder_id": ship_id, "station_id": station_id, "key": key})
+    signal_emit("item_changed", {"holder_id": ship_id})
+    return True
+
+
+def market_sell_price(key):
+    lbl = item_get(key)
+    p = (lbl.get_inventory_value("price", 0) or 0) if lbl is not None else 0
+    return int(p * MARKET_SELL_FACTOR)

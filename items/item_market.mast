@@ -1,0 +1,28 @@
+#
+# Station market: buy/sell items from the registry for shared side credits.
+# Comms routes run on the server, so buy/sell are authoritative. Stock is finite
+# when a station has been seeded (the universe does this per sector); otherwise
+# it is treated as unlimited so the market works in any mission.
+#
+//comms if has_role(COMMS_ORIGIN_ID, "__player__") and has_roles(COMMS_SELECTED_ID, "station") and side_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
+    + "Market" //comms/market
+
+
+//comms/market
+    market_sid = to_side_id(COMMS_ORIGIN.side)
+    market_credits = get_inventory_value(market_sid, "credits", 0)
+    << "Market"
+        % Credits available: {market_credits}
+    + "Back" //comms
+    for market_lbl in market_purchasable():
+        mk = market_lbl.get_inventory_value("key")
+        mname = market_lbl.get_inventory_value("display_text", mk)
+        mprice = market_lbl.get_inventory_value("price", 0)
+        mstock = market_stock(COMMS_SELECTED_ID, mk)
+        mowned = get_inventory_value(COMMS_ORIGIN_ID, mk, 0)
+        + "Buy {mname} - {mprice}cr (stock {mstock})" if mstock > 0 and market_credits >= mprice:
+            market_buy(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, mk)
+            comms_navigate("//comms/market")
+        + "Sell {mname} - +{market_sell_price(mk)}cr (have {mowned})" if mowned > 0:
+            market_sell(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, mk)
+            comms_navigate("//comms/market")

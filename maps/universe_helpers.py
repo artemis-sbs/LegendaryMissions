@@ -176,13 +176,26 @@ def universe_sector_flag(sectors, i, j, flag):
 
 def universe_set_sector_flag(sectors, i, j, flag, value=True):
     """Set a per-sector delta flag; returns the (possibly new) sectors dict."""
+    return universe_set_sector_value(sectors, i, j, flag, value)
+
+
+def universe_sector_value(sectors, i, j, field, default=None):
+    """Read an arbitrary per-sector delta field (e.g. market stock)."""
+    if not isinstance(sectors, dict):
+        return default
+    s = sectors.get(f"{i},{j}")
+    return s.get(field, default) if isinstance(s, dict) else default
+
+
+def universe_set_sector_value(sectors, i, j, field, value):
+    """Set an arbitrary per-sector delta field; returns the sectors dict."""
     if not isinstance(sectors, dict):
         sectors = {}
     k = f"{i},{j}"
     s = sectors.get(k)
     if not isinstance(s, dict):
         s = {}
-    s[flag] = value
+    s[field] = value
     sectors[k] = s
     return sectors
 

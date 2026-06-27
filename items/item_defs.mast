@@ -99,6 +99,7 @@ display_text: HiDens Power Cell
 art: container_2a
 mode: resource
 targets: ship, cockpit
+price: 150
 desc: Instantly restores 500 ship energy when used.
 ```
     blob = to_blob(UPGRADE_AGENT_ID)

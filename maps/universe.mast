@@ -75,6 +75,18 @@ GameCode:
     ->END
 
 
+# Persist a station's market stock to the sector delta on buy/sell.
+//signal/item_bought if UNIVERSE_ACTIVE
+    universe_sectors = universe_set_sector_value(universe_sectors, universe_i, universe_j, "market", market_snapshot(station_id))
+    universe_save(universe_seed, universe_i, universe_j, universe_sectors)
+    ->END
+
+//signal/item_sold if UNIVERSE_ACTIVE
+    universe_sectors = universe_set_sector_value(universe_sectors, universe_i, universe_j, "market", market_snapshot(station_id))
+    universe_save(universe_seed, universe_i, universe_j, universe_sectors)
+    ->END
+
+
 #
 # Navigation console: jump between sectors (only shown in the universe map).
 #
@@ -152,7 +164,14 @@ GameCode:
         if not universe_sector_flag(universe_sectors, universe_i, universe_j, "station_destroyed"):
             random.seed(key + 1)
             st_type = random.choice(["starbase_command", "starbase_civil", "starbase_science", "starbase_industry"])
-            npc_spawn(0, 0, 0, "Starbase", "tsn, station", st_type, "behav_station")
+            station = npc_spawn(0, 0, 0, "Starbase", "tsn, station", st_type, "behav_station")
+            station_id = to_id(station)
+            # Market: restore this sector's saved stock, else seed deterministically.
+            saved_market = universe_sector_value(universe_sectors, universe_i, universe_j, "market", None)
+            if saved_market is not None:
+                market_restore(station_id, saved_market)
+            else:
+                market_seed(station_id, key)
             await task_schedule(docking_standard_player_station)
     elif kind == "enemy":
         # Skip enemies in a sector the players have already cleared (persisted).
