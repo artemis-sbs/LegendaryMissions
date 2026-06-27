@@ -1,16 +1,24 @@
-default CONSOLE_SELECT = "" # Make sure variable exist at startup
+#
+# Quest log - a top tab on every console showing the player's quests (ship +
+# client + shared/game), state-ordered (active -> available -> complete ->
+# failed) with the AMD narrative. Gated by the QUEST_TAB_ENABLED setting so a
+# mission can turn it off. (Accept/abandon controls are a follow-up; they need
+# the flattened list to carry each quest's owning agent.)
+#
+default CONSOLE_SELECT = ""              # exists at startup
+default shared QUEST_TAB_ENABLED = True  # missions may set this False
 
-if is_dev_build():
+if QUEST_TAB_ENABLED:
     gui_tab_add_top("quest")
-    # Example images
-    gui_image_add_atlas("test", "media/LegendaryMissions/operator")
-    gui_image_add_atlas("test2", "media/LegendaryMissions/operator", 645,570, 950,820)
+    # Show the quest log on the standard bridge consoles.
+    quest_console_enable("helm,weapons,science,engineering,comms,mainscreen")
+    if is_dev_build():
+        # Dev-only sample art for the quest test data.
+        gui_image_add_atlas("test", "media/LegendaryMissions/operator")
+        gui_image_add_atlas("test2", "media/LegendaryMissions/operator", 645, 570, 950, 820)
 
-    quest_console_enable("helm,comms")
-    shared QUEST_TAB_ENABLED = True
 
-
-//gui/tab/quest if quest_is_console_enabled(CONSOLE_SELECT)
+//gui/tab/quest if QUEST_TAB_ENABLED and quest_is_console_enabled(CONSOLE_SELECT)
     if is_dev_build():
         document_root = quest_create_test_data()
 
@@ -18,8 +26,4 @@ if is_dev_build():
     document_type = "quest"
     document_back_tab = CONSOLE_SELECT
 
-    document_back_tab = CONSOLE_SELECT
-
-
     jump document_screen
-
