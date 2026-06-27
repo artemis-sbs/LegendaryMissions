@@ -13,6 +13,34 @@ from sbs_utils.vec import Vec3
 
 import sbs
 from sbs_utils.procedural.routes import  RouteDamageObject
+from sbs_utils.procedural.query import to_object_list
+from sbs_utils.procedural.roles import role
+
+
+# Per-captain truce (Open Universe, Epic D): a fleet ignores captains who have
+# earned high enough reputation with the fleet's clan. Reads the per-ship
+# "reputation" inventory directly, so it's a no-op where there's no reputation
+# (non-universe missions) and needs no cross-addon import.
+TRUCE_THRESHOLD = 60
+
+
+def reputation_standing(ship_id, clan):
+    """Overall favorability of a captain (ship) with a clan (sum of axes)."""
+    reps = get_inventory_value(ship_id, "reputation", None) or {}
+    cm = reps.get(clan)
+    return sum(cm.values()) if isinstance(cm, dict) else 0
+
+
+def truced_ships(clan):
+    """Player-ship ids at truce with a clan (standing >= threshold); excluded
+    from that clan's fleet targeting. Empty when there's no reputation."""
+    out = set()
+    if not clan:
+        return out
+    for s in to_object_list(role("__player__")):
+        if reputation_standing(s.id, clan) >= TRUCE_THRESHOLD:
+            out.add(s.id)
+    return out
 
 class Fleet(Agent):
     #--------------------------------------------------------------------------------------
