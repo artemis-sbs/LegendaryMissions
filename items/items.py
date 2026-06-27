@@ -67,7 +67,9 @@ def item_spawn(key, x, y, z, name=None, blink=None, yaw=None):
         blink = random.randint(1, 2)
     if yaw is None:
         yaw = random.uniform(0.03, 0.08)
-    obj = terrain_spawn(x, y, z, name, f"#,item,{key}", art, "behav_pickup")
+    # Roles: "item" (new generic collection) + "upgrade" and the key (legacy
+    # role checks, e.g. science scans, still match).
+    obj = terrain_spawn(x, y, z, name, f"#,item,upgrade,{key}", art, "behav_pickup")
     obj.engine_object.steer_yaw = yaw
     obj.engine_object.blink_state = int(blink)
     set_inventory_value(obj.id, "item_key", key)
