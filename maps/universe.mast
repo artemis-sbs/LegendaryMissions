@@ -65,6 +65,13 @@ GameCode:
 
     await task_schedule(universe_enter_sector)
     await task_schedule(spawn_players)
+    universe_load_players()
+    ->END
+
+
+# Persist items + shared side credits whenever they change (universe only).
+//signal/item_changed if UNIVERSE_ACTIVE
+    universe_save_players()
     ->END
 
 
@@ -218,6 +225,7 @@ GameCode:
     await task_schedule(universe_enter_sector)
     universe_reposition_players()
     universe_save(universe_seed, universe_i, universe_j, universe_sectors)
+    universe_save_players()
 
     await delay_sim(1)
 

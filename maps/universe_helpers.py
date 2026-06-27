@@ -15,6 +15,10 @@ from sbs_utils.procedural.terrain import terrain_spawn_field_keyed
 from sbs_utils.procedural.space_objects import delete_objects_box
 from sbs_utils.procedural.roles import role
 from sbs_utils.procedural.query import to_object_list
+from sbs_utils.procedural.execution import labels_get_type
+from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+from sbs_utils.procedural.sides import to_side_id
+from sbs_utils.procedural.upgrades import upgrade_add
 
 # Half-extent of a sector's playable area (world units).
 UNIVERSE_SECTOR_R = 50_000
@@ -71,10 +75,89 @@ def universe_save_path():
     return os.path.join(common, "universe_save.yaml")
 
 
+def universe_save_state(data):
+    """Write the full save dict (low-level)."""
+    save_yaml_data(universe_save_path(), data)
+
+
 def universe_save(seed, i, j, sectors):
-    """Persist the universe seed, current sector, and the sparse delta map."""
-    save_yaml_data(universe_save_path(),
-                   {"universe_seed": seed, "current_sector": [i, j], "sectors": sectors})
+    """Persist the universe seed, current sector, and delta map.
+
+    Merges into the existing save so the players/side_credits sections (written
+    by universe_save_players) are preserved.
+    """
+    data = universe_load() or {}
+    data["universe_seed"] = seed
+    data["current_sector"] = [i, j]
+    data["sectors"] = sectors
+    universe_save_state(data)
+
+
+# --- Player / economy persistence -------------------------------------------
+# Items are per-ship (counts); credits are a shared per-side pool (the future
+# admiral / RTS console will own more of this economy). Keyed by ship name /
+# side key, which are stable across reloads (runtime ids are not).
+UNIVERSE_START_CREDITS = 500
+
+
+def _item_keys():
+    return [l.get_inventory_value("key") for l in labels_get_type("item/")]
+
+
+def _item_label(key):
+    for l in labels_get_type("item/"):
+        if l.get_inventory_value("key") == key:
+            return l
+    return None
+
+
+def universe_save_players():
+    """Persist per-ship item counts/installs and shared per-side credits."""
+    data = universe_load() or {}
+    players = {}
+    side_credits = {}
+    for ship in to_object_list(role("__player__")):
+        items = {}
+        for k in _item_keys():
+            c = get_inventory_value(ship.id, k, 0)
+            if c:
+                items[k] = c
+        installs = get_inventory_value(ship.id, "installs", [])
+        players[ship.name] = {"items": items, "installs": list(installs)}
+        side = ship.side
+        if side:
+            side_credits[side] = get_inventory_value(to_side_id(side), "credits", 0)
+    data["players"] = players
+    data["side_credits"] = side_credits
+    universe_save_state(data)
+
+
+def universe_load_players():
+    """Restore per-ship items/installs + per-side credits; re-apply installs.
+
+    New universes (no save) start each player side at UNIVERSE_START_CREDITS.
+    """
+    data = universe_load() or {}
+    players = data.get("players", {})
+    side_credits = data.get("side_credits", {})
+    seen_sides = set()
+    for ship in to_object_list(role("__player__")):
+        side = ship.side
+        if side and side not in seen_sides:
+            set_inventory_value(to_side_id(side), "credits",
+                                side_credits.get(side, UNIVERSE_START_CREDITS))
+            seen_sides.add(side)
+        pdata = players.get(ship.name)
+        if not pdata:
+            continue
+        for k, c in pdata.get("items", {}).items():
+            set_inventory_value(ship.id, k, c)
+        installs = pdata.get("installs", [])
+        set_inventory_value(ship.id, "installs", installs)
+        for k in installs:
+            lbl = _item_label(k)
+            if lbl is not None:
+                upgrade_add(ship.id, lbl, data={"key": k}, activate=True)
 
 
 def universe_load():
