@@ -236,9 +236,14 @@ GameCode:
                 # Spawn at the far edge so arrival isn't an immediate swarm.
                 near = 42_000
                 far = 49_000
+            # The owning foe clan's fleets fly the clan's side (still tagged
+            # "raider" so the clear-check and existing queries keep working).
+            ship_roles = "raider"
+            if owner is not None:
+                ship_roles = owner + ", raider"
             for n in range(count):
                 pos = Vec3.rand_in_sphere(near, far, False, True)
-                prefab_spawn(prefab_fleet_raider, {"race": random.choice(races), "fleet_difficulty": DIFFICULTY, "START_X": pos.x, "START_Y": pos.y, "START_Z": pos.z})
+                prefab_spawn(prefab_fleet_raider, {"race": random.choice(races), "fleet_difficulty": DIFFICULTY, "ship_roles": ship_roles, "START_X": pos.x, "START_Y": pos.y, "START_Z": pos.z})
             task_schedule(universe_watch_enemy_cleared, {"ei": universe_i, "ej": universe_j})
     elif kind == "anomaly":
         random.seed(key + 4)
