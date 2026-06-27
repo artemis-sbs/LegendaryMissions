@@ -20,6 +20,7 @@ default shared universe_kind = "home"
 default shared START_MODE = "Continue"
 default shared universe_sectors = {}
 default shared MAP_REVEAL = "Fog of War"
+default shared UNIVERSE_SELECT = "Default"
 
 
 @map/universe "Open Universe"
@@ -33,6 +34,7 @@ Properties:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
     Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
   Map:
+    Universe: 'gui_drop_down("$text: {UNIVERSE_SELECT};list: " + universe_options_csv(), var="UNIVERSE_SELECT")'
     Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max", var="TERRAIN_SELECT")'
     Danger: 'gui_drop_down("$text: {DANGER};list: Quiet, Balanced, Dangerous", var="DANGER")'
     Encounters: 'gui_drop_down("$text: {ENCOUNTERS};list: On Arrival, Dormant", var="ENCOUNTERS")'
@@ -50,7 +52,7 @@ GameCode:
     # Load and spawn the universe's clans as sides (see clans.amd). The player
     # side (tsn) already exists from the server-start create_sides signal, so
     # foe clans' enemies:"tsn" relation resolves.
-    shared UNIVERSE_CLANS = universe_parse_clans(media_read_relative_file("clans.amd"))
+    shared UNIVERSE_CLANS = universe_parse_clans(media_read_relative_file(universe_clans_file(UNIVERSE_SELECT)))
     for _clan in UNIVERSE_CLANS:
         await prefab_spawn(prefab_side_generic, {"key": _clan.key, "name": _clan.name, "desc": _clan.desc, "color": _clan.color, "enemies": _clan.enemies})
     shared universe_terrain_value = terrain_to_value(TERRAIN_SELECT)

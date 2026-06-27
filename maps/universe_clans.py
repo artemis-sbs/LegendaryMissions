@@ -7,7 +7,41 @@ among foe clans - so the galaxy map and what spawns agree. See UNIVERSE_CHANGES.
 """
 from sbs_utils import scatter
 from sbs_utils.procedural.quest import document_get_amd_file
+from sbs_utils.procedural.execution import labels_get_type
 from sbs_utils.mast.mast_node import MastDataObject
+
+
+# --- Universe registry (start-screen dropdown) -------------------------------
+# Each universe is a label (type: universe/<key>) in universes.mast naming its
+# clans/narrative AMD files. The dropdown lists them; selecting one picks which
+# clans.amd (+ narrative.amd) to load.
+def universe_registry():
+    return labels_get_type("universe/")
+
+
+def universe_options_csv():
+    """Comma list of universe display names for the dropdown's list: field."""
+    names = []
+    for l in universe_registry():
+        names.append(l.get_inventory_value("display", l.get_inventory_value("key", "Default")))
+    return ", ".join(names) if names else "Default"
+
+
+def _universe_field(display, field, default):
+    for l in universe_registry():
+        if l.get_inventory_value("display") == display or l.get_inventory_value("key") == display:
+            return l.get_inventory_value(field, default)
+    return default
+
+
+def universe_clans_file(display):
+    """The clans.amd filename for the selected universe (fallback clans.amd)."""
+    return _universe_field(display, "clans", "clans.amd")
+
+
+def universe_narrative_file(display):
+    """The narrative.amd filename for the selected universe (fallback)."""
+    return _universe_field(display, "narrative", "narrative.amd")
 
 
 def universe_parse_clans(content):
