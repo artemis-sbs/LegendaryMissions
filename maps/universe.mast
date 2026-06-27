@@ -118,7 +118,8 @@ GameCode:
 --- repaint
     prev_i = universe_i
     prev_j = universe_j
-    sec_name = universe_sector_name(universe_i, universe_j)
+    cur_owner = universe_system_clan(UNIVERSE_CLANS, universe_seed, universe_i, universe_j, universe_sector_kind(universe_seed, universe_i, universe_j, DANGER))[0]
+    sec_name = clan_name(UNIVERSE_CLANS, cur_owner) if cur_owner is not None else ""
     gui_section(style="area: 5, 5, 95, 95; background:#1578;")
     """justify:center; font:gui-5; $text:Sector ({universe_i}, {universe_j})  {sec_name}  [{universe_kind}]"""
 
@@ -132,10 +133,19 @@ GameCode:
             cj = universe_j + dj
             is_target = (ci, cj) in quest_targets
             txt = universe_map_cell_text(universe_seed, ci, cj, DANGER, universe_sectors, MAP_REVEAL)
+            cell_bg = "#0006"
+            # Clan overlay: homes are always named + colored; other clan-owned
+            # systems are colored once revealed (fog of war otherwise).
+            home_owner = clan_home_owner(UNIVERSE_CLANS, ci, cj)
+            cell_owner = universe_system_clan(UNIVERSE_CLANS, universe_seed, ci, cj, universe_sector_kind(universe_seed, ci, cj, DANGER))[0]
+            cell_revealed = MAP_REVEAL == "Full Chart" or universe_sector_flag(universe_sectors, ci, cj, "visited")
+            if home_owner is not None:
+                txt = clan_name(UNIVERSE_CLANS, home_owner)
+                cell_bg = clan_color(UNIVERSE_CLANS, home_owner)
+            elif cell_owner is not None and cell_revealed:
+                cell_bg = clan_color(UNIVERSE_CLANS, cell_owner)
             if is_target:
                 txt = "* " + txt
-            cell_bg = "#0006"
-            if is_target:
                 cell_bg = "#a60"
             if di == 0 and dj == 0:
                 cell_bg = "#0a6"
@@ -172,9 +182,13 @@ GameCode:
 #
 === universe_enter_sector
     key = universe_sector_key(universe_seed, universe_i, universe_j)
-    # Kind is computed by the same pure helper the galaxy map uses, so what the
-    # map shows is exactly what spawns here.
-    kind = universe_sector_kind(universe_seed, universe_i, universe_j, DANGER)
+    # Base kind (clan-agnostic) + clan overlay: a clan home -> that clan + a
+    # station; a keyed enemy system -> a foe clan. Map and spawn use the same
+    # helper so they agree.
+    base_kind = universe_sector_kind(universe_seed, universe_i, universe_j, DANGER)
+    res = universe_system_clan(UNIVERSE_CLANS, universe_seed, universe_i, universe_j, base_kind)
+    owner = res[0]
+    kind = res[1]
     universe_kind = kind
     # Remember we've been here (drives the galaxy-map fog of war).
     universe_sectors = universe_set_sector_flag(universe_sectors, universe_i, universe_j, "visited")
@@ -191,7 +205,13 @@ GameCode:
         if not universe_sector_flag(universe_sectors, universe_i, universe_j, "station_destroyed"):
             random.seed(key + 1)
             st_type = random.choice(["starbase_command", "starbase_civil", "starbase_science", "starbase_industry"])
-            station = npc_spawn(0, 0, 0, "Starbase", "tsn, station", st_type, "behav_station")
+            # Clan-owned systems get the clan's station; else a friendly tsn base.
+            st_side = "tsn"
+            st_name = "Starbase"
+            if owner is not None:
+                st_side = owner
+                st_name = clan_name(UNIVERSE_CLANS, owner)
+            station = npc_spawn(0, 0, 0, st_name, f"{st_side}, station", st_type, "behav_station")
             station_id = to_id(station)
             # Market: restore this sector's saved stock, else seed deterministically.
             saved_market = universe_sector_value(universe_sectors, universe_i, universe_j, "market", None)
@@ -199,7 +219,9 @@ GameCode:
                 market_restore(station_id, saved_market)
             else:
                 market_seed(station_id, key)
-            await task_schedule(docking_standard_player_station)
+            # Only friendly stations offer player docking.
+            if not side_are_enemies(st_side, "tsn"):
+                await task_schedule(docking_standard_player_station)
     elif kind == "enemy":
         # Skip enemies in a sector the players have already cleared (persisted).
         if not universe_sector_flag(universe_sectors, universe_i, universe_j, "enemy_cleared"):

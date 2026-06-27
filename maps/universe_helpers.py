@@ -381,38 +381,28 @@ def universe_quest_target_sectors():
 
 
 # --- Sector kind + galaxy map ------------------------------------------------
-# Named landmarks at fixed coords; these override the procedural kind and are
-# shown on the galaxy map even before you visit them. Add more here freely.
-UNIVERSE_POIS = {
-    (0, 0): ("Home Base", "home"),
-    (5, 3): ("Trade Nexus", "station"),
-    (-4, 6): ("The Maelstrom", "anomaly"),
-    (8, -5): ("Raider Den", "enemy"),
-    (-7, -7): ("Derelict Drift", "nebula"),
-}
-
+# Named landmarks now come from clans (clans.amd home systems), layered onto the
+# galaxy map by universe.mast. The procedural kind below is clan-agnostic; clan
+# ownership/naming is applied on top (see universe_clans.universe_system_clan).
 _KIND_ABBR = {"home": "Home", "station": "Base", "enemy": "Foe",
               "nebula": "Neb", "anomaly": "!!", "empty": "."}
 
 
 def universe_sector_name(i, j):
-    """The named-POI label for a sector, or '' if it's procedural."""
-    poi = UNIVERSE_POIS.get((int(i), int(j)))
-    return poi[0] if poi else ""
+    """Deprecated: procedural names removed - clans name their home systems.
+    Kept (returns '') so existing callers don't break."""
+    return ""
 
 
 def universe_sector_kind(seed, i, j, danger="Quiet"):
     """The deterministic kind of any sector (pure - does not spawn anything).
 
-    Named POIs win; (0,0) is always home; otherwise a keyed roll against the
-    Danger thresholds. Both the generator and the galaxy map call this, so what
-    you see on the map is exactly what spawns when you arrive.
+    (0,0) is always home; otherwise a keyed roll against the Danger thresholds.
+    Both the generator and the galaxy map call this, so what you see on the map is
+    exactly what spawns. Clan ownership/naming is layered on top in universe.mast.
     """
     i = int(i)
     j = int(j)
-    poi = UNIVERSE_POIS.get((i, j))
-    if poi:
-        return poi[1]
     if i == 0 and j == 0:
         return "home"
     roll = scatter.cell_roll(seed, 1, i, j, 7)

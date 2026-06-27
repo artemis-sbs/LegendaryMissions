@@ -54,6 +54,34 @@ def clan_home_owner(clans, i, j):
     return None
 
 
+def clan_name(clans, key):
+    """Display name for a clan key (or the key if unknown)."""
+    c = clan_get(clans, key)
+    return c.name if c is not None else key
+
+
+def clan_color(clans, key):
+    """Map/side color for a clan key (or a default)."""
+    c = clan_get(clans, key)
+    return c.color if c is not None else "#888888"
+
+
+def universe_system_clan(clans, seed, i, j, base_kind):
+    """Owning clan key + effective kind for a system, given its base kind.
+
+    A clan home -> that clan + 'station' (a clan presence); a keyed 'enemy'
+    system -> a foe clan (still 'enemy'); otherwise no clan. Both the map and the
+    generator call this so naming/ownership match what spawns. base_kind comes
+    from universe_sector_kind (clan-agnostic) - passed in to avoid a cross-import.
+    """
+    home = clan_home_owner(clans, i, j)
+    if home is not None:
+        return home, "station"
+    if base_kind == "enemy":
+        return clan_for_system(clans, seed, i, j), "enemy"
+    return None, base_kind
+
+
 def clan_for_system(clans, seed, i, j):
     """Owning clan key for a clan/foe system: home wins, else a keyed pick among
     foe clans (deterministic). Returns None if there are no foe clans.
