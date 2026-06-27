@@ -22,6 +22,9 @@ default shared universe_sectors = {}
 default shared MAP_REVEAL = "Fog of War"
 default shared UNIVERSE_SELECT = "Default"
 default shared universe_diplomacy = {}
+# Engine-network culling: park terrain beyond this radius from all players.
+default shared UNIVERSE_CULL = True
+default shared UNIVERSE_CULL_RADIUS = 25000
 
 
 @map/universe "Open Universe"
@@ -80,7 +83,19 @@ GameCode:
     await task_schedule(spawn_players)
     universe_load_players()
     task_schedule(universe_chatter_loop)
+    task_schedule(universe_cull_loop)
     ->END
+
+
+# Engine-network culling: periodically park terrain far from all players (out of
+# the network) and retrieve it as they approach. Terrain only (brain-less).
+=== universe_cull_loop
+--- culloop
+    await delay_sim(3)
+    ->END if not UNIVERSE_ACTIVE
+    if UNIVERSE_CULL:
+        universe_cull_step(to_object_list(role("asteroid") | role("nebula")), UNIVERSE_CULL_RADIUS)
+    jump culloop
 
 
 # Capture: hold a foe clan station's space clear of its ships to take it. Once
@@ -382,6 +397,8 @@ GameCode:
     # Recenter on the destination sector (generated at the origin)
     universe_i = ti
     universe_j = tj
+    # Return parked terrain to normal space so it gets despawned with the rest.
+    universe_cull_clear()
     universe_clear_system()
     await task_schedule(universe_enter_system)
     universe_reposition_players()
