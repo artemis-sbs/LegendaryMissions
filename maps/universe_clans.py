@@ -92,9 +92,41 @@ def universe_parse_clans(content):
             "homes": data.get("homes") or [],
             "leans": data.get("leans") or {},
             "quest_pool": data.get("quest_pool") or [],
+            "chatter": data.get("chatter") or [],
             "enemies": "tsn" if diplomacy == "foe" else "",
         }))
     return clans
+
+
+# Ambient comms chatter by archetype (clans.amd may override with a `chatter:`
+# list). {name} is substituted with the clan name. Flavor only - never reveals
+# the map (round-5 decision).
+_ARCHETYPE_CHATTER = {
+    "military":  ["This is {name} space - mind your conduct, captain.",
+                  "{name} patrols have you on scope."],
+    "trader":    ["{name} welcomes honest custom - credits talk.",
+                  "Safe lanes, captain. {name} has cargo if you have coin."],
+    "settler":   ["{name} holds the drift out here. Keep it civil.",
+                  "Not much law this far out - {name} looks after its own."],
+    "mercenary": ["{name} works for the highest bidder. Got a contract?",
+                  "Coin first, questions later - the {name} way."],
+    "pirate":    ["{name} smells weakness, captain...",
+                  "Best run along - this is {name} territory."],
+    "cult":      ["The {name} sees more than you know.",
+                  "{name} whispers in the dark between stars."],
+}
+
+
+def universe_chatter_line(clan):
+    """A random ambient line for a clan (its authored chatter, else archetype
+    defaults), with {name} substituted. '' if none."""
+    if clan is None:
+        return ""
+    lines = clan.get("chatter") or _ARCHETYPE_CHATTER.get(clan.get("archetype"), [])
+    if not lines:
+        return ""
+    import random as _r
+    return _r.choice(lines).replace("{name}", clan.get("name", "the locals"))
 
 
 def clan_get(clans, key):

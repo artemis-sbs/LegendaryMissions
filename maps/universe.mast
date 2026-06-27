@@ -79,7 +79,21 @@ GameCode:
     await task_schedule(universe_enter_system)
     await task_schedule(spawn_players)
     universe_load_players()
+    task_schedule(universe_chatter_loop)
     ->END
+
+
+# Ambient chatter: occasional clan lines while in their space (flavor only).
+=== universe_chatter_loop
+--- loop
+    await delay_sim(45)
+    ->END if not UNIVERSE_ACTIVE
+    loop_owner = universe_system_clan(UNIVERSE_CLANS, universe_seed, universe_i, universe_j, universe_system_kind(universe_seed, universe_i, universe_j, DANGER))[0]
+    if loop_owner is not None:
+        loop_chatter = universe_chatter_line(clan_get(UNIVERSE_CLANS, loop_owner))
+        if loop_chatter:
+            comms_broadcast(role("__player__"), loop_chatter, clan_color(UNIVERSE_CLANS, loop_owner))
+    jump loop
 
 
 # Persist items + shared side credits whenever they change (universe only).
@@ -212,6 +226,11 @@ GameCode:
     owner = res[0]
     kind = res[1]
     universe_kind = kind
+    # Ambient: a clan greeting on arrival in their space (flavor only).
+    if owner is not None:
+        arrival_chatter = universe_chatter_line(clan_get(UNIVERSE_CLANS, owner))
+        if arrival_chatter:
+            comms_broadcast(role("__player__"), arrival_chatter, clan_color(UNIVERSE_CLANS, owner))
     # Remember we've been here (drives the galaxy-map fog of war).
     universe_sectors = universe_set_system_flag(universe_sectors, universe_i, universe_j, "visited")
 
