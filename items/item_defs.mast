@@ -1,0 +1,159 @@
+#
+# Item definitions for the discoverable item system (Phase 1).
+#
+# Each item is a prefab-style label tagged `type: item/<category>/<sub>` so it
+# is found by labels_get_type("item/") - no new syntax. These re-express the 9
+# legacy anomaly upgrades (same keys + art) as data. Effects, prices, and tiers
+# are refined in later phases (Phase 3 activation, Phase 5/6 economy); the
+# bodies are stubs for now so the registry can be exercised first.
+#
+# metadata fields:
+#   type      item/<category>/<sub>   (category: upgrade | resource | ...)
+#   key       stable id (matches the legacy inventory key / pickup role)
+#   art       pickup art_id
+#   mode      consumable | install | resource
+#   targets   agent kinds it can apply to
+#   consoles  console(s) that may activate it (omit = any)
+#   duration  consumable effect length (seconds)
+#   tier/price economy hints (placeholder until Phase 5/6)
+#
+
+=== prefab_item_carapaction_coil
+metadata:``` yaml
+type: item/upgrade/defense
+key: carapaction_coil
+display_text: Carapaction Coil
+art: alien_2a
+mode: consumable
+targets: ship, cockpit
+consoles: weapons, engineering
+duration: 300
+tier: 2
+price: 250
+desc: Reinforces shields for a time.
+```
+    ->END
+
+=== prefab_item_infusion_pcoils
+metadata:``` yaml
+type: item/upgrade/helm
+key: infusion_pcoils
+display_text: Infusion P-Coils
+art: danger_4a
+mode: consumable
+targets: ship, cockpit
+consoles: helm
+duration: 300
+tier: 2
+price: 250
+desc: Boosts impulse/maneuvering for a time.
+```
+    ->END
+
+=== prefab_item_tauron_focuser
+metadata:``` yaml
+type: item/upgrade/weapons
+key: tauron_focuser
+display_text: Tauron Focuser
+art: alien_4a
+mode: consumable
+targets: ship, cockpit
+consoles: weapons
+duration: 300
+tier: 2
+price: 250
+desc: Sharpens beam focus for a time.
+```
+    ->END
+
+=== prefab_item_secret_codecase
+metadata:``` yaml
+type: item/upgrade/comms
+key: secret_codecase
+display_text: Secret Codecase
+art: container_1a
+mode: consumable
+targets: ship, cockpit
+consoles: comms
+duration: 300
+tier: 3
+price: 400
+desc: Unlocks special comms options for a time.
+```
+    ->END
+
+=== prefab_item_hidens_powercell
+metadata:``` yaml
+type: item/resource/energy
+key: hidens_powercell
+display_text: HiDens Power Cell
+art: container_2a
+mode: resource
+targets: ship, cockpit
+desc: Instantly restores ship energy when used.
+```
+    ->END
+
+=== prefab_item_vigoranium_nodule
+metadata:``` yaml
+type: item/upgrade/engineering
+key: vigoranium_nodule
+display_text: Vigoranium Nodule
+art: container_4a
+mode: consumable
+targets: ship, cockpit
+consoles: engineering
+duration: 5
+tier: 2
+price: 250
+desc: Restores damage-control team strength.
+```
+    ->END
+
+=== prefab_item_cetrocite_crystal
+metadata:``` yaml
+type: item/upgrade/engineering
+key: cetrocite_crystal
+display_text: Cetrocite Crystal
+art: container_small_6a
+mode: consumable
+targets: ship, cockpit
+consoles: engineering
+duration: 300
+tier: 2
+price: 250
+desc: Improves system cooling for a time.
+```
+    ->END
+
+=== prefab_item_lateral_array
+metadata:``` yaml
+type: item/upgrade/science
+key: lateral_array
+display_text: Lateral Array
+art: danger_5a
+mode: consumable
+targets: ship, cockpit
+consoles: science
+duration: 300
+tier: 2
+price: 250
+desc: Extends sensor range for a time.
+```
+    ->END
+
+=== prefab_item_haplix_overcharger
+metadata:``` yaml
+type: item/upgrade/weapons
+key: haplix_overcharger
+display_text: Haplix Overcharger
+art: alien_5a
+mode: consumable
+targets: ship, cockpit
+consoles: engineering, weapons
+duration: 300
+tier: 3
+price: 400
+desc: Overcharges weapons systems for a time.
+```
+    ->END
