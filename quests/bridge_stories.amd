@@ -1,0 +1,32 @@
+// A multi-step bridge story (whole crew). Each heading is one step; its data
+// carries the starting state (active = live now, secret = revealed later), the
+// trigger, the reward, and the next step to reveal. Granted as one reveal chain
+// via quest_grant_amd. Steps use content that already exists (a station to scan
+// and dock, raiders to destroy) so it is playable anywhere with the standard
+// addons.
+
+# [Patrol Briefing](story_patrol)
+---
+state: active
+on_scan: { role: station }
+reveal: story_patrol_b
+reward: { credits: 100 }
+---
+Have Science scan this starbase to download the patrol briefing, then proceed
+to your sweep.
+
+# [Patrol Sweep](story_patrol_b)
+---
+state: secret
+on_kill: { role: raider, count: 3 }
+reveal: story_patrol_c
+---
+Raiders are working the shipping lanes. Destroy three of them.
+
+# [Report In](story_patrol_c)
+---
+state: secret
+on_dock: {}
+reward: { credits: 500 }
+---
+Dock at a friendly station to file your report and collect the bounty.

@@ -1,0 +1,11 @@
+#
+# Sample multi-step bridge story (Science scan -> combat -> dock), authored in
+# AMD and granted as a reveal chain via quest_grant_amd. Loaded once; a giver
+# (e.g. a universe station's comms) grants it to a ship. Missions can also grant
+# it by emitting grant_bridge_story with STORY_SHIP_ID.
+#
+shared BRIDGE_STORY_DOC = document_get_amd_file(None, "Bridge", content=media_read_relative_file("bridge_stories.amd"))
+
+//signal/grant_bridge_story
+    quest_grant_amd(STORY_SHIP_ID, BRIDGE_STORY_DOC)
+    ->END

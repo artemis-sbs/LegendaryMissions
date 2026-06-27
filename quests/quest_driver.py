@@ -55,6 +55,31 @@ def quest_mark_complete(agent_id, quest_id):
     comms_broadcast(agent_id, "Mission complete: " + str(name), "#0f0")
 
 
+_STATE_NAMES = {
+    "idle": QuestState.IDLE, "active": QuestState.ACTIVE, "secret": QuestState.SECRET,
+    "complete": QuestState.COMPLETE, "failed": QuestState.FAILED,
+}
+
+
+def quest_grant_amd(agent_id, doc):
+    """Grant all quests from a parsed AMD story doc to an agent at once.
+
+    Each heading becomes a quest; its data `state` (active/secret/idle/...) sets
+    the starting state, so a multi-step story is granted as parent ACTIVE + later
+    steps SECRET, chained by each step's `reveal`. Idempotent per quest id.
+    """
+    if doc is None:
+        return
+    for n in doc.get("children", []):
+        qid = n.get("key")
+        if quest_get_state(agent_id, qid) != QuestState.IDLE:
+            continue  # already granted/in-progress
+        data = n.get("data") or {}
+        st = _STATE_NAMES.get(str(data.get("state", "idle")).lower(), QuestState.IDLE)
+        quest_add(agent_id, qid, n.get("display_text"),
+                  (n.get("description") or "").strip(), state=st, data=data)
+
+
 def quest_reveal(agent_id, reveal):
     """Activate sub-quests revealed on completion (reveal: id, or [ids]).
 

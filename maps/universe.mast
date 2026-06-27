@@ -96,6 +96,10 @@ GameCode:
         universe_grant_delivery(ship_id, universe_seed, universe_i, universe_j)
         universe_save_players()
         >> "Cargo loaded. The destination is marked on your galaxy map."
+    + "Accept Patrol Mission" if quest_get_state(ship_id, "story_patrol") == 0:
+        quest_grant_amd(ship_id, BRIDGE_STORY_DOC)
+        universe_save_players()
+        >> "Patrol orders uploaded. Check your quest log - scan this starbase to begin."
 
 
 #
