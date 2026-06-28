@@ -199,6 +199,17 @@ GameCode:
     ->END
 
 
+# Scanning a universe derelict yields a one-time salvage reward (the science
+# addon shows the scan; this grants credits). on_scan quests also fire.
+//science if UNIVERSE_ACTIVE and has_role(SCIENCE_SELECTED_ID, "universe_derelict")
+    if get_inventory_value(SCIENCE_SELECTED_ID, "looted", 0) == 0:
+        set_inventory_value(SCIENCE_SELECTED_ID, "looted", 1)
+        salvage_side = to_side_id(get_side(SCIENCE_ORIGIN_ID))
+        set_inventory_value(salvage_side, "credits", get_inventory_value(salvage_side, "credits", 0) + 150)
+        comms_broadcast(SCIENCE_ORIGIN_ID, "Salvage recovered from the derelict: +150 credits.", "#0cf")
+    ->END
+
+
 # Change + persist a diplomacy relation (negotiation / quest-driven flips).
 # data: REL_A, REL_B, REL_VALUE (a sbs.DIPLOMACY int).
 === universe_set_relation
@@ -398,6 +409,13 @@ GameCode:
     for _c in range(cache_count):
         cpos = Vec3.rand_in_sphere(8000, 40000, False, True)
         item_spawn(random.choice(loot_keys), cpos.x, cpos.y, cpos.z)
+
+    # A keyed chance for a scannable derelict POI (science-scannable via the
+    # science addon; feeds on_scan quests; one-time salvage reward on first scan).
+    random.seed(key + 13)
+    if random.random() < 0.4:
+        dpos = Vec3.rand_in_sphere(10000, 35000, False, True)
+        terrain_spawn(dpos.x, dpos.y, dpos.z, "Derelict", "wreck, universe_derelict", "wreck", "behav_wreck")
 
     # Tell the quest driver we've arrived (completes on_reach cargo runs).
     signal_emit("universe_arrived", {"ARRIVE_I": universe_i, "ARRIVE_J": universe_j})
