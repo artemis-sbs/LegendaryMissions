@@ -188,6 +188,9 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
 //enable/science if has_role(SCIENCE_SELECTED_ID, "upgrade")
 //science if has_role(SCIENCE_SELECTED_ID, "upgrade")
 
+    # Default so any "upgrade"-roled item (e.g. trade-good pickups) scans cleanly;
+    # the chain below overrides for known upgrades.
+    upg_desc = "Salvageable cargo - no upgrade signature detected."
     if has_roles(SCIENCE_SELECTED_ID, "upgrade, carapaction_coil"):
         upg_desc = "Carapaction Coil. 5 min 300% shield recharge boost."
     elif has_roles(SCIENCE_SELECTED_ID, "upgrade, infusion_pcoils"):
