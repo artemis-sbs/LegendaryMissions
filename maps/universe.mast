@@ -333,15 +333,18 @@ GameCode:
 
     gui_section(style="area: 68, 71, 96, 92;")
     gui_row("row-height: 2.2em;")
-    on gui_message(gui_button("$text:Jump Here;justify:center;", style="background:#0a6;")):
+    go_btn = gui_button("$text:Jump Here;justify:center;", style="background:#0a6;")
+    on gui_message(go_btn):
         task_schedule(universe_jump_to, {"ti": SEL_I, "tj": SEL_J})
     gui_row("row-height: 2.2em;")
-    on gui_message(gui_button("$text:Center on Selected;justify:center;")):
+    center_btn = gui_button("$text:Center on Selected;justify:center;")
+    on gui_message(center_btn):
         VIEW_I = SEL_I
         VIEW_J = SEL_J
         gui_task_jump("repaint")
     gui_row("row-height: 2.2em;")
-    on gui_message(gui_button("$text:Recenter on Me;justify:center;")):
+    recenter_btn = gui_button("$text:Recenter on Me;justify:center;")
+    on gui_message(recenter_btn):
         VIEW_I = universe_i
         VIEW_J = universe_j
         SEL_I = universe_i
