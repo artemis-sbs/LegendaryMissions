@@ -129,6 +129,39 @@ GameCode:
     jump cwatch
 
 
+# Re-capture: a clan tries to retake a captured station. If its re-assault fleet
+# is destroyed, the attempt fails (you keep it). If the clan holds the station's
+# space (no player near) long enough, it reverts to the clan.
+=== universe_recapture_watch
+    default cap_station = None
+    default cap_clan = None
+    default cap_hold = 0
+    ->END if cap_station is None
+    cap_i = universe_i
+    cap_j = universe_j
+--- rwatch
+    await delay_sim(2)
+    ->END if not UNIVERSE_ACTIVE
+    ->END if not object_exists(cap_station)
+    ->END if cap_i != universe_i or cap_j != universe_j
+    # Re-assault repelled once no clan ships remain in the system.
+    foes = closest(cap_station, role(cap_clan) - role("station"), 60000)
+    ->END if foes is None
+    pl = closest(cap_station, role("__player__"), 12000)
+    if pl is None:
+        cap_hold += 2
+    else:
+        cap_hold = 0
+    if cap_hold >= 20:
+        cap_obj = to_object(cap_station)
+        cap_obj.set_side(cap_clan)
+        universe_sectors = universe_set_system_flag(universe_sectors, cap_i, cap_j, "captured", False)
+        universe_save(universe_seed, universe_i, universe_j, universe_sectors)
+        comms_broadcast(role("__player__"), "Starbase retaken by the enemy!", "#f00")
+        ->END
+    jump rwatch
+
+
 # Ambient chatter: occasional clan lines while in their space (flavor only).
 === universe_chatter_loop
 --- loop
@@ -317,6 +350,13 @@ GameCode:
                 task_schedule(universe_capture_watch, {"cap_station": station_id, "cap_clan": owner})
             else:
                 await task_schedule(docking_standard_player_station)
+                # A captured foe-clan station: the clan mounts a re-assault to
+                # retake it. Defend (clear the fleet) to keep it, or it reverts.
+                if captured and owner is not None and side_are_enemies(owner, "tsn"):
+                    random.seed(key + 9)
+                    rpos = Vec3.rand_in_sphere(15000, 25000, False, True)
+                    prefab_spawn(prefab_fleet_raider, {"race": "Kralien", "fleet_difficulty": DIFFICULTY, "ship_roles": owner + ", raider", "START_X": rpos.x, "START_Y": rpos.y, "START_Z": rpos.z})
+                    task_schedule(universe_recapture_watch, {"cap_station": station_id, "cap_clan": owner})
     elif kind == "enemy":
         # Skip enemies in a sector the players have already cleared (persisted).
         if not universe_system_flag(universe_sectors, universe_i, universe_j, "enemy_cleared"):
