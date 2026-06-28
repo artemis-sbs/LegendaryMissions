@@ -32,6 +32,11 @@ def universe_location_template(item):
     gui_text(f"$text:{item.name}  ({item.i}, {item.j});justify:left;font:gui-1")
 
 
+def universe_location_title():
+    gui_row("row-height: 1.2em;padding:6px;background:#1578;")
+    gui_text("$text:Known Locations;justify:left;")
+
+
 # --- Diplomacy deltas (persisted per side/clan pair) -------------------------
 # Authored defaults come from clans.amd (foe/neutral); these deltas override them
 # (e.g. a negotiated ceasefire) and persist in the save. Keyed by a sorted pair.

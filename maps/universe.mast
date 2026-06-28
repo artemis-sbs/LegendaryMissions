@@ -351,11 +351,10 @@ GameCode:
     gui_row("row-height:1.3em;")
     """ $text:Jumps away: {sel_dist}"""
 
-    # Known locations: pick one to select + center the map on it.
+    # Known locations: pick one to select + center the map on it. The listbox's
+    # own title shows the label, so it uses the whole section.
     gui_section(style="area: 58, 33, 96, 57; background:#1572;")
-    gui_row("row-height:1.4em;")
-    """justify:center; $text:Known Locations"""
-    loc_box = gui_list_box(universe_known_locations(UNIVERSE_CLANS, quest_targets), "row-height:0.1em;", item_template=universe_location_template, select=True)
+    loc_box = gui_list_box(universe_known_locations(UNIVERSE_CLANS, quest_targets), "row-height:0.1em;", item_template=universe_location_template, title_template=universe_location_title, select=True)
     on change loc_box.get_value():
         loc_sel = loc_box.get_value()
         if loc_sel is not None:
