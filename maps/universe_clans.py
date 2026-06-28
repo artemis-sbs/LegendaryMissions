@@ -9,7 +9,27 @@ from sbs_utils import scatter
 from sbs_utils.procedural.quest import document_get_amd_file
 from sbs_utils.procedural.execution import labels_get_type
 from sbs_utils.procedural.sides import side_set_relations
+from sbs_utils.procedural.gui import gui_row, gui_text
 from sbs_utils.mast.mast_node import MastDataObject
+
+
+# --- Nav "known locations" list ----------------------------------------------
+def universe_known_locations(clans, quest_targets):
+    """Notable systems for the nav list: home base, clan homes, and active quest
+    targets - each a MastDataObject with name + i/j."""
+    locs = [MastDataObject({"name": "Home Base", "i": 0, "j": 0})]
+    for c in clans:
+        for h in (c.get("homes") or []):
+            if len(h) == 2:
+                locs.append(MastDataObject({"name": c.name, "i": int(h[0]), "j": int(h[1])}))
+    for t in quest_targets:
+        locs.append(MastDataObject({"name": "Quest Target", "i": int(t[0]), "j": int(t[1])}))
+    return locs
+
+
+def universe_location_template(item):
+    gui_row("row-height: 1.2em;")
+    gui_text(f"$text:{item.name}  ({item.i}, {item.j});justify:left;font:gui-1")
 
 
 # --- Diplomacy deltas (persisted per side/clan pair) -------------------------

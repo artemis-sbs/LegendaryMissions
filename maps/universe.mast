@@ -280,7 +280,7 @@ GameCode:
     # cell to SELECT it (info on the right) - it does not jump. @ = you are here,
     # > = selected.
     quest_targets = universe_quest_target_sectors()
-    gui_section(style="area: 4, 12, 66, 92;")
+    gui_section(style="area: 4, 11, 56, 79;")
     for dj in [3, 2, 1, 0, -1, -2, -3]:
         gui_row("row-height: 2em;")
         for di in [-3, -2, -1, 0, 1, 2, 3]:
@@ -311,6 +311,26 @@ GameCode:
                 SEL_J = sj
                 gui_task_jump("repaint")
 
+    # Scroll the view - the universe is larger than the 7x7 window.
+    gui_section(style="area: 4, 80, 56, 90;")
+    gui_row("row-height: 2.2em;")
+    west_btn = gui_button("$text:< W;font:gui-1;justify:center;")
+    on gui_message(west_btn):
+        VIEW_I = VIEW_I - 3
+        gui_task_jump("repaint")
+    south_btn = gui_button("$text:S v;font:gui-1;justify:center;")
+    on gui_message(south_btn):
+        VIEW_J = VIEW_J - 3
+        gui_task_jump("repaint")
+    north_btn = gui_button("$text:N ^;font:gui-1;justify:center;")
+    on gui_message(north_btn):
+        VIEW_J = VIEW_J + 3
+        gui_task_jump("repaint")
+    east_btn = gui_button("$text:E >;font:gui-1;justify:center;")
+    on gui_message(east_btn):
+        VIEW_I = VIEW_I + 3
+        gui_task_jump("repaint")
+
     # Selected-system info (explore before committing to a jump).
     sel_res = universe_system_clan(UNIVERSE_CLANS, universe_seed, SEL_I, SEL_J, universe_system_kind(universe_seed, SEL_I, SEL_J, DANGER))
     sel_owner = sel_res[0]
@@ -319,19 +339,47 @@ GameCode:
     info_owner = (clan_name(UNIVERSE_CLANS, sel_owner) if sel_owner is not None else "Unclaimed") if sel_known else "Unknown"
     info_kind = sel_kind if sel_known else "Unknown"
     sel_dist = abs(SEL_I - universe_i) + abs(SEL_J - universe_j)
-    gui_section(style="area: 68, 12, 96, 70; background:#1572;")
-    gui_row("row-height:1.8em;")
+    gui_section(style="area: 58, 11, 96, 32; background:#1572;")
+    gui_row("row-height:1.5em;")
     """justify:center; font:gui-3; $text:Selected System"""
-    gui_row("row-height:1.5em;")
+    gui_row("row-height:1.3em;")
     """ $text:Coords: ({SEL_I}, {SEL_J})"""
-    gui_row("row-height:1.5em;")
+    gui_row("row-height:1.3em;")
     """ $text:Owner: {info_owner}"""
-    gui_row("row-height:1.5em;")
+    gui_row("row-height:1.3em;")
     """ $text:Type: {info_kind}"""
-    gui_row("row-height:1.5em;")
+    gui_row("row-height:1.3em;")
     """ $text:Jumps away: {sel_dist}"""
 
-    gui_section(style="area: 68, 71, 96, 92;")
+    # Known locations: pick one to select + center the map on it.
+    gui_section(style="area: 58, 33, 96, 57; background:#1572;")
+    gui_row("row-height:1.4em;")
+    """justify:center; $text:Known Locations"""
+    loc_box = gui_list_box(universe_known_locations(UNIVERSE_CLANS, quest_targets), "row-height:0.1em;", item_template=universe_location_template, select=True)
+    on change loc_box.get_value():
+        loc_sel = loc_box.get_value()
+        if loc_sel is not None:
+            SEL_I = loc_sel.i
+            SEL_J = loc_sel.j
+            VIEW_I = loc_sel.i
+            VIEW_J = loc_sel.j
+            gui_task_jump("repaint")
+
+    # Type coordinates directly to select them.
+    gui_section(style="area: 58, 58, 96, 67;")
+    gui_row("row-height:2em;")
+    """ $text:Go to (i, j):"""
+    ji = gui_input("desc: i;", var="JUMP_I")
+    jj = gui_input("desc: j;", var="JUMP_J")
+    typed_btn = gui_button("$text:Go;justify:center;")
+    on gui_message(typed_btn):
+        SEL_I = safe_int(JUMP_I)
+        SEL_J = safe_int(JUMP_J)
+        VIEW_I = safe_int(JUMP_I)
+        VIEW_J = safe_int(JUMP_J)
+        gui_task_jump("repaint")
+
+    gui_section(style="area: 58, 68, 96, 90;")
     gui_row("row-height: 2.2em;")
     go_btn = gui_button("$text:Jump Here;justify:center;", style="background:#0a6;")
     on gui_message(go_btn):
