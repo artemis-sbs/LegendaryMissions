@@ -552,24 +552,26 @@ GameCode:
                 universe_grant_mystery(p.id, universe_seed, universe_i, universe_j)
         universe_save_players()
 
-    # Richer systems: a keyed scatter of loot caches to find and collect
-    # (denser in nebula/anomaly). Deterministic per system; collected via the
-    # generic item route, and they feed on_collect quests.
-    random.seed(key + 11)
-    cache_count = random.randint(0, 2)
-    if kind == "nebula" or kind == "anomaly":
-        cache_count += 2
-    loot_keys = ["ore", "gas", "provisions", "tech", "contraband"]
-    for _c in range(cache_count):
-        cpos = Vec3.rand_in_sphere(8000, 40000, False, True)
-        item_spawn(random.choice(loot_keys), cpos.x, cpos.y, cpos.z)
-
-    # A keyed chance for a scannable derelict POI (science-scannable via the
-    # science addon; feeds on_scan quests; one-time salvage reward on first scan).
-    random.seed(key + 13)
-    if random.random() < 0.4:
-        dpos = Vec3.rand_in_sphere(10000, 35000, False, True)
-        terrain_spawn(dpos.x, dpos.y, dpos.z, "Derelict", "wreck, universe_derelict", "wreck", "behav_wreck")
+    # Richer systems: a keyed POI deck layered on the template core above
+    # (universe_systems.py). Deterministic per system; loot/derelicts feed
+    # on_collect/on_scan quests, secondary outposts add clan-work givers, and foe
+    # territory seeds mine fields. Decided here in Python, spawned here in MAST.
+    owner_foe = owner is not None and side_are_enemies(owner, "tsn")
+    owner_arch = clan_archetype(UNIVERSE_CLANS, owner)
+    for poi in universe_system_deck(key, kind, owner, owner_arch, owner_foe, DIFFICULTY):
+        match poi.type:
+            case "loot":
+                item_spawn(poi.item_key, poi.x, poi.y, poi.z)
+            case "derelict":
+                terrain_spawn(poi.x, poi.y, poi.z, "Derelict", "wreck, universe_derelict", "wreck", "behav_wreck")
+            case "outpost":
+                npc_spawn(poi.x, poi.y, poi.z, clan_name(UNIVERSE_CLANS, poi.side) + " Outpost", poi.side + ", station, outpost", poi.art, "behav_station")
+            case "mines":
+                for _m in range(poi.count):
+                    moff = Vec3.rand_in_sphere(600, 2500, False, True)
+                    mine = terrain_spawn(poi.x + moff.x, poi.y, poi.z + moff.z, None, None, "danger_1a", "behav_mine")
+                    mine.data_set.set("damage_done", 8)
+                    mine.data_set.set("blast_radius", 900)
 
     # Tell the quest driver we've arrived (completes on_reach cargo runs).
     signal_emit("universe_arrived", {"ARRIVE_I": universe_i, "ARRIVE_J": universe_j})
@@ -581,7 +583,7 @@ GameCode:
 # them. The base universe still regenerates from the seed; only these deltas
 # are stored (see universe_save in universe_helpers.py).
 #
-//damage/destroy if UNIVERSE_ACTIVE and has_role(DESTROYED_ID, "station")
+//damage/destroy if UNIVERSE_ACTIVE and has_role(DESTROYED_ID, "station") and not has_role(DESTROYED_ID, "outpost")
     universe_sectors = universe_set_system_flag(universe_sectors, universe_i, universe_j, "station_destroyed")
     universe_save(universe_seed, universe_i, universe_j, universe_sectors)
     ->END

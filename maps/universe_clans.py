@@ -183,6 +183,13 @@ def clan_color(clans, key):
     return c.color if c is not None else "#888888"
 
 
+def clan_archetype(clans, key):
+    """Archetype for a clan key (military/trader/...), or None. Used to flavor the
+    system POI deck (universe_systems.py)."""
+    c = clan_get(clans, key)
+    return c.archetype if c is not None else None
+
+
 def universe_system_clan(clans, seed, i, j, base_kind):
     """Owning clan key + effective kind for a system, given its base kind.
 
