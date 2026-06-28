@@ -252,6 +252,30 @@ GameCode:
     for offer in clan_work_offers(ship_id, UNIVERSE_CLANS, get_side(COMMS_SELECTED_ID), UNIVERSE_CLAN_QUESTS):
         job_label = f"{offer.title}  ({offer.credits} cr)"
         + "{job_label}" universe_accept_clan_job {"job_clan": offer.clan, "job_type": offer.type}
+    # Diplomacy: a captain can shift side-wide relations with this clan. A
+    # ceasefire can be bought with a tribute when standing is low (free at
+    # standing>=30); an alliance must be earned (standing>=60). Live relation via
+    # side_get_relations; changes persist (universe_set_dip + save).
+    dip_clan = get_side(COMMS_SELECTED_ID)
+    dip_rec = clan_get(UNIVERSE_CLANS, dip_clan)
+    my_side = get_side(ship_id)
+    if dip_rec is not None and dip_clan != my_side:
+        dip_rel = side_get_relations(my_side, dip_clan)
+        dip_standing = clan_standing(ship_id, dip_rec)
+        dip_side_id = to_side_id(my_side)
+        dip_credits = get_inventory_value(dip_side_id, "credits", 0)
+        ceasefire_cost = clan_ceasefire_cost(dip_standing)
+        + "Negotiate Ceasefire" if dip_rel == sbs.DIPLOMACY.HOSTILE and dip_credits >= ceasefire_cost:
+            set_inventory_value(dip_side_id, "credits", dip_credits - ceasefire_cost)
+            side_set_relations(my_side, dip_clan, sbs.DIPLOMACY.NEUTRAL)
+            universe_diplomacy = universe_set_dip(universe_diplomacy, my_side, dip_clan, sbs.DIPLOMACY.NEUTRAL)
+            universe_save_diplomacy(universe_diplomacy)
+            >> "We have an understanding. Hostilities are suspended (tribute: {ceasefire_cost} cr)."
+        + "Propose Alliance" if dip_rel == sbs.DIPLOMACY.NEUTRAL and dip_standing >= 60:
+            side_set_relations(my_side, dip_clan, sbs.DIPLOMACY.ALLIED)
+            universe_diplomacy = universe_set_dip(universe_diplomacy, my_side, dip_clan, sbs.DIPLOMACY.ALLIED)
+            universe_save_diplomacy(universe_diplomacy)
+            >> "Then we stand together. The clan is honored to call you ally."
 
 
 # Accept a clan job (from the station comms above). Grants + activates it on the

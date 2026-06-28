@@ -111,3 +111,18 @@ def clan_offer_tier(standing):
 def clan_reward_mult(standing):
     """Reward multiplier from standing: 1.0 at <=0, up to 2.0 at +100."""
     return 1.0 + max(0, standing) / 100.0
+
+
+# --- Diplomacy negotiation (standing -> side-wide relations) -------------------
+# Standing is per-captain; negotiating shifts the *side-wide* relation with a clan
+# (the bridge between per-captain reputation and side diplomacy). A ceasefire can
+# be bought with a tribute when standing is low (breaks the catch-22 of needing a
+# truce to earn a foe clan's respect); an alliance must be genuinely earned.
+CEASEFIRE_FREE_AT = 30   # standing at/above which a ceasefire costs nothing
+ALLIANCE_STANDING = 60   # standing needed to propose an alliance
+
+
+def clan_ceasefire_cost(standing):
+    """Tribute (credits) to buy a ceasefire: 0 at standing>=30, scaling to 600 at
+    standing 0 (20 cr per point below the free threshold)."""
+    return max(0, CEASEFIRE_FREE_AT - max(0, standing)) * 20
