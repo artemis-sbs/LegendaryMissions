@@ -456,11 +456,14 @@ GameCode:
     default tj = universe_j
     ->END if ti == universe_i and tj == universe_j
 
-    # Hyperspace screen on for every console
+    # Hyperspace screen on for every console. role("console") is normally console
+    # objects (with .client_id) but can be a raw client id; normalize either way.
     for c in to_object_list(role("console")):
-        ship = to_object(sbs.get_ship_of_client(c.client_id))
+        co = to_object(c)
+        cid = co.client_id if co is not None else c
+        ship = to_object(sbs.get_ship_of_client(cid))
         hull = ship.art_id if ship is not None else ""
-        sbs.super_hyper_warp_mode(c.client_id, hull, 1)
+        sbs.super_hyper_warp_mode(cid, hull, 1)
 
     await delay_sim(2)
 
@@ -479,5 +482,7 @@ GameCode:
 
     # Hyperspace screen off
     for c in to_object_list(role("console")):
-        sbs.super_hyper_warp_mode(c.client_id, "", 0)
+        co = to_object(c)
+        cid = co.client_id if co is not None else c
+        sbs.super_hyper_warp_mode(cid, "", 0)
     ->END
