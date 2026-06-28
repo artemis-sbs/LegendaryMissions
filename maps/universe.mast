@@ -387,6 +387,18 @@ GameCode:
                 universe_grant_mystery(p.id, universe_seed, universe_i, universe_j)
         universe_save_players()
 
+    # Richer systems: a keyed scatter of loot caches to find and collect
+    # (denser in nebula/anomaly). Deterministic per system; collected via the
+    # generic item route, and they feed on_collect quests.
+    random.seed(key + 11)
+    cache_count = random.randint(0, 2)
+    if kind == "nebula" or kind == "anomaly":
+        cache_count += 2
+    loot_keys = ["ore", "gas", "provisions", "tech", "contraband"]
+    for _c in range(cache_count):
+        cpos = Vec3.rand_in_sphere(8000, 40000, False, True)
+        item_spawn(random.choice(loot_keys), cpos.x, cpos.y, cpos.z)
+
     # Tell the quest driver we've arrived (completes on_reach cargo runs).
     signal_emit("universe_arrived", {"ARRIVE_I": universe_i, "ARRIVE_J": universe_j})
     ->END
