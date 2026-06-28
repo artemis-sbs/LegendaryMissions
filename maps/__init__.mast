@@ -3,6 +3,7 @@ import mission_helper_functions.py
 import universe_helpers.py
 import universe_clans.py
 import universe_reputation.py
+import universe_clan_quests.py
 import universe_standby.py
 import universes.mast
 

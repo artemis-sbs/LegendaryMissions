@@ -73,3 +73,41 @@ def reputation_apply(agent_id, rep_block):
         if isinstance(poles, dict):
             for pole, delta in poles.items():
                 reputation_adjust(agent_id, clan, pole, delta)
+
+
+# --- Standing: a single "how much this clan likes you" scalar -----------------
+# Derived from the captain's per-axis reputation aligned to the clan's authored
+# leans (clans.amd). Used to gate + scale clan job offers (clan_quests.amd).
+def clan_standing(agent_id, clan):
+    """A -100..100 standing for a clan record: the captain's reputation along the
+    poles the clan values, weighted by how strongly it holds each. 0 if the clan
+    has no leans and the captain has no recorded reputation with it."""
+    if clan is None:
+        return 0
+    leans = clan.get("leans") or {}
+    key = clan.get("key")
+    if not leans:
+        cm = _rep_map(agent_id).get(key) or {}
+        vals = list(cm.values())
+        return int(sum(vals) / len(vals)) if vals else 0
+    total = 0.0
+    wsum = 0.0
+    for pole, weight in leans.items():
+        w = abs(weight)
+        total += w * reputation_get(agent_id, key, pole)
+        wsum += w
+    return int(total / wsum) if wsum else 0
+
+
+def clan_offer_tier(standing):
+    """Highest job tier a standing unlocks: 1 (basic) always, 2 at >=20, 3 at >=50."""
+    if standing >= 50:
+        return 3
+    if standing >= 20:
+        return 2
+    return 1
+
+
+def clan_reward_mult(standing):
+    """Reward multiplier from standing: 1.0 at <=0, up to 2.0 at +100."""
+    return 1.0 + max(0, standing) / 100.0

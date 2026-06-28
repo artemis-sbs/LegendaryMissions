@@ -57,6 +57,9 @@ GameCode:
     # side (tsn) already exists from the server-start create_sides signal, so
     # foe clans' enemies:"tsn" relation resolves.
     shared UNIVERSE_CLANS = universe_parse_clans(media_read_relative_file(universe_clans_file(UNIVERSE_SELECT)))
+    # Generic clan jobs (clan_quests.amd): clans offer these from their pools,
+    # gated + scaled by the captain's standing. Loaded once for the universe.
+    shared UNIVERSE_CLAN_QUESTS = universe_parse_clan_quests(media_read_relative_file("clan_quests.amd"))
     for _clan in UNIVERSE_CLANS:
         await prefab_spawn(prefab_side_generic, {"key": _clan.key, "name": _clan.name, "desc": _clan.desc, "color": _clan.color, "enemies": _clan.enemies})
     shared universe_terrain_value = terrain_to_value(TERRAIN_SELECT)
@@ -243,6 +246,22 @@ GameCode:
         quest_grant_amd(ship_id, BRIDGE_STORY_DOC)
         universe_save_players()
         >> "Patrol orders uploaded. Check your quest log - scan this starbase to begin."
+    # Clan work: if this station belongs to a clan that will deal with you, offer
+    # jobs from its pool (gated + reward-scaled by your standing). One button per
+    # offer; the data dict captures which job for the accept handler.
+    for offer in clan_work_offers(ship_id, UNIVERSE_CLANS, get_side(COMMS_SELECTED_ID), UNIVERSE_CLAN_QUESTS):
+        job_label = f"{offer.title}  ({offer.credits} cr)"
+        + "{job_label}" universe_accept_clan_job {"job_clan": offer.clan, "job_type": offer.type}
+
+
+# Accept a clan job (from the station comms above). Grants + activates it on the
+# captain's ship with a standing-scaled reward, then persists.
+=== universe_accept_clan_job
+    ship_id = COMMS_ORIGIN_ID
+    universe_grant_clan_job(ship_id, UNIVERSE_CLANS, job_clan, job_type, UNIVERSE_CLAN_QUESTS)
+    universe_save_players()
+    comms_broadcast(ship_id, "Job accepted - check your quest log.", "#0cf")
+    ->END
 
 
 #
