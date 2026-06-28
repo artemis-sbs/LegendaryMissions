@@ -253,26 +253,41 @@ GameCode:
     default JUMP_I = "0"
     default JUMP_J = "0"
 --- repaint
+    # View center (pan to explore) and selected system - persist across repaints;
+    # both start at the current system. _last_cur tracks an actual jump so we can
+    # recenter on arrival.
+    default VIEW_I = universe_i
+    default VIEW_J = universe_j
+    default SEL_I = universe_i
+    default SEL_J = universe_j
+    default _last_cur_i = universe_i
+    default _last_cur_j = universe_j
+    if _last_cur_i != universe_i or _last_cur_j != universe_j:
+        VIEW_I = universe_i
+        VIEW_J = universe_j
+        SEL_I = universe_i
+        SEL_J = universe_j
+        _last_cur_i = universe_i
+        _last_cur_j = universe_j
     prev_i = universe_i
     prev_j = universe_j
     cur_owner = universe_system_clan(UNIVERSE_CLANS, universe_seed, universe_i, universe_j, universe_system_kind(universe_seed, universe_i, universe_j, DANGER))[0]
     sec_name = clan_name(UNIVERSE_CLANS, cur_owner) if cur_owner is not None else ""
-    gui_section(style="area: 5, 5, 95, 95; background:#1578;")
+    gui_section(style="area: 4, 3, 96, 11; background:#1578;")
     """justify:center; font:gui-5; $text:System ({universe_i}, {universe_j})  {sec_name}  [{universe_kind}]"""
 
-    # Galaxy map: a 7x7 grid centered on the current sector (north = +j on top).
-    # Click any cell to jump there. Adjacent cells double as N/S/E/W.
+    # Galaxy map: a 7x7 grid around the VIEW center (north = +j on top). Click a
+    # cell to SELECT it (info on the right) - it does not jump. @ = you are here,
+    # > = selected.
     quest_targets = universe_quest_target_sectors()
+    gui_section(style="area: 4, 12, 66, 92;")
     for dj in [3, 2, 1, 0, -1, -2, -3]:
         gui_row("row-height: 2em;")
         for di in [-3, -2, -1, 0, 1, 2, 3]:
-            ci = universe_i + di
-            cj = universe_j + dj
-            is_target = (ci, cj) in quest_targets
+            ci = VIEW_I + di
+            cj = VIEW_J + dj
             txt = universe_map_cell_text(universe_seed, ci, cj, DANGER, universe_sectors, MAP_REVEAL)
             cell_bg = "#0006"
-            # Clan overlay: homes are always named + colored; other clan-owned
-            # systems are colored once revealed (fog of war otherwise).
             home_owner = clan_home_owner(UNIVERSE_CLANS, ci, cj)
             cell_owner = universe_system_clan(UNIVERSE_CLANS, universe_seed, ci, cj, universe_system_kind(universe_seed, ci, cj, DANGER))[0]
             cell_revealed = MAP_REVEAL == "Full Chart" or universe_system_flag(universe_sectors, ci, cj, "visited")
@@ -281,22 +296,57 @@ GameCode:
                 cell_bg = clan_color(UNIVERSE_CLANS, home_owner)
             elif cell_owner is not None and cell_revealed:
                 cell_bg = clan_color(UNIVERSE_CLANS, cell_owner)
-            if is_target:
-                txt = "* " + txt
+            if (ci, cj) in quest_targets:
                 cell_bg = "#a60"
-            if di == 0 and dj == 0:
+            cell_mark = ""
+            if ci == universe_i and cj == universe_j:
                 cell_bg = "#0a6"
-            cell = gui_button(f"$text:{txt};font:gui-1;justify:center;", style=f"background:{cell_bg};", data={"ti": ci, "tj": cj})
+                cell_mark = "@"
+            if ci == SEL_I and cj == SEL_J:
+                cell_bg = "#cc0"
+                cell_mark = cell_mark + ">"
+            cell = gui_button(f"$text:{cell_mark}{txt};font:gui-1;justify:center;", style=f"background:{cell_bg};", data={"si": ci, "sj": cj})
             on gui_message(cell):
-                task_schedule(universe_jump_to, {"ti": ti, "tj": tj})
+                SEL_I = si
+                SEL_J = sj
+                gui_task_jump("repaint")
 
-    gui_row("row-height: 2.5em;")
-    """justify:right; $text:Jump to (i, j):"""
-    ji = gui_input("desc: i;", var="JUMP_I")
-    jj = gui_input("desc: j;", var="JUMP_J")
-    gobtn = gui_button("$text:Jump;justify:center;")
-    on gui_message(gobtn):
-        task_schedule(universe_jump_to, {"ti": safe_int(JUMP_I), "tj": safe_int(JUMP_J)})
+    # Selected-system info (explore before committing to a jump).
+    sel_res = universe_system_clan(UNIVERSE_CLANS, universe_seed, SEL_I, SEL_J, universe_system_kind(universe_seed, SEL_I, SEL_J, DANGER))
+    sel_owner = sel_res[0]
+    sel_kind = sel_res[1]
+    sel_known = universe_system_flag(universe_sectors, SEL_I, SEL_J, "visited") or MAP_REVEAL == "Full Chart"
+    info_owner = (clan_name(UNIVERSE_CLANS, sel_owner) if sel_owner is not None else "Unclaimed") if sel_known else "Unknown"
+    info_kind = sel_kind if sel_known else "Unknown"
+    sel_dist = abs(SEL_I - universe_i) + abs(SEL_J - universe_j)
+    gui_section(style="area: 68, 12, 96, 70; background:#1572;")
+    gui_row("row-height:1.8em;")
+    """justify:center; font:gui-3; $text:Selected System"""
+    gui_row("row-height:1.5em;")
+    """ $text:Coords: ({SEL_I}, {SEL_J})"""
+    gui_row("row-height:1.5em;")
+    """ $text:Owner: {info_owner}"""
+    gui_row("row-height:1.5em;")
+    """ $text:Type: {info_kind}"""
+    gui_row("row-height:1.5em;")
+    """ $text:Jumps away: {sel_dist}"""
+
+    gui_section(style="area: 68, 71, 96, 92;")
+    gui_row("row-height: 2.2em;")
+    on gui_message(gui_button("$text:Jump Here;justify:center;", style="background:#0a6;")):
+        task_schedule(universe_jump_to, {"ti": SEL_I, "tj": SEL_J})
+    gui_row("row-height: 2.2em;")
+    on gui_message(gui_button("$text:Center on Selected;justify:center;")):
+        VIEW_I = SEL_I
+        VIEW_J = SEL_J
+        gui_task_jump("repaint")
+    gui_row("row-height: 2.2em;")
+    on gui_message(gui_button("$text:Recenter on Me;justify:center;")):
+        VIEW_I = universe_i
+        VIEW_J = universe_j
+        SEL_I = universe_i
+        SEL_J = universe_j
+        gui_task_jump("repaint")
 
     gui_sub_task_schedule("nav_watch")
     await gui()

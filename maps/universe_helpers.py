@@ -59,8 +59,10 @@ def universe_generate_system(universe_seed, i, j, terrain_value=2):
     r = UNIVERSE_SYSTEM_R
     nebula_chance = terrain_value * 0.0012
     asteroid_chance = terrain_value * 0.0010
+    # marker=False: no per-nebula map markers in the universe (they clutter /
+    # misbehave on the galaxy-scale map; the field itself is enough).
     terrain_spawn_field_keyed(key, 1000, -r, -r, r, r, terrain_value,
-                              nebula_chance, asteroid_chance)
+                              nebula_chance, asteroid_chance, marker=False)
 
 
 def universe_clear_system():
