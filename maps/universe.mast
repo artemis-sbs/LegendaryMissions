@@ -172,6 +172,12 @@ GameCode:
         loop_chatter = universe_chatter_line(clan_get(UNIVERSE_CLANS, loop_owner))
         if loop_chatter:
             comms_broadcast(role("__player__"), loop_chatter, clan_color(UNIVERSE_CLANS, loop_owner))
+    # Near-POI: hint when a player is close to an unscanned derelict (discovery).
+    loop_players = to_object_list(role("__player__"))
+    if len(loop_players) > 0:
+        near_der = closest(loop_players[0], role("universe_derelict"), 7000)
+        if near_der is not None:
+            comms_broadcast(role("__player__"), "Sensors flag a derelict nearby - science could scan it.", "#0cf")
     jump loop
 
 
@@ -196,6 +202,9 @@ GameCode:
 # Apply a completed quest's declarative rep: block to the captain (universe).
 //signal/quest_finished if UNIVERSE_ACTIVE
     reputation_apply(AGENT_ID, DATA.get("rep"))
+    # On-change chatter: clans note a shift in your standing.
+    if DATA.get("rep") is not None:
+        comms_broadcast(role("__player__"), "Comms chatter: word of your deeds spreads among the clans.", "#0cf")
     ->END
 
 
@@ -216,6 +225,8 @@ GameCode:
     side_set_relations(REL_A, REL_B, REL_VALUE)
     universe_diplomacy = universe_set_dip(universe_diplomacy, REL_A, REL_B, REL_VALUE)
     universe_save_diplomacy(universe_diplomacy)
+    # On-change chatter: a deliberate diplomacy shift makes the rounds.
+    comms_broadcast(role("__player__"), "Diplomatic channels report a shift in relations.", "#0cf")
     ->END
 
 
