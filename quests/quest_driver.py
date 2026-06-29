@@ -17,7 +17,7 @@ from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_va
 from sbs_utils.procedural.sides import to_side_id
 from sbs_utils.procedural.comms import comms_broadcast
 from sbs_utils.procedural.signal import signal_emit
-from sbs_utils.procedural.gui import gui_row, gui_text
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_icon
 from sbs_utils.mast.mast_node import MastDataObject
 from sbs_utils.agent import Agent
 
@@ -320,6 +320,21 @@ def quest_state_label(state):
     return _QUEST_STATE_LABEL.get(int(state or 0), "")
 
 
+# State indicator: the same square icon (index 101), recolored by state - matches
+# the original document/quest viewer (which the custom tab had dropped).
+QUEST_STATE_ICON = 101
+_QUEST_STATE_ICON_COLOR = {
+    int(QuestState.ACTIVE): "#cc0",     # in progress - amber
+    int(QuestState.IDLE): "#888",       # available  - gray
+    int(QuestState.COMPLETE): "#151",   # done       - green
+    int(QuestState.FAILED): "#a22",     # failed     - red
+}
+
+
+def quest_state_icon_color(state):
+    return _QUEST_STATE_ICON_COLOR.get(int(state or 0), "#888")
+
+
 def quest_tab_items(client_id, ship_id):
     """Quest rows for the log tab: shared/game + client + ship quests, each
     tagged with its owning agent (for accept/abandon). SECRET quests are hidden."""
@@ -347,8 +362,11 @@ def quest_tab_items(client_id, ship_id):
 
 
 def quest_tab_template(item):
+    # State indicator: the square icon (101) recolored by state, then the title.
+    icon_color = quest_state_icon_color(item.get("state"))
     gui_row("row-height: 1.2em;padding:6px;")
-    gui_text(f"$text:{item.title};justify: left;")
+    gui_icon(f"icon_index:{QUEST_STATE_ICON};color:{icon_color};", "padding:5px,0,5px,0;")
+    gui_text(f"$text:{item.title};justify: left;", "padding:5px,6px,0,0;")
     gui_row("row-height: 1.0em;padding:6px;")
     gui_text(f"$text:[{item.group}] {quest_state_label(item.get('state'))};justify: left;font:gui-1")
 
