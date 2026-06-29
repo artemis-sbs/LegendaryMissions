@@ -11,7 +11,8 @@ from sbs_utils.procedural.quest import document_get_amd_file
 from sbs_utils.procedural.execution import labels_get_type
 from sbs_utils.procedural.sides import side_set_relations
 from sbs_utils.procedural.roles import all_roles
-from sbs_utils.procedural.gui import gui_row, gui_text, gui_info_panel_send_message
+from sbs_utils.procedural.gui import gui_row, gui_text
+from sbs_utils.procedural.comms import comms_info_card
 from sbs_utils.mast.mast_node import MastDataObject
 
 # Fallback race pool when a clan declares no makeup.
@@ -167,9 +168,8 @@ def universe_chatter_line(clan):
 # --- Chatter / narrative comms delivery (info panel, NOT the text waterfall) ---
 # Chatter reads as a hail from a clan, not a log blip: an info-panel card carrying
 # the clan's name + color (+ optional face/icon), kept in history, auto-dismissed.
-# This mirrors the HereThereBeMonsters here_*_info_message helpers - good
-# candidates to promote into sbs_utils (procedural.comms) as a reusable
-# "incoming comms card" so missions don't each reinvent it. See UNIVERSE_CHANGES.
+# These are thin wrappers over the reusable sbs_utils helper comms_info_card
+# (promoted from the HereThereBeMonsters here_*_info_message pattern).
 def _chatter_consoles():
     """The comms consoles that should receive universe chatter/comms cards."""
     return all_roles("console, comms")
@@ -181,11 +181,10 @@ def universe_chatter_card(clan, line, time=10):
         return
     color = clan.get("color", "#0cf") if clan is not None else "#0cf"
     name = clan.get("name") if clan is not None else None
-    gui_info_panel_send_message(
-        _chatter_consoles(), line, message_color=color, title=name,
-        title_color=color, face=(clan.get("face") if clan is not None else None),
-        icon_index=(clan.get("icon") if clan is not None else None),
-        time=time, history=True)
+    comms_info_card(
+        _chatter_consoles(), line, title=name, color=color,
+        face=(clan.get("face") if clan is not None else None),
+        icon_index=(clan.get("icon") if clan is not None else None), time=time)
 
 
 def universe_info_card(line, title=None, color="#0cf", time=10):
@@ -193,9 +192,7 @@ def universe_info_card(line, title=None, color="#0cf", time=10):
     an info-panel card - same surface as clan chatter, no portrait."""
     if not line:
         return
-    gui_info_panel_send_message(
-        _chatter_consoles(), line, message_color=color, title=title,
-        title_color=color, time=time, history=True)
+    comms_info_card(_chatter_consoles(), line, title=title, color=color, time=time)
 
 
 def clan_pick_race(clan):
