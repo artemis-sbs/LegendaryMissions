@@ -12,8 +12,12 @@ See UNIVERSE_CHANGES.md.
 from sbs_utils.procedural.quest import (
     document_get_amd_file, quest_add, quest_get_state, QuestState)
 from sbs_utils.mast.mast_node import MastDataObject
-from .universe_clans import clan_get
-from .universe_reputation import clan_standing, clan_offer_tier, clan_reward_mult
+# NOTE: no relative sibling imports. Mission .py files are loaded by __init__.mast
+# (`import universe_clans.py`, `import universe_reputation.py`) into one shared engine
+# namespace - they are not a package, so `from .universe_clans import ...` fails to
+# compile in-engine. clan_get / clan_standing / clan_offer_tier / clan_reward_mult are
+# already available because __init__.mast imports those files before this one. Only
+# absolute `sbs_utils...` imports are valid here.
 
 
 def universe_parse_clan_quests(content):
