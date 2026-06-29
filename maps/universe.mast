@@ -98,6 +98,8 @@ GameCode:
     ->END if not UNIVERSE_ACTIVE
     if UNIVERSE_CULL:
         universe_cull_step(to_object_list(role("asteroid") | role("nebula") | role("black_hole") | role("mine")), UNIVERSE_CULL_RADIUS)
+        # Fleets cull as a unit (whole formation parked + brain paused when far).
+        universe_cull_fleets("raider_fleet", UNIVERSE_CULL_RADIUS)
     jump culloop
 
 
