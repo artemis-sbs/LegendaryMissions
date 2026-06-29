@@ -174,15 +174,16 @@ GameCode:
     ->END if not UNIVERSE_ACTIVE
     loop_owner = universe_system_clan(UNIVERSE_CLANS, universe_seed, universe_i, universe_j, universe_system_kind(universe_seed, universe_i, universe_j, DANGER))[0]
     if loop_owner is not None:
-        loop_chatter = universe_chatter_line(clan_get(UNIVERSE_CLANS, loop_owner))
+        loop_clan = clan_get(UNIVERSE_CLANS, loop_owner)
+        loop_chatter = universe_chatter_line(loop_clan)
         if loop_chatter:
-            comms_broadcast(role("__player__"), loop_chatter, clan_color(UNIVERSE_CLANS, loop_owner))
+            universe_chatter_card(loop_clan, loop_chatter)
     # Near-POI: hint when a player is close to an unscanned derelict (discovery).
     loop_players = to_object_list(role("__player__"))
     if len(loop_players) > 0:
         near_der = closest(loop_players[0], role("universe_derelict"), 7000)
         if near_der is not None:
-            comms_broadcast(role("__player__"), "Sensors flag a derelict nearby - science could scan it.", "#0cf")
+            universe_info_card("Sensors flag a derelict nearby - science could scan it.", title="Sensors")
     jump loop
 
 
@@ -209,7 +210,7 @@ GameCode:
     reputation_apply(AGENT_ID, DATA.get("rep"))
     # On-change chatter: clans note a shift in your standing.
     if DATA.get("rep") is not None:
-        comms_broadcast(role("__player__"), "Comms chatter: word of your deeds spreads among the clans.", "#0cf")
+        universe_info_card("Word of your deeds spreads among the clans.", title="Comms Chatter")
     ->END
 
 
@@ -231,7 +232,7 @@ GameCode:
     universe_diplomacy = universe_set_dip(universe_diplomacy, REL_A, REL_B, REL_VALUE)
     universe_save_diplomacy(universe_diplomacy)
     # On-change chatter: a deliberate diplomacy shift makes the rounds.
-    comms_broadcast(role("__player__"), "Diplomatic channels report a shift in relations.", "#0cf")
+    universe_info_card("Diplomatic channels report a shift in relations.", title="Comms Chatter")
     ->END
 
 
@@ -474,9 +475,10 @@ GameCode:
     universe_kind = kind
     # Ambient: a clan greeting on arrival in their space (flavor only).
     if owner is not None:
-        arrival_chatter = universe_chatter_line(clan_get(UNIVERSE_CLANS, owner))
+        arrival_clan = clan_get(UNIVERSE_CLANS, owner)
+        arrival_chatter = universe_chatter_line(arrival_clan)
         if arrival_chatter:
-            comms_broadcast(role("__player__"), arrival_chatter, clan_color(UNIVERSE_CLANS, owner))
+            universe_chatter_card(arrival_clan, arrival_chatter)
     # Remember we've been here (drives the galaxy-map fog of war).
     universe_sectors = universe_set_system_flag(universe_sectors, universe_i, universe_j, "visited")
 
@@ -513,7 +515,7 @@ GameCode:
                 # capture the station (universe_capture_watch).
                 random.seed(key + 7)
                 gpos = Vec3.rand_in_sphere(4000, 9000, False, True)
-                prefab_spawn(prefab_fleet_raider, {"race": "Kralien", "fleet_difficulty": DIFFICULTY, "ship_roles": owner + ", raider", "START_X": gpos.x, "START_Y": gpos.y, "START_Z": gpos.z})
+                prefab_spawn(prefab_fleet_raider, {"race": clan_pick_race(clan_get(UNIVERSE_CLANS, owner)), "fleet_difficulty": DIFFICULTY, "ship_roles": owner + ", raider", "START_X": gpos.x, "START_Y": gpos.y, "START_Z": gpos.z})
                 task_schedule(universe_capture_watch, {"cap_station": station_id, "cap_clan": owner})
             else:
                 await task_schedule(docking_standard_player_station)
@@ -522,13 +524,13 @@ GameCode:
                 if captured and owner is not None and side_are_enemies(owner, "tsn"):
                     random.seed(key + 9)
                     rpos = Vec3.rand_in_sphere(15000, 25000, False, True)
-                    prefab_spawn(prefab_fleet_raider, {"race": "Kralien", "fleet_difficulty": DIFFICULTY, "ship_roles": owner + ", raider", "START_X": rpos.x, "START_Y": rpos.y, "START_Z": rpos.z})
+                    prefab_spawn(prefab_fleet_raider, {"race": clan_pick_race(clan_get(UNIVERSE_CLANS, owner)), "fleet_difficulty": DIFFICULTY, "ship_roles": owner + ", raider", "START_X": rpos.x, "START_Y": rpos.y, "START_Z": rpos.z})
                     task_schedule(universe_recapture_watch, {"cap_station": station_id, "cap_clan": owner})
     elif kind == "enemy":
         # Skip enemies in a sector the players have already cleared (persisted).
         if not universe_system_flag(universe_sectors, universe_i, universe_j, "enemy_cleared"):
             random.seed(key + 3)
-            races = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
+            enemy_clan = clan_get(UNIVERSE_CLANS, owner)
             count = 1 + int(DIFFICULTY / 3)
             near = 20_000
             far = 40_000
@@ -543,7 +545,7 @@ GameCode:
                 ship_roles = owner + ", raider"
             for n in range(count):
                 pos = Vec3.rand_in_sphere(near, far, False, True)
-                prefab_spawn(prefab_fleet_raider, {"race": random.choice(races), "fleet_difficulty": DIFFICULTY, "ship_roles": ship_roles, "START_X": pos.x, "START_Y": pos.y, "START_Z": pos.z})
+                prefab_spawn(prefab_fleet_raider, {"race": clan_pick_race(enemy_clan), "fleet_difficulty": DIFFICULTY, "ship_roles": ship_roles, "START_X": pos.x, "START_Y": pos.y, "START_Z": pos.z})
             task_schedule(universe_watch_enemy_cleared, {"ei": universe_i, "ej": universe_j})
     elif kind == "anomaly":
         random.seed(key + 4)

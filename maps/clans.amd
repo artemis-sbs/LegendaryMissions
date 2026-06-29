@@ -2,6 +2,10 @@
 // side key); the data section sets identity + home systems; the prose is the
 // description. Loaded by universe_clans.py and spawned as sides. Data fence is a
 // line of only dashes.
+//
+// makeup = the race composition of a clan's ships: a single race ("Torgoth"), an
+// even list ([Torgoth, Kralien]), or a weighted dict ({Torgoth: 70, Kralien: 30}).
+// Omit it for a random mix. Races: Kralien, Torgoth, Arvonian, Ximni.
 
 # [Iron Concord](iron)
 ---
@@ -11,6 +15,7 @@ diplomacy: neutral
 homes: [[6, 4]]
 leans: { by_the_book: 40, fearsome: 30, honest: 20 }
 quest_pool: [patrol, escort, strike]
+makeup: { Kralien: 60, Arvonian: 40 }
 ---
 Disciplined and territorial. Respects strength and straight dealing; honor a deal
 and the Concord remembers - break one and they remember longer.
@@ -23,6 +28,7 @@ diplomacy: neutral
 homes: [[-5, 3]]
 leans: { peaceful: 40, generous: 30, kind: 20 }
 quest_pool: [supply, escort, survey]
+makeup: [Arvonian]
 ---
 Green-world traders and farmers. Quick to deal, slow to fight; pay them in
 kindness and they pay you back in goods.
@@ -35,6 +41,7 @@ diplomacy: neutral
 homes: [[-7, -7]]
 leans: { resourceful: 40, honest: 30, kind: 10 }
 quest_pool: [salvage, rescue, supply]
+makeup: [Kralien, Torgoth, Arvonian, Ximni]
 ---
 Independent settlers scratching a living from the drift. Self-reliant and plain-
 spoken; they value a captain who gets things done.
@@ -47,6 +54,7 @@ diplomacy: neutral
 homes: [[5, -3]]
 leans: { resourceful: 30, selfish: 30, fearsome: 20 }
 quest_pool: [bounty, escort, smuggle]
+makeup: { Ximni: 40, Torgoth: 30, Kralien: 30 }
 ---
 Brokers of muscle and cargo - loyal to the contract, not the cause. Coin and a
 fearsome reputation open their doors.
@@ -59,6 +67,7 @@ diplomacy: foe
 homes: [[8, -5]]
 leans: { violent: 40, cruel: 30, cowardly: 20 }
 quest_pool: [raid, smuggle, bounty]
+makeup: [Torgoth]
 ---
 Opportunist pirates who prey on the lanes. They respect violence and despise the
 weak; only the dangerous bargain with them.
@@ -71,6 +80,7 @@ diplomacy: foe
 homes: [[-4, 6]]
 leans: { intellectual: 40, liar: 30, selfish: 20 }
 quest_pool: [retrieve, escort, mystery]
+makeup: [Ximni]
 ---
 A secretive cult chasing forbidden knowledge in the deep dark. Honeyed words hide
 sharp intent; trust them at your peril.

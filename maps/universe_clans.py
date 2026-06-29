@@ -5,12 +5,17 @@ pure function of (seed, i, j): named home systems win, otherwise a keyed pick
 among foe clans - so the galaxy map and what spawns agree. See UNIVERSE_CHANGES.md
 (Epics C/I).
 """
+import random
 from sbs_utils import scatter
 from sbs_utils.procedural.quest import document_get_amd_file
 from sbs_utils.procedural.execution import labels_get_type
 from sbs_utils.procedural.sides import side_set_relations
-from sbs_utils.procedural.gui import gui_row, gui_text
+from sbs_utils.procedural.roles import all_roles
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_info_panel_send_message
 from sbs_utils.mast.mast_node import MastDataObject
+
+# Fallback race pool when a clan declares no makeup.
+_DEFAULT_RACES = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
 
 
 # --- Nav "known locations" list ----------------------------------------------
@@ -118,6 +123,12 @@ def universe_parse_clans(content):
             "leans": data.get("leans") or {},
             "quest_pool": data.get("quest_pool") or [],
             "chatter": data.get("chatter") or [],
+            # makeup: race composition of this clan's ships - a single race, an
+            # even list, or a {race: weight} dict (see clan_pick_race).
+            "makeup": data.get("makeup"),
+            # Optional comms-card identity (info panel): a face string + an icon.
+            "face": data.get("face"),
+            "icon": data.get("icon"),
             "enemies": "tsn" if diplomacy == "foe" else "",
         }))
     return clans
@@ -150,8 +161,60 @@ def universe_chatter_line(clan):
     lines = clan.get("chatter") or _ARCHETYPE_CHATTER.get(clan.get("archetype"), [])
     if not lines:
         return ""
-    import random as _r
-    return _r.choice(lines).replace("{name}", clan.get("name", "the locals"))
+    return random.choice(lines).replace("{name}", clan.get("name", "the locals"))
+
+
+# --- Chatter / narrative comms delivery (info panel, NOT the text waterfall) ---
+# Chatter reads as a hail from a clan, not a log blip: an info-panel card carrying
+# the clan's name + color (+ optional face/icon), kept in history, auto-dismissed.
+# This mirrors the HereThereBeMonsters here_*_info_message helpers - good
+# candidates to promote into sbs_utils (procedural.comms) as a reusable
+# "incoming comms card" so missions don't each reinvent it. See UNIVERSE_CHANGES.
+def _chatter_consoles():
+    """The comms consoles that should receive universe chatter/comms cards."""
+    return all_roles("console, comms")
+
+
+def universe_chatter_card(clan, line, time=10):
+    """Deliver a clan's ambient line as an info-panel card (face/name/color)."""
+    if not line:
+        return
+    color = clan.get("color", "#0cf") if clan is not None else "#0cf"
+    name = clan.get("name") if clan is not None else None
+    gui_info_panel_send_message(
+        _chatter_consoles(), line, message_color=color, title=name,
+        title_color=color, face=(clan.get("face") if clan is not None else None),
+        icon_index=(clan.get("icon") if clan is not None else None),
+        time=time, history=True)
+
+
+def universe_info_card(line, title=None, color="#0cf", time=10):
+    """Deliver a non-clan ambient/narrative line (sensors, comms chatter, news) as
+    an info-panel card - same surface as clan chatter, no portrait."""
+    if not line:
+        return
+    gui_info_panel_send_message(
+        _chatter_consoles(), line, message_color=color, title=title,
+        title_color=color, time=time, history=True)
+
+
+def clan_pick_race(clan):
+    """Pick a race for one of a clan's ships from its authored makeup.
+
+    makeup may be a single race string, an even list ([Torgoth, Kralien]), or a
+    weighted dict ({Torgoth: 70, Kralien: 30}). No makeup (or no clan) -> a random
+    pick from the default pool, preserving the old mixed behavior.
+    """
+    makeup = clan.get("makeup") if clan is not None else None
+    if not makeup:
+        return random.choice(_DEFAULT_RACES)
+    if isinstance(makeup, dict):
+        races = list(makeup.keys())
+        weights = list(makeup.values())
+        return random.choices(races, weights=weights)[0]
+    if isinstance(makeup, list):
+        return random.choice(makeup) if makeup else random.choice(_DEFAULT_RACES)
+    return str(makeup)
 
 
 def clan_get(clans, key):
