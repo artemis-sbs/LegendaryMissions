@@ -1,3 +1,4 @@
 import pickup_common.mast
+import upgrade.py
 import upgrade.mast
 

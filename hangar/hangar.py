@@ -426,7 +426,116 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
     set_timer(craft.id, "refit", seconds=int(30*refit_cooef))
     return True
 
-from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text
+from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text, gui_blank
+from sbs_utils.procedural.gui.listbox import gui_list_box
+from sbs_utils.mast.mast_node import MastDataObject
+
+
+# --- Fighter/shuttle combat credit (works without the consoles addon) --------
+# Pilot kills/tonnage/damage are credited HERE (cockpit attackers only) so the Air
+# Wing roster is meaningful in missions like Mining Days that don't load the results
+# (consoles) addon. The consoles addon credits player BRIDGE ships only, so the two
+# never double-count. Stats land on the same inventory keys either way.
+HANGAR_TONNAGE_PER_HULLPOINT = 1000
+
+
+def _hangar_attacker_id(parent_id, source_id):
+    """The crediting attacker: firing ship (parent) when set, else the source."""
+    aid = to_id(parent_id)
+    if aid is None or aid == 0:
+        aid = to_id(source_id)
+    if aid == 0:
+        return None
+    return aid
+
+
+def _hangar_victim_tonnage(victim):
+    so = to_space_object(victim)
+    if so is None:
+        return 0
+    sd = get_ship_data_for(so.art_id)
+    hp = (sd.get("hullpoints", 0) or 0) if sd is not None else 0
+    return int(hp) * HANGAR_TONNAGE_PER_HULLPOINT
+
+
+def _hangar_bump(agent_id, key, amount):
+    set_inventory_value(agent_id, key, get_inventory_value(agent_id, key, 0) + amount)
+
+
+def hangar_credit_kill(parent_id, source_id, victim_id):
+    """Credit a fighter/shuttle kill + tonnage to the cockpit and its pilot."""
+    attacker = _hangar_attacker_id(parent_id, source_id)
+    if attacker is None or not has_role(attacker, "cockpit"):
+        return
+    tons = _hangar_victim_tonnage(victim_id)
+    _hangar_bump(attacker, "kills", 1)
+    _hangar_bump(attacker, "tonnage", tons)
+    pilot = get_inventory_value(attacker, "client_id", 0)
+    if pilot:
+        _hangar_bump(pilot, "kills", 1)
+        _hangar_bump(pilot, "tonnage", tons)
+
+
+def hangar_credit_damage(parent_id, source_id, amount):
+    """Accumulate raw damage dealt by a cockpit (the 'impact' stat) on it + its pilot."""
+    attacker = _hangar_attacker_id(parent_id, source_id)
+    if attacker is None or not has_role(attacker, "cockpit"):
+        return
+    try:
+        amount = float(amount or 0)
+    except (TypeError, ValueError):
+        return
+    if amount <= 0:
+        return
+    _hangar_bump(attacker, "damage_dealt", amount)
+    pilot = get_inventory_value(attacker, "client_id", 0)
+    if pilot:
+        _hangar_bump(pilot, "damage_dealt", amount)
+
+
+# --- Air Wing roster (live during play) --------------------------------------
+# One row per pilot. sortie / call_sign / completed_objectives are the hangar's
+# own inventory; kills / tonnage are credited by the results addon's damage routes
+# when it is loaded and default to 0 otherwise, so this roster works standalone.
+def hangar_pilot_items():
+    items = []
+    try:
+        client_ids = list(sbs.get_client_ID_list())
+    except Exception:
+        client_ids = []
+    for cid in client_ids:
+        sorties = get_inventory_value(cid, "sortie", 0)
+        if not sorties:
+            continue
+        items.append(MastDataObject({
+            "call_sign": str(get_inventory_value(cid, "call_sign", "pilot")),
+            "sorties": sorties,
+            "kills": get_inventory_value(cid, "kills", 0),
+            "tonnage": get_inventory_value(cid, "tonnage", 0),
+            "objectives": get_inventory_value(cid, "completed_objectives", 0),
+        }))
+    return items
+
+
+def hangar_pilot_template(item):
+    gui_row("row-height: 1.2em;padding:6px;")
+    gui_text(f"$text:{item.get('call_sign')};justify: left;")
+    gui_row("row-height: 1.0em;padding:6px;")
+    gui_text(f"$text:Sorties {item.get('sorties')}   Kills {item.get('kills')}   Tonnage {item.get('tonnage')}   Objectives {item.get('objectives')};justify: left;font:gui-1")
+
+
+def hangar_pilot_title_template():
+    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
+    gui_text("$text:Air Wing;justify: left;")
+
+
+def hangar_airwing_panel(cid, left, top, width, height):
+    """Cockpit info-panel page: the live Air Wing roster. The panel framework sets
+    up the section; we just fill it."""
+    gui_list_box(hangar_pilot_items(), "", item_template=hangar_pilot_template, title_template=hangar_pilot_title_template, select=False)
+    # keep the list off the panel's right edge
+    gui_blank(style="col-width:0.5em")
+
 
 def get_dock_name(so):
     """

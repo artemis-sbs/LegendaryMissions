@@ -30,11 +30,29 @@ shared game_stats = ~~{
             race = race[0:under]
             if race=="xim":
                 race= "ximni"
-            
+
             race = "{race.lower()}_ships_destroyed"
             count = game_stats.get(race, 0)
             game_stats[race] = count + 1
 
+    # Credit the kill + the victim's tonnage to the player BRIDGE ship that landed
+    # the final blow. (Fighter/shuttle kills are credited by the hangar addon, so a
+    # console-less mission still tracks pilots and the two never double-count.) The
+    # DESTROYED route carries the killer in DAMAGE_* (defaulted here for non-combat
+    # removals, where no damage event is attached).
+    default DAMAGE_PARENT_ID = 0
+    default DAMAGE_SOURCE_ID = 0
+    results_credit_kill(DAMAGE_PARENT_ID, DAMAGE_SOURCE_ID, DESTROYED_ID)
+    ->END
+
+
+# Option-B "impact" stat: accumulate raw damage dealt per player BRIDGE ship.
+# Filtered to player attackers so the per-hit body stays cheap, and gated by
+# TRACK_DAMAGE so a host on weak hardware can switch it off. (//damage/object is
+# already routed by other addons, so this adds a handler, not new per-frame
+# dispatch.)
+//damage/object if SETTINGS.get("TRACK_DAMAGE", True) and (has_role(DAMAGE_PARENT_ID, "__player__") or has_role(DAMAGE_SOURCE_ID, "__player__"))
+    results_credit_damage(DAMAGE_PARENT_ID, DAMAGE_SOURCE_ID, EVENT.sub_float)
     ->END
 
 
@@ -52,90 +70,143 @@ shared game_stats = ~~{
 
 
 === show_game_results_gui
-        
-    gui_section(style="area: 10, 10, 90, 90;")
 
-    """color:white;justify: center; font: gui-6;$text:Game results"""
-    gui_row()
-    """""color:cyan;justify:center;font:gui-5;$text:{START_TEXT}"""""
-##    
-    gui_row()
-    gui_hole(5)
-    """color:yellow; justify: right;$text:Difficulty"""
-    gui_blank(style="col-width: 1;")
-    gui_hole(5)
-    """color:yellow;justify: left;$text:{DIFFICULTY}"""
-##
-
-    gui_row()
-    gui_hole(5)
-    """color:yellow;justify: right;$text:Terran destroyed"""
-    gui_blank(style="col-width: 1;")
-    gui_hole(5)
-    """color:yellow;justify: left;$text:{game_stats["tsn_destroyed"]}"""
-##
-    gui_row()
-    gui_hole(5)
-    """color:yellow; justify: right;$text:Arvonian ships destroyed"""
-    gui_blank(style="col-width: 1;")
-    gui_hole(5)
-    """color:yellow;justify: left;$text:{game_stats["arvonian_ships_destroyed"]}"""
-
-    gui_row()
-    gui_hole(5)
-    """color:yellow; justify: right;$text:Kralien ships destroyed"""
-    gui_blank(style="col-width: 1;")
-    gui_hole(5)
-    """color:yellow;justify: left;$text:{game_stats["kralien_ships_destroyed"]}"""
-
-    gui_row()
-    gui_hole(5)
-    """color:yellow; justify: right;$text:Skaraan ships destroyed"""
-    gui_blank(style="col-width: 1;")
-    gui_hole(5)
-    """color:yellow;justify: left;$text:{game_stats["skaraan_ships_destroyed"]}"""
-
-    gui_row()
-    gui_hole(5)
-    """color:yellow; justify: right;$text:Ximni ships destroyed"""
-    gui_blank(style="col-width: 1;")
-    gui_hole(5)
-    """color:yellow;justify: left;$text:{game_stats["ximni_ships_destroyed"]}"""
-
-    gui_row()
-    gui_hole(5)
-    """color:yellow; justify: right;$text:Torgoth ships destroyed"""
-    gui_blank(style="col-width: 1;")
-    gui_hole(5)
-    """color:yellow;justify: left;$text:{game_stats["torgoth_ships_destroyed"]}"""
-
-    gui_row()
-    gui_hole(5)
-    """color:yellow; justify: right;$text:Enemies surrendered"""
-    gui_blank(style="col-width: 1;")
-    gui_hole(5)
-    """color:yellow;justify: left;$text:{game_stats["ships_surrender"]}"""
-
-    gui_row()
-    gui_hole(5)
-    end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)
-    """color:yellow; justify: right;$text:Game Time"""
-    gui_blank(style="col-width: 1;")
-    gui_hole(5)
-    """color:yellow;justify: left;$text:{end_time} minutes"""
-
-    
+    # Tabbed results: a lean Summary lands first (same for every console); Fleet,
+    # Air Wing, Quests and the per-race Enemies breakdown are one click away. The
+    # selected tab is held in RESULTS_TAB (default keeps it across the re-jump each
+    # tab button does).
+    default RESULTS_TAB = "summary"
 
     mission = get_mission_name()
     start_mission = get_startup_mission_name()
     if start_mission is not None:
         same = mission == start_mission
-
     if start_mission is None or start_mission=="":
         same = True
         start_mission = mission
-
     show_replay = IS_SERVER or CONSOLE_SELECT == "operator" or CONSOLE_SELECT == "gamemaster"
+
+    end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)
+    totals = results_summary()
+
+    # Tab strip (key, label) for this screen, drawn by the reusable gui_screen_tabs
+    # helper which styles plain buttons like the console top tabs.
+    results_tabs = [["summary","Summary"], ["fleet","Fleet"], ["airwing","Air Wing"], ["quests","Quests"], ["enemies","Enemies"]]
+
+    # Top tab strip (styled like the console top tabs)
+    gui_section(style="area: 40, 0, 100, 5;")
+    gui_row("row-height:35px;")
+    gui_screen_tabs(results_tabs, RESULTS_TAB, "results_set_tab")
+
+    # Title band
+    gui_section(style="area: 10, 6, 90, 16;")
+    """color:white;justify: center; font: gui-6;$text:Game results"""
+    gui_row()
+    """""color:cyan;justify:center;font:gui-5;$text:{START_TEXT}"""""
+
+    # Active tab content
+    gui_section(style="area: 10, 17, 90, 90;")
+
+    if RESULTS_TAB == "summary":
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Difficulty"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{DIFFICULTY}"""
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Enemies destroyed"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{totals["kills"]}"""
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Tonnage destroyed"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{totals["tonnage"]}"""
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Damage dealt"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{totals["damage"]}"""
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Enemies surrendered"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{game_stats["ships_surrender"]}"""
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Game Time"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{end_time} minutes"""
+
+    if RESULTS_TAB == "fleet":
+        fleet_box = gui_list_box(results_ship_items(), "padding:0,0,10px,0;", item_template=results_ship_template, title_template=results_ship_title_template, select=False)
+
+    if RESULTS_TAB == "airwing":
+        wing_items = results_pilot_items()
+        if len(wing_items)==0:
+            gui_row()
+            """color:yellow;justify: center;$text:No sorties were flown."""
+        else:
+            wing_box = gui_list_box(wing_items, "padding:0,0,10px,0;", item_template=results_pilot_template, title_template=results_pilot_title_template, select=False)
+
+    if RESULTS_TAB == "quests":
+        quest_items = results_quest_items()
+        if len(quest_items)==0:
+            gui_row()
+            """color:yellow;justify: center;$text:No quests."""
+        else:
+            quest_box = gui_list_box(quest_items, "padding:0,0,10px,0;", item_template=results_quest_template, title_template=results_quest_title_template, select=False)
+
+    if RESULTS_TAB == "enemies":
+        gui_row()
+        gui_hole(5)
+        """color:yellow;justify: right;$text:Terran destroyed"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{game_stats["tsn_destroyed"]}"""
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Arvonian ships destroyed"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{game_stats["arvonian_ships_destroyed"]}"""
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Kralien ships destroyed"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{game_stats["kralien_ships_destroyed"]}"""
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Skaraan ships destroyed"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{game_stats["skaraan_ships_destroyed"]}"""
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Ximni ships destroyed"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{game_stats["ximni_ships_destroyed"]}"""
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Torgoth ships destroyed"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{game_stats["torgoth_ships_destroyed"]}"""
+        gui_row()
+        gui_hole(5)
+        """color:yellow; justify: right;$text:Enemies surrendered"""
+        gui_blank(style="col-width: 1;")
+        gui_hole(5)
+        """color:yellow;justify: left;$text:{game_stats["ships_surrender"]}"""
 
     await gui():
         + "replay" if show_replay:
@@ -144,6 +215,12 @@ shared game_stats = ~~{
             sbs.run_next_mission(start_mission)
 
     # Kind of need to restart, which is good for now since cleanup is not guaranteed
+
+
+=== results_set_tab
+    # A results tab was clicked: gui_screen_tabs set TAB_KEY; record it and rebuild.
+    RESULTS_TAB = TAB_KEY
+    jump show_game_results_gui
 
 
 === save_game_results_yaml
@@ -159,8 +236,10 @@ shared game_stats = ~~{
     ->END if RESULTS_SAVED
     RESULTS_SAVED = True
 
-    # Keep only the most recent games (~0.4 KiB each) so the file stays small and
-    # quick to open. 200 ~= 76 KiB; raise/lower to taste.
+    # Keep only the most recent games so the file stays small and quick to open.
+    # Records now carry the dense per-ship / per-pilot / quest breakdown (more than
+    # the GUI shows), so each is a few KiB and scales with crew/quest count - lower
+    # this if the file gets large.
     default shared GAME_RESULTS_MAX = 200
 
     results_file = get_missions_dir() + "/game_results.yaml"
@@ -174,6 +253,8 @@ shared game_stats = ~~{
     stamp = game_results_timestamp()
     default WORLD_SELECT = None
     map_name = game_results_map(WORLD_SELECT)
+    # Dense breakdown (per-ship / per-pilot / quest) the GUI omits - kept in the save.
+    extra = results_record_extra()
     record = ~~{
         "time": stamp,
         "mission": get_mission_name(),
@@ -183,6 +264,10 @@ shared game_stats = ~~{
         "game_minutes": int(end_ticks / 30 / 60),
         # drop start_time (an internal sim-tick marker, not a stat; game_minutes covers duration)
         "stats": {k: v for k, v in game_stats.items() if k != "start_time"},
+        "summary": extra["summary"],
+        "ships": extra["ships"],
+        "pilots": extra["pilots"],
+        "quests": extra["quests"],
     }~~
     results.append(record)
     if len(results) > GAME_RESULTS_MAX:
