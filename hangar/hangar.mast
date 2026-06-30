@@ -344,12 +344,41 @@ hangar_get_craft_data("terran")
         home_id = get_dedicated_link(ride_select, "home_dock")
         hangar_objective_started(ride_select, home_id, mission_objective)
 
-    gui_console("cockpit")
+    # Cockpit layout: a full-screen overlay image with the engine widgets placed
+    # explicitly on top (instead of gui_console("cockpit")'s default auto-layout),
+    # the same approach the Mining Days mission uses. gui_activate_console marks
+    # the console type so the //gui/cockpit info-panel route still fires.
+    gui_activate_console("cockpit")
+
+    gui_section(style="area:0,0,100,100;")
+    gui_image_stretch(get_mission_dir_filename("media/LegendaryMissions/hangar/cockpit_overlay"))
+
+    gui_section(style="area: 0,11,100,105;")
+    gui_layout_widget("3dview")
+
+    gui_section(style="area: 20,70+45px,37.5,99;")
+    gui_layout_widget("2dview")
+
+    gui_section(style="area: 20,70,37.5,70+45px;")
+    gui_layout_widget("radar_zoom_ctrl")
+
+    gui_section(style="area: 88,50,100,100;")
+    gui_layout_widget("fighter_control")
+
+    gui_section(style="area: 4,60,17,99;")
+    gui_layout_widget("grid_control")
+
+    gui_section(style="area: 41,69,59.7,90;")
+    gui_layout_widget("helm_free_3d")
+
+    gui_section(style="area: 41,90,59.7,99;")
+    gui_layout_widget("text_waterfall")
+
     # Buttons
     gui_section(style="area:0,0,50px,100;orientation:BT;")
     gui_row(style="row-height:50px;")
     brain = gui_button("icon_index:134;color:#fff", on_press="hangar_grid_select", data={"sel_role":"computer"}, is_sub_task=True)
-    
+
 
 
     await gui()
@@ -374,8 +403,9 @@ hangar_get_craft_data("terran")
 
 
 //gui/cockpit
-    # Left
-    gui_section(style="area:0,45px,100,100;")
+    # Info panel in the overlay's top-left panel slot (where Mining Days places
+    # ship_data), but using LM's richer info panel so the Air Wing page is kept.
+    gui_section(style="area:7,19,28,44;col-width:280px;")
     default tab = 1
 
     with gui_sub_section("col-width:280px;"):
