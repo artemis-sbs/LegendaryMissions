@@ -6,14 +6,19 @@
 //collision/interactive if has_role(COLLISION_ORIGIN_ID, "item") and has_any_role(COLLISION_SELECTED_ID, "__player__, cockpit")
     item_key = get_inventory_value(COLLISION_ORIGIN_ID, "item_key", "")
     ->END if item_key == ""
+    # Fetch the pickup first and bail if it's already gone: collision can fire
+    # again for the same pickup after the first hit deleted it (the py-side role
+    # lingers a tick while the engine object is gone). This also prevents a
+    # double credit.
+    tobj = sim.get_space_object(COLLISION_ORIGIN_ID)
+    ->END if tobj is None
+    tpos = tobj.pos
     have = get_inventory_value(COLLISION_SELECTED_ID, item_key, 0)
     set_inventory_value(COLLISION_SELECTED_ID, item_key, have + 1)
     # Announce the event so GUI/quests/economy can react (decoupled).
     signal_emit("item_collected", {"holder_id": COLLISION_SELECTED_ID, "key": item_key})
     item_name = item_meta(item_key, "display_text", item_key)
     comms_broadcast(COLLISION_SELECTED_ID, f"Pickup: {item_name}", "#E3F")
-    tobj = sim.get_space_object(COLLISION_ORIGIN_ID)
-    tpos = tobj.pos
     sbs.delete_object(COLLISION_ORIGIN_ID)
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
     ->END
