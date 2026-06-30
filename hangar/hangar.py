@@ -9,6 +9,8 @@ from sbs_utils.procedural.routes import RouteDamageDestroy
 from sbs_utils.procedural.sides import to_side_object
 from sbs_utils.procedural.media import media_read_relative_file
 from sbs_utils.procedural.ship_data import get_ship_data_for
+from sbs_utils.procedural.items import item_get
+from sbs_utils.procedural.upgrades import upgrade_add
 
 from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished
 from sbs_utils.procedural.execution import set_shared_variable, get_shared_variable, get_variable
@@ -62,6 +64,8 @@ def hangar_get_stats(client_id, fighter):
     if fighter is None:
         return ["", ""]
     
+    # shield_max_val already holds the scaled capacity (the cockpit_shields
+    # loadout item multiplies it directly), so read it as-is.
     front_shield_max_val = fighter.data_set.get("shield_max_val", 0)
     rear_shield_max_val = fighter.data_set.get("shield_max_val", 1)
     bs = fighter.data_set.get("beamDamage", 0)
@@ -78,7 +82,7 @@ def hangar_get_stats(client_id, fighter):
     call_sign = get_inventory_value(client_id, "call_sign", "pilot")
     line1 = "bad ship data key or data_set values"
     if bs is not None and front_shield_max_val is not None:
-        line1 = f"{f}: TORP {t} BEAM {bs:.2f} SHLDS {front_shield_max_val}" # | {rear_shield_max_val}"
+        line1 = f"{f}: TORP {t} BEAM {bs:.2f} SHLDS {int(front_shield_max_val)}" # | {int(rear_shield_max_val)}"
     line2 = f"{call_sign}: sorties {s} objectives {c}"
     return [line1, line2]
     
@@ -157,9 +161,38 @@ def hangar_get_ship_data_keys(docked_id):
 
 
 
+def hangar_apply_loadout(craft_id, upgrades):
+    """Install a craft's default upgrades at spawn.
+
+    Each entry in ``upgrades`` is either an item key string (``"cockpit_shields"``)
+    or a dict ``{"item": key, ...extra}`` whose extra fields are passed to the
+    item effect (e.g. ``{"item": "torp_bay", "torp_type": "Nuke", "amount": 2}``).
+    Items are resolved from the registry by key and applied with ``upgrade_add``,
+    so their effects (modifier_add coefficients, additive ammo) layer on top of
+    the hull's shipData values.
+    """
+    for up in upgrades:
+        if isinstance(up, str):
+            ukey = up
+            data = {"key": ukey}
+        elif isinstance(up, dict):
+            ukey = up.get("item")
+            data = dict(up)
+            data["key"] = ukey
+        else:
+            continue
+        if not ukey:
+            continue
+        item_label = item_get(ukey)
+        if item_label is None:
+            print(f"WARNING: hangar loadout item not found: {ukey}")
+            continue
+        upgrade_add(craft_id, item_label, data=data, activate=True)
+
+
 def hangar_craft_spawn(docked_id, craft_data):
     """
-    Spawns a new hangar craft in the hangar of the specified ship or station.  
+    Spawns a new hangar craft in the hangar of the specified ship or station.
     You probably don't need to use this, because in hangar.mast, when a ship or station is spawned, this function is called to create all the necessary shuttles, fighters, and bombers needed.
 
     Args:
@@ -183,9 +216,12 @@ def hangar_craft_spawn(docked_id, craft_data):
         name = sd.get("name", name)
         origin = sd.get("origin", origin)
 
-    roles = craft_data.get("roles","" )
-    roles = f"{so.side},{roles},cockpit,standby,hangar"
-    
+    # The loadout "type" (fighter|bomber|shuttle) is the craft's variant role
+    # and its displayed class. name/roles derive from shipData; only the variant
+    # and the upgrade list are mission loadout data now.
+    craft_type = craft_data.get("type", "fighter")
+    roles = f"{so.side},{craft_type},cockpit,standby,hangar"
+
     _pos = so.engine_object.pos
     name = f"{origin} {name} {_craft_id}"
     craft = player_spawn(_pos.x, _pos.y,_pos.z, name, roles, sd_key)
@@ -194,26 +230,13 @@ def hangar_craft_spawn(docked_id, craft_data):
     # Not counted for end game
     craft.py_object.remove_role("PlayerShip,__player__")
 
-    style = craft_data.get("display_text", "Fighter")
-    set_inventory_value(craft.id, "CRAFT_TYPE", style )
+    set_inventory_value(craft.id, "CRAFT_TYPE", craft_type.capitalize())
 
-    #
-    # 
-    torp_types = craft_data.get("torp_types", {})
-    for t, count in torp_types.items():
-        craft.blob.set(f"{t}_MAX", count, 0)
-        craft.blob.set(f"{t}_VAL", count, 0)
-    
-    torp_available = ",".join(torp_types.keys())
-    craft.blob.set("torpedo_types_available", torp_available, 0)
-    shields = craft_data.get("shields", [-1,-1])
+    # Apply the craft's default upgrades (shields, torpedo bays, ...) through the
+    # item/upgrade system. Effects use modifier_add on data_set coefficients and
+    # additive ammo, so they layer on top of the hull's shipData values.
+    hangar_apply_loadout(craft.id, craft_data.get("upgrades", []))
 
-    c = craft.blob.get("shield_count", 0)
-    for x in range(c):
-        m = shields[c] if c<len(shields) else craft.blob.get("shield_max_val", x)
-        craft.blob.set("shield_max_val", m*4, x)
-        v = shields[c] if c<len(shields) else craft.blob.get("shield_val", x)
-        craft.blob.set("shield_val", v*4, x)
     #
     # Cross links
     #
@@ -273,7 +296,7 @@ def hangar_random_craft_spawn(docked_id, craft_type=None):
             craft_type = "bomber"
     
     craft_data_list = hangar_get_ship_data_keys(docked_id)
-    filtered = [craft_data for craft_data in craft_data_list if craft_type in craft_data.get("roles", "")]
+    filtered = [craft_data for craft_data in craft_data_list if craft_type == craft_data.get("type")]
     craft_data_to_spawn = random.choice(filtered)
 
     return hangar_craft_spawn(docked_id, craft_data_to_spawn)

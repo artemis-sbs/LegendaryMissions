@@ -1,0 +1,69 @@
+#
+# Hangar craft default-loadout items.
+#
+# These are item/upgrade prefab labels (discovered via labels_get_type("item/"),
+# resolved by key with item_get(), applied with upgrade_add() - see hangar.py
+# hangar_apply_loadout). They are a craft's DEFAULT fit at spawn, so effects
+# layer on top of the hull's shipData values instead of overwriting them:
+#   - cockpit_shields  scales shield capacity via the shield_upgrade_coeff
+#                      data_set array (default x4 - matches the old hangar fit).
+#   - torp_bay         ADDS ammo of one torpedo type on top of the hull's
+#                      shipData torpedostart.
+#
+# type is item/loadout/* (not item/upgrade/*) on purpose: that keeps them out of
+# the space-pickup pool, the player Upgrades tab, and the station market - they
+# are only ever applied programmatically as a craft fit.
+#
+
+=== prefab_item_cockpit_shields
+metadata:``` yaml
+type: item/loadout/defense
+key: cockpit_shields
+display_text: Cockpit Shields
+mode: install
+mult: 2
+desc: Reinforces a hangar craft's shields (default x2).
+```
+    # Scale shield capacity via the shield_max_val data_set array - the value the
+    # engine and views read directly (shield_upgrade_coeff is not applied to the
+    # stored shields, so it never lands). Additive value mult-1 -> x mult, then
+    # top current shields up to the new max so docked craft show full shields.
+    modifier_add(UPGRADE_AGENT_ID, "shield_max_val", mult - 1, key)
+    blob = to_blob(UPGRADE_AGENT_ID)
+    if blob is not None:
+        c = blob.get("shield_count", 0)
+        if c is None:
+            c = 0
+        for x in range(c):
+            m = blob.get("shield_max_val", x)
+            if m is not None:
+                blob.set("shield_val", m, x)
+    ->END
+
+=== prefab_item_torp_bay
+metadata:``` yaml
+type: item/loadout/weapons
+key: torp_bay
+display_text: Torpedo Bay
+mode: install
+torp_type: Homing
+amount: 0
+desc: Adds ammo of one torpedo type on top of the hull's loadout.
+```
+    blob = to_blob(UPGRADE_AGENT_ID)
+    if blob is not None and amount:
+        base = blob.get(f"{torp_type}_MAX", 0)
+        if base is None:
+            base = 0
+        total = base + amount
+        blob.set(f"{torp_type}_MAX", total, 0)
+        blob.set(f"{torp_type}_NUM", total, 0)
+        blob.set(f"{torp_type}_VAL", total, 0)
+        avail = blob.get("torpedo_types_available", 0)
+        if not isinstance(avail, str):
+            avail = ""
+        types = [a.strip() for a in avail.split(",") if a.strip()]
+        if torp_type not in types:
+            types.append(torp_type)
+        blob.set("torpedo_types_available", ",".join(types), 0)
+    ->END

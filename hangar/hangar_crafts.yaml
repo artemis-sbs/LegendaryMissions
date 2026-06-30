@@ -1,95 +1,95 @@
-# Default can also be terran
+# Hangar craft loadouts, per origin (the dock's origin; "terran" is the default).
+#
+# Each entry is a DELTA on top of a shipData hull, not a full restatement:
+#   key       shipData hull key (name / base shields / base ammo come from there)
+#   type      fighter | bomber | shuttle  - the craft's variant role + displayed
+#             class; also the filter used by hangar_random_craft_spawn()
+#   upgrades  default fit applied at spawn via the item/upgrade system
+#             (hangar.py hangar_apply_loadout). Each entry is either an item key
+#             string, or {item: <key>, ...extra} whose extra fields pass to the
+#             item effect. Effects layer on the hull values:
+#               - cockpit_shields              x4 shields (shield_upgrade_coeff)
+#               - {item: torp_bay, torp_type:, amount:}  ADDS that ammo on top
+#                 of the hull's shipData torpedostart
+#
+# Note one hull can back two variants (e.g. xim_avenger is both fighter and
+# bomber) - that is exactly what the per-loadout upgrade list is for.
+
 terran:
   - key: tsn_fighter
-    torp_types:
-      Homing: 10
-    shields: [100,100]
-    roles: fighter
-    display_text: Fighter
+    type: fighter
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Homing, amount: 5}   # hull has 5 -> 10
   - key: tsn_bomber
-    roles: bomber
-    torp_types: 
-      Homing: 10
-      Nuke: 2
-      EMP: 1
-      Mine: 5
-    shields: [160,160]
-    display_text: Bomber
+    type: bomber
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Nuke, amount: 2}      # hull already has Homing 10
+      - {item: torp_bay, torp_type: EMP, amount: 1}
+      - {item: torp_bay, torp_type: Mine, amount: 5}
   - key: tsn_shuttle
-    torp_types: 
-      Homing: 2
-    shields: [200,200]
-    roles: shuttle
-    display_text: Shuttle
-
+    type: shuttle
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Homing, amount: 2}
 
 ximni:
   - key: xim_avenger
-    torp_types:
-      Homing: 5
-    roles: fighter
-    display_text: Fighter
-    shields: [100,100]
+    type: fighter
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Homing, amount: 5}
   - key: xim_avenger
-    roles: bomber
-    torp_types:
-      Homing: 5
-      Nuke: 2
-      EMP: 2
-      Mine: 5 
-    display_text: Bomber
-    shields: [160,160]
+    type: bomber
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Homing, amount: 5}
+      - {item: torp_bay, torp_type: Nuke, amount: 2}
+      - {item: torp_bay, torp_type: EMP, amount: 2}
+      - {item: torp_bay, torp_type: Mine, amount: 5}
   - key: tsn_shuttle
-    torp_types: 
-      Homing: 2
-    roles: shuttle
-    display_text: Shuttle
-    shields: [100,100]
+    type: shuttle
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Homing, amount: 2}
 
 pirate:
   - key: pirate_fighter
-    torp_types: 
-      Homing: 10
-    roles: fighter
-    display_text: Fighter
-    shields: [100,100]
+    type: fighter
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Homing, amount: 10}
   - key: pirate_fighter
-    roles: bomber
-    torp_types:
-      Homing: 10
-      Nuke: 2
-      EMP: 1
-      Mine: 5 
-    display_text: Bomber
-    shields: [160,160]
+    type: bomber
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Homing, amount: 10}
+      - {item: torp_bay, torp_type: Nuke, amount: 2}
+      - {item: torp_bay, torp_type: EMP, amount: 1}
+      - {item: torp_bay, torp_type: Mine, amount: 5}
   - key: tsn_shuttle
-    torp_types: 
-      Homing: 2
-    roles: shuttle
-    display_text: Shuttle
-    shields: [200,200]
+    type: shuttle
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Homing, amount: 2}
 
 arvonian:
   - key: arvonian_fighter
-    torp_types: 
-      Homing: 10
-    roles: fighter
-    display_text: Fighter
-    shields: [200,200]
+    type: fighter
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Homing, amount: 10}
   - key: arvonian_fighter
-    roles: bomber
-    torp_types: 
-      Homing: 10
-      Nuke: 2
-      EMP: 1
-      Mine: 5
-    display_text: Bomber
-    shields: [160,160]
+    type: bomber
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Homing, amount: 10}
+      - {item: torp_bay, torp_type: Nuke, amount: 2}
+      - {item: torp_bay, torp_type: EMP, amount: 1}
+      - {item: torp_bay, torp_type: Mine, amount: 5}
   - key: tsn_shuttle
-    torp_types: 
-      Homing: 2
-    roles: shuttle
-    display_text: Shuttle
-    shields: [200,200]
-
-
+    type: shuttle
+    upgrades:
+      - cockpit_shields
+      - {item: torp_bay, torp_type: Homing, amount: 2}
