@@ -1,10 +1,15 @@
 #
 # Server-side item activation. The GUI only emits the intent signal
-# "item_activate" {holder_id, key, client_id}; this route (which runs on the
-# server) validates and applies the effect, so activation is authoritative and
-# never runs in a client task (the bug class that broke the old system).
+# "item_activate" {holder_id, key, client_id}; this route validates and applies
+# the effect, so activation is authoritative and never runs in a client task
+# (the bug class that broke the old system).
 #
-//signal/item_activate
+# MUST be //shared/signal (not //signal): a plain //signal route registers on
+# the server AND every client page, so it would consume the item, set the
+# cooldown, and apply the effect once per connected client. //shared/signal
+# registers server-only, so the whole body runs exactly once.
+#
+//shared/signal/item_activate
     item_label = item_get(key)
     ->END if item_label is None
     have = get_inventory_value(holder_id, key, 0)
