@@ -129,35 +129,38 @@ gui_reroute_clients("client_main")
     if mission_overview is not None:
         START_TEXT = """$t {mission_overview.display_name}:\n\n{mission_overview.desc}"""
 
-    gui_section( style="area: 0, 50px, 100, 210px;padding:10px,0;background:#1578;")
-    gui_text_area(START_TEXT)
+    gui_section( style="area: 0, 50px, 100, 95;padding:10px,0;background:#1578;")
+    
+    gui_row("row-height: 160px")
+    with gui_sub_section( style="padding:10px,0, 10px;background:#1578;"):
+        gui_text_area(START_TEXT)
 
-    # For using a seed value when randomly generating terrain, not currently implemented
-    #row style="row-height:65px;"
-    #"""justify:right;$text:Seed (Optional)"""
-    #gui_input("""desc: Integer""", var="seed_value")
+        # For using a seed value when randomly generating terrain, not currently implemented
+        #row style="row-height:65px;"
+        #"""justify:right;$text:Seed (Optional)"""
+        #gui_input("""desc: Integer""", var="seed_value")
 
     rs= "row-height: 45px;margin:5px,5px,0,0;"
     ts= "row-height: 45px;col-width: 7em;margin:0,2px, 0,0;"
+    gui_row(style="padding:10px,20px, 10px")
+    with gui_sub_section():
+        l = len(mission_list)
+        if l >1:
+            MISSIONS_TITLE = "Select a mission. {l} types."
+        else:
+            MISSIONS_TITLE = "Mission"
+        mission_picker = gui_list_box(mission_list,"row-height: 7em; background:#1578;", item_template=main_mission_select_template, title_template=MISSIONS_TITLE, select=True, carousel=True)
+        # Initialize the selection to account for if we already have one
+        mission_picker.set_selected_index(mission_index)
 
-    gui_section(style="area: 0, 95-500px, 100, 95;")
-    l = len(mission_list)
-    if l >1:
-        MISSIONS_TITLE = "Select a mission. {l} types."
-    else:
-        MISSIONS_TITLE = "Mission"
-    mission_picker = gui_list_box(mission_list,"row-height: 7em; background:#1578;", item_template=main_mission_select_template, title_template=MISSIONS_TITLE, select=True, carousel=True)
-    # Initialize the selection to account for if we already have one
-    mission_picker.set_selected_index(mission_index)
-
-    WORLD_SELECT = mission_picker.get_value()
-
-    on change mission_picker.get_selected_index():
-        # This should be one thing, or None
         WORLD_SELECT = mission_picker.get_value()
-        mission_index = mission_picker.get_selected_index()
-        jump show_server_menu
-    gui_blank(1, "col-width: 20px")
+
+        on change mission_picker.get_selected_index():
+            # This should be one thing, or None
+            WORLD_SELECT = mission_picker.get_value()
+            mission_index = mission_picker.get_selected_index()
+            jump show_server_menu
+        gui_blank(1, "col-width: 20px")
     #
     # Demo only has DIFFICULTY
     #
