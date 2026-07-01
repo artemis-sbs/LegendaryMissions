@@ -16,7 +16,7 @@ def console_select_tab(event, sender):
     FrameContext.client_task.set_variable(f"{console}_TAB_ENABLED", not en)
 
 def console_select_template(item, **kwargs):
-    gui_row("row-height: 2.5em;")
+    gui_row("row-height: 2em;")
     sec = kwargs.get("section")
     # Too coupled for now just  test
     click_color = "#fff1"
@@ -27,9 +27,9 @@ def console_select_template(item, **kwargs):
 
     con = gui_sub_section()
     with con:
-        gui_row("row-height: 1.2em;padding:13px;")
+        gui_row("row-height: 1em;padding:13px;")
         gui_text(f"$text:{item.display_name};justify: left;font:gui-3;")
-        gui_row("row-height: 1.2em;padding:13px;")
+        gui_row("row-height: 1em;padding:13px;")
         gui_text(f"$text:{item.description};justify: left;font:gui-2;color:#bbb;")
 
     con.sub_section.click_tag = kwargs.get("click_tag")
@@ -60,12 +60,12 @@ def console_select_template(item, **kwargs):
     
 
 def console_select_title_template():
-    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
+    gui_row("row-height: 1em;padding:13px;background:#1578;")
     gui_text(f"$text:Consoles;justify: left;")
     
 
 def console_ship_select_template(item):
-    gui_row("row-height:2.5em;padding:13px;")
+    gui_row("row-height:2em;padding:13px;")
     gui_ship(f"{item.art_id}", style="col-width:50px;padding:0,0,5px,0;")
     dat = ship_data.get_ship_data_for(item.art_id)
     desc = "A fine ship"
@@ -78,7 +78,7 @@ def console_ship_select_template(item):
             desc = f"{desc}"
 
     with gui_sub_section():
-        gui_row("row-height:1.2em;")
+        gui_row("row-height:1em;")
         gui_text(f"$text:{item.name} - {item.side};justify: left;font:gui-3;")
         gui_row("row-height:1em;")
         gui_text(f"$text:{desc};justify: left;font:gui-2;color:#bbb;")
@@ -86,7 +86,7 @@ def console_ship_select_template(item):
     
 
 def console_ship_select_title_template():
-    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
+    gui_row("row-height: 1em;padding:13px;background:#1578;")
     gui_text(f"$text:Ships;justify: left;")
     
 import os
