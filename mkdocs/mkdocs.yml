@@ -52,6 +52,7 @@ nav:
 
   - Playing:
     - playing/index.md
+    - Game features: playing/features.md
     - Updating: playing/updating.md
 
   - Hosting:
