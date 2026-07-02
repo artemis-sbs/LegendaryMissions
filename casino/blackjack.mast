@@ -1,0 +1,85 @@
+# Blackjack table (standard 52-card Terran deck, player vs dealer). Uses the
+# tested engine in games/engines.py, the cage in casino_economy.py, and the
+# shared casino_draw_hand helper. Entry: show_blackjack.
+#
+# NOTE (render-verify): first playable pass; card sizing may need tuning.
+
+//casino/game/blackjack "Blackjack"
+    jump show_blackjack
+
+=== show_blackjack ==
+    casino_register_decks()
+    casino_ensure_stake(client_id)
+    default bj_bet = 10
+
+--- bj_new
+    chips = casino_chips_get(client_id)
+    if chips < bj_bet:
+        jump casino_broke
+    bj_deck_cards = bj_deck(1)
+    random.shuffle(bj_deck_cards)
+    bj_player = bj_deal(bj_deck_cards, 2)
+    bj_dealer = bj_deal(bj_deck_cards, 2)
+    bj_msg = "Hit or Stand?"
+    bj_phase = "play"
+    if bj_is_blackjack(bj_player):
+        jump bj_resolve
+
+--- bj_render
+    casino_console_header(CONSOLE_SELECT)
+
+    gui_section(style="area: 10, 6, 90, 14;")
+    """color:white;justify:center; font: gui-6;$text:Blackjack"""
+
+    # Dealer: one up-card + hole card during play; all revealed at showdown.
+    gui_section(style="area: 10, 16, 90, 40;")
+    if bj_phase == "play":
+        casino_draw_hand(bj_dealer, bj_card_key, "card_ter_back", 1)
+    else:
+        casino_draw_hand(bj_dealer, bj_card_key, "card_ter_back")
+
+    # Player
+    gui_section(style="area: 10, 44, 90, 68;")
+    casino_draw_hand(bj_player, bj_card_key, "card_ter_back")
+
+    p_total = bj_hand_value(bj_player)
+    gui_section(style="area: 10, 70, 90, 78;")
+    """color:white;justify:center;$text:Your total: {p_total}   {bj_msg}"""
+
+    chips = casino_chips_get(client_id)
+    gui_section(style="area: 10, 80, 90, 88;")
+    """color:white;justify:center;$text:Chips: {chips}    Bet: {bj_bet}"""
+
+    gui_section(style="area: 10, 90, 90, 98;")
+    gui_row()
+    if bj_phase == "play":
+        on gui_message(gui_button("Hit")):
+            _drawn = bj_deal(bj_deck_cards, 1)
+            bj_player.append(_drawn[0])
+            if bj_hand_value(bj_player) > 21:
+                jump bj_resolve
+            jump bj_render
+        on gui_message(gui_button("Stand")):
+            jump bj_resolve
+    else:
+        on gui_message(gui_button("Deal Again")):
+            jump bj_new
+    on gui_message(gui_button("Leave")):
+        jump show_casino
+
+    await gui()
+    jump bj_render
+
+--- bj_resolve
+    bj_phase = "done"
+    bj_dealer = bj_play_dealer_deck(bj_dealer, bj_deck_cards)
+    _delta = bj_settle(bj_player, bj_dealer, bj_bet)
+    casino_bet_apply(client_id, _delta)
+    _dtotal = bj_hand_value(bj_dealer)
+    if _delta > 0:
+        bj_msg = f"You win {_delta}! (dealer {_dtotal})"
+    elif _delta < 0:
+        bj_msg = f"You lose {-_delta}. (dealer {_dtotal})"
+    else:
+        bj_msg = f"Push. (dealer {_dtotal})"
+    jump bj_render

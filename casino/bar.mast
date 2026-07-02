@@ -1,0 +1,123 @@
+# Casino bar. Revived from hangar/bar.mast (which worked but was disconnected).
+# Entry: show_bar. Patrons: three named NPCs + every visiting client. Buy a
+# drink, toast the room, watch the banter. Rumors + bar.amd content wiring
+# come in a later phase; the patron/chatter data is inline for now.
+#
+# NOTE (render-verify): reached from the casino lobby (casino.mast). "Leave"
+# returns to show_casino.
+
+shared bar_barkeep = faces.random_torgoth()
+shared bar_pilots = {"barkeep": {"call_sign":"Bitters", "face":bar_barkeep}, "cogs": {"call_sign": "NightSky", "face": faces.random_terran_male()}, "ghost": {"call_sign":"Ghost", "face":faces.random_terran_female()}}
+shared bar_martinis = 10
+shared bar_beer = 10
+shared bar_vodka = 8
+
+shared bar_customers = bar_pilots.copy()
+shared bar_messages = []
+shared bar_message_id = 0
+shared bar_banter_task = None
+shared bar_chatter = ["You hear they're putting card tables in the back? About time.", "Cheers to the ones who didn't dock today.", "House always wins, pilot. Until it doesn't.", "Drink up - the Understander deals a cold hand.", "Whale song on the speakers again. Bitters is an old softie."]
+message = ""
+
+//casino/game/bar "Bar"
+    jump show_bar
+
+
+=== show_bar ==
+    if bar_banter_task is None:
+        bar_banter_task = task_schedule(bar_banter)
+
+    if len(message) == 0:
+        my_face = faces.random_terran()
+    cs = get_inventory_value(client_id, "call_sign", "No call sign")
+    bar_customers[client_id] = {"call_sign": cs, "face": my_face}
+
+--- bar_show
+    gui_section("area: 0,0,60,60;")
+    gui_face(bar_barkeep)
+    """""""""""""""""""""""""""""""""
+    Thirsty?
+    I have
+    """""""""""""""""""""""""""""""""
+    ^^^    {bar_martinis} Martini{"s" if bar_martinis>1 else ""}^^^ if bar_martinis>0
+    ^^^    {"and " if bar_martinis>0 and bar_vodka == 0 else ""}{bar_beer} beer{"s" if bar_beer>1 else ""}^^^ if bar_beer > 0
+    ^^^    {"and " if (bar_beer+bar_martinis) > 0 else ""}{bar_vodka} vodka^^^ if bar_vodka > 0
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...
+    nothing
+    ....
+    I'm all out.
+    If you get more supply from DS1 the next one is on me.
+    ^^^^^^^^^^^^ if bar_martinis == 0 and bar_vodka == 0 and bar_beer == 0
+
+    gui_section("area: 60,100-100px, 100,100+45px;")
+    gui_row(style="row-height: 45px;")
+    gui_hole()
+    gui_hole()
+    gui_input("desc:Make a toast", var="message")
+    on gui_message(gui_button("send")):
+        to_send = message.strip()
+        if len(to_send) > 0:
+            bar_messages.append({"face": my_face, "msg": to_send})
+            if len(bar_messages) > 12:
+                bar_messages.pop(0)
+            message = ""
+            bar_message_id += 1
+            jump bar_show
+
+    gui_section("area: 60,0, 100,80;")
+    _sorted = list(reversed(bar_messages))
+    lb_messages = ~~list_box_control(_sorted,
+                                text=lambda item: f"$text:{item.get('msg', 'Hmm')};justify: left;",
+                                face= lambda item: f"{item.get('face','')}",
+                                title = lambda: "$text:Conversation;justify:center;",
+                                background= "#1572", title_background="#1578",
+                                select=False,
+                                item_height=6)~~
+    gui_content(lb_messages)
+
+    gui_section("area: 0,60,25,100-40px;background: #1572;")
+    lb_customers = ~~list_box_control(list(bar_customers.values()),
+                                text=lambda item: f"$text:{item.get('call_sign', 'Hmm')};justify: center;",
+                                face= lambda item: f"{item.get('face','')}",
+                                title = lambda: "$text:Patrons;justify:center;",
+                                background= "#1572", title_background="#1578",
+                                select=True,
+                                item_height=6)~~
+    gui_content(lb_customers)
+
+    on change len(bar_customers.values()):
+        jump bar_show
+    on change bar_message_id:
+        jump bar_show
+    on change bar_beer+bar_martinis+bar_vodka:
+        jump bar_show
+
+    await gui():
+        + "Martini" if bar_martinis > 0:
+            shared bar_martinis = bar_martinis - 1
+            jump bar_show
+        + "Beer" if bar_beer > 0:
+            shared bar_beer = bar_beer - 1
+            jump bar_show
+        + "Vodka" if bar_vodka > 0:
+            shared bar_vodka = bar_vodka - 1
+            jump bar_show
+        + "Leave":
+            bar_customers.pop(client_id, None)
+            jump show_casino
+        =disconnect:
+            bar_customers.pop(client_id, None)
+            ->END
+
+    jump bar_show
+
+=== bar_banter ==
+    await delay_sim(seconds=random.randint(3,10)*5)
+    speaker = random.choice(list(bar_pilots.keys()))
+    line = random.choice(bar_chatter)
+    bar_messages.append({"face": bar_pilots.get(speaker, {}).get("face", ""), "msg": line})
+    if len(bar_messages) > 12:
+        bar_messages.pop(0)
+    bar_message_id += 1
+    jump bar_banter

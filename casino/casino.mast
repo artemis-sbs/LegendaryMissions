@@ -1,0 +1,74 @@
+# Casino lobby: the cage (buy/cash chips) and navigation to the bar and card
+# games. Reached as a hangar top tab (//gui/tab/casino) once the hangar calls
+# gui_tab_enable("casino") in show_hangar (integration step, flagged).
+#
+# Cage math lives in casino_economy.py (unit-tested); this is the GUI wiring.
+# NOTE (render-verify): the card-game areas are stubs until their phases land.
+
+default CONSOLE_SELECT = ""   # ensure it exists at startup
+
+# Self-register as a top tab (the "child knows its parent" pattern, like
+# library/help/quest). Appears on any console that calls gui_tab_enable_top()
+# - the hangar does. //gui/tab/casino handles the click.
+gui_tab_add_top("casino")
+
+# Hangar top tab -> casino lobby.
+//gui/tab/casino
+    jump show_casino
+
+=== show_casino ==
+    casino_console_header(CONSOLE_SELECT)
+
+    casino_ensure_stake(client_id)   # one-time welcome chips so it's playable
+    side_id = casino_side_of_client(client_id)
+    chips = casino_chips_get(client_id)
+
+    gui_section(style="area: 10, 6, 90, 16;")
+    """color:white;justify: center; font: gui-6;$text:The Casino"""
+
+    # Cage
+    gui_section(style="area: 10, 18, 90, 30; background:#1572;")
+    gui_row(style="row-height: 2em;")
+    """color:white;justify:center;$text:Chips: {chips}   (100 max, 1 chip = 1 credit)"""
+    gui_row(style="row-height: 3em;")
+    on gui_message(gui_button("Buy 10")):
+        casino_chips_buy(client_id, side_id, 10)
+        jump show_casino
+    on gui_message(gui_button("Cash Out")):
+        casino_chips_cash_out(client_id, side_id)
+        jump show_casino
+
+    # Areas - discovered from the //casino/game/<key> routes (casino_game_label.py).
+    # A game appears here just by declaring that route; no edits to this file.
+    # Loop-generated buttons use on_press= (a handler label) + data, the proven
+    # pattern for dynamic buttons; `on gui_message` only binds static widgets.
+    gui_section(style="area: 10, 32, 90, 92;")
+    for _g in casino_games_list():
+        gui_row(style="row-height: 3em;")
+        gui_button(_g["name"], data={"lbl": _g["label"]}, on_press="casino_goto")
+
+    on change casino_chips_get(client_id):
+        jump show_casino
+
+    await gui()
+    jump show_casino
+
+# Navigate to a game the lobby button carried in its data (lbl = route label).
+# gui_reroute_client re-ticks the client's page at the label, so the game's
+# entry setup (register decks, welcome stake, set bet) actually runs - unlike
+# gui_task_jump, which redirected mid-flow and skipped it.
+=== casino_goto ==
+    gui_reroute_client(client_id, lbl)
+
+# Shared "out of chips" screen - games jump here instead of each defining one.
+=== casino_broke ==
+    casino_console_header(CONSOLE_SELECT)
+    chips = casino_chips_get(client_id)
+    default shared casino_broke_need = 0
+    gui_section(style="area: 20, 40, 80, 60;")
+    """color:white;justify:center;$text:Out of chips (you have {chips}, need {casino_broke_need}). Visit the cage to buy in."""
+    gui_section(style="area: 35, 62, 65, 72;")
+    on gui_message(gui_button("Back to Lobby")):
+        jump show_casino
+    await gui()
+    jump show_casino

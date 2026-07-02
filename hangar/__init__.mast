@@ -3,4 +3,6 @@ import hangar_loadout.mast
 import hangar.mast
 import missions.mast
 import hangar_comms.mast
-# import hangar/bar.mast
+# The bar moved into the separate casino addon (sibling folder); the hangar
+# pulls it in so the Casino top tab appears in the bay.
+import ../casino/__init__.mast

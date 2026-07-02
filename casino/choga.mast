@@ -1,0 +1,92 @@
+# Choga table - "Soul Tickle", Arvonian house-banked stud (Caribbean-Stud
+# style) on the 64-card Arvonian deck. The dealer is "the Understander". Uses
+# the tested engine (rankings Monte-Carlo balanced) + the cage. Entry:
+# show_choga.
+#
+# NOTE (render-verify): first playable pass. Checksum side bonus (XOR==0) is a
+# later add; core is ante -> see hand + dealer up-card -> Raise(2x)/Fold.
+
+//casino/game/choga "Choga"
+    jump show_choga
+
+=== show_choga ==
+    casino_register_decks()
+    casino_ensure_stake(client_id)
+    default choga_ante = 10
+
+--- choga_new
+    chips = casino_chips_get(client_id)
+    if chips < choga_ante:
+        jump casino_broke
+    choga_deck_cards = choga_deck()
+    random.shuffle(choga_deck_cards)
+    choga_player = choga_deal(choga_deck_cards, 5)
+    choga_dealer = choga_deal(choga_deck_cards, 5)
+    choga_msg = "Raise (2x ante) or Fold?"
+    choga_phase = "decide"
+
+--- choga_render
+    casino_console_header(CONSOLE_SELECT)
+
+    gui_section(style="area: 6, 6, 94, 13;")
+    """color:white;justify:center; font: gui-6;$text:Choga"""
+
+    # Dealer - the Understander: one up-card while deciding, all at showdown.
+    gui_section(style="area: 6, 15, 94, 35;")
+    if choga_phase == "decide":
+        casino_draw_hand(choga_dealer, choga_card_key, "card_arv_back", 1)
+    else:
+        casino_draw_hand(choga_dealer, choga_card_key, "card_arv_back")
+
+    _dlabel = "The Understander"
+    if choga_phase != "decide":
+        _dlabel = f"The Understander - {choga_rank_name(choga_dealer)}"
+    gui_section(style="area: 6, 35, 94, 41;")
+    """color:white;justify:center;$text:{_dlabel}"""
+
+    # Player
+    gui_section(style="area: 6, 44, 94, 64;")
+    casino_draw_hand(choga_player, choga_card_key, "card_arv_back")
+    _pname = choga_rank_name(choga_player)
+    gui_section(style="area: 6, 64, 94, 70;")
+    """color:white;justify:center;$text:Your hand: {_pname}"""
+
+    gui_section(style="area: 6, 72, 94, 79;")
+    """color:white;justify:center;$text:{choga_msg}"""
+
+    chips = casino_chips_get(client_id)
+    gui_section(style="area: 6, 80, 94, 87;")
+    """color:white;justify:center;$text:Chips: {chips}    Ante: {choga_ante}"""
+
+    gui_section(style="area: 6, 90, 94, 98;")
+    gui_row()
+    if choga_phase == "decide":
+        on gui_message(gui_button("Raise")):
+            choga_raised = True
+            jump choga_resolve
+        on gui_message(gui_button("Fold")):
+            choga_raised = False
+            jump choga_resolve
+    else:
+        on gui_message(gui_button("Deal Again")):
+            jump choga_new
+    on gui_message(gui_button("Leave")):
+        jump show_casino
+
+    await gui()
+    jump choga_render
+
+--- choga_resolve
+    choga_phase = "done"
+    _delta = choga_settle(choga_player, choga_dealer, choga_ante, choga_raised)
+    casino_bet_apply(client_id, _delta)
+    _dname = choga_rank_name(choga_dealer)
+    if not choga_raised:
+        choga_msg = "You folded, forfeiting the ante."
+    elif _delta > 0:
+        choga_msg = f"You win {_delta}!"
+    elif _delta < 0:
+        choga_msg = f"You lose {-_delta}."
+    else:
+        choga_msg = "Push."
+    jump choga_render

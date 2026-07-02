@@ -1,0 +1,98 @@
+# Gates table (baccarat-style: bet on which hand - Player or Banker - scores
+# higher). Uses the tested engine in games/engines.py and the cage. Entry:
+# show_gates.
+#
+# NOTE (render-verify): opcodes are shown as text labels (OR/AND/NOR/NAND/XOR);
+# bit cards use the Arvonian octal row (value 0-7). Dedicated opcode-card art
+# is a later polish.
+
+//casino/game/gates "Gates"
+    jump show_gates
+
+=== show_gates ==
+    casino_register_decks()
+    casino_ensure_stake(client_id)
+    default gates_bet = 10
+
+--- gates_bet_phase
+    chips = casino_chips_get(client_id)
+    if chips < gates_bet:
+        jump casino_broke
+    gates_msg = "Bet on which hand will score higher."
+
+    casino_console_header(CONSOLE_SELECT)
+
+    gui_section(style="area: 10, 6, 90, 14;")
+    """color:white;justify:center; font: gui-6;$text:Gates"""
+
+    gui_section(style="area: 10, 30, 90, 50;")
+    """color:white;justify:center;$text:{gates_msg}"""
+
+    chips = casino_chips_get(client_id)
+    gui_section(style="area: 10, 52, 90, 60;")
+    """color:white;justify:center;$text:Chips: {chips}    Bet: {gates_bet}   (banker wins ties)"""
+
+    gui_section(style="area: 10, 66, 90, 76;")
+    gui_row()
+    on gui_message(gui_button("Bet Player")):
+        gates_bet_on = True
+        jump gates_play
+    on gui_message(gui_button("Bet Banker")):
+        gates_bet_on = False
+        jump gates_play
+    on gui_message(gui_button("Leave")):
+        jump show_casino
+
+    await gui()
+    jump gates_bet_phase
+
+--- gates_play
+    _r = gates_play_round(True)
+    gates_p = _r[0]
+    gates_b = _r[1]
+    gates_pt = _r[2]
+    gates_bt = _r[3]
+    _delta = gates_settle(gates_bet, gates_bet_on, gates_pt, gates_bt)
+    casino_bet_apply(client_id, _delta)
+    if _delta > 0:
+        gates_msg = f"You win {_delta}!"
+    elif _delta < 0:
+        gates_msg = f"You lose {-_delta}."
+    else:
+        gates_msg = "Push."
+
+--- gates_result
+    casino_console_header(CONSOLE_SELECT)
+
+    gui_section(style="area: 10, 6, 90, 14;")
+    """color:white;justify:center; font: gui-6;$text:Gates"""
+
+    _pops = gates_ops_str(gates_p)
+    _bops = gates_ops_str(gates_b)
+    _bet_side = "Player" if gates_bet_on else "Banker"
+
+    # Player hand
+    gui_section(style="area: 10, 16, 90, 38;")
+    casino_draw_hand(gates_p.bits, gates_bit_key, "card_arv_back")
+    gui_section(style="area: 10, 38, 90, 44;")
+    """color:white;justify:center;$text:Player  [{_pops}]  = {gates_pt}"""
+
+    # Banker hand
+    gui_section(style="area: 10, 48, 90, 70;")
+    casino_draw_hand(gates_b.bits, gates_bit_key, "card_arv_back")
+    gui_section(style="area: 10, 70, 90, 76;")
+    """color:white;justify:center;$text:Banker  [{_bops}]  = {gates_bt}"""
+
+    chips = casino_chips_get(client_id)
+    gui_section(style="area: 10, 80, 90, 88;")
+    """color:white;justify:center;$text:You bet {_bet_side}.  {gates_msg}   Chips: {chips}"""
+
+    gui_section(style="area: 10, 90, 90, 98;")
+    gui_row()
+    on gui_message(gui_button("Deal Again")):
+        jump gates_bet_phase
+    on gui_message(gui_button("Leave")):
+        jump show_casino
+
+    await gui()
+    jump gates_result

@@ -1,0 +1,110 @@
+// Casino bar patrons, chatter, and rumors.  DRAFT CONTENT.
+//
+// Each top-level heading is a patron. Its --- data --- section carries
+// display + behavior; the prose is their "vibe" / barks. Each ## sub-heading
+// is a rumor that patron may pass; its data marks truth and the effect, the
+// prose is the line they speak.
+//
+// Interpreted data keys (casino loader must read these -- NOT new AMD syntax,
+// just keys, same as hangar_quests.amd uses on_kill/reward). Confirm names:
+//   patron:  call_sign, face_kind, reliability (0.0-1.0), role
+//   rumor:   truth (bool), effect {..}, cost (chips, optional), once (bool)
+//   effect:  { seed_quest: <hq_key> } | { reveal: <text> } | { none: true }
+//
+// reliability weights how often this patron's rumors are TRUE. When
+// OpenUniverse is loaded, multiply by the teller's clan standing.
+
+# [Bitters](bitters)
+---
+call_sign: Bitters
+face_kind: torgoth_male
+role: bartender
+reliability: 0.5
+---
+The Torgoth barkeep. Pours straight, talks sideways. Has heard everything
+twice and believes about half of it. Buy a drink, get an earful.
+
+## [rumor: dry docks](bitters_r1)
+---
+truth: true
+effect: { reveal: "DS1 is restocking the good stuff next rotation." }
+once: false
+---
+You want the top-shelf vodka? DS1's holding a shipment. Won't say who from.
+
+## [rumor: the ghost ship](bitters_r2)
+---
+truth: false
+effect: { none: true }
+---
+Fella in here swore he saw a derelict cruiser out past the belt, lights on,
+nobody aboard. I say he'd had one too many of mine.
+
+# [Cogs](cogs)
+---
+call_sign: NightSky
+face_kind: terran_male
+role: mechanic
+reliability: 0.8
+---
+Wrench-hand who knows every hull in the bay and half the ones that never
+made it home. If a damcon crew ever pulled off a miracle, Cogs knows their
+name. Reliable - he deals in facts, not fumes.
+
+## [rumor: hero damcon](cogs_r1)
+---
+truth: true
+effect: { seed_quest: hq_salvage }
+cost: 10
+---
+There's working tech in the debris field nobody's swept yet. I patched a
+scanner that'll find it - slip me a chip and I'll mark your board.
+
+## [rumor: bad coil](cogs_r2)
+---
+truth: true
+effect: { reveal: "Check your port coil before you launch - saw two ships limp back with the same fault." }
+---
+Word of advice, on the house: that coil batch is bad. Check yours before you
+strap in.
+
+# [Ghost](ghost)
+---
+call_sign: Ghost
+face_kind: terran_female
+role: pilot
+reliability: 0.9
+---
+A pilot who flies the quiet routes and comes back knowing things. Says little,
+means all of it. When Ghost passes you a heading, you fly it.
+
+## [rumor: raider massing](ghost_r1)
+---
+truth: true
+effect: { seed_quest: hq_hunt }
+---
+They're massing on the flank - I counted the drive plumes myself. Somebody
+should thin them before they pick a target.
+
+## [rumor: soft escort](ghost_r2)
+---
+truth: true
+effect: { seed_quest: hq_patrol }
+---
+Convoy's coming through the approaches light on escort. Easy work for
+someone paying attention.
+
+// ---- ambient chatter (non-rumor barks the banter task can pull) ----
+// Kept as a simple heading with a data list so the loader can random.choice.
+
+# [Chatter](chatter)
+---
+lines:
+  - "You hear they're putting a card table in the back? About time."
+  - "Cheers to the ones who didn't dock today."
+  - "House always wins, pilot. Until it doesn't."
+  - "Drink up - the Understander deals a cold hand."
+  - "I fly better with one of these in me. Don't tell the flight surgeon."
+  - "Whale song on the speakers again. Bitters is an old softie."
+---
+Ambient one-liners for the bar banter loop. No truth, no effect - flavor only.

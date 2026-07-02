@@ -1,0 +1,87 @@
+# Nibble table (Arvonian deck, player vs dealer). Uses the tested engine in
+# games/engines.py and the cage in casino_economy.py. Entry: show_nibble.
+#
+# NOTE (render-verify): card image sizing in a row may need tuning; this is a
+# first playable pass. Reached from the casino lobby; "Leave" returns there.
+
+//casino/game/nibble "Nibble"
+    jump show_nibble
+
+=== show_nibble ==
+    casino_register_decks()
+    casino_ensure_stake(client_id)
+    default nibble_bet = 10
+
+--- nibble_new
+    chips = casino_chips_get(client_id)
+    if chips < nibble_bet:
+        jump casino_broke
+    nibble_deck_cards = nibble_deck(16)
+    random.shuffle(nibble_deck_cards)
+    nibble_player = nibble_deal(nibble_deck_cards, 2)
+    nibble_dealer = nibble_deal(nibble_deck_cards, 2)
+    nibble_msg = "Hit or Stand?"
+    nibble_phase = "play"
+
+--- nibble_render
+    casino_console_header(CONSOLE_SELECT)
+
+    gui_section(style="area: 10, 6, 90, 14;")
+    """color:white;justify:center; font: gui-6;$text:Nibble"""
+
+    # Dealer hand: during play show one up-card + backs; at showdown show all.
+    gui_section(style="area: 10, 16, 90, 40;")
+    if nibble_phase == "play":
+        casino_draw_hand(nibble_dealer, nibble_card_key, "card_arv_back", 1)
+    else:
+        casino_draw_hand(nibble_dealer, nibble_card_key, "card_arv_back")
+
+    # Player hand
+    gui_section(style="area: 10, 44, 90, 68;")
+    casino_draw_hand(nibble_player, nibble_card_key, "card_arv_back")
+
+    # Status
+    p_total = nibble_score(nibble_player)[0]
+    gui_section(style="area: 10, 70, 90, 78;")
+    """color:white;justify:center;$text:Your total: {p_total}   {nibble_msg}"""
+
+    # Controls
+    chips = casino_chips_get(client_id)
+    gui_section(style="area: 10, 80, 90, 88;")
+    """color:white;justify:center;$text:Chips: {chips}    Bet: {nibble_bet}"""
+
+    gui_section(style="area: 10, 90, 90, 98;")
+    gui_row()
+    if nibble_phase == "play":
+        on gui_message(gui_button("Hit")):
+            _drawn = nibble_deal(nibble_deck_cards, 1)
+            nibble_player.append(_drawn[0])
+            if nibble_score(nibble_player)[0] > 20:
+                jump nibble_resolve
+            jump nibble_render
+        on gui_message(gui_button("Stand")):
+            jump nibble_resolve
+    else:
+        on gui_message(gui_button("Deal Again")):
+            jump nibble_new
+    on gui_message(gui_button("Leave")):
+        jump show_casino
+
+    await gui()
+    jump nibble_render
+
+--- nibble_resolve
+    nibble_phase = "done"
+    _busted = nibble_score(nibble_player)[0] > 20
+    _nat = nibble_is_natural(nibble_player)
+    nibble_dealer = nibble_play_dealer_deck(nibble_dealer, nibble_deck_cards, 15, _busted, _nat)
+    _delta = nibble_settle(nibble_player, nibble_dealer, nibble_bet)
+    casino_bet_apply(client_id, _delta)
+    _dtotal = nibble_score(nibble_dealer)[0]
+    if _delta > 0:
+        nibble_msg = f"You win {_delta}! (dealer {_dtotal})"
+    elif _delta < 0:
+        nibble_msg = f"You lose {-_delta}. (dealer {_dtotal})"
+    else:
+        nibble_msg = f"Push. (dealer {_dtotal})"
+    jump nibble_render
