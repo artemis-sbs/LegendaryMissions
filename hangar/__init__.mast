@@ -3,6 +3,8 @@ import hangar_loadout.mast
 import hangar.mast
 import missions.mast
 import hangar_comms.mast
-# The bar moved into the separate casino addon (sibling folder); the hangar
-# pulls it in so the Casino top tab appears in the bay.
-import ../casino/__init__.mast
+# The bar + casino are a separate, optional addon (sibling casino/ folder). The
+# hangar does NOT import it - the loader auto-discovers casino/__init__.mast on
+# its own, and the casino self-registers its top tab (gui_tab_add_top) only when
+# present. So the hangar runs fine with or without the casino addon. (A hard
+# import here would break any mission that ships the hangar but not the casino.)
