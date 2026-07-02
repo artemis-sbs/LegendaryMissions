@@ -74,8 +74,8 @@
     nibble_phase = "done"
     _busted = nibble_score(nibble_player)[0] > 20
     _nat = nibble_is_natural(nibble_player)
-    nibble_dealer = nibble_play_dealer_deck(nibble_dealer, nibble_deck_cards, 15, _busted, _nat)
-    _delta = nibble_settle(nibble_player, nibble_dealer, nibble_bet)
+    nibble_dealer = nibble_play_dealer_deck(nibble_dealer, nibble_deck_cards, 12, _busted, _nat)
+    _delta = nibble_settle(nibble_player, nibble_dealer, nibble_bet, player_wins_ties=True)
     casino_bet_apply(client_id, _delta)
     _dtotal = nibble_score(nibble_dealer)[0]
     if _delta > 0:

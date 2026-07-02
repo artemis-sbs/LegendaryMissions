@@ -7,6 +7,8 @@ import casino_media.py
 import casino_gui.py
 import casino_lobby.py
 import bar_helpers.py
+import bar_reputation.py
+import bar_rumors.py
 # Registers the //casino/game/<key> "Name" decorator node. MUST load before any
 # game .mast that uses the syntax (append=False node, first-match wins).
 import casino_game_label.py

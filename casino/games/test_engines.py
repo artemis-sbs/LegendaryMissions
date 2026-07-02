@@ -38,7 +38,8 @@ class TestNibble(unittest.TestCase):
     def test_tie_dealer_wins(self):
         p = [NibbleCard(9,0), NibbleCard(9,0)]   # 18
         d = [NibbleCard(9,0), NibbleCard(9,0)]   # 18
-        self.assertEqual(nibble_settle(p, d, 10), -10)
+        self.assertEqual(nibble_settle(p, d, 10), -10)          # default: dealer
+        self.assertEqual(nibble_settle(p, d, 10, player_wins_ties=True), 10)  # softened
     def test_deck_size(self):
         self.assertEqual(len(nibble_deck(16)), 64)
         self.assertEqual(len(nibble_deck(8)), 32)

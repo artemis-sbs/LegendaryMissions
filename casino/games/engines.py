@@ -42,9 +42,11 @@ def nibble_is_natural(cards):
     _, num = nibble_score(cards)
     return num == 0 or num == 14
 
-def nibble_settle(player_cards, dealer_cards, bet):
-    """Signed payout delta, replicating endHand() exactly.
-    dealer_cards must already be played out per policy (use nibble_play_dealer)."""
+def nibble_settle(player_cards, dealer_cards, bet, player_wins_ties=False):
+    """Signed payout delta, replicating endHand(). ``player_wins_ties`` is a
+    casino house-rule softener (the original has the dealer win ties); combined
+    with a lower dealer hit target it makes the (very house-favored) table
+    friendlier. dealer_cards must already be played out per policy."""
     player = nibble_score(player_cards)[0]
     dealer = nibble_score(dealer_cards)[0]
     is_nat = nibble_is_natural(player_cards)
@@ -67,7 +69,7 @@ def nibble_settle(player_cards, dealer_cards, bet):
         return -cost
     if dealer < player:
         return reward
-    return -cost                            # tie -> dealer wins
+    return reward if player_wins_ties else -cost   # tie
 
 def nibble_play_dealer(dealer_cards, draw, must=15, player_busted=False,
                        player_natural=False):

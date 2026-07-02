@@ -7,7 +7,7 @@
 # returns to show_casino.
 
 shared bar_barkeep = faces.random_torgoth()
-shared bar_pilots = {"barkeep": {"call_sign":"Bitters", "face":bar_barkeep}, "cogs": {"call_sign": "NightSky", "face": faces.random_terran_male()}, "ghost": {"call_sign":"Ghost", "face":faces.random_terran_female()}}
+shared bar_pilots = {"barkeep": {"key":"barkeep", "call_sign":"Bitters", "face":bar_barkeep}, "cogs": {"key":"cogs", "call_sign": "NightSky", "face": faces.random_terran_male()}, "ghost": {"key":"ghost", "call_sign":"Ghost", "face":faces.random_terran_female()}}
 shared bar_martinis = 10
 shared bar_beer = 10
 shared bar_vodka = 8
@@ -26,6 +26,11 @@ message = ""
 === show_bar ==
     if bar_banter_task is None:
         bar_banter_task = task_schedule(bar_banter)
+
+    # Seed the named patrons' starting reputations (idempotent, shared).
+    patron_seed_base_rep(bar_pilots.get("barkeep"), "barkeep")
+    patron_seed_base_rep(bar_pilots.get("cogs"), "cogs")
+    patron_seed_base_rep(bar_pilots.get("ghost"), "ghost")
 
     if len(message) == 0:
         my_face = faces.random_terran()
@@ -48,23 +53,62 @@ message = ""
             _drinks.append(f"{bar_vodka} vodka")
         bar_keep_greeting = "Thirsty? I have " + ", ".join(_drinks) + "."
 
+    # Selected patron (tracked by call sign so it survives the repaint), for
+    # the details panel under Bitters. (for-loop must be at label level.)
+    default bar_selected_cs = None
+    default bar_active_tip = None
+    _patrons = list(bar_customers.values())
+    _sel_patron = None
+    _sel_idx = -1
+    _i = 0
+    for _p in _patrons:
+        if _p.get("call_sign") == bar_selected_cs:
+            _sel_patron = _p
+            _sel_idx = _i
+        _i = _i + 1
+
     # Main content: three columns via sub-sections.
     gui_section(style="area: 2, 4, 98, 88;")
 
-    # Left column: Bitters face, greeting under him, then a reserved patron
-    # details panel (future: select a patron to show actions here).
+    # Left column: Bitters face, greeting under him, then the patron details
+    # panel - select a patron to see them and act (buy a drink; rumors later).
     with gui_sub_section("col-width:28;"):
-        gui_row("row-height:40;")
+        gui_row("row-height:34;")
         gui_face(bar_barkeep)
-        gui_row("row-height:20;")
+        gui_row("row-height:16;")
         gui_text_area(bar_keep_greeting)
-        gui_row()
-        gui_text_area("Select a patron for details.")
+        gui_row("row-height:30;")
+        if _sel_patron is not None:
+            gui_face(_sel_patron.get("face", ""))
+            _trust = patron_trust_label(_sel_patron)
+            _pkey = _sel_patron.get("key", "")
+            gui_text_area(f"{_sel_patron.get('call_sign', 'pilot')} ({_trust})")
+            if bar_active_tip is not None and bar_active_tip.get("key") == _pkey:
+                gui_text_area(f"Tip: {bar_active_tip.get('tip', '')}")
+                on gui_message(gui_button("Act on it")):
+                    jump bar_rumor_resolve
+            else:
+                on gui_message(gui_button("Buy them a drink")):
+                    bar_messages.append({"face": my_face, "msg": f"Bought {_sel_patron.get('call_sign', 'a pilot')} a round."})
+                    if len(bar_messages) > 12:
+                        bar_messages.pop(0)
+                    bar_message_id += 1
+                    jump bar_show
+                if patron_has_rumors(_pkey):
+                    on gui_message(gui_button("Ask for a rumor")):
+                        _r = pick_rumor(_pkey)
+                        _true = patron_rumor_is_true(_sel_patron, patron_ou_standing(_sel_patron))
+                        bar_active_tip = {"key": _pkey, "tip": _r.get("tip", ""), "intel": _r.get("intel", ""), "true": _true}
+                        jump bar_show
+        else:
+            gui_text_area("Select a patron for details.")
 
     # Patrons column.
     with gui_sub_section("col-width:22;"):
         gui_row()
-        gui_list_box(list(bar_customers.values()), "background:#1572;", item_template=bar_patron_template, title_template=bar_patron_title, select=True)
+        patron_box = gui_list_box(_patrons, "background:#1572;", item_template=bar_patron_template, title_template=bar_patron_title, select=True)
+    if _sel_idx >= 0:
+        patron_box.set_selected_index(_sel_idx, False)
 
     # Conversation column (rest): messages + toast input.
     with gui_sub_section():
@@ -87,6 +131,10 @@ message = ""
     gui_section("area: 2, 90, 98, 98;")
     gui_row()
 
+    on change patron_box.get_value():
+        _pv = patron_box.get_value()
+        bar_selected_cs = _pv.get("call_sign") if _pv is not None else None
+        jump bar_show
     on change len(bar_customers.values()):
         jump bar_show
     on change bar_message_id:
@@ -111,6 +159,25 @@ message = ""
             bar_customers.pop(client_id, None)
             ->END
 
+    jump bar_show
+
+# Resolve the held tip: rolled truth (by reputation) pays off or busts, and the
+# patron's reputation nudges - so the crew learns who to trust.
+--- bar_rumor_resolve
+    _tp = bar_pilots.get(bar_active_tip.get("key"))
+    if bar_active_tip.get("true"):
+        _tface = _tp.get("face", "") if _tp is not None else my_face
+        bar_messages.append({"face": _tface, "msg": bar_active_tip.get("intel", "")})
+        if _tp is not None:
+            patron_rep_adjust(_tp, 0.05)
+    else:
+        bar_messages.append({"face": my_face, "msg": "That tip went nowhere. Wasted trip."})
+        if _tp is not None:
+            patron_rep_adjust(_tp, -0.12)
+    if len(bar_messages) > 12:
+        bar_messages.pop(0)
+    bar_message_id += 1
+    bar_active_tip = None
     jump bar_show
 
 === bar_banter ==
