@@ -316,3 +316,7 @@ def choga_card_key(card):
     return "card_arv_%d_%d" % (castle, value)
 def choga_rank_name(cards):
     return CHOGA_NAMES[choga_rank(cards)[0]]
+def choga_checksum_bonus(cards, ante):
+    """Arvonian 'clean checksum' side bonus: if the 5 values XOR to 0 (~1-in-16),
+    pay ante * CHOGA_CHECKSUM_PAY on top of the hand result. 0 otherwise."""
+    return ante * CHOGA_CHECKSUM_PAY if choga_checksum(cards) else 0

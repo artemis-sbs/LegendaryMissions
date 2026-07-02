@@ -23,14 +23,34 @@ gui_tab_add_top("casino")
     side_id = casino_side_of_client(client_id)
     chips = casino_chips_get(client_id)
 
-    gui_section(style="area: 10, 6, 90, 16;")
-    """color:white;justify: center; font: gui-6;$text:The Casino"""
+    # Games are discovered from the //casino/game/<key> routes - add one by
+    # declaring the route, no edits here. Auto-select the first game so the
+    # help panel and Play button show immediately; selection is tracked by key
+    # so it survives the repaint.
+    _games = casino_games_list()
+    default casino_selected_key = None
+    if casino_selected_key is None and len(_games) > 0:
+        casino_selected_key = _games[0]["key"]
+
+    # Selected game: index (restore the listbox highlight) + dict (help/Play).
+    _idx = -1
+    _sel = None
+    _i = 0
+    for _g in _games:
+        if _g["key"] == casino_selected_key:
+            _idx = _i
+            _sel = _g
+        _i = _i + 1
+
+    # Title
+    gui_section(style="area: 10, 4, 90, 12;")
+    """color:white;justify:center; font: gui-6;$text:The Casino"""
 
     # Cage
-    gui_section(style="area: 10, 18, 90, 30; background:#1572;")
-    gui_row(style="row-height: 2em;")
-    """color:white;justify:center;$text:Chips: {chips}   (100 max, 1 chip = 1 credit)"""
-    gui_row(style="row-height: 3em;")
+    gui_section(style="area: 10, 13, 90, 25; background:#1572;")
+    gui_row()
+    """color:white;justify:center;$text:Chips: {chips}    (100 max)"""
+    gui_row()
     on gui_message(gui_button("Buy 10")):
         casino_chips_buy(client_id, side_id, 10)
         jump show_casino
@@ -38,36 +58,44 @@ gui_tab_add_top("casino")
         casino_chips_cash_out(client_id, side_id)
         jump show_casino
 
-    # Areas - discovered from the //casino/game/<key> routes (casino_game_label.py).
-    # A game appears here just by declaring that route; no edits to this file.
-    # Loop-generated buttons use on_press= (a handler label) + data, the proven
-    # pattern for dynamic buttons; `on gui_message` only binds static widgets.
-    gui_section(style="area: 10, 32, 90, 92;")
-    for _g in casino_games_list():
-        gui_row(style="row-height: 3em;")
-        gui_button(_g["name"], data={"lbl": _g["label"]}, on_press="casino_goto")
+    # Games list (left)
+    gui_section(style="area: 10, 28, 42, 90; background:#1572;")
+    game_box = gui_list_box(_games, "", item_template=casino_game_list_template, title_template=casino_game_list_title, select=True)
+    if _idx >= 0:
+        game_box.set_selected_index(_idx, False)
 
+    # Help / details (right)
+    gui_section(style="area: 44, 28, 90, 80; background:#1571;")
+    gui_text_area(casino_game_help(casino_selected_key))
+
+    # Play button (right, its own band under the help so it's always visible)
+    gui_section(style="area: 44, 82, 90, 91;")
+    if _sel is not None:
+        _play_lbl = _sel["label"]
+        _play_name = _sel["name"]
+        on gui_message(gui_button(f"Play {_play_name}")):
+            gui_reroute_client(client_id, _play_lbl)
+
+    on change game_box.get_value():
+        _v = game_box.get_value()
+        casino_selected_key = _v["key"] if _v is not None else None
+        jump show_casino
     on change casino_chips_get(client_id):
         jump show_casino
 
     await gui()
     jump show_casino
 
-# Navigate to a game the lobby button carried in its data (lbl = route label).
-# gui_reroute_client re-ticks the client's page at the label, so the game's
-# entry setup (register decks, welcome stake, set bet) actually runs - unlike
-# gui_task_jump, which redirected mid-flow and skipped it.
-=== casino_goto ==
-    gui_reroute_client(client_id, lbl)
-
 # Shared "out of chips" screen - games jump here instead of each defining one.
 === casino_broke ==
     casino_console_header(CONSOLE_SELECT)
-    chips = casino_chips_get(client_id)
-    default shared casino_broke_need = 0
-    gui_section(style="area: 20, 40, 80, 60;")
-    """color:white;justify:center;$text:Out of chips (you have {chips}, need {casino_broke_need}). Visit the cage to buy in."""
-    gui_section(style="area: 35, 62, 65, 72;")
+    gui_section(style="area: 20, 40, 80, 58;")
+    """color:white;justify:center;$text:Out of chips. Buy in to keep playing."""
+    gui_section(style="area: 30, 60, 70, 70;")
+    gui_row()
+    on gui_message(gui_button("Buy in (50)")):
+        casino_chips_buy(client_id, casino_side_of_client(client_id), 50)
+        jump show_casino
     on gui_message(gui_button("Back to Lobby")):
         jump show_casino
     await gui()

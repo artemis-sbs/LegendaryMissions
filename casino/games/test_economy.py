@@ -82,6 +82,12 @@ class TestCage(unittest.TestCase):
         self.assertEqual(got, 25)
         self.assertEqual(ce.casino_chips_get(self.client.id), 25)
 
+    def test_buy_house_comp_no_wallet(self):
+        # side_id None -> house stakes you so you never get locked out
+        got = ce.casino_chips_buy(self.client.id, None, 30)
+        self.assertEqual(got, 30)
+        self.assertEqual(ce.casino_chips_get(self.client.id), 30)
+
     def test_cash_out_all(self):
         ce.casino_chips_buy(self.client.id, self.side.id, 60)
         paid = ce.casino_chips_cash_out(self.client.id, self.side.id)

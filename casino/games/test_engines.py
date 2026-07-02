@@ -133,6 +133,12 @@ class TestChoga(unittest.TestCase):
     def test_checksum(self):
         self.assertTrue(choga_checksum([(3,0),(3,1),(5,0),(5,1),(0,0)]))  # 3^3^5^5^0=0
         self.assertFalse(choga_checksum([(1,0),(2,0),(3,0),(4,0),(5,0)]))
+    def test_checksum_bonus(self):
+        from engines import choga_checksum_bonus, CHOGA_CHECKSUM_PAY
+        clean = [(3,0),(3,1),(5,0),(5,1),(0,0)]      # XOR 0
+        dirty = [(1,0),(2,0),(3,0),(4,0),(5,0)]      # XOR != 0
+        self.assertEqual(choga_checksum_bonus(clean, 10), 10 * CHOGA_CHECKSUM_PAY)
+        self.assertEqual(choga_checksum_bonus(dirty, 10), 0)
     def test_settle_fold_and_qualify(self):
         strong = [(9,0),(9,1),(9,2),(2,0),(3,0)]   # trips
         weak_nonqual = [(1,0),(4,1),(7,2),(9,0),(11,0)]  # high card -> dealer no qualify

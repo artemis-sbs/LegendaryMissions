@@ -79,7 +79,10 @@
 --- choga_resolve
     choga_phase = "done"
     _delta = choga_settle(choga_player, choga_dealer, choga_ante, choga_raised)
-    casino_bet_apply(client_id, _delta)
+    _bonus = 0
+    if choga_raised:
+        _bonus = choga_checksum_bonus(choga_player, choga_ante)
+    casino_bet_apply(client_id, _delta + _bonus)
     _dname = choga_rank_name(choga_dealer)
     if not choga_raised:
         choga_msg = "You folded, forfeiting the ante."
@@ -89,4 +92,6 @@
         choga_msg = f"You lose {-_delta}."
     else:
         choga_msg = "Push."
+    if _bonus > 0:
+        choga_msg = choga_msg + f"  Clean checksum bonus +{_bonus}!"
     jump choga_render

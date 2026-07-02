@@ -70,11 +70,17 @@ def casino_ensure_stake(client_id, amount=CASINO_WELCOME_STAKE):
 
 def casino_chips_buy(client_id, side_id, amount,
                      cap=DEFAULT_CHIP_CAP, rate=DEFAULT_CHIP_RATE):
-    """Buy chips from a side wallet. Returns chips actually bought."""
+    """Buy chips. Spends side credits when a wallet resolves; otherwise the
+    house stakes you (no ship-side wallet in the hangar / no economy yet), so a
+    player can always buy back in and never gets locked out. Returns chips
+    actually bought. See CASINO_ECONOMY.md."""
     have = casino_chips_get(client_id)
     amount = clamp_buy(have, amount, cap)
-    if amount <= 0 or side_id is None:
+    if amount <= 0:
         return 0
+    if side_id is None:
+        set_inventory_value(client_id, "chips", have + amount)   # house comp
+        return amount
     credits = get_inventory_value(side_id, "credits", 0)
     if credits < amount * rate:
         amount = credits // rate            # buy only what the wallet affords
