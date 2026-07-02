@@ -6,6 +6,7 @@ import casino_economy.py
 import casino_media.py
 import casino_gui.py
 import casino_lobby.py
+import casino_market.py
 import bar_helpers.py
 import bar_reputation.py
 import bar_rumors.py
@@ -23,3 +24,4 @@ import gates.mast
 import choga.mast
 import poker.mast
 import parity.mast
+import market.mast

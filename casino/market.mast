@@ -1,0 +1,68 @@
+# Pilot Market - buy/sell craft upgrades and gear. Not a game, but it lives in
+# the lobby via the same //casino/game route. Prices are in chips, spent
+# chips-first then side credits (casino_economy). Grey-market goods unlock with
+# a patron's trust (max bar reputation). Entry: show_market.
+#
+# NOTE: buying records ownership on the client (casino_owns_<key>). Actually
+# APPLYING a purchased cockpit upgrade to the launched craft (via upgrade_add)
+# is a follow-up hook - the hangar would apply owned upgrades at launch.
+
+//casino/game/market "Market"
+    jump show_market
+
+=== show_market ==
+    casino_ensure_stake(client_id)
+    default market_msg = "Buy craft upgrades and gear."
+
+--- market_show
+    casino_console_header(CONSOLE_SELECT)
+    side_id = casino_side_of_client(client_id)
+    _power = casino_buying_power(client_id, side_id)
+    _maxrep = max_patron_reputation(list(bar_pilots.values()))
+    _goods = market_goods(_maxrep)
+
+    gui_section(style="area: 8, 4, 92, 12;")
+    """color:white;justify:center; font: gui-6;$text:Pilot Market"""
+
+    gui_section(style="area: 8, 13, 92, 21; background:#1572;")
+    """color:#bdf;justify:center;$text:Buying power {_power} (chips, then side credits).  {market_msg}"""
+
+    # A row per good: description + Buy (or OWNED + Sell).
+    gui_section(style="area: 8, 23, 92, 88;")
+    for _g in _goods:
+        gui_row("row-height:2.2em;")
+        _owned = get_inventory_value(client_id, market_owned_flag(_g["key"]), 0)
+        if _owned:
+            gui_text(f"$text:{_g['name']} - OWNED   {_g['desc']};justify:left;")
+            gui_button("Sell", data={"mkey": _g["key"], "msell": 1}, on_press="market_action")
+        else:
+            gui_text(f"$text:{_g['name']}   {_g['price']} chips   {_g['desc']};justify:left;")
+            gui_button("Buy", data={"mkey": _g["key"], "msell": 0}, on_press="market_action")
+
+    gui_section(style="area: 40, 90, 60, 98;")
+    on gui_message(gui_button("Leave")):
+        jump show_casino
+
+    on change casino_chips_get(client_id):
+        jump market_show
+
+    await gui()
+    jump market_show
+
+--- market_action
+    default mkey = ""
+    default msell = 0
+    side_id = casino_side_of_client(client_id)
+    _mg = market_item(mkey)
+    if _mg is not None:
+        if msell:
+            set_inventory_value(client_id, market_owned_flag(mkey), 0)
+            casino_market_refund(client_id, side_id, market_sell_price(_mg))
+            market_msg = f"Sold {_mg['name']}."
+        else:
+            if casino_market_spend(client_id, side_id, _mg["price"]):
+                set_inventory_value(client_id, market_owned_flag(mkey), 1)
+                market_msg = f"Bought {_mg['name']}."
+            else:
+                market_msg = f"You can't afford {_mg['name']}."
+    jump market_show

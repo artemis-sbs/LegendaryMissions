@@ -137,3 +137,36 @@ def casino_check_comps(client_id):
                                     casino_chips_get(client_id) + bonus)
                 msg = "The house comps you %d chips - %s!" % (bonus, name)
     return msg
+
+
+# ---- market wallet: prices are in chips; spend chips first, then side credits
+# (the cage's exchange rate), so big-ticket gear exceeds the chip cap and draws
+# the crew wallet. Selling refunds to side credits.
+def casino_buying_power(client_id, side_id, rate=DEFAULT_CHIP_RATE):
+    """Total spendable, in chip-equivalents (chips + affordable side credits)."""
+    credits = get_inventory_value(side_id, "credits", 0) if side_id else 0
+    return casino_chips_get(client_id) + (credits // rate)
+
+def casino_market_spend(client_id, side_id, price, rate=DEFAULT_CHIP_RATE):
+    """Pay `price` (in chips) from chips first, then side credits. True if paid."""
+    if price <= 0:
+        return True
+    chips = casino_chips_get(client_id)
+    if chips >= price:
+        set_inventory_value(client_id, "chips", chips - price)
+        return True
+    remainder = price - chips                       # still owed, in chips
+    credits = get_inventory_value(side_id, "credits", 0) if side_id else 0
+    if credits < remainder * rate:
+        return False
+    set_inventory_value(client_id, "chips", 0)
+    set_inventory_value(side_id, "credits", credits - remainder * rate)
+    return True
+
+def casino_market_refund(client_id, side_id, amount, rate=DEFAULT_CHIP_RATE):
+    """Refund a sale to the side wallet (amount in chips-equivalent)."""
+    if amount <= 0 or side_id is None:
+        return 0
+    credits = get_inventory_value(side_id, "credits", 0)
+    set_inventory_value(side_id, "credits", credits + amount * rate)
+    return amount * rate

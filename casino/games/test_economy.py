@@ -113,6 +113,23 @@ class TestCage(unittest.TestCase):
         self.assertIsNotNone(ce.casino_check_comps(self.client.id))
         self.assertEqual(ce.casino_chips_get(self.client.id), start + 25)
 
+    def test_market_spend_chips_then_credits(self):
+        from sbs_utils.procedural.inventory import get_inventory_value
+        ce.casino_chips_buy(self.client.id, self.side.id, 60)   # 60 chips, side now 940
+        # buying power = 60 chips + 940 credits = 1000
+        self.assertEqual(ce.casino_buying_power(self.client.id, self.side.id), 1000)
+        # spend 200: 60 from chips, 140 from credits
+        self.assertTrue(ce.casino_market_spend(self.client.id, self.side.id, 200))
+        self.assertEqual(ce.casino_chips_get(self.client.id), 0)
+        self.assertEqual(get_inventory_value(self.side.id, "credits", 0), 940 - 140)
+        # can't afford 10000
+        self.assertFalse(ce.casino_market_spend(self.client.id, self.side.id, 10000))
+    def test_market_refund(self):
+        from sbs_utils.procedural.inventory import get_inventory_value
+        before = get_inventory_value(self.side.id, "credits", 0)
+        ce.casino_market_refund(self.client.id, self.side.id, 50)
+        self.assertEqual(get_inventory_value(self.side.id, "credits", 0), before + 50)
+
     def test_welcome_stake_once(self):
         got = ce.casino_ensure_stake(self.client.id, 50)
         self.assertEqual(got, 50)

@@ -62,6 +62,17 @@ def patron_seed_base_rep(patron, key):
     return patron["reputation"]
 
 
+def max_patron_reputation(patrons):
+    """Best reputation across a list of patron dicts - the player's standing for
+    grey-market access. 0.0 if none."""
+    best = 0.0
+    for p in patrons:
+        r = patron_reputation(p)
+        if r > best:
+            best = r
+    return best
+
+
 def patron_ou_standing(patron):
     """Hook: return the teller's OpenUniverse clan standing as 0.0-1.0, or None
     when OU isn't loaded. Left as a stub so the casino stays OU-optional; OU (or
