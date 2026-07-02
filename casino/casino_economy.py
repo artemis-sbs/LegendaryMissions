@@ -116,3 +116,24 @@ def casino_bet_apply(client_id, delta):
 def casino_net(client_id):
     """Session net win/loss for comp thresholds."""
     return get_inventory_value(client_id, "casino_net", 0)
+
+
+# Hot-streak comps: (net-win threshold, bonus chips, name). One-time each.
+CASINO_COMP_TIERS = [(50, 10, "hot streak"), (100, 25, "high roller"),
+                     (250, 50, "the house's favorite")]
+
+def casino_check_comps(client_id):
+    """Grant any newly-earned one-time streak comps (bonus chips) based on the
+    session net win. Returns a message for the highest comp just granted, or
+    None. Comps are gifts - they don't count toward casino_net."""
+    net = casino_net(client_id)
+    msg = None
+    for threshold, bonus, name in CASINO_COMP_TIERS:
+        if net >= threshold:
+            flag = "casino_comp_%d" % threshold
+            if not get_inventory_value(client_id, flag, 0):
+                set_inventory_value(client_id, flag, 1)
+                set_inventory_value(client_id, "chips",
+                                    casino_chips_get(client_id) + bonus)
+                msg = "The house comps you %d chips - %s!" % (bonus, name)
+    return msg

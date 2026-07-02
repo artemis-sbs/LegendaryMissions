@@ -66,66 +66,69 @@ message = ""
             _sel_patron = _p
             _sel_idx = _i
         _i = _i + 1
+    _pkey = ""
+    if _sel_patron is not None:
+        _pkey = _sel_patron.get("key", "")
 
-    # Main content: three columns via sub-sections.
-    gui_section(style="area: 2, 4, 98, 88;")
+    # Absolute sections (predictable at small sizes; conditional content like
+    # the details panel renders reliably here, unlike inside a sub-section).
 
-    # Left column: Bitters face, greeting under him, then the patron details
-    # panel - select a patron to see them and act (buy a drink; rumors later).
-    with gui_sub_section("col-width:28;"):
-        gui_row("row-height:34;")
-        gui_face(bar_barkeep)
-        gui_row("row-height:16;")
-        gui_text_area(bar_keep_greeting)
-        gui_row("row-height:30;")
-        if _sel_patron is not None:
-            gui_face(_sel_patron.get("face", ""))
-            _trust = patron_trust_label(_sel_patron)
-            _pkey = _sel_patron.get("key", "")
-            gui_text_area(f"{_sel_patron.get('call_sign', 'pilot')} ({_trust})")
-            if bar_active_tip is not None and bar_active_tip.get("key") == _pkey:
-                gui_text_area(f"Tip: {bar_active_tip.get('tip', '')}")
-                on gui_message(gui_button("Act on it")):
-                    jump bar_rumor_resolve
-            else:
-                on gui_message(gui_button("Buy them a drink")):
-                    bar_messages.append({"face": my_face, "msg": f"Bought {_sel_patron.get('call_sign', 'a pilot')} a round."})
-                    if len(bar_messages) > 12:
-                        bar_messages.pop(0)
-                    bar_message_id += 1
-                    jump bar_show
-                if patron_has_rumors(_pkey):
-                    on gui_message(gui_button("Ask for a rumor")):
-                        _r = pick_rumor(_pkey)
-                        _true = patron_rumor_is_true(_sel_patron, patron_ou_standing(_sel_patron))
-                        bar_active_tip = {"key": _pkey, "tip": _r.get("tip", ""), "intel": _r.get("intel", ""), "true": _true}
-                        jump bar_show
+    # Bitters (barkeep): face + greeting under him, left column top.
+    gui_section(style="area: 2, 4, 28, 30;")
+    gui_face(bar_barkeep)
+    gui_section(style="area: 2, 31, 28, 44;")
+    gui_text_area(bar_keep_greeting)
+
+    # Patron details: face + name/trust on top.
+    gui_section(style="area: 2, 46, 28, 66; background:#1571;")
+    if _sel_patron is not None:
+        gui_face(_sel_patron.get("face", ""))
+        _trust = patron_trust_label(_sel_patron)
+        gui_text_area(f"{_sel_patron.get('call_sign', 'pilot')} ({_trust})")
+    else:
+        gui_text_area("Select a patron for details.")
+
+    # ...and the actions for that patron as a list of buttons below. Each
+    # button's on_press dispatches to bar_action carrying its action id in data
+    # (a direct button loop - on_press isn't wired by a listbox item template).
+    gui_section(style="area: 2, 67, 28, 88; background:#1571;")
+    _actions = []
+    if _sel_patron is not None:
+        if bar_active_tip is not None and bar_active_tip.get("key") == _pkey:
+            gui_row("row-height:1.4em;")
+            gui_text_area(f"Tip: {bar_active_tip.get('tip', '')}")
+            _actions = ~~[{"label": "Act on it", "act": "act"}]~~
         else:
-            gui_text_area("Select a patron for details.")
+            _actions = ~~[{"label": "Buy them a drink", "act": "drink"}]~~
+            if patron_has_rumors(_pkey):
+                _actions.append({"label": "Ask for a rumor", "act": "ask"})
+    for _a in _actions:
+        gui_row("row-height:1.8em;")
+        gui_button(f"$text:{_a.get('label', '')};justify:center;", data={"bar_act": _a.get('act', '')}, on_press="bar_action")
 
-    # Patrons column.
-    with gui_sub_section("col-width:22;"):
-        gui_row()
-        patron_box = gui_list_box(_patrons, "background:#1572;", item_template=bar_patron_template, title_template=bar_patron_title, select=True)
+    # Patrons list.
+    gui_section(style="area: 30, 4, 50, 88; background:#1572;")
+    patron_box = gui_list_box(_patrons, "", item_template=bar_patron_template, title_template=bar_patron_title, select=True)
     if _sel_idx >= 0:
         patron_box.set_selected_index(_sel_idx, False)
 
-    # Conversation column (rest): messages + toast input.
-    with gui_sub_section():
-        gui_row("row-height:78;")
-        _sorted = list(reversed(bar_messages))
-        gui_list_box(_sorted, "background:#1572;", item_template=bar_message_template, title_template=bar_message_title, select=False)
-        gui_row()
-        gui_input("desc:Make a toast", var="message")
-        on gui_message(gui_button("send")):
-            to_send = message.strip()
-            if len(to_send) > 0:
-                bar_messages.append({"face": my_face, "msg": to_send})
-                if len(bar_messages) > 12:
-                    bar_messages.pop(0)
-                message = ""
-                bar_message_id += 1
-                jump bar_show
+    # Conversation.
+    gui_section(style="area: 52, 4, 98, 80; background:#1572;")
+    _sorted = list(reversed(bar_messages))
+    gui_list_box(_sorted, "", item_template=bar_message_template, title_template=bar_message_title, select=False)
+
+    # Toast input.
+    gui_section(style="area: 52, 82, 98, 88;")
+    gui_input("desc:Make a toast", var="message")
+    on gui_message(gui_button("send")):
+        to_send = message.strip()
+        if len(to_send) > 0:
+            bar_messages.append({"face": my_face, "msg": to_send})
+            if len(bar_messages) > 12:
+                bar_messages.pop(0)
+            message = ""
+            bar_message_id += 1
+            jump bar_show
 
     # Drink + Leave buttons render in this bottom bar (from await gui below).
     gui_section("area: 2, 90, 98, 98;")
@@ -159,6 +162,25 @@ message = ""
             bar_customers.pop(client_id, None)
             ->END
 
+    jump bar_show
+
+# Dispatch a patron action button (bar_act carried in the button's data). Runs
+# in the gui task, so the render's _sel_patron / _pkey / my_face are in scope.
+--- bar_action
+    default bar_act = ""
+    if bar_act == "drink":
+        bar_messages.append({"face": my_face, "msg": f"Bought {_sel_patron.get('call_sign', 'a pilot')} a round."})
+        if len(bar_messages) > 12:
+            bar_messages.pop(0)
+        bar_message_id += 1
+        jump bar_show
+    if bar_act == "ask":
+        _r = pick_rumor(_pkey)
+        _true = patron_rumor_is_true(_sel_patron, patron_ou_standing(_sel_patron))
+        bar_active_tip = {"key": _pkey, "tip": _r.get("tip", ""), "intel": _r.get("intel", ""), "true": _true}
+        jump bar_show
+    if bar_act == "act":
+        jump bar_rumor_resolve
     jump bar_show
 
 # Resolve the held tip: rolled truth (by reputation) pays off or busts, and the

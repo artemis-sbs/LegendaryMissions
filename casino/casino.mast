@@ -20,6 +20,7 @@ gui_tab_add_top("casino")
     casino_console_header(CONSOLE_SELECT)
 
     casino_ensure_stake(client_id)   # one-time welcome chips so it's playable
+    _comp = casino_check_comps(client_id)   # streak comp (bonus chips), if earned
     side_id = casino_side_of_client(client_id)
     chips = casino_chips_get(client_id)
 
@@ -50,6 +51,9 @@ gui_tab_add_top("casino")
     gui_section(style="area: 10, 13, 90, 25; background:#1572;")
     gui_row()
     """color:white;justify:center;$text:Chips: {chips}    (100 max)"""
+    if _comp is not None:
+        gui_row()
+        """color:#ffd76a;justify:center;$text:{_comp}"""
     gui_row()
     on gui_message(gui_button("Buy 10")):
         casino_chips_buy(client_id, side_id, 10)

@@ -95,6 +95,24 @@ class TestCage(unittest.TestCase):
         self.assertEqual(ce.casino_chips_get(self.client.id), 0)
         self.assertEqual(self.credits(), 1000)   # back to start
 
+    def test_comps_tiers_once(self):
+        from sbs_utils.procedural.inventory import set_inventory_value
+        # Not up enough yet -> no comp.
+        set_inventory_value(self.client.id, "casino_net", 40)
+        self.assertIsNone(ce.casino_check_comps(self.client.id))
+        # Cross +50 -> hot streak comp (10 chips), once.
+        set_inventory_value(self.client.id, "casino_net", 60)
+        start = ce.casino_chips_get(self.client.id)
+        msg = ce.casino_check_comps(self.client.id)
+        self.assertIsNotNone(msg)
+        self.assertEqual(ce.casino_chips_get(self.client.id), start + 10)
+        self.assertIsNone(ce.casino_check_comps(self.client.id))   # not twice
+        # Cross +100 -> next tier (25 chips).
+        set_inventory_value(self.client.id, "casino_net", 120)
+        start = ce.casino_chips_get(self.client.id)
+        self.assertIsNotNone(ce.casino_check_comps(self.client.id))
+        self.assertEqual(ce.casino_chips_get(self.client.id), start + 25)
+
     def test_welcome_stake_once(self):
         got = ce.casino_ensure_stake(self.client.id, 50)
         self.assertEqual(got, 50)
