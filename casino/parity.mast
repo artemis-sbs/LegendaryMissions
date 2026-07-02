@@ -1,0 +1,69 @@
+# Parity - an original Arvonian chance game. Three cards' values XOR into a
+# 4-bit register (0-15); bet on it, roulette-style. Even/Odd and High/Low pay
+# even money (a fair table by default). Fast and casual. Entry: show_parity.
+
+//casino/game/parity "Parity"
+    jump show_parity
+
+=== show_parity ==
+    casino_register_decks()
+    casino_ensure_stake(client_id)
+    default parity_bet = 10
+    default parity_cards = None
+    default parity_reg = 0
+    default parity_msg = "Place a bet on the register."
+
+--- parity_bet
+    chips = casino_chips_get(client_id)
+    if chips < parity_bet:
+        jump casino_broke
+    casino_console_header(CONSOLE_SELECT)
+
+    gui_section(style="area: 10, 4, 90, 12;")
+    """color:white;justify:center; font: gui-6;$text:Parity"""
+
+    gui_section(style="area: 10, 14, 90, 24; background:#1572;")
+    """color:#bdf;justify:center;$text:Three cards XOR into a register (0-15). Even/Odd and High/Low pay even money."""
+
+    # Last spin's cards + register, once we have one.
+    if parity_cards is not None:
+        gui_section(style="area: 22, 28, 78, 54;")
+        casino_draw_hand(parity_cards, parity_card_key, "card_arv_back")
+        gui_section(style="area: 22, 55, 78, 66;")
+        """color:#ffd76a;justify:center; font: gui-4;$text:{parity_msg}"""
+
+    chips = casino_chips_get(client_id)
+    gui_section(style="area: 10, 68, 90, 74;")
+    """color:white;justify:center;$text:Chips: {chips}    Bet: {parity_bet}"""
+
+    gui_section(style="area: 10, 80, 90, 90;")
+    gui_row()
+    on gui_message(gui_button("Even")):
+        parity_type = "even"
+        jump parity_spin_step
+    on gui_message(gui_button("Odd")):
+        parity_type = "odd"
+        jump parity_spin_step
+    on gui_message(gui_button("High")):
+        parity_type = "high"
+        jump parity_spin_step
+    on gui_message(gui_button("Low")):
+        parity_type = "low"
+        jump parity_spin_step
+    on gui_message(gui_button("Leave")):
+        jump show_casino
+
+    await gui()
+    jump parity_bet
+
+--- parity_spin_step
+    _res = parity_roll()
+    parity_cards = _res[0]
+    parity_reg = _res[1]
+    _delta = parity_settle(parity_bet, parity_type, 0, parity_reg)
+    casino_bet_apply(client_id, _delta)
+    if _delta > 0:
+        parity_msg = f"Register {parity_reg} - you win {_delta}!"
+    else:
+        parity_msg = f"Register {parity_reg} - you lose {-_delta}."
+    jump parity_bet

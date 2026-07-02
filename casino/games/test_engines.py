@@ -182,5 +182,31 @@ class TestVideoPoker(unittest.TestCase):
         self.assertEqual(poker_card_key(("K", 2)), "card_ter_diamonds_K")
 
 
+class TestParity(unittest.TestCase):
+    def test_roll(self):
+        from engines import parity_roll
+        import random
+        cards, reg = parity_roll(random.Random(4))
+        self.assertEqual(len(cards), 3)
+        self.assertTrue(0 <= reg <= 15)
+        # register is the XOR of the three values
+        x = 0
+        for v, c in cards:
+            x ^= v
+        self.assertEqual(reg, x)
+    def test_wins_and_settle(self):
+        from engines import parity_wins, parity_settle
+        self.assertTrue(parity_wins("even", 0, 6))
+        self.assertFalse(parity_wins("even", 0, 7))
+        self.assertTrue(parity_wins("odd", 0, 7))
+        self.assertTrue(parity_wins("high", 0, 12))
+        self.assertTrue(parity_wins("low", 0, 3))
+        self.assertTrue(parity_wins("exact", 9, 9))
+        self.assertFalse(parity_wins("exact", 9, 8))
+        self.assertEqual(parity_settle(10, "even", 0, 6), 10)
+        self.assertEqual(parity_settle(10, "even", 0, 7), -10)
+        self.assertEqual(parity_settle(10, "exact", 9, 9), 150)   # 15:1
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

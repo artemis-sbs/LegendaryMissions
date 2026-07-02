@@ -25,6 +25,9 @@ CASINO_GAME_HELP = {
              "the ones you want and Draw the rest. Paid by the paytable: a "
              "pair of Jacks or better returns your bet, up to a Royal Flush "
              "at 250x. No dealer - just you and the odds.",
+    "parity": "Parity (Arvonian). The house's fast game: three cards XOR into "
+              "a register (0-15) and you bet on it. Even/Odd and High/Low pay "
+              "even money. Quick, casual, and a fair shake.",
 }
 
 def casino_game_help(key):

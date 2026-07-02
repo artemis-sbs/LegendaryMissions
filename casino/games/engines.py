@@ -391,3 +391,42 @@ def poker_toggle_hold(held, i):
     assignment). Returns the same list."""
     held[i] = not held[i]
     return held
+
+
+# =========================================================================
+# PARITY  (original Arvonian chance game - a "register" you bet on)
+# =========================================================================
+# Three cards' values XOR into a 4-bit register (0-15). Bet on properties of
+# it, roulette-style. Even/odd, high/low are exactly 50/50 and exact is 1/16
+# paying 15:1 - a FAIR table by default (add a "house zero" later for an edge).
+PARITY_PAYS = {"even": 1, "odd": 1, "high": 1, "low": 1, "exact": 15}
+PARITY_LABELS = {"even": "Even", "odd": "Odd", "high": "High (>=8)",
+                 "low": "Low (<8)", "exact": "Exact"}
+
+def parity_roll(rng=None):
+    """Deal 3 Arvonian cards; XOR their values into a register 0-15.
+    Returns (cards, register)."""
+    r = rng or _random
+    deck = choga_deck()
+    r.shuffle(deck)
+    cards = [deck.pop() for _ in range(3)]
+    reg = 0
+    for v, c in cards:
+        reg ^= v
+    return cards, reg
+
+def parity_wins(bet_type, bet_value, reg):
+    if bet_type == "even":  return reg % 2 == 0
+    if bet_type == "odd":   return reg % 2 == 1
+    if bet_type == "high":  return reg >= 8
+    if bet_type == "low":   return reg < 8
+    if bet_type == "exact": return reg == bet_value
+    return False
+
+def parity_settle(bet, bet_type, bet_value, reg):
+    if parity_wins(bet_type, bet_value, reg):
+        return bet * PARITY_PAYS.get(bet_type, 0)
+    return -bet
+
+def parity_card_key(card):
+    return choga_card_key(card)
