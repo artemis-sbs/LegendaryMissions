@@ -25,6 +25,24 @@ from sbs_utils.procedural.items import (  # noqa: F401
 # Credits are a shared per-side pool. Station stock lives on the station agent
 # (stock_<key>); a station is "seeded" finite, or treated as unlimited if not.
 MARKET_SELL_FACTOR = 0.5
+# A side can carry a buy-price subsidy (0..1): whoever funds it (e.g. the Open
+# Universe Admiral console) writes the rate to the side agent's `market_subsidy`
+# inventory, and that side's ships buy at (1 - rate) of the price. Selling is
+# never subsidised. Capped so a subsidy can never approach free goods.
+MARKET_SUBSIDY_MAX = 0.5
+
+
+def market_subsidy_rate(side):
+    """A side's active buy-price subsidy (0..MARKET_SUBSIDY_MAX). 0 when unset
+    or invalid. `side` is a side key/id/agent (to_side_id resolves it)."""
+    sid = to_side_id(side)
+    if sid is None:
+        return 0.0
+    try:
+        rate = float(get_inventory_value(sid, "market_subsidy", 0.0) or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+    return max(0.0, min(MARKET_SUBSIDY_MAX, rate))
 
 
 def market_purchasable():
@@ -69,11 +87,19 @@ def market_disposition(station_id, key):
     return 1.0 if idx is None else _disposition_for(int(seed_key), idx)
 
 
-def market_price(station_id, key):
-    """Current buy price = base price x the station's disposition."""
+def market_price(station_id, key, ship_id=None):
+    """Current buy price = base price x the station's disposition, discounted by
+    the buyer side's subsidy when a `ship_id` is given (so the price shown, the
+    affordability check, and the charge all agree). Omit `ship_id` for the
+    undiscounted list price (e.g. sell payouts)."""
     lbl = item_get(key)
     base = (lbl.get_inventory_value("price", 0) or 0) if lbl is not None else 0
-    return int(round(base * market_disposition(station_id, key)))
+    price = base * market_disposition(station_id, key)
+    if ship_id is not None:
+        ship = to_object(ship_id)
+        if ship is not None and ship.side:
+            price *= (1.0 - market_subsidy_rate(ship.side))
+    return int(round(price))
 
 
 def market_sell_price(station_id, key):
@@ -120,10 +146,11 @@ def _ship_side_id(ship_id):
 
 
 def market_buy(ship_id, station_id, key):
-    """Buy one `key` for the ship from the station, paying side credits."""
+    """Buy one `key` for the ship from the station, paying side credits (the
+    buyer side's subsidy discounts the price)."""
     if item_get(key) is None:
         return False
-    price = market_price(station_id, key)
+    price = market_price(station_id, key, ship_id)
     sid = _ship_side_id(ship_id)
     if sid is None or price <= 0:
         return False
