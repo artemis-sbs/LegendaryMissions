@@ -322,3 +322,72 @@ def choga_checksum_bonus(cards, ante):
     """Arvonian 'clean checksum' side bonus: if the 5 values XOR to 0 (~1-in-16),
     pay ante * CHOGA_CHECKSUM_PAY on top of the hand result. 0 otherwise."""
     return ante * CHOGA_CHECKSUM_PAY if choga_checksum(cards) else 0
+
+
+# =========================================================================
+# VIDEO POKER  (Jacks or Better; Terran 52-card deck - same as blackjack)
+# =========================================================================
+_POKER_VAL = {"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,
+              "J":11,"Q":12,"K":13,"A":14}
+
+# 9/6 Jacks or Better, payout per 1 bet.
+POKER_PAYTABLE = {"royal_flush":250, "straight_flush":50, "four_kind":25,
+                  "full_house":9, "flush":6, "straight":4, "three_kind":3,
+                  "two_pair":2, "jacks_or_better":1, "nothing":0}
+POKER_NAMES = {"royal_flush":"Royal Flush","straight_flush":"Straight Flush",
+               "four_kind":"Four of a Kind","full_house":"Full House",
+               "flush":"Flush","straight":"Straight","three_kind":"Three of a Kind",
+               "two_pair":"Two Pair","jacks_or_better":"Jacks or Better","nothing":"Nothing"}
+
+def poker_hand_category(cards):
+    """Category key for a 5-card Terran hand (Jacks or Better rules)."""
+    from collections import Counter
+    vals = sorted(_POKER_VAL[r] for r, s in cards)
+    suits = [s for r, s in cards]
+    vc = Counter(vals)
+    counts = sorted(vc.values(), reverse=True)
+    is_flush = len(set(suits)) == 1
+    uniq = sorted(set(vals))
+    is_straight = len(uniq) == 5 and (uniq[-1] - uniq[0] == 4)
+    if set(vals) == {14, 2, 3, 4, 5}:          # wheel A-2-3-4-5
+        is_straight = True
+    is_royal = is_flush and set(vals) == {10, 11, 12, 13, 14}
+    if is_royal:                       return "royal_flush"
+    if is_straight and is_flush:       return "straight_flush"
+    if counts[0] == 4:                 return "four_kind"
+    if counts[0] == 3 and counts[1] == 2: return "full_house"
+    if is_flush:                       return "flush"
+    if is_straight:                    return "straight"
+    if counts[0] == 3:                 return "three_kind"
+    if counts[0] == 2 and counts[1] == 2: return "two_pair"
+    if counts[0] == 2:
+        pair_val = [v for v, c in vc.items() if c == 2][0]
+        if pair_val >= 11:             return "jacks_or_better"  # J,Q,K,A
+    return "nothing"
+
+def video_poker_payout(cards, bet, paytable=None):
+    pt = paytable or POKER_PAYTABLE
+    return bet * pt.get(poker_hand_category(cards), 0)
+
+def poker_hand_name(cards):
+    return POKER_NAMES[poker_hand_category(cards)]
+
+# card = (rank, suit_index) - Terran deck, same as blackjack.
+def poker_card_key(card):
+    return bj_card_key(card)
+
+def poker_deal(deck, n):
+    return [deck.pop() for _ in range(n)]
+
+def poker_draw(deck, hand, held):
+    """Replace non-held cards with fresh draws. held is a list of bools."""
+    out = []
+    for i, c in enumerate(hand):
+        out.append(c if held[i] else deck.pop())
+    return out
+
+def poker_toggle_hold(held, i):
+    """Flip hold state for card i (MAST-friendly - avoids in-script list-index
+    assignment). Returns the same list."""
+    held[i] = not held[i]
+    return held

@@ -1,0 +1,83 @@
+# Video Poker (Jacks or Better, Terran 52-card deck). Deal five, Hold the ones
+# you want, Draw the rest, get paid by the paytable. House-banked via the
+# paytable - no dealer. Entry: show_poker.
+#
+# NOTE (render-verify): card sizing in the 5-card row may need tuning.
+
+//casino/game/poker "Poker"
+    jump show_poker
+
+=== show_poker ==
+    casino_register_decks()
+    casino_ensure_stake(client_id)
+    default poker_bet = 5
+
+--- poker_new
+    chips = casino_chips_get(client_id)
+    if chips < poker_bet:
+        jump casino_broke
+    poker_deck = bj_deck(1)
+    random.shuffle(poker_deck)
+    poker_hand = poker_deal(poker_deck, 5)
+    poker_held = ~~[False, False, False, False, False]~~
+    poker_phase = "hold"
+    poker_msg = "Hold the cards you want, then Draw."
+
+--- poker_render
+    casino_console_header(CONSOLE_SELECT)
+
+    gui_section(style="area: 8, 4, 92, 12;")
+    """color:white;justify:center; font: gui-6;$text:Video Poker"""
+
+    gui_section(style="area: 8, 13, 92, 20; background:#1572;")
+    """color:#bdf;justify:center;$text:Royal 250   St.Flush 50   Quads 25   Full 9   Flush 6   Straight 4   Trips 3   Two Pair 2   Jacks+ 1"""
+
+    # Five cards, each with its own Hold toggle below (fixed count - a button
+    # per card is fine here).
+    for _i in range(5):
+        _cx = 9 + _i * 16
+        gui_section(style=f"area: {_cx}, 23, {_cx+14}, 56;")
+        gui_image_keep_aspect_ratio_center(poker_card_key(poker_hand[_i]))
+        gui_section(style=f"area: {_cx}, 57, {_cx+14}, 66;")
+        if poker_phase == "hold":
+            _hl = "HELD" if poker_held[_i] else "Hold"
+            gui_button(_hl, data={"hi": _i}, on_press="poker_toggle")
+        else:
+            if poker_held[_i]:
+                """color:#6f6;justify:center;$text:held"""
+
+    _hand_name = poker_hand_name(poker_hand)
+    chips = casino_chips_get(client_id)
+    gui_section(style="area: 8, 69, 92, 78;")
+    """color:white;justify:center;$text:{_hand_name}    {poker_msg}    Chips: {chips}   Bet: {poker_bet}"""
+
+    gui_section(style="area: 8, 82, 92, 92;")
+    gui_row()
+    if poker_phase == "hold":
+        on gui_message(gui_button("Draw")):
+            jump poker_draw_step
+    else:
+        on gui_message(gui_button("Deal Again")):
+            jump poker_new
+    on gui_message(gui_button("Leave")):
+        jump show_casino
+
+    await gui()
+    jump poker_render
+
+--- poker_toggle
+    default hi = 0
+    poker_toggle_hold(poker_held, hi)
+    jump poker_render
+
+--- poker_draw_step
+    poker_hand = poker_draw(poker_deck, poker_hand, poker_held)
+    _pay = video_poker_payout(poker_hand, poker_bet)
+    casino_bet_apply(client_id, _pay - poker_bet)
+    _hn = poker_hand_name(poker_hand)
+    if _pay > 0:
+        poker_msg = f"{_hn} pays {_pay}!"
+    else:
+        poker_msg = f"{_hn}. No win."
+    poker_phase = "done"
+    jump poker_render

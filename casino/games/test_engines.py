@@ -157,5 +157,30 @@ class TestChoga(unittest.TestCase):
         self.assertEqual(choga_card_key((5, 2)), "card_arv_2_5")
         self.assertEqual(choga_rank_name([(3,0),(3,1),(7,0),(9,0),(1,0)]), "Pair")
 
+class TestVideoPoker(unittest.TestCase):
+    def test_categories(self):
+        from engines import poker_hand_category
+        self.assertEqual(poker_hand_category([("10",0),("J",0),("Q",0),("K",0),("A",0)]), "royal_flush")
+        self.assertEqual(poker_hand_category([("2",1),("3",1),("4",1),("5",1),("6",1)]), "straight_flush")
+        self.assertEqual(poker_hand_category([("J",0),("J",1),("J",2),("J",3),("3",0)]), "four_kind")
+        self.assertEqual(poker_hand_category([("J",0),("J",1),("J",2),("3",0),("3",1)]), "full_house")
+        self.assertEqual(poker_hand_category([("2",1),("5",1),("7",1),("9",1),("J",1)]), "flush")
+        self.assertEqual(poker_hand_category([("A",0),("2",1),("3",2),("4",3),("5",0)]), "straight")  # wheel
+        self.assertEqual(poker_hand_category([("J",0),("J",1),("3",0),("7",0),("9",0)]), "jacks_or_better")
+        self.assertEqual(poker_hand_category([("4",0),("4",1),("3",0),("7",0),("9",0)]), "nothing")  # low pair
+    def test_payout(self):
+        from engines import video_poker_payout
+        self.assertEqual(video_poker_payout([("10",0),("J",0),("Q",0),("K",0),("A",0)], 5), 1250)
+        self.assertEqual(video_poker_payout([("J",0),("J",1),("3",0),("7",0),("9",0)], 5), 5)   # jacks 1x
+        self.assertEqual(video_poker_payout([("4",0),("4",1),("3",0),("7",0),("9",0)], 5), 0)   # nothing
+    def test_draw_holds(self):
+        from engines import bj_deck, poker_deal, poker_draw, poker_card_key
+        deck = bj_deck(); hand = poker_deal(deck, 5); n = len(deck)
+        new = poker_draw(deck, hand, [True, False, True, False, False])
+        self.assertEqual(new[0], hand[0]); self.assertEqual(new[2], hand[2])
+        self.assertEqual(len(deck), n - 3)
+        self.assertEqual(poker_card_key(("K", 2)), "card_ter_diamonds_K")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

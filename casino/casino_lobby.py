@@ -21,6 +21,10 @@ CASINO_GAME_HELP = {
              "cards and the Understander's up-card and choose Raise (2x) or "
              "Fold. Best poker hand wins; the dealer plays with a pair or "
              "better. A clean checksum pays a bonus.",
+    "poker": "Video Poker (Jacks or Better). You're dealt five cards - Hold "
+             "the ones you want and Draw the rest. Paid by the paytable: a "
+             "pair of Jacks or better returns your bet, up to a Royal Flush "
+             "at 250x. No dealer - just you and the odds.",
 }
 
 def casino_game_help(key):
