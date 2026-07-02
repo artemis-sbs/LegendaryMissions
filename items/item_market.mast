@@ -26,9 +26,16 @@
         mprice = market_price(COMMS_SELECTED_ID, mk, COMMS_ORIGIN_ID)
         mstock = market_stock(COMMS_SELECTED_ID, mk)
         mowned = get_inventory_value(COMMS_ORIGIN_ID, mk, 0)
-        + "Buy {mname} - {mprice}cr (stock {mstock})" if mstock > 0 and market_credits >= mprice:
-            market_buy(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, mk)
-            comms_navigate("//comms/market")
-        + "Sell {mname} - +{market_sell_price(COMMS_SELECTED_ID, mk)}cr (have {mowned})" if mowned > 0:
-            market_sell(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, mk)
-            comms_navigate("//comms/market")
+        # Gate with `if` statements (evaluated here, in-task), not `+ "..." if
+        # <cond>:` button conditions: the engine re-evaluates button conditions
+        # outside this route's task, where the loop's mstock/mprice/market_credits
+        # are undefined. The button label already shows the price/stock.
+        if mstock > 0 and market_credits >= mprice:
+            + "Buy {mname} - {mprice}cr (stock {mstock})":
+                market_buy(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, mk)
+                comms_navigate("//comms/market")
+        if mowned > 0:
+            msell = market_sell_price(COMMS_SELECTED_ID, mk)
+            + "Sell {mname} - +{msell}cr (have {mowned})":
+                market_sell(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, mk)
+                comms_navigate("//comms/market")
