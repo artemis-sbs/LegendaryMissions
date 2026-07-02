@@ -33,58 +33,59 @@ message = ""
     bar_customers[client_id] = {"call_sign": cs, "face": my_face}
 
 --- bar_show
-    gui_section("area: 0,0,60,60;")
-    gui_face(bar_barkeep)
-    """""""""""""""""""""""""""""""""
-    Thirsty?
-    I have
-    """""""""""""""""""""""""""""""""
-    ^^^    {bar_martinis} Martini{"s" if bar_martinis>1 else ""}^^^ if bar_martinis>0
-    ^^^    {"and " if bar_martinis>0 and bar_vodka == 0 else ""}{bar_beer} beer{"s" if bar_beer>1 else ""}^^^ if bar_beer > 0
-    ^^^    {"and " if (bar_beer+bar_martinis) > 0 else ""}{bar_vodka} vodka^^^ if bar_vodka > 0
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ...
-    nothing
-    ....
-    I'm all out.
-    If you get more supply from DS1 the next one is on me.
-    ^^^^^^^^^^^^ if bar_martinis == 0 and bar_vodka == 0 and bar_beer == 0
+    casino_console_header(CONSOLE_SELECT)
 
-    gui_section("area: 60,100-100px, 100,100+45px;")
-    gui_row(style="row-height: 45px;")
-    gui_hole()
-    gui_hole()
-    gui_input("desc:Make a toast", var="message")
-    on gui_message(gui_button("send")):
-        to_send = message.strip()
-        if len(to_send) > 0:
-            bar_messages.append({"face": my_face, "msg": to_send})
-            if len(bar_messages) > 12:
-                bar_messages.pop(0)
-            message = ""
-            bar_message_id += 1
-            jump bar_show
+    # Barkeep greeting (built here, shown under Bitters below).
+    if bar_martinis == 0 and bar_vodka == 0 and bar_beer == 0:
+        bar_keep_greeting = "Thirsty? Sorry - I'm all out. Bring me supply from DS1 and the next one's on me."
+    else:
+        _drinks = []
+        if bar_martinis > 0:
+            _drinks.append(f"{bar_martinis} Martini{'s' if bar_martinis>1 else ''}")
+        if bar_beer > 0:
+            _drinks.append(f"{bar_beer} beer{'s' if bar_beer>1 else ''}")
+        if bar_vodka > 0:
+            _drinks.append(f"{bar_vodka} vodka")
+        bar_keep_greeting = "Thirsty? I have " + ", ".join(_drinks) + "."
 
-    gui_section("area: 60,0, 100,80;")
-    _sorted = list(reversed(bar_messages))
-    lb_messages = ~~list_box_control(_sorted,
-                                text=lambda item: f"$text:{item.get('msg', 'Hmm')};justify: left;",
-                                face= lambda item: f"{item.get('face','')}",
-                                title = lambda: "$text:Conversation;justify:center;",
-                                background= "#1572", title_background="#1578",
-                                select=False,
-                                item_height=6)~~
-    gui_content(lb_messages)
+    # Main content: three columns via sub-sections.
+    gui_section(style="area: 2, 4, 98, 88;")
 
-    gui_section("area: 0,60,25,100-40px;background: #1572;")
-    lb_customers = ~~list_box_control(list(bar_customers.values()),
-                                text=lambda item: f"$text:{item.get('call_sign', 'Hmm')};justify: center;",
-                                face= lambda item: f"{item.get('face','')}",
-                                title = lambda: "$text:Patrons;justify:center;",
-                                background= "#1572", title_background="#1578",
-                                select=True,
-                                item_height=6)~~
-    gui_content(lb_customers)
+    # Left column: Bitters face, greeting under him, then a reserved patron
+    # details panel (future: select a patron to show actions here).
+    with gui_sub_section("col-width:28;"):
+        gui_row("row-height:40;")
+        gui_face(bar_barkeep)
+        gui_row("row-height:20;")
+        gui_text_area(bar_keep_greeting)
+        gui_row()
+        gui_text_area("Select a patron for details.")
+
+    # Patrons column.
+    with gui_sub_section("col-width:22;"):
+        gui_row()
+        gui_list_box(list(bar_customers.values()), "background:#1572;", item_template=bar_patron_template, title_template=bar_patron_title, select=True)
+
+    # Conversation column (rest): messages + toast input.
+    with gui_sub_section():
+        gui_row("row-height:78;")
+        _sorted = list(reversed(bar_messages))
+        gui_list_box(_sorted, "background:#1572;", item_template=bar_message_template, title_template=bar_message_title, select=False)
+        gui_row()
+        gui_input("desc:Make a toast", var="message")
+        on gui_message(gui_button("send")):
+            to_send = message.strip()
+            if len(to_send) > 0:
+                bar_messages.append({"face": my_face, "msg": to_send})
+                if len(bar_messages) > 12:
+                    bar_messages.pop(0)
+                message = ""
+                bar_message_id += 1
+                jump bar_show
+
+    # Drink + Leave buttons render in this bottom bar (from await gui below).
+    gui_section("area: 2, 90, 98, 98;")
+    gui_row()
 
     on change len(bar_customers.values()):
         jump bar_show
