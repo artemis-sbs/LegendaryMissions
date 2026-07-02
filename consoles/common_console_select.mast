@@ -308,11 +308,18 @@ if CAN_CHANGE_CONSOLE:
 
 ====== game_started_console ====
     if not console_ready:
+        # The console list was computed at connect time, BEFORE the map ran -
+        # @console labels whose conditions depend on map state (a map-gated
+        # Navigation/Admiral console) were filtered out then. Give the map's
+        # opening code a beat to set those variables, then rebuild the list so
+        # the re-shown selection screen offers the full set.
+        await delay_sim(1)
+        consoles = gui_get_console_type_list()
         jump select_console
     #
     # This delay lets the server finish
-    # building the map, some times 
-    # a race condition occurs like the grid objects 
+    # building the map, some times
+    # a race condition occurs like the grid objects
     # or player ship aren't spawn first
     #
     await delay_sim(1)
