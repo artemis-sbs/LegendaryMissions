@@ -535,6 +535,21 @@ def korata_run_str(values, ops):
             parts.append(str(values[i + 1]))
     return " ".join(parts)
 
+# --- card-list convenience (the MAST table stores the value CARDS it played so
+# it can draw them; these read the values back out) ------------------------
+def korata_cards_values(cards):
+    return [c[0] for c in cards]
+
+def korata_cards_score(cards, ops, mask):
+    return korata_run_score([c[0] for c in cards], ops, mask)
+
+def korata_cards_run_str(cards, ops):
+    return korata_run_str([c[0] for c in cards], ops)
+
+def korata_ai_value_index(hand, my_cards, my_ops, mask):
+    """korata_ai_pick_value keyed off the AI's played value CARDS (not ints)."""
+    return korata_ai_pick_value(hand, [c[0] for c in my_cards], my_ops, mask)
+
 # --- AI (greedy, 1-ply) -----------------------------------------------------
 def korata_ai_pick_value(hand, ai_values, ai_ops, mask):
     """Index of the hand card whose VALUE, appended to the AI's run, maximizes the

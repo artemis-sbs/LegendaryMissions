@@ -302,6 +302,17 @@ class TestKoraTa(unittest.TestCase):
         self.assertEqual(korata_pot_settle(20, 40, "ai"), -20)      # lose own stake
         self.assertEqual(korata_pot_settle(30, 30, "tie"), 0)
 
+    def test_card_list_helpers(self):
+        from engines import (korata_cards_score, korata_cards_run_str,
+                             korata_ai_value_index)
+        cards = [(5, 0), (7, 2), (3, 1)]     # values 5,7,3
+        self.assertEqual(korata_cards_score(cards, [OP_AND, OP_OR], 7), 7)
+        self.assertEqual(korata_cards_run_str(cards, [OP_AND, OP_OR]),
+                         "5 AND 7 OR 3")
+        # picks the card that folds highest onto an empty run (largest value)
+        self.assertEqual(
+            korata_ai_value_index([(2,0),(6,0),(4,0)], [], [], 7), 1)
+
     def test_greedy_beats_random(self):
         import random
         from engines import korata_simulate_hand, korata_showdown

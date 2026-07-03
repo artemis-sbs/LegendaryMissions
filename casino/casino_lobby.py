@@ -28,6 +28,15 @@ CASINO_GAME_HELP = {
     "parity": "Parity (Arvonian). The house's fast game: three cards XOR into "
               "a register (0-15) and you bet on it. Even/Odd and High/Low pay "
               "even money. Quick, casual, and a fair shake.",
+    "korata3": "KoraTa - Ghost-Writing (3-bit). Duel the Understander's "
+               "apprentice over five rounds: play your cards as VALUES to build "
+               "your run, or as OPCODES (the gate on the card) to corrupt "
+               "theirs. Bet across two streets; high score takes the pot. "
+               "Tighter 0-7 values - more ties.",
+    "korata4": "KoraTa - Ghost-Writing (4-bit). The wide table: same duel, but "
+               "values run 0-15 for bigger scores and fewer ties. Build your "
+               "run, sabotage the apprentice's with your cards' gates, and bet "
+               "across two streets. High score wins.",
     "market": "Pilot Market. Spend your winnings: buy and sell craft upgrades "
               "and gear (chips first, then the crew's side credits). Earn a "
               "patron's trust at the bar and the grey market opens up.",

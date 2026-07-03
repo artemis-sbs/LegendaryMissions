@@ -1,0 +1,304 @@
+# KoraTa - "Ghost-Writing" (Arvonian, 2-player head-to-head vs the AI). Build a
+# scoring run from your 5 cards over 5 rounds (Value, Opcode, Value, Opcode,
+# Value) while sabotaging the apprentice's run with the gates your cards carry;
+# bet across two streets. Engine: games/engines.py (korata_*). Entry: show_korata.
+#
+# Cards are real Arvonian cards - each shows its value and its printed corner
+# opcode (arv_opcode = (value+castle)%4: OR/AND/NOR/NAND, no XOR). Two lobby
+# entries share this table, differing only in value width (3-bit / 4-bit).
+#
+# NOTE (render-verify): hand cards are clickable via the poker click_text overlay
+# pattern; on gui_message handlers are UNROLLED (they don't bind in a for-loop).
+
+//casino/game/korata3 "KoraTa - Ghost-Writing (3-bit)"
+    korata_bits = 3
+    jump show_korata
+
+//casino/game/korata4 "KoraTa - Ghost-Writing (4-bit)"
+    korata_bits = 4
+    jump show_korata
+
+=== show_korata ==
+    casino_register_decks()
+    casino_ensure_stake(client_id)
+    default korata_bits = 4
+    default korata_ante = 10
+    default korata_raise = 10
+
+--- korata_deal
+    k_mask = korata_mask(korata_bits)
+    chips = casino_chips_get(client_id)
+    if chips < korata_ante:
+        jump casino_broke
+
+    k_deck = korata_deck(korata_bits)
+    random.shuffle(k_deck)
+    korata_hand = korata_deal(k_deck, 5)
+    k_ai_hand = korata_deal(k_deck, 5)
+
+    kp_cards = ~~[]~~          # your run: the value cards you played
+    kp_ops = ~~[]~~            # ...and the gates the apprentice placed on you
+    ka_cards = ~~[]~~          # apprentice's run
+    ka_ops = ~~[]~~            # ...and the gates you placed on it
+
+    k_pot = 2 * korata_ante
+    k_player_put = korata_ante
+    k_ai_put = korata_ante
+    k_step = 0
+    jump korata_dispatch
+
+# ---- phase sequence: V O V O V (bet after each O) --------------------------
+--- korata_dispatch
+    if k_step == 0:
+        jump korata_value_phase
+    if k_step == 1:
+        jump korata_opcode_phase
+    if k_step == 2:
+        jump korata_value_phase
+    if k_step == 3:
+        jump korata_opcode_phase
+    if k_step == 4:
+        jump korata_value_phase
+    jump korata_finish
+
+--- korata_value_phase
+    k_mode = "value"
+    k_msg = "Play a card as a VALUE onto your run."
+    jump korata_pick_render
+
+--- korata_opcode_phase
+    k_mode = "opcode"
+    k_msg = "Play a card's OPCODE onto the apprentice's run."
+    jump korata_pick_render
+
+# ---- pick a card from your hand (value or opcode, per k_mode) --------------
+--- korata_pick_render
+    casino_console_header(CONSOLE_SELECT)
+
+    gui_section(style="area: 8, 3, 92, 10;")
+    """color:white;justify:center; font: gui-6;$text:KoraTa - Ghost-Writing"""
+
+    # Apprentice's run (top)
+    ka_score = korata_cards_score(ka_cards, ka_ops, k_mask)
+    ka_str = korata_cards_run_str(ka_cards, ka_ops)
+    gui_section(style="area: 8, 11, 92, 28;")
+    casino_draw_hand(ka_cards, korata_card_key, "card_arv_back")
+    gui_section(style="area: 8, 28, 92, 33;")
+    """color:#f9a;justify:center;$text:Apprentice: {ka_str} = {ka_score}"""
+
+    # Your run (middle)
+    kp_score = korata_cards_score(kp_cards, kp_ops, k_mask)
+    kp_str = korata_cards_run_str(kp_cards, kp_ops)
+    gui_section(style="area: 8, 36, 92, 53;")
+    casino_draw_hand(kp_cards, korata_card_key, "card_arv_back")
+    gui_section(style="area: 8, 53, 92, 58;")
+    """color:#9fd;justify:center;$text:You: {kp_str} = {kp_score}"""
+
+    chips = casino_chips_get(client_id)
+    gui_section(style="area: 8, 60, 92, 66;")
+    """color:white;justify:center;$text:Pot: {k_pot}    Chips: {chips}    {k_msg}"""
+
+    # Your hand - clickable cards (poker click_text overlay; handlers unrolled)
+    k_cards = ~~[None, None, None, None, None]~~
+    _n = len(korata_hand)
+    for _i in range(_n):
+        _cx = 8 + _i * 17
+        _card = korata_hand[_i]
+        gui_section(style=f"area: {_cx}, 67, {_cx+15}, 85;")
+        k_cards[_i] = gui_image_keep_aspect_ratio_center(korata_card_key(_card), style="click_text: ; click_background:#0000;")
+        gui_section(style=f"area: {_cx}, 85, {_cx+15}, 90;")
+        if k_mode == "value":
+            _sub = f"Play {_card[0]}"
+        else:
+            _sub = "Drop " + korata_op_name(korata_op_of_card(_card))
+        """color:#bdf;justify:center;$text:{_sub}"""
+
+    if _n > 0:
+        on gui_message(k_cards[0]):
+            k_pick = 0
+            jump korata_apply_pick
+    if _n > 1:
+        on gui_message(k_cards[1]):
+            k_pick = 1
+            jump korata_apply_pick
+    if _n > 2:
+        on gui_message(k_cards[2]):
+            k_pick = 2
+            jump korata_apply_pick
+    if _n > 3:
+        on gui_message(k_cards[3]):
+            k_pick = 3
+            jump korata_apply_pick
+    if _n > 4:
+        on gui_message(k_cards[4]):
+            k_pick = 4
+            jump korata_apply_pick
+
+    gui_section(style="area: 8, 91, 92, 98;")
+    gui_row()
+    on gui_message(gui_button("Leave")):
+        jump show_casino
+
+    await gui()
+    jump korata_pick_render
+
+--- korata_apply_pick
+    _card = korata_hand.pop(k_pick)
+    if k_mode == "value":
+        kp_cards.append(_card)
+        _aiv = korata_ai_value_index(k_ai_hand, ka_cards, ka_ops, k_mask)
+        ka_cards.append(k_ai_hand.pop(_aiv))
+        k_step = k_step + 1
+        jump korata_dispatch
+
+    # opcode phase: your card's gate sabotages the apprentice; then it sabotages you
+    ka_ops.append(korata_op_of_card(_card))
+    _target = korata_cards_score(kp_cards, kp_ops, k_mask)
+    _aio = korata_ai_pick_opcode(k_ai_hand, _target, k_mask)
+    _aicard = k_ai_hand.pop(_aio)
+    kp_ops.append(korata_op_of_card(_aicard))
+    jump korata_bet
+
+# ---- betting street (after each opcode phase) -----------------------------
+--- korata_bet
+    k_to_call = 0
+    k_msg = "Place your bets."
+    jump korata_bet_render
+
+--- korata_bet_render
+    casino_console_header(CONSOLE_SELECT)
+
+    gui_section(style="area: 8, 3, 92, 10;")
+    """color:white;justify:center; font: gui-6;$text:KoraTa - Ghost-Writing"""
+
+    ka_score = korata_cards_score(ka_cards, ka_ops, k_mask)
+    ka_str = korata_cards_run_str(ka_cards, ka_ops)
+    gui_section(style="area: 8, 11, 92, 28;")
+    casino_draw_hand(ka_cards, korata_card_key, "card_arv_back")
+    gui_section(style="area: 8, 28, 92, 33;")
+    """color:#f9a;justify:center;$text:Apprentice: {ka_str} = {ka_score}"""
+
+    kp_score = korata_cards_score(kp_cards, kp_ops, k_mask)
+    kp_str = korata_cards_run_str(kp_cards, kp_ops)
+    gui_section(style="area: 8, 36, 92, 53;")
+    casino_draw_hand(kp_cards, korata_card_key, "card_arv_back")
+    gui_section(style="area: 8, 53, 92, 58;")
+    """color:#9fd;justify:center;$text:You: {kp_str} = {kp_score}"""
+
+    chips = casino_chips_get(client_id)
+    gui_section(style="area: 8, 60, 92, 68;")
+    """color:white;justify:center;$text:Pot: {k_pot}    Chips: {chips}    {k_msg}"""
+
+    gui_section(style="area: 8, 82, 92, 92;")
+    gui_row()
+    if k_to_call == 0:
+        on gui_message(gui_button("Check")):
+            jump korata_bet_ai_check
+        if chips >= k_player_put + korata_raise:
+            on gui_message(gui_button("Raise")):
+                k_player_put = k_player_put + korata_raise
+                k_pot = k_pot + korata_raise
+                jump korata_bet_ai_raise
+        on gui_message(gui_button("Fold")):
+            jump korata_fold_player
+    else:
+        _call_lbl = f"Call {k_to_call}"
+        on gui_message(gui_button(_call_lbl)):
+            k_player_put = k_player_put + k_to_call
+            k_pot = k_pot + k_to_call
+            jump korata_after_street
+        on gui_message(gui_button("Fold")):
+            jump korata_fold_player
+
+    await gui()
+    jump korata_bet_render
+
+--- korata_bet_ai_check
+    ka_score = korata_cards_score(ka_cards, ka_ops, k_mask)
+    kp_score = korata_cards_score(kp_cards, kp_ops, k_mask)
+    _act = korata_ai_bet(ka_score, kp_score, 0, k_pot, k_mask)
+    if _act[0] == "raise":
+        k_ai_put = k_ai_put + korata_raise
+        k_pot = k_pot + korata_raise
+        k_to_call = korata_raise
+        k_msg = "The apprentice bets. Call or fold."
+        jump korata_bet_render
+    jump korata_after_street
+
+--- korata_bet_ai_raise
+    ka_score = korata_cards_score(ka_cards, ka_ops, k_mask)
+    kp_score = korata_cards_score(kp_cards, kp_ops, k_mask)
+    _act = korata_ai_bet(ka_score, kp_score, korata_raise, k_pot, k_mask)
+    if _act[0] == "fold":
+        jump korata_fold_ai
+    if _act[0] == "raise":
+        k_ai_put = k_ai_put + 2 * korata_raise
+        k_pot = k_pot + 2 * korata_raise
+        k_to_call = korata_raise
+        k_msg = "The apprentice re-raises. Call or fold."
+        jump korata_bet_render
+    k_ai_put = k_ai_put + korata_raise
+    k_pot = k_pot + korata_raise
+    jump korata_after_street
+
+--- korata_after_street
+    k_step = k_step + 1
+    jump korata_dispatch
+
+# ---- endings --------------------------------------------------------------
+--- korata_fold_player
+    casino_bet_apply(client_id, korata_pot_settle(k_player_put, k_ai_put, "ai"))
+    k_result = "You fold. The apprentice takes the pot."
+    jump korata_result
+
+--- korata_fold_ai
+    casino_bet_apply(client_id, korata_pot_settle(k_player_put, k_ai_put, "player"))
+    k_result = "The apprentice folds! You take the pot."
+    jump korata_result
+
+--- korata_finish
+    kp_score = korata_cards_score(kp_cards, kp_ops, k_mask)
+    ka_score = korata_cards_score(ka_cards, ka_ops, k_mask)
+    _w = korata_showdown(kp_score, ka_score)
+    casino_bet_apply(client_id, korata_pot_settle(k_player_put, k_ai_put, _w))
+    if _w == "player":
+        k_result = f"You win! +{k_ai_put} chips."
+    elif _w == "ai":
+        k_result = f"You lose. -{k_player_put} chips."
+    else:
+        k_result = "Push - stakes returned."
+    jump korata_result
+
+--- korata_result
+    casino_console_header(CONSOLE_SELECT)
+
+    gui_section(style="area: 8, 3, 92, 10;")
+    """color:white;justify:center; font: gui-6;$text:KoraTa - Ghost-Writing"""
+
+    ka_score = korata_cards_score(ka_cards, ka_ops, k_mask)
+    ka_str = korata_cards_run_str(ka_cards, ka_ops)
+    gui_section(style="area: 8, 11, 92, 28;")
+    casino_draw_hand(ka_cards, korata_card_key, "card_arv_back")
+    gui_section(style="area: 8, 28, 92, 33;")
+    """color:#f9a;justify:center;$text:Apprentice: {ka_str} = {ka_score}"""
+
+    kp_score = korata_cards_score(kp_cards, kp_ops, k_mask)
+    kp_str = korata_cards_run_str(kp_cards, kp_ops)
+    gui_section(style="area: 8, 36, 92, 53;")
+    casino_draw_hand(kp_cards, korata_card_key, "card_arv_back")
+    gui_section(style="area: 8, 53, 92, 58;")
+    """color:#9fd;justify:center;$text:You: {kp_str} = {kp_score}"""
+
+    chips = casino_chips_get(client_id)
+    gui_section(style="area: 8, 62, 92, 72;")
+    """color:#ffd76a;justify:center; font: gui-4;$text:{k_result}   Chips: {chips}"""
+
+    gui_section(style="area: 8, 82, 92, 92;")
+    gui_row()
+    on gui_message(gui_button("Deal Again")):
+        jump korata_deal
+    on gui_message(gui_button("Leave")):
+        jump show_casino
+
+    await gui()
+    jump korata_result

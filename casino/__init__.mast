@@ -24,4 +24,5 @@ import gates.mast
 import choga.mast
 import poker.mast
 import parity.mast
+import korata.mast
 import market.mast
