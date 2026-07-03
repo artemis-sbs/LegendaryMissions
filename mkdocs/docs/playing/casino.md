@@ -51,7 +51,7 @@ hitting until 17.
 Just you and the paytable &mdash; no dealer.
 
 1. You're dealt **five cards**.
-2. Tap **Hold** on the ones you want to keep.
+2. **Tap the cards** you want to keep &mdash; each shows **HELD**.
 3. Press **Draw** to replace the rest.
 4. Your final hand is paid by the table shown at the top.
 

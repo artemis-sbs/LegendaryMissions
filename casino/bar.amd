@@ -1,110 +1,95 @@
-// Casino bar patrons, chatter, and rumors.  DRAFT CONTENT.
+// Casino bar - patrons, their rumors, and ambient chatter. This is the whole
+// social layer of the casino as an authored "script": edit the words here, no
+// Python. bar_content.py loads this file; bar.mast builds the patrons from it.
 //
-// Each top-level heading is a patron. Its --- data --- section carries
-// display + behavior; the prose is their "vibe" / barks. Each ## sub-heading
-// is a rumor that patron may pass; its data marks truth and the effect, the
-// prose is the line they speak.
+// Format (reuses the AMD document form, same as hangar_quests.amd):
+//   # [Display](key)     - a patron. Its --- fenced block is data; the prose
+//                          under it is their "vibe" line.
+//   ## [rumor: x](key)   - a rumor that patron may pass. The prose is what they
+//                          SAY (the tip); its data `intel` is the payoff shown
+//                          if the tip pans out.
 //
-// Interpreted data keys (casino loader must read these -- NOT new AMD syntax,
-// just keys, same as hangar_quests.amd uses on_kill/reward). Confirm names:
-//   patron:  call_sign, face_kind, reliability (0.0-1.0), role
-//   rumor:   truth (bool), effect {..}, cost (chips, optional), once (bool)
-//   effect:  { seed_quest: <hq_key> } | { reveal: <text> } | { none: true }
+// A rumor's TRUTH is not authored here - it is rolled from the teller's
+// reputation at ask time (see bar_reputation.py), so a rumor only needs a tip
+// and a payoff.
 //
-// reliability weights how often this patron's rumors are TRUE. When
-// OpenUniverse is loaded, multiply by the teller's clan standing.
+// Patron data keys:  call_sign, face_kind (torgoth_male | terran_male |
+//                    terran_female), reliability (0.0-1.0 starting trust).
+// Rumor data key:    intel (the payoff line shown when the tip turns out true).
 
-# [Bitters](bitters)
+# [Bitters](barkeep)
 ---
 call_sign: Bitters
 face_kind: torgoth_male
-role: bartender
-reliability: 0.5
+reliability: 0.55
 ---
-The Torgoth barkeep. Pours straight, talks sideways. Has heard everything
-twice and believes about half of it. Buy a drink, get an earful.
+The Torgoth barkeep. Pours straight, talks sideways - heard everything twice and believes about half of it.
 
-## [rumor: dry docks](bitters_r1)
+## [rumor: restock](barkeep_r1)
 ---
-truth: true
-effect: { reveal: "DS1 is restocking the good stuff next rotation." }
-once: false
+intel: "The restock run pays out - Bitters' tip was solid."
 ---
-You want the top-shelf vodka? DS1's holding a shipment. Won't say who from.
+DS1's holding a shipment of the good stuff next rotation.
 
-## [rumor: the ghost ship](bitters_r2)
+## [rumor: derelict](barkeep_r2)
 ---
-truth: false
-effect: { none: true }
+intel: "There really is a derelict out there. Bitters, you old softie."
 ---
-Fella in here swore he saw a derelict cruiser out past the belt, lights on,
-nobody aboard. I say he'd had one too many of mine.
+Fella swore he saw a derelict cruiser, lights on, nobody aboard.
 
 # [Cogs](cogs)
 ---
 call_sign: NightSky
 face_kind: terran_male
-role: mechanic
 reliability: 0.8
 ---
-Wrench-hand who knows every hull in the bay and half the ones that never
-made it home. If a damcon crew ever pulled off a miracle, Cogs knows their
-name. Reliable - he deals in facts, not fumes.
+Wrench-hand who knows every hull in the bay. Deals in facts, not fumes - reliable.
 
-## [rumor: hero damcon](cogs_r1)
+## [rumor: salvage](cogs_r1)
 ---
-truth: true
-effect: { seed_quest: hq_salvage }
-cost: 10
+intel: "Cogs called it - salvage coordinates logged to your board."
 ---
-There's working tech in the debris field nobody's swept yet. I patched a
-scanner that'll find it - slip me a chip and I'll mark your board.
+There's working tech in the debris field nobody's swept.
 
 ## [rumor: bad coil](cogs_r2)
 ---
-truth: true
-effect: { reveal: "Check your port coil before you launch - saw two ships limp back with the same fault." }
+intel: "Two ships limped home with the same fault. Cogs saved you a tow."
 ---
-Word of advice, on the house: that coil batch is bad. Check yours before you
-strap in.
+That coil batch is bad. Check yours before you launch.
 
 # [Ghost](ghost)
 ---
 call_sign: Ghost
 face_kind: terran_female
-role: pilot
 reliability: 0.9
 ---
-A pilot who flies the quiet routes and comes back knowing things. Says little,
-means all of it. When Ghost passes you a heading, you fly it.
+A pilot who flies the quiet routes and comes back knowing things. Says little, means all of it.
 
-## [rumor: raider massing](ghost_r1)
+## [rumor: wolfpack](ghost_r1)
 ---
-truth: true
-effect: { seed_quest: hq_hunt }
+intel: "Ghost was right - their staging point is marked. Hit them before they strike."
 ---
-They're massing on the flank - I counted the drive plumes myself. Somebody
-should thin them before they pick a target.
+A raider wolfpack is massing past the belt.
 
 ## [rumor: soft escort](ghost_r2)
 ---
-truth: true
-effect: { seed_quest: hq_patrol }
+intel: "The convoy's there, just as Ghost said. Easy work for a patrol."
 ---
-Convoy's coming through the approaches light on escort. Easy work for
-someone paying attention.
+A convoy's coming through the approaches light on escort.
 
-// ---- ambient chatter (non-rumor barks the banter task can pull) ----
-// Kept as a simple heading with a data list so the loader can random.choice.
+## [rumor: upgrade cache](ghost_r3)
+---
+intel: "The upgrade cache checks out. Worth a run."
+---
+Someone's running upgrades through the far station, quiet-like.
 
+// Ambient one-liners the banter loop pulls at random - flavor only, no rumor.
 # [Chatter](chatter)
 ---
 lines:
-  - "You hear they're putting a card table in the back? About time."
+  - "You hear they're putting card tables in the back? About time."
   - "Cheers to the ones who didn't dock today."
   - "House always wins, pilot. Until it doesn't."
   - "Drink up - the Understander deals a cold hand."
-  - "I fly better with one of these in me. Don't tell the flight surgeon."
   - "Whale song on the speakers again. Bitters is an old softie."
 ---
-Ambient one-liners for the bar banter loop. No truth, no effect - flavor only.

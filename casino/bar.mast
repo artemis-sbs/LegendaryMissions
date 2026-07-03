@@ -1,13 +1,16 @@
 # Casino bar. Revived from hangar/bar.mast (which worked but was disconnected).
 # Entry: show_bar. Patrons: three named NPCs + every visiting client. Buy a
-# drink, toast the room, watch the banter. Rumors + bar.amd content wiring
-# come in a later phase; the patron/chatter data is inline for now.
+# drink, toast the room, watch the banter. Patrons, rumors, and chatter are
+# authored in bar.amd and loaded here - see bar_content.py.
 #
 # NOTE (render-verify): reached from the casino lobby (casino.mast). "Leave"
 # returns to show_casino.
 
-shared bar_barkeep = faces.random_torgoth()
-shared bar_pilots = {"barkeep": {"key":"barkeep", "call_sign":"Bitters", "face":bar_barkeep}, "cogs": {"key":"cogs", "call_sign": "NightSky", "face": faces.random_terran_male()}, "ghost": {"key":"ghost", "call_sign":"Ghost", "face":faces.random_terran_female()}}
+# Load the authored bar content (patrons, rumors, chatter) from bar.amd, the
+# same way the quest board loads hangar_quests.amd.
+shared BAR_DOC = bar_set_doc(document_get_amd_file(None, "Bar", content=media_read_relative_file("bar.amd")))
+shared bar_pilots = bar_build_pilots(faces)
+shared bar_barkeep = bar_pilots.get("barkeep", {}).get("face", faces.random_torgoth())
 shared bar_martinis = 10
 shared bar_beer = 10
 shared bar_vodka = 8
@@ -16,7 +19,7 @@ shared bar_customers = bar_pilots.copy()
 shared bar_messages = []
 shared bar_message_id = 0
 shared bar_banter_task = None
-shared bar_chatter = ["You hear they're putting card tables in the back? About time.", "Cheers to the ones who didn't dock today.", "House always wins, pilot. Until it doesn't.", "Drink up - the Understander deals a cold hand.", "Whale song on the speakers again. Bitters is an old softie."]
+shared bar_chatter = bar_chatter_lines()
 message = ""
 
 //casino/game/bar "Bar"

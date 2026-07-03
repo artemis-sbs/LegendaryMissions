@@ -67,41 +67,58 @@ and they can always buy back in &mdash; nobody gets stuck.
 
 ## Make it your own
 
-You don't need to be a programmer to change the flavor. Each kind of content
-lives in one file as a simple list &mdash; copy a line, change the words.
+You don't need to be a programmer to change the flavor. The whole social layer
+of the bar &mdash; the regulars, their rumors, and the ambient chatter &mdash;
+is one authored file, **`casino/bar.amd`**. It reads like a script: copy a
+block, change the words.
 
 ### Add a rumor a patron can tell
 
-Open **`casino/bar_rumors.py`**. Each patron has a list of tips. A tip is what
-they say (`tip`) and the payoff if it pans out (`intel`). Add one:
+In **`casino/bar.amd`**, each patron is a `#` heading and each rumor is a `##`
+heading under them. The line the patron **says** is the prose under the heading;
+the payoff shown if it pans out is the `intel:` line. Add one under a patron:
 
-```python
-"ghost": [
-    {"tip": "A convoy's slipping through the approaches light on escort.",
-     "intel": "The convoy's there, just as Ghost said. Easy pickings."},
-    # add your own below:
-    {"tip": "Something big is squatting in the old minefield.",
-     "intel": "Ghost was right - and it's carrying salvage."},
-],
+```
+## [rumor: minefield](ghost_r4)
+---
+intel: "Ghost was right - and it's carrying salvage."
+---
+Something big is squatting in the old minefield.
 ```
 
 Whether a rumor turns out **true** is rolled against that patron's reputation,
-so you don't mark it true or false yourself &mdash; just write the tip and the
-good outcome.
+so you don't mark it true or false yourself &mdash; just write the line they say
+and the good outcome. Give each new rumor a unique key in the `(parentheses)`.
 
-### Add a drink or a bar regular
+### Add a bar regular
 
-Open **`casino/bar.mast`** (the top few lines). The bar's stock and its regulars
-are plain lists:
+Add another `#` heading in **`casino/bar.amd`**. The `---` block sets their
+call sign, face, and starting trust; the prose beneath is their vibe:
+
+```
+# [Sparks](sparks)
+---
+call_sign: Sparks
+face_kind: terran_male
+reliability: 0.6
+---
+A comms rating who overhears half the sector and repeats a third of it.
+```
+
+`face_kind` is `torgoth_male`, `terran_male`, or `terran_female`;
+`reliability` (0.0&ndash;1.0) is how often their rumors ring true to start.
+Ambient one-liners the regulars mutter live in the `# [Chatter]` block at the
+bottom of the same file &mdash; add lines to its `lines:` list for more color.
+
+### Add a drink
+
+The bar's drink stock is in **`casino/bar.mast`** (the top few lines):
 
 ```
 shared bar_martinis = 10        # change the numbers to restock
 shared bar_beer = 10
 shared bar_vodka = 8
 ```
-
-Ambient one-liners the regulars mutter live in `bar_chatter` &mdash; add your
-own lines to that list for more color.
 
 ### Add something to the market
 

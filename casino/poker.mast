@@ -1,8 +1,10 @@
-# Video Poker (Jacks or Better, Terran 52-card deck). Deal five, Hold the ones
-# you want, Draw the rest, get paid by the paytable. House-banked via the
+# Video Poker (Jacks or Better, Terran 52-card deck). Deal five, tap the cards
+# to hold, Draw the rest, get paid by the paytable. House-banked via the
 # paytable - no dealer. Entry: show_poker.
 #
-# NOTE (render-verify): card sizing in the 5-card row may need tuning.
+# NOTE (render-verify): each card is clickable via an empty click_text overlay
+# (transparent, nothing drawn over the art); tapping a card toggles the HELD/Hold
+# text shown under it. Confirm all five toggle independently.
 
 //casino/game/poker "Poker"
     jump show_poker
@@ -21,7 +23,7 @@
     poker_hand = poker_deal(poker_deck, 5)
     poker_held = ~~[False, False, False, False, False]~~
     poker_phase = "hold"
-    poker_msg = "Hold the cards you want, then Draw."
+    poker_msg = "Tap the cards to hold, then Draw."
 
 --- poker_render
     casino_console_header(CONSOLE_SELECT)
@@ -32,19 +34,43 @@
     gui_section(style="area: 8, 13, 92, 20; background:#1572;")
     """color:#bdf;justify:center;$text:Royal 250   St.Flush 50   Quads 25   Full 9   Flush 6   Straight 4   Trips 3   Two Pair 2   Jacks+ 1"""
 
-    # Five cards, each with its own Hold toggle below (fixed count - a button
-    # per card is fine here).
+    # Five cards - the card image itself is the hold toggle. An empty click_text
+    # overlay (with a transparent click_background) makes the image clickable
+    # without drawing anything over the art; the HELD state shows as text under
+    # the card. click_tag is left default so each card gets a unique tag.
+    # Handlers are unrolled (fixed 5-card hand) because `on gui_message` does not
+    # bind reliably in a for-loop.
+    poker_cards = ~~[None, None, None, None, None]~~
     for _i in range(5):
         _cx = 9 + _i * 16
         gui_section(style=f"area: {_cx}, 23, {_cx+14}, 56;")
-        gui_image_keep_aspect_ratio_center(poker_card_key(poker_hand[_i]))
-        gui_section(style=f"area: {_cx}, 57, {_cx+14}, 66;")
         if poker_phase == "hold":
-            _hl = "HELD" if poker_held[_i] else "Hold"
-            gui_button(_hl, data={"hi": _i}, on_press="poker_toggle")
+            poker_cards[_i] = gui_image_keep_aspect_ratio_center(poker_card_key(poker_hand[_i]), style="click_text: ; click_background:#0000;")
         else:
-            if poker_held[_i]:
-                """color:#6f6;justify:center;$text:held"""
+            gui_image_keep_aspect_ratio_center(poker_card_key(poker_hand[_i]))
+        gui_section(style=f"area: {_cx}, 57, {_cx+14}, 66;")
+        if poker_held[_i]:
+            """color:#6f6;justify:center;$text:HELD"""
+        else:
+            if poker_phase == "hold":
+                """color:#888;justify:center;$text:Hold"""
+
+    if poker_phase == "hold":
+        on gui_message(poker_cards[0]):
+            poker_toggle_hold(poker_held, 0)
+            jump poker_render
+        on gui_message(poker_cards[1]):
+            poker_toggle_hold(poker_held, 1)
+            jump poker_render
+        on gui_message(poker_cards[2]):
+            poker_toggle_hold(poker_held, 2)
+            jump poker_render
+        on gui_message(poker_cards[3]):
+            poker_toggle_hold(poker_held, 3)
+            jump poker_render
+        on gui_message(poker_cards[4]):
+            poker_toggle_hold(poker_held, 4)
+            jump poker_render
 
     _hand_name = poker_hand_name(poker_hand)
     chips = casino_chips_get(client_id)
@@ -63,11 +89,6 @@
         jump show_casino
 
     await gui()
-    jump poker_render
-
---- poker_toggle
-    default hi = 0
-    poker_toggle_hold(poker_held, hi)
     jump poker_render
 
 --- poker_draw_step

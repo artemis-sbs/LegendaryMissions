@@ -56,9 +56,14 @@ def patron_rumor_is_true(patron, ou_standing=None, rng=None):
     return (rng or _random).random() < odds
 
 def patron_seed_base_rep(patron, key):
-    """Give a patron its starting reputation once (idempotent)."""
+    """Give a patron its starting reputation once (idempotent). Prefers the
+    patron's authored ``reliability`` (loaded from bar.amd); falls back to the
+    built-in base for that key, then the default."""
     if patron.get("reputation") is None:
-        patron["reputation"] = PATRON_BASE_REP.get(key, DEFAULT_REP)
+        base = patron.get("reliability")
+        if base is None:
+            base = PATRON_BASE_REP.get(key, DEFAULT_REP)
+        patron["reputation"] = clamp01(base)
     return patron["reputation"]
 
 
