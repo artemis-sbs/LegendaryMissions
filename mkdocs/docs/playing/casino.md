@@ -2,7 +2,7 @@
 
 When your ship is in the hangar bay, open the **Casino** tab. Inside is a
 lobby: pick a room from the list on the left, read its blurb, and hit **Play**.
-There's a **bar**, six **games**, and a **pilot market**.
+There's a **bar**, eight **games**, and a **pilot market**.
 
 ## Chips
 
@@ -81,7 +81,7 @@ An Arvonian logic game &mdash; you **bet on which hand wins**, you don't play a
 hand yourself.
 
 1. Two hands are dealt: **Player** and **Banker**. Each is a bit card, a logic
-   gate (AND, OR, NOR, NAND, XOR), and another bit card.
+   gate **printed on the card** (AND, OR, NOR, or NAND), and another bit card.
 2. Bet **Bet Player** or **Bet Banker**.
 3. Each hand's score is `first-bit GATE second-bit` (0-7). Highest total wins;
    the **Banker wins ties**.
@@ -99,6 +99,23 @@ Arvonian stud poker against **the Understander** (the house computer).
 A special Arvonian twist: if your five card values **XOR to zero** ("a clean
 checksum"), you collect a bonus on top. And a quirk of this 64-card deck &mdash;
 a **straight beats a flush** here, the opposite of a normal deck.
+
+### KoraTa &mdash; Ghost-Writing
+
+A five-round duel against the Understander's **apprentice**. You each build a
+scoring **run** from your cards &mdash; and the gates those cards carry let you
+**sabotage** the other run.
+
+1. You get a hand of cards and play one each round, over **five rounds** in the
+   fixed order **Value, Opcode, Value, Opcode, Value**.
+2. On a **Value** round, play a card for its **number** to extend your own run.
+3. On an **Opcode** round, play a card for the **gate printed on it** to fold
+   into &mdash; and corrupt &mdash; the apprentice's run.
+4. Bet across **two streets** during the duel. The **higher final score takes
+   the pot**.
+
+Two tables to choose from: the **3-bit** game runs values 0-7 (tighter scores,
+more ties), and the **4-bit** game runs 0-15 (bigger swings, fewer ties).
 
 ---
 

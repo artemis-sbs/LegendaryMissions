@@ -1,7 +1,7 @@
 # The Casino
 
 Give your crew somewhere to unwind. The **Casino** is a hangar-bay hangout: a
-**bar** with regulars who trade gossip, six **games of chance**, and a **pilot
+**bar** with regulars who trade gossip, eight **games of chance**, and a **pilot
 market** where winnings buy real ship upgrades. It runs on an Arvonian card
 deck &mdash; the computer-loving Arvonians play with bit-based cards, and the
 house dealer in some games is flavored as **the Understander**, their revered
@@ -44,7 +44,7 @@ and they can always buy back in &mdash; nobody gets stuck.
 - **The bar.** Bitters the Torgoth barkeep pours drinks; regulars like **Ghost**
   (a quiet pilot) and **Cogs** (a mechanic who hears things) sit around. Buy a
   patron a drink, toast the room, or ask them for a rumor.
-- **Six games.** Pick one from the lobby list; each has a "how to play" blurb
+- **Eight games.** Pick one from the lobby list; each has a "how to play" blurb
   and a **Play** button.
 
     | Game | Feel |
@@ -52,6 +52,8 @@ and they can always buy back in &mdash; nobody gets stuck.
     | **Nibble** | Blackjack-ish on the Arvonian deck &mdash; a tough table |
     | **Gates** | Bet on which logic-gate hand wins (baccarat-style) |
     | **Choga** | Arvonian stud poker vs. the Understander |
+    | **KoraTa (3-bit)** | Head-to-head opcode duel &mdash; build your run, corrupt theirs (values 0-7) |
+    | **KoraTa (4-bit)** | The wide KoraTa table &mdash; same duel, values 0-15 |
     | **Blackjack** | Classic 21 |
     | **Video Poker** | Jacks-or-Better, hold and draw |
     | **Parity** | A fast "wheel" &mdash; bet even/odd or high/low |
@@ -143,10 +145,22 @@ much with `"min_rep": 0.8`).
 
 Every lobby entry &mdash; games and the market alike &mdash; is just a labelled
 "room" the casino discovers automatically. To add one, make a new file in
-`casino/` with a route at the top:
+`casino/` with a route at the top. Give it a **`help` metadata block** (and a
+`min_bet`) &mdash; the lobby's detail panel renders `help` as mini-markdown, so a
+`$t` title and `-` bullets read nicely:
 
 ```
 //casino/game/roulette "Roulette"
+metadata: ``` yaml
+help: |
+  $t Roulette
+
+  Spin the wheel and bet on where it lands.
+
+  - Pick a number or a color.
+  - Watch the wheel; matches pay out.
+min_bet: 10
+```
     jump show_roulette
 
 === show_roulette ==
