@@ -17,6 +17,7 @@ help: >
   rounds: play your cards as VALUES to build your run, or as OPCODES (the gate
   on the card) to corrupt theirs. Bet across two streets; high score takes the
   pot. Tighter 0-7 values - more ties.
+min_bet: 10
 ```
     korata_bits = 3
     jump show_korata
@@ -28,6 +29,7 @@ help: >
   0-15 for bigger scores and fewer ties. Build your run, sabotage the
   apprentice's with your cards' gates, and bet across two streets. High score
   wins.
+min_bet: 10
 ```
     korata_bits = 4
     jump show_korata
@@ -35,8 +37,12 @@ help: >
 === show_korata ==
     casino_register_decks()
     casino_ensure_stake(client_id)
+    # min_bet is injected from the launching //casino/game route's metadata
+    # (see do_jump metadata injection); the `default`s are fallbacks if the
+    # table is entered some other way.
     default korata_bits = 4
-    default korata_ante = 10
+    default min_bet = 10
+    default korata_ante = min_bet
     default korata_raise = 10
 
 --- korata_deal
