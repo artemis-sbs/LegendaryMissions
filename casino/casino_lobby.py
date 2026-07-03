@@ -1,7 +1,9 @@
 """Lobby helpers: a games listbox (item/title templates) and per-game help
 text shown in the details panel. Games are still discovered via
-casino_games_list(); help is keyed by the game's key."""
+casino_games_list(); help comes from a `help` metadata value on the game's
+//casino/game route when present, else this built-in table."""
 from sbs_utils.procedural.gui import gui_row, gui_text
+from sbs_utils.procedural.execution import labels_get_type
 
 
 CASINO_GAME_HELP = {
@@ -28,21 +30,27 @@ CASINO_GAME_HELP = {
     "parity": "Parity (Arvonian). The house's fast game: three cards XOR into "
               "a register (0-15) and you bet on it. Even/Odd and High/Low pay "
               "even money. Quick, casual, and a fair shake.",
-    "korata3": "KoraTa - Ghost-Writing (3-bit). Duel the Understander's "
-               "apprentice over five rounds: play your cards as VALUES to build "
-               "your run, or as OPCODES (the gate on the card) to corrupt "
-               "theirs. Bet across two streets; high score takes the pot. "
-               "Tighter 0-7 values - more ties.",
-    "korata4": "KoraTa - Ghost-Writing (4-bit). The wide table: same duel, but "
-               "values run 0-15 for bigger scores and fewer ties. Build your "
-               "run, sabotage the apprentice's with your cards' gates, and bet "
-               "across two streets. High score wins.",
+    # KoraTa declares its own help via `help` metadata on its //casino/game
+    # route (korata.mast) - it no longer needs an entry here.
     "market": "Pilot Market. Spend your winnings: buy and sell craft upgrades "
               "and gear (chips first, then the crew's side credits). Earn a "
               "patron's trust at the bar and the grey market opens up.",
 }
 
+def casino_game_meta(key, name, default=None):
+    """A metadata value declared on a game's //casino/game/<key> route (stored in
+    the route label's inventory via its metadata block), or `default`."""
+    for lbl in labels_get_type("casino/game/"):
+        if getattr(lbl, "game_key", None) == key:
+            return lbl.get_inventory_value(name, default)
+    return default
+
 def casino_game_help(key):
+    # Prefer a `help` metadata value on the game's route; fall back to the
+    # built-in table for games that haven't migrated to metadata yet.
+    meta = casino_game_meta(key, "help", None)
+    if meta:
+        return meta
     return CASINO_GAME_HELP.get(key, "Select a game to see how to play.")
 
 

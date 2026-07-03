@@ -55,17 +55,26 @@ Games are discovered via a decorator route, exactly like the engine's own
 `//web` / `@map` / `//gui/tab` labels. To add one:
 
 1. Write `mygame.mast` with a game entry label (e.g. `=== show_mygame ==`).
-2. At its top level, declare the discoverable route:
+2. At its top level, declare the discoverable route. Put the game's help text in
+   a `help` **metadata block** on the route so no lobby edit is needed (the
+   metadata content + closing ` ``` ` fence must be at **column 0**):
    ```
    //casino/game/mygame "My Game"
+   metadata: ``` yaml
+   help: >
+     My Game. One-liner on how to play, shown in the lobby detail panel.
+   ```
        jump show_mygame
    ```
 3. `import mygame.mast` in `__init__.mast` (after `casino_game_label.py`).
 
 The lobby renders itself from `casino_games_list()` (which reads
 `CasinoGameDecoratorLabel.all`) and navigates via `gui_task_jump` to the
-route - so the new game appears automatically. Card logic goes in
-`games/engines.py` (pure, unit-tested); shared drawing in `casino_gui.py`.
+route - so the new game appears automatically. `casino_game_help()` prefers the
+route's `help` metadata (via the label's inventory) and falls back to the
+`CASINO_GAME_HELP` dict in `casino_lobby.py` for games that predate metadata.
+Card logic goes in `games/engines.py` (pure, unit-tested); shared drawing in
+`casino_gui.py`.
 
 ## Build order (phases, see BAR.md)
 
