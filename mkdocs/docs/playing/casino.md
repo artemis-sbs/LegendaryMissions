@@ -70,8 +70,10 @@ or less**.
    fast.
 3. Go over 20 and you bust.
 
-Start with two 0s or two 7s for a **natural** that pays double. Fair warning:
-the castle scoring makes this the house's toughest table.
+The house here plays a friendlier version than the old Arvonian rules: **ties
+go to you**, and the dealer stops drawing sooner. Start with two 0s or two 7s
+for a **natural** that pays double. Even so, the castle scoring makes this the
+house's toughest table &mdash; play it steady.
 
 ### Gates
 
