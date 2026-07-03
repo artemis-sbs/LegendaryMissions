@@ -8,10 +8,15 @@
 
 //casino/game/choga "Choga"
 metadata: ``` yaml
-help: >
-  Choga - Soul Tickle (Arvonian stud). Ante, then see your five cards and the
-  Understander's up-card and choose Raise (2x) or Fold. Best poker hand wins;
-  the dealer plays with a pair or better. A clean checksum pays a bonus.
+help: |
+  $t Choga - Soul Tickle
+
+  Arvonian stud poker against the Understander.
+
+  - Ante, then see your five cards and the dealer's up-card.
+  - Choose Raise (2x) or Fold.
+  - Best poker hand wins; the dealer plays with a pair or better.
+  - A clean checksum pays a bonus.
 min_bet: 10
 ```
     jump show_choga

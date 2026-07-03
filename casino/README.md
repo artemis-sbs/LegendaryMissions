@@ -57,12 +57,20 @@ Games are discovered via a decorator route, exactly like the engine's own
 1. Write `mygame.mast` with a game entry label (e.g. `=== show_mygame ==`).
 2. At its top level, declare the discoverable route. Put the game's help text in
    a `help` **metadata block** on the route so no lobby edit is needed (the
-   metadata content + closing ` ``` ` fence must be at **column 0**):
+   metadata content + closing ` ``` ` fence must be at **column 0**). The lobby
+   renders `help` through `gui_text_area`, so use its mini-markdown (`help: |`
+   literal block; `$t` title, `-` bullets - avoid `#`/`$h` headings, they
+   auto-number). See GUI.md "gui_text_area".
    ```
    //casino/game/mygame "My Game"
    metadata: ``` yaml
-   help: >
-     My Game. One-liner on how to play, shown in the lobby detail panel.
+   help: |
+     $t My Game
+
+     One-line pitch shown in the lobby detail panel.
+
+     - How to play, first point.
+     - Second point.
    ```
        jump show_mygame
    ```

@@ -24,9 +24,12 @@ message = ""
 
 //casino/game/bar "Bar"
 metadata: ``` yaml
-help: >
-  The bar. Grab a drink, toast the room, and chat with the patrons. Rumors and
-  side jobs, later.
+help: |
+  $t The Bar
+
+  Grab a drink, toast the room, and chat with the patrons.
+
+  - Rumors and side jobs, later.
 ```
     jump show_bar
 

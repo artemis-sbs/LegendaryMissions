@@ -6,10 +6,14 @@
 
 //casino/game/nibble "Nibble"
 metadata: ``` yaml
-help: >
-  Nibble (Arvonian). Beat the dealer with a hand of 20 or less - Hit to draw,
-  Stand to hold. Castles on later cards score big, so pressing your luck is
-  dangerous. Dealer wins ties. A very tough table.
+help: |
+  $t Nibble
+
+  Arvonian blackjack: beat the dealer with a hand of 20 or less.
+
+  - Hit to draw, Stand to hold.
+  - Castles on later cards score big - pressing your luck is dangerous.
+  - Dealer wins ties. A very tough table.
 min_bet: 10
 ```
     jump show_nibble

@@ -8,11 +8,14 @@
 
 //casino/game/poker "Poker"
 metadata: ``` yaml
-help: >
-  Video Poker (Jacks or Better). You're dealt five cards - Hold the ones you
-  want and Draw the rest. Paid by the paytable: a pair of Jacks or better
-  returns your bet, up to a Royal Flush at 250x. No dealer - just you and the
-  odds.
+help: |
+  $t Video Poker - Jacks or Better
+
+  You versus the paytable - no dealer.
+
+  - You're dealt five cards; Hold the ones you want and Draw the rest.
+  - A pair of Jacks or better returns your bet.
+  - The paytable climbs to a Royal Flush at 250x.
 min_bet: 5
 ```
     jump show_poker

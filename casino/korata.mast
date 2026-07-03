@@ -12,11 +12,21 @@
 
 //casino/game/korata3 "KoraTa - Ghost-Writing (3-bit)"
 metadata: ``` yaml
-help: >
-  KoraTa - Ghost-Writing (3-bit). Duel the Understander's apprentice over five
-  rounds: play your cards as VALUES to build your run, or as OPCODES (the gate
-  on the card) to corrupt theirs. Bet across two streets; high score takes the
-  pot. Tighter 0-7 values - more ties.
+help: |
+  $t KoraTa - Ghost-Writing (3-bit)
+
+  Duel the Understander's apprentice over five rounds. Build your own scoring
+  run, or spend cards as gates to corrupt theirs.
+
+  Rounds:
+  - Pattern: Value, Opcode, Value, Opcode, Value.
+  - Play a card as a VALUE to extend your run.
+  - Play its OPCODE (the gate printed on the card) to sabotage the apprentice.
+
+  Betting:
+  - Two betting streets during the duel.
+  - Highest final score takes the pot.
+  - Values run 0-7 - tighter scores, more ties.
 min_bet: 10
 ```
     korata_bits = 3
@@ -24,11 +34,21 @@ min_bet: 10
 
 //casino/game/korata4 "KoraTa - Ghost-Writing (4-bit)"
 metadata: ``` yaml
-help: >
-  KoraTa - Ghost-Writing (4-bit). The wide table: same duel, but values run
-  0-15 for bigger scores and fewer ties. Build your run, sabotage the
-  apprentice's with your cards' gates, and bet across two streets. High score
-  wins.
+help: |
+  $t KoraTa - Ghost-Writing (4-bit)
+
+  The wide table: the same five-round duel, but values run 0-15 for bigger
+  scores and fewer ties.
+
+  Rounds:
+  - Pattern: Value, Opcode, Value, Opcode, Value.
+  - Play a card as a VALUE to extend your run.
+  - Play its OPCODE (the card's gate) to sabotage the apprentice.
+
+  Betting:
+  - Two betting streets during the duel.
+  - Highest final score takes the pot.
+  - Values run 0-15 - bigger swings, fewer ties.
 min_bet: 10
 ```
     korata_bits = 4

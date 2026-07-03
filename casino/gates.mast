@@ -10,10 +10,14 @@
 
 //casino/game/gates "Gates"
 metadata: ``` yaml
-help: >
-  Gates (Arvonian, baccarat-style). Bet on which hand - Player or Banker -
-  scores higher. Each hand folds bit cards through the logic-gate opcodes
-  printed on them (AND/OR/NOR/NAND). Banker wins ties.
+help: |
+  $t Gates
+
+  Arvonian baccarat-style: bet on which hand scores higher.
+
+  - Bet on Player or Banker.
+  - Each hand folds its bit cards through the gate opcodes printed on them (AND/OR/NOR/NAND).
+  - Banker wins ties.
 min_bet: 10
 ```
     jump show_gates
