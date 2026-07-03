@@ -10,6 +10,10 @@ master computer.
 It's optional and self-contained. Add it and a **Casino** tab appears in the
 bay; leave it out and nothing changes.
 
+> Looking for the rules of each game as a **player**? See
+> [How to play the Casino](../playing/casino.md). This page is for **authors**
+> adding the casino to a mission.
+
 ---
 
 ## Add it to your mission
