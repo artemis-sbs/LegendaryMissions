@@ -108,14 +108,15 @@
     for _i in range(_n):
         _cx = 8 + _i * 17
         _card = korata_hand[_i]
-        gui_section(style=f"area: {_cx}, 67, {_cx+15}, 85;")
+        gui_section(style=f"area: {_cx}, 67, {_cx+15}, 83;")
         k_cards[_i] = gui_image_keep_aspect_ratio_center(korata_card_key(_card), style="click_text: ; click_background:#0000;")
-        gui_section(style=f"area: {_cx}, 85, {_cx+15}, 90;")
+        _opn = korata_op_name(korata_op_of_card(_card))
+        gui_section(style=f"area: {_cx}, 83, {_cx+15}, 90;")
         if k_mode == "value":
-            _sub = f"Play {_card[0]}"
+            _sub = f"Play {_card[0]} {_opn}"
         else:
-            _sub = "Drop " + korata_op_name(korata_op_of_card(_card))
-        """color:#bdf;justify:center;$text:{_sub}"""
+            _sub = f"Drop {_opn} ({_card[0]})"
+        """color:#bdf;justify:center; font: gui-3;$text:{_sub}"""
 
     if _n > 0:
         on gui_message(k_cards[0]):
@@ -190,10 +191,25 @@
     """color:#9fd;justify:center;$text:You: {kp_str} = {kp_score}"""
 
     chips = casino_chips_get(client_id)
-    gui_section(style="area: 8, 60, 92, 68;")
+    gui_section(style="area: 8, 60, 92, 66;")
     """color:white;justify:center;$text:Pot: {k_pot}    Chips: {chips}    {k_msg}"""
 
-    gui_section(style="area: 8, 82, 92, 92;")
+    # Keep the rest of your hand - with its value+opcode labels - visible while
+    # betting (not clickable here; same layout as the pick screen).
+    _n = len(korata_hand)
+    for _i in range(_n):
+        _cx = 8 + _i * 17
+        _card = korata_hand[_i]
+        gui_section(style=f"area: {_cx}, 67, {_cx+15}, 83;")
+        gui_image_keep_aspect_ratio_center(korata_card_key(_card))
+        _opn = korata_op_name(korata_op_of_card(_card))
+        gui_section(style=f"area: {_cx}, 83, {_cx+15}, 90;")
+        _sub = f"{_card[0]} {_opn}"
+        """color:#bdf;justify:center; font: gui-3;$text:{_sub}"""
+
+    # Bet controls - same row/size/placement as the pick screen's Leave button,
+    # plus Leave as a fourth option.
+    gui_section(style="area: 8, 91, 92, 98;")
     gui_row()
     if k_to_call == 0:
         on gui_message(gui_button("Check")):
@@ -205,6 +221,8 @@
                 jump korata_bet_ai_raise
         on gui_message(gui_button("Fold")):
             jump korata_fold_player
+        on gui_message(gui_button("Leave")):
+            jump show_casino
     else:
         _call_lbl = f"Call {k_to_call}"
         on gui_message(gui_button(_call_lbl)):
@@ -213,6 +231,8 @@
             jump korata_after_street
         on gui_message(gui_button("Fold")):
             jump korata_fold_player
+        on gui_message(gui_button("Leave")):
+            jump show_casino
 
     await gui()
     jump korata_bet_render
