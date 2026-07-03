@@ -61,6 +61,7 @@ nav:
 
   - Addons:
     - addons/index.md
+    - The Casino: addons/casino.md
     - Maps & terrain: script/maps/index.md
 
   - About:
