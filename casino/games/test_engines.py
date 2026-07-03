@@ -1,4 +1,9 @@
-import unittest
+import os, sys, unittest
+
+# engines.py lives alongside this file; ensure it's importable regardless of
+# the discovery start dir / cwd.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from engines import (
     NibbleCard, nibble_score, nibble_is_natural, nibble_settle, nibble_deck,
     GatesHand, gates_apply, gates_score, gates_banker_draws, gates_settle,

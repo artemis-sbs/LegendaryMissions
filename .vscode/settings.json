@@ -1,0 +1,21 @@
+{
+  // Mirrors sbs_utils: unittest, discovery from the folder root (-s .) so the
+  // casino/games/test_*.py suites nest under the "LegendaryMissions" node.
+  // Runtime path (sbs_utils, PyAddons) comes from the .env file, which VS Code
+  // applies to tests automatically. (pytest not installed.)
+  "python.testing.unittestEnabled": true,
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestArgs": [
+    "-v",
+    "-s",
+    ".",
+    "-p",
+    "test_*.py"
+  ],
+  // Help Pylance resolve imports the tests use.
+  "python.analysis.extraPaths": [
+    "../sbs_utils",
+    "./casino",
+    "./casino/games"
+  ]
+}
