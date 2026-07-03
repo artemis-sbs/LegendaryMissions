@@ -7,12 +7,21 @@
 # text shown under it. Confirm all five toggle independently.
 
 //casino/game/poker "Poker"
+metadata: ``` yaml
+help: >
+  Video Poker (Jacks or Better). You're dealt five cards - Hold the ones you
+  want and Draw the rest. Paid by the paytable: a pair of Jacks or better
+  returns your bet, up to a Royal Flush at 250x. No dealer - just you and the
+  odds.
+min_bet: 5
+```
     jump show_poker
 
 === show_poker ==
     casino_register_decks()
     casino_ensure_stake(client_id)
-    default poker_bet = 5
+    default min_bet = 5
+    default poker_bet = min_bet
 
 --- poker_new
     chips = casino_chips_get(client_id)

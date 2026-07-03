@@ -8,6 +8,12 @@
 # is a follow-up hook - the hangar would apply owned upgrades at launch.
 
 //casino/game/market "Market"
+metadata: ``` yaml
+help: >
+  Pilot Market. Spend your winnings: buy and sell craft upgrades and gear
+  (chips first, then the crew's side credits). Earn a patron's trust at the bar
+  and the grey market opens up.
+```
     jump show_market
 
 === show_market ==

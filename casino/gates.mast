@@ -9,12 +9,20 @@
 # glyphs on the cards.
 
 //casino/game/gates "Gates"
+metadata: ``` yaml
+help: >
+  Gates (Arvonian, baccarat-style). Bet on which hand - Player or Banker -
+  scores higher. Each hand folds bit cards through the logic-gate opcodes
+  printed on them (AND/OR/NOR/NAND). Banker wins ties.
+min_bet: 10
+```
     jump show_gates
 
 === show_gates ==
     casino_register_decks()
     casino_ensure_stake(client_id)
-    default gates_bet = 10
+    default min_bet = 10
+    default gates_bet = min_bet
 
 --- gates_bet_phase
     chips = casino_chips_get(client_id)

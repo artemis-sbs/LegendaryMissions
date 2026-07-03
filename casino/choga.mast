@@ -7,12 +7,20 @@
 # later add; core is ante -> see hand + dealer up-card -> Raise(2x)/Fold.
 
 //casino/game/choga "Choga"
+metadata: ``` yaml
+help: >
+  Choga - Soul Tickle (Arvonian stud). Ante, then see your five cards and the
+  Understander's up-card and choose Raise (2x) or Fold. Best poker hand wins;
+  the dealer plays with a pair or better. A clean checksum pays a bonus.
+min_bet: 10
+```
     jump show_choga
 
 === show_choga ==
     casino_register_decks()
     casino_ensure_stake(client_id)
-    default choga_ante = 10
+    default min_bet = 10
+    default choga_ante = min_bet
 
 --- choga_new
     chips = casino_chips_get(client_id)

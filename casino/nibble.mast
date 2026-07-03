@@ -5,12 +5,20 @@
 # first playable pass. Reached from the casino lobby; "Leave" returns there.
 
 //casino/game/nibble "Nibble"
+metadata: ``` yaml
+help: >
+  Nibble (Arvonian). Beat the dealer with a hand of 20 or less - Hit to draw,
+  Stand to hold. Castles on later cards score big, so pressing your luck is
+  dangerous. Dealer wins ties. A very tough table.
+min_bet: 10
+```
     jump show_nibble
 
 === show_nibble ==
     casino_register_decks()
     casino_ensure_stake(client_id)
-    default nibble_bet = 10
+    default min_bet = 10
+    default nibble_bet = min_bet
 
 --- nibble_new
     chips = casino_chips_get(client_id)

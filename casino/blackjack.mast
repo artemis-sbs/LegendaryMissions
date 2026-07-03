@@ -5,12 +5,19 @@
 # NOTE (render-verify): first playable pass; card sizing may need tuning.
 
 //casino/game/blackjack "Blackjack"
+metadata: ``` yaml
+help: >
+  Blackjack. Classic 21 on a standard deck. Hit or Stand to beat the dealer
+  without going over 21. A natural blackjack pays 3:2. Dealer stands on 17.
+min_bet: 10
+```
     jump show_blackjack
 
 === show_blackjack ==
     casino_register_decks()
     casino_ensure_stake(client_id)
-    default bj_bet = 10
+    default min_bet = 10
+    default bj_bet = min_bet
 
 --- bj_new
     chips = casino_chips_get(client_id)

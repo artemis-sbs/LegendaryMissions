@@ -3,12 +3,20 @@
 # even money (a fair table by default). Fast and casual. Entry: show_parity.
 
 //casino/game/parity "Parity"
+metadata: ``` yaml
+help: >
+  Parity (Arvonian). The house's fast game: three cards XOR into a register
+  (0-15) and you bet on it. Even/Odd and High/Low pay even money. Quick,
+  casual, and a fair shake.
+min_bet: 10
+```
     jump show_parity
 
 === show_parity ==
     casino_register_decks()
     casino_ensure_stake(client_id)
-    default parity_bet = 10
+    default min_bet = 10
+    default parity_bet = min_bet
     default parity_cards = None
     default parity_reg = 0
     default parity_msg = "Place a bet on the register."
