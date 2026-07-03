@@ -2,9 +2,11 @@
 # higher). Uses the tested engine in games/engines.py and the cage. Entry:
 # show_gates.
 #
-# NOTE (render-verify): opcodes are shown as text labels (OR/AND/NOR/NAND/XOR);
-# bit cards use the Arvonian octal row (value 0-7). Dedicated opcode-card art
-# is a later polish.
+# Cards are real Arvonian cards (value 0-7, castle 0-3) drawn from their own
+# castle row via gates_card_key, so each card's PRINTED corner opcode is what
+# the fold uses (arv_opcode = (value+castle)%4, gates OR/AND/NOR/NAND - no XOR).
+# gates_ops_str still shows the operator names as a readout; they now match the
+# glyphs on the cards.
 
 //casino/game/gates "Gates"
     jump show_gates
@@ -73,13 +75,13 @@
 
     # Player hand
     gui_section(style="area: 10, 16, 90, 38;")
-    casino_draw_hand(gates_p.bits, gates_bit_key, "card_arv_back")
+    casino_draw_hand(gates_p.cards, gates_card_key, "card_arv_back")
     gui_section(style="area: 10, 38, 90, 44;")
     """color:white;justify:center;$text:Player  [{_pops}]  = {gates_pt}"""
 
     # Banker hand
     gui_section(style="area: 10, 48, 90, 70;")
-    casino_draw_hand(gates_b.bits, gates_bit_key, "card_arv_back")
+    casino_draw_hand(gates_b.cards, gates_card_key, "card_arv_back")
     gui_section(style="area: 10, 70, 90, 76;")
     """color:white;justify:center;$text:Banker  [{_bops}]  = {gates_bt}"""
 

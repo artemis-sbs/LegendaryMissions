@@ -95,8 +95,13 @@ card position; later cards' castles are worth exponentially more.
 **Baccarat-style** — you bet on which of two logic-hands (Player or Banker)
 scores higher. Verified against `bundle.js` module 12.
 
-**Opcodes:** `OR=0, AND=1, NOR=2, NAND=3, XOR=4` (the corner glyphs). A hand
-alternates bit, opcode, bit, opcode, bit...
+**Opcodes:** `OR=0, AND=1, NOR=2, NAND=3` — the corner glyphs **printed on the
+cards**. Confirmed from `arvonian_deck.png`: a card's operator is
+`arv_opcode(value, castle) = (value + castle) % 4`, and **there is no XOR on the
+deck**. Gates deals real Arvonian cards; the gate folded in when a card joins is
+that card's own printed corner glyph (so the operators match the art, not an
+invented random pool). A hand alternates bit, opcode, bit, opcode, bit... where
+each opcode is the incoming card's corner.
 
 **Scoring** (`getScore`): fold left over the hand —
 ```
@@ -195,6 +200,73 @@ hands). If the dealer doesn't qualify, ante pays 1:1 and the raise pushes
 > STATUS: rankings + frequencies are now **data-backed**; the exact pay
 > ladder and qualifier still want a house-edge sim on the final engine
 > (target ~3-5% edge). @doug to approve the ladder.
+
+---
+
+## 5. KoraTa — "Ghost-Writing"  (Arvonian, 2-player vs AI)  [DESIGN LOCKED]
+
+The casino's only **head-to-head** game — you vs an **AI**, with **poker-style
+betting**. *KoraTa* ("Ghost-Writing") is the Arvonian art of inscribing corrupting
+instructions into a rival's run — sibling to *chogaTa* (Choga). You build a scoring
+"run" from your own cards while your opponent sabotages it with the logic-gate
+opcodes their cards carry. Design verified against the real deck art (2026-07-03).
+
+**Two versions** (two lobby entries, one engine/table, differ only in width):
+
+| Route | Values | Deck | Score mask |
+|---|---|---|---|
+| `//casino/game/korata3 "KoraTa - Ghost-Writing (3-bit)"` | 0–7 | 32-card subset | `0b111` |
+| `//casino/game/korata4 "KoraTa - Ghost-Writing (4-bit)"` | 0–15 | full 64 | `0b1111` |
+
+**The card.** A real Arvonian card carries **both** a value (center diamond) and an
+opcode (corner glyph). The opcode is derived from the art:
+`arv_opcode(value, castle) = (value + castle) % 4` over `[OR, AND, NOR, NAND]` —
+**no XOR** (same mapping Gates now uses; see §2). Spend a card **on your run** → its
+**value**; **on your opponent's run** → its **opcode**. You can only sabotage with
+the gates your dealt cards happen to carry.
+
+**Deal & run.** Each player is dealt **5 cards** and builds a **run** = 3 values + 2
+opcodes → a left-fold `v1 OP1 v2 OP2 v3`, masked to `bits`. Your 3 values are cards
+you played; your 2 opcodes were placed by your **opponent**. Highest final score
+wins; **ties push**.
+
+**Turn structure — 5 rounds, V·O·V·O·V** (you = P1, AI = P2; P1 acts first each
+phase):
+
+| # | Phase | You | AI | Then |
+|---|---|---|---|---|
+| 1 | Value | value → your run | value → its run | — |
+| 2 | Opcode | opcode → AI's run | opcode → your run | **Bet round 1** |
+| 3 | Value | value → your run | value → its run | show scores |
+| 4 | Opcode | opcode → AI's run | opcode → your run | **Bet round 2** |
+| 5 | Value | value → your run | value → its run | showdown |
+
+Each player spends all 5 cards: 3 as values (onto own run), 2 as opcodes (onto the
+opponent's). Both runs are **open information** (face-up). The whole strategy is
+*which* card to burn as a value vs. as a gate.
+
+**Betting (poker streets).** Ante (default 10) seeds the pot. The two opcode phases
+double as two betting rounds resolved after both opcodes land: **Check / Raise /
+Fold** (fixed raise unit, capped); the AI responds **Call / Raise / Fold** from its
+policy. **Fold forfeits the pot**; showdown after phase 5 pays the higher score,
+**tie returns contributions**. Chip flow reuses the cage: track `pot`/`player_put`/
+`ai_put`, settle via `casino_bet_apply(client_id, delta)`.
+
+**AI (greedy, 1-ply).** Value phase → pick the card whose value maximizes the AI's
+current fold. Opcode phase → pick the card whose carried opcode minimizes your
+**expected** next fold (mean over `X in 0..mask`). Bet → from `edge = ai_score -
+your_score`: raise when ahead, call when close, fold when well behind and the call
+is dear. Limited to the gates its cards carry, same as you.
+
+**House edge.** PvP-vs-AI, so no built-in edge. Either add a small **rake** on won
+pots (~5%) or leave it a fair bar amusement; confirm with a seeded AI-vs-random
+Monte-Carlo (`games/sim.py`) that the AI wins ~50%.
+
+> IMPLEMENTATION: engine `KORATA` section in `games/engines.py` (`korata_deck/
+> deal/apply/run_score`, `korata_ai_*`, `korata_showdown/pot_settle`,
+> `korata_card_key`), `TestKoraTa` in `test_engines.py`, table in `casino/
+> korata.mast` (phase state machine + betting, modeled on `gates.mast`). Wiring:
+> `import korata.mast`, two `CASINO_GAME_HELP` strings, this rules copy.
 
 ---
 

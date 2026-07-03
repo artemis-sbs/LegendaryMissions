@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from engines import (
     NibbleCard, nibble_score, nibble_is_natural, nibble_settle, nibble_deck,
     GatesHand, gates_apply, gates_score, gates_banker_draws, gates_settle,
+    arv_opcode, gates_card_key,
     OP_AND, OP_OR, OP_NOR, OP_NAND, OP_XOR,
     bj_hand_value, bj_is_blackjack, bj_settle, bj_deck,
     choga_rank, choga_checksum, choga_settle, choga_deck,
@@ -67,10 +68,33 @@ class TestGates(unittest.TestCase):
         self.assertEqual(gates_apply(OP_NAND, 5, 7), 2)
         self.assertEqual(gates_apply(OP_NOR, 5, 7), 0)
         self.assertEqual(gates_apply(OP_XOR, 5, 7), 2)
+    def test_arv_opcode_from_art(self):
+        # op = (value + castle) % 4 over [OR, AND, NOR, NAND], no XOR.
+        # Verified against arvonian_deck.png across all four castle rows.
+        expected = {
+            0: [OP_OR, OP_AND, OP_NOR, OP_NAND],    # castle 0 (red)
+            1: [OP_AND, OP_NOR, OP_NAND, OP_OR],    # castle 1 (purple)
+            2: [OP_NOR, OP_NAND, OP_OR, OP_AND],    # castle 2 (blue)
+            3: [OP_NAND, OP_OR, OP_AND, OP_NOR],    # castle 3 (green)
+        }
+        for castle, gates in expected.items():
+            for value in range(8):
+                self.assertEqual(arv_opcode(value, castle), gates[value % 4])
+        # the mapping never produces XOR
+        for castle in range(4):
+            for value in range(16):
+                self.assertIn(arv_opcode(value, castle),
+                              (OP_OR, OP_AND, OP_NOR, OP_NAND))
+
     def test_score_fold(self):
-        h = GatesHand(bits=[5, 7], ops=[OP_AND])
+        # Operators are now the cards' own corner opcodes (arv_opcode).
+        # (5,0)->op OR unused (first card); (7,2)->op AND: 5 AND 7 = 5
+        h = GatesHand(cards=[(5, 0), (7, 2)])
+        self.assertEqual(h.ops, [OP_AND])
         self.assertEqual(gates_score(h), 5)
-        h2 = GatesHand(bits=[5, 7, 3], ops=[OP_AND, OP_OR])  # (5&7)|3 = 5|3 = 7
+        # add (3,1)->op OR: (5 AND 7) OR 3 = 5 | 3 = 7
+        h2 = GatesHand(cards=[(5, 0), (7, 2), (3, 1)])
+        self.assertEqual(h2.ops, [OP_AND, OP_OR])
         self.assertEqual(gates_score(h2), 7)
     def test_banker_tableau(self):
         self.assertTrue(gates_banker_draws(0, 4))
@@ -92,9 +116,14 @@ class TestGates(unittest.TestCase):
         r = random.Random(3)
         p, b, pt, bt = gates_play_round(True, r)
         self.assertTrue(0 <= pt <= 7 and 0 <= bt <= 7)
-        self.assertGreaterEqual(len(p.bits), 2)
+        self.assertGreaterEqual(len(p.cards), 2)
+        # dealt cards carry only the four deck gates - never XOR
+        for hand in (p, b):
+            for op in hand.ops:
+                self.assertIn(op, (OP_OR, OP_AND, OP_NOR, OP_NAND))
         self.assertEqual(gates_op_name(OP_XOR), "XOR")
         self.assertEqual(gates_bit_key(5), "card_arv_0_5")
+        self.assertEqual(gates_card_key((5, 2)), "card_arv_2_5")
         self.assertIsInstance(gates_ops_str(p), str)
 
 class TestBlackjack(unittest.TestCase):

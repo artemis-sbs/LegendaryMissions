@@ -107,6 +107,15 @@ def nibble_card_key(card):
 OP_OR, OP_AND, OP_NOR, OP_NAND, OP_XOR = 0, 1, 2, 3, 4
 MASK = 0b111   # values are 3-bit (0-7)
 
+# The Arvonian card's operator is PRINTED on the card (the corner logic-gate
+# glyph), derived from its (value, castle):  op = (value + castle) % 4 over the
+# gate order [OR, AND, NOR, NAND].  There is NO XOR on the deck (confirmed by
+# reading arvonian_deck.png across all four castle rows).  Both Gates and OpCode
+# read the operator off the card via this mapping instead of inventing one, so
+# the folded gates always match the glyphs on screen.
+def arv_opcode(value, castle):
+    return (value + castle) % 4   # -> OP_OR / OP_AND / OP_NOR / OP_NAND
+
 def gates_apply(op, a, b):
     if op == OP_AND:  r = a & b
     elif op == OP_OR: r = a | b
@@ -118,8 +127,19 @@ def gates_apply(op, a, b):
 
 @dataclass
 class GatesHand:
-    bits: list = field(default_factory=list)   # bit-card values (0-7)
-    ops: list = field(default_factory=list)    # opcodes between bits
+    # Real Arvonian cards (value 0-7, castle 0-3). The gate folded in when a
+    # card joins is that card's OWN printed corner opcode (arv_opcode), so the
+    # operators the hand folds through are exactly the glyphs drawn on the cards.
+    # bits/ops are derived so gates_score and the display helpers are unchanged.
+    cards: list = field(default_factory=list)
+
+    @property
+    def bits(self):
+        return [c[0] for c in self.cards]
+
+    @property
+    def ops(self):
+        return [arv_opcode(v, castle) for (v, castle) in self.cards[1:]]
 
 def gates_score(hand):
     score = hand.bits[0]
@@ -148,24 +168,38 @@ def gates_settle(bet, bet_on_player, player_total, banker_total):
 
 # --- MAST-friendly round driver + display helpers ---------------------------
 import random as _random
-GATES_OPS = [OP_OR, OP_AND, OP_NOR, OP_NAND, OP_XOR]
+GATES_OPS = [OP_OR, OP_AND, OP_NOR, OP_NAND]   # the four deck gates (no XOR)
 OP_NAMES = {OP_OR: "OR", OP_AND: "AND", OP_NOR: "NOR", OP_NAND: "NAND", OP_XOR: "XOR"}
 
 def gates_op_name(op):
     return OP_NAMES.get(op, "?")
 
 def gates_bit_key(value):
-    """Atlas key for a gates bit card (value 0-7), drawn from castle-row 0."""
+    """Deprecated: castle-row-0 atlas key (value 0-7). Kept for back-compat;
+    gates now draws real cards via gates_card_key so the corner opcode shows."""
     return "card_arv_0_%d" % value
+
+def gates_card_key(card):
+    """Atlas key for a real Arvonian gates card (value, castle) - renders the
+    value AND its printed corner opcode."""
+    value, castle = card
+    return "card_arv_%d_%d" % (castle, value)
 
 def gates_ops_str(hand):
     return " ".join(gates_op_name(o) for o in hand.ops)
 
+def _gates_card(r):
+    """Deal one Arvonian card (value 0-7, castle 0-3); its operator is the
+    printed corner glyph arv_opcode(value, castle)."""
+    return (r.randint(0, 7), r.randint(0, 3))
+
 def _gates_new_hand(r):
-    return GatesHand(bits=[r.randint(0, 7), r.randint(0, 7)], ops=[r.choice(GATES_OPS)])
+    return GatesHand(cards=[_gates_card(r), _gates_card(r)])
 
 def gates_play_round(hit_rule=True, rng=None):
-    """Deal + apply the hit tableau. Returns (player, banker, p_total, b_total)."""
+    """Deal + apply the hit tableau. Returns (player, banker, p_total, b_total).
+    Operators are read off the cards (arv_opcode), never invented - so the folded
+    gates match the corner glyphs shown on screen."""
     r = rng or _random
     p = _gates_new_hand(r)
     b = _gates_new_hand(r)
@@ -173,11 +207,9 @@ def gates_play_round(hit_rule=True, rng=None):
     if hit_rule:
         p_third = None
         if pt <= 5 and bt not in (6, 7):
-            p.bits.append(r.randint(0, 7)); p.ops.append(r.choice(GATES_OPS))
-            p_third = p.bits[-1]; pt = gates_score(p)
+            p.cards.append(_gates_card(r)); p_third = p.cards[-1][0]; pt = gates_score(p)
         if gates_banker_draws(bt, p_third):
-            b.bits.append(r.randint(0, 7)); b.ops.append(r.choice(GATES_OPS))
-            bt = gates_score(b)
+            b.cards.append(_gates_card(r)); bt = gates_score(b)
     return p, b, pt, bt
 
 

@@ -9,8 +9,10 @@ player-ship consoles. The hangar imports it.
 lobby+cage, and all four card games (nibble, blackjack, gates, choga) are
 written, self-register via `//casino/game/<key>`, and compile clean. The
 hangar imports the addon and the Casino tab self-registers. What remains:
-**render-verify in the mockgui** (card sizing, layouts), opcode-card art for
-gates, the checksum side bonus for choga, and polish.
+**render-verify in the mockgui** (card sizing, layouts), the checksum side bonus
+for choga, and polish. (Gates now folds each card's **printed corner opcode**
+`(value+castle)%4` - OR/AND/NOR/NAND, no XOR - so no dedicated opcode-card art is
+needed; see GAME_OPCODE.md for the deck's opcode mapping.)
 
 ## Package contents (what's here now)
 
