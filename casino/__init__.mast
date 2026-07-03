@@ -13,6 +13,7 @@ import bar_content.py
 # Registers the //casino/game/<key> "Name" decorator node. MUST load before any
 # game .mast that uses the syntax (append=False node, first-match wins).
 import casino_game_label.py
+import games/engines.py
 
 # MAST content
 import casino.mast
@@ -25,10 +26,3 @@ import poker.mast
 import parity.mast
 import korata.mast
 import market.mast
-
-# Pure-Python game engines. MUST be the LAST import: a subfolder import
-# (games/...) moves the MAST import base into games/, which would break any
-# sibling import that followed it (engines' functions resolve at runtime, so
-# load order does not matter functionally). See the basedir cursor in
-# mast.content_from_lib_or_file.
-import games/engines.py
