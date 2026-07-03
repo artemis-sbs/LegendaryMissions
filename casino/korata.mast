@@ -63,7 +63,11 @@
 
 --- korata_value_phase
     k_mode = "value"
-    k_msg = "Play a card as a VALUE onto your run."
+    _pend = korata_cards_pending_op(kp_cards, kp_ops)
+    if _pend is None:
+        k_msg = "Play a card as a VALUE onto your run."
+    else:
+        k_msg = f"Play a VALUE - it folds through {korata_op_name(_pend)} (the apprentice's gate)."
     jump korata_pick_render
 
 --- korata_opcode_phase

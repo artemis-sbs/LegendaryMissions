@@ -302,6 +302,20 @@ class TestKoraTa(unittest.TestCase):
         self.assertEqual(korata_pot_settle(20, 40, "ai"), -20)      # lose own stake
         self.assertEqual(korata_pot_settle(30, 30, "tie"), 0)
 
+    def test_run_str_shows_pending_op(self):
+        from engines import (korata_run_str, korata_pending_op,
+                             korata_cards_pending_op)
+        # complete run
+        self.assertEqual(korata_run_str([5, 7, 3], [OP_AND, OP_OR]), "5 AND 7 OR 3")
+        # a pending gate (awaiting the next value) is shown as '_'
+        self.assertEqual(korata_run_str([5], [OP_AND]), "5 AND _")
+        self.assertEqual(korata_run_str([5, 7], [OP_AND, OP_OR]), "5 AND 7 OR _")
+        # pending-op detection
+        self.assertEqual(korata_pending_op([5], [OP_AND]), OP_AND)
+        self.assertIsNone(korata_pending_op([5, 7], [OP_AND]))   # complete
+        self.assertIsNone(korata_pending_op([], []))
+        self.assertEqual(korata_cards_pending_op([(5, 0)], [OP_AND]), OP_AND)
+
     def test_card_list_helpers(self):
         from engines import (korata_cards_score, korata_cards_run_str,
                              korata_ai_value_index)

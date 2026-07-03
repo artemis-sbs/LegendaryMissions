@@ -525,15 +525,30 @@ def korata_op_name(op):
     return OP_NAMES.get(op, "?")
 
 def korata_run_str(values, ops):
-    """Readable run, e.g. '5 AND 7 OR 3'."""
+    """Readable run, e.g. '5 AND 7 OR 3'. A trailing pending op - one the opponent
+    already placed that is still awaiting your next value - shows as 'OP _' so you
+    can see which gate your next value will fold through before you pick it."""
     if not values:
         return ""
     parts = [str(values[0])]
+    n = len(values)
     for i, op in enumerate(ops):
-        if i + 1 < len(values):
+        if i + 1 < n:
             parts.append(korata_op_name(op))
             parts.append(str(values[i + 1]))
+        else:
+            parts.append(korata_op_name(op))     # pending gate, no value yet
+            parts.append("_")
+            break
     return " ".join(parts)
+
+def korata_pending_op(values, ops):
+    """The gate awaiting the next value (opponent placed it, nothing folded through
+    it yet), or None. This is the gate your next value will fold through."""
+    n = len(values)
+    if n >= 1 and len(ops) >= n:
+        return ops[n - 1]
+    return None
 
 # --- card-list convenience (the MAST table stores the value CARDS it played so
 # it can draw them; these read the values back out) ------------------------
@@ -545,6 +560,11 @@ def korata_cards_score(cards, ops, mask):
 
 def korata_cards_run_str(cards, ops):
     return korata_run_str([c[0] for c in cards], ops)
+
+def korata_cards_pending_op(cards, ops):
+    """The gate your next value will fold through (opponent-placed, pending), or
+    None - keyed off the played value CARDS. See korata_pending_op."""
+    return korata_pending_op([c[0] for c in cards], ops)
 
 def korata_ai_value_index(hand, my_cards, my_ops, mask):
     """korata_ai_pick_value keyed off the AI's played value CARDS (not ints)."""
