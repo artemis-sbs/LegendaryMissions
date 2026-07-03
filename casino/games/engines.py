@@ -462,3 +462,165 @@ def parity_settle(bet, bet_type, bet_value, reg):
 
 def parity_card_key(card):
     return choga_card_key(card)
+
+
+# =========================================================================
+# KORATA  ("Ghost-Writing"; 2-player head-to-head vs AI; Arvonian deck)
+# =========================================================================
+# You and an AI each build a scoring "run" from a 5-card hand, over 5 rounds
+# (Value, Opcode, Value, Opcode, Value). A card = (value, castle); its printed
+# corner opcode is arv_opcode(value, castle) (OR/AND/NOR/NAND - no XOR). Played
+# on your OWN run a card adds its value; played on the OPPONENT's run it applies
+# its opcode. A finished run is 3 values folded through 2 opponent-placed gates:
+# v1 OP1 v2 OP2 v3, masked to `bits`. Highest score wins; ties push. Betting is
+# poker-style (see korata.mast); the engine is pure game logic + the AI.
+KORATA_ANTE = 10
+KORATA_RAISE = 10
+
+def korata_mask(bits):
+    return (1 << bits) - 1
+
+def korata_apply(op, a, b, mask):
+    """Parametric-width gate apply (the four deck gates; NOR/NAND inverted then
+    masked to `mask`). Generalizes gates_apply, which is fixed at 3-bit."""
+    if op == OP_AND:    r = a & b
+    elif op == OP_OR:   r = a | b
+    elif op == OP_NOR:  r = ~(a | b)
+    elif op == OP_NAND: r = ~(a & b)
+    else: raise ValueError(op)
+    return r & mask
+
+def korata_run_score(values, ops, mask):
+    """Left-fold `values` through `ops` (each op joins the next value). Tolerates
+    a partial run mid-hand: a trailing op with no following value yet is ignored,
+    and an empty run scores 0."""
+    if not values:
+        return 0
+    s = values[0]
+    for i, op in enumerate(ops):
+        if i + 1 < len(values):
+            s = korata_apply(op, s, values[i + 1], mask)
+    return s
+
+def korata_deck(bits):
+    """All Arvonian cards for the value width: values 0..2^bits-1 x castle 0-3.
+    32 cards at 3-bit, the full 64 at 4-bit."""
+    n = 1 << bits
+    return [(v, c) for c in range(4) for v in range(n)]
+
+def korata_deal(deck, n):
+    return [deck.pop() for _ in range(n)]
+
+def korata_card_key(card):
+    """Atlas key - the card already renders its value AND its corner opcode."""
+    value, castle = card
+    return "card_arv_%d_%d" % (castle, value)
+
+def korata_op_of_card(card):
+    """The card's printed corner opcode (OR/AND/NOR/NAND)."""
+    value, castle = card
+    return arv_opcode(value, castle)
+
+def korata_op_name(op):
+    return OP_NAMES.get(op, "?")
+
+def korata_run_str(values, ops):
+    """Readable run, e.g. '5 AND 7 OR 3'."""
+    if not values:
+        return ""
+    parts = [str(values[0])]
+    for i, op in enumerate(ops):
+        if i + 1 < len(values):
+            parts.append(korata_op_name(op))
+            parts.append(str(values[i + 1]))
+    return " ".join(parts)
+
+# --- AI (greedy, 1-ply) -----------------------------------------------------
+def korata_ai_pick_value(hand, ai_values, ai_ops, mask):
+    """Index of the hand card whose VALUE, appended to the AI's run, maximizes the
+    AI's current fold score. Deterministic (ties -> lowest index)."""
+    best_i, best = 0, None
+    for i, (v, _c) in enumerate(hand):
+        s = korata_run_score(ai_values + [v], ai_ops, mask)
+        if best is None or s > best:
+            best, best_i = s, i
+    return best_i
+
+def korata_ai_pick_opcode(hand, your_score, mask):
+    """Index of the hand card whose carried opcode, applied to your run, minimizes
+    your EXPECTED next fold (summed over X in 0..mask - the unknown next value).
+    Deterministic (ties -> lowest index)."""
+    xs = range(mask + 1)
+    best_i, best = 0, None
+    for i, card in enumerate(hand):
+        op = korata_op_of_card(card)
+        total = 0
+        for x in xs:
+            total += korata_apply(op, your_score, x, mask)
+        if best is None or total < best:
+            best, best_i = total, i
+    return best_i
+
+def korata_ai_bet(ai_score, your_score, to_call, pot, mask):
+    """Greedy street decision. Returns (action, amount): 'fold' (0), 'call'
+    (to_call), or 'raise' (to_call + KORATA_RAISE). `strong` scales with the
+    value width so an 'edge' means the same at 3- and 4-bit."""
+    strong = max(1, (mask + 1) // 8)     # 1 at 3-bit, 2 at 4-bit
+    edge = ai_score - your_score
+    if to_call > 0 and edge < -strong:
+        return ("fold", 0)
+    if edge > strong:
+        return ("raise", to_call + KORATA_RAISE)
+    return ("call", to_call)
+
+# --- settlement -------------------------------------------------------------
+def korata_showdown(p_score, ai_score):
+    if p_score > ai_score: return "player"
+    if ai_score > p_score: return "ai"
+    return "tie"
+
+def korata_pot_settle(player_put, ai_put, winner):
+    """Signed delta to the PLAYER's chips. Each side's `*_put` is what it paid into
+    the pot; the winner takes the opponent's contribution, a tie returns both."""
+    if winner == "player": return ai_put
+    if winner == "ai":     return -player_put
+    return 0
+
+# --- full-hand simulator (fairness sim / tests; no betting) -----------------
+def _korata_seat_value(strategy, hand, my_vals, my_ops, mask, rng):
+    if strategy == "greedy":
+        i = korata_ai_pick_value(hand, my_vals, my_ops, mask)
+    else:
+        i = rng.randrange(len(hand))
+    my_vals.append(hand.pop(i)[0])
+
+def _korata_seat_opcode(strategy, hand, opp_score, mask, rng):
+    if strategy == "greedy":
+        i = korata_ai_pick_opcode(hand, opp_score, mask)
+    else:
+        i = rng.randrange(len(hand))
+    return korata_op_of_card(hand.pop(i))
+
+def korata_simulate_hand(rng, bits, p_strategy="greedy", ai_strategy="greedy"):
+    """Play one no-bet V.O.V.O.V hand between two seats (each 'greedy' or
+    'random'). Returns (player_score, ai_score). Used by games/sim.py and the
+    fairness test - a greedy seat should beat a random one well over half the
+    time."""
+    mask = korata_mask(bits)
+    deck = korata_deck(bits)
+    rng.shuffle(deck)
+    ph = [deck.pop() for _ in range(5)]
+    ah = [deck.pop() for _ in range(5)]
+    pv, po = [], []                      # player run: own values / opponent's ops
+    av, ao = [], []                      # ai run
+    for phase in ("V", "O", "V", "O", "V"):
+        if phase == "V":
+            _korata_seat_value(p_strategy, ph, pv, po, mask, rng)
+            _korata_seat_value(ai_strategy, ah, av, ao, mask, rng)
+        else:
+            # P1 places an opcode on the AI's run, then the AI on the player's.
+            ao.append(_korata_seat_opcode(p_strategy, ph,
+                                          korata_run_score(av, ao, mask), mask, rng))
+            po.append(_korata_seat_opcode(ai_strategy, ah,
+                                          korata_run_score(pv, po, mask), mask, rng))
+    return korata_run_score(pv, po, mask), korata_run_score(av, ao, mask)

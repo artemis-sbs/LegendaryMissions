@@ -242,5 +242,81 @@ class TestParity(unittest.TestCase):
         self.assertEqual(parity_settle(10, "exact", 9, 9), 150)   # 15:1
 
 
+class TestKoraTa(unittest.TestCase):
+    def test_deck_and_keys(self):
+        from engines import korata_deck, korata_card_key, korata_op_of_card
+        self.assertEqual(len(korata_deck(3)), 32)   # values 0-7 x 4 castles
+        self.assertEqual(len(korata_deck(4)), 64)   # full Arvonian deck
+        self.assertEqual(korata_card_key((5, 2)), "card_arv_2_5")
+        self.assertEqual(korata_op_of_card((0, 0)), OP_OR)    # (0+0)%4
+        self.assertEqual(korata_op_of_card((0, 2)), OP_NOR)   # (0+2)%4
+
+    def test_run_score_fold_and_width(self):
+        from engines import korata_run_score
+        # 3-bit: (5 AND 7) OR 3 = 5 | 3 = 7
+        self.assertEqual(korata_run_score([5, 7, 3], [OP_AND, OP_OR], 7), 7)
+        # NAND width matters: ~(5&7) masked
+        self.assertEqual(korata_run_score([5, 7], [OP_NAND], 7), 2)    # ~5 & 7
+        self.assertEqual(korata_run_score([5, 7], [OP_NAND], 15), 10)  # ~5 & 15
+        # 4-bit example: ~(9 & 14) & 15 = ~8 & 15 = 7
+        self.assertEqual(korata_run_score([9, 14], [OP_NAND], 15), 7)
+        # partial runs mid-hand
+        self.assertEqual(korata_run_score([5], [], 7), 5)
+        self.assertEqual(korata_run_score([5], [OP_AND], 7), 5)   # trailing op ignored
+        self.assertEqual(korata_run_score([], [], 7), 0)
+
+    def test_apply(self):
+        from engines import korata_apply
+        self.assertEqual(korata_apply(OP_OR, 5, 7, 7), 7)
+        self.assertEqual(korata_apply(OP_NOR, 5, 7, 7), 0)
+        self.assertEqual(korata_apply(OP_NAND, 5, 7, 15), 10)
+
+    def test_ai_pick_value_uses_fold(self):
+        from engines import korata_ai_pick_value
+        # empty run -> just the largest value
+        self.assertEqual(korata_ai_pick_value([(2,0),(6,0),(4,0)], [], [], 7), 1)
+        # with a pending AND gate, the card that folds highest wins (7 AND 7 = 7)
+        self.assertEqual(
+            korata_ai_pick_value([(1,0),(7,0)], [7], [OP_AND], 7), 1)
+
+    def test_ai_pick_opcode_minimizes_you(self):
+        from engines import korata_ai_pick_opcode, korata_op_of_card
+        # your_score 7: NOR drives every next fold to 0, the strongest sabotage.
+        hand = [(0,0), (0,2), (1,0)]        # ops: OR, NOR, AND
+        self.assertEqual(korata_op_of_card((0,2)), OP_NOR)
+        self.assertEqual(korata_ai_pick_opcode(hand, 7, 7), 1)
+
+    def test_ai_bet(self):
+        from engines import korata_ai_bet, KORATA_RAISE
+        self.assertEqual(korata_ai_bet(7, 2, 10, 20, 7), ("raise", 10 + KORATA_RAISE))
+        self.assertEqual(korata_ai_bet(2, 7, 10, 20, 7), ("fold", 0))
+        self.assertEqual(korata_ai_bet(4, 4, 10, 20, 7), ("call", 10))
+        self.assertEqual(korata_ai_bet(7, 2, 0, 20, 7), ("raise", KORATA_RAISE))
+
+    def test_showdown_and_pot_settle(self):
+        from engines import korata_showdown, korata_pot_settle
+        self.assertEqual(korata_showdown(5, 3), "player")
+        self.assertEqual(korata_showdown(3, 5), "ai")
+        self.assertEqual(korata_showdown(4, 4), "tie")
+        self.assertEqual(korata_pot_settle(20, 40, "player"), 40)   # take AI's stake
+        self.assertEqual(korata_pot_settle(20, 40, "ai"), -20)      # lose own stake
+        self.assertEqual(korata_pot_settle(30, 30, "tie"), 0)
+
+    def test_greedy_beats_random(self):
+        import random
+        from engines import korata_simulate_hand, korata_showdown
+        rng = random.Random(1234)
+        p_wins = a_wins = ties = 0
+        for _ in range(400):
+            ps, as_ = korata_simulate_hand(rng, 4, "greedy", "random")
+            self.assertTrue(0 <= ps <= 15 and 0 <= as_ <= 15)
+            w = korata_showdown(ps, as_)
+            if w == "player": p_wins += 1
+            elif w == "ai":   a_wins += 1
+            else:             ties += 1
+        # the greedy seat (player) should clearly beat the random seat (ai)
+        self.assertGreater(p_wins, a_wins)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
