@@ -7,6 +7,8 @@
     # Remove work order
     unlink(UPGRADE_AGENT_ID, "work-order", any_damage.id)
     set_inventory_value(UPGRADE_AGENT_ID, "blackboard:prev_target_pos", None)
+    # Release the committed target so we re-pick next damage/order
+    set_inventory_value(UPGRADE_AGENT_ID, "blackboard:damage_target", None)
     ->END
 
 
@@ -177,10 +179,21 @@ dataset: move_speed
 metadata: ``` yaml
 room: __damaged__
 ```
-    # Clear any work orders 
-    the_target =  to_object(grid_closest(BRAIN_AGENT_ID, linked_to(BRAIN_AGENT_ID, "work-order") & role(room) & role("__damaged__") & grid_objects(BRAIN_AGENT.host_id)))
+    # The set of still-valid work orders for this ship
+    orders = linked_to(BRAIN_AGENT_ID, "work-order") & role(room) & role("__damaged__") & grid_objects(BRAIN_AGENT.host_id)
+    #
+    # Stay committed to the order we already chose while it is still valid;
+    # only re-pick the closest when it is repaired or the player cancels it.
+    # Recomputing grid_closest every tick makes the straight-line closest flip
+    # as we walk the corridor between two orders -> oscillation.
+    #
+    committed = BRAIN_AGENT.get_inventory_value("blackboard:damage_target")
+    if committed is not None and committed in orders:
+        the_target = to_object(committed)
+    else:
+        the_target = to_object(grid_closest(BRAIN_AGENT_ID, orders))
     yield fail if the_target is None
-    
+    set_inventory_value(BRAIN_AGENT_ID, "blackboard:damage_target", the_target.id)
     x = the_target.data_set.get("curx",0)
     y = the_target.data_set.get("cury",0)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:target_pos", (x,y))
@@ -189,8 +202,21 @@ room: __damaged__
 
 === ai_lifeform_move_to_damage
     yield fail if to_object(BRAIN_AGENT.host_id) is None
-    any_damage = to_object(grid_closest(BRAIN_AGENT_ID,role("__damaged__") & grid_objects(BRAIN_AGENT.host_id)))
+    # This ship's live damaged rooms
+    damaged = role("__damaged__") & grid_objects(BRAIN_AGENT.host_id)
+    #
+    # Stay committed to the room we already chose while it is still damaged;
+    # only re-pick the closest when it is repaired or gone. Recomputing
+    # grid_closest every tick makes the straight-line closest flip as we walk
+    # the corridor between two damaged rooms -> oscillation.
+    #
+    committed = BRAIN_AGENT.get_inventory_value("blackboard:damage_target")
+    if committed is not None and committed in damaged:
+        any_damage = to_object(committed)
+    else:
+        any_damage = to_object(grid_closest(BRAIN_AGENT_ID, damaged))
     yield fail if any_damage is None
+    set_inventory_value(BRAIN_AGENT_ID, "blackboard:damage_target", any_damage.id)
     x = any_damage.data_set.get("curx",0)
     y = any_damage.data_set.get("cury",0)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:target_pos", (x,y))
