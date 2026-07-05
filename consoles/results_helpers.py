@@ -154,6 +154,21 @@ _QUEST_STATE_LABEL = {
     int(QuestState.POSTING): "Posted",
 }
 
+# Row color per state so the log is scannable at a glance: green = done,
+# red = failed, gold = still active, gray = available/posted/other.
+_QUEST_STATE_COLOR = {
+    int(QuestState.COMPLETE): "#3c3",
+    int(QuestState.FAILED): "#e55",
+    int(QuestState.ACTIVE): "#fc4",
+    int(QuestState.IDLE): "#999",
+    int(QuestState.POSTING): "#8ad",
+}
+
+
+def quest_state_color(state):
+    """Hex color for a quest state (defaults to light gray)."""
+    return _QUEST_STATE_COLOR.get(int(state or 0), "#aaa")
+
 
 def results_quests():
     """Game (SHARED) + per-ship quests with a display state, for the read-only
@@ -247,10 +262,11 @@ def results_pilot_title_template():
 
 
 def results_quest_template(item):
+    color = quest_state_color(item.get('state'))
     gui_row("row-height: 1.2em;padding:6px;")
-    gui_text(f"$text:{item.get('title')};justify: left;")
+    gui_text(f"$text:{item.get('title')};justify: left;color:{color}")
     gui_row("row-height: 1.0em;padding:6px;")
-    gui_text(f"$text:[{item.get('group')}] {item.get('state_label')};justify: left;font:gui-1")
+    gui_text(f"$text:[{item.get('group')}] {item.get('state_label')};justify: left;font:gui-1;color:{color}")
 
 
 def results_quest_title_template():
