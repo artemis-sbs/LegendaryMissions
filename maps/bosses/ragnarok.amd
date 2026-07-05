@@ -1,0 +1,36 @@
+// Ragnarok - a renegade Terran warlord. When the raiders thin out, the "42 Fleet"
+// warps in: the juggernaut Ragnarok, the light cruiser XORN, and renegade escorts.
+// Beat Ragnarok to win - or turn XORN (a //comms appeal in siege.mast), who then
+// rounds on Ragnarok. Authored in the shared AMD quest vocabulary.
+
+# [Ragnarok](ragnarok)
+---
+Trigger: enemies_low
+Low: 30%
+Flies: pirate
+Fleets: 3
+Difficulty: +2
+Named: Ragnarok tsn_juggernaut, XORN tsn_light_cruiser
+---
+The 42 Fleet warps in under the renegade Admiral Ragnarok - a Terran juggernaut and its honor guard.
+
+## [Defeat Ragnarok](defeat_ragnarok)
+---
+Scope: shared
+State: active
+Parent: siege_mission
+Required: true
+Goal: destroy 1 ragnarok
+Pays: 800 credits
+---
+Destroy the juggernaut Ragnarok to break the 42 Fleet.
+
+## [Turn Xorn](turn_xorn)
+---
+Scope: shared
+State: active
+Parent: siege_mission
+When: signal xorn_defected
+Pays: 400 credits
+---
+Hail the light cruiser XORN and appeal to their honor - convince them to turn on Ragnarok.

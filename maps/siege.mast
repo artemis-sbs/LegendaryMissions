@@ -420,3 +420,21 @@ brain:
     signal_emit("quest_signal", {"SIGNAL_NAME": "siege_survived"})
     ->END
 
+
+# Ragnarok boss: XORN can be talked into defecting. Hail the light cruiser and appeal
+# to their honor - XORN switches to your side and turns its guns on Ragnarok. The
+# "Turn Xorn" objective listens for the xorn_defected signal this fires.
+//comms if SIEGE_ACTIVE and has_any_role(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "xorn") and not has_role(COMMS_SELECTED_ID, "defected")
+    + "Appeal to Xorn: turn on Ragnarok":
+        <<[cyan] "XORN"
+            % Ragnarok led us to ruin. I am done taking orders - point me at the flagship.
+            % You speak true. Ragnarok betrayed the fleet. I am yours; I will take the juggernaut myself.
+        # XORN switches to the player's side and hunts its former masters (Ragnarok's
+        # raiders are now its enemies); a fresh chase-npc brain drives it.
+        remove_role(COMMS_SELECTED_ID, "raider")
+        add_role(COMMS_SELECTED_ID, "defected")
+        COMMS_SELECTED.side = COMMS_ORIGIN.side
+        brain_clear(COMMS_SELECTED_ID)
+        brain_add(COMMS_SELECTED_ID, "ai_chase_npc", {"force_shoot": True, "throttle": 2.2})
+        signal_emit("quest_signal", {"SIGNAL_NAME": "xorn_defected"})
+
