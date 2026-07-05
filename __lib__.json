@@ -24,6 +24,7 @@
         "gamemaster",
         "gamemaster_comms",
         "prefabs",
+        "biomech",
         "basic_player_destroy",
         "basic_random_skybox",
         "collisions",

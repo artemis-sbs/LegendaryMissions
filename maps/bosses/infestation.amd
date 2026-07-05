@@ -10,7 +10,7 @@
 ---
 Trigger: enemies_low
 Low: 40%
-Hook: siege_boss_infestation
+Hook: biomech_infestation
 ---
 A BioMech swarm erupts across the sector - they breed faster than they can be culled.
 

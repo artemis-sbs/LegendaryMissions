@@ -1,5 +1,4 @@
 import monster.mast
-import biomech.mast
 import basic_civilian.mast
 import basic_enemy.mast
 import defender.mast
