@@ -26,6 +26,16 @@ deletes the old one, so every BioMech carries the complete state of its stage.
 
 One spawn path (biomech_spawn) is shared by prefab_biomech and biomech_evolve. Pair with
 the biomech_infestation driver in biomech.mast and the brains in biomech_brains.mast.
+
+SIGNALS (raw signal_emit; react with a //signal/<name> route). A mission that wants a
+quest to react bridges these to quest_signal itself - the addon stays quest-agnostic:
+  * biomech_enraged {attacker, woke} - the hive just woke (passive -> enraged); fires
+    once on the transition, not per hit.
+  * biomech_calmed  {}                - the whole hive returned to passive.
+  * biomech_evolved {id, stage, art}  - a hull evolved one stage (stage is the 0-based
+    index; 3 = Stage 4).
+  * biomech_stage4  {id}              - the FIRST hull reached Stage 4 (it now breeds and
+    can be hailed) - a good cue to scan it so the Stage-4 comms opens.
 """
 from sbs_utils.procedural.spawn import npc_spawn
 from sbs_utils.procedural.query import to_id, to_object, to_object_list
@@ -34,6 +44,7 @@ from sbs_utils.procedural.brain import brain_add
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.space_objects import delete_object
 from sbs_utils.procedural.sides import side_set_object_side, side_keys_set
+from sbs_utils.procedural.signal import signal_emit
 
 # The growth ladder: each key is a distinct shipData template (escalating stats).
 BIOMECH_STAGE_ARTS = ["biomech_a", "biomech_b", "biomech_c", "biomech_d"]
@@ -68,6 +79,15 @@ def _biomech_set_side(obj_id, side_key):
     a mission that hasn't set up the side just falls back to brain-driven aggression)."""
     if _biomech_side_registered(side_key):
         side_set_object_side(obj_id, side_key)
+
+
+def _biomech_any_enraged():
+    """True if any live BioMech is currently enraged (used to fire the hive
+    passive<->enraged transition signals only once, not per hit)."""
+    for o in to_object_list(role("biomech")):
+        if get_inventory_value(o.id, "biomech:enraged", 0) == 1:
+            return True
+    return False
 
 # The BioMech brain: a Select of [hunt, feed]. hunt succeeds only while enraged (so an
 # enraged hull chases + fires); otherwise it declines and the passive feed brain runs.
@@ -113,6 +133,7 @@ def biomech_enrage(hit_id, attacker_id=0, radius=None):
     hit = to_object(hit_id)
     if hit is None:
         return 0
+    hive_was_awake = _biomech_any_enraged()             # for the transition signal
     hp = hit.pos
     r2 = radius * radius
     aid = to_id(attacker_id) if attacker_id else 0
@@ -125,6 +146,8 @@ def biomech_enrage(hit_id, attacker_id=0, radius=None):
                 set_inventory_value(o.id, "biomech:target", aid)
             _biomech_set_side(o.id, BIOMECH_ENRAGED_SIDE)   # neutral -> hostile (this hull)
             woke += 1
+    if woke and not hive_was_awake:                     # hive just woke (passive -> enraged)
+        signal_emit("biomech_enraged", {"attacker": aid, "woke": woke})
     return woke
 
 
@@ -149,6 +172,8 @@ def biomech_calm(center_id=None, radius=None):
         set_inventory_value(o.id, "biomech:target", 0)
         _biomech_set_side(o.id, BIOMECH_PASSIVE_SIDE)       # hostile -> neutral (this hull)
         n += 1
+    if n and not _biomech_any_enraged():                # whole hive is passive again
+        signal_emit("biomech_calmed", {})
     return n
 
 
@@ -173,12 +198,18 @@ def biomech_evolve():
     roles = get_inventory_value(old.id, "biomech:roles", "biomech, raider")
     enraged = get_inventory_value(old.id, "biomech:enraged", 0)
     tgt = get_inventory_value(old.id, "biomech:target", 0)
-    new_id = biomech_spawn(pos.x, pos.y, pos.z, BIOMECH_STAGE_ARTS[idx + 1], roles)
+    had_stage4 = biomech_has_stage4()                       # before this hull matures
+    new_stage = idx + 1
+    new_id = biomech_spawn(pos.x, pos.y, pos.z, BIOMECH_STAGE_ARTS[new_stage], roles)
     if enraged:
         set_inventory_value(new_id, "biomech:enraged", 1)
         set_inventory_value(new_id, "biomech:target", tgt)
         _biomech_set_side(new_id, BIOMECH_ENRAGED_SIDE)     # stay hostile across the respawn
     delete_object(old.id)
+    signal_emit("biomech_evolved", {"id": new_id, "stage": new_stage, "art": BIOMECH_STAGE_ARTS[new_stage]})
+    if new_stage == len(BIOMECH_STAGE_ARTS) - 1 and not had_stage4:
+        # First hull to reach Stage 4: it now breeds and can be hailed.
+        signal_emit("biomech_stage4", {"id": new_id})
     return new_id
 
 

@@ -133,6 +133,42 @@ class BioMechTests(unittest.TestCase):
             BM.biomech_spawn(i * 1000, 0, 0, "biomech_a")
         self.assertEqual(BM.biomech_count(), 5)
 
+    def _capture_signals(self):
+        sigs = []
+        self._real_emit = BM.signal_emit
+        BM.signal_emit = lambda name, data=None: sigs.append((name, data))
+        self.addCleanup(lambda: setattr(BM, "signal_emit", self._real_emit))
+        return sigs
+
+    def test_enraged_signal_fires_once_on_transition(self):
+        sigs = self._capture_signals()
+        a = BM.biomech_spawn(0, 0, 0, "biomech_a")
+        BM.biomech_spawn(1000, 0, 0, "biomech_a")
+        BM.biomech_enrage(a, 9, radius=100000)               # hive wakes -> one signal
+        BM.biomech_enrage(a, 9, radius=100000)               # already awake -> no repeat
+        enr = [d for n, d in sigs if n == "biomech_enraged"]
+        self.assertEqual(len(enr), 1)
+        self.assertEqual(enr[0]["attacker"], 9)
+        self.assertGreaterEqual(enr[0]["woke"], 1)
+
+    def test_calmed_signal_fires_when_hive_fully_passive(self):
+        sigs = self._capture_signals()
+        a = BM.biomech_spawn(0, 0, 0, "biomech_a")
+        BM.biomech_enrage(a, 1, radius=100000)
+        BM.biomech_calm()
+        self.assertEqual(len([1 for n, _ in sigs if n == "biomech_calmed"]), 1)
+
+    def test_evolved_and_stage4_signals(self):
+        sigs = self._capture_signals()
+        BM.biomech_spawn(0, 0, 0, "biomech_a")
+        for _ in range(3):                                   # a -> b -> c -> d
+            BM.biomech_evolve()
+        evolved = [d for n, d in sigs if n == "biomech_evolved"]
+        self.assertEqual(len(evolved), 3)
+        self.assertEqual(evolved[-1]["art"], "biomech_d")
+        stage4 = [d for n, d in sigs if n == "biomech_stage4"]
+        self.assertEqual(len(stage4), 1)                     # fires exactly once
+
 
 if __name__ == "__main__":
     unittest.main()
