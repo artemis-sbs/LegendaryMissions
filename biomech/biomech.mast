@@ -1,35 +1,24 @@
 # BioMech prefab + a reusable infestation driver (LegendaryMissions biomech addon).
-# Cosmos has no built-in BioMech AI, so behavior is scripted here (biomech.py holds the
-# evolve/count/stage helpers). Any mission that loads this addon can spawn a
-# prefab_biomech or run biomech_infestation.
+# Cosmos has no built-in BioMech AI, so behavior is scripted here. biomech.py holds the
+# single spawn path (biomech_spawn: hull + shared chase brain) and the evolve/count/stage
+# helpers. Any mission that loads this addon can spawn a prefab_biomech or run
+# biomech_infestation.
 
-# A BioMech: npc_spawn a stage art (biomech_a..d = Drone1..4, escalating shields via
-# shipData) + a fast, aggressive chase brain (BioMechs out-run and out-turn ships).
-# Spawn via prefab_spawn(prefab_biomech, {START_X/Y/Z, BIO_ART, BIO_ROLES}).
+# The prefab is a thin wrapper over biomech_spawn so the stage art, roles, and brain live
+# in ONE place (biomech.py). Spawn via prefab_spawn(prefab_biomech, {START_X/Y/Z,
+# BIO_ART, BIO_ROLES}), or call biomech_spawn(x,y,z,art,roles) directly.
 === prefab_biomech
-metadata: ```
-brain:
-    - label: ai_chase_player
-      data:
-        force_shoot: true
-        throttle: 2.8
-    - label: ai_chase_station
-      data:
-        force_shoot: true
-        throttle: 2.2
-```
     default BIO_ART = "biomech_a"
     default BIO_ROLES = "biomech, raider"
-    bio = npc_spawn(START_X, START_Y, START_Z, "BioMech", BIO_ROLES, BIO_ART, "behav_npcship")
-    brain_add(bio, brain)
-    yield result to_id(bio)
+    yield result biomech_spawn(START_X, START_Y, START_Z, BIO_ART, BIO_ROLES)
 
 
-# A self-contained BioMech infestation: spawn an initial swarm, evolve them
-# (biomech_a..d), and - once a Stage 4 matures - breed litters of Stage 1, bounded by a
-# population cap (INFEST_CAP + DIFFICULTY) and a fixed cycle count so it stays winnable.
-# All data vars optional; schedule with prefab_spawn(biomech_infestation, {...}) or name
-# it as a boss Hook. BioMechs are raider-roled by default (an extermination threat).
+# A self-contained BioMech infestation: spawn an initial swarm, EVOLVE them by respawn
+# (biomech_a..d, each a full shipData stage), and - once a Stage 4 matures - breed litters
+# of Stage 1, bounded by a population cap (INFEST_CAP + DIFFICULTY) and a fixed cycle count
+# so it stays winnable. All data vars optional; schedule with
+# prefab_spawn(biomech_infestation, {...}) or name it as a boss Hook. BioMechs are
+# raider-roled by default (an extermination threat).
 === biomech_infestation
     default GAME_ENDED = False
     default DIFFICULTY = 5
@@ -44,18 +33,19 @@ brain:
     infest_cap = INFEST_CAP + int(DIFFICULTY)
     for infest_i in range(INFEST_COUNT):
         ipos = Vec3.rand_in_sphere(20000, 40000, False, True)
-        prefab_spawn(prefab_biomech, {"START_X": INFEST_X + ipos.x, "START_Y": INFEST_Y + ipos.y, "START_Z": INFEST_Z + ipos.z, "BIO_ART": "biomech_a", "BIO_ROLES": INFEST_ROLES})
+        biomech_spawn(INFEST_X + ipos.x, INFEST_Y + ipos.y, INFEST_Z + ipos.z, "biomech_a", INFEST_ROLES)
 --- infest_grow
     await delay_sim(INFEST_WAVE)
     ->END if GAME_ENDED
     ->END if INFEST_CYCLES <= 0
     INFEST_CYCLES = INFEST_CYCLES - 1
-    # Evolve a couple toward Stage 4 (the Cosmos stand-in for eating asteroids).
+    # Evolve a couple toward Stage 4 (the Cosmos stand-in for eating asteroids). Each
+    # evolve respawns the hull at the next stage, so its stats promote with it.
     biomech_evolve()
     biomech_evolve()
     # Breed once a Stage 4 exists and we are under the population cap.
     if biomech_has_stage4() and biomech_count() < infest_cap:
         rpos = Vec3.rand_in_sphere(15000, 35000, False, True)
-        prefab_spawn(prefab_biomech, {"START_X": INFEST_X + rpos.x, "START_Y": INFEST_Y + rpos.y, "START_Z": INFEST_Z + rpos.z, "BIO_ART": "biomech_a", "BIO_ROLES": INFEST_ROLES})
-        prefab_spawn(prefab_biomech, {"START_X": INFEST_X + rpos.x + 2500, "START_Y": INFEST_Y + rpos.y, "START_Z": INFEST_Z + rpos.z, "BIO_ART": "biomech_a", "BIO_ROLES": INFEST_ROLES})
+        biomech_spawn(INFEST_X + rpos.x, INFEST_Y + rpos.y, INFEST_Z + rpos.z, "biomech_a", INFEST_ROLES)
+        biomech_spawn(INFEST_X + rpos.x + 2500, INFEST_Y + rpos.y, INFEST_Z + rpos.z, "biomech_a", INFEST_ROLES)
     jump infest_grow
