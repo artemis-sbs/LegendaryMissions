@@ -535,6 +535,7 @@ def hangar_pilot_items():
             "sorties": sorties,
             "kills": get_inventory_value(cid, "kills", 0),
             "tonnage": get_inventory_value(cid, "tonnage", 0),
+            "damage": int(get_inventory_value(cid, "damage_dealt", 0)),
             "objectives": get_inventory_value(cid, "completed_objectives", 0),
         }))
     return items
@@ -544,7 +545,7 @@ def hangar_pilot_template(item):
     gui_row("row-height: 1.2em;padding:6px;")
     gui_text(f"$text:{item.get('call_sign')};justify: left;")
     gui_row("row-height: 1.0em;padding:6px;")
-    gui_text(f"$text:Sorties {item.get('sorties')}   Kills {item.get('kills')}   Tonnage {item.get('tonnage')}   Objectives {item.get('objectives')};justify: left;font:gui-1")
+    gui_text(f"$text:Sorties {item.get('sorties')}   Kills {item.get('kills')}   Tonnage {item.get('tonnage')}   Damage {item.get('damage')}   Objectives {item.get('objectives')};justify: left;font:gui-1")
 
 
 def hangar_pilot_title_template():
