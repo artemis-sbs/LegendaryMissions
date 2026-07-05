@@ -259,7 +259,9 @@ GameCode:
 #    at game end via the siege_survived signal).
 #
 === siege_bonus_objectives
-    ace_target = 8 + int(DIFFICULTY)
+    # More achievable + difficulty-scaled: base 6 raiders at DIFFICULTY 5 (was
+    # 8+DIFFICULTY = 13), fewer on easy, more on hard, never below 3.
+    ace_target = quest_kill_count_for_difficulty(6, DIFFICULTY, floor=3)
     for p in to_object_list(role("__player__")):
         quest_add(p.id, "siege_ace", f"Ace: {ace_target} raider kills", f"Optional: destroy {ace_target} raiders this siege.", state=1, data={"on_kill": {"role": "raider", "count": ace_target}, "reward": {"credits": 300, "items": {"tech": 1}}})
         quest_add(p.id, "siege_guardian", "Guardian: keep every starbase", "Optional: finish the siege without losing a starbase.", state=1, data={"on_signal": {"name": "siege_survived"}, "reward": {"credits": 500}})
