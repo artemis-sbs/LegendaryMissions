@@ -1,6 +1,6 @@
 // Infestation - a BioMech swarm breeding out of control (a Cosmos approximation of the
-// Artemis 2.x Infestation scenario; see infest.md for the 2.x reference). When the
-// raiders thin out, BioMechs boil in; they evolve (biomech_a..d, the art carries the
+// Artemis 2.x Infestation scenario). When the raiders thin out, BioMechs boil in;
+// they evolve (biomech_a..d, the art carries the
 // escalating stats) and, once a Stage 4 matures, breed litters of Stage 1. Exterminate
 // them to win. Cosmos has no built-in BioMech AI, so the behavior is scripted in
 // siege.mast's siege_boss_infestation hook (spawn/evolve/reproduce, bounded so it stays
