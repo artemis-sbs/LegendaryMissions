@@ -3,6 +3,10 @@ default shared SIEGE_ACTIVE = False
 # Survive-to-timeout outcome (map option): "Win" = outlasting the clock is a
 # victory (today's behavior); "Loss" = failing to break the siege in time loses.
 default shared SIEGE_TIMEOUT = "Win"
+# Boss (map option): a boss from maps/bosses/*.amd (folder-scanned) that arrives when
+# the raiders thin out (siege_enemies_low), or None. BOSS_LIST feeds the dropdown.
+default shared BOSS_SELECT = "None"
+default shared BOSS_LIST = siege_boss_list()
 
 @map/siege "Siege"
 " In this scenario, bases will be located in the center of the sector, 
@@ -13,6 +17,7 @@ Properties:
   Main:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
     Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
+    Boss: 'gui_drop_down("$text: {BOSS_SELECT};list: {BOSS_LIST}", var="BOSS_SELECT")'
   Map:
     Map Size: 'gui_drop_down("$text: {MAP_SIZE};list: Small, Medium, Large", var="MAP_SIZE")'
     Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'
@@ -39,6 +44,7 @@ GameCode:
   - UPGRADE_SELECT
   - GAME_TIME_LIMIT
   - SIEGE_TIMEOUT
+  - BOSS_SELECT
   - seed_value
 ```
 
@@ -287,19 +293,32 @@ GameCode:
 === siege_watch
     default GAME_ENDED = False
     default shared SIEGE_TIMEOUT = "Win"
+    default shared BOSS_SELECT = "None"
     seen_raiders = False
+    peak_raiders = 0
+    boss_triggered = False
 --- loop
     await delay_sim(4)
     ->END if GAME_ENDED
-    if len(role("raider")) > 0:
+    raider_count = len(role("raider"))
+    if raider_count > peak_raiders:
+        peak_raiders = raider_count
+    if raider_count > 0:
         seen_raiders = True
+    # Boss: once the raiders thin below the selected boss's Low threshold, the boss
+    # arrives (its forces + objectives, config from maps/bosses/). Fires once.
+    if seen_raiders and not boss_triggered and BOSS_SELECT != "None":
+        if raider_count <= peak_raiders * siege_boss_low_pct(BOSS_SELECT):
+            boss_triggered = True
+            signal_emit("siege_enemies_low", None)
     # Lose: every friendly starbase is gone.
     if len(role("tsn") & role("station")) == 0:
         signal_emit("quest_signal", {"SIGNAL_NAME": "siege_bases_lost"})
         ->END
     # Win: the fleets are cleared (only once they actually turned up, so a first
-    # tick before the fleets finish spawning can't declare an instant victory).
-    if seen_raiders and len(role("raider")) == 0:
+    # tick before the fleets finish spawning can't declare an instant victory). A
+    # boss adds raider-roled forces, so this waits for them too.
+    if seen_raiders and raider_count == 0:
         signal_emit("quest_signal", {"SIGNAL_NAME": "siege_won"})
         ->END
     # Time limit reached: the outcome is the "Survive Clock" map option.
@@ -311,6 +330,44 @@ GameCode:
             signal_emit("quest_signal", {"SIGNAL_NAME": "siege_won"})
         ->END
     jump loop
+
+
+# The selected boss arrives when the raiders thin out: spawn its reinforcement
+# fleets + named flagships (config from maps/bosses/, folder-scanned) and graft its
+# objectives onto siege_mission. Config-driven - a new boss .amd needs no change here.
+//signal/siege_enemies_low if BOSS_SELECT != "None"
+    boss_node = siege_boss_get(BOSS_SELECT)
+    ->END if boss_node is None
+    boss_race = siege_boss_race(BOSS_SELECT)
+    boss_diff = siege_boss_difficulty(BOSS_SELECT, DIFFICULTY)
+    for boss_i in range(siege_boss_fleet_count(BOSS_SELECT)):
+        fpos = Vec3.rand_in_sphere(25000, 45000, False, True)
+        prefab_spawn(prefab_fleet_raider, {"race": boss_race, "fleet_difficulty": boss_diff, "ship_roles": "raider, boss_fleet", "START_X": fpos.x, "START_Y": fpos.y, "START_Z": fpos.z})
+    for boss_name, boss_art in siege_boss_named(BOSS_SELECT):
+        npos = Vec3.rand_in_sphere(20000, 30000, False, True)
+        boss_roles = "raider, boss, " + boss_name.lower()
+        prefab_spawn(prefab_siege_boss_ship, {"START_X": npos.x, "START_Y": npos.y, "START_Z": npos.z, "NAME": boss_name, "BOSS_ART": boss_art, "BOSS_ROLES": boss_roles})
+    quest_grant_amd(SHARED, boss_node)
+    ->END
+
+
+# A named boss flagship: a durable hull that hunts players + stations. prefab_spawn
+# seeds NAME / BOSS_ART / BOSS_ROLES as task vars; the brain metadata is the tree.
+=== prefab_siege_boss_ship
+metadata: ```
+brain:
+    - label: ai_chase_player
+      data:
+        force_shoot: true
+        throttle: 2.0
+    - label: ai_chase_station
+      data:
+        force_shoot: true
+        throttle: 1.6
+```
+    boss_ship = npc_spawn(START_X, START_Y, START_Z, NAME, BOSS_ROLES, BOSS_ART, "behav_npcship")
+    brain_add(boss_ship, brain)
+    yield result to_id(boss_ship)
 
 
 # A starbase fell: the Guardian bonus is lost for everyone. KILLED (not DESTROY):

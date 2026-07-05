@@ -1,5 +1,6 @@
 import mission_story.mast
 import mission_helper_functions.py
+import siege_boss.py
 
 import siege.mast
 import singlefront.mast

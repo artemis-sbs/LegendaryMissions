@@ -1,0 +1,26 @@
+// The Warlord - a named enemy flagship and reinforcement fleets that warp in when
+// the siege's raiders thin out. Authored in the shared AMD quest vocabulary (the
+// same grammar Open Universe uses). Drop another .amd in maps/bosses/ and it appears
+// in the siege BOSS dropdown automatically - no code change.
+
+# [Warlord](warlord)
+---
+Trigger: enemies_low
+Low: 25%
+Flies: 50% Kralien, 50% Torgoth
+Fleets: 2
+Difficulty: +1
+Named: Warlord kralien_dreadnought
+---
+A raider warlord and their honor guard warp in to break the defenders.
+
+## [Defeat the Warlord](defeat_warlord)
+---
+Scope: shared
+State: active
+Parent: siege_mission
+Required: true
+Goal: destroy 1 warlord
+Pays: 500 credits
+---
+Destroy the raider Warlord to break the siege for good.
