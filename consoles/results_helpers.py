@@ -8,7 +8,7 @@ from sbs_utils.procedural.ship_data import get_ship_data_for
 from sbs_utils.procedural.quest import (
     quest_agent_quests, quest_get_state, quest_get_key, quest_get_display_name, QuestState)
 from sbs_utils.mast.mast_node import MastDataObject
-from sbs_utils.procedural.gui import gui_row, gui_text
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_icon, gui_list_box_header, gui_list_box_is_header
 from sbs_utils.agent import Agent
 
 
@@ -170,6 +170,13 @@ def quest_state_color(state):
     return _QUEST_STATE_COLOR.get(int(state or 0), "#aaa")
 
 
+# Within a section, order rows active -> available/posted -> done -> failed.
+_QUEST_STATE_ORDER = {
+    int(QuestState.ACTIVE): 0, int(QuestState.IDLE): 1, int(QuestState.POSTING): 1,
+    int(QuestState.COMPLETE): 2, int(QuestState.FAILED): 3,
+}
+
+
 def results_quests():
     """Game (SHARED) + per-ship quests with a display state, for the read-only
     Quests tab and the save. SECRET (undiscovered) quests are hidden."""
@@ -189,6 +196,7 @@ def results_quests():
                 "title": str(q.get("display_text", qid)),
                 "state": st,
                 "state_label": _QUEST_STATE_LABEL.get(st, ""),
+                "desc": (q.get("description") or "").strip(),
             })
     return out
 
@@ -234,7 +242,24 @@ def results_pilot_items():
 
 
 def results_quest_items():
-    return _wrap(results_quests())
+    """Quest rows grouped under collapsible section headers (Game + each ship),
+    matching the in-game quest log. Flat list; LayoutListBoxHeader items mark the
+    sections and the listbox (collapsible=True) folds each one. Empty sections
+    never appear (results_quests only emits groups that have quests)."""
+    by_group = {}
+    order = []
+    for r in results_quests():
+        g = r.get("group")
+        if g not in by_group:
+            by_group[g] = []
+            order.append(g)
+        by_group[g].append(r)
+    items = []
+    for g in order:
+        rows = sorted(by_group[g], key=lambda it: _QUEST_STATE_ORDER.get(it.get("state"), 9))
+        items.append(gui_list_box_header(g, False, 0, True, {"section": g}))
+        items.extend(MastDataObject(r) for r in rows)
+    return items
 
 
 def results_ship_template(item):
@@ -262,11 +287,23 @@ def results_pilot_title_template():
 
 
 def results_quest_template(item):
+    # Collapsible section header (Game / <ship name>): label + fold arrow.
+    if gui_list_box_is_header(item):
+        gui_row("row-height: 1.4em;padding:6px;")
+        icon_index = 155 if not item.collapse else 154
+        gui_text(f"$text:{item.label};justify: left;color:#fff;", "padding:5px,6px,0,0;background:#1578")
+        icon = gui_icon(f"icon_index:{icon_index};color:#fff;", "padding:0,0,5px,0;background:#1578;")
+        if item.selectable:
+            icon.click_text = ""
+            icon.click_tag = item.collapse_tag
+            icon.click_background = "#aaaa"
+            icon.click_color = "black"
+        return
     color = quest_state_color(item.get('state'))
     gui_row("row-height: 1.2em;padding:6px;")
     gui_text(f"$text:{item.get('title')};justify: left;color:{color}")
     gui_row("row-height: 1.0em;padding:6px;")
-    gui_text(f"$text:[{item.get('group')}] {item.get('state_label')};justify: left;font:gui-1;color:{color}")
+    gui_text(f"$text:{item.get('state_label')};justify: left;font:gui-1;color:{color}")
 
 
 def results_quest_title_template():
