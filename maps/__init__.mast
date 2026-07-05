@@ -3,6 +3,9 @@ import mission_helper_functions.py
 import siege_boss.py
 
 import siege.mast
+# Per-boss logic/comms, co-located with each boss's bosses/<key>.amd config.
+import bosses/ragnarok.mast
+import bosses/continuous.mast
 import singlefront.mast
 import doublefront.mast
 import deepstrike.mast

@@ -1,0 +1,29 @@
+# Continuous boss logic (paired with bosses/continuous.amd).
+# Respawn waves from the start until the clock nears its end, then the attackers break
+# off (surrender) for a satisfying defender win. Config from the selected boss .amd
+# (Flies race / Fleets per wave / Difficulty / Wave seconds). siege.mast schedules this
+# label when the selected boss's Trigger is "continuous".
+=== siege_continuous
+    default shared BOSS_SELECT = "None"
+    default GAME_ENDED = False
+    cont_wave = siege_boss_wave(BOSS_SELECT)
+    cont_diff = siege_boss_difficulty(BOSS_SELECT, DIFFICULTY)
+    cont_count = max(1, siege_boss_fleet_count(BOSS_SELECT))
+    cont_end = safe_int(GAME_TIME_LIMIT) * 60 * 0.02
+--- cwave
+    await delay_sim(cont_wave)
+    ->END if GAME_ENDED
+    # Within the last ~2% of the time limit the raiders break off and retreat.
+    if is_timer_set(SHARED, "time_limit") and get_time_remaining(SHARED, "time_limit") < cont_end:
+        jump csurrender
+    for cont_i in range(cont_count):
+        wpos = Vec3.rand_in_sphere(30000, 45000, False, True)
+        prefab_spawn(prefab_fleet_raider, {"race": siege_boss_race(BOSS_SELECT), "fleet_difficulty": cont_diff, "ship_roles": "raider, continuous", "START_X": wpos.x, "START_Y": wpos.y, "START_Z": wpos.z})
+    jump cwave
+--- csurrender
+    # Randomized retreat chatter, then the attackers flee (drop the raider role, so
+    # siege_watch declares siege_won once they are gone).
+    surrender_lines = ~~["This is too much - all ships retreat!", "Fall back! We can't break them!", "Break off! Break off!", "Signal the withdrawal - now!"]~~
+    comms_broadcast(role("__player__"), random.choice(surrender_lines), "#fa0")
+    remove_role(role("raider"), "raider")
+    ->END
