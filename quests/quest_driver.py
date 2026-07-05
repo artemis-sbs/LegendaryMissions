@@ -15,6 +15,7 @@ from sbs_utils.procedural.roles import has_role, role
 from sbs_utils.procedural.query import to_object, to_object_list, to_id
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.sides import to_side_id
+from sbs_utils.procedural.timers import set_timer, is_timer_set, is_timer_finished
 from sbs_utils.procedural.comms import comms_broadcast
 from sbs_utils.procedural.signal import signal_emit
 from sbs_utils.procedural.gui import gui_row, gui_text, gui_icon
@@ -35,6 +36,63 @@ def quest_grant_reward(agent_id, reward):
             set_inventory_value(sid, "credits", get_inventory_value(sid, "credits", 0) + credits)
     for k, n in (reward.get("items") or {}).items():
         set_inventory_value(agent_id, k, get_inventory_value(agent_id, k, 0) + n)
+
+
+def quest_grant_penalty(agent_id, penalty):
+    """Apply a quest penalty (mirror of quest_grant_reward): deduct credits from
+    the agent's side, remove items from the agent. Never goes below zero."""
+    if not isinstance(penalty, dict):
+        return
+    credits = penalty.get("credits", 0)
+    if credits:
+        ship = to_object(agent_id)
+        side = ship.side if ship is not None else None
+        if side:
+            sid = to_side_id(side)
+            set_inventory_value(sid, "credits", max(0, get_inventory_value(sid, "credits", 0) - credits))
+    for k, n in (penalty.get("items") or {}).items():
+        set_inventory_value(agent_id, k, max(0, get_inventory_value(agent_id, k, 0) - n))
+
+
+def _quest_maybe_end_game(agent_id, quest_id, data, win):
+    """Fire game_over once if this quest is a game-ending mission quest.
+
+    A quest with end_win (on COMPLETE) or end_lose (on FAILED) ends the game;
+    win_text/lose_text (falling back to the display name) is the end-screen reason.
+    Guarding the actual teardown lives in the //signal/game_over route.
+    """
+    if not data.get("end_win" if win else "end_lose"):
+        return
+    text = data.get("win_text" if win else "lose_text") or quest_get_display_name(agent_id, quest_id) or quest_id
+    signal_emit("game_over", {"WIN": bool(win), "TEXT": str(text),
+                              "AGENT_ID": to_id(agent_id), "QUEST_ID": quest_id})
+
+
+def quest_reeval_mission(agent_id, parent_qid):
+    """Re-evaluate a mission (parent) quest from its children's states.
+
+    Any `critical` child FAILED -> the mission FAILS; else once every `required`
+    child is COMPLETE the mission COMPLETES. No-op unless the parent is ACTIVE, so
+    it settles exactly once. Children link up via their data `parent: <parent_qid>`.
+    """
+    if not parent_qid or quest_get_state(agent_id, parent_qid) != QuestState.ACTIVE:
+        return
+    tree = quest_agent_quests(agent_id)
+    if tree is None:
+        return
+    required_done = []
+    for qid in tree.get("children", {}):
+        d = quest_get_data(agent_id, qid) or {}
+        if d.get("parent") != parent_qid:
+            continue
+        st = quest_get_state(agent_id, qid)
+        if d.get("critical") and st == QuestState.FAILED:
+            quest_mark_failed(agent_id, parent_qid)
+            return
+        if d.get("required"):
+            required_done.append(st == QuestState.COMPLETE)
+    if required_done and all(required_done):
+        quest_mark_complete(agent_id, parent_qid)
 
 
 def quest_mark_active(agent_id, quest_id):
@@ -61,6 +119,10 @@ def quest_mark_complete(agent_id, quest_id):
     signal_emit("quest_finished", {"AGENT_ID": agent_id, "QUEST_ID": quest_id, "DATA": data})
     name = quest_get_display_name(agent_id, quest_id) or quest_id
     comms_broadcast(agent_id, "Mission complete: " + str(name), "#0f0")
+    # A game-ending mission quest wins the game; then bubble up to a parent mission.
+    _quest_maybe_end_game(agent_id, quest_id, data, win=True)
+    if data.get("parent"):
+        quest_reeval_mission(agent_id, data.get("parent"))
 
 
 _STATE_NAMES = {
@@ -111,9 +173,18 @@ def quest_shared_state(quest_id):
 
 
 def quest_mark_failed(agent_id, quest_id):
-    """Fail an active quest (idempotent)."""
-    if quest_get_state(agent_id, quest_id) == QuestState.ACTIVE:
-        quest_set_key(agent_id, quest_id, "state", QuestState.FAILED)
+    """Fail an active quest (idempotent): set state, apply penalty, announce, then
+    fire the lose (if end_lose) and bubble up to the parent mission."""
+    if quest_get_state(agent_id, quest_id) != QuestState.ACTIVE:
+        return
+    quest_set_key(agent_id, quest_id, "state", QuestState.FAILED)
+    data = quest_get_data(agent_id, quest_id) or {}
+    quest_grant_penalty(agent_id, data.get("penalty"))
+    name = quest_get_display_name(agent_id, quest_id) or quest_id
+    comms_broadcast(agent_id, "Mission failed: " + str(name), "#f33")
+    _quest_maybe_end_game(agent_id, quest_id, data, win=False)
+    if data.get("parent"):
+        quest_reeval_mission(agent_id, data.get("parent"))
 
 
 def _active_quests(agent_id):
@@ -201,12 +272,54 @@ def quest_on_signal(name):
     for aid in agents:
         for qid, data in _active_quests(aid):
             trig = data.get("on_signal") or data.get("on_comms")
+            if isinstance(trig, dict):
+                want = trig.get("name") or trig.get("option")
+                if not want or want == name:
+                    _advance_count(aid, qid, data, trig.get("count", 1))
+            # Fail trigger: a matching signal fails the quest (mirror of on_signal).
+            ftrig = data.get("fail_on_signal")
+            if isinstance(ftrig, dict):
+                fwant = ftrig.get("name") or ftrig.get("option")
+                if not fwant or fwant == name:
+                    quest_mark_failed(aid, qid)
+
+
+def quest_fail_on_all_dead(destroyed_id=None):
+    """Fail ACTIVE quests whose fail_on_all_dead {role} guard just emptied - the
+    last holder of that role has died. Called from the killed route; the victim is
+    still registered there, so it is excluded from the remaining count."""
+    for aid in [Agent.SHARED_ID] + [s.id for s in to_object_list(role("__player__"))]:
+        for qid, data in _active_quests(aid):
+            trig = data.get("fail_on_all_dead")
             if not isinstance(trig, dict):
                 continue
-            want = trig.get("name") or trig.get("option")
-            if want and want != name:
+            want = trig.get("role")
+            if not want:
                 continue
-            _advance_count(aid, qid, data, trig.get("count", 1))
+            count = len(role(want))
+            if destroyed_id is not None and has_role(destroyed_id, want):
+                count -= 1  # the ship dying right now still holds the role
+            if count <= 0:
+                quest_mark_failed(aid, qid)
+
+
+def quest_tick_fail_after():
+    """Watcher tick: fail ACTIVE quests whose fail_after deadline elapsed. The
+    deadline is anchored lazily (a per-quest timer set on first sight), so
+    activation needs no hook - general to any mission, not just siege."""
+    for aid in [Agent.SHARED_ID] + [s.id for s in to_object_list(role("__player__"))]:
+        for qid, data in _active_quests(aid):
+            trig = data.get("fail_after")
+            if not isinstance(trig, dict):
+                continue
+            secs = int(trig.get("seconds", 0) or 0) + int(trig.get("minutes", 0) or 0) * 60
+            if secs <= 0:
+                continue
+            tname = "qfail:" + str(qid)
+            if not is_timer_set(aid, tname):
+                set_timer(aid, tname, seconds=secs)
+            elif is_timer_finished(aid, tname):
+                quest_mark_failed(aid, qid)
 
 
 def quest_on_arrive(i, j):

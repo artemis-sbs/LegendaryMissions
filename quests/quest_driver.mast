@@ -14,6 +14,10 @@
     quest_mark_complete(AGENT_ID, QUEST_ID)
     ->END
 
+//signal/quest_failed
+    quest_mark_failed(AGENT_ID, QUEST_ID)
+    ->END
+
 # KILLED, not DESTROY: the victim is still registered here, so the on_kill role
 # filter (has_role(victim, "raider")) works. On the DESTROY route the victim is
 # often already gone (to_object -> None -> has_role False), so role-filtered kill
@@ -25,6 +29,9 @@
         quest_on_kill(DAMAGE_PARENT_ID, DAMAGE_SELECTED_ID)
     # Game-level (SHARED) kill objectives - once per kill.
     quest_on_kill_shared(DAMAGE_SELECTED_ID)
+    # Fail trigger: this kill may have emptied a "protect these" role (the victim
+    # is still registered here, so it is excluded from the remaining count).
+    quest_fail_on_all_dead(DAMAGE_SELECTED_ID)
     ->END
 
 //signal/item_collected
@@ -50,3 +57,35 @@
 //signal/quest_signal
     quest_on_signal(SIGNAL_NAME)
     ->END
+
+# A game-ending mission quest resolved (end_win/end_lose): tear the game down once.
+# WIN + TEXT ride the game_over signal from _quest_maybe_end_game; the first
+# terminal quest wins the race because GAME_ENDED guards a second teardown.
+//signal/game_over
+    default GAME_ENDED = False
+    ->END if GAME_ENDED
+    START_TEXT = TEXT
+    GAME_STARTED = False
+    GAME_ENDED = True
+    if WIN:
+        sbs.play_music_file(0, "music/default/victory")
+    else:
+        sbs.play_music_file(0, "music/default/failure")
+    signal_emit("show_game_results", None)
+    ->END
+
+# fail_after watcher: fails ACTIVE quests past their deadline. Event-driven fail
+# triggers (fail_on_signal / fail_on_all_dead) need no watcher; only the timeout
+# does. Scheduled once server-side at game start.
+//signal/game_started
+    default shared QUEST_FAIL_WATCH = False
+    if not QUEST_FAIL_WATCH:
+        shared QUEST_FAIL_WATCH = True
+        task_schedule(quest_fail_watch)
+    ->END
+
+=== quest_fail_watch
+--- watch
+    await delay_sim(2)
+    quest_tick_fail_after()
+    jump watch
