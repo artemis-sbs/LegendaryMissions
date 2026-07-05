@@ -55,6 +55,37 @@ class BioMechTests(unittest.TestCase):
         self.assertEqual(BM.get_inventory_value(far, "biomech:enraged", 0), 0)   # bounded out
         self.assertEqual(BM.get_inventory_value(near, "biomech:target", 0), attacker)
 
+    def test_enrage_flips_only_woken_hulls_to_hostile_side(self):
+        # Record side switches; pretend both sides are registered so the guard passes.
+        switches = []
+        self._real_set_side = BM.side_set_object_side
+        self._real_keys = BM.side_keys_set
+        BM.side_set_object_side = lambda oid, key: switches.append((oid, key))
+        BM.side_keys_set = lambda: {"raider", "biomech"}  # pretend both are registered
+        try:
+            hit = BM.biomech_spawn(0, 0, 0, "biomech_a")
+            near = BM.biomech_spawn(2000, 0, 0, "biomech_a")
+            far = BM.biomech_spawn(60000, 0, 0, "biomech_a")
+            BM.biomech_enrage(hit, 9, radius=5000)
+            switched_ids = {oid for oid, key in switches}
+            self.assertIn(hit, switched_ids)
+            self.assertIn(near, switched_ids)
+            self.assertNotIn(far, switched_ids)               # bounded: far hull untouched
+            self.assertTrue(all(key == BM.BIOMECH_ENRAGED_SIDE for _, key in switches))
+            # calming switches back to the passive/neutral side
+            switches.clear()
+            BM.biomech_calm(hit, radius=5000)
+            self.assertTrue(switches and all(key == BM.BIOMECH_PASSIVE_SIDE for _, key in switches))
+        finally:
+            BM.side_set_object_side = self._real_set_side
+            BM.side_keys_set = self._real_keys
+
+    def test_enrage_side_switch_is_guarded_when_side_missing(self):
+        # Default mock has no registered 'raider' side -> to_side_id None -> no crash.
+        bid = BM.biomech_spawn(0, 0, 0, "biomech_a")
+        self.assertEqual(BM.biomech_enrage(bid, 1, radius=1000), 1)
+        self.assertEqual(BM.get_inventory_value(bid, "biomech:enraged", 0), 1)
+
     def test_calm_clears_enraged(self):
         a = BM.biomech_spawn(0, 0, 0, "biomech_a")
         b = BM.biomech_spawn(1000, 0, 0, "biomech_a")

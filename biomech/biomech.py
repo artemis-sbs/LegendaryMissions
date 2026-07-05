@@ -4,13 +4,16 @@ addon (not siege-specific).
 Cosmos has no built-in BioMech AI, so the lifecycle AND the disposition are scripted
 here, modelling the Artemis 2.x BioMech:
 
-  * Stages 1-3 are PASSIVE. They avoid combat and drift toward asteroids to feed
-    (ai_biomech_feed). They do not shoot.
+  * Stages 1-3 are PASSIVE and NEUTRAL. They live on a neutral side no one is hostile
+    to, so players will not auto-engage them; they avoid combat and drift toward
+    asteroids to feed (ai_biomech_feed) and do not shoot.
   * COLLECTIVE MIND. Attacking any BioMech wakes the hive - but BOUNDED to an aggro
     radius (an area effect), not the whole sector. biomech_enrage() flips the nearby
-    hulls to enraged and points them at the attacker; ai_biomech_hunt then chases and
-    fires. (The engine broad_test is capped at ~5000u, so the bound is a plain distance
-    check, which also lets it exceed that cap and be unit-tested.)
+    hulls to enraged, points them at the attacker, and switches each PER-OBJECT to a
+    hostile side (so only the woken hulls turn hostile); ai_biomech_hunt then chases and
+    fires. biomech_calm() reverses it. (The engine broad_test is capped at ~5000u, so
+    the bound is a plain distance check, which also lets it exceed that cap and be
+    unit-tested.)
   * Stage 4 is sentient - a comms route (biomech_brains.mast) lets a ship hail a Stage-4
     hull to calm (biomech_calm) or taunt (biomech_enrage) the hive.
 
@@ -30,6 +33,7 @@ from sbs_utils.procedural.roles import role
 from sbs_utils.procedural.brain import brain_add
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.space_objects import delete_object
+from sbs_utils.procedural.sides import side_set_object_side, side_keys_set
 
 # The growth ladder: each key is a distinct shipData template (escalating stats).
 BIOMECH_STAGE_ARTS = ["biomech_a", "biomech_b", "biomech_c", "biomech_d"]
@@ -37,6 +41,33 @@ BIOMECH_STAGE_ARTS = ["biomech_a", "biomech_b", "biomech_c", "biomech_d"]
 # How far the collective mind reaches: attacking one hull wakes BioMechs within this
 # radius (an area effect), not every BioMech in the sector. Tune per mission.
 BIOMECH_AGGRO_RADIUS = 9000.0
+
+# NEUTRAL UNTIL ENRAGED (per-object, so it stays bounded to the woken hive).
+# BioMechs live on a neutral side (BIOMECH_PASSIVE_SIDE) that no one is hostile to, so a
+# passive hull reads neutral and players will not auto-engage it. When a hull is roused,
+# it switches PER-OBJECT to a registered hostile side (BIOMECH_ENRAGED_SIDE) - so only
+# the woken hulls turn hostile, not the whole colony. Calming switches it back. The side
+# switch is a no-op (guarded) if BIOMECH_ENRAGED_SIDE is not a registered side; the
+# brain's force_shoot still makes an enraged hull fire regardless. Set BIOMECH_ENRAGED_SIDE
+# to whatever hostile side the mission has registered (siege has 'raider').
+BIOMECH_PASSIVE_SIDE = "biomech"
+BIOMECH_ENRAGED_SIDE = "raider"
+
+
+def _biomech_side_registered(side_key):
+    """True if `side_key` is a registered side. Quiet (side_keys_set doesn't warn, unlike
+    to_side_id, which prints 'Side not found' on a miss)."""
+    if not side_key:
+        return False
+    key = side_key.strip().lower()
+    return any(str(k).strip().lower() == key for k in side_keys_set())
+
+
+def _biomech_set_side(obj_id, side_key):
+    """Switch a hull's side, but only if `side_key` is a registered side (else no-op, so
+    a mission that hasn't set up the side just falls back to brain-driven aggression)."""
+    if _biomech_side_registered(side_key):
+        side_set_object_side(obj_id, side_key)
 
 # The BioMech brain: a Select of [hunt, feed]. hunt succeeds only while enraged (so an
 # enraged hull chases + fires); otherwise it declines and the passive feed brain runs.
@@ -92,6 +123,7 @@ def biomech_enrage(hit_id, attacker_id=0, radius=None):
             set_inventory_value(o.id, "biomech:enraged", 1)
             if aid:
                 set_inventory_value(o.id, "biomech:target", aid)
+            _biomech_set_side(o.id, BIOMECH_ENRAGED_SIDE)   # neutral -> hostile (this hull)
             woke += 1
     return woke
 
@@ -115,6 +147,7 @@ def biomech_calm(center_id=None, radius=None):
     for o in targets:
         set_inventory_value(o.id, "biomech:enraged", 0)
         set_inventory_value(o.id, "biomech:target", 0)
+        _biomech_set_side(o.id, BIOMECH_PASSIVE_SIDE)       # hostile -> neutral (this hull)
         n += 1
     return n
 
@@ -144,6 +177,7 @@ def biomech_evolve():
     if enraged:
         set_inventory_value(new_id, "biomech:enraged", 1)
         set_inventory_value(new_id, "biomech:target", tgt)
+        _biomech_set_side(new_id, BIOMECH_ENRAGED_SIDE)     # stay hostile across the respawn
     delete_object(old.id)
     return new_id
 
