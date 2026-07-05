@@ -31,7 +31,7 @@ def quest_grant_reward(agent_id, reward):
     credits = reward.get("credits", 0)
     if credits:
         ship = to_object(agent_id)
-        side = ship.side if ship is not None else None
+        side = getattr(ship, "side", None)   # SHARED / console agents have no .side
         if side:
             sid = to_side_id(side)
             set_inventory_value(sid, "credits", get_inventory_value(sid, "credits", 0) + credits)
@@ -47,7 +47,7 @@ def quest_grant_penalty(agent_id, penalty):
     credits = penalty.get("credits", 0)
     if credits:
         ship = to_object(agent_id)
-        side = ship.side if ship is not None else None
+        side = getattr(ship, "side", None)   # SHARED / console agents have no .side
         if side:
             sid = to_side_id(side)
             set_inventory_value(sid, "credits", max(0, get_inventory_value(sid, "credits", 0) - credits))

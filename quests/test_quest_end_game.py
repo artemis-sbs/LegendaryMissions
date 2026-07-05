@@ -97,6 +97,17 @@ class QuestEndGameTests(unittest.TestCase):
         self.assertEqual(int(quest_get_state(SH, "escort")), int(QuestState.FAILED))
         self.assertEqual(len(self._game_overs()), 1)
 
+    def test_shared_quest_credit_reward_no_side_crash(self):
+        # A SHARED quest (Agent.SHARED_ID has no .side) with a credits reward must
+        # complete without crashing on ship.side - the siege boss "Defeat the
+        # Warlord" (Pays: 500 credits) case. Reward is simply skipped (no side).
+        quest_add(SH, "warlord", "Defeat the Warlord", "", state=QuestState.ACTIVE,
+                  data={"on_kill": {"role": "warlord", "count": 1}, "reward": {"credits": 500}})
+        wl = to_id(create_enemy(0, 0, 0, "tsn_light_cruiser", name="W"))
+        Agent.get(wl).add_role("warlord")
+        QD.quest_on_kill_shared(wl)
+        self.assertEqual(int(quest_get_state(SH, "warlord")), int(QuestState.COMPLETE))
+
     def test_penalty_removes_items_on_fail(self):
         ship = to_id(create_enemy(0, 0, 0, "tsn_light_cruiser", name="P"))
         Agent.get(ship).add_role("__player__")
