@@ -1,5 +1,8 @@
 # Gate the siege bonus-objective routes to this map only.
 default shared SIEGE_ACTIVE = False
+# Survive-to-timeout outcome (map option): "Win" = outlasting the clock is a
+# victory (today's behavior); "Loss" = failing to break the siege in time loses.
+default shared SIEGE_TIMEOUT = "Win"
 
 @map/siege "Siege"
 " In this scenario, bases will be located in the center of the sector, 
@@ -18,6 +21,7 @@ Properties:
     Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, max", var="MONSTER_SELECT")'
     Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
+    Survive Clock: 'gui_drop_down("$text: {SIEGE_TIMEOUT};list: Win, Loss", var="SIEGE_TIMEOUT")'
     Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
 # GameCode (optional): which property vars a saved game code includes. Omitting
 # this whole block defaults to ALL the properties above (same as listing them
@@ -34,6 +38,7 @@ GameCode:
   - MONSTER_SELECT
   - UPGRADE_SELECT
   - GAME_TIME_LIMIT
+  - SIEGE_TIMEOUT
   - seed_value
 ```
 
@@ -246,7 +251,17 @@ GameCode:
 
     #------------------------------------------------------------------------------------------------------------
 
-    task_schedule(task_end_game)
+    # End-game as quests (quests/quest_driver): a SHARED mission quest whose
+    # children drive win/lose. break_siege (required) completes on siege_won; the
+    # two critical children each fire the loss with their own reason text. The
+    # siege_watch task below translates live board state into those signals - so
+    # win/lose flows through the quest system (and shows on the results log), not a
+    # bespoke poll. (task_end_game is left for the other maps that still use it.)
+    quest_add(SHARED, "siege_mission", "Repel the Siege", "Break the siege on the starbases.", state=1, data={"end_win": True, "win_text": "Victory! The starbases held."})
+    quest_add(SHARED, "break_siege", "Break the siege", "Destroy the attacking fleets.", state=1, data={"parent": "siege_mission", "required": True, "on_signal": {"name": "siege_won"}})
+    quest_add(SHARED, "hold_stations", "Hold the starbases", "Do not let every starbase fall.", state=1, data={"parent": "siege_mission", "critical": True, "end_lose": True, "lose_text": "The starbases have fallen.", "fail_on_signal": {"name": "siege_bases_lost"}})
+    quest_add(SHARED, "beat_clock", "Break it in time", "Break the siege before time runs out.", state=1, data={"parent": "siege_mission", "critical": True, "end_lose": True, "lose_text": "Time ran out - the siege was not broken.", "fail_on_signal": {"name": "siege_time_lost"}})
+    task_schedule(siege_watch)
     task_schedule(siege_bonus_objectives)
 
     #------------------------------------------------------------------------------------------------------------
@@ -268,8 +283,42 @@ GameCode:
     ->END
 
 
-# A starbase fell: the Guardian bonus is lost for everyone.
-//damage/destroy if SIEGE_ACTIVE and has_role(DESTROYED_ID, "station")
+# Lifecycle watcher: translate live board state into the siege_mission signals.
+# It no longer ends the game itself - the quest system does (game_over route),
+# so the outcome + its reason text come from the mission quest.
+=== siege_watch
+    default GAME_ENDED = False
+    default shared SIEGE_TIMEOUT = "Win"
+    seen_raiders = False
+--- loop
+    await delay_sim(4)
+    ->END if GAME_ENDED
+    if len(role("raider")) > 0:
+        seen_raiders = True
+    # Lose: every friendly starbase is gone.
+    if len(role("tsn") & role("station")) == 0:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "siege_bases_lost"})
+        ->END
+    # Win: the fleets are cleared (only once they actually turned up, so a first
+    # tick before the fleets finish spawning can't declare an instant victory).
+    if seen_raiders and len(role("raider")) == 0:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "siege_won"})
+        ->END
+    # Time limit reached: the outcome is the "Survive Clock" map option.
+    if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"):
+        remove_role(role("raider"), "raider")
+        if SIEGE_TIMEOUT == "Loss":
+            signal_emit("quest_signal", {"SIGNAL_NAME": "siege_time_lost"})
+        else:
+            signal_emit("quest_signal", {"SIGNAL_NAME": "siege_won"})
+        ->END
+    jump loop
+
+
+# A starbase fell: the Guardian bonus is lost for everyone. KILLED (not DESTROY):
+# the station is still registered here, so has_role reads it (a destroyed object is
+# often already gone on the DESTROY route). Victim = DAMAGE_SELECTED_ID.
+//damage/killed if SIEGE_ACTIVE and has_role(DAMAGE_SELECTED_ID, "station")
     for p in to_object_list(role("__player__")):
         quest_mark_failed(p.id, "siege_guardian")
     ->END
