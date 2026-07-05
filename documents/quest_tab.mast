@@ -29,7 +29,7 @@ if QUEST_TAB_ENABLED:
 
     # Quest list (left) + narrative (right) + accept/abandon controls.
     gui_section(style="area: 0,45px, 38,100; background:#1572;")
-    qbox = gui_list_box(items, "row-height:0.1em;", item_template=quest_tab_template, title_template=quest_tab_log_title, select=True, collapsible=True)
+    qbox = gui_list_box(items, "row-height:0.1em;", item_template=quest_log_template, title_template=quest_log_title, select=True, collapsible=True)
 
     gui_section(style="area: 38,45px, 100,90; background:#1572;")
     qdesc = gui_text_area("{sel_desc}", style="tag:q-desc;padding:10px,15px,10px,15px;")

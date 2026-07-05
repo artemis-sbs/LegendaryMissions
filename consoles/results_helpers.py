@@ -6,7 +6,8 @@ from sbs_utils.procedural.roles import has_role, role
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.ship_data import get_ship_data_for
 from sbs_utils.procedural.quest import (
-    quest_agent_quests, quest_get_state, quest_get_key, quest_get_display_name, QuestState)
+    quest_agent_quests, quest_get_state, quest_get_key, quest_get_display_name, QuestState,
+    quest_log_build_items)
 from sbs_utils.mast.mast_node import MastDataObject
 from sbs_utils.procedural.gui import gui_row, gui_text, gui_icon, gui_list_box_header, gui_list_box_is_header
 from sbs_utils.agent import Agent
@@ -154,28 +155,6 @@ _QUEST_STATE_LABEL = {
     int(QuestState.POSTING): "Posted",
 }
 
-# Row color per state so the log is scannable at a glance: green = done,
-# red = failed, gold = still active, gray = available/posted/other.
-_QUEST_STATE_COLOR = {
-    int(QuestState.COMPLETE): "#3c3",
-    int(QuestState.FAILED): "#e55",
-    int(QuestState.ACTIVE): "#fc4",
-    int(QuestState.IDLE): "#999",
-    int(QuestState.POSTING): "#8ad",
-}
-
-
-def quest_state_color(state):
-    """Hex color for a quest state (defaults to light gray)."""
-    return _QUEST_STATE_COLOR.get(int(state or 0), "#aaa")
-
-
-# Within a section, order rows active -> available/posted -> done -> failed.
-_QUEST_STATE_ORDER = {
-    int(QuestState.ACTIVE): 0, int(QuestState.IDLE): 1, int(QuestState.POSTING): 1,
-    int(QuestState.COMPLETE): 2, int(QuestState.FAILED): 3,
-}
-
 
 def results_quests():
     """Game (SHARED) + per-ship quests with a display state, for the read-only
@@ -242,24 +221,13 @@ def results_pilot_items():
 
 
 def results_quest_items():
-    """Quest rows grouped under collapsible section headers (Game + each ship),
-    matching the in-game quest log. Flat list; LayoutListBoxHeader items mark the
-    sections and the listbox (collapsible=True) folds each one. Empty sections
-    never appear (results_quests only emits groups that have quests)."""
-    by_group = {}
-    order = []
-    for r in results_quests():
-        g = r.get("group")
-        if g not in by_group:
-            by_group[g] = []
-            order.append(g)
-        by_group[g].append(r)
-    items = []
-    for g in order:
-        rows = sorted(by_group[g], key=lambda it: _QUEST_STATE_ORDER.get(it.get("state"), 9))
-        items.append(gui_list_box_header(g, False, 0, True, {"section": g}))
-        items.extend(MastDataObject(r) for r in rows)
-    return items
+    """Collapsible quest-log items for the results tab: the game (SHARED) plus every
+    player ship. Uses the SAME shared renderer as the in-game log (quest_log_*);
+    only the `sources` list differs, so both logs stay identical by construction."""
+    sources = [("Game", Agent.SHARED_ID)]
+    for so in to_space_object_list(role("__player__")):
+        sources.append((str(so.name), so.id))
+    return quest_log_build_items(sources)
 
 
 def results_ship_template(item):
@@ -286,30 +254,9 @@ def results_pilot_title_template():
     gui_text("$text:Air Wing;justify: left;")
 
 
-def results_quest_template(item):
-    # Collapsible section header (Game / <ship name>): label + fold arrow.
-    if gui_list_box_is_header(item):
-        gui_row("row-height: 1.4em;padding:6px;")
-        icon_index = 155 if not item.collapse else 154
-        gui_text(f"$text:{item.label};justify: left;color:#fff;", "padding:5px,6px,0,0;background:#1578")
-        icon = gui_icon(f"icon_index:{icon_index};color:#fff;", "padding:0,0,5px,0;background:#1578;")
-        if item.selectable:
-            icon.click_text = ""
-            icon.click_tag = item.collapse_tag
-            icon.click_background = "#aaaa"
-            icon.click_color = "black"
-        return
-    color = quest_state_color(item.get('state'))
-    gui_row("row-height: 1.2em;padding:6px;")
-    gui_icon(f"icon_index:101;color:{color};", "padding:5px,0,5px,0;")
-    gui_text(f"$text:{item.get('title')};justify: left;color:{color}", "padding:5px,6px,0,0;")
-    gui_row("row-height: 1.0em;padding:6px;")
-    gui_text(f"$text:{item.get('state_label')};justify: left;font:gui-1;color:{color}")
-
-
-def results_quest_title_template():
-    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
-    gui_text("$text:Quest Log;justify: left;")
+# Quest rows/headers + the tab title are rendered by the SHARED sbs_utils
+# quest_log_template / quest_log_title (used by the in-game log too) - see
+# game_results.mast. There is intentionally no results-specific quest template.
 
 
 def game_results_timestamp():

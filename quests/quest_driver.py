@@ -10,7 +10,8 @@ quest_activated/quest_completed signals so manual activation still updates state
 """
 from sbs_utils.procedural.quest import (
     quest_agent_quests, quest_get_state, quest_get_data,
-    quest_get_key, quest_set_key, quest_get_display_name, quest_add, QuestState)
+    quest_get_key, quest_set_key, quest_get_display_name, quest_add, QuestState,
+    quest_log_build_items)
 from sbs_utils.procedural.roles import has_role, role
 from sbs_utils.procedural.query import to_object, to_object_list, to_id
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
@@ -418,97 +419,18 @@ def hangar_quest_title_template():
 
 
 # --- Quest log tab (accept/abandon) ------------------------------------------
-_QUEST_STATE_LABEL = {
-    int(QuestState.ACTIVE): "Active", int(QuestState.IDLE): "Available",
-    int(QuestState.COMPLETE): "Done", int(QuestState.FAILED): "Failed",
-}
-# Display order: active, available, complete, failed.
-_QUEST_STATE_ORDER = {
-    int(QuestState.ACTIVE): 0, int(QuestState.IDLE): 1,
-    int(QuestState.COMPLETE): 2, int(QuestState.FAILED): 3,
-}
-
-
-def quest_state_label(state):
-    return _QUEST_STATE_LABEL.get(int(state or 0), "")
-
-
-# State indicator: the same square icon (index 101), recolored by state - matches
-# the original document/quest viewer (which the custom tab had dropped).
-QUEST_STATE_ICON = 101
-_QUEST_STATE_ICON_COLOR = {
-    int(QuestState.ACTIVE): "#cc0",     # in progress - amber
-    int(QuestState.IDLE): "#888",       # available  - gray
-    int(QuestState.COMPLETE): "#151",   # done       - green
-    int(QuestState.FAILED): "#a22",     # failed     - red
-}
-
-
-def quest_state_icon_color(state):
-    return _QUEST_STATE_ICON_COLOR.get(int(state or 0), "#888")
-
-
+# Rendering is shared with the end-game results Quests tab via sbs_utils
+# quest_log_build_items / quest_log_template / quest_log_title, so the look lives
+# in ONE place. Only `sources` (whose quests to show) differs between the two logs.
 def quest_tab_items(client_id, ship_id):
-    """Quest rows for the log tab, grouped under collapsible section headers
-    (Game / You / Ship). Each quest row is tagged with its owning agent (for
-    accept/abandon); SECRET quests and empty sections are hidden. The returned
-    list is flat - LayoutListBoxHeader items mark the sections and the listbox
-    (collapsible=True) folds each section on its header."""
-    items = []
+    """Collapsible quest-log items for THIS console: the game (SHARED), the client,
+    and its ship. Rows carry their owning agent (for accept/abandon)."""
     sources = [("Game", Agent.SHARED_ID)]
     if client_id and client_id != 0:
         sources.append(("You", client_id))
     if ship_id and ship_id != 0:
         sources.append(("Ship", ship_id))
-    for label, aid in sources:
-        rows = []
-        tree = quest_agent_quests(aid)
-        children = tree.get("children") if tree is not None else None
-        for qid, q in (children or {}).items():
-            st = int(q.get("state", QuestState.IDLE) or 0)
-            if st == int(QuestState.SECRET):
-                continue
-            rows.append(MastDataObject({
-                "agent_id": aid, "key": qid, "group": label,
-                "title": q.get("display_text", qid), "state": st,
-                "progress": q.get("progress", 0),
-                "desc": (q.get("description") or "").strip(),
-            }))
-        if not rows:
-            continue  # don't show an empty section header
-        rows.sort(key=lambda it: _QUEST_STATE_ORDER.get(it.get("state"), 9))
-        # selectable + non-root data so the listbox assigns a collapse_tag and the
-        # template draws the fold arrow.
-        items.append(gui_list_box_header(label, False, 0, True, {"section": label}))
-        items.extend(rows)
-    return items
-
-
-def quest_tab_template(item):
-    # Collapsible section header (Game / You / Ship): label + fold arrow.
-    if gui_list_box_is_header(item):
-        gui_row("row-height: 1.4em;padding:6px;")
-        icon_index = 155 if not item.collapse else 154
-        text = gui_text(f"$text:{item.label};justify: left;color:#fff;", "padding:5px,6px,0,0;background:#1578")
-        icon = gui_icon(f"icon_index:{icon_index};color:#fff;", "padding:0,0,5px,0;background:#1578;")
-        if item.selectable:
-            icon.click_text = ""
-            icon.click_tag = item.collapse_tag
-            icon.click_background = "#aaaa"
-            icon.click_color = "black"
-        return
-    # State indicator: the square icon (101) recolored by state, then the title.
-    icon_color = quest_state_icon_color(item.get("state"))
-    gui_row("row-height: 1.2em;padding:6px;")
-    gui_icon(f"icon_index:{QUEST_STATE_ICON};color:{icon_color};", "padding:5px,0,5px,0;")
-    gui_text(f"$text:{item.title};justify: left;", "padding:5px,6px,0,0;")
-    gui_row("row-height: 1.0em;padding:6px;")
-    gui_text(f"$text:{quest_state_label(item.get('state'))};justify: left;font:gui-1")
-
-
-def quest_tab_log_title():
-    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
-    gui_text("$text:Quest Log;justify: left;")
+    return quest_log_build_items(sources)
 
 
 def quest_tab_accept(item):

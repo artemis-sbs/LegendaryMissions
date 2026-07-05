@@ -169,7 +169,7 @@ shared game_stats = ~~{
             # left, the selected quest's description on the right.
             q_sel_desc = "Select a quest to see its details."
             gui_section(style="area: 10, 17, 46, 90;")
-            quest_box = gui_list_box(quest_items, "row-height:0.1em;", item_template=results_quest_template, title_template=results_quest_title_template, select=True, collapsible=True)
+            quest_box = gui_list_box(quest_items, "row-height:0.1em;", item_template=quest_log_template, title_template=quest_log_title, select=True, collapsible=True)
             gui_section(style="area: 48, 17, 90, 90; background:#1572;")
             q_desc = gui_text_area("{q_sel_desc}", style="padding:10px,15px,10px,15px;")
             on change quest_box.get_value():
