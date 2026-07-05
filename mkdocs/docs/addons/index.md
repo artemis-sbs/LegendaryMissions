@@ -42,6 +42,7 @@ Load only the addons you use &mdash; each one adds labels to the global namespac
 | `science_scans` | science scan response handlers |
 | `gamemaster` / `gamemaster_comms` | GM console + spawn/message/map tools |
 | `hangar` | landing bay, bar, hangar comms, sorties |
+| `biomech` | [BioMech](biomech.md) creatures — a passive/collective/evolving swarm |
 | `internal_comms` | crew department comms (sickbay, security, ...) |
 | `operator` | operator/admin console for venue use |
 | `side_missions` | structured optional objectives |

@@ -63,6 +63,7 @@ nav:
   - Addons:
     - addons/index.md
     - The Casino: addons/casino.md
+    - BioMech: addons/biomech.md
     - Maps & terrain: script/maps/index.md
     - Writing a Siege boss: script/bosses.md
 
