@@ -301,7 +301,8 @@ def results_quest_template(item):
         return
     color = quest_state_color(item.get('state'))
     gui_row("row-height: 1.2em;padding:6px;")
-    gui_text(f"$text:{item.get('title')};justify: left;color:{color}")
+    gui_icon(f"icon_index:101;color:{color};", "padding:5px,0,5px,0;")
+    gui_text(f"$text:{item.get('title')};justify: left;color:{color}", "padding:5px,6px,0,0;")
     gui_row("row-height: 1.0em;padding:6px;")
     gui_text(f"$text:{item.get('state_label')};justify: left;font:gui-1;color:{color}")
 
