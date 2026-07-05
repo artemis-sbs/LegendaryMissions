@@ -1,0 +1,14 @@
+// Continuous - convention play. Waves of raiders keep arriving from the start until
+// the clock runs down, then the attackers break off for a clean defender win. No
+// named boss and no extra objective: you win by outlasting the siege, so set a Time
+// Limit. (Trigger: continuous is handled by siege.mast's siege_continuous loop.)
+
+# [Continuous](continuous)
+---
+Trigger: continuous
+Flies: 60% Kralien, 20% Torgoth, 20% Arvonian
+Fleets: 1
+Difficulty: +0
+Wave: 40
+---
+Endless waves press the starbases. Hold the line until they break and withdraw.

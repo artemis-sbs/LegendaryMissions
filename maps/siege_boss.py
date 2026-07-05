@@ -32,6 +32,8 @@ def _boss_facts():
             data["trigger"] = str(value).strip().lower()
         elif label == "low":
             data["low"] = amd_pct(value)                 # "25%" -> 0.25
+        elif label == "wave":
+            data["wave"] = int(amd_num(value))           # seconds between waves (continuous)
         elif label == "flies":
             data["makeup"] = amd_makeup(value)           # "50% Kralien, 50% Torgoth"
         elif label == "fleets":
@@ -91,6 +93,17 @@ def siege_boss_get(sel):
 def _bdata(sel):
     node = siege_boss_get(sel)
     return (node.get("data") or {}) if node else {}
+
+
+def siege_boss_trigger(sel):
+    """How the boss arrives: 'enemies_low' (spawn once when raiders thin - default)
+    or 'continuous' (respawn waves until the clock runs out)."""
+    return _bdata(sel).get("trigger", "enemies_low") if siege_boss_get(sel) else "none"
+
+
+def siege_boss_wave(sel):
+    """Seconds between waves for a continuous boss (default 45)."""
+    return int(_bdata(sel).get("wave", 45))
 
 
 def siege_boss_low_pct(sel):
