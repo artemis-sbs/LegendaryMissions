@@ -1,0 +1,25 @@
+# A BioMech (Cosmos approximation - the engine has no built-in BioMech AI, so the
+# behavior is scripted by the caller). The stage art biomech_a..d (Drone1..4 in
+# shipData) carries the escalating shields/appearance, so "evolving" is just swapping
+# the art_id. BioMechs are fast + agile (per the 2.x lore), so a high-throttle chase
+# brain. Spawn via prefab_spawn(prefab_biomech, {START_X/Y/Z, BIO_ART, BIO_ROLES}).
+#
+# (the maps/bosses siege Infestation drives evolve/reproduce over these.)
+
+=== prefab_biomech
+metadata: ```
+brain:
+    - label: ai_chase_player
+      data:
+        force_shoot: true
+        throttle: 2.8
+    - label: ai_chase_station
+      data:
+        force_shoot: true
+        throttle: 2.2
+```
+    default BIO_ART = "biomech_a"
+    default BIO_ROLES = "biomech, raider"
+    bio = npc_spawn(START_X, START_Y, START_Z, "BioMech", BIO_ROLES, BIO_ART, "behav_npcship")
+    brain_add(bio, brain)
+    yield result to_id(bio)

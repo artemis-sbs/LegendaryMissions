@@ -355,6 +355,9 @@ GameCode:
         boss_roles = "raider, boss, " + boss_name.lower()
         prefab_spawn(prefab_siege_boss_ship, {"START_X": npos.x, "START_Y": npos.y, "START_Z": npos.z, "NAME": boss_name, "BOSS_ART": boss_art, "BOSS_ROLES": boss_roles})
     quest_grant_amd(SHARED, boss_node)
+    # A boss with a Hook runs a bespoke behavior label (e.g. the infestation loop).
+    if siege_boss_hook(BOSS_SELECT) != "":
+        prefab_spawn(siege_boss_hook(BOSS_SELECT), {"BOSS_SELECT": BOSS_SELECT})
     ->END
 
 
@@ -437,4 +440,34 @@ brain:
         brain_clear(COMMS_SELECTED_ID)
         brain_add(COMMS_SELECTED_ID, "ai_chase_npc", {"force_shoot": True, "throttle": 2.2})
         signal_emit("quest_signal", {"SIGNAL_NAME": "xorn_defected"})
+
+
+# Infestation hook: BioMechs boil out (Cosmos approximation - the engine has no
+# built-in biomech AI). They evolve (biomech_a..d, art carries the escalating stats)
+# and, once one matures to Stage 4, breed litters of Stage 1 - bounded by a cap and a
+# fixed number of cycles so the swarm stays winnable. Exterminate them (raider-roled)
+# to win via siege_won. Scheduled by the enemies_low driver for a Hook: boss.
+=== siege_boss_infestation
+    default GAME_ENDED = False
+    default DIFFICULTY = 5
+    bio_cycles = 10
+    bio_cap = 12 + int(DIFFICULTY)
+    # Initial swarm; the ~20 "of all stages" builds up as they evolve and breed.
+    for bio_i in range(8):
+        bpos = Vec3.rand_in_sphere(20000, 40000, False, True)
+        prefab_spawn(prefab_biomech, {"START_X": bpos.x, "START_Y": bpos.y, "START_Z": bpos.z, "BIO_ART": "biomech_a", "BIO_ROLES": "biomech, raider, boss"})
+--- bio_grow
+    await delay_sim(25)
+    ->END if GAME_ENDED
+    ->END if bio_cycles <= 0
+    bio_cycles = bio_cycles - 1
+    # Evolve a couple toward Stage 4 (the Cosmos stand-in for eating asteroids).
+    siege_infestation_evolve()
+    siege_infestation_evolve()
+    # Breed once a Stage 4 exists and we are under the population cap.
+    if siege_infestation_has_stage4() and siege_infestation_count() < bio_cap:
+        rpos = Vec3.rand_in_sphere(15000, 35000, False, True)
+        prefab_spawn(prefab_biomech, {"START_X": rpos.x, "START_Y": rpos.y, "START_Z": rpos.z, "BIO_ART": "biomech_a", "BIO_ROLES": "biomech, raider, boss"})
+        prefab_spawn(prefab_biomech, {"START_X": rpos.x + 2500, "START_Y": rpos.y, "START_Z": rpos.z, "BIO_ART": "biomech_a", "BIO_ROLES": "biomech, raider, boss"})
+    jump bio_grow
 

@@ -16,6 +16,8 @@ from sbs_utils.fs import get_mission_dir_filename
 from sbs_utils.procedural.amd import amd_parse_facts, amd_makeup, amd_pct, amd_num
 from sbs_utils.procedural.amd_quest import amd_quest_facts
 from sbs_utils.procedural.quest import document_get_amd_file
+from sbs_utils.procedural.roles import role
+from sbs_utils.procedural.query import to_object_list
 
 _BOSS_DIR = "maps/bosses"
 _bosses = None   # cache: Display -> boss node
@@ -147,3 +149,48 @@ def siege_boss_race(sel):
 def siege_boss_named(sel):
     """List of (name, art) named flagship hulls for the boss (may be empty)."""
     return list(_bdata(sel).get("named", []))
+
+
+def siege_boss_hook(sel):
+    """A MAST label the boss runs (via prefab_spawn) for bespoke behavior beyond the
+    config spawn - e.g. the infestation's evolve/reproduce loop. '' if none."""
+    return _bdata(sel).get("hook", "")
+
+
+# --- BioMech infestation helpers (Cosmos approximation) ----------------------
+# The stage IS the art (biomech_a..d); evolving just swaps the art so shields +
+# appearance follow shipData. No extra per-ship state to track.
+_BIO_ARTS = ["biomech_a", "biomech_b", "biomech_c", "biomech_d"]
+
+
+def siege_infestation_count():
+    """Number of live BioMechs."""
+    return len(role("biomech"))
+
+
+def siege_infestation_evolve():
+    """Evolve one random pre-stage-4 BioMech to the next stage (swap art -> its
+    shields/appearance follow shipData). The Cosmos stand-in for the 2.x
+    asteroid-eating growth. Returns the evolved id, or 0 if all are already stage 4."""
+    growable = []
+    for o in to_object_list(role("biomech")):
+        try:
+            idx = _BIO_ARTS.index(o.art_id)
+        except ValueError:
+            idx = 0
+        if idx < len(_BIO_ARTS) - 1:
+            growable.append((o, idx))
+    if not growable:
+        return 0
+    o, idx = random.choice(growable)
+    o.art_id = _BIO_ARTS[idx + 1]
+    return o.id
+
+
+def siege_infestation_has_stage4():
+    """True once at least one BioMech has matured to Stage 4 (biomech_d) - the stage
+    that reproduces in the lore, so breeding only starts once one matures."""
+    for o in to_object_list(role("biomech")):
+        if o.art_id == _BIO_ARTS[-1]:
+            return True
+    return False
