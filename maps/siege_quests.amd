@@ -1,0 +1,46 @@
+// Siege end-game quests, authored in the shared AMD quest vocabulary
+// (sbs_utils.procedural.amd_quest) - the same grammar Open Universe uses, so this
+// is a gentle on-ramp to a universe .amd. Granted to the game (Scope: shared) by
+// siege.mast. The mission tree: siege_mission is the parent; break_siege (Required)
+// wins it; hold_stations / beat_clock (Critical) lose it. siege_watch emits the
+// siege_won / siege_bases_lost / siege_time_lost signals these quests listen for.
+
+# [Repel the Siege](siege_mission)
+---
+Scope: shared
+State: active
+Win: Victory! The starbases held.
+---
+Break the siege on the starbases.
+
+# [Break the Siege](break_siege)
+---
+Scope: shared
+State: active
+Parent: siege_mission
+Required: true
+When: signal siege_won
+---
+Destroy the attacking fleets before they overwhelm the starbases.
+
+# [Hold the Starbases](hold_stations)
+---
+Scope: shared
+State: active
+Parent: siege_mission
+Critical: true
+Fail on signal: siege_bases_lost
+Lose: The starbases have fallen.
+---
+Do not let every starbase fall - losing the last one loses the siege.
+
+# [Break It in Time](beat_clock)
+---
+Scope: shared
+State: active
+Parent: siege_mission
+Critical: true
+Fail on signal: siege_time_lost
+Lose: Time ran out - the siege was not broken.
+---
+Break the siege before the clock runs out (when Survive Clock is set to Loss).

@@ -251,16 +251,14 @@ GameCode:
 
     #------------------------------------------------------------------------------------------------------------
 
-    # End-game as quests (quests/quest_driver): a SHARED mission quest whose
-    # children drive win/lose. break_siege (required) completes on siege_won; the
-    # two critical children each fire the loss with their own reason text. The
-    # siege_watch task below translates live board state into those signals - so
-    # win/lose flows through the quest system (and shows on the results log), not a
-    # bespoke poll. (task_end_game is left for the other maps that still use it.)
-    quest_add(SHARED, "siege_mission", "Repel the Siege", "Break the siege on the starbases.", state=1, data={"end_win": True, "win_text": "Victory! The starbases held."})
-    quest_add(SHARED, "break_siege", "Break the siege", "Destroy the attacking fleets.", state=1, data={"parent": "siege_mission", "required": True, "on_signal": {"name": "siege_won"}})
-    quest_add(SHARED, "hold_stations", "Hold the starbases", "Do not let every starbase fall.", state=1, data={"parent": "siege_mission", "critical": True, "end_lose": True, "lose_text": "The starbases have fallen.", "fail_on_signal": {"name": "siege_bases_lost"}})
-    quest_add(SHARED, "beat_clock", "Break it in time", "Break the siege before time runs out.", state=1, data={"parent": "siege_mission", "critical": True, "end_lose": True, "lose_text": "Time ran out - the siege was not broken.", "fail_on_signal": {"name": "siege_time_lost"}})
+    # End-game as quests, authored in maps/siege_quests.amd (the shared AMD quest
+    # vocabulary - the same grammar Open Universe uses). A SHARED mission quest whose
+    # children drive win/lose: break_siege (Required) completes on siege_won; the two
+    # Critical children each fire the loss with their own reason text. siege_watch
+    # below translates live board state into those signals, so win/lose flows through
+    # the quest system (and shows on the results log), not a bespoke poll.
+    # (task_end_game is left for the other maps that still use it.)
+    quest_grant_amd(SHARED, document_get_amd_file(get_mission_dir_filename("maps/siege_quests.amd"), data_parser=amd_quest_data))
     task_schedule(siege_watch)
     task_schedule(siege_bonus_objectives)
 
