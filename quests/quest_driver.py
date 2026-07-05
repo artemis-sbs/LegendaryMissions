@@ -18,7 +18,7 @@ from sbs_utils.procedural.sides import to_side_id
 from sbs_utils.procedural.timers import set_timer, is_timer_set, is_timer_finished
 from sbs_utils.procedural.comms import comms_broadcast
 from sbs_utils.procedural.signal import signal_emit
-from sbs_utils.procedural.gui import gui_row, gui_text, gui_icon
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_icon, gui_list_box_header, gui_list_box_is_header
 from sbs_utils.mast.mast_node import MastDataObject
 from sbs_utils.agent import Agent
 
@@ -449,8 +449,11 @@ def quest_state_icon_color(state):
 
 
 def quest_tab_items(client_id, ship_id):
-    """Quest rows for the log tab: shared/game + client + ship quests, each
-    tagged with its owning agent (for accept/abandon). SECRET quests are hidden."""
+    """Quest rows for the log tab, grouped under collapsible section headers
+    (Game / You / Ship). Each quest row is tagged with its owning agent (for
+    accept/abandon); SECRET quests and empty sections are hidden. The returned
+    list is flat - LayoutListBoxHeader items mark the sections and the listbox
+    (collapsible=True) folds each section on its header."""
     items = []
     sources = [("Game", Agent.SHARED_ID)]
     if client_id and client_id != 0:
@@ -458,30 +461,49 @@ def quest_tab_items(client_id, ship_id):
     if ship_id and ship_id != 0:
         sources.append(("Ship", ship_id))
     for label, aid in sources:
+        rows = []
         tree = quest_agent_quests(aid)
         children = tree.get("children") if tree is not None else None
         for qid, q in (children or {}).items():
             st = int(q.get("state", QuestState.IDLE) or 0)
             if st == int(QuestState.SECRET):
                 continue
-            items.append(MastDataObject({
+            rows.append(MastDataObject({
                 "agent_id": aid, "key": qid, "group": label,
                 "title": q.get("display_text", qid), "state": st,
                 "progress": q.get("progress", 0),
                 "desc": (q.get("description") or "").strip(),
             }))
-    items.sort(key=lambda it: _QUEST_STATE_ORDER.get(it.get("state"), 9))
+        if not rows:
+            continue  # don't show an empty section header
+        rows.sort(key=lambda it: _QUEST_STATE_ORDER.get(it.get("state"), 9))
+        # selectable + non-root data so the listbox assigns a collapse_tag and the
+        # template draws the fold arrow.
+        items.append(gui_list_box_header(label, False, 0, True, {"section": label}))
+        items.extend(rows)
     return items
 
 
 def quest_tab_template(item):
+    # Collapsible section header (Game / You / Ship): label + fold arrow.
+    if gui_list_box_is_header(item):
+        gui_row("row-height: 1.4em;padding:6px;")
+        icon_index = 155 if not item.collapse else 154
+        text = gui_text(f"$text:{item.label};justify: left;color:#fff;", "padding:5px,6px,0,0;background:#1578")
+        icon = gui_icon(f"icon_index:{icon_index};color:#fff;", "padding:0,0,5px,0;background:#1578;")
+        if item.selectable:
+            icon.click_text = ""
+            icon.click_tag = item.collapse_tag
+            icon.click_background = "#aaaa"
+            icon.click_color = "black"
+        return
     # State indicator: the square icon (101) recolored by state, then the title.
     icon_color = quest_state_icon_color(item.get("state"))
     gui_row("row-height: 1.2em;padding:6px;")
     gui_icon(f"icon_index:{QUEST_STATE_ICON};color:{icon_color};", "padding:5px,0,5px,0;")
     gui_text(f"$text:{item.title};justify: left;", "padding:5px,6px,0,0;")
     gui_row("row-height: 1.0em;padding:6px;")
-    gui_text(f"$text:[{item.group}] {quest_state_label(item.get('state'))};justify: left;font:gui-1")
+    gui_text(f"$text:{quest_state_label(item.get('state'))};justify: left;font:gui-1")
 
 
 def quest_tab_log_title():
@@ -490,12 +512,16 @@ def quest_tab_log_title():
 
 
 def quest_tab_accept(item):
-    """Accept an available (IDLE) quest."""
-    if item is not None and item.get("state") == int(QuestState.IDLE):
+    """Accept an available (IDLE) quest. No-op on a section header."""
+    if item is None or gui_list_box_is_header(item):
+        return
+    if item.get("state") == int(QuestState.IDLE):
         quest_mark_active(item.get("agent_id"), item.get("key"))
 
 
 def quest_tab_abandon(item):
-    """Abandon an active quest (-> FAILED)."""
-    if item is not None and item.get("state") == int(QuestState.ACTIVE):
+    """Abandon an active quest (-> FAILED). No-op on a section header."""
+    if item is None or gui_list_box_is_header(item):
+        return
+    if item.get("state") == int(QuestState.ACTIVE):
         quest_set_key(item.get("agent_id"), item.get("key"), "state", QuestState.FAILED)
