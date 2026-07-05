@@ -468,10 +468,11 @@ hangar_get_craft_data("terran")
 # Wing roster is populated even in missions that don't load the results (consoles)
 # addon. Fires only for cockpit attackers; the consoles addon credits bridge ships,
 # so the two never double-count.
-//damage/destroy if not has_role(DESTROYED_ID, "standby")
-    default DAMAGE_PARENT_ID = 0
-    default DAMAGE_SOURCE_ID = 0
-    hangar_credit_kill(DAMAGE_PARENT_ID, DAMAGE_SOURCE_ID, DESTROYED_ID)
+//damage/killed if not has_role(DAMAGE_SELECTED_ID, "standby")
+    # KILLED (not DESTROY): the victim is still registered so its hull reads for
+    # tonnage, and the attacker rides the damage event. DESTROY is a lifetime
+    # removal (fires for script deletes; victim can be gone -> tonnage 0).
+    hangar_credit_kill(DAMAGE_PARENT_ID, DAMAGE_SOURCE_ID, DAMAGE_SELECTED_ID)
     ->END
 
 //damage/object if SETTINGS.get("TRACK_DAMAGE", True) and (has_role(DAMAGE_PARENT_ID, "cockpit") or has_role(DAMAGE_SOURCE_ID, "cockpit"))

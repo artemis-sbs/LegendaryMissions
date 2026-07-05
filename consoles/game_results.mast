@@ -14,18 +14,18 @@ shared game_stats = ~~{
 }~~
 
 
-//damage/destroy if not has_role(DESTROYED_ID, "standby")
-    ##
-    ## Called via route destroy
-    ##
-    obj = to_object(DESTROYED_ID)
-    # Don't count never-activated player slots. spawn_players de-roles the unused
-    # default_player_ship slots (drops __player__/tsn) and then deletes them, which
-    # fires this route with the ship still sided TSN - inflating tsn_destroyed. An
-    # ACTIVE player keeps __player__ (and default_player_ship), so gate on the pair:
-    # a default_player_ship that is no longer a __player__ is a dry-docked slot.
-    is_unused_slot = has_role(DESTROYED_ID, "default_player_ship") and not has_role(DESTROYED_ID, "__player__")
-    if obj is not None and not is_unused_slot:
+//damage/killed if not has_role(DAMAGE_SELECTED_ID, "standby")
+    #
+    # A ship killed by damage. This is the KILLED route, not the DESTROY route:
+    # killed fires "about to be removed" - the victim is still registered (its
+    # side/hull read cleanly for the tally + tonnage) and the attacker rides the
+    # damage event (DAMAGE_PARENT/SOURCE). The DESTROY route is a lifetime REMOVAL
+    # event: it also fires for script deletes (e.g. unused player slots, which is
+    # why it used to over-count) and the victim can already be gone (to_object ->
+    # None -> tonnage 0). The victim here is DAMAGE_SELECTED_ID.
+    #
+    obj = to_object(DAMAGE_SELECTED_ID)
+    if obj is not None:
         side = "{obj.side.lower()}_destroyed"
         count = game_stats.get(side, 0)
         game_stats[side] = count + 1
@@ -43,12 +43,9 @@ shared game_stats = ~~{
 
     # Credit the kill + the victim's tonnage to the player BRIDGE ship that landed
     # the final blow. (Fighter/shuttle kills are credited by the hangar addon, so a
-    # console-less mission still tracks pilots and the two never double-count.) The
-    # DESTROYED route carries the killer in DAMAGE_* (defaulted here for non-combat
-    # removals, where no damage event is attached).
-    default DAMAGE_PARENT_ID = 0
-    default DAMAGE_SOURCE_ID = 0
-    results_credit_kill(DAMAGE_PARENT_ID, DAMAGE_SOURCE_ID, DESTROYED_ID)
+    # console-less mission still tracks pilots and the two never double-count.)
+    # //damage/killed always carries the attacker in DAMAGE_PARENT/SOURCE.
+    results_credit_kill(DAMAGE_PARENT_ID, DAMAGE_SOURCE_ID, DAMAGE_SELECTED_ID)
     ->END
 
 
