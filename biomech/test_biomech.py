@@ -31,15 +31,46 @@ class BioMechTests(unittest.TestCase):
     def tearDown(self):
         BM.brain_add = self._real_brain_add
 
-    def test_spawn_sets_role_and_remembers_roles(self):
+    def test_spawn_sets_role_remembers_roles_and_starts_passive(self):
         bid = BM.biomech_spawn(0, 0, 0, "biomech_a", "biomech, raider")
         o = to_object(bid)
         self.assertTrue(o.has_role("biomech"))
         self.assertTrue(o.has_role("raider"))
         self.assertEqual(BM.get_inventory_value(bid, "biomech:roles", None), "biomech, raider")
+        self.assertEqual(BM.get_inventory_value(bid, "biomech:enraged", None), 0)  # passive
         self.assertEqual(BM.biomech_count(), 1)
         self.assertEqual(BM.biomech_stage(o), 0)
         self.assertFalse(BM.biomech_has_stage4())
+
+    def test_enrage_is_bounded_to_radius(self):
+        # A hull that gets hit, a near hull inside the aggro radius, a far hull outside.
+        hit = BM.biomech_spawn(0, 0, 0, "biomech_a")
+        near = BM.biomech_spawn(3000, 0, 0, "biomech_a")   # within 5000
+        far = BM.biomech_spawn(50000, 0, 0, "biomech_a")   # well outside
+        attacker = 777
+        woke = BM.biomech_enrage(hit, attacker, radius=5000)
+        self.assertEqual(woke, 2)                          # hit + near only
+        self.assertEqual(BM.get_inventory_value(hit, "biomech:enraged", 0), 1)
+        self.assertEqual(BM.get_inventory_value(near, "biomech:enraged", 0), 1)
+        self.assertEqual(BM.get_inventory_value(far, "biomech:enraged", 0), 0)   # bounded out
+        self.assertEqual(BM.get_inventory_value(near, "biomech:target", 0), attacker)
+
+    def test_calm_clears_enraged(self):
+        a = BM.biomech_spawn(0, 0, 0, "biomech_a")
+        b = BM.biomech_spawn(1000, 0, 0, "biomech_a")
+        BM.biomech_enrage(a, 5, radius=100000)             # rouse the whole hive
+        self.assertEqual(BM.get_inventory_value(b, "biomech:enraged", 0), 1)
+        calmed = BM.biomech_calm()
+        self.assertEqual(calmed, 2)
+        self.assertEqual(BM.get_inventory_value(a, "biomech:enraged", 1), 0)
+        self.assertEqual(BM.get_inventory_value(b, "biomech:enraged", 1), 0)
+
+    def test_evolve_carries_enraged_forward(self):
+        bid = BM.biomech_spawn(0, 0, 0, "biomech_a")
+        BM.biomech_enrage(bid, 42, radius=1000)
+        new_id = BM.biomech_evolve()
+        self.assertEqual(BM.get_inventory_value(new_id, "biomech:enraged", 0), 1)
+        self.assertEqual(BM.get_inventory_value(new_id, "biomech:target", 0), 42)
 
     def test_evolve_respawns_next_stage_at_same_pos(self):
         # ONE growable hull, so evolve is deterministic.

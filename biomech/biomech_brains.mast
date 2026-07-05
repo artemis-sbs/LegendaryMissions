@@ -1,0 +1,66 @@
+# BioMech disposition: passive-until-provoked, collective mind, sentient Stage 4.
+# The brain is a Select of [ai_biomech_hunt, ai_biomech_feed] (biomech.py BIOMECH_BRAIN):
+# hunt wins only while the hull is enraged; otherwise it declines and the passive feed
+# brain runs. Enrage/calm state lives in the hull's inventory (biomech:enraged /
+# biomech:target), flipped by biomech_enrage / biomech_calm.
+
+# Enraged BioMech: hunt the remembered attacker, or the nearest player anywhere ("at any
+# range" - the hive does not give up), and tear in with weapons hot.
+=== ai_biomech_hunt
+" BioMech hunting
+metadata: ``` yaml
+type: brain/npc
+throttle: 2.8
+stop_dist: 300
+```
+    clear_target(BRAIN_AGENT.id)
+    yield fail if BRAIN_AGENT.get_inventory_value("biomech:enraged", 0) != 1
+    hunt = to_object(BRAIN_AGENT.get_inventory_value("biomech:target", 0))
+    if hunt is None:
+        hunt = to_object(closest(BRAIN_AGENT_ID, role("__player__")))
+    yield fail if hunt is None
+    BRAIN_AGENT.set_inventory_value("biomech:target", to_id(hunt))
+    target(BRAIN_AGENT_ID, to_id(hunt), True, throttle, stop_dist=stop_dist)
+    yield success
+
+# Passive BioMech (the default state): drift toward the nearest asteroid to feed. No
+# weapons - it will not attack unless the hive is roused. Idles in place if no asteroid.
+=== ai_biomech_feed
+" BioMech feeding
+metadata: ``` yaml
+type: brain/npc
+throttle: 0.6
+stop_dist: 600
+```
+    clear_target(BRAIN_AGENT.id)
+    rock = to_object(closest(BRAIN_AGENT_ID, role("asteroid")))
+    if rock is not None:
+        target_pos(BRAIN_AGENT_ID, rock.pos.x, rock.pos.y, rock.pos.z, throttle, stop_dist=stop_dist)
+        yield success
+    BRAIN_AGENT.data_set.set("throttle", 0.0, 0)
+    yield success
+
+# Provoke: a player hitting ANY BioMech wakes the hive within a bounded radius (an area
+# effect, not the whole sector - see BIOMECH_AGGRO_RADIUS) and sics them on the attacker.
+//damage/object if has_role(DAMAGE_TARGET_ID, "biomech") and has_any_role(DAMAGE_ORIGIN_ID, "__player__")
+    biomech_enrage(DAMAGE_TARGET_ID, DAMAGE_ORIGIN_ID)
+    ->END
+
+# Stage 4 is sentient: your comms officer can hail a mature (biomech_d) hull. Calm the
+# hive (a chance to soothe it back to passive) or taunt it (rouse it). Requires the
+# mission to make BioMechs scannable so comms will open on them.
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "biomech") and COMMS_SELECTED.art_id == "biomech_d"
+    + "Attempt to calm the hive":
+        calm_ok = random.random() < 0.5
+        if calm_ok:
+            biomech_calm(COMMS_SELECTED_ID)
+            <<[cyan] "BioMech"
+                % The hive-song settles. The swarm loses interest in you.
+        else:
+            biomech_enrage(COMMS_SELECTED_ID, COMMS_ORIGIN_ID)
+            <<[cyan] "BioMech"
+                % Your signal ripples wrong. The swarm shrieks and turns.
+    + "Taunt the swarm":
+        biomech_enrage(COMMS_SELECTED_ID, COMMS_ORIGIN_ID)
+        <<[cyan] "BioMech"
+            % The hive answers with fury.
