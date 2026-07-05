@@ -19,7 +19,13 @@ shared game_stats = ~~{
     ## Called via route destroy
     ##
     obj = to_object(DESTROYED_ID)
-    if obj is not None:
+    # Don't count never-activated player slots. spawn_players de-roles the unused
+    # default_player_ship slots (drops __player__/tsn) and then deletes them, which
+    # fires this route with the ship still sided TSN - inflating tsn_destroyed. An
+    # ACTIVE player keeps __player__ (and default_player_ship), so gate on the pair:
+    # a default_player_ship that is no longer a __player__ is a dry-docked slot.
+    is_unused_slot = has_role(DESTROYED_ID, "default_player_ship") and not has_role(DESTROYED_ID, "__player__")
+    if obj is not None and not is_unused_slot:
         side = "{obj.side.lower()}_destroyed"
         count = game_stats.get(side, 0)
         game_stats[side] = count + 1
