@@ -14,13 +14,17 @@
     quest_mark_complete(AGENT_ID, QUEST_ID)
     ->END
 
-//damage/destroy
-    quest_on_kill(DAMAGE_SOURCE_ID, DESTROYED_ID)
+# KILLED, not DESTROY: the victim is still registered here, so the on_kill role
+# filter (has_role(victim, "raider")) works. On the DESTROY route the victim is
+# often already gone (to_object -> None -> has_role False), so role-filtered kill
+# quests like "destroy N raiders" silently never advanced. Victim = DAMAGE_SELECTED_ID.
+//damage/killed
+    quest_on_kill(DAMAGE_SOURCE_ID, DAMAGE_SELECTED_ID)
     # Also credit the owning ship (e.g. a fighter's carrier); parent 0 = none.
     if DAMAGE_PARENT_ID and DAMAGE_PARENT_ID != DAMAGE_SOURCE_ID:
-        quest_on_kill(DAMAGE_PARENT_ID, DESTROYED_ID)
+        quest_on_kill(DAMAGE_PARENT_ID, DAMAGE_SELECTED_ID)
     # Game-level (SHARED) kill objectives - once per kill.
-    quest_on_kill_shared(DESTROYED_ID)
+    quest_on_kill_shared(DAMAGE_SELECTED_ID)
     ->END
 
 //signal/item_collected
