@@ -6,14 +6,19 @@
 # NOTE (render-verify): the card-game areas are stubs until their phases land.
 
 default CONSOLE_SELECT = ""   # ensure it exists at startup
+# Master switch: a mission/host can drop the whole casino by setting this False.
+default shared CASINO_ENABLED = True
 
 # Self-register as a top tab (the "child knows its parent" pattern, like
-# library/help/quest). Appears on any console that calls gui_tab_enable_top()
-# - the hangar does. //gui/tab/casino handles the click.
+# library/help/quest). It registers globally, but the //gui/tab/casino condition
+# below gates its VISIBILITY - so it only shows in the hangar, not on every standard
+# console that calls gui_tab_enable_top().
 gui_tab_add_top("casino")
 
-# Hangar top tab -> casino lobby.
-//gui/tab/casino
+# Hangar top tab -> casino lobby. Only in the hangar (CONSOLE_SELECT == "hangar", like
+# the OU admiral's galaxy tab) and only when the casino is enabled. The tab renderer
+# evaluates this condition, so a false result hides the tab, not just the click.
+//gui/tab/casino if CASINO_ENABLED and CONSOLE_SELECT == "hangar"
     jump show_casino
 
 === show_casino ==
