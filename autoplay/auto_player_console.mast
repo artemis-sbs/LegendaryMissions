@@ -256,6 +256,17 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
         if current!= raider:
             set_weapons_selection(_ship_id, raider)
             # follow_route_select_weapon(_ship_id, raider)
+        # Beams auto-fire; torpedoes need an explicit launch. Spend the area munitions
+        # wisely: Nuke a real cluster (3+ raiders in blast range), EMP a pair (strip
+        # their shields for the beams), Homing a lone target. Never waste them on wrecks.
+        # fire_torpedo falls back to a Homing if the chosen type is not loaded.
+        cluster = role("raider") & broad_test_around(to_id(raider), 2000, 2000, 0x30)
+        if len(cluster) >= 3:
+            fire_torpedo(_ship_id, "Nuke")
+        elif len(cluster) == 2:
+            fire_torpedo(_ship_id, "EMP")
+        else:
+            fire_torpedo(_ship_id, "Homing")
     elif wreck is not None:
         current = get_weapons_selection(_ship_id)
         if current!= wreck:
