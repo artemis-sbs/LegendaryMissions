@@ -17,12 +17,12 @@ range: close or far
     # which is bad to do
     #
     # But demo setting science
-    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Clock charging in {t}"})
+    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Cloak charging in {t}"})
     await delay_sim(0.8)
     jump warmup
 
 ---- ready
-    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Clock was activated"})
+    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID,  "status": f"Cloak was activated"})
     old_art_id = get_inventory_value(ELITE_ID, "visible_art_id")
     yield FAIL if None != old_art_id #if I'm currently cloaked
 
