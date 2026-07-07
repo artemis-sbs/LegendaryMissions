@@ -1,0 +1,10 @@
+# Hangar console tab enables - the "mission" side of LegendaryMissions.
+#
+# The Casino is an ADDON (casino/); whether a mission surfaces it in the hangar is a
+# MISSION decision, so the enable lives here, not baked into the addon. `//gui/hangar`
+# fires whenever the hangar console is activated (gui_activate_console("hangar")) and
+# can have multiple handlers, so any map/addon adds its own tabs the same way. Enabling
+# the tab is what scopes it - the casino's //gui/tab/casino content route carries no
+# CONSOLE_SELECT gate. See GUI.md "Adding a console tab (the clean, per-console way)".
+//gui/hangar if CASINO_ENABLED
+    gui_tab_enable("casino")
