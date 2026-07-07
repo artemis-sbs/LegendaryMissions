@@ -2,23 +2,23 @@
 terran:
   - key: tsn_fighter
     torp_types:
-      Homing: 10
-    shields: [100,100]
+      Homing: 4
+    shields: [40,40]
     roles: fighter
     display_text: Fighter
   - key: tsn_bomber
     roles: bomber
     torp_types: 
-      Homing: 10
-      Nuke: 2
+      Homing: 8
+      Nuke: 1
       EMP: 1
-      Mine: 5
-    shields: [160,160]
+      Mine: 2
+    shields: [80,80]
     display_text: Bomber
   - key: tsn_shuttle
     torp_types: 
       Homing: 2
-    shields: [200,200]
+    shields: [100,100]
     roles: shuttle
     display_text: Shuttle
 
@@ -26,19 +26,19 @@ terran:
 ximni:
   - key: xim_avenger
     torp_types:
-      Homing: 5
+      Homing: 3
     roles: fighter
     display_text: Fighter
-    shields: [100,100]
+    shields: [50,50]
   - key: xim_avenger
     roles: bomber
     torp_types:
-      Homing: 5
-      Nuke: 2
-      EMP: 2
-      Mine: 5 
+      Homing: 6
+      Nuke: 1
+      EMP: 1
+      Mine: 2 
     display_text: Bomber
-    shields: [160,160]
+    shields: [90,90]
   - key: tsn_shuttle
     torp_types: 
       Homing: 2
@@ -49,47 +49,47 @@ ximni:
 pirate:
   - key: pirate_fighter
     torp_types: 
-      Homing: 10
+      Homing: 5
     roles: fighter
     display_text: Fighter
-    shields: [100,100]
+    shields: [35,35]
   - key: pirate_fighter
     roles: bomber
     torp_types:
       Homing: 10
-      Nuke: 2
+      Nuke: 0
       EMP: 1
-      Mine: 5 
+      Mine: 3 
     display_text: Bomber
-    shields: [160,160]
+    shields: [75,75]
   - key: tsn_shuttle
     torp_types: 
-      Homing: 2
+      Homing: 3
     roles: shuttle
     display_text: Shuttle
-    shields: [200,200]
+    shields: [90,90]
 
 arvonian:
   - key: arvonian_fighter
     torp_types: 
-      Homing: 10
+      Homing: 3
     roles: fighter
     display_text: Fighter
-    shields: [200,200]
+    shields: [80,80]
   - key: arvonian_fighter
     roles: bomber
     torp_types: 
-      Homing: 10
-      Nuke: 2
+      Homing: 8
+      Nuke: 1
       EMP: 1
-      Mine: 5
+      Mine: 2
     display_text: Bomber
-    shields: [160,160]
+    shields: [100,100]
   - key: tsn_shuttle
     torp_types: 
-      Homing: 2
+      Homing: 3
     roles: shuttle
     display_text: Shuttle
-    shields: [200,200]
+    shields: [100,100]
 
 
