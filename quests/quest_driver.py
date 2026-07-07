@@ -9,7 +9,7 @@ progress is immediate and never double-counts, and also handles the API's
 quest_activated/quest_completed signals so manual activation still updates state.
 """
 from sbs_utils.procedural.quest import (
-    quest_agent_quests, quest_get_state, quest_get_data,
+    quest_agent_quests, quest_get, quest_get_state, quest_get_data,
     quest_get_key, quest_set_key, quest_get_display_name, quest_add, QuestState,
     quest_log_build_items)
 from sbs_utils.procedural.roles import has_role, role
@@ -96,6 +96,35 @@ def quest_reeval_mission(agent_id, parent_qid):
         quest_mark_complete(agent_id, parent_qid)
 
 
+def _quest_tree_parent(quest_id):
+    """The parent path of a nested quest key (`arc/step` -> `arc`); None for a top-level key."""
+    return quest_id.rsplit("/", 1)[0] if "/" in quest_id else None
+
+
+def quest_reeval_tree_parent(agent_id, quest_id):
+    """A quest with CHILDREN completes when ALL its children are COMPLETE - the natural
+    'the arc is done when its steps are done'. Called when a nested `arc/step` settles: it
+    completes the tree parent, which recurses UP via quest_mark_complete. SECRET children
+    are unrevealed future steps, so they block completion (the arc isn't finished). Only an
+    ACTIVE parent is settled; idempotent (quest_mark_complete no-ops if already complete).
+
+    Author a parent as a pure CONTAINER (no own When trigger) with leaf children as the
+    objectives, so its completion is driven only by the children (unambiguous)."""
+    parent = _quest_tree_parent(quest_id)
+    if parent is None:
+        return
+    if quest_get_state(agent_id, parent) != QuestState.ACTIVE:
+        return
+    pnode = quest_get(agent_id, parent)
+    kids = (pnode.get("children") if pnode is not None else None) or {}
+    if not kids:
+        return
+    for c in kids.values():
+        if int(c.get("state", 0) or 0) != int(QuestState.COMPLETE):
+            return  # a child still to do -> parent stays active
+    quest_mark_complete(agent_id, parent)
+
+
 def quest_mark_active(agent_id, quest_id):
     """Set a quest ACTIVE (idempotent)."""
     if quest_get_state(agent_id, quest_id) == QuestState.ACTIVE:
@@ -124,6 +153,9 @@ def quest_mark_complete(agent_id, quest_id):
     _quest_maybe_end_game(agent_id, quest_id, data, win=True)
     if data.get("parent"):
         quest_reeval_mission(agent_id, data.get("parent"))
+    # A quest with children (a nested-key arc) completes when all its children complete:
+    # settle this quest's TREE parent, recursing up.
+    quest_reeval_tree_parent(agent_id, quest_id)
 
 
 _STATE_NAMES = {
@@ -132,26 +164,37 @@ _STATE_NAMES = {
 }
 
 
-def quest_grant_amd(agent_id, doc):
+def quest_grant_amd(agent_id, doc, _prefix=""):
     """Grant all quests from a parsed AMD story doc to an agent at once.
 
     Each heading becomes a quest; its data `state` (active/secret/idle/...) sets
     the starting state, so a multi-step story is granted as parent ACTIVE + later
     steps SECRET, chained by each step's `reveal`. Idempotent per quest id.
+
+    NESTED headings become NESTED quests: a deeper heading (`#### step` under a
+    `### arc`) is granted with the '/'-path key `arc/step` (via quest_folder), so
+    the arc renders as a collapsible tree in the Quests tab and its steps trigger /
+    reveal by their full path. The parent is granted before its children so
+    quest_folder can attach them.
     """
     if doc is None:
         return
     for n in doc.get("children", []):
-        qid = n.get("key")
+        key = n.get("key")
+        if not key:
+            continue
+        qid = _prefix + key
         data = n.get("data") or {}
         # scope: shared -> grant to the game (SHARED) agent, so the whole crew
         # shares the arc; otherwise to the given agent (ship).
         target = Agent.SHARED_ID if data.get("scope") == "shared" else agent_id
-        if quest_get_state(target, qid) != QuestState.IDLE:
-            continue  # already granted/in-progress
-        st = _STATE_NAMES.get(str(data.get("state", "idle")).lower(), QuestState.IDLE)
-        quest_add(target, qid, n.get("display_text"),
-                  (n.get("description") or "").strip(), state=st, data=data)
+        if quest_get_state(target, qid) == QuestState.IDLE:  # skip already-granted
+            st = _STATE_NAMES.get(str(data.get("state", "idle")).lower(), QuestState.IDLE)
+            quest_add(target, qid, n.get("display_text"),
+                      (n.get("description") or "").strip(), state=st, data=data)
+        # Recurse into nested headings, building the child path key `<qid>/<childkey>`.
+        if n.get("children"):
+            quest_grant_amd(agent_id, n, _prefix=qid + "/")
 
 
 def quest_reveal(agent_id, reveal):
@@ -188,15 +231,28 @@ def quest_mark_failed(agent_id, quest_id):
         quest_reeval_mission(agent_id, data.get("parent"))
 
 
+def _collect_active_quests(children, prefix, out):
+    """Recurse the quest tree, appending (full_path, data) for every ACTIVE quest - so
+    NESTED arc steps (`arc/step`, authored as nested quest keys) fire their triggers too.
+    The path is '/'-separated so quest_get_key / quest_set_key / quest_mark_complete
+    navigate it via quest_folder. Flat quests (no children) are unchanged (path == key)."""
+    for cid, q in (children or {}).items():
+        path = prefix + cid
+        if int(q.get("state", 0) or 0) == int(QuestState.ACTIVE):
+            out.append((path, q.get("data") or {}))
+        sub = q.get("children")
+        if sub:
+            _collect_active_quests(sub, path + "/", out)
+
+
 def _active_quests(agent_id):
-    """(quest_id, data) for each ACTIVE quest on the agent."""
+    """(quest_id, data) for each ACTIVE quest on the agent, INCLUDING nested arc steps
+    (quest_id is the full '/'-path). Every on_* trigger handler iterates this."""
     tree = quest_agent_quests(agent_id)
     if tree is None:
         return []
     out = []
-    for qid in tree.get("children", {}):
-        if quest_get_state(agent_id, qid) == QuestState.ACTIVE:
-            out.append((qid, quest_get_data(agent_id, qid) or {}))
+    _collect_active_quests(tree.get("children", {}), "", out)
     return out
 
 
