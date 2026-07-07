@@ -7,6 +7,7 @@
 #
 default CONSOLE_SELECT = ""              # exists at startup
 default shared QUEST_TAB_ENABLED = True  # missions may set this False
+default shared QUEST_ENGAGE_ENABLED = False  # missions WITH travel set True -> Engage button
 
 if QUEST_TAB_ENABLED:
     gui_tab_add_top("quest")
@@ -41,6 +42,14 @@ if QUEST_TAB_ENABLED:
 
     gui_section(style="area: 38,90, 100,100;")
     gui_row("row-height: 2em;")
+    if QUEST_ENGAGE_ENABLED:
+        # Travel to the selected job's destination. Mission-agnostic: emit the intent with
+        # the quest's owner + key; the mission (e.g. Open Universe //signal/quest_engage)
+        # resolves the on_reach target and performs the actual jump.
+        on gui_message(gui_button("Engage")):
+            qsel = qbox.get_value()
+            if qsel is not None and not gui_list_box_is_header(qsel):
+                signal_emit("quest_engage", {"QE_SHIP": ship_id, "QE_AGENT": qsel.get("agent_id"), "QE_KEY": qsel.get("key")})
     on gui_message(gui_button("Accept")):
         quest_tab_accept(qbox.get_value())
         jump repaint
