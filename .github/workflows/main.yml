@@ -1,48 +1,36 @@
 name: Create Archive
-on: 
+on:
   push:
     tags:
       - "*"
 jobs:
+  # Single source of truth: the addon (mastlib) list is read straight from
+  # __lib__.json, so adding an addon there automatically ships it - the matrix can
+  # never drift out of sync with the packaged libs again.
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@master
+      - name: Build addon matrix from __lib__.json
+        id: set
+        run: echo "matrix=$(jq -c '.mastlib' __lib__.json)" >> "$GITHUB_OUTPUT"
+
   build:
     runs-on: ubuntu-latest
+    needs: setup
 
     strategy:
       matrix:
-        item:
-          - admiral
-          - admiral_comms
-          - ai
-          - autoplay
-          - basic_player_destroy
-          - basic_random_skybox
-          - collisions
-          - commerce
-          - comms
-          - consoles
-          - damage
-          - data_panels
-          - docking
-          - fleets
-          - gamemaster
-          - gamemaster_comms
-          - grid_comms
-          - hangar
-          - internal_comms
-          - operator
-          - prefabs
-          - science_scans
-          - side_missions
-          - upgrades
-          - documents
-          - director
+        item: ${{ fromJson(needs.setup.outputs.matrix) }}
 
     steps:
       - name: Set env version
         id: get_version
         #run: echo "{VERSION}={${GITHUB_REF/refs\/tags\//}}" >> $GITHUB_OUTPUT
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-        
+
       - uses: actions/checkout@master
       - name: Archive autoplay addon
         uses: thedoctor0/zip-release@main
@@ -83,7 +71,7 @@ jobs:
           path: 'media.${{ steps.get_version.outputs.VERSION }}.zip'
           retention-days: 1
 
-  build_release: 
+  build_release:
     runs-on: ubuntu-latest
     needs:
       - build_media
@@ -96,7 +84,7 @@ jobs:
           path: artifacts # Download all artifacts to this directory
       #- name: Display structure of downloaded files
       #  run: ls -R artifacts
-    
+
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
