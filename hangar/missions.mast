@@ -82,9 +82,17 @@
     torp_type = random.randint(0,len(_torp_types)-1)
     amount = random.randint(2, max(3, 6-torp_type))
     torp_name = _torp_types[torp_type].strip()
+    torp_num = "torpedoes"
+    torp_pronoun = "them"
+    if torp_name == "Nuke":
+        amount = 1
+        torp_num = "torpedo"
+        torp_pronoun = "it"
+
+    
 
 
-    set_inventory_value(CRAFT_ID, "briefing", f"Deliver {torp_name} to {sel_o.name}^Take the {amount} {torp_name} and delivery them to {sel_o.name}.")
+    set_inventory_value(CRAFT_ID, "briefing", f"Deliver {torp_name} to {sel_o.name}^Take {amount} {torp_name} {torp_num} and deliver {torp_pronoun} to {sel_o.name}.")
     mission_objective = f"Deliver {torp_name} to {sel_o.name}"
     set_inventory_value(CRAFT_ID, "current_objective", f"Deliver {torp_name} to {sel_o.name}")
     mission_objective = f"delivered {amount} {torp_name} to {sel_o.name}"
@@ -145,11 +153,11 @@
     sel_o = to_object(OBJECTIVE_ID)
     ->END if sel_o is None
 
-    life_forms = ["Admiral Xeno Nakada", "Prince Zayne Alcantar", "Admiral Tharay sh'Firri", "Skarran delegate", "Torgoth delegate"]
+    life_forms = ["Admiral Xeno Nakada", "Prince Zayne Alcantar", "Admiral Tharay sh'Firri", "Skaraan Delegate Vareb", "Torgoth Delegate Glork"]
 
     life_form_name = random.choice(life_forms)
 
-    set_inventory_value(CRAFT_ID, "briefing", f"Deliver {life_form_name} to {sel_o.name}^Take the {life_form_name} and delivery them to {sel_o.name}.")
+    set_inventory_value(CRAFT_ID, "briefing", f"Deliver {life_form_name} to {sel_o.name}^Take {life_form_name} and deliver them to {sel_o.name}.")
     mission_objective =  f"Deliver {life_form_name} to {sel_o.name}"
     set_inventory_value(CRAFT_ID, "current_objective", f"Deliver {life_form_name} to {sel_o.name}")
 
