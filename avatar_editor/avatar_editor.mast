@@ -1,0 +1,130 @@
+#
+#  Avatar Editor  (LegendaryMissions addon, opt-in)
+#
+#  A reusable, WYSIWYG face customizer built over sbs_utils.faces:
+#      faces.FACE_FEATURES  - per-race feature list (label / max / optional)
+#      faces.build_face()   - assembles the layered face string from indices
+#
+#  Unlike the extension's blind builder, this runs in the engine, so it shows a
+#  live gui_face preview that updates as you move the sliders.
+#
+#  Use it from a mission (after adding "avatar_editor" to story.json mastlib):
+#
+#      # fire-and-forget as its own GUI page, then read the result:
+#      await task_schedule(avatar_editor_show, {"av_race": "terran"})
+#      chosen = AVATAR_FACE                      # shared, set on Done
+#
+#      # or react to the done signal (data = the face string):
+#      //signal/avatar_editor_done
+#          set_face(SOME_ID, EVENT... )          # etc.
+#
+#      # or run it inline in an existing GUI task and come back:
+#      jump avatar_editor_show   (with av_return="my_label" in scope)
+#
+#  Inputs (task vars / metadata defaults):
+#      av_race         starting race            (default "terran")
+#      av_title        title-bar text           (default "AVATAR EDITOR")
+#      av_done_signal  signal emitted on Done    (default "avatar_editor_done")
+#      av_return       label to return to on Done ("" -> ->END)
+#
+#  Output:
+#      shared AVATAR_FACE   the built face string (updated live + on Done)
+#      the chosen face is also copied to the clipboard on every change
+#
+
+default shared AVATAR_FACE = ""
+
+=== avatar_editor_show
+metadata: ``` yaml
+av_race: terran
+av_title: AVATAR EDITOR
+av_done_signal: avatar_editor_done
+av_return: ""
+```
+    av_race = str(av_race).lower()
+    av_features = faces.FACE_FEATURES.get(av_race)
+    jump avatar_editor_bad_race if av_features is None
+    av_values = [f.get("min", 0) for f in av_features]
+    av_enables = [True] * len(av_features)
+
+--- avatar_editor_paint
+    face = faces.build_face(av_race, av_values, av_enables)
+    shared AVATAR_FACE = face
+    gui_clipboard_copy(face)
+
+    gui_section("area:0,0,100,100;")
+    gui_row("row-height:2em;background: #1573")
+    gui_text("text:{av_title}; font:gui-3;justify: center;")
+    close_ib = gui_icon("icon_index:137;color:white;", style="click_color:white;click_tag:done;click_background:#6666")
+    on gui_click(close_ib):
+        jump avatar_editor_done
+
+    # Live preview (left of the controls)
+    gui_section(style="area: 0, 12, 100-400px, 100;")
+    the_face = gui_face(face)
+
+    # Race picker
+    gui_section(style="area: 100-400px, 12, 100, 20;row-height:2em;")
+    race_pick = gui_drop_down("text:{av_race.capitalize()};list: Arvonian, Kralien, Skaraan, Terran, Torgoth, Ximni", var="av_race")
+    on gui_message(race_pick):
+        av_race = str(av_race).lower()
+        av_features = faces.FACE_FEATURES.get(av_race)
+        av_values = [f.get("min", 0) for f in av_features]
+        av_enables = [True] * len(av_features)
+        jump avatar_editor_paint
+
+    # Per-feature controls
+    gui_section(style="area: 100-400px, 20, 100, 92;row-height:2em;")
+    ctrl_style = "padding:10px,5px,5px,10px;"
+    for i, widget in enumerate(av_features):
+        gui_row(style="padding: 1px;")
+        label = widget["label"]
+        wmax = widget["max"]
+        wmin = widget.get("min", 0)
+        if "optional" in widget:
+            cb = gui_checkbox("text: {label};state:{av_enables[i]}", ctrl_style, data={"windex": i})
+            cb.value = av_enables[i]
+            on gui_message(cb):
+                av_enables[windex] = not av_enables[windex]
+                the_face.value = faces.build_face(av_race, av_values, av_enables)
+                gui_clipboard_copy(the_face.value)
+            if wmax > 0:
+                sl = gui_int_slider("low: {wmin}; high: {wmax};", ctrl_style, data={"windex": i})
+                sl.value = av_values[i]
+                on gui_message(sl):
+                    av_values[windex] = __ITEM__.value
+                    the_face.value = faces.build_face(av_race, av_values, av_enables)
+                    gui_clipboard_copy(the_face.value)
+        else:
+            """text:{label}"""
+            sl = gui_int_slider("low: {wmin}; high: {wmax}; show_number: no", ctrl_style, data={"windex": i})
+            sl.value = av_values[i]
+            on gui_message(sl):
+                av_values[windex] = __ITEM__.value
+                the_face.value = faces.build_face(av_race, av_values, av_enables)
+                gui_clipboard_copy(the_face.value)
+
+    # Done
+    gui_section(style="area: 100-400px, 92, 100, 100;row-height:2em;")
+    on gui_message(gui_button("Done")):
+        jump avatar_editor_done
+
+    await gui()
+
+--- avatar_editor_done
+    face = faces.build_face(av_race, av_values, av_enables)
+    shared AVATAR_FACE = face
+    gui_clipboard_copy(face)
+    if av_done_signal:
+        signal_emit(av_done_signal, face)
+    if av_return:
+        mast_task.jump(av_return)
+        ->END
+    ->END
+
+=== avatar_editor_bad_race
+    gui_section(style="area: 20, 40, 80, 60;")
+    gui_text("text:Avatar editor: unknown race '{av_race}'.;justify:center;")
+    on gui_message(gui_button("Close")):
+        jump avatar_editor_done
+    await gui()

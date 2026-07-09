@@ -30,7 +30,8 @@
         "collisions",
         "data_panels",
         "documents",
-        "director"
+        "director",
+        "avatar_editor"
     ],
     "zip": [
         "media"
