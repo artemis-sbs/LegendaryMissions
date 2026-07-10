@@ -1,0 +1,82 @@
+# Grazer - a TAME monster (bestiary species over behav_typhon).
+#
+# A big, placid drifter that ignores everyone. If a ship fires on it, it turns
+# hostile for a while (aggro timer) and glows angry-red, then calms back down and
+# reverts colour. Demonstrates damage-reactive behaviour + a live look change via
+# the dirty system. Players learn it is tame-unless-provoked by SCANNING it.
+#
+# role("monster") is the umbrella; role("grazer") scopes the brain, damage route
+# and science routes. Only "typhon" that remains is the engine behaviour.
+=== prefab_grazer
+metadata: ```
+type: prefab/monster
+side: monster
+health: 20000
+scale: 1.2
+brain:
+    - label: ai_grazer_retaliate
+      data:
+        aggro_range: 8000
+        throttle: 1.0
+```
+    monster = npc_spawn(START_X, START_Y, START_Z, "Grazer", side + ",monster,grazer", "-", "behav_typhon")
+    monster.blob.set("monster_health_max", health, 0)
+    monster.blob.set("monster_health", health, 0)
+    monster.blob.set("local_scale_coeff", scale, 0)
+    monster.engine_object.exclusion_radius = int(200 * scale)
+
+    monster.blob.set("body_1_geom_filename", "typhon-big-cube", 0)
+    monster.blob.set("body_2_geom_filename", "typhon-big-cube", 0)
+    monster.blob.set("body_1_color", "#68a", 0)
+    monster.blob.set("body_2_color", "#68a", 0)
+    monster.blob.set("particle_color_1", "#68a", 0)
+    monster.blob.set("particle_color_2", "#68a", 0)
+    monster.blob.set("particle_color_3", "#68a", 0)
+    monster.blob.set("beamColor", "#f44", 0)
+
+    clear_target(monster.id)
+    brain_add(monster, brain)
+    yield result to_id(monster)
+
+
+=== ai_grazer_retaliate
+    # Tame by default: acts only while provoked (aggro timer running). Calm -> yields
+    # fail and just drifts. prefab_grazer only.
+    yield fail if is_timer_finished(BRAIN_AGENT_ID, "aggro")
+    foe = closest(BRAIN_AGENT_ID, role("__player__"), aggro_range)
+    yield fail if foe is None
+    target(BRAIN_AGENT_ID, foe.id, True, throttle)
+    yield success
+
+
+# Provoke on being hit: flip hostile for 30s and turn angry-red. A calm watcher
+# reverts it when the timer lapses. (The damage TARGET is the grazer itself.)
+//damage/object if has_role(DAMAGE_TARGET_ID, "grazer")
+    set_timer(DAMAGE_TARGET_ID, "aggro", seconds=30)
+    if not has_role(DAMAGE_TARGET_ID, "provoked"):
+        add_role(DAMAGE_TARGET_ID, "provoked")
+        set_data_set_value(DAMAGE_TARGET_ID, "body_1_color", "#f44")
+        set_data_set_value(DAMAGE_TARGET_ID, "body_2_color", "#f44")
+        task_schedule(grazer_calm_watch, {"grazer_id": DAMAGE_TARGET_ID})
+    ->END
+
+== grazer_calm_watch
+--- wait
+    await delay_sim(2)
+    ->END if not object_exists(grazer_id)
+    jump wait if not is_timer_finished(grazer_id, "aggro")
+    remove_role(grazer_id, "provoked")
+    set_data_set_value(grazer_id, "body_1_color", "#68a")
+    set_data_set_value(grazer_id, "body_2_color", "#68a")
+    ->END
+
+
+# Science scan - tell the players it is tame unless attacked.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "grazer")
+//science if has_role(SCIENCE_SELECTED_ID, "grazer")
+
+    + "scan":
+        <scan>
+            % Grazer - a large, placid lifeform. Tame unless provoked.
+            % Herbivorous drifter - it ignores ships that leave it alone, but turns aggressive if fired upon.
+            % Lifeform - recommend you do not engage; it will retaliate.

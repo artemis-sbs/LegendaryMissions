@@ -1,0 +1,70 @@
+# Ravener - a DAMAGING monster that FEEDS on weapon fire (bestiary species).
+#
+# An aggressive predator that HEALS when shot: any non-maelstrom hull hit tops its
+# health back up, so beams and torpedoes only make it stronger. The one thing it
+# can't eat is a black hole - maelstrom damage is exempt from the heal - so the
+# only way to kill it is to lure or drag it into one. Closes the loop with the
+# age/black-hole seek-death system. Players learn this by SCANNING it.
+#
+# role("monster") umbrella + role("ravener") scoping; behav_typhon under the hood.
+=== prefab_ravener
+metadata: ```
+type: prefab/monster
+side: monster
+health: 8000
+scale: 1.1
+heal_on_hit: 500
+brain:
+    - label: ai_chase_player
+      data:
+        SIZE_X: 12000
+        throttle: 2.8
+        force_shoot: true
+```
+    monster = npc_spawn(START_X, START_Y, START_Z, "Ravener", side + ",monster,ravener", "-", "behav_typhon")
+    monster.blob.set("monster_health_max", health, 0)
+    monster.blob.set("monster_health", health, 0)
+    monster.blob.set("local_scale_coeff", scale, 0)
+    monster.engine_object.exclusion_radius = int(200 * scale)
+    set_data_set_value(monster.id, "ravener_heal", heal_on_hit)
+
+    monster.blob.set("body_1_geom_filename", "typhon-balls", 0)
+    monster.blob.set("body_2_geom_filename", "typhon-balls", 0)
+    monster.blob.set("body_1_color", "#f80", 0)
+    monster.blob.set("body_2_color", "#f80", 0)
+    monster.blob.set("particle_color_1", "#f80", 0)
+    monster.blob.set("particle_color_2", "#f40", 0)
+    monster.blob.set("particle_color_3", "#fb0", 0)
+    monster.blob.set("beamColor", "#f80", 0)
+
+    clear_target(monster.id)
+    brain_add(monster, brain)
+    yield result to_id(monster)
+
+
+# Feeds on weapon fire: any non-maelstrom hull hit HEALS it (up to max), so beams
+# and torps only make it stronger. Maelstrom (black-hole) damage is exempt - that
+# is the intended kill. (The damage TARGET is the ravener itself.)
+//damage/object if has_role(DAMAGE_TARGET_ID, "ravener") and EVENT.sub_tag != "maelstrom"
+    hp = get_data_set_value(DAMAGE_TARGET_ID, "monster_health")
+    ->END if hp is None
+    heal = get_data_set_value(DAMAGE_TARGET_ID, "ravener_heal")
+    if heal is None:
+        heal = 500
+    hpmax = get_data_set_value(DAMAGE_TARGET_ID, "monster_health_max")
+    nhp = hp + heal
+    if hpmax is not None and nhp > hpmax:
+        nhp = hpmax
+    set_data_set_value(DAMAGE_TARGET_ID, "monster_health", nhp)
+    ->END
+
+
+# Science scan - warn players NOT to shoot it and point them at the environment.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "ravener")
+//science if has_role(SCIENCE_SELECTED_ID, "ravener")
+
+    + "scan":
+        <scan>
+            % Ravener - an aggressive predator that FEEDS on energy weapons. Hold fire.
+            % Fire-eater - it absorbs beam and torpedo damage as health; conventional weapons only make it stronger.
+            % Lifeform - only an environmental hazard such as a black hole can destroy it.
