@@ -118,6 +118,10 @@
     print(f"Torpedo Event: {EVENT.extra_tag}")
     if DAMAGE_TARGET_ID is not None:
         add_role(DAMAGE_TARGET_ID, "tagged")
+        # Start (or refresh) the 180s elite-ability suppression. Driving it off a
+        # timer here - not off the persistent "tagged" role - lets elites recover
+        # once it expires, while "tagged" stays set for other consumers (scan intel).
+        set_timer(DAMAGE_TARGET_ID, "tag_suppression", 180)
         tagdate = str(2280 + random.randint(1, 30)) + "-" + str(random.randint(1,12)).zfill(2) + "-" + str(random.randint(1,28)).zfill(2)
         set_inventory_value(DAMAGE_TARGET_ID, "tagged_by_id", DAMAGE_PARENT_ID)
         set_inventory_value(DAMAGE_TARGET_ID, "tagged_by_side", EVENT.value_tag)

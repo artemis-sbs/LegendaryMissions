@@ -35,19 +35,16 @@ elite_build_abilities()
     -> END if len(abilities) == 0
     default x = 0
     #
-    # A tag for temporarily disabling all scripted abilities
-    # Should be set elsewhere this just allows it
-    # 
-
-    if has_role(ELITE_ID, "tagged") and not has_role(ELITE_ID, "tag_delay"):
-        add_role(ELITE_ID, "tag_delay")
-        set_timer(ELITE_ID, f"elite_all_cooldown", 180)
-        print(f"Tag interferes with {to_object(ELITE_ID).name} elite abilities, 180s delay")
-
-    if has_role(ELITE_ID, "tag_delay") and not is_timer_finished(ELITE_ID, f"elite_all_cooldown"):
+    # A Tag torpedo temporarily disables all scripted abilities. The hit sets the
+    # "tag_suppression" timer directly (see damage/destroy.mast), so re-tagging
+    # refreshes it, it clears itself when it expires, and the persistent "tagged"
+    # role is left untouched for other consumers. is_timer_finished() is True when
+    # the timer was never set, so untagged elites are unaffected.
+    #
+    if not is_timer_finished(ELITE_ID, "tag_suppression"):
         await delay_sim(1)
-        jump handle_elite_abilities 
-   
+        jump handle_elite_abilities
+
     #
     # Consider allowing a brain here to 
     # determine elite abilities 
@@ -89,10 +86,6 @@ elite_build_abilities()
     else:
         print(f"Picked {ab}")
         await delay_sim(seconds=30)
-
-    if has_role(ELITE_ID, "tag_delay") and is_timer_finished(ELITE_ID, f"elite_all_cooldown"):
-        remove_role(ELITE_ID, "tag_delay")
-        print(f"Elite ability for {to_object(ELITE_ID).name} done, remove tag_delay")
 
     # Add at least on delay
     await delay_sim(seconds=1)
