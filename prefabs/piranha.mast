@@ -1,0 +1,72 @@
+# Piranha - a weak biter that is deadly ONLY in numbers (bestiary species).
+#
+# Individually trivial: low health, medium speed, one weak bite per pass. The threat
+# is the SWARM (prefab_piranha_swarm) and the fact that swarms erupt from wrecks (see
+# the wreck hook in ../damage/destroy.mast). A lone Piranha is a nuisance; a nest of
+# them chews through shields and hull.
+# role("monster") umbrella + role("piranha") scoping; behav_typhon under the hood.
+=== prefab_piranha
+metadata: ```
+type: prefab/monster
+side: monster
+health: 800
+scale: 0.4
+brain:
+    - label: ai_chase_player
+      data:
+        SIZE_X: 12000
+        throttle: 1.8
+        force_shoot: true
+    - label: ai_chase_npc
+      data:
+        SIZE_X: 12000
+        throttle: 1.8
+        force_shoot: true
+```
+    monster = npc_spawn(START_X, START_Y, START_Z, "Piranha", side + ",monster,piranha", "-", "behav_typhon")
+    monster.blob.set("monster_health_max", health, 0)
+    monster.blob.set("monster_health", health, 0)
+    monster.blob.set("local_scale_coeff", scale, 0)
+    monster.engine_object.exclusion_radius = int(200 * scale)
+
+    # Look: small rust-orange cluster with jagged orange teeth-glow.
+    monster.blob.set("body_1_geom_filename", "typhon-balls", 0)
+    monster.blob.set("body_2_geom_filename", "typhon-balls", 0)
+    monster.blob.set("body_1_color", "#c93", 0)
+    monster.blob.set("body_2_color", "#c93", 0)
+    monster.blob.set("particle_color_1", "#c93", 0)
+    monster.blob.set("particle_color_2", "#a62", 0)
+    monster.blob.set("particle_color_3", "#eb4", 0)
+    monster.blob.set("beamColor", "#f80", 0)
+
+    clear_target(monster.id)
+    brain_add(monster, brain)
+    yield result to_id(monster)
+
+
+# A Piranha SWARM: drop `swarm_count` individuals in a tight cluster around START.
+# This is what a wreck nest hatches, and what a GM drops with one click. Each member
+# is an independent prefab_piranha (own brain, own target). yields the count spawned.
+=== prefab_piranha_swarm
+metadata: ```
+type: prefab/monster
+swarm_count: 6
+swarm_spread: 800
+```
+    for i in range(int(swarm_count)):
+        px = START_X + random.uniform(-swarm_spread, swarm_spread)
+        py = START_Y + random.uniform(-swarm_spread, swarm_spread)
+        pz = START_Z + random.uniform(-swarm_spread, swarm_spread)
+        prefab_spawn("prefab_piranha", None, px, py, pz)
+    yield result int(swarm_count)
+
+
+# Science scan - individually harmless, warn about the swarm.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "piranha")
+//science if has_role(SCIENCE_SELECTED_ID, "piranha")
+
+    + "scan":
+        <scan>
+            % Piranha - a small metal-eating scavenger. Weak alone, lethal in a swarm.
+            % Wreck-dweller - swarms lurk in derelicts and erupt at passing ships. Approach wreckage with caution.
+            % Lifeform - a single specimen is no threat; a nest will strip a hull. Do not linger.

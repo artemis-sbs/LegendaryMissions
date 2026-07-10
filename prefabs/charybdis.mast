@@ -1,0 +1,127 @@
+# Charybdis - a peaceful, near-indestructible space-folder (bestiary species).
+#
+# It drifts slowly and never attacks. Its "weapon" is defensive: fire on it and it
+# folds space, HURLING the attacker to a random distant point (a Jump-Drive-like
+# throw) instead of dealing damage. As it wanders it belches a TRAIL of purple nebula
+# in its wake. Very tanky - it is meant to be endured or avoided, not farmed.
+#
+# role("monster") umbrella + role("charybdis") scoping; behav_typhon under the hood.
+# NOTE: teleport + nebula trail are engine-visible effects - verify in the browser.
+import prefab_helpers.py
+
+=== prefab_charybdis
+metadata: ```
+type: prefab/monster
+side: monster
+health: 20000
+scale: 1.3
+teleport_min: 30000
+teleport_max: 60000
+teleport_cooldown: 8
+nebula_count: 8
+nebula_interval: 12
+brain:
+    - label: ai_charybdis_drift
+      data:
+        throttle: 0.5
+        wander_range: 40000
+        arrive_dist: 3000
+```
+    monster = npc_spawn(START_X, START_Y, START_Z, "Charybdis", side + ",monster,charybdis", "-", "behav_typhon")
+    monster.blob.set("monster_health_max", health, 0)
+    monster.blob.set("monster_health", health, 0)
+    monster.blob.set("local_scale_coeff", scale, 0)
+    monster.engine_object.exclusion_radius = int(200 * scale)
+
+    # Look: a large deep-purple cube - it is the nebula-maker, so it reads purple.
+    monster.blob.set("body_1_geom_filename", "typhon-big-cube", 0)
+    monster.blob.set("body_2_geom_filename", "typhon-big-cube", 0)
+    monster.blob.set("body_1_color", "#a0f", 0)
+    monster.blob.set("body_2_color", "#a0f", 0)
+    monster.blob.set("particle_color_1", "#a0f", 0)
+    monster.blob.set("particle_color_2", "#80c", 0)
+    monster.blob.set("particle_color_3", "#c4f", 0)
+    monster.blob.set("beamColor", "#c4f", 0)
+    monster.blob.set("beamDamage", 0, 0)      # peaceful - it teleports, it does not bite
+
+    # Remember the teleport tuning for the damage route, and lay a nebula trail.
+    set_inventory_value(monster.id, "tp_min", teleport_min)
+    set_inventory_value(monster.id, "tp_max", teleport_max)
+    set_inventory_value(monster.id, "tp_cd", teleport_cooldown)
+
+    clear_target(monster.id)
+    brain_add(monster, brain)
+    task_schedule(charybdis_nebula_trail, {"charybdis_id": to_id(monster), "nebula_count": nebula_count, "nebula_interval": nebula_interval})
+    yield result to_id(monster)
+
+
+=== ai_charybdis_drift
+" Drifting slowly through the sector
+metadata: ```
+type: brain/npc
+throttle: 0.5
+wander_range: 40000
+arrive_dist: 3000
+```
+    clear_target(BRAIN_AGENT.id)
+    # Store the drift point as scalar x/z - get_pos() returns an engine vec3 that
+    # can't be subtracted from an sbs_utils Vec3, so do the distance math by component.
+    cpos = get_pos(BRAIN_AGENT_ID)
+    tx = BRAIN_AGENT.get_inventory_value("blackboard:drift_x")
+    tz = BRAIN_AGENT.get_inventory_value("blackboard:drift_z")
+    need_new = tx is None
+    if not need_new:
+        dx = cpos.x - tx
+        dz = cpos.z - tz
+        need_new = (dx * dx + dz * dz) < arrive_dist * arrive_dist
+    if need_new:
+        ang = random.uniform(0, 6.283)
+        dist = random.uniform(wander_range / 2, wander_range)
+        tx = cpos.x + math.cos(ang) * dist
+        tz = cpos.z + math.sin(ang) * dist
+        BRAIN_AGENT.set_inventory_value("blackboard:drift_x", tx)
+        BRAIN_AGENT.set_inventory_value("blackboard:drift_z", tz)
+    target_pos(BRAIN_AGENT_ID, tx, cpos.y, tz, throttle, stop_dist=arrive_dist)
+    yield success
+
+
+# Lay a capped trail of purple nebula in the monster's wake. Capped (not deleted) to
+# avoid leaking terrain - a Charybdis lays at most `nebula_count` clouds over its life.
+== charybdis_nebula_trail
+    trail_left = int(nebula_count)
+--- trail_loop
+    await delay_sim(nebula_interval)
+    ->END if not object_exists(charybdis_id)
+    ->END if trail_left <= 0
+    cpos = get_pos(charybdis_id)
+    terrain_spawn_nebula_sphere(cpos.x, cpos.y, cpos.z, radius=3000, density_scale=0.5, density=1, cluster_color="purple", selectable=False, marker=False)
+    trail_left = trail_left - 1
+    jump trail_loop
+
+
+# Fold space when attacked: hurl the attacker to a random distant point instead of
+# taking it lying down. Cooldown-gated so it can't chain-throw a ship every tick.
+//damage/object if has_role(DAMAGE_TARGET_ID, "charybdis")
+    ->END if not is_timer_finished(DAMAGE_TARGET_ID, "teleport_cd")
+    attacker = to_object(DAMAGE_ORIGIN_ID)
+    ->END if attacker is None
+    tp_min = get_inventory_value(DAMAGE_TARGET_ID, "tp_min", 30000)
+    tp_max = get_inventory_value(DAMAGE_TARGET_ID, "tp_max", 60000)
+    tp_cd = get_inventory_value(DAMAGE_TARGET_ID, "tp_cd", 8)
+    cpos = get_pos(DAMAGE_TARGET_ID)
+    ang = random.uniform(0, 6.283)
+    dist = random.uniform(tp_min, tp_max)
+    attacker.pos = Vec3(cpos.x + math.cos(ang) * dist, cpos.y, cpos.z + math.sin(ang) * dist)
+    set_timer(DAMAGE_TARGET_ID, "teleport_cd", seconds=tp_cd)
+    ->END
+
+
+# Science scan - explain it is peaceful but will fling you across the sector.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "charybdis")
+//science if has_role(SCIENCE_SELECTED_ID, "charybdis")
+
+    + "scan":
+        <scan>
+            % Charybdis - a hardy lifeform that folds space. Peaceful unless attacked.
+            % Space-folder - it leaves a nebula trail and, if fired upon, hurls its attacker across the sector. Do not provoke it.
+            % Lifeform - nearly indestructible and non-aggressive. Recommend you leave it be.

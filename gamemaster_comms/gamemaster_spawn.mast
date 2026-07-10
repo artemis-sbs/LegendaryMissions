@@ -59,7 +59,7 @@
 # open so a GM can drop several. Each spawns at the GM camera + a small offset.
 //comms/gamemaster/spawn/monster if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     +^1[$gamemaster]"Back" //comms/gamemaster/spawn/terrain
-    species = ~~[("Typhon (classic hunter)", "prefab_typhon_classic"), ("Reaver (enrages when hit)", "prefab_reaver"), ("Ravener (feeds on fire)", "prefab_ravener"), ("Grazer (tame unless provoked)", "prefab_grazer"), ("Bulwark (inert hazard)", "prefab_bulwark"), ("Warden (hunts raiders)", "prefab_warden"), ("Sparkfeeder (gifts energy)", "prefab_sparkfeeder"), ("Siphon Leech (drains energy)", "prefab_leech")]~~
+    species = ~~[("Typhon (classic hunter)", "prefab_typhon_classic"), ("Reaver (enrages when hit)", "prefab_reaver"), ("Ravener (feeds on fire)", "prefab_ravener"), ("Grazer (tame unless provoked)", "prefab_grazer"), ("Bulwark (inert hazard)", "prefab_bulwark"), ("Warden (hunts raiders)", "prefab_warden"), ("Sparkfeeder (gifts energy)", "prefab_sparkfeeder"), ("Siphon Leech (drains energy)", "prefab_leech"), ("Shark (hunts prey)", "prefab_shark"), ("Dragon (apex, self-heals)", "prefab_dragon"), ("Charybdis (folds space)", "prefab_charybdis"), ("Piranha swarm (wreck nest)", "prefab_piranha_swarm"), ("Insect (fast pest)", "prefab_insect")]~~
     for label, prefab in species:
         +[$gamemaster]"{label}" {"prefab": prefab}:
             pos = Vec3(COMMS_ORIGIN.pos)

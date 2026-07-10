@@ -6,6 +6,11 @@ import reaver.mast
 import warden.mast
 import leech.mast
 import bulwark.mast
+import insect.mast
+import piranha.mast
+import shark.mast
+import charybdis.mast
+import dragon.mast
 import basic_civilian.mast
 import basic_enemy.mast
 import defender.mast

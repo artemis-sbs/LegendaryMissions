@@ -1,16 +1,15 @@
 
+import prefab_helpers.py
+
 === prefab_typhon_classic
 metadata: ```
 type: prefab/monster
-health_young: 5000
-health_mature: 15000
-health_ancient: 30000
-scale_young: 0.7
-scale_mature: 1.0
-scale_ancient: 1.4
-weight_young: 50
-weight_mature: 35
-weight_ancient: 15
+side: monster
+ages:
+    weights: [50, 35, 15]
+    young:   { health: 5000,  scale: 0.7, label: Young }
+    mature:  { health: 15000, scale: 1.0, label: Mature }
+    ancient: { health: 30000, scale: 1.4, label: Ancient }
 ancient_lifespan_min: 300
 ancient_lifespan_max: 600
 brain:
@@ -34,30 +33,14 @@ brain:
         throttle: 1.6
         force_shoot: true
 ```
-    # Age is fixed at spawn: roll a life stage, then bake health and size once.
+    # Age is fixed at spawn: roll a life stage, then bake health and size once via
+    # the shared age system (prefab_helpers.monster_roll_age / monster_bake_age).
     # Older individuals are tougher and larger; damage is left at the hull default
-    # (age does not change damage). Scoped to THIS prefab only - behav_typhon and
-    # every other monster path are untouched.
-    stage = random.choices(["young", "mature", "ancient"], weights=[weight_young, weight_mature, weight_ancient])[0]
-    if stage == "young":
-        stage_health = health_young
-        stage_scale = scale_young
-        stage_name = "Young Typhon"
-    elif stage == "mature":
-        stage_health = health_mature
-        stage_scale = scale_mature
-        stage_name = "Mature Typhon"
-    else:
-        stage_health = health_ancient
-        stage_scale = scale_ancient
-        stage_name = "Ancient Typhon"
-
-    monster = npc_spawn(START_X,START_Y,START_Z, stage_name, "monster,typhon,classic", "-", "behav_typhon")
-    add_role(monster.id, stage)
-    monster.blob.set("monster_health_max", stage_health, 0)
-    monster.blob.set("monster_health", stage_health, 0)
-    monster.blob.set("local_scale_coeff", stage_scale, 0)
-    monster.engine_object.exclusion_radius = int(200 * stage_scale)
+    # (age does not change damage). The stage lands as a role (young/mature/ancient)
+    # so ai_typhon_seek_death can gate on "ancient". Scoped to THIS prefab only.
+    stage, cfg = monster_roll_age(ages)
+    monster = npc_spawn(START_X,START_Y,START_Z, cfg["label"] + " Typhon", "monster,typhon,classic," + stage, "-", "behav_typhon")
+    monster_bake_age(monster, cfg)
 
     monster.blob.set("body_1_color", "purple", 0)
     monster.blob.set("body_2_color", "purple", 0)

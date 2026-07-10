@@ -92,6 +92,13 @@
     # wr_side = get_inventory_value(wr.id, "hull_side", 0)
     # wr_hull = get_inventory_value(wr.id, "hull_type", 0)
 
+    # A wreck may be a Piranha NEST: ~30% of hulks hatch a swarm that erupts at the
+    # wreck, springing on ships that come to salvage it (the bestiary Piranha hook).
+    # Erupt-on-creation for now; an erupt-when-the-wreck-is-shot variant is a future
+    # option. Piranha are the one monster that can appear regardless of monster count.
+    if random.randint(1, 10) <= 3:
+        prefab_spawn("prefab_piranha_swarm", None, dest_posx, dest_posy, dest_posz)
+
     ->END
 
 //damage/internal if has_role(DAMAGE_ORIGIN_ID, "__player__") and EVENT.sub_tag == "maelstrom"
@@ -108,7 +115,17 @@
     else:
         ->END
     shield_check = get_data_set_value(DAMAGE_TARGET_ID, "shield_val", torpface)
-    if shield_check == 0:
+    # Player ships need explode_player_ship - a bare sbs.delete_object leaves the sim
+    # in a broken state and the players never see the kill. Only insta-kill when the
+    # ship's shields are fully DOWN; player shield_val can also go negative, so the
+    # face check is <= 0, not == 0.
+    if has_role(DAMAGE_TARGET_ID, "__player__"):
+        shields_raised = get_data_set_value(DAMAGE_TARGET_ID, "shields_raised_flag", 0)
+        if shields_raised == 0 and shield_check <= 0:
+            explode_player_ship(DAMAGE_TARGET_ID)
+        ->END
+    # NPC ships: killed when the struck facing's shield is depleted.
+    if shield_check <= 0:
         sbs.delete_object(DAMAGE_TARGET_ID)
         if has_role(DAMAGE_TARGET_ID, "raider"):
             jump wreckage {"DAMAGE_SELECTED_ID": DAMAGE_TARGET_ID}

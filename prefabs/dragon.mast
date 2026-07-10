@@ -1,0 +1,93 @@
+# Dragon - the apex bestiary predator: aggressive, huge, and self-healing.
+#
+# It prizes ships above all - it chases players hard (then NPCs, then stations) and
+# uses a mini-jump (ai_stay_close) to stay latched on, approximating the wiki "grab
+# and drag". It REGENERATES continuously, so scattered fire never wins; only massed
+# fire, or luring it into a black hole (regen pauses near one), brings it down.
+# Ancients are far tougher and larger - damage is unchanged.
+#
+# Uses the SHARED age system (prefab_helpers) with the biggest tiers.
+# role("monster") umbrella + role("dragon") scoping; behav_typhon under the hood.
+# NOTE: the lootable "lair" from the wiki is DEFERRED - not implemented in this pass.
+import prefab_helpers.py
+
+=== prefab_dragon
+metadata: ```
+type: prefab/monster
+side: monster
+ages:
+    weights: [45, 35, 20]
+    young:   { health: 15000, scale: 1.0, label: Young }
+    mature:  { health: 25000, scale: 1.4, label: Mature }
+    ancient: { health: 40000, scale: 1.8, label: Ancient }
+regen_amount: 250
+regen_interval: 2
+regen_blackhole_range: 6000
+brain:
+    - label: ai_stay_close
+      data:
+        force_shoot: true
+    - label: ai_chase_player
+      data:
+        SIZE_X: 14000
+        throttle: 2.8
+        force_shoot: true
+    - label: ai_chase_npc
+      data:
+        SIZE_X: 14000
+        throttle: 2.4
+        force_shoot: true
+    - label: ai_chase_station
+      data:
+        SIZE_X: 14000
+        throttle: 1.6
+        force_shoot: true
+```
+    stage, cfg = monster_roll_age(ages)
+    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Dragon", side + ",monster,dragon," + stage, "-", "behav_typhon")
+    monster_bake_age(monster, cfg)
+
+    # Look: a large, molten red-orange needle with a fiery maw.
+    monster.blob.set("body_1_geom_filename", "typhon-needle", 0)
+    monster.blob.set("body_2_geom_filename", "typhon-needle", 0)
+    monster.blob.set("body_1_color", "#c40", 0)
+    monster.blob.set("body_2_color", "#c40", 0)
+    monster.blob.set("particle_color_1", "#c40", 0)
+    monster.blob.set("particle_color_2", "#a20", 0)
+    monster.blob.set("particle_color_3", "#f80", 0)
+    monster.blob.set("beamColor", "#f60", 0)
+
+    clear_target(monster.id)
+    brain_add(monster, brain)
+    # Continuous self-heal, paused near a black hole so it stays killable there.
+    task_schedule(dragon_regen, {"dragon_id": to_id(monster), "regen_amount": regen_amount, "regen_interval": regen_interval, "regen_blackhole_range": regen_blackhole_range})
+    yield result to_id(monster)
+
+
+# Passive regeneration: top health back toward max over time. Skipped while near a
+# black hole - that is the intended kill (mirrors the Ravener's maelstrom exemption).
+== dragon_regen
+--- regen_loop
+    await delay_sim(regen_interval)
+    ->END if not object_exists(dragon_id)
+    hole = closest(dragon_id, role("black_hole"), regen_blackhole_range)
+    if hole is None:
+        hp = get_data_set_value(dragon_id, "monster_health")
+        hpmax = get_data_set_value(dragon_id, "monster_health_max")
+        if hp is not None and hpmax is not None and hp < hpmax:
+            nhp = hp + regen_amount
+            if nhp > hpmax:
+                nhp = hpmax
+            set_data_set_value(dragon_id, "monster_health", nhp)
+    jump regen_loop
+
+
+# Science scan - warn players it heals and won't fall to piecemeal fire.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "dragon")
+//science if has_role(SCIENCE_SELECTED_ID, "dragon")
+
+    + "scan":
+        <scan>
+            % Dragon - an apex predator that hoards ships. Extremely dangerous and aggressive.
+            % Regenerator - it heals rapidly; scattered fire will not kill it. Concentrate fire, or lure it into a black hole.
+            % Lifeform - do not engage alone. It will run down and cripple a lone ship.

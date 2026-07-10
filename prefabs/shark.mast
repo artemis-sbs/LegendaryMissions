@@ -1,0 +1,88 @@
+# Shark - a predator that HUNTS prey and ignores ships unless provoked.
+#
+# Normally it stalks the nearest prey (a placid species - default the Grazer, since
+# Cosmos has no space whale) at a slow hunting throttle. If a ship fires on it, an
+# aggro timer flips it hostile: it breaks off the hunt and strikes the nearest player
+# fast, then reverts to hunting once the timer lapses and the attacker leaves. Slow to
+# hunt, fast to strike - exactly the wiki behaviour.
+#
+# Uses the SHARED age system (prefab_helpers): Young/Mature/Ancient vary health and
+# size, never damage. role("monster") umbrella + role("shark") scoping.
+import prefab_helpers.py
+
+=== prefab_shark
+metadata: ```
+type: prefab/monster
+side: monster
+ages:
+    weights: [50, 35, 15]
+    young:   { health: 4000, scale: 0.8, label: Young }
+    mature:  { health: 6000, scale: 1.0, label: Mature }
+    ancient: { health: 9000, scale: 1.3, label: Ancient }
+brain:
+    - label: ai_shark_hunt
+      data:
+        prey_role: grazer
+        hunt_throttle: 0.8
+        strike_throttle: 2.6
+        aggro_range: 12000
+        stop_dist: 300
+```
+    stage, cfg = monster_roll_age(ages)
+    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Shark", side + ",monster,shark," + stage, "-", "behav_typhon")
+    monster_bake_age(monster, cfg)
+
+    # Look: sleek steel-grey cylinder with a red maw.
+    monster.blob.set("body_1_geom_filename", "typhon-cylinder", 0)
+    monster.blob.set("body_2_geom_filename", "typhon-cylinder", 0)
+    monster.blob.set("body_1_color", "#889", 0)
+    monster.blob.set("body_2_color", "#889", 0)
+    monster.blob.set("particle_color_1", "#889", 0)
+    monster.blob.set("particle_color_2", "#667", 0)
+    monster.blob.set("particle_color_3", "#aab", 0)
+    monster.blob.set("beamColor", "#f33", 0)
+
+    clear_target(monster.id)
+    brain_add(monster, brain)
+    yield result to_id(monster)
+
+
+=== ai_shark_hunt
+" Hunting prey, or striking an attacker if provoked
+metadata: ```
+type: brain/npc
+prey_role: grazer
+hunt_throttle: 0.8
+strike_throttle: 2.6
+aggro_range: 12000
+stop_dist: 300
+```
+    clear_target(BRAIN_AGENT.id)
+    # Provoked (aggro timer running): break off and strike the nearest player, fast.
+    if not is_timer_finished(BRAIN_AGENT_ID, "aggro"):
+        foe = closest(BRAIN_AGENT_ID, role("__player__"), aggro_range)
+        if foe is not None:
+            target(BRAIN_AGENT_ID, foe.id, True, strike_throttle, stop_dist=stop_dist)
+            yield success
+    # Otherwise hunt: stalk the nearest prey slowly. No prey -> drift (fail).
+    prey = closest(BRAIN_AGENT_ID, role(prey_role))
+    yield fail if prey is None
+    target(BRAIN_AGENT_ID, prey.id, True, hunt_throttle, stop_dist=stop_dist)
+    yield success
+
+
+# Provoke on being hit: turn hostile for 25s. A calm shark just hunts and ignores you.
+//damage/object if has_role(DAMAGE_TARGET_ID, "shark")
+    set_timer(DAMAGE_TARGET_ID, "aggro", seconds=25)
+    ->END
+
+
+# Science scan - tell players it ignores them unless attacked.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "shark")
+//science if has_role(SCIENCE_SELECTED_ID, "shark")
+
+    + "scan":
+        <scan>
+            % Shark - a predator that hunts other lifeforms. It ignores ships unless provoked.
+            % Stalker - slow while hunting, but it strikes with alarming speed if you fire on it. Hold fire and it will pass.
+            % Lifeform - defends itself aggressively once attacked. Recommend you do not engage.
