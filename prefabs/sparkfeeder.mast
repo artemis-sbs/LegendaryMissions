@@ -1,0 +1,69 @@
+# Sparkfeeder - a HELPFUL monster (bestiary species over behav_typhon).
+#
+# A docile, bioelectric lifeform: instead of attacking, it drifts to the nearest
+# player and sheds operating "energy" into the hull, topping the ship up. It never
+# damages (beamDamage 0, no attack brain). Players learn what it is by SCANNING it
+# (science routes below), so they don't shoot a creature that is helping them.
+#
+# Naming: the only fixed "typhon" is the engine behavior behav_typhon. The prefab,
+# roles (monster + sparkfeeder), name and look are all species-specific. role("monster")
+# stays the umbrella every generic system (spawn counts, MONSTER_SELECT) queries.
+=== prefab_sparkfeeder
+metadata: ```
+type: prefab/monster
+side: monster
+health: 3000
+scale: 0.6
+brain:
+    - label: ai_sparkfeeder_gift
+      data:
+        gift_range: 3000
+        gift_stop_dist: 500
+        gift_rate: 5
+        throttle: 0.6
+```
+    monster = npc_spawn(START_X, START_Y, START_Z, "Sparkfeeder", side + ",monster,sparkfeeder", "-", "behav_typhon")
+    monster.blob.set("monster_health_max", health, 0)
+    monster.blob.set("monster_health", health, 0)
+    monster.blob.set("local_scale_coeff", scale, 0)
+    monster.engine_object.exclusion_radius = int(200 * scale)
+
+    # Look: cyan panel-form with matching particles and a cosmetic cyan beam.
+    monster.blob.set("body_1_geom_filename", "typhon-panel", 0)
+    monster.blob.set("body_2_geom_filename", "typhon-panel", 0)
+    monster.blob.set("body_1_color", "#8cf", 0)
+    monster.blob.set("body_2_color", "#8cf", 0)
+    monster.blob.set("particle_color_1", "#8cf", 0)
+    monster.blob.set("particle_color_2", "#8cf", 0)
+    monster.blob.set("particle_color_3", "#8cf", 0)
+    monster.blob.set("beamColor", "#8cf", 0)
+    monster.blob.set("beamDamage", 0, 0)      # harmless - it can never hurt a ship
+
+    clear_target(monster.id)
+    brain_add(monster, brain)
+    yield result to_id(monster)
+
+
+=== ai_sparkfeeder_gift
+    # Helpful behaviour (prefab_sparkfeeder only): drift to the nearest player and
+    # add to its "energy". Never damages. gift_* arrive as brain-node data.
+    player = closest(BRAIN_AGENT_ID, role("__player__"), gift_range)
+    yield fail if player is None
+    ppos = get_pos(player.id)
+    target_pos(BRAIN_AGENT_ID, ppos.x, ppos.y, ppos.z, throttle, 0, gift_stop_dist)
+    e = get_data_set_value(player.id, "energy")
+    if e is None:
+        e = 0
+    set_data_set_value(player.id, "energy", e + gift_rate)
+    yield success
+
+
+# Science scan - tell the players this creature is friendly so they don't fire on it.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "sparkfeeder")
+//science if has_role(SCIENCE_SELECTED_ID, "sparkfeeder")
+
+    + "scan":
+        <scan>
+            % Sparkfeeder - a docile, bioelectric lifeform. Harmless.
+            % Energy grazer - it sheds operating energy into nearby hulls, recharging ships that drift close.
+            % Lifeform - considered beneficial. Recommend you hold fire.
