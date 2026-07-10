@@ -129,4 +129,41 @@ damage: 0
             # task_schedule(asteroid_hit, {"asteroid_id": a, "damage": 10})
 
 
+####################
+# Black hole lethal proximity  (issue #344)
+####################
+# The engine's maelstrom collision / internal-damage events don't reliably fire
+# while a ship sits in the gravity well - it can hover just outside the 100u
+# event horizon, or even warp free - so player ships AND fighters used to
+# survive black holes. This server-side ticker measures the distance from every
+# controllable craft to every black hole each MAST tick and explodes any that
+# cross the lethal radius, independent of any engine collision event.
+#
+# One ticker for ALL holes (not one per hole): it reads role("black_hole")
+# fresh each tick, so GM-spawned or removed holes need no per-hole wiring.
+# Fighters carry "cockpit" (LM strips __player__ from them so a dead fighter
+# doesn't trip end-game), so the target set is any_role("__player__,cockpit");
+# docked craft still carry "standby" and are excluded so a carrier passing a
+# hole doesn't vaporise its own bay. A hole can tune its kill range with a
+# "lethal_radius" data_set value; the 500u default clears the fastest warp
+# (~400u per 5Hz tick) so a ship can't tunnel through between checks.
+//signal/game_started
+    jump black_hole_lethal_watch
+
+== black_hole_lethal_watch
+--- loop
+    await delay_sim(0)
+    craft = any_role("__player__,cockpit") - role("standby")
+    if len(craft) > 0:
+        for bh_id in role("black_hole"):
+            lethal = get_data_set_value(bh_id, "lethal_radius")
+            if lethal is None:
+                lethal = 500
+            # Fresh set per hole: closest_list narrows its arg in place (&=),
+            # and this also drops craft already exploded earlier this tick.
+            for hit in closest_list(bh_id, craft - role("exploded"), max_dist=lethal):
+                explode_player_ship(hit.id)
+    jump loop
+
+
 
