@@ -1,0 +1,47 @@
+# Bulwark - a TAME, inert megafauna (bestiary species).
+#
+# A colossal, placid creature that never attacks. It drifts slowly and holds
+# position; its only danger is its bulk - ram it and the passive-collision system
+# hurts YOU. A mobile reef that zones space. White typhon-big-cube with the drone
+# texture. No brain (inert), beamDamage 0.
+# role("monster") umbrella + role("bulwark") scoping; behav_typhon under the hood.
+=== prefab_bulwark
+metadata: ```
+type: prefab/monster
+side: monster
+health: 40000
+scale: 2.5
+```
+    monster = npc_spawn(START_X, START_Y, START_Z, "Bulwark", side + ",monster,bulwark", "-", "behav_typhon")
+    monster.blob.set("monster_health_max", health, 0)
+    monster.blob.set("monster_health", health, 0)
+    monster.blob.set("local_scale_coeff", scale, 0)
+    monster.engine_object.exclusion_radius = int(200 * scale)
+
+    monster.blob.set("body_1_geom_filename", "typhon-big-cube", 0)
+    monster.blob.set("body_2_geom_filename", "typhon-big-cube", 0)
+    monster.blob.set("body_1_color", "white", 0)
+    monster.blob.set("body_2_color", "purple", 0)
+    monster.blob.set("body_2_diffuse_bitmap_file", "drone_diffuse", 0)
+    monster.blob.set("particle_color_1", "white", 0)
+    monster.blob.set("particle_color_2", "white", 0)
+    monster.blob.set("particle_color_3", "white", 0)
+    monster.blob.set("beamDamage", 0, 0)      # never attacks
+
+    # Inert: no brain. Hold station at the spawn point so it drifts, not hunts.
+    monster.blob.set("target_pos_x", START_X, 0)
+    monster.blob.set("target_pos_y", START_Y, 0)
+    monster.blob.set("target_pos_z", START_Z, 0)
+    clear_target(monster.id)
+    yield result to_id(monster)
+
+
+# Science scan - identify it as a harmless navigational hazard.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "bulwark")
+//science if has_role(SCIENCE_SELECTED_ID, "bulwark")
+
+    + "scan":
+        <scan>
+            % Bulwark - a colossal, inert lifeform. Harmless unless you collide with it.
+            % Living reef - it drifts slowly and does not attack. Its sheer bulk is the only danger.
+            % Lifeform - navigational hazard. Give it a wide berth.

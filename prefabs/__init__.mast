@@ -2,6 +2,10 @@ import monster.mast
 import sparkfeeder.mast
 import grazer.mast
 import ravener.mast
+import reaver.mast
+import warden.mast
+import leech.mast
+import bulwark.mast
 import basic_civilian.mast
 import basic_enemy.mast
 import defender.mast

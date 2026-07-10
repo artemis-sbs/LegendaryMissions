@@ -1,0 +1,66 @@
+# Siphon Leech - a NUISANCE parasite (bestiary species) - the Sparkfeeder's twin.
+#
+# It drifts to the nearest ship and DRAINS operating energy (never hull) - annoying,
+# not deadly. Outrun it or kill it. Sickly green typhon-cylinder.
+# role("monster") umbrella + role("leech") scoping; behav_typhon under the hood.
+=== prefab_leech
+metadata: ```
+type: prefab/monster
+side: monster
+health: 2000
+scale: 0.5
+brain:
+    - label: ai_leech_drain
+      data:
+        drain_range: 2500
+        drain_rate: 5
+        throttle: 0.9
+        drain_stop_dist: 400
+```
+    monster = npc_spawn(START_X, START_Y, START_Z, "Siphon Leech", side + ",monster,leech", "-", "behav_typhon")
+    monster.blob.set("monster_health_max", health, 0)
+    monster.blob.set("monster_health", health, 0)
+    monster.blob.set("local_scale_coeff", scale, 0)
+    monster.engine_object.exclusion_radius = int(200 * scale)
+
+    monster.blob.set("body_1_geom_filename", "typhon-cylinder", 0)
+    monster.blob.set("body_2_geom_filename", "typhon-cylinder", 0)
+    monster.blob.set("body_1_color", "#6a4", 0)
+    monster.blob.set("body_2_color", "#849", 0)
+    monster.blob.set("particle_color_1", "#6a4", 0)
+    monster.blob.set("particle_color_2", "#849", 0)
+    monster.blob.set("particle_color_3", "#6a4", 0)
+    monster.blob.set("beamColor", "#6a4", 0)
+    monster.blob.set("beamDamage", 0, 0)      # no hull damage - it only drains energy
+
+    clear_target(monster.id)
+    brain_add(monster, brain)
+    yield result to_id(monster)
+
+
+=== ai_leech_drain
+    # Parasite: drift to the nearest player and DRAIN its energy (floored at 0).
+    # Never damages hull. prefab_leech only.
+    player = closest(BRAIN_AGENT_ID, role("__player__"), drain_range)
+    yield fail if player is None
+    ppos = get_pos(player.id)
+    target_pos(BRAIN_AGENT_ID, ppos.x, ppos.y, ppos.z, throttle, 0, drain_stop_dist)
+    e = get_data_set_value(player.id, "energy")
+    if e is None:
+        e = 0
+    ne = e - drain_rate
+    if ne < 0:
+        ne = 0
+    set_data_set_value(player.id, "energy", ne)
+    yield success
+
+
+# Science scan - identify it as a non-lethal energy parasite.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "leech")
+//science if has_role(SCIENCE_SELECTED_ID, "leech")
+
+    + "scan":
+        <scan>
+            % Siphon Leech - a parasitic lifeform. It bleeds off ship energy.
+            % Energy parasite - it latches onto the nearest ship and siphons operating energy. Non-lethal.
+            % Lifeform - kill it or outrun it to stop the drain.

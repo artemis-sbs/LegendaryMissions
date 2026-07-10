@@ -1,0 +1,60 @@
+# Reaver - a DAMAGING hunter that ENRAGES when hurt (bestiary species).
+#
+# A fast, aggressive predator (typhon-needle, red). It chases and beams players,
+# and every wound makes it faster and brighter red (monster_speed up + recolor via
+# the dirty system) - a fight that gets worse the longer it runs.
+# role("monster") umbrella + role("reaver") scoping; behav_typhon under the hood.
+=== prefab_reaver
+metadata: ```
+type: prefab/monster
+side: monster
+health: 6000
+scale: 0.9
+brain:
+    - label: ai_chase_player
+      data:
+        SIZE_X: 14000
+        throttle: 3.0
+        force_shoot: true
+```
+    monster = npc_spawn(START_X, START_Y, START_Z, "Reaver", side + ",monster,reaver", "-", "behav_typhon")
+    monster.blob.set("monster_health_max", health, 0)
+    monster.blob.set("monster_health", health, 0)
+    monster.blob.set("local_scale_coeff", scale, 0)
+    monster.engine_object.exclusion_radius = int(200 * scale)
+
+    monster.blob.set("body_1_geom_filename", "typhon-needle", 0)
+    monster.blob.set("body_2_geom_filename", "typhon-needle", 0)
+    monster.blob.set("body_1_color", "#f44", 0)
+    monster.blob.set("body_2_color", "#f44", 0)
+    monster.blob.set("particle_color_1", "#f44", 0)
+    monster.blob.set("particle_color_2", "#f44", 0)
+    monster.blob.set("particle_color_3", "#f44", 0)
+    monster.blob.set("beamColor", "#f44", 0)
+
+    clear_target(monster.id)
+    brain_add(monster, brain)
+    yield result to_id(monster)
+
+
+# Enrage on being hit: faster (monster_speed up) and brighter red each wound.
+//damage/object if has_role(DAMAGE_TARGET_ID, "reaver")
+    spd = get_data_set_value(DAMAGE_TARGET_ID, "monster_speed")
+    if spd is None:
+        spd = 0
+    set_data_set_value(DAMAGE_TARGET_ID, "monster_speed", spd + 10)
+    set_data_set_value(DAMAGE_TARGET_ID, "body_1_color", "#f00")
+    set_data_set_value(DAMAGE_TARGET_ID, "body_2_color", "#f00")
+    add_role(DAMAGE_TARGET_ID, "enraged")
+    ->END
+
+
+# Science scan - flag it as an escalating threat.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "reaver")
+//science if has_role(SCIENCE_SELECTED_ID, "reaver")
+
+    + "scan":
+        <scan>
+            % Reaver - a fast, aggressive predator. Hostile on sight.
+            % Apex hunter - it grows more frenzied and faster the more it is wounded.
+            % Lifeform - extreme threat. Disengage or destroy it quickly.

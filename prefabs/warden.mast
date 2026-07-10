@@ -1,0 +1,58 @@
+# Warden - a HELPFUL guardian monster (bestiary species).
+#
+# A friendly creature that hunts the players' enemies (raiders), never the players
+# themselves - a "pet" that clears hostiles. Blue-green typhon-balls.
+# role("monster") umbrella + role("warden") scoping; behav_typhon under the hood.
+#
+# Note: for a true ally the mission should spawn it on a friendly/neutral side
+# (the `side` metadata below); its brain already refuses to target players.
+=== prefab_warden
+metadata: ```
+type: prefab/monster
+side: monster
+health: 10000
+scale: 1.0
+brain:
+    - label: ai_warden_hunt
+      data:
+        hunt_range: 15000
+        throttle: 2.5
+```
+    monster = npc_spawn(START_X, START_Y, START_Z, "Warden", side + ",monster,warden", "-", "behav_typhon")
+    monster.blob.set("monster_health_max", health, 0)
+    monster.blob.set("monster_health", health, 0)
+    monster.blob.set("local_scale_coeff", scale, 0)
+    monster.engine_object.exclusion_radius = int(200 * scale)
+
+    monster.blob.set("body_1_geom_filename", "typhon-balls", 0)
+    monster.blob.set("body_2_geom_filename", "typhon-balls", 0)
+    monster.blob.set("body_1_color", "#4cf", 0)
+    monster.blob.set("body_2_color", "#4cf", 0)
+    monster.blob.set("particle_color_1", "#4cf", 0)
+    monster.blob.set("particle_color_2", "#4cf", 0)
+    monster.blob.set("particle_color_3", "#4cf", 0)
+    monster.blob.set("beamColor", "#4cf", 0)
+
+    clear_target(monster.id)
+    brain_add(monster, brain)
+    yield result to_id(monster)
+
+
+=== ai_warden_hunt
+    # Helpful guardian: hunts the nearest hostile (raider), never a player.
+    # prefab_warden only.
+    foe = closest(BRAIN_AGENT_ID, role("raider"), hunt_range)
+    yield fail if foe is None
+    target(BRAIN_AGENT_ID, foe.id, True, throttle)
+    yield success
+
+
+# Science scan - tell players it is an ally.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "warden")
+//science if has_role(SCIENCE_SELECTED_ID, "warden")
+
+    + "scan":
+        <scan>
+            % Warden - a friendly guardian lifeform. It hunts hostiles, not ships.
+            % Symbiont - it defends this region against raiders. Considered an ally.
+            % Lifeform - beneficial. Hold fire.
