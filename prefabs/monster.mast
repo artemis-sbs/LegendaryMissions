@@ -2,7 +2,19 @@
 === prefab_typhon_classic
 metadata: ```
 type: prefab/monster
+health_young: 5000
+health_mature: 15000
+health_ancient: 30000
+scale_young: 0.7
+scale_mature: 1.0
+scale_ancient: 1.4
+weight_young: 50
+weight_mature: 35
+weight_ancient: 15
+ancient_lifespan_min: 300
+ancient_lifespan_max: 600
 brain:
+    - label: ai_typhon_seek_death
     - Label: ai_stay_close
       data:
         force_shoot: true
@@ -22,8 +34,30 @@ brain:
         throttle: 1.6
         force_shoot: true
 ```
-    monster = npc_spawn(START_X,START_Y,START_Z,"ZZ", "monster,typhon,classic", "-", "behav_typhon")
-    monster.engine_object.exclusion_radius = 200
+    # Age is fixed at spawn: roll a life stage, then bake health and size once.
+    # Older individuals are tougher and larger; damage is left at the hull default
+    # (age does not change damage). Scoped to THIS prefab only - behav_typhon and
+    # every other monster path are untouched.
+    stage = random.choices(["young", "mature", "ancient"], weights=[weight_young, weight_mature, weight_ancient])[0]
+    if stage == "young":
+        stage_health = health_young
+        stage_scale = scale_young
+        stage_name = "Young Typhon"
+    elif stage == "mature":
+        stage_health = health_mature
+        stage_scale = scale_mature
+        stage_name = "Mature Typhon"
+    else:
+        stage_health = health_ancient
+        stage_scale = scale_ancient
+        stage_name = "Ancient Typhon"
+
+    monster = npc_spawn(START_X,START_Y,START_Z, stage_name, "monster,typhon,classic", "-", "behav_typhon")
+    add_role(monster.id, stage)
+    monster.blob.set("monster_health_max", stage_health, 0)
+    monster.blob.set("monster_health", stage_health, 0)
+    monster.blob.set("local_scale_coeff", stage_scale, 0)
+    monster.engine_object.exclusion_radius = int(200 * stage_scale)
 
     monster.blob.set("body_1_color", "purple", 0)
     monster.blob.set("body_2_color", "purple", 0)
@@ -34,11 +68,32 @@ brain:
     monster.blob.set("particle_color_2", "purple", 0)
     monster.blob.set("particle_color_3", "purple", 0)
     monster.blob.set("beamColor", "yellow",0)
+
+    # Ancients are near the end of life: give them a lifespan, after which the
+    # ai_typhon_seek_death brain node drives them into a black hole to die.
+    # Younger stages get no timer and never seek a hole.
+    if stage == "ancient":
+        set_timer(monster.id, "lifespan", seconds=random.uniform(ancient_lifespan_min, ancient_lifespan_max))
+
     clear_target(monster.id)
 
-    # Add the brain 
+    # Add the brain
     brain_add(monster, brain)
     yield result to_id(monster)
+
+
+=== ai_typhon_seek_death
+    # Priority-first brain node for prefab_typhon_classic ONLY. Aged Ancients steer
+    # into the nearest black hole to die; every other monster (and every Ancient
+    # before its lifespan expires) falls through to the chase nodes below it. Being
+    # near or dragged to a black hole is what actually kills the monster.
+    yield fail if not has_role(BRAIN_AGENT_ID, "ancient")
+    yield fail if not is_timer_finished(BRAIN_AGENT_ID, "lifespan")
+    hole = closest(BRAIN_AGENT_ID, role("black_hole"))
+    yield fail if hole is None
+    hp = get_pos(hole.id)
+    target_pos(BRAIN_AGENT_ID, hp.x, hp.y, hp.z, 2.6, 0, 0)
+    yield success
 
 
 
