@@ -211,9 +211,9 @@ def hangar_craft_spawn(docked_id, craft_data):
     c = craft.blob.get("shield_count", 0)
     for x in range(c):
         m = shields[c] if c<len(shields) else craft.blob.get("shield_max_val", x)
-        craft.blob.set("shield_max_val", m*4, x)
+        craft.blob.set("shield_max_val", m, x)
         v = shields[c] if c<len(shields) else craft.blob.get("shield_val", x)
-        craft.blob.set("shield_val", v*4, x)
+        craft.blob.set("shield_val", v, x)
     #
     # Cross links
     #
