@@ -168,6 +168,8 @@ metadata: ``` yaml
 type: brain/damcons
 dataset: move_speed
 ```
+    # Host ship destroyed -> this damcon's grid blob is invalid; stop the SEQ.
+    yield fail if not grid_object_valid(BRAIN_AGENT_ID)
     grid_damcons_detailed_status_update(BRAIN_AGENT_ID)
     # This is intended to succeed to fall though part of a SEQ
     yield success
@@ -179,6 +181,7 @@ dataset: move_speed
 metadata: ``` yaml
 room: __damaged__
 ```
+    yield fail if not grid_object_valid(BRAIN_AGENT_ID)
     # The set of still-valid work orders for this ship
     orders = linked_to(BRAIN_AGENT_ID, "work-order") & role(room) & role("__damaged__") & grid_objects(BRAIN_AGENT.host_id)
     #
@@ -202,6 +205,7 @@ room: __damaged__
 
 === ai_lifeform_move_to_damage
     yield fail if to_object(BRAIN_AGENT.host_id) is None
+    yield fail if not grid_object_valid(BRAIN_AGENT_ID)
     # This ship's live damaged rooms
     damaged = role("__damaged__") & grid_objects(BRAIN_AGENT.host_id)
     #
@@ -227,6 +231,8 @@ room: __damaged__
 # ```
     rally_point = to_grid_object(BRAIN_AGENT.get_inventory_value("idle_marker", None))
     yield fail if rally_point is None
+    # Rally marker lives on the same hull; a destroyed host invalidates its blob.
+    yield fail if not grid_object_valid(rally_point)
     x = rally_point.data_set.get("curx",0)
     y = rally_point.data_set.get("cury",0)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:target_pos", (x,y))
@@ -235,6 +241,7 @@ room: __damaged__
 === ai_lifeform_move_to_location
 # metadata: ``` yaml
 # ```
+    yield fail if not grid_object_valid(BRAIN_AGENT_ID)
     _pos = get_inventory_value(BRAIN_AGENT_ID, "blackboard:target_pos")
     prev_pos = get_inventory_value(BRAIN_AGENT_ID, "blackboard:prev_target_pos")
     idle_pos = get_inventory_value(BRAIN_AGENT_ID, "blackboard:idle_pos")
