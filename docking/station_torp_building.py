@@ -7,11 +7,11 @@ from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_va
 
 # I'll leave this here for now, but this information now goes in the torpedo prefabs.
 __build_times = {
-    "command": {"build_times": {"Homing": 2, "Nuke": 5, "EMP": 3, "Mine": 2}},
-    "civil": {"build_times": {"Homing": 6, "Nuke": 20, "EMP": 10, "Mine": 8 }},
-    "industry": {"build_times": {"Homing": 1, "Nuke": 4, "EMP": 2, "Mine": 2 }},
-    "science": {"build_times": {"Homing": 6, "Nuke": 20, "EMP": 10, "Mine": 8}},
-    "default": {"build_times": {"Homing": 3, "Nuke": 10, "EMP": 5, "Mine": 4}}
+    "command": {"build_times": {"Homing": 2, "Nuke": 5, "EMP": 3, "Mine": 2, "PShock": 5, "Tag": 1}},
+    "civil": {"build_times": {"Homing": 6, "Nuke": 20, "EMP": 10, "Mine": 8, "PShock": 20, "Tag": 2}},
+    "industry": {"build_times": {"Homing": 1, "Nuke": 4, "EMP": 2, "Mine": 2, "PShock": 4, "Tag": 1}},
+    "science": {"build_times": {"Homing": 6, "Nuke": 20, "EMP": 10, "Mine": 8, "PShock": 20, "Tag": 2}},
+    "default": {"build_times": {"Homing": 3, "Nuke": 10, "EMP": 5, "Mine": 4, "PShock": 10, "Tag": 1}}
 }
 
 #TODO Should these functions be moved to sbs_utils?

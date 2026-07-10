@@ -26,6 +26,10 @@
     #
     ->END if EVENT.sub_tag == "maelstrom"
 
+    jump wreckage {"DAMAGE_SELECTED_ID": DAMAGE_SELECTED_ID}
+
+====== wreckage ======
+
     # When an enemy ship is destroyed, we want to replace it with a wreck. Before we delete the enemy, we need to 
     # grab a few things from it: the x/y/z position, and the side value, so we can determine later what type of 
     # upgrade it might drop. 
@@ -93,5 +97,33 @@
 //damage/internal if has_role(DAMAGE_ORIGIN_ID, "__player__") and EVENT.sub_tag == "maelstrom"
     explode_player_ship(DAMAGE_ORIGIN_ID)
 
+####################
+# Torpedo Effects
+####################
+
+//damage/object if EVENT.extra_tag == "PShock"
+    print(f"Torpedo Event: {EVENT.extra_tag}")
+    if EVENT.source_point is not None and DAMAGE_TARGET_ID is not None:
+        torpface = sim.get_shield_hit_index_source(EVENT.source_point, to_engine_object(DAMAGE_TARGET_ID))
+    else:
+        ->END
+    shield_check = get_data_set_value(DAMAGE_TARGET_ID, "shield_val", torpface)
+    if shield_check == 0:
+        sbs.delete_object(DAMAGE_TARGET_ID)
+        if has_role(DAMAGE_TARGET_ID, "raider"):
+            jump wreckage {"DAMAGE_SELECTED_ID": DAMAGE_TARGET_ID}
+    ->END
+
+//damage/object if EVENT.extra_tag == "Tag"
+    print(f"Torpedo Event: {EVENT.extra_tag}")
+    if DAMAGE_TARGET_ID is not None:
+        add_role(DAMAGE_TARGET_ID, "tagged")
+        tagdate = str(2280 + random.randint(1, 30)) + "-" + str(random.randint(1,12)).zfill(2) + "-" + str(random.randint(1,28)).zfill(2)
+        set_inventory_value(DAMAGE_TARGET_ID, "tagged_by_id", DAMAGE_PARENT_ID)
+        set_inventory_value(DAMAGE_TARGET_ID, "tagged_by_side", EVENT.value_tag)
+        set_inventory_value(DAMAGE_TARGET_ID, "tagged_by_name", to_object(DAMAGE_PARENT_ID).name)
+        set_inventory_value(DAMAGE_TARGET_ID, "tag_date", tagdate)
+        print(f"Tag: {to_object(DAMAGE_TARGET_ID).name} tagged by {to_object(DAMAGE_PARENT_ID).name} on {tagdate}")        
+    ->END
 
 #

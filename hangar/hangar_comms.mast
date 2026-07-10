@@ -35,6 +35,8 @@
         tt = FIGHTER.data_set.get("torpedoTubeCurrentType", 0)
         #print(f"FF {FIGHTER.name} {button}")
         if tt == "Homing":
+            tt = "EMP"
+        elif tt == "EMP":
             tt = "Nuke"
         elif tt == "Nuke":
             tt = "Mine"

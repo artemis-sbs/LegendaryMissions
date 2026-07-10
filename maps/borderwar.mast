@@ -69,7 +69,7 @@ Properties:
 
     #------------------------------------------------------------------------------------------------------------
     # Build friendly stations
-    terrain_spawn_stations(DIFFICULTY, lethal_value, 21000, 65000)
+    terrain_spawn_stations(DIFFICULTY, lethal_value, 25000, 65000)
 
     #------------------------------------------------------------------------------------------------------------
     # wait for the creation of the player ships
