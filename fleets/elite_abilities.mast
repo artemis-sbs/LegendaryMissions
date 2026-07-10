@@ -7,89 +7,77 @@ elite_build_abilities()
     task_schedule(handle_elite_abilities, {"ELITE_ID": SPAWNED_ID})
 
 ==== handle_elite_abilities
-    so = to_object(ELITE_ID)
-    -> END if None == so
+" Back-compat entry point: attaches the elite behavior-tree brain (once) and
+" ends. The brain drives ability selection each tick, replacing the old
+" hand-rolled loop. Kept as a named label because //spawn, the GM add-ability
+" comms, and a2x set_special all schedule it by name.
+metadata: ```
+brain:
+  SEQ Elite Abilities:
+    - elite_bt_gate
+    - elite_bt_activate
+```
+    ->END if ELITE_ID is None
+    ->END if get_inventory_value(ELITE_ID, "__BRAIN__", None) is not None
+    brain_add(ELITE_ID, brain, None, 0, None)
+    ->END
 
-    #
-    # Elite should only use powers when near things
-    # 
-    #
-    side = so.side
-    stuff = broad_test_around(so, 18000,18000, 0xF0)
-    nearest_target = closest(so, stuff - role(side) )
-    if nearest_target is None:
-        await delay_sim(seconds=20)
-        jump handle_elite_abilities
 
-    # Get the abilities managed by script
+=== elite_bt_gate
+" Gate node: succeed only when this elite should consider an ability - not
+" tag-suppressed, an enemy is near, and no ability is already running. Also
+" detects a just-finished ability to emit its end signal and clear state.
+metadata: ```
+type: brain/npc
+```
+    so = to_object(BRAIN_AGENT_ID)
+    yield fail if so is None
+
+    # An ability is mid-run: hold until its task finishes, then emit end + clear.
+    elite_task = get_inventory_value(BRAIN_AGENT_ID, "ELITE_TASK", None)
+    if elite_task is not None:
+        yield fail if not elite_task.done()
+        ability = get_inventory_value(BRAIN_AGENT_ID, "ELITE_ACTIVE_ABILITY", None)
+        signal_emit("elite_ability_end", {"ELITE_ID": BRAIN_AGENT_ID, "ability": ability})
+        set_inventory_value(BRAIN_AGENT_ID, "ELITE_TASK", None)
+        set_inventory_value(BRAIN_AGENT_ID, "ELITE_ACTIVE_ABILITY", None)
+
+    # Tag torpedo suppression (timer set in damage/destroy.mast; True when unset).
+    yield fail if not is_timer_finished(BRAIN_AGENT_ID, "tag_suppression")
+
+    # Elites only use powers when near non-friendly ships.
+    stuff = broad_test_around(so, 18000, 18000, 0xF0)
+    nearest_target = closest(so, stuff - role(so.side))
+    yield fail if nearest_target is None
+    yield success
+
+
+=== elite_bt_activate
+" Action node: pick one of this elite's ready scripted abilities (role present
+" and per-ability cooldown finished) and launch it as its own task. The task
+" runs the ability sequence; the gate holds the tree until it completes.
+metadata: ```
+type: brain/npc
+```
     all_abilities = elite_get_non_engine()
-    abilities = []
-
+    ready = []
     for ab in all_abilities:
-        if has_role(ELITE_ID, ab):
-            abilities.append(ab)
+        if not has_role(BRAIN_AGENT_ID, ab):
+            continue
+        if is_timer_finished(BRAIN_AGENT_ID, f"{ab}_cooldown"):
+            ready.append(ab)
 
-    # Don't need this is there are no scripted abilities
-    # TODO: Maybe we do if GM/Script adds abilities, Handle this better
+    yield fail if len(ready) == 0
 
-    -> END if len(abilities) == 0
-    default x = 0
-    #
-    # A Tag torpedo temporarily disables all scripted abilities. The hit sets the
-    # "tag_suppression" timer directly (see damage/destroy.mast), so re-tagging
-    # refreshes it, it clears itself when it expires, and the persistent "tagged"
-    # role is left untouched for other consumers. is_timer_finished() is True when
-    # the timer was never set, so untagged elites are unaffected.
-    #
-    if not is_timer_finished(ELITE_ID, "tag_suppression"):
-        await delay_sim(1)
-        jump handle_elite_abilities
-
-    #
-    # Consider allowing a brain here to 
-    # determine elite abilities 
-    #
-    ab = random.choice(abilities)
-    t = get_time_remaining(ELITE_ID, f"{ab}_cooldown")
-    if x >= 150:
-        print(f"Time remaining {t} for {ab}")
-        x = 0
-
-    if not is_timer_finished(ELITE_ID, f"{ab}_cooldown"):
-        await delay_sim(1)
-        jump handle_elite_abilities 
-
-    #
-    # This will run a sequence based on the elite type
-    # awaiting will wait until the sequence is finished
-    #
-    #TODO: This should by more dynamic and use the labels, so new abilities can be added
-    #
-    # This also maybe should not await, but be more active and allow it to change its mind
-    # Abilities maybe need a --- clear label if it need to be cleared
-    #
-    data={"ELITE_ID": ELITE_ID}
+    ab = random.choice(ready)
     elite_label = all_abilities.get(ab)
-    #debug_print(f"ELITE {ab} {elite_label}")
-    if elite_label is not None: # and l not isinstance(l, str):
-        # Store the task to make it possible 
-        # for it to be canceled. e.g. special torp that cancel elite
-        # 
-        # e.g. elite_scramble, set science status, set time "elite_all_cooldown"
-        #   Disable engine abilities TODO (how?)
-        elite_task = task_schedule(elite_label, data={"ELITE_ID": ELITE_ID})
-        set_inventory_value(ELITE_ID, "ELITE_TASK", elite_task)
-        signal_emit("elite_ability_start", {"ELITE_ID": ELITE_ID, "ability": ab})
-        e = await elite_task
-        set_inventory_value(ELITE_ID, "ELITE_TASK", None)
-        signal_emit("elite_ability_end", {"ELITE_ID": ELITE_ID, "ability": ab})
-    else:
-        print(f"Picked {ab}")
-        await delay_sim(seconds=30)
+    yield fail if elite_label is None
 
-    # Add at least on delay
-    await delay_sim(seconds=1)
-    -> handle_elite_abilities
+    elite_task = task_schedule(elite_label, data={"ELITE_ID": BRAIN_AGENT_ID})
+    set_inventory_value(BRAIN_AGENT_ID, "ELITE_TASK", elite_task)
+    set_inventory_value(BRAIN_AGENT_ID, "ELITE_ACTIVE_ABILITY", ab)
+    signal_emit("elite_ability_start", {"ELITE_ID": BRAIN_AGENT_ID, "ability": ab})
+    yield success
 
 
 
