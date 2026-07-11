@@ -77,6 +77,6 @@ brain:
 
     + "scan":
         <scan>
-            % Grazer - a large, placid lifeform. Tame unless provoked.
-            % Herbivorous drifter - it ignores ships that leave it alone, but turns aggressive if fired upon.
-            % Lifeform - recommend you do not engage; it will retaliate.
+            % TAME: Grazer - a large, placid lifeform. It ignores ships that leave it alone, but turns hostile for a time if fired upon.
+            % TAME: Grazer - a herbivorous drifter. Leave it be and it leaves you be; attack it and it retaliates.
+            % TAME: Grazer - non-aggressive by nature. Do not engage; it defends itself only when provoked.

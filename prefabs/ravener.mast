@@ -65,6 +65,6 @@ brain:
 
     + "scan":
         <scan>
-            % Ravener - an aggressive predator that FEEDS on energy weapons. Hold fire.
-            % Fire-eater - it absorbs beam and torpedo damage as health; conventional weapons only make it stronger.
-            % Lifeform - only an environmental hazard such as a black hole can destroy it.
+            % HOSTILE: Ravener - an aggressive predator that FEEDS on energy weapons. Hold fire.
+            % HOSTILE: Ravener - a fire-eater; it absorbs beam and torpedo damage as health. Conventional weapons only make it stronger.
+            % HOSTILE: Ravener - only an environmental hazard such as a black hole can destroy it.

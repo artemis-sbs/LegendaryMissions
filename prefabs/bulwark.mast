@@ -42,6 +42,6 @@ scale: 2.5
 
     + "scan":
         <scan>
-            % Bulwark - a colossal, inert lifeform. Harmless unless you collide with it.
-            % Living reef - it drifts slowly and does not attack. Its sheer bulk is the only danger.
-            % Lifeform - navigational hazard. Give it a wide berth.
+            % HARMLESS: Bulwark - a colossal, inert lifeform. It does not attack; its sheer bulk is the only danger.
+            % HARMLESS: Bulwark - a living reef that drifts slowly. Ram it and you take the damage.
+            % HARMLESS: Bulwark - a navigational hazard, nothing more. Give it a wide berth.

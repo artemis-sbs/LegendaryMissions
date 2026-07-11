@@ -122,6 +122,6 @@ arrive_dist: 3000
 
     + "scan":
         <scan>
-            % Charybdis - a hardy lifeform that folds space. Peaceful unless attacked.
-            % Space-folder - it leaves a nebula trail and, if fired upon, hurls its attacker across the sector. Do not provoke it.
-            % Lifeform - nearly indestructible and non-aggressive. Recommend you leave it be.
+            % TAME: Charybdis - a hardy lifeform that folds space. Peaceful unless attacked.
+            % TAME: Charybdis - it leaves a nebula trail and, if fired upon, hurls its attacker across the sector. Do not provoke it.
+            % TAME: Charybdis - nearly indestructible and non-aggressive. Recommend you leave it be.

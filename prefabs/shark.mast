@@ -83,6 +83,6 @@ stop_dist: 300
 
     + "scan":
         <scan>
-            % Shark - a predator that hunts other lifeforms. It ignores ships unless provoked.
-            % Stalker - slow while hunting, but it strikes with alarming speed if you fire on it. Hold fire and it will pass.
-            % Lifeform - defends itself aggressively once attacked. Recommend you do not engage.
+            % TAME: Shark - a predator that hunts other lifeforms and ignores ships unless provoked.
+            % TAME: Shark - a slow stalker while hunting, but it strikes with alarming speed if fired on. Hold fire and it will pass.
+            % TAME: Shark - non-aggressive toward ships, yet it defends itself hard once attacked. Recommend you do not engage.

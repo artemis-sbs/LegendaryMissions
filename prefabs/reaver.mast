@@ -55,6 +55,6 @@ brain:
 
     + "scan":
         <scan>
-            % Reaver - a fast, aggressive predator. Hostile on sight.
-            % Apex hunter - it grows more frenzied and faster the more it is wounded.
-            % Lifeform - extreme threat. Disengage or destroy it quickly.
+            % HOSTILE: Reaver - a fast, aggressive predator. Attacks on sight.
+            % HOSTILE: Reaver - an apex hunter; it grows more frenzied and faster the more it is wounded.
+            % HOSTILE: Reaver - an extreme threat. Disengage or destroy it quickly.

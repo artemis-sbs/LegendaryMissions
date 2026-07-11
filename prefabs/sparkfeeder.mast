@@ -64,6 +64,6 @@ brain:
 
     + "scan":
         <scan>
-            % Sparkfeeder - a docile, bioelectric lifeform. Harmless.
-            % Energy grazer - it sheds operating energy into nearby hulls, recharging ships that drift close.
-            % Lifeform - considered beneficial. Recommend you hold fire.
+            % BENEFICIAL: Sparkfeeder - a docile, bioelectric lifeform. Harmless.
+            % BENEFICIAL: Sparkfeeder - an energy grazer; it sheds operating energy into nearby hulls, recharging ships that drift close.
+            % BENEFICIAL: Sparkfeeder - considered beneficial. Recommend you hold fire.

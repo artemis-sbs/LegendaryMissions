@@ -53,6 +53,6 @@ brain:
 
     + "scan":
         <scan>
-            % Warden - a friendly guardian lifeform. It hunts hostiles, not ships.
-            % Symbiont - it defends this region against raiders. Considered an ally.
-            % Lifeform - beneficial. Hold fire.
+            % BENEFICIAL: Warden - a friendly guardian lifeform. It hunts hostiles, not ships.
+            % BENEFICIAL: Warden - a symbiont that defends this region against raiders. Considered an ally.
+            % BENEFICIAL: Warden - a helpful guardian. Hold fire.

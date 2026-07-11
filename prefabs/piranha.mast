@@ -67,6 +67,6 @@ swarm_spread: 800
 
     + "scan":
         <scan>
-            % Piranha - a small metal-eating scavenger. Weak alone, lethal in a swarm.
-            % Wreck-dweller - swarms lurk in derelicts and erupt at passing ships. Approach wreckage with caution.
-            % Lifeform - a single specimen is no threat; a nest will strip a hull. Do not linger.
+            % HOSTILE: Piranha - a small metal-eating scavenger. Weak alone, lethal in a swarm.
+            % HOSTILE: Piranha - a wreck-dweller; swarms lurk in derelicts and erupt at passing ships. Approach wreckage with caution.
+            % HOSTILE: Piranha - a single specimen is a minor threat, but a nest will strip a hull. Do not linger.

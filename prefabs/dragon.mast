@@ -88,6 +88,6 @@ brain:
 
     + "scan":
         <scan>
-            % Dragon - an apex predator that hoards ships. Extremely dangerous and aggressive.
-            % Regenerator - it heals rapidly; scattered fire will not kill it. Concentrate fire, or lure it into a black hole.
-            % Lifeform - do not engage alone. It will run down and cripple a lone ship.
+            % HOSTILE: Dragon - an apex predator that hoards ships. Extremely dangerous and aggressive on sight.
+            % HOSTILE: Dragon - a rapid regenerator; scattered fire will not kill it. Concentrate fire, or lure it into a black hole.
+            % HOSTILE: Dragon - do not engage alone. It will run down and cripple a lone ship.

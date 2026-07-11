@@ -61,6 +61,6 @@ brain:
 
     + "scan":
         <scan>
-            % Siphon Leech - a parasitic lifeform. It bleeds off ship energy.
-            % Energy parasite - it latches onto the nearest ship and siphons operating energy. Non-lethal.
-            % Lifeform - kill it or outrun it to stop the drain.
+            % HARMLESS: Siphon Leech - a parasitic lifeform. It bleeds off ship energy but cannot kill.
+            % HARMLESS: Siphon Leech - an energy parasite; it latches onto the nearest ship and siphons operating energy. Non-lethal.
+            % HARMLESS: Siphon Leech - a nuisance, not a threat. Kill it or outrun it to stop the drain.

@@ -50,6 +50,6 @@ brain:
 
     + "scan":
         <scan>
-            % NSECT - a small, extremely fast lifeform. Aggressive but weak.
-            % Space bug - it stings for little damage and must circle for each pass. More nuisance than danger.
-            % Lifeform - a lone specimen is easily destroyed. Watch it does not harass you into a worse threat.
+            % HOSTILE: NSECT - a small, extremely fast lifeform. Aggressive but weak.
+            % HOSTILE: NSECT - a space bug; it stings for little damage and must circle for each pass. More nuisance than danger.
+            % HOSTILE: NSECT - a lone specimen is easily destroyed. Watch it does not harass you into a worse threat.
