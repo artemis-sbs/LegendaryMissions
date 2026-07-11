@@ -29,7 +29,7 @@ brain:
         stop_dist: 300
 ```
     stage, cfg = monster_roll_age(ages)
-    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Shark", side + ",monster,shark," + stage, "-", "behav_typhon")
+    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Shark", side + ",monster,shark," + stage, "-", "behav_npcship")
     monster_bake_age(monster, cfg)
 
     # Look: sleek steel-grey cylinder with a red maw.

@@ -23,7 +23,7 @@ brain:
         throttle: 3.2
         force_shoot: true
 ```
-    monster = npc_spawn(START_X, START_Y, START_Z, "Insect", side + ",monster,insect", "-", "behav_typhon")
+    monster = npc_spawn(START_X, START_Y, START_Z, "Insect", side + ",monster,insect", "-", "behav_npcship")
     monster.blob.set("monster_health_max", health, 0)
     monster.blob.set("monster_health", health, 0)
     monster.blob.set("local_scale_coeff", scale, 0)

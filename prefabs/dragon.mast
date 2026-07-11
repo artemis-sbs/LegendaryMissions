@@ -44,7 +44,7 @@ brain:
         force_shoot: true
 ```
     stage, cfg = monster_roll_age(ages)
-    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Dragon", side + ",monster,dragon," + stage, "-", "behav_typhon")
+    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Dragon", side + ",monster,dragon," + stage, "-", "behav_npcship")
     monster_bake_age(monster, cfg)
 
     # Look: a large, molten red-orange needle with a fiery maw.
