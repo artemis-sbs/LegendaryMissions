@@ -115,6 +115,11 @@
     else:
         ->END
     shield_check = get_data_set_value(DAMAGE_TARGET_ID, "shield_val", torpface)
+    # A target with no shield_val slot for the struck facing (an NPC with no shield
+    # system, or an object already removed) reads back as None; treat that as "shields
+    # down" so the `<= 0` checks below don't crash on `None <= 0`.
+    if shield_check is None:
+        shield_check = 0
     # Player ships need explode_player_ship - a bare sbs.delete_object leaves the sim
     # in a broken state and the players never see the kill. Only insta-kill when the
     # ship's shields are fully DOWN; player shield_val can also go negative, so the
@@ -142,9 +147,15 @@
         tagdate = str(2280 + random.randint(1, 30)) + "-" + str(random.randint(1,12)).zfill(2) + "-" + str(random.randint(1,28)).zfill(2)
         set_inventory_value(DAMAGE_TARGET_ID, "tagged_by_id", DAMAGE_PARENT_ID)
         set_inventory_value(DAMAGE_TARGET_ID, "tagged_by_side", EVENT.value_tag)
-        set_inventory_value(DAMAGE_TARGET_ID, "tagged_by_name", to_object(DAMAGE_PARENT_ID).name)
+        # The firing ship (DAMAGE_PARENT_ID) may already be destroyed, or the torpedo
+        # may have no parent - to_object() then returns None, so don't deref .name blindly.
+        tag_parent = to_object(DAMAGE_PARENT_ID)
+        tag_by_name = tag_parent.name if tag_parent is not None else "Unknown"
+        set_inventory_value(DAMAGE_TARGET_ID, "tagged_by_name", tag_by_name)
         set_inventory_value(DAMAGE_TARGET_ID, "tag_date", tagdate)
-        print(f"Tag: {to_object(DAMAGE_TARGET_ID).name} tagged by {to_object(DAMAGE_PARENT_ID).name} on {tagdate}")        
+        tag_target = to_object(DAMAGE_TARGET_ID)
+        tag_target_name = tag_target.name if tag_target is not None else "Unknown"
+        print(f"Tag: {tag_target_name} tagged by {tag_by_name} on {tagdate}")
     ->END
 
 #
