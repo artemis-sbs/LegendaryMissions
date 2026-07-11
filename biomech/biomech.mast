@@ -34,6 +34,12 @@
     for infest_i in range(INFEST_COUNT):
         ipos = Vec3.rand_in_sphere(20000, 40000, False, True)
         biomech_spawn(INFEST_X + ipos.x, INFEST_Y + ipos.y, INFEST_Z + ipos.z, "biomech_a", INFEST_ROLES)
+    # Wake the biomechs that spawned NEAR a player ship so the infestation THREATENS on
+    # arrival instead of idling; hulls that spawned far off stay passive until provoked.
+    # biomech_enrage centred on each player rouses the hulls within BIOMECH_AGGRO_RADIUS and
+    # locks them onto that ship (and an evolve carries the enraged state forward).
+    for infest_pl in to_object_list(role("__player__")):
+        biomech_enrage(infest_pl.id, infest_pl.id)
 --- infest_grow
     await delay_sim(INFEST_WAVE)
     ->END if GAME_ENDED
@@ -48,4 +54,7 @@
         rpos = Vec3.rand_in_sphere(15000, 35000, False, True)
         biomech_spawn(INFEST_X + rpos.x, INFEST_Y + rpos.y, INFEST_Z + rpos.z, "biomech_a", INFEST_ROLES)
         biomech_spawn(INFEST_X + rpos.x + 2500, INFEST_Y + rpos.y, INFEST_Z + rpos.z, "biomech_a", INFEST_ROLES)
+    # Newly bred hulls that land near a player join the fight immediately, too.
+    for infest_pl in to_object_list(role("__player__")):
+        biomech_enrage(infest_pl.id, infest_pl.id)
     jump infest_grow
