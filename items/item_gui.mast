@@ -1,49 +1,101 @@
 #
-# Generic Upgrades console tab. Lists the ship's owned items from the registry
-# and lets the player activate one when on a matching console. The button only
-# emits intent (signal item_activate) - the server route applies the effect.
-# Replaces the ~600-line hardcoded upgrade tab.
+# Generic Upgrades console tab. Lists the ship's owned items in a scrolling list
+# box (small screens no longer clip the rows) with a detail panel that shows the
+# selected item's description and its action (Activate / live countdown / console
+# gate). The Activate button only emits intent (signal item_activate) - the
+# server route applies the effect. Replaces the ~600-line hardcoded upgrade tab.
 #
+# Shape mirrors the quest tab (documents/quest_tab.mast): an inline `--- repaint`
+# label directly under the //gui/tab route, so repaints stay in the tab
+# framework's scope and keep CONSOLE_SELECT / the back tab intact.
+#
+default CONSOLE_SELECT = ""   # exists at startup
 gui_tab_add_top("upgrade")
 
 //gui/tab/upgrade
-    jump item_upgrade_screen
-
-=== item_upgrade_screen
+--- repaint
     gui_tab_back(CONSOLE_SELECT)
-    ship_id = sbs.get_ship_of_client(client_id)
-    # `default` so a button press (jump back here) keeps the same console type.
-    default ctype = get_inventory_value(client_id, "CONSOLE_TYPE")
     gui_activate_console("upgrade")
+    ship_id = sbs.get_ship_of_client(client_id)
+    ctype = get_inventory_value(client_id, "CONSOLE_TYPE", "")
 
-    gui_section(style="area: 5, 12, 95, 100; row-height: 2.2em;")
-    """color:white; font:gui-3; justify:center; $text:Upgrades"""
+    _items = items_upgrade_tab_list(ship_id)
+    # True while any shown item is still counting down - drives a live 1s repaint
+    # so the timer visibly ticks (idle tabs only repaint on item signals).
+    any_active = False
+    for _it in _items:
+        if not _it["ready"]:
+            any_active = True
 
-    for lbl in items_get_list():
-        k = lbl.get_inventory_value("key")
-        have = get_inventory_value(ship_id, k, 0)
-        continue if have <= 0
-        # Trade goods are cargo (sold at markets), not activatable upgrades.
-        continue if "trade" in lbl.get_inventory_value("type", "")
-        item_name = lbl.get_inventory_value("display_text", k)
-        item_consoles = lbl.get_inventory_value("consoles", "")
-        ready = is_timer_finished(ship_id, "item_cd_" + k)
-        gui_row()
-        """col-width: 12em; $text: {item_name}  x{have}"""
-        if (item_consoles == "" or ctype in item_consoles) and ready:
-            act = gui_button("$text:Activate;justify:center;", data={"ak": k})
-            on gui_message(act):
-                signal_emit("item_activate", {"holder_id": ship_id, "key": ak, "client_id": client_id})
-        elif not ready:
-            cd = format_time_remaining(ship_id, "item_cd_" + k)
-            """color:#ff0; $text: active - {cd}"""
-        else:
-            """color:#888; $text: ({item_consoles})"""
+    # Track the selection by key so it survives repaints.
+    default upgrade_sel_key = None
+    if upgrade_sel_key is None and len(_items) > 0:
+        upgrade_sel_key = _items[0]["key"]
+
+    # Resolve the selected row (index for the list highlight, dict for the detail).
+    _idx = -1
+    _sel = None
+    _i = 0
+    for _it in _items:
+        if _it["key"] == upgrade_sel_key:
+            _idx = _i
+            _sel = _it
+        _i = _i + 1
+    # Selected item was consumed/gone - fall back to the first row.
+    if _sel is None and len(_items) > 0:
+        _sel = _items[0]
+        _idx = 0
+        upgrade_sel_key = _sel["key"]
+
+    _name = _sel["name"] if _sel is not None else ""
+    _desc = _sel["desc"] if _sel is not None else ""
+    _cd = _sel["cd"] if _sel is not None else ""
+    _consoles = _sel["consoles"] if _sel is not None else ""
+    _ready = _sel["ready"] if _sel is not None else True
+
+    # Left: scrolling list of owned/active upgrades.
+    gui_section(style="area: 5, 5, 45, 100; background:#1572;")
+    ubox = gui_list_box(_items, "row-height: 0.1em;", item_template=item_upgrade_row, title_template=item_upgrade_title, select=True)
+    if _idx >= 0:
+        ubox.set_selected_index(_idx, False)
+    on change ubox.get_value():
+        _v = ubox.get_value()
+        upgrade_sel_key = _v["key"] if _v is not None else None
+        jump repaint
+
+    # Right (top): selected item name.
+    gui_section(style="area: 47, 5, 95, 16;")
+    if _sel is not None:
+        """color:#8cf; justify:center; font:gui-4; $text: {_name}"""
+    else:
+        """color:#aaa; justify:center; $text: No upgrades yet."""
+
+    # Right (middle): description (wraps / scrolls on small screens).
+    gui_section(style="area: 47, 17, 95, 82; background:#1571;")
+    if _sel is not None:
+        gui_text_area("{_desc}")
+
+    # Right (bottom): action band - Activate, live countdown, or console gate.
+    gui_section(style="area: 47, 84, 95, 94;")
+    if _sel is not None and not _ready:
+        """color:#ff0; justify:center; $text: active - {_cd}"""
+    elif _sel is not None and (_consoles == "" or ctype in _consoles):
+        act = gui_button("$text:Activate;justify:center;", data={"akey": upgrade_sel_key})
+        on gui_message(act):
+            signal_emit("item_activate", {"holder_id": ship_id, "key": akey, "client_id": client_id})
+    elif _sel is not None:
+        """color:#888; justify:center; $text: Use on: {_consoles}"""
 
     # Repaint when items change (collected/activated) - signals are server-wide.
     on signal item_changed:
-        jump item_upgrade_screen
+        jump repaint
     on signal item_activated:
-        jump item_upgrade_screen
+        jump repaint
 
-    await gui()
+    # While something is counting down, self-tick every second so the timer
+    # updates live; otherwise just wait for interaction / item signals.
+    if any_active:
+        await gui(timeout=delay_sim(1))
+    else:
+        await gui()
+    jump repaint

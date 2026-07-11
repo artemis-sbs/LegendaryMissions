@@ -13,12 +13,76 @@ from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_va
 from sbs_utils.procedural.query import to_object
 from sbs_utils.procedural.sides import to_side_id
 from sbs_utils.procedural.signal import signal_emit
+from sbs_utils.procedural.timers import is_timer_finished, format_time_remaining
+from sbs_utils.procedural.gui import gui_row, gui_text
 
 # Registry + spawning now live in core sbs_utils; re-export for backward compat.
 from sbs_utils.procedural.items import (  # noqa: F401
     items_get_list, item_get, item_meta, item_keys, items_of_category,
     item_spawn, terrain_spawn_items, pickup_spawn, terrain_spawn_pickups,
 )
+
+
+# --- Upgrades console tab ----------------------------------------------------
+def _fmt_duration(secs):
+    """Human duration for an item's effect length: whole minutes as 'N min',
+    otherwise 'N sec'."""
+    secs = int(secs)
+    if secs >= 60 and secs % 60 == 0:
+        return f"{secs // 60} min"
+    return f"{secs} sec"
+
+
+def item_describe(lbl):
+    """The item's description, with the placeholder phrase 'for a time' expanded
+    to the actual effect length when the item declares a `duration` (so timed
+    upgrades read 'for 5 min' instead of the vague 'for a time', and stay correct
+    if the duration is retuned)."""
+    desc = lbl.get_inventory_value("desc", "") or ""
+    dur = lbl.get_inventory_value("duration", 0) or 0
+    if dur and dur > 0 and "for a time" in desc:
+        desc = desc.replace("for a time", "for " + _fmt_duration(dur))
+    return desc
+
+
+def items_upgrade_tab_list(ship_id):
+    """Rows for the Upgrades console tab (item_gui.mast): the ship's owned
+    activatable items, plus any consumable still counting down (its `have` may be
+    0 after activation) so the timer stays visible. Trade goods are cargo (sold
+    at markets), not upgrades, so they are excluded. Each row is a dict carrying
+    live cooldown state; the tab rebuilds the list each repaint."""
+    rows = []
+    for lbl in items_get_list():
+        k = lbl.get_inventory_value("key")
+        have = get_inventory_value(ship_id, k, 0)
+        ready = is_timer_finished(ship_id, "item_cd_" + k)
+        if have <= 0 and ready:
+            continue
+        if "trade" in (lbl.get_inventory_value("type", "") or ""):
+            continue
+        rows.append({
+            "key": k,
+            "name": lbl.get_inventory_value("display_text", k),
+            "desc": item_describe(lbl),
+            "have": have,
+            "consoles": lbl.get_inventory_value("consoles", "") or "",
+            "ready": ready,
+            "cd": "" if ready else format_time_remaining(ship_id, "item_cd_" + k),
+        })
+    return rows
+
+
+def item_upgrade_row(item):
+    """List-box row template for the Upgrades tab: name x count, marked active
+    while it is counting down."""
+    gui_row("row-height: 1.1em; padding:10px;")
+    tag = "" if item.get("ready", True) else "  (active)"
+    gui_text(f"$text:{item.get('name', '?')}  x{item.get('have', 0)}{tag};justify:left;")
+
+
+def item_upgrade_title():
+    gui_row("row-height: 1.1em; padding:10px; background:#1578;")
+    gui_text("$text:Upgrades;justify:center;")
 
 
 # --- Market / economy --------------------------------------------------------
