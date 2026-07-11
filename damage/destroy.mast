@@ -126,8 +126,25 @@
     # face check is <= 0, not == 0.
     if has_role(DAMAGE_TARGET_ID, "__player__"):
         shields_raised = get_data_set_value(DAMAGE_TARGET_ID, "shields_raised_flag", 0)
-        if shields_raised == 0 and shield_check <= 0:
+        if shields_raised == 0 or shield_check <= 0:
             explode_player_ship(DAMAGE_TARGET_ID)
+        ->END
+    # Monsters have no shield system, so the shield_check path always reads "down"
+    # and the NPC branch below would one-shot them. A PShock should only CHIP a
+    # monster - subtract a modest amount from monster_health and let the engine's
+    # normal 0-health death handle the kill (delete only when it actually hits 0).
+    if has_role(DAMAGE_TARGET_ID, "monster"):
+        hp = get_data_set_value(DAMAGE_TARGET_ID, "monster_health")
+        ->END if hp is None
+        pdmg = get_data_set_value(DAMAGE_TARGET_ID, "pshock_damage")
+        if pdmg is None:
+            hpmax = get_data_set_value(DAMAGE_TARGET_ID, "monster_health_max")
+            pdmg = int(hpmax * 0.10) if hpmax is not None else 2000
+        nhp = hp - pdmg
+        if nhp <= 0:
+            sbs.delete_object(DAMAGE_TARGET_ID)
+        else:
+            set_data_set_value(DAMAGE_TARGET_ID, "monster_health", nhp)
         ->END
     # NPC ships: killed when the struck facing's shield is depleted.
     if shield_check <= 0:
