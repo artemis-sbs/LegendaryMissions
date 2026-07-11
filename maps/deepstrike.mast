@@ -24,7 +24,9 @@ Properties:
     friendly_value = 0 # No friendlies
     monster_value = terrain_to_value(MONSTER_SELECT)
     upgrade_value = terrain_to_value(UPGRADE_SELECT)
-
+    # Seed arrives from a gui_input typein / loaded game code, so it can be a
+    # string; normalize to int before any comparison or arithmetic.
+    seed_value = safe_int(seed_value)
 
     if seed_value != 0:
         random.seed(seed_value)

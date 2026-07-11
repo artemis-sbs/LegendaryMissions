@@ -50,6 +50,9 @@ GameCode:
 
 
     SIEGE_ACTIVE = True
+    # Seed arrives from a gui_input typein / loaded game code, so it can be a
+    # string; normalize to int before any comparison or arithmetic (seed + N).
+    seed_value = safe_int(seed_value)
     terrain_value = terrain_to_value(TERRAIN_SELECT)
     lethal_value =  terrain_to_value(LETHAL_SELECT)
     friendly_value = terrain_to_value(FRIENDLY_SELECT)

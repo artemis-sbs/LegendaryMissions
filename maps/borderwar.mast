@@ -28,6 +28,9 @@ Properties:
     friendly_value = terrain_to_value(FRIENDLY_SELECT)
     monster_value = terrain_to_value(MONSTER_SELECT)
     upgrade_value = terrain_to_value(UPGRADE_SELECT)
+    # Seed arrives from a gui_input typein / loaded game code, so it can be a
+    # string; normalize to int before any comparison or arithmetic.
+    seed_value = safe_int(seed_value)
 
     if seed_value != 0:
         random.seed(seed_value)
@@ -156,7 +159,9 @@ Properties:
     #------------------------------------------------------------------------------------------------------------
 
     players = all_roles('__player__, tsn')
-    war_delay = int(WAR_TIME_DELAY)
+    # WAR_TIME_DELAY is a gui_input typein / loaded game code -> a string (or empty);
+    # safe_int avoids int("") ValueError and keeps the compares below numeric.
+    war_delay = safe_int(WAR_TIME_DELAY)
 
     if war_delay == 0:
         comms_broadcast(players, "WAR HAS BEEN DECLARED!", "yellow")
@@ -175,7 +180,7 @@ Properties:
     if war_declared >= 1:
         ->END
 
-    if war_delay == int(WAR_TIME_DELAY):
+    if war_delay == safe_int(WAR_TIME_DELAY):
         # Send "WAR IN X MINUTES!" message to all player ships.
         comms_broadcast(players, f"""WAR STARTS IN {war_delay} MINUTES!""", "yellow")
         for p in players:
