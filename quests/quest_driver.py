@@ -13,7 +13,7 @@ from sbs_utils.procedural.quest import (
     quest_get_key, quest_set_key, quest_get_display_name, quest_add, QuestState,
     quest_log_build_items)
 from sbs_utils.procedural.roles import has_role, role
-from sbs_utils.procedural.query import to_object, to_object_list, to_id
+from sbs_utils.procedural.query import to_object, to_object_list, to_id, is_space_object_id
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.sides import to_side_id
 from sbs_utils.procedural.timers import set_timer, is_timer_set, is_timer_finished
@@ -22,6 +22,17 @@ from sbs_utils.procedural.signal import signal_emit
 from sbs_utils.procedural.gui import gui_row, gui_text, gui_icon, gui_list_box_header, gui_list_box_is_header
 from sbs_utils.mast.mast_node import MastDataObject
 from sbs_utils.agent import Agent
+
+
+def _quest_audience(agent_id):
+    """Who should see a quest's complete/fail line. A per-ship quest is owned by a
+    real space object -> tell that ship. A shared-scope quest is owned by the
+    non-space SHARED story agent (Agent.SHARED_ID), which is NOT a player ship, so
+    tell every player instead - passing SHARED to send_message_to_player_ship
+    raises "invalid space object"."""
+    if is_space_object_id(agent_id):
+        return agent_id
+    return role("__player__")
 
 
 def quest_grant_reward(agent_id, reward):
@@ -148,7 +159,7 @@ def quest_mark_complete(agent_id, quest_id):
         signal_emit(sig, {"AGENT_ID": agent_id, "QUEST_ID": quest_id})
     signal_emit("quest_finished", {"AGENT_ID": agent_id, "QUEST_ID": quest_id, "DATA": data})
     name = quest_get_display_name(agent_id, quest_id) or quest_id
-    comms_broadcast(agent_id, "Mission complete: " + str(name), "#0f0")
+    comms_broadcast(_quest_audience(agent_id), "Mission complete: " + str(name), "#0f0")
     # A game-ending mission quest wins the game; then bubble up to a parent mission.
     _quest_maybe_end_game(agent_id, quest_id, data, win=True)
     if data.get("parent"):
@@ -225,7 +236,7 @@ def quest_mark_failed(agent_id, quest_id):
     data = quest_get_data(agent_id, quest_id) or {}
     quest_grant_penalty(agent_id, data.get("penalty"))
     name = quest_get_display_name(agent_id, quest_id) or quest_id
-    comms_broadcast(agent_id, "Mission failed: " + str(name), "#f33")
+    comms_broadcast(_quest_audience(agent_id), "Mission failed: " + str(name), "#f33")
     _quest_maybe_end_game(agent_id, quest_id, data, win=False)
     if data.get("parent"):
         quest_reeval_mission(agent_id, data.get("parent"))
