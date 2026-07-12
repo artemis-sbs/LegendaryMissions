@@ -6,6 +6,6 @@
 #
 shared BRIDGE_STORY_DOC = document_get_amd_file(None, "Bridge", content=media_read_relative_file("bridge_stories.amd"))
 
-//signal/grant_bridge_story
+//shared/signal/grant_bridge_story
     quest_grant_amd(STORY_SHIP_ID, BRIDGE_STORY_DOC)
     ->END

@@ -343,7 +343,7 @@ GameCode:
 # The selected boss arrives when the raiders thin out: spawn its reinforcement
 # fleets + named flagships (config from maps/bosses/, folder-scanned) and graft its
 # objectives onto siege_mission. Config-driven - a new boss .amd needs no change here.
-//signal/siege_enemies_low if BOSS_SELECT != "None"
+//shared/signal/siege_enemies_low if BOSS_SELECT != "None"
     # Only one-shot bosses arrive this way; a continuous boss runs its own wave loop.
     ->END if siege_boss_trigger(BOSS_SELECT) != "enemies_low"
     boss_node = siege_boss_get(BOSS_SELECT)

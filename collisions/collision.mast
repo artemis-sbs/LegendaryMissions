@@ -147,7 +147,7 @@ damage: 0
 # hole doesn't vaporise its own bay. A hole can tune its kill range with a
 # "lethal_radius" data_set value; the 500u default clears the fastest warp
 # (~400u per 5Hz tick) so a ship can't tunnel through between checks.
-//signal/game_started
+//shared/signal/game_started
     jump black_hole_lethal_watch
 
 == black_hole_lethal_watch

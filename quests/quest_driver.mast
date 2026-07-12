@@ -6,15 +6,15 @@
 #
 
 # The quest API only emits these; the driver writes the stored state.
-//signal/quest_activated
+//shared/signal/quest_activated
     quest_mark_active(AGENT_ID, QUEST_ID)
     ->END
 
-//signal/quest_completed
+//shared/signal/quest_completed
     quest_mark_complete(AGENT_ID, QUEST_ID)
     ->END
 
-//signal/quest_failed
+//shared/signal/quest_failed
     quest_mark_failed(AGENT_ID, QUEST_ID)
     ->END
 
@@ -34,12 +34,12 @@
     quest_fail_on_all_dead(DAMAGE_SELECTED_ID)
     ->END
 
-//signal/item_collected
+//shared/signal/item_collected
     quest_on_collect(holder_id, key)
     ->END
 
 # Open Universe arrival - completes on_reach(sector) quests (cargo runs etc.)
-//signal/universe_arrived
+//shared/signal/universe_arrived
     quest_on_arrive(ARRIVE_I, ARRIVE_J)
     ->END
 
@@ -49,19 +49,19 @@
     ->END
 
 # Ship docked a station - advances on_dock quests (return-to-base etc.).
-//signal/ship_docked
+//shared/signal/ship_docked
     quest_on_dock(DOCK_SHIP_ID, DOCK_STATION_ID)
     ->END
 
 # Generic named trigger - on_signal / on_comms (mission/comms escape hatch).
-//signal/quest_signal
+//shared/signal/quest_signal
     quest_on_signal(SIGNAL_NAME)
     ->END
 
 # A game-ending mission quest resolved (end_win/end_lose): tear the game down once.
 # WIN + TEXT ride the game_over signal from _quest_maybe_end_game; the first
 # terminal quest wins the race because GAME_ENDED guards a second teardown.
-//signal/game_over
+//shared/signal/game_over
     default GAME_ENDED = False
     ->END if GAME_ENDED
     START_TEXT = TEXT
@@ -77,7 +77,7 @@
 # fail_after watcher: fails ACTIVE quests past their deadline. Event-driven fail
 # triggers (fail_on_signal / fail_on_all_dead) need no watcher; only the timeout
 # does. Scheduled once server-side at game start.
-//signal/game_started
+//shared/signal/game_started
     default shared QUEST_FAIL_WATCH = False
     if not QUEST_FAIL_WATCH:
         shared QUEST_FAIL_WATCH = True
