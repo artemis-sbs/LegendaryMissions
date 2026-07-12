@@ -38,6 +38,15 @@ brain:
     monster.blob.set("particle_color_2", "#a62", 0)
     monster.blob.set("particle_color_3", "#eb4", 0)
     monster.blob.set("beamColor", "#f80", 0)
+    # The BITE. Art "-" carries no shipData weapon, so the beam stats must be set here or
+    # the Piranha fires a 0-damage beam (does nothing). Weak per hit + a slow cycle, so one
+    # is a nuisance and a SWARM is what chews through a hull. Wide arc = it bites on the pass.
+    monster.blob.set("beamCount", 1, 0)
+    monster.blob.set("beamDamage", 12, 0)
+    monster.blob.set("beamRange", 1400, 0)
+    monster.blob.set("beamCycleTime", 4.0, 0)
+    monster.blob.set("beamArcWidth", 120, 0)
+    monster.blob.set("beamBarrelAngle", 0, 0)
 
     clear_target(monster.id)
     brain_add(monster, brain)
