@@ -23,21 +23,13 @@ brain:
         throttle: 3.2
         force_shoot: true
 ```
-    monster = npc_spawn(START_X, START_Y, START_Z, "Insect", side + ",monster,insect", "-", "behav_npcship")
+    monster = npc_spawn(START_X, START_Y, START_Z, "Insect", side + ",monster,insect", "monster5", "behav_npcship")
     monster.blob.set("monster_health_max", health, 0)
     monster.blob.set("monster_health", health, 0)
     monster.blob.set("local_scale_coeff", scale, 0)
     monster.engine_object.exclusion_radius = int(200 * scale)
 
-    # Look: small, sickly-green needle with a weak green sting.
-    monster.blob.set("body_1_geom_filename", "typhon-needle", 0)
-    monster.blob.set("body_2_geom_filename", "typhon-needle", 0)
-    monster.blob.set("body_1_color", "#9c3", 0)
-    monster.blob.set("body_2_color", "#9c3", 0)
-    monster.blob.set("particle_color_1", "#9c3", 0)
-    monster.blob.set("particle_color_2", "#7a2", 0)
-    monster.blob.set("particle_color_3", "#bd4", 0)
-    monster.blob.set("beamColor", "#9f3", 0)
+    # Look (geometry + colours) comes from the monster5 art now.
 
     clear_target(monster.id)
     brain_add(monster, brain)

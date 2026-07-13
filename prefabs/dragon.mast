@@ -44,18 +44,10 @@ brain:
         force_shoot: true
 ```
     stage, cfg = monster_roll_age(ages)
-    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Dragon", side + ",monster,dragon," + stage, "-", "behav_npcship")
+    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Dragon", side + ",monster,dragon," + stage, "monster3", "behav_npcship")
     monster_bake_age(monster, cfg)
 
-    # Look: a large, molten red-orange needle with a fiery maw.
-    monster.blob.set("body_1_geom_filename", "typhon-needle", 0)
-    monster.blob.set("body_2_geom_filename", "typhon-needle", 0)
-    monster.blob.set("body_1_color", "#c40", 0)
-    monster.blob.set("body_2_color", "#c40", 0)
-    monster.blob.set("particle_color_1", "#c40", 0)
-    monster.blob.set("particle_color_2", "#a20", 0)
-    monster.blob.set("particle_color_3", "#f80", 0)
-    monster.blob.set("beamColor", "#f60", 0)
+    # Look (geometry + colours) comes from the monster3 art now.
 
     clear_target(monster.id)
     brain_add(monster, brain)

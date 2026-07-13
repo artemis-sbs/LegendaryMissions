@@ -27,21 +27,13 @@ brain:
         wander_range: 40000
         arrive_dist: 3000
 ```
-    monster = npc_spawn(START_X, START_Y, START_Z, "Charybdis", side + ",monster,charybdis", "-", "behav_npcship")
+    monster = npc_spawn(START_X, START_Y, START_Z, "Charybdis", side + ",monster,charybdis", "monster1", "behav_npcship")
     monster.blob.set("monster_health_max", health, 0)
     monster.blob.set("monster_health", health, 0)
     monster.blob.set("local_scale_coeff", scale, 0)
     monster.engine_object.exclusion_radius = int(200 * scale)
 
-    # Look: a large deep-purple cube - it is the nebula-maker, so it reads purple.
-    monster.blob.set("body_1_geom_filename", "typhon-big-cube", 0)
-    monster.blob.set("body_2_geom_filename", "typhon-big-cube", 0)
-    monster.blob.set("body_1_color", "#a0f", 0)
-    monster.blob.set("body_2_color", "#a0f", 0)
-    monster.blob.set("particle_color_1", "#a0f", 0)
-    monster.blob.set("particle_color_2", "#80c", 0)
-    monster.blob.set("particle_color_3", "#c4f", 0)
-    monster.blob.set("beamColor", "#c4f", 0)
+    # Look (geometry + colours) comes from the monster1 art now.
     monster.blob.set("beamDamage", 0, 0)      # peaceful - it teleports, it does not bite
 
     # Remember the teleport tuning for the damage route, and lay a nebula trail.

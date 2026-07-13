@@ -29,18 +29,10 @@ brain:
         stop_dist: 300
 ```
     stage, cfg = monster_roll_age(ages)
-    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Shark", side + ",monster,shark," + stage, "-", "behav_npcship")
+    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Shark", side + ",monster,shark," + stage, "monster4", "behav_npcship")
     monster_bake_age(monster, cfg)
 
-    # Look: sleek steel-grey cylinder with a red maw.
-    monster.blob.set("body_1_geom_filename", "typhon-cylinder", 0)
-    monster.blob.set("body_2_geom_filename", "typhon-cylinder", 0)
-    monster.blob.set("body_1_color", "#889", 0)
-    monster.blob.set("body_2_color", "#889", 0)
-    monster.blob.set("particle_color_1", "#889", 0)
-    monster.blob.set("particle_color_2", "#667", 0)
-    monster.blob.set("particle_color_3", "#aab", 0)
-    monster.blob.set("beamColor", "#f33", 0)
+    # Look (geometry + colours) comes from the monster4 art now.
 
     clear_target(monster.id)
     brain_add(monster, brain)
