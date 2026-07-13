@@ -67,3 +67,17 @@ desc: Adds ammo of one torpedo type on top of the hull's loadout.
             types.append(torp_type)
         blob.set("torpedo_types_available", ",".join(types), 0)
     ->END
+
+=== upgrade_item_torp_loader
+metadata:``` yaml
+type: item/loadout/weapons
+key: torp_loader
+display_text: Torpedo Autoloader
+mode: install
+coeff: 0.5
+desc: Speeds torpedo reloading, cutting the per-torpedo refit time (default x0.5).
+```
+    # Refit time scales with how many torpedoes are reloaded (see hangar.py dock).
+    # Lowering refit_torp_coeff on the craft shortens that per-torpedo cost.
+    set_inventory_value(UPGRADE_AGENT_ID, "refit_torp_coeff", coeff)
+    ->END

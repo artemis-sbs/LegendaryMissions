@@ -442,12 +442,44 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
         refit_cooef = max(1,len(docked_crafts) - max_refit)
     else:
         """ Treat fighters and bomber same """
-        docked_crafts = linked_to(home_id, "hangar_craft") & role("standby") & role("fighter") & role("bomber") 
+        docked_crafts = linked_to(home_id, "hangar_craft") & role("standby") & role("fighter") & role("bomber")
         max_refit = get_inventory_value(home_id, "MAX_FIGHTER", 1)
         refit_cooef = max(1,len(docked_crafts) - max_refit)
 
-    set_timer(craft.id, "refit", seconds=int(30*refit_cooef))
+    #
+    # Loading torpedoes costs refit time - each torpedo that has to be reloaded
+    # (MAX - current) adds time, so a bomber returning with empty tubes refits
+    # slower than one that never fired. A "torp_loader" upgrade lowers
+    # refit_torp_coeff on the craft to speed this up.
+    #
+    seconds_per_torp = get_inventory_value(home_id, "REFIT_SECONDS_PER_TORP", 3)
+    torp_coeff = get_inventory_value(craft.id, "refit_torp_coeff", 1.0)
+    torp_seconds = int(hangar_craft_torp_reload_count(craft.id) * seconds_per_torp * torp_coeff)
+
+    set_timer(craft.id, "refit", seconds=int(30*refit_cooef) + torp_seconds)
     return True
+
+
+def hangar_craft_torp_reload_count(craft_id):
+    """Torpedoes a refit must reload: sum of (MAX - NUM) over every torp type.
+
+    NUM is the engine's "current number" field and exactly what launch reloads up
+    to MAX, so (MAX - NUM) is the count actually loaded during the refit.
+    """
+    blob = to_data_set(craft_id)
+    if blob is None:
+        return 0
+    avail = blob.get("torpedo_types_available", 0)
+    if not isinstance(avail, str):
+        return 0
+    total = 0
+    for t in avail.split(","):
+        t = t.strip()
+        if t:
+            need = (blob.get(f"{t}_MAX", 0) or 0) - (blob.get(f"{t}_NUM", 0) or 0)
+            if need > 0:
+                total += need
+    return total
 
 from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text, gui_blank
 from sbs_utils.procedural.gui.listbox import gui_list_box

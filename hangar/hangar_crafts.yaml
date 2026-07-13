@@ -8,9 +8,12 @@
 #             (hangar.py hangar_apply_loadout). Each entry is either an item key
 #             string, or {item: <key>, ...extra} whose extra fields pass to the
 #             item effect. Effects layer on the hull values:
-#               - cockpit_shields              x4 shields (shield_upgrade_coeff)
+#               - cockpit_shields              x2 shields (shield_upgrade_coeff)
 #               - {item: torp_bay, torp_type:, amount:}  ADDS that ammo on top
 #                 of the hull's shipData torpedostart
+#               - {item: torp_loader, coeff:}  speeds rearming: multiplies the
+#                 per-torpedo refit time (default x0.5). Add to a craft's upgrades
+#                 list to fit it, e.g.  - {item: torp_loader, coeff: 0.5}
 #
 # Note one hull can back two variants (e.g. xim_avenger is both fighter and
 # bomber) - that is exactly what the per-loadout upgrade list is for.
@@ -20,39 +23,39 @@ terran:
     type: fighter
     upgrades:
       - cockpit_shields
-      - {item: torp_bay, torp_type: Homing, amount: 5}   # hull has 5 -> 10
+      - {item: torp_bay, torp_type: Homing, amount: 0}   # hull has 5
   - key: tsn_bomber
     type: bomber
     upgrades:
       - cockpit_shields
-      - {item: torp_bay, torp_type: Nuke, amount: 2}      # hull already has Homing 10
+      - {item: torp_bay, torp_type: Nuke, amount: 1}      # hull already has Homing 10
       - {item: torp_bay, torp_type: EMP, amount: 1}
-      - {item: torp_bay, torp_type: Mine, amount: 5}
+      - {item: torp_bay, torp_type: Mine, amount: 1}
   - key: tsn_shuttle
     type: shuttle
     upgrades:
       - cockpit_shields
-      - {item: torp_bay, torp_type: Homing, amount: 2}
+      - {item: torp_bay, torp_type: Homing, amount: 1}
 
 ximni:
   - key: xim_avenger
     type: fighter
     upgrades:
       - cockpit_shields
-      - {item: torp_bay, torp_type: Homing, amount: 5}
+      - {item: torp_bay, torp_type: Homing, amount: 0}
   - key: xim_avenger
     type: bomber
     upgrades:
       - cockpit_shields
       - {item: torp_bay, torp_type: Homing, amount: 5}
-      - {item: torp_bay, torp_type: Nuke, amount: 2}
-      - {item: torp_bay, torp_type: EMP, amount: 2}
-      - {item: torp_bay, torp_type: Mine, amount: 5}
+      - {item: torp_bay, torp_type: Nuke, amount: 1}
+      - {item: torp_bay, torp_type: EMP, amount: 1}
+      - {item: torp_bay, torp_type: Mine, amount: 1}
   - key: tsn_shuttle
     type: shuttle
     upgrades:
       - cockpit_shields
-      - {item: torp_bay, torp_type: Homing, amount: 2}
+      - {item: torp_bay, torp_type: Homing, amount: 1}
 
 pirate:
   - key: pirate_fighter
@@ -65,14 +68,14 @@ pirate:
     upgrades:
       - cockpit_shields
       - {item: torp_bay, torp_type: Homing, amount: 10}
-      - {item: torp_bay, torp_type: Nuke, amount: 2}
+      - {item: torp_bay, torp_type: Nuke, amount: 1}
       - {item: torp_bay, torp_type: EMP, amount: 1}
-      - {item: torp_bay, torp_type: Mine, amount: 5}
+      - {item: torp_bay, torp_type: Mine, amount: 1}
   - key: tsn_shuttle
     type: shuttle
     upgrades:
       - cockpit_shields
-      - {item: torp_bay, torp_type: Homing, amount: 2}
+      - {item: torp_bay, torp_type: Homing, amount: 1}
 
 arvonian:
   - key: arvonian_fighter
@@ -85,11 +88,11 @@ arvonian:
     upgrades:
       - cockpit_shields
       - {item: torp_bay, torp_type: Homing, amount: 10}
-      - {item: torp_bay, torp_type: Nuke, amount: 2}
+      - {item: torp_bay, torp_type: Nuke, amount: 1}
       - {item: torp_bay, torp_type: EMP, amount: 1}
-      - {item: torp_bay, torp_type: Mine, amount: 5}
+      - {item: torp_bay, torp_type: Mine, amount: 1}
   - key: tsn_shuttle
     type: shuttle
     upgrades:
       - cockpit_shields
-      - {item: torp_bay, torp_type: Homing, amount: 2}
+      - {item: torp_bay, torp_type: Homing, amount: 1}
