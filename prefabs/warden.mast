@@ -40,8 +40,15 @@ brain:
 
 === ai_warden_hunt
     # Helpful guardian: hunts the nearest hostile (raider), never a player.
-    # prefab_warden only.
-    foe = closest(BRAIN_AGENT_ID, role("raider"), hunt_range)
+    # prefab_warden only. If spawned on a real side with diplomacy relations (the
+    # comment on prefab_warden's "true ally" note), restrict to raiders actually
+    # HOSTILE to that side so a ceasefired clan is spared; on the default feral
+    # "monster" side (no relations) fall back to the raider-role convention.
+    _enemies = side_enemy_members_set(get_side(BRAIN_AGENT_ID))
+    if _enemies:
+        foe = closest(BRAIN_AGENT_ID, role("raider") & _enemies, hunt_range)
+    else:
+        foe = closest(BRAIN_AGENT_ID, role("raider"), hunt_range)
     yield fail if foe is None
     target(BRAIN_AGENT_ID, foe.id, True, throttle)
     yield success

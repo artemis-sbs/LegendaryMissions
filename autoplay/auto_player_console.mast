@@ -93,8 +93,11 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
         print("Autoplayer is no more")
         ->END
         
-    raider = to_object(closest(_ship_id, role("raider")))
-    close_raider = to_object(closest(_ship_id, role("raider"), 10000))
+    # Foes = raider-tagged ships still HOSTILE to this autoplayer's side (diplomacy),
+    # so a ceasefired/neutral clan or a surrendered ship is not chased.
+    _foes = role("raider") & side_enemy_members_set(get_side(_ship_id))
+    raider = to_object(closest(_ship_id, _foes))
+    close_raider = to_object(closest(_ship_id, _foes, 10000))
     station = to_object(closest(_ship_id, all_roles("tsn,station")))
     danger = to_object(closest(_ship_id, any_role("mine,maelstrom"), 2500))
     upgrade = to_object(closest(_ship_id, all_roles("upgrade"), 5000))
@@ -229,7 +232,8 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
     jump automated_player_science_ai_loop if ship is None
 
     # set_science_selection
-    raider = closest(_ship_id, role("raider"), 25000)
+    _foes = role("raider") & side_enemy_members_set(get_side(_ship_id))
+    raider = closest(_ship_id, _foes, 25000)
     if raider is not None:
         current = get_science_selection(_ship_id)
         if current!= raider:
@@ -249,7 +253,8 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
     ship = to_object(_ship_id)
     jump automated_player_weapons_ai_loop if ship is None
 
-    raider = closest(_ship_id, role("raider"), 10000)
+    _foes = role("raider") & side_enemy_members_set(get_side(_ship_id))
+    raider = closest(_ship_id, _foes, 10000)
     wreck = closest(_ship_id, role("wreck"), 10000)
     if raider is not None:
         current = get_weapons_selection(_ship_id)
@@ -260,7 +265,7 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
         # wisely: Nuke a real cluster (3+ raiders in blast range), EMP a pair (strip
         # their shields for the beams), Homing a lone target. Never waste them on wrecks.
         # fire_torpedo falls back to a Homing if the chosen type is not loaded.
-        cluster = role("raider") & broad_test_around(to_id(raider), 2000, 2000, 0x30)
+        cluster = _foes & broad_test_around(to_id(raider), 2000, 2000, 0x30)
         if len(cluster) >= 3:
             fire_torpedo(_ship_id, "Nuke")
         elif len(cluster) == 2:
