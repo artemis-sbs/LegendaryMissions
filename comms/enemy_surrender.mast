@@ -21,6 +21,18 @@ shared _surrender_return = task_schedule(take_surrendered_home)
     + "Surrender now"  handle_comms_raider_surrender
 
 
+# A surrendered ship is a neutral prize until someone claims it. A player (or the
+# admiral) can CAPTURE it - it joins their side and serves as a defender, fighting
+# their enemies and taking orders like any friendly.
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and has_role(COMMS_SELECTED_ID, "surrendered")
+    + "Take as prize":
+        side_capture(COMMS_SELECTED_ID, COMMS_ORIGIN_ID)
+        add_role(COMMS_SELECTED_ID, "prefab_npc_defender")
+        set_inventory_value(COMMS_SELECTED_ID, "give_orders_type", "objective/orders/defender")
+        objective_add(COMMS_SELECTED_ID, objective_protect_area)
+        comms_receive("The crew stands down and joins your command.", title="Prize taken", title_color=surrender_color)
+
+
 
 
 
