@@ -12,9 +12,7 @@
             obj.data_set.set("name_tag", name)            
     if not has_role(COMMS_SELECTED_ID, "surrendered"):
         +[$gamemaster]"Force Surrender":
-            add_role(COMMS_SELECTED_ID, "surrendered")
-            remove_role(COMMS_SELECTED_ID, "raider") # Why do this?
-            set_data_set_value(COMMS_SELECTED_ID, "surrender_flag", 1)
+            side_surrender(COMMS_SELECTED_ID)
             fleet_remove_ship(COMMS_SELECTED_ID)
         if has_role(COMMS_SELECTED_ID, "never_surrender"):
             +[$gamemaster]"Allow Surrender":
@@ -59,9 +57,7 @@ brain:
     - ai_fleet_scatter_formation
 ```
     yield fail if ship is None
-    remove_role(ship, "surrendered")
-    add_role(ship, "raider")
-    set_data_set_value(ship, "surrender_flag", 0)
+    side_unsurrender(ship)
     obj = to_object(ship)
     fleet_obj = fleet_spawn(Vec3(obj.pos), "ship_fleet")
     set_inventory_value(ship, "my_fleet_id", fleet_obj.id)
