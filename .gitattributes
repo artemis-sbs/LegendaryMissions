@@ -1,1 +1,2 @@
 *.mast linguist-language=Python
+*.amd linguist-language=markdown
