@@ -95,7 +95,7 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
         
     # Foes = raider-tagged ships still HOSTILE to this autoplayer's side (diplomacy),
     # so a ceasefired/neutral clan or a surrendered ship is not chased.
-    _foes = role("raider") & side_enemy_members_set(get_side(_ship_id))
+    _foes = side_hostile_members(_ship_id, "raider")
     raider = to_object(closest(_ship_id, _foes))
     close_raider = to_object(closest(_ship_id, _foes, 10000))
     station = to_object(closest(_ship_id, all_roles("tsn,station")))
@@ -232,7 +232,7 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
     jump automated_player_science_ai_loop if ship is None
 
     # set_science_selection
-    _foes = role("raider") & side_enemy_members_set(get_side(_ship_id))
+    _foes = side_hostile_members(_ship_id, "raider")
     raider = closest(_ship_id, _foes, 25000)
     if raider is not None:
         current = get_science_selection(_ship_id)
@@ -253,7 +253,7 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
     ship = to_object(_ship_id)
     jump automated_player_weapons_ai_loop if ship is None
 
-    _foes = role("raider") & side_enemy_members_set(get_side(_ship_id))
+    _foes = side_hostile_members(_ship_id, "raider")
     raider = closest(_ship_id, _foes, 10000)
     wreck = closest(_ship_id, role("wreck"), 10000)
     if raider is not None:
@@ -293,7 +293,8 @@ jump automated_player_weapons_ai
     ship = to_object(_ship_id)
     jump automated_player_comms_ai_loop if ship is None
 
-    raider = closest(_ship_id, role("raider"), 10000)
+    _foes = side_hostile_members(_ship_id, "raider")
+    raider = closest(_ship_id, _foes, 10000)
     if raider is not None:
         current = get_comms_selection(_ship_id)
         if current!= raider:

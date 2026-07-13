@@ -69,7 +69,7 @@ distance: 600
     _too_close = 300+(DIFFICULTY+1)*200
     # Only a genuinely HOSTILE ship blocks docking: a ceasefired/neutral raider-tagged
     # ship parked nearby should not (diplomacy, not the bare raider tag).
-    raider = closest(DOCKING_PLAYER_ID, role("raider") & side_enemy_members_set(get_side(DOCKING_PLAYER_ID)), _too_close)
+    raider = closest(DOCKING_PLAYER_ID, side_hostile_members(DOCKING_PLAYER_ID, "raider"), _too_close)
     if raider is not None:
         # comms_message("Attempting dock when enemies is ill advised.", DOCKING_PLAYER_ID, DOCKING_PLAYER_ID,  "Enemies near", None, "white", "red", from_name="Docking")
         with comms_override(DOCKING_PLAYER_ID, DOCKING_PLAYER_ID, from_name="Docking"):

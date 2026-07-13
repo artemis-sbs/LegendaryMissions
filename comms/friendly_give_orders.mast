@@ -230,7 +230,7 @@
             % How can I help
             % Your orders
             % Yes, sir
-    elif COMMS_SELECTED.has_role('raider') and not science_is_unknown(COMMS_ORIGIN_ID, COMMS_SELECTED_ID):
+    elif is_hostile_combatant(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and not science_is_unknown(COMMS_ORIGIN_ID, COMMS_SELECTED_ID):
         ()[red] "Unused"
             % Eat my beams
             % You shall perish
