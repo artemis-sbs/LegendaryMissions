@@ -15,7 +15,7 @@ from sbs_utils.procedural.quest import (
 from sbs_utils.procedural.roles import has_role, role
 from sbs_utils.procedural.query import to_object, to_object_list, to_id, is_space_object_id
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
-from sbs_utils.procedural.sides import to_side_id
+from sbs_utils.procedural.sides import to_side_id, side_are_enemies, is_hostile_to_players
 from sbs_utils.procedural.timers import set_timer, is_timer_set, is_timer_finished
 from sbs_utils.procedural.comms import comms_broadcast
 from sbs_utils.procedural.signal import signal_emit
@@ -274,8 +274,29 @@ def _advance_count(agent_id, qid, data, need):
         quest_mark_complete(agent_id, qid)
 
 
+def _kill_is_hostile(killer_id, victim_id):
+    """Was the victim an ENEMY? Of the killer if it has a side, otherwise of the
+    players (e.g. a SHARED/game-level quest whose killer is Agent.SHARED_ID). Lets a
+    kill quest count "enemies" by diplomacy instead of a hardcoded faction role, and
+    stops a ceasefired/neutral (or surrendered) ship from counting."""
+    killer = to_object(killer_id)
+    kside = getattr(killer, "side", None) if killer is not None else None
+    if kside:
+        return side_are_enemies(kside, victim_id)
+    return is_hostile_to_players(victim_id, scope_role=None)
+
+
 def quest_on_kill(killer_id, destroyed_id):
-    """Advance the killer's on_kill quests when an object is destroyed."""
+    """Advance the killer's on_kill quests when an object is destroyed.
+
+    The on_kill match is general — all keys optional and AND-combined:
+      role    : victim must hold this role (exact; e.g. "raider"). Back-compatible.
+      roles   : victim must hold ANY of these roles (a list) - a broader type filter.
+      hostile : if truthy, the victim must have been an ENEMY by diplomacy (of the
+                killer, or of the players for a SHARED quest). This is the general,
+                faction-agnostic, ceasefire-safe way to score "destroy N enemies" -
+                prefer it over a hardcoded raider role.
+    Omitting all three counts any destruction (unchanged legacy behaviour)."""
     if killer_id is None:
         return
     for qid, data in _active_quests(killer_id):
@@ -284,6 +305,11 @@ def quest_on_kill(killer_id, destroyed_id):
             continue
         role = trig.get("role")
         if role and not has_role(destroyed_id, role):
+            continue
+        roles = trig.get("roles")
+        if roles and not any(has_role(destroyed_id, r) for r in roles):
+            continue
+        if trig.get("hostile") and not _kill_is_hostile(killer_id, destroyed_id):
             continue
         _advance_count(killer_id, qid, data, trig.get("count", 1))
 

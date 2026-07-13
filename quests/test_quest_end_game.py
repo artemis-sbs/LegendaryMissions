@@ -108,6 +108,43 @@ class QuestEndGameTests(unittest.TestCase):
         QD.quest_on_kill_shared(wl)
         self.assertEqual(int(quest_get_state(SH, "warlord")), int(QuestState.COMPLETE))
 
+    def _make_side(self, key):
+        from sbs_utils.agent import get_story_id
+        s = Agent(); s.id = get_story_id(); s.add(); s.add_role("__side__")
+        s.set_inventory_value("side_key", key)
+        s.set_inventory_value("side_name", key)
+        return s
+
+    def test_on_kill_hostile_gate(self):
+        # A general "destroy N enemies" quest: hostile=true counts only diplomatic
+        # enemies, so a neutral/ceasefired ship (still combat-tagged) does NOT count.
+        from sbs_utils.procedural.sides import side_set_relations
+        self._make_side("tsn"); self._make_side("raider"); self._make_side("civ")
+        side_set_relations("tsn", "raider", sbs.DIPLOMACY.HOSTILE)
+        side_set_relations("tsn", "civ", sbs.DIPLOMACY.NEUTRAL)
+        killer = to_id(create_enemy(0, 0, 0, "tsn_light_cruiser", name="K"))
+        ko = Agent.get(killer); ko.add_role("__player__"); ko.side = "tsn"
+        quest_add(killer, "hunt", "Hunt enemies", "", state=QuestState.ACTIVE,
+                  data={"on_kill": {"hostile": True, "count": 1}})
+        neutral = to_id(create_enemy(0, 0, 0, "tsn_light_cruiser", name="C"))
+        no = Agent.get(neutral); no.add_role("raider"); no.side = "civ"   # neutral, still tagged
+        QD.quest_on_kill(killer, neutral)
+        self.assertEqual(int(quest_get_state(killer, "hunt")), int(QuestState.ACTIVE))
+        foe = to_id(create_enemy(0, 0, 0, "tsn_light_cruiser", name="F"))
+        fo = Agent.get(foe); fo.add_role("raider"); fo.side = "raider"
+        QD.quest_on_kill(killer, foe)
+        self.assertEqual(int(quest_get_state(killer, "hunt")), int(QuestState.COMPLETE))
+
+    def test_on_kill_roles_any_of(self):
+        killer = to_id(create_enemy(0, 0, 0, "tsn_light_cruiser", name="K2"))
+        Agent.get(killer).add_role("__player__")
+        quest_add(killer, "hunt2", "Hunt types", "", state=QuestState.ACTIVE,
+                  data={"on_kill": {"roles": ["raider", "warlord"], "count": 1}})
+        victim = to_id(create_enemy(0, 0, 0, "tsn_light_cruiser", name="V"))
+        Agent.get(victim).add_role("warlord")   # matches one of the listed roles
+        QD.quest_on_kill(killer, victim)
+        self.assertEqual(int(quest_get_state(killer, "hunt2")), int(QuestState.COMPLETE))
+
     def test_penalty_removes_items_on_fail(self):
         ship = to_id(create_enemy(0, 0, 0, "tsn_light_cruiser", name="P"))
         Agent.get(ship).add_role("__player__")
