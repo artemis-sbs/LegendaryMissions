@@ -27,12 +27,18 @@ exclude_roles: raider
 ```
     lead_ship_id = BRAIN_AGENT.get_inventory_value("blackboard:lead_ship_id")
     yield fail if lead_ship_id is None
+    # Diplomacy-aware acquisition: restrict to sides genuinely HOSTILE to this fleet's
+    # side, so a runtime ceasefire (a foe clan flipped HOSTILE->NEUTRAL) is honored -
+    # the now-neutral player leaves side_enemy_members_set and the fleet stops hunting
+    # it. In the stock 3-side model (raider hostile to both tsn and civ) this is a
+    # no-op. exclude_roles + truced_ships (per-captain reputation truce) still apply.
+    enemies = side_enemy_members_set(get_side(lead_ship_id))
     if use_arena:
         local_arena = BRAIN_AGENT.get_inventory_value("blackboard:local_arena")
         yield fail if local_arena is None
-        the_target = closest(lead_ship_id, local_arena & any_role(test_roles) - role(get_side(lead_ship_id)) - any_role(exclude_roles) - truced_ships(get_side(lead_ship_id)))
+        the_target = closest(lead_ship_id, local_arena & any_role(test_roles) & enemies - role(get_side(lead_ship_id)) - any_role(exclude_roles) - truced_ships(get_side(lead_ship_id)))
     else:
-        the_target = closest(lead_ship_id, any_role(test_roles) - role(get_side(lead_ship_id)) - any_role(exclude_roles) - truced_ships(get_side(lead_ship_id)))
+        the_target = closest(lead_ship_id, any_role(test_roles) & enemies - role(get_side(lead_ship_id)) - any_role(exclude_roles) - truced_ships(get_side(lead_ship_id)))
 
     the_target = to_object(the_target)
     yield fail if the_target is None
@@ -69,21 +75,29 @@ type: brain/npc
 ```
     anger_as_set = set(BRAIN_AGENT.anger_dict.keys())
     yield fail if len(anger_as_set)==0
+    # get_best_anger prunes expired grudges (updates anger_dict); call it first.
     best_anger = BRAIN_AGENT.get_best_anger()
     lead_ship_id = BRAIN_AGENT.get_inventory_value("blackboard:lead_ship_id")
     yield fail if lead_ship_id is None
     local_arena = BRAIN_AGENT.get_inventory_value("blackboard:local_arena")
     yield fail if local_arena is None
 
+    # Honor diplomacy (matches ai_fleet_chase_roles): drop grudges against a side that
+    # is no longer HOSTILE - e.g. a clan you just ceasefired - so a lingering grudge
+    # can't override the diplomacy-aware acquisition below. In the stock model every
+    # attacker is already an enemy, so this is a no-op there.
+    enemies = side_enemy_members_set(get_side(lead_ship_id))
+    anger_as_set = set(BRAIN_AGENT.anger_dict.keys()) & enemies
+    yield fail if len(anger_as_set)==0
 
-    # Chase the most angry at if local
-    if best_anger in local_arena:
+    # Chase the most angry at if local (and still a valid enemy)
+    if best_anger in anger_as_set and best_anger in local_arena:
         the_target = best_anger
     else:
         # Chase anything close angry at
         the_target = closest(lead_ship_id, local_arena & anger_as_set)
-    # If nothing close chase the most infuriating
-    if the_target is None:
+    # If nothing close chase the most infuriating (only if it is still an enemy)
+    if the_target is None and best_anger in anger_as_set:
         the_target = best_anger
     yield fail if the_target is None
     yield fail if to_object(the_target) is None
