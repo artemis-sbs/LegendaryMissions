@@ -15,5 +15,5 @@
         add_role(COMMS_SELECTED_ID, "defected")
         COMMS_SELECTED.side = COMMS_ORIGIN.side
         brain_clear(COMMS_SELECTED_ID)
-        brain_add(COMMS_SELECTED_ID, "ai_chase_npc", {"force_shoot": True, "throttle": 2.2})
+        brain_add(COMMS_SELECTED_ID, "ai_chase_npc", {"force_shoot": True, "throttle": 2.2, "enemies_only": True})
         signal_emit("quest_signal", {"SIGNAL_NAME": "xorn_defected"})

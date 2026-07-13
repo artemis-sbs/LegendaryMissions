@@ -373,10 +373,12 @@ brain:
       data:
         force_shoot: true
         throttle: 2.0
+        enemies_only: true
     - label: ai_chase_station
       data:
         force_shoot: true
         throttle: 1.6
+        enemies_only: true
 ```
     boss_ship = npc_spawn(START_X, START_Y, START_Z, NAME, BOSS_ROLES, BOSS_ART, "behav_npcship")
     brain_add(boss_ship, brain)

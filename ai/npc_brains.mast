@@ -40,6 +40,7 @@ type: brain/npc
 throttle: 1.0
 stop_dist: 500
 force_shoot: false
+enemies_only: false
 ```
     default SIZE_X = None
     default SIZE_Z = SIZE_X
@@ -49,10 +50,16 @@ force_shoot: false
     clear_target(BRAIN_AGENT.id)
     yield fail if BRAIN_AGENT.data_set.get("surrender_flag",0) == 1
 
+    # Candidate targets: any non-player, non-ally, non-invisible ship.
+    # enemies_only restricts to genuinely hostile sides so defenders don't
+    # chase/harass neutrals; monsters/bosses leave it false to attack anything.
+    base = any_role('ship,shuttle,fighter,bomber,station')-role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#")
+    if enemies_only:
+        base = base & side_enemy_members_set(BRAIN_AGENT_ID)
     if SIZE_X is None:
-        _target = closest(BRAIN_AGENT_ID, any_role('ship,shuttle,fighter,bomber,station')-role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, base)
     else:
-        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&any_role('ship,shuttle,fighter,bomber,station')-role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&base)
     _target = to_object(_target)
 
     if _target is not None:
@@ -67,21 +74,26 @@ force_shoot: false
 
 === ai_chase_player
 " Chasing player target
-metadata: ``` 
+metadata: ```
 type: brain/npc
 throttle: 1.0
 stop_dist: 500
 force_shoot: false
+enemies_only: false
 ```
     default SIZE_X = None
     default SIZE_Z = SIZE_X
     # Clear the target
     clear_target(BRAIN_AGENT.id)
     # The role "#" is an invisible e.g. admiral, operator
+    # enemies_only restricts to genuinely hostile sides (see ai_chase_npc).
+    base = role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#")
+    if enemies_only:
+        base = base & side_enemy_members_set(BRAIN_AGENT_ID)
     if SIZE_X is None:
-        _target = closest(BRAIN_AGENT_ID, role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, base)
     else:
-        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&base)
 
     _target = to_object(_target)
     if _target is not None:
@@ -97,21 +109,26 @@ force_shoot: false
 
 === ai_chase_station
 " Chasing station target
-metadata: ``` 
+metadata: ```
 type: brain/npc
 throttle: 1.0
 stop_dist: 500
 force_shoot: false
+enemies_only: false
 ```
     default SIZE_X = None
     default SIZE_Z = SIZE_X
     # Clear the target
     clear_target(BRAIN_AGENT.id)
     # The role "#" is an invisible e.g. admiral, operator
+    # enemies_only restricts to genuinely hostile sides (see ai_chase_npc).
+    base = role("station")-side_ally_members_set(BRAIN_AGENT_ID)-role("#")
+    if enemies_only:
+        base = base & side_enemy_members_set(BRAIN_AGENT_ID)
     if SIZE_X is None:
-        _target = closest(BRAIN_AGENT_ID, role("station")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, base)
     else:
-        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&role("station")-side_ally_members_set(BRAIN_AGENT_ID)-role("#"))
+        _target = closest(BRAIN_AGENT_ID, broad_test_around(BRAIN_AGENT_ID, SIZE_X, SIZE_Z, 0xf0)&base)
 
     _target = to_object(_target)
     #print(f"PAST CLOSEST {l} {r} {_target} {ss} {st} {s} ")
