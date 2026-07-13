@@ -32,7 +32,7 @@
         #
         # Move new friendly around near stations
         #
-        stations_friendly = to_object_list(role("tsn")  & role("station") & broad_test_around(COMMS_ORIGIN_ID, 50000,50000))
+        stations_friendly = to_object_list(players_allied_members("station") & broad_test_around(COMMS_ORIGIN_ID, 50000,50000))
         ->END if len(stations_friendly) == 0
         for friendly in to_object_list(new_friendly):
             so = random.choice(stations_friendly)

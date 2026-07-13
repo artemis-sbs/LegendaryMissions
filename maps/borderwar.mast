@@ -158,7 +158,7 @@ Properties:
 
     #------------------------------------------------------------------------------------------------------------
 
-    players = all_roles('__player__, tsn')
+    players = role('__player__')
     # WAR_TIME_DELAY is a gui_input typein / loaded game code -> a string (or empty);
     # safe_int avoids int("") ValueError and keeps the compares below numeric.
     war_delay = safe_int(WAR_TIME_DELAY)

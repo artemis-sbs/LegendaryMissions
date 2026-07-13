@@ -320,7 +320,7 @@ GameCode:
             boss_triggered = True
             signal_emit("siege_enemies_low", None)
     # Lose: every friendly starbase is gone.
-    if len(role("tsn") & role("station")) == 0:
+    if len(players_allied_members("station")) == 0:
         signal_emit("quest_signal", {"SIGNAL_NAME": "siege_bases_lost"})
         ->END
     # Win: the fleets are cleared (only once they actually turned up, so a first

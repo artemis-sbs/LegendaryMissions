@@ -26,7 +26,7 @@
             ->END
 
     spawn_pos = Vec3(0,0,0)
-    stations_friendly = to_object_list(role("tsn")  & role("station"))
+    stations_friendly = to_object_list(players_allied_members("station"))
     for x while count>0:
         # OK add this ship
         if len(stations_friendly) > 0:

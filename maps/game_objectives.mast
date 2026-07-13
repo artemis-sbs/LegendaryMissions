@@ -29,7 +29,7 @@
 
 ============ objective_end_game_finish_before_time_limit
 
-    stations = role('tsn') & role('station')
+    stations = players_allied_members("station")
     if len(stations) ==0:
         START_TEXT = "Mission is lost!  All yer base are belong to us, dammit."
         GAME_STARTED = False

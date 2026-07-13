@@ -224,7 +224,7 @@
 
     name = COMMS_ORIGIN.name
     selected_name = COMMS_SELECTED.name
-    if COMMS_SELECTED.has_role('tsn'):
+    if side_are_friendly(COMMS_ORIGIN_ID, COMMS_SELECTED_ID):
         ()[blue] "Unused"
             % ready
             % How can I help

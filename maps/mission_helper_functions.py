@@ -18,7 +18,7 @@ def send_general_message(nName, textLine, face, srcID):
         sbs.send_story_dialog(c.client_id, nName, textLine, face, "#444")
 
     # send it to all comms players as well
-    my_players = to_object_list(role("__player__") & role("tsn"))
+    my_players = to_object_list(role("__player__"))
     for player in my_players:
         comms_message(textLine, srcID, player.id, face=face, from_name=nName)
 #        COMMS_ORIGIN_ID=player.id

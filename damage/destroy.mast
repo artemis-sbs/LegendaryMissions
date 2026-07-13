@@ -1,5 +1,5 @@
 
-//damage/destroy if has_role(DESTROYED_ID, "tsn") and not has_role(DESTROYED_ID, "standby")
+//damage/destroy if is_allied_to_players(DESTROYED_ID) and not has_role(DESTROYED_ID, "standby")
 
     for player in role("__player__"):
         #

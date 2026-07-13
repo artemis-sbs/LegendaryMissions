@@ -6,7 +6,7 @@ from sbs_utils.procedural.links import link, unlink, get_dedicated_link, set_ded
 from sbs_utils.procedural.roles import has_role, remove_role, any_role, role, all_roles
 from sbs_utils.procedural.space_objects import broad_test_around, closest, get_pos, set_pos
 from sbs_utils.procedural.routes import RouteDamageDestroy
-from sbs_utils.procedural.sides import to_side_object
+from sbs_utils.procedural.sides import to_side_object, side_allied_members
 from sbs_utils.procedural.media import media_read_relative_file
 from sbs_utils.procedural.ship_data import get_ship_data_for
 from sbs_utils.procedural.items import item_get
@@ -391,12 +391,12 @@ def hangar_attempt_dock_craft(craft_id, dock_rng = 600):
 
     # None mean dock anywhere
     if dock_rng is None:
-        dock_target = closest(craft_id, role("tsn") & any_role("station, __player__"))
+        dock_target = closest(craft_id, side_allied_members(craft_id) & any_role("station, __player__"))
     elif home_id is not None and sbs.distance_id(craft.id, home_id) < dock_rng:
         dock_target = home_id
     else:
         dockable = broad_test_around(craft.id, dock_rng, dock_rng, 0xF0)
-        dock_target = closest(craft_id, dockable & role("tsn") & any_role("station, __player__"))
+        dock_target = closest(craft_id, dockable & side_allied_members(craft_id) & any_role("station, __player__"))
 
     if dock_target is None: return False
     hangar_bump_version()
