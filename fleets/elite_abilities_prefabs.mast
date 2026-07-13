@@ -169,26 +169,45 @@ display_name: HET
     set_timer(ELITE_ID, f"{type}_cooldown", 10)
     yield SUCCESS
 
-==== elite_tractor_start === 
-" Activate tractor
+==== elite_tractor_start ===
+" Activate tractor - snare the nearest enemy so it cannot flee. Tethers the
+" target to this elite at its current range for the active window, then
+" releases and starts the cooldown. Matches the other abilities' timings.
 metadata: ```
 type: elite/tractor
 display_name: Tractor
 ```
+    yield FAIL if ELITE_ID is None or not object_exists(ELITE_ID)
 
-    # Fail early if nothing is near
+    # Target the closest non-friendly ship in range.
+    local = broad_test_around(ELITE_ID, 2500, 2500, 0xF0)
+    target_id = closest(ELITE_ID, local - role(get_side(ELITE_ID)))
+    yield FAIL if target_id is None
+    yield FAIL if not object_exists(target_id)
 
-    #TODO: set tractor_target_uid
-    await delay_sim(10)
+    # Anchor the target to this elite at the current separation so it can't run.
+    # AddTractorConnection(sourceID, targetID, offsetPoint, pullDistance).
+    d = sbs.distance_id(ELITE_ID, target_id)
+    sim.AddTractorConnection(ELITE_ID, target_id, sbs.vec3(0, 0, 0), d)
 
+    # Visible tether particle on the held target for the duration.
+    emittor_id = None
+    target_eo = to_engine_object(target_id)
+    if target_eo is not None:
+        emittor_id = sbs.add_particle_emittor(target_eo, -1, "align:True; shape:hull; color:green,white; lifespan:4; image_cell:0,3; size:0.8; speed: 5; count:10")
 
-    yield SUCCESS
+    task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID, "status": "Caught in a tractor beam"})
+
+    # Hold for the active window.
+    await delay_sim(30)
 
 --- clear
-    # Fail early if nothing is near
+    # Release the tractor and tidy the particle.
+    sim.DeleteTractorConnection(ELITE_ID, target_id)
+    if emittor_id is not None:
+        sbs.delete_particle_emittor(emittor_id)
 
-    #TODO: Clear tractor_target_uid
-
+    set_timer(ELITE_ID, f"{type}_cooldown", 10)
     yield SUCCESS
 
 ==== elite_shield_drain_start === 
@@ -225,13 +244,12 @@ display_name: Shield Vamp
     yield FAIL if target_id is None
     target_eo = to_engine_object(target_id)
     yield FAIL if target_eo is None
-    is_vamp = get_variable("vamp", False)
     color = "cyan,blue"
     if is_vamp:
         color = "yellow,brown"
 
     emittor_id = sbs.add_particle_emittor(target_eo, -1, f"align:True; shape:hull; color:{color}; lifespan:4; image_cell:0,3; size:0.8; speed: 5; count:10")
-    count = 5
+    count = 0
 
 --- elite_shield_drain_cycle 
     # Fail early if nothing is near
@@ -283,6 +301,7 @@ display_name: Shield Vamp
 --- clear
     sbs.delete_particle_emittor(emittor_id)
     await delay_sim(10)
+    set_timer(ELITE_ID, f"{type}_cooldown", 10)
     yield SUCCESS
 
 
