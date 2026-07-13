@@ -193,7 +193,7 @@ shared manual_beams_version_task = None
     yield idle
 
 
-//damage/object if has_role(DAMAGE_TARGET_ID, "raider")
+//damage/object if is_hostile_to_players(DAMAGE_TARGET_ID)
 
     system = get_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_SYSTEM")
     target_id = get_inventory_value(DAMAGE_SOURCE_ID, "MANUAL_CRITICAL_HIT")

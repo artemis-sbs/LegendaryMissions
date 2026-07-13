@@ -308,7 +308,7 @@ GameCode:
 --- loop
     await delay_sim(4)
     ->END if GAME_ENDED
-    raider_count = len(role("raider"))
+    raider_count = len(players_hostile_members("raider"))
     if raider_count > peak_raiders:
         peak_raiders = raider_count
     if raider_count > 0:

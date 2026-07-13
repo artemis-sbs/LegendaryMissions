@@ -11,10 +11,11 @@
     await delay_sim(4)
 
     if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"):
-        left = role("raider")
-        c = len(left)
+        # Count/stop only ships still hostile to the players (diplomacy, not the bare
+        # raider tag); remove_role strips the tag from all raiders to end the attack.
+        c = len(players_hostile_members("raider"))
         # End attack
-        remove_role(left, "raider")
+        remove_role(role("raider"), "raider")
         START_TEXT = "Mission time has run out! {c} enemies left."
         GAME_STARTED = False
         GAME_ENDED = True
@@ -39,7 +40,7 @@
 
         ->END
 
-    raiders = role('Raider')
+    raiders = players_hostile_members("raider")
     if len(raiders)==0 and WORLD_SELECT.path !="peacetime":
         START_TEXT = "Mission is won!  All the enemies have been destroyed."
         GAME_STARTED = False

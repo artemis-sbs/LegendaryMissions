@@ -2,7 +2,7 @@
 # Salvage: a destroyed raider drops a trade good, giving the player something to
 # sell at a station. Server-side route. Closes the credit loop with combat.
 #
-//damage/destroy if has_role(DESTROYED_ID, "raider")
+//damage/destroy if is_hostile_to_players(DESTROYED_ID)
     salvage_obj = to_object(DESTROYED_ID)
     ->END if salvage_obj is None
     salvage_goods = items_of_category("trade")

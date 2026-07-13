@@ -20,7 +20,7 @@
     sim.delete_navproxy_by_id(nav_id)
 
 
-//damage/killed if has_role(DAMAGE_SELECTED_ID, "raider")
+//damage/killed if is_hostile_to_players(DAMAGE_SELECTED_ID)
     #
     # Don't spawn a wreck in a black hole
     #
@@ -148,8 +148,10 @@
         ->END
     # NPC ships: killed when the struck facing's shield is depleted.
     if shield_check <= 0:
+        # Was it a player-enemy? Test BEFORE deleting (side lookup needs the object).
+        _was_foe = is_hostile_to_players(DAMAGE_TARGET_ID)
         sbs.delete_object(DAMAGE_TARGET_ID)
-        if has_role(DAMAGE_TARGET_ID, "raider"):
+        if _was_foe:
             jump wreckage {"DAMAGE_SELECTED_ID": DAMAGE_TARGET_ID}
     ->END
 
