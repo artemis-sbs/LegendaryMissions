@@ -1,6 +1,7 @@
 
 from sbs_utils.procedural.execution import get_shared_variable
 from sbs_utils.procedural.query import to_id, to_object, to_blob #, object_exists, to_object_list, get_side
+from sbs_utils.procedural.sides import side_set_hostile_to_players
 from sbs_utils.procedural.roles import add_role
 from sbs_utils.procedural.routes import follow_route_select_science
 from sbs_utils.procedural.spawn import npc_spawn, terrain_spawn
@@ -475,7 +476,7 @@ def fleet_remove_ship(id_or_obj):
 
 
 #--------------------------------------------------------------------------------------
-def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet", ship_roles=None):
+def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet", ship_roles=None, faction_side=False):
     """Create a new fleet and add the appropriate amount of ships
 
     Args:
@@ -545,10 +546,21 @@ def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet"
         for h in hard:
             all_abilities_copy.pop(h, None)
 
+    # Per-faction (opt-in): put the ships on the RACE's OWN side, hostile to the
+    # players, instead of the shared "raider" side. Register the side + relations
+    # once here; each ship keeps the "raider" role (compat + combat scope) but its
+    # SIDE is the faction, so a ceasefire / multi-faction setup works via diplomacy.
+    # Default (faction_side False) keeps the historical shared "raider" side.
+    if faction_side:
+        side_set_hostile_to_players(race)
+
 #    carrier_count = 0
     for b in range(num_ships):
         art_id = siege_fleet[b]
-        roles = f"{ship_roles},{race}" if ship_roles is not None else f"raider,{race}"
+        if faction_side:
+            roles = f"{race},{ship_roles}" if ship_roles is not None else f"{race},raider"
+        else:
+            roles = f"{ship_roles},{race}" if ship_roles is not None else f"raider,{race}"
         
         r_name = name_random_hostile(race)                           #  f"{random.choice(enemy_prefix)} {str(call_signs[enemy_name_number]).zfill(2)}"
 

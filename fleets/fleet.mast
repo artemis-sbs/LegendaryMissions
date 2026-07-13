@@ -6,6 +6,7 @@ race: kralien
 ship_roles: raider
 fleet_roles: raider_fleet
 fleet_difficulty: 5
+faction_side: false
 brain:
   SEQ Movement:
     - ai_fleet_init_blackboard
@@ -31,7 +32,7 @@ brain:
     - ai_fleet_scatter_formation
 ```
     _fleet_index = fleet_difficulty -1
-    fleet = fleet_create(race, _fleet_index, START_X, START_Y, START_Z, fleet_roles, ship_roles)
+    fleet = fleet_create(race, _fleet_index, START_X, START_Y, START_Z, fleet_roles, ship_roles, faction_side)
     # Add fleet behavior tree
     brain_add(fleet.id, brain, None, 0, None)
     yield result to_id(fleet)
