@@ -88,7 +88,11 @@
 
     await delay_sim(0)
     spawn_pos = Vec3(0,0,0)
-    player_ships = to_object_list(role("default_player_ship"))
+    # Sorted by id so slot N maps to the same ship the loadout was captured from
+    # (player_loadout_from_ships also sorts by id). loadout is [] unless a game
+    # code carried a SHIP_LOADOUT, so this is a no-op for maps that don't use it.
+    player_ships = sorted(to_object_list(role("default_player_ship")), key=lambda s: s.id)
+    loadout = player_loadout_active()
     #------------------------------------------------------------------------------------------------------------
     for player_ship in player_ships:
         side = player_ship.side
@@ -109,6 +113,14 @@
 
         # Reset to default blob in case art work changed
         name = player_ship.name
+        # Loadout override (from a game code): swap the hull BEFORE setup_from_data
+        # so the rebuilt stats match the coded hull; override the name after.
+        slot = loadout[c] if c < len(loadout) else None
+        if slot is not None:
+            if slot["hull"]:
+                player_ship.art_id = slot["hull"]
+            if slot["name"]:
+                name = slot["name"]
         sbs.player_ship_setup_defaults(player_ship.engine_object)
         sbs.player_ship_setup_from_data(player_ship.engine_object)
         player_ship.name = name

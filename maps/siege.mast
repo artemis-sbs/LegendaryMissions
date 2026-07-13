@@ -46,6 +46,7 @@ GameCode:
   - SIEGE_TIMEOUT
   - BOSS_SELECT
   - seed_value
+  - SHIP_LOADOUT
 ```
 
 

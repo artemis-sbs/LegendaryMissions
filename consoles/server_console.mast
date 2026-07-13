@@ -40,6 +40,9 @@ gui_reroute_clients("client_main")
     shared MONSTER_SELECT  = SETTINGS.get("MONSTER_SELECT")
     shared UPGRADE_SELECT  = SETTINGS.get("UPGRADE_SELECT")
     shared seed_value  = SETTINGS.get("seed_value")
+    # Packed hull+name-per-slot loadout carried by a game code (empty = none).
+    # spawn_players rehydrates it; the Save-preset icon captures the live crew.
+    shared SHIP_LOADOUT  = SETTINGS.get("SHIP_LOADOUT", "")
     shared GAME_STARTED  = SETTINGS.get("GAME_STARTED")
     shared GAME_ENDED  = SETTINGS.get("GAME_ENDED")
     shared GAME_TIME_LIMIT  = str(SETTINGS.get("GAME_TIME_LIMIT", ""))
@@ -176,19 +179,25 @@ gui_reroute_clients("client_main")
         # NOTE: icon_index values are placeholders - change them to the
         # save/copy/load glyphs you want from the icon atlas.
         default GAME_CODE_PRESET = ""
+        default GAME_CODE_NAME = ""
         presets = game_code_presets_for_map(WORLD_SELECT.path)
-        preset_labels = [game_code_label(code) for code in presets]
+        preset_labels = [p["name"] for p in presets]
         gui_row("row-height: 30px;")
         preset_dd = gui_drop_down(f"text: Presets ({len(presets)}); list: {','.join(preset_labels)}", var="GAME_CODE_PRESET")
         on gui_message(preset_dd):
-            for code in presets:
-                if game_code_label(code) == preset_dd.value:
-                    game_code_decode(code)
+            for p in presets:
+                if p["name"] == preset_dd.value:
+                    game_code_decode(p["code"])
                     jump game_code_reload
 
+        # Optional name for the next saved preset; blank -> auto "Preset N".
+        name_in = gui_input("desc: Preset name;", var="GAME_CODE_NAME")
         save_ic = gui_icon("icon_index: 94; color: white;", "click_tag: gc_save;")
         on gui_message(save_ic):
-            game_code_presets_save_code(game_code_encode(WORLD_SELECT))
+            # Capture the current crew's hulls + names into SHIP_LOADOUT so the
+            # saved preset reproduces the same ships for the next crew.
+            player_loadout_capture(to_object_list(role("default_player_ship")))
+            game_code_presets_save_code(game_code_encode(WORLD_SELECT), GAME_CODE_NAME)
             jump game_code_reload
         # copy_ic = gui_icon("icon_index: 134; color: white;", "click_tag: gc_copy;")
         # on gui_message(copy_ic):
