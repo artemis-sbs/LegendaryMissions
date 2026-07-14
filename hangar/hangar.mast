@@ -391,6 +391,13 @@ hangar_get_craft_data("terran")
     gui_section(style="area: 41,90,59.7,99;")
     gui_layout_widget("text_waterfall")
 
+    # Register ship_data in the console widget list (no visible HUD slot). The
+    # engine only renders a widget that's in the list send_client_widget_list
+    # transmits at page creation; the //gui/cockpit info-panel ship_data tab only
+    # sends a RECT (send_client_widget_rects), which positions but doesn't
+    # register. Without this the tab has nothing to position and never appears.
+    gui_update_widgets("ship_data", "")
+
     # Buttons
     gui_section(style="area:0,0,50px,100;orientation:BT;")
     gui_row(style="row-height:50px;")
