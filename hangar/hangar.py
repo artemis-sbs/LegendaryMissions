@@ -343,7 +343,13 @@ def hangar_launch_craft(craft_id, client_id):
     avail = avail.split(",")
     for t in avail:
         t = t.strip()
+        # "".split(",") yields [''] - skip the empty entry, and skip any type
+        # with no _MAX set (blob.get returns None) so we never set(None).
+        if not t:
+            continue
         h = blob.get( f"{t}_MAX", 0)
+        if h is None:
+            continue
         blob.set(f"{t}_NUM", h, 0)
 
     # Reset shields
