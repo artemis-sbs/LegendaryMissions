@@ -107,7 +107,7 @@ damage: 0
         jump END
     if damage > 5:
         pos = get_pos(asteroid_id)
-        sbs.delete_object(asteroid_id)
+        delete_object(asteroid_id)
         # Make a particle effect when it's destroyed
         # sbs.particle_at(pos, "color: #644117; count: 100; lifespan: 100; size: 500; speed: {damage}; image_cell: 14;")
         # sbs.particle_at(pos, "color: #641,#977; lifespan:60; image_cell:9; size:20;speed: 1; count:100,1000;")

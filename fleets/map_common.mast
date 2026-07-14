@@ -163,7 +163,7 @@ players:
     ->END
     
 ==== player_ships_remove_unused
-    sbs.delete_object(_ship_id)
+    delete_object(_ship_id)
     ->END
 
         

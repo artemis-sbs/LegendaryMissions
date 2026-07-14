@@ -19,6 +19,6 @@
     signal_emit("item_collected", {"holder_id": COLLISION_SELECTED_ID, "key": item_key})
     item_name = item_meta(item_key, "display_text", item_key)
     comms_broadcast(COLLISION_SELECTED_ID, f"Pickup: {item_name}", "#E3F")
-    sbs.delete_object(COLLISION_ORIGIN_ID)
+    delete_object(COLLISION_ORIGIN_ID)
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
     ->END

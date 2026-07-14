@@ -142,7 +142,7 @@
             pdmg = int(hpmax * 0.10) if hpmax is not None else 2000
         nhp = hp - pdmg
         if nhp <= 0:
-            sbs.delete_object(DAMAGE_TARGET_ID)
+            delete_object(DAMAGE_TARGET_ID)
         else:
             set_data_set_value(DAMAGE_TARGET_ID, "monster_health", nhp)
         ->END
@@ -150,7 +150,7 @@
     if shield_check <= 0:
         # Was it a player-enemy? Test BEFORE deleting (side lookup needs the object).
         _was_foe = is_hostile_to_players(DAMAGE_TARGET_ID)
-        sbs.delete_object(DAMAGE_TARGET_ID)
+        delete_object(DAMAGE_TARGET_ID)
         if _was_foe:
             jump wreckage {"DAMAGE_SELECTED_ID": DAMAGE_TARGET_ID}
     ->END

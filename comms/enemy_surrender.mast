@@ -166,7 +166,7 @@ shared _surrender_return = task_schedule(take_surrendered_home)
         diff = _pos - spawn_pos
         continue if diff.length() > 500
         # if Close to 500, then delete
-        sbs.delete_object(ship)
+        delete_object(ship)
 
 
     jump take_surrendered_home

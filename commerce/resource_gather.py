@@ -2,6 +2,7 @@ from sbs_utils.procedural.routes import RouteDamageObject
 from sbs_utils.procedural.execution import get_variable
 from sbs_utils.procedural.roles import has_role
 from sbs_utils.procedural.query import to_blob
+from sbs_utils.procedural.space_objects import delete_object
 import math
 import sbs
 
@@ -36,7 +37,7 @@ def resource_handle_damage():
     zf, zi = math.modf(x)
 
     if xi == 0 and yi == 0 and zi== 0 and (xf+yf+zf) < 2.0:
-        sbs.delete_object(target)
+        delete_object(target)   # deferred native free (see sbs_utils DeleteQueue)
         return
 
     # coeff

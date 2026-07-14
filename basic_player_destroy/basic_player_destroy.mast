@@ -20,7 +20,7 @@ shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
 
     so = to_object(DESTROYED_ID)
     if so is not None:
-        sbs.delete_object(DESTROYED_ID)
+        delete_object(DESTROYED_ID)
 
     await delay_sim(0)
 

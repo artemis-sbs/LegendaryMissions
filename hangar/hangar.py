@@ -4,7 +4,7 @@ from sbs_utils.procedural.spawn import player_spawn
 from sbs_utils.procedural.query import set_science_selection, to_space_object, to_id, object_exists, to_data_set, to_space_object_list
 from sbs_utils.procedural.links import link, unlink, get_dedicated_link, set_dedicated_link, linked_to, has_link
 from sbs_utils.procedural.roles import has_role, remove_role, any_role, role, all_roles
-from sbs_utils.procedural.space_objects import broad_test_around, closest, get_pos, set_pos
+from sbs_utils.procedural.space_objects import broad_test_around, closest, get_pos, set_pos, delete_object
 from sbs_utils.procedural.routes import RouteDamageDestroy
 from sbs_utils.procedural.sides import to_side_object, side_allied_members
 from sbs_utils.procedural.media import media_read_relative_file
@@ -56,7 +56,7 @@ def hangar_handle_destroy():
         #
         # TODO: The engine is nor deleting the object properly
         # For know forcing the script to forget about it
-        sbs.delete_object(id)
+        delete_object(id)   # deferred native free (see sbs_utils DeleteQueue)
     hangar_bump_version()    
 
 def hangar_get_stats(client_id, fighter):
