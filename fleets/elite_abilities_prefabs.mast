@@ -182,14 +182,14 @@ display_name: Tractor
     # Target the closest non-friendly ship in range.
     local = broad_test_around(ELITE_ID, 2500, 2500, 0xF0)
     # closest() returns a CloseData (or None), not an id - take its .id/.distance.
-    target = closest(ELITE_ID, local - role(get_side(ELITE_ID)))
-    yield FAIL if target is None
-    target_id = target.id
+    tgt = closest(ELITE_ID, local - role(get_side(ELITE_ID)))
+    yield FAIL if tgt is None
+    target_id = tgt.id
     yield FAIL if not object_exists(target_id)
 
     # Anchor the target to this elite at the current separation so it can't run.
     # AddTractorConnection(sourceID, targetID, offsetPoint, pullDistance).
-    d = target.distance
+    d = tgt.distance
     sim.AddTractorConnection(ELITE_ID, target_id, sbs.vec3(0, 0, 0), d)
 
     # Visible tether particle on the held target for the duration.
@@ -242,9 +242,9 @@ display_name: Shield Vamp
     # Target 
     #
     # closest() returns a CloseData (or None), not an id - take its .id.
-    target = closest(ELITE_ID, local - role(get_side(ELITE_ID)))
-    yield FAIL if target is None
-    target_id = target.id
+    tgt = closest(ELITE_ID, local - role(get_side(ELITE_ID)))
+    yield FAIL if tgt is None
+    target_id = tgt.id
     target_eo = to_engine_object(target_id)
     yield FAIL if target_eo is None
     color = "cyan,blue"
