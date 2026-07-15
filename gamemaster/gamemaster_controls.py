@@ -45,7 +45,7 @@ def get_gm_label():
 
 class GM_Gui_Tab(Button):
    def __init__(self, tag, name, icon):
-      super().__init__(tag, f"$text:{name}")
+      super().__init__(tag, f"$text:{gui_text_escape(name)}")
       pass
 
 #

@@ -1,4 +1,4 @@
-from sbs_utils.procedural.gui import gui_row, gui_text, gui_hole
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_hole, gui_text_escape
 from sbs_utils.procedural.links import linked_to
 from sbs_utils.procedural.query import to_object
 from sbs_utils.helpers import FrameContext
@@ -109,7 +109,7 @@ def brain_scan_get_text(obj):
 
 def brain_scan_selection_item(item):
     gui_row("row-height: 1.2em;padding:5px,0,5px,0;")
-    gui_text(f"$text:{item.name};justify: left;","padding:0,0,0.1em,0;")
+    gui_text(f"$text:{gui_text_escape(item.name)};justify: left;","padding:0,0,0.1em,0;")
     
 def brain_scan_selection_title():
     gui_row("row-height: 1.2em;padding:13px;background:#1578;")

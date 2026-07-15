@@ -73,7 +73,7 @@ message = ""
     _sort_msgs = list(reversed(messages))
 
     lb_messages = ~~list_box_control(_sort_msgs, 
-                                text=lambda item: f"$text:{item.get('msg', 'Hmm')};justify: left;",
+                                text=lambda item: f"$text:{gui_text_escape(item.get('msg', 'Hmm'))};justify: left;",
                                 face= lambda item: f"{item.get('face','')}",
                                 title = lambda: "$text:Conversation;justify:center;",
                                 background= "#1572", title_background="#1578",
@@ -83,7 +83,7 @@ message = ""
 
     gui_section("area: 0,60,25,100-40px;background: #1572;")
     lb_customers = ~~list_box_control(list(customers.values()), 
-                                text=lambda item: f"$text:{item.get('call_sign', 'Hmm')};justify: center;",
+                                text=lambda item: f"$text:{gui_text_escape(item.get('call_sign', 'Hmm'))};justify: center;",
                                 face= lambda item: f"{item.get('face','')}",
                                 title = lambda: "$text:Patrons;justify:center;",
                                 background= "#1572", title_background="#1578",

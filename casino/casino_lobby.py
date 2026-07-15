@@ -2,7 +2,7 @@
 text shown in the details panel. Games are still discovered via
 casino_games_list(); help comes from a `help` metadata value on the game's
 //casino/game route when present, else this built-in table."""
-from sbs_utils.procedural.gui import gui_row, gui_text
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_text_escape
 from sbs_utils.procedural.execution import labels_get_type
 
 
@@ -31,7 +31,7 @@ def casino_game_help(key):
 
 def casino_game_list_template(item):
     gui_row("row-height: 1.4em; padding:8px;")
-    gui_text(f"$text:{item.get('name', '?')};justify:left;")
+    gui_text(f"$text:{gui_text_escape(item.get('name', '?'))};justify:left;")
 
 def casino_game_list_title():
     gui_row("row-height: 1.4em; padding:8px; background:#1578;")

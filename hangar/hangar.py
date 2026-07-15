@@ -81,9 +81,11 @@ def hangar_get_stats(client_id, fighter):
     c = get_inventory_value(client_id, "completed_objectives", 0)
     call_sign = get_inventory_value(client_id, "call_sign", "pilot")
     line1 = "bad ship data key or data_set values"
+    # Escape the craft name / call sign (user-controlled) so a ':' or ';' in
+    # them can't inject style when these lines land in a "$text: {stats}" (#569).
     if bs is not None and front_shield_max_val is not None:
-        line1 = f"{f}: TORP {t} BEAM {bs:.2f} SHLDS {int(front_shield_max_val)}" # | {int(rear_shield_max_val)}"
-    line2 = f"{call_sign}: sorties {s} objectives {c}"
+        line1 = f"{gui_text_escape(f)}: TORP {t} BEAM {bs:.2f} SHLDS {int(front_shield_max_val)}" # | {int(rear_shield_max_val)}"
+    line2 = f"{gui_text_escape(call_sign)}: sorties {s} objectives {c}"
     return [line1, line2]
     
     
@@ -487,7 +489,7 @@ def hangar_craft_torp_reload_count(craft_id):
                 total += need
     return total
 
-from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text, gui_blank
+from sbs_utils.procedural.gui import gui_row, gui_icon, gui_text, gui_blank, gui_text_escape
 from sbs_utils.procedural.gui.listbox import gui_list_box
 from sbs_utils.mast.mast_node import MastDataObject
 
@@ -581,7 +583,8 @@ def hangar_pilot_items():
 
 def hangar_pilot_template(item):
     gui_row("row-height: 1.2em;padding:6px;")
-    gui_text(f"$text:{item.get('call_sign')};justify: left;")
+    # Escape the user-entered call sign so ':' / ';' in it can't inject style (#569).
+    gui_text(f"$text:{gui_text_escape(item.get('call_sign'))};justify: left;")
     gui_row("row-height: 1.0em;padding:6px;")
     gui_text(f"$text:Sorties {item.get('sorties')}   Kills {item.get('kills')}   Tonnage {item.get('tonnage')}   Damage {item.get('damage')}   Objectives {item.get('objectives')};justify: left;font:gui-1")
 
@@ -674,7 +677,7 @@ def hangar_get_crafts_at(dock_id):
 
 def hangar_console_ship_template(item):
     gui_row("row-height: 1.0em;padding:13px;")
-    gui_text(f"$text:{item.name};justify: left;")
+    gui_text(f"$text:{gui_text_escape(item.name)};justify: left;")
     t = item.get_inventory_value("CRAFT_TYPE", "Fighter")
     gui_row("row-height: 1.0em;padding:13px;")
     gui_text(f"$text:{t};justify: left;font:gui-1")
@@ -688,7 +691,7 @@ def hangar_console_title_template():
 
 def hangar_console_dock_template(item):
     gui_row("row-height: 1.0em;padding:13px;")
-    gui_text(f"$text:{item.name};justify: left;")
+    gui_text(f"$text:{gui_text_escape(item.name)};justify: left;")
     
 
 def hangar_console_dock_title_template():

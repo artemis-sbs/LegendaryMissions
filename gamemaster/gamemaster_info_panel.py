@@ -43,7 +43,7 @@ def show_gm_panel_gui(cid):
     # with gui_sub_section():
     # gui_button(f"$text: {obj.name}; tag: ship_name")
     # gui_button(f"$text: Hello")
-    ship_name_change = gui_input(f"$text:{obj.name};desc:Ship Name", var="gm_ship_name")
+    ship_name_change = gui_input(f"$text:{gui_text_escape(obj.name)};desc:Ship Name", var="gm_ship_name")
     gui_message(ship_name_change, "update_ship_name")
     gui_row("row-height: 2em;")
     sides = role("__side__")
@@ -143,9 +143,9 @@ def gm_panel_list_item(message_obj):
                         gui_face(face)
 
         if title:
-            gui_text(f"$text: {title};font:gui-2;color:{title_color};")
+            gui_text(f"$text: {gui_text_escape(title)};font:gui-2;color:{title_color};")
         elif message:
-            gui_text(f"$text: {message};font:gui-2;color:{message_color};")
+            gui_text(f"$text: {gui_text_escape(message)};font:gui-2;color:{message_color};")
 
 from sbs_utils.procedural.timers import is_timer_set, format_time_remaining
 from sbs_utils.procedural.inventory import set_inventory_value, get_inventory_value

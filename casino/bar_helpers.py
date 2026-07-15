@@ -2,7 +2,7 @@
 takes template functions (like the hangar roster), not the non-existent
 `list_box_control` the old prototype used. Items are plain dicts with
 `face`/`msg`/`call_sign` keys."""
-from sbs_utils.procedural.gui import gui_row, gui_text, gui_face
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_face, gui_text_escape
 
 
 def bar_message_template(item):
@@ -10,7 +10,7 @@ def bar_message_template(item):
     face = item.get("face", "")
     if face:
         gui_face(face)
-    gui_text(f"$text:{item.get('msg', '')};justify:left;")
+    gui_text(f"$text:{gui_text_escape(item.get('msg', ''))};justify:left;")
 
 def bar_message_title():
     gui_row("row-height: 1.5em; padding:6px; background:#1578;")
@@ -21,7 +21,7 @@ def bar_patron_template(item):
     face = item.get("face", "")
     if face:
         gui_face(face)
-    gui_text(f"$text:{item.get('call_sign', 'pilot')};justify:center;")
+    gui_text(f"$text:{gui_text_escape(item.get('call_sign', 'pilot'))};justify:center;")
 
 def bar_patron_title():
     gui_row("row-height: 1.5em; padding:6px; background:#1578;")

@@ -1,4 +1,4 @@
-from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section, gui_button, gui_task_for_client, gui_icon, gui_blank, gui_message_callback
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section, gui_button, gui_task_for_client, gui_icon, gui_blank, gui_message_callback, gui_text_escape
 from sbs_utils.procedural.gui import gui_tab_is_top, gui_tab_add_top, gui_tab_remove_top
 from sbs_utils import fs
 from sbs_utils.procedural import ship_data
@@ -79,7 +79,10 @@ def console_ship_select_template(item):
 
     with gui_sub_section():
         gui_row("row-height:1em;")
-        gui_text(f"$text:{item.name} - {item.side};justify: left;font:gui-3;")
+        # Escape the user-entered ship name so a ':' or ';' in it can't inject
+        # style properties or break the justify/font that follow (issue #569).
+        ship_label = gui_text_escape(f"{item.name} - {item.side}")
+        gui_text(f"$text:{ship_label};justify: left;font:gui-3;")
         gui_row("row-height:1em;")
         gui_text(f"$text:{desc};justify: left;font:gui-2;color:#bbb;")
     # gui_text(f"$text:Hello;justify: left;font:gui-2;")
@@ -176,8 +179,8 @@ def comms_recent_item(item):
         
         msg = msg[:20] + " .."
         
-        title = f"$text:{title};font:gui-2;color:{title_color};"
-        msg = f"$text:{msg};font:gui-1;color:{msg_color};"
+        title = f"$text:{gui_text_escape(title)};font:gui-2;color:{title_color};"
+        msg = f"$text:{gui_text_escape(msg)};font:gui-1;color:{msg_color};"
         
         gui_text(title)
         gui_row()
@@ -205,8 +208,8 @@ def comms_message_item(item):
         msg = msg[:16] + " .."
 
         msg_color = item.message_color
-        title = f"$text:{title};font:gui-2;color:{title_color};"
-        msg = f"$text:{msg};font:gui-1;;color:{msg_color};"
+        title = f"$text:{gui_text_escape(title)};font:gui-2;color:{title_color};"
+        msg = f"$text:{gui_text_escape(msg)};font:gui-1;;color:{msg_color};"
 
         if not item.receive:
             title += "justify:right;"

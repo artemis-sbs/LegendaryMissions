@@ -9,7 +9,7 @@ from sbs_utils.procedural.quest import (
     quest_agent_quests, quest_get_state, quest_get_key, quest_get_display_name, QuestState,
     quest_log_build_items)
 from sbs_utils.mast.mast_node import MastDataObject
-from sbs_utils.procedural.gui import gui_row, gui_text, gui_icon, gui_list_box_header, gui_list_box_is_header
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_icon, gui_list_box_header, gui_list_box_is_header, gui_text_escape
 from sbs_utils.agent import Agent
 
 
@@ -232,7 +232,7 @@ def results_quest_items():
 
 def results_ship_template(item):
     gui_row("row-height: 1.2em;padding:6px;")
-    gui_text(f"$text:{item.get('name')};justify: left;")
+    gui_text(f"$text:{gui_text_escape(item.get('name'))};justify: left;")
     gui_row("row-height: 1.0em;padding:6px;")
     gui_text(f"$text:Kills {item.get('kills')}   Tonnage {item.get('tonnage')}   Damage {item.get('damage')}   Hull {item.get('hull_pct')}%;justify: left;font:gui-1")
 
@@ -244,7 +244,7 @@ def results_ship_title_template():
 
 def results_pilot_template(item):
     gui_row("row-height: 1.2em;padding:6px;")
-    gui_text(f"$text:{item.get('call_sign')};justify: left;")
+    gui_text(f"$text:{gui_text_escape(item.get('call_sign'))};justify: left;")
     gui_row("row-height: 1.0em;padding:6px;")
     gui_text(f"$text:Sorties {item.get('sorties')}   Kills {item.get('kills')}   Tonnage {item.get('tonnage')}   Damage {item.get('damage')}   Objectives {item.get('objectives')};justify: left;font:gui-1")
 
