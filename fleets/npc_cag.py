@@ -214,19 +214,23 @@ class NpcCAG(Agent):
 
         # Orphaned fighters: when a carrier is destroyed it drops out of the loop above,
         # so its fighters are never managed again and would just coast on their last order
-        # (or idle once bingo hits, with no carrier to return to). Sweep every NPC fighter
-        # whose carrier is gone and send it hunting the nearest hostile player/station - it
-        # goes down fighting instead of drifting. Docked survivors (on the standby list,
-        # object_exists False) and player-crewed craft are left alone.
+        # (or idle once bingo hits, with no carrier to return to). Sweep the CAG's own
+        # fighters whose carrier is gone and send each one hunting the nearest hostile
+        # player/station - it goes down fighting instead of drifting.
+        #
+        # Identify a CAG fighter by its "my_carrier" dedicated link, NOT by role: NPC
+        # fighters inherit a "cockpit" role from their ship art (same way starbase art adds
+        # "station"), so a role check would wrongly skip them as player-crewed. Only CAG
+        # fighters carry my_carrier; player-launched craft do not.
         for fighter_id in all_roles("fighter"):
+            carrier_id = get_dedicated_link(fighter_id, "my_carrier")
+            if carrier_id is None:
+                continue    # not a CAG fighter (no carrier link) - leave alone
+            if to_object(carrier_id) is not None:
+                continue    # carrier still alive - handled by the per-carrier loop above
             craft = to_object(fighter_id)
             if craft is None or not object_exists(craft):
-                continue
-            if craft.has_role("__player__") or craft.has_role("cockpit"):
-                continue
-            carrier = to_object(get_dedicated_link(fighter_id, "my_carrier"))
-            if carrier is not None:
-                continue    # still has a live carrier - handled by the loop above
+                continue    # truly gone, or docked on standby (object_exists False) - skip
             t_id = self.find_stranded_target_id(fighter_id)
             if t_id is not None:
                 target(fighter_id, t_id)
