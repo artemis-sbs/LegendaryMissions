@@ -120,34 +120,30 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
         print("Autoplayer is no more")
         ->END
         
-    # ---- Lethal terrain avoidance (highest priority) ----
+    # ---- Black-hole avoidance (highest priority) ----
     # Black holes carry role "black_hole" (their art/behavior is "maelstrom", the ROLE is
     # not - so the old any_role("mine,maelstrom") scan missed them entirely). A hole PULLS
     # a ship into a lethal core, so the danger zone is its gravity_radius (default ~5000),
-    # not the tiny kill radius - we must flee before the pull grabs us. Mines/maelstroms
-    # are point hazards. If we are inside any hazard's danger zone, steer directly AWAY and
-    # burn, skipping the rest of the helm this tick (guards us even while docking/chasing).
+    # not the tiny kill radius. Inside it we FLEE - steer directly away and burn, skipping
+    # the rest of the helm this tick. Mines are NOT fled here - they get course deflection
+    # further down, so a station ringed by mines can still be reached (a full flee would
+    # just bounce us off the ring forever and we would never dock).
     _hole = to_object(closest(_ship_id, role("black_hole"), 15000))
-    _flee = None
     if _hole is not None:
         _gr = _hole.data_set.get("gravity_radius", 0) or 0
         if _gr <= 0:
             _gr = 5000
         if sbs.distance_id(_ship_id, to_id(_hole)) < _gr + 2000:
-            _flee = _hole
-    if _flee is None:
-        _flee = to_object(closest(_ship_id, any_role("mine,maelstrom"), 2500))
-    if _flee is not None:
-        _away = ship.pos - _flee.pos
-        if _away.length() < 1:
-            _away = Vec3(1, 0, 0)
-        ship.data_set.set("playerThrottle", 3.0, 0)
-        ship.data_set.set("steerToDirDX", _away.x, 0)
-        ship.data_set.set("steerToDirDY", _away.y, 0)
-        ship.data_set.set("steerToDirDZ", _away.z, 0)
-        ship.data_set.set("steeringToDirFlag", 1, 0)
-        await delay_sim(1)
-        jump automated_player_helm_ai
+            _away = ship.pos - _hole.pos
+            if _away.length() < 1:
+                _away = Vec3(1, 0, 0)
+            ship.data_set.set("playerThrottle", 3.0, 0)
+            ship.data_set.set("steerToDirDX", _away.x, 0)
+            ship.data_set.set("steerToDirDY", _away.y, 0)
+            ship.data_set.set("steerToDirDZ", _away.z, 0)
+            ship.data_set.set("steeringToDirFlag", 1, 0)
+            await delay_sim(1)
+            jump automated_player_helm_ai
 
     # Foes = raider-tagged ships still HOSTILE to this autoplayer's side (diplomacy),
     # so a ceasefired/neutral clan or a surrendered ship is not chased.
@@ -268,9 +264,32 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
             ship.data_set.set("playerThrottle", 0, 0)
             speed = 0
 
-        ship.data_set.set("steerToDirDX", diff.x,0)
-        ship.data_set.set("steerToDirDY", diff.y,0)
-        ship.data_set.set("steerToDirDZ", diff.z,0)
+        # Mine / maelstrom deflection: steer toward the goal, but bend the course AWAY from
+        # the closest mine instead of fleeing it - so we thread around a minefield and can
+        # still reach a station ringed by mines (a flee would just bounce off the ring). The
+        # repulsion grows as we near the mine, up to the goal vector's own magnitude, so at
+        # contact the two combine to a hard ~sideways arc; far out it barely nudges.
+        _sx = diff.x
+        _sy = diff.y
+        _sz = diff.z
+        _mine = to_object(closest(_ship_id, any_role("mine,maelstrom"), 2500))
+        if _mine is not None:
+            _rx = ship.pos.x - _mine.pos.x
+            _ry = ship.pos.y - _mine.pos.y
+            _rz = ship.pos.z - _mine.pos.z
+            _rd = (_rx*_rx + _ry*_ry + _rz*_rz) ** 0.5
+            if _rd < 1:
+                _rd = 1
+            _scale = (2500 - _rd) / 2500
+            if _scale < 0:
+                _scale = 0
+            _f = ln * _scale / _rd
+            _sx = diff.x + _rx * _f
+            _sy = diff.y + _ry * _f
+            _sz = diff.z + _rz * _f
+        ship.data_set.set("steerToDirDX", _sx,0)
+        ship.data_set.set("steerToDirDY", _sy,0)
+        ship.data_set.set("steerToDirDZ", _sz,0)
         ship.data_set.set("steeringToDirFlag", 1,0)
         if last != t:
             comms_broadcast(client_id, "{ship.name} > {t.name} at {speed:.1f} Dock {last_go_dock} {ln:.0f}")
