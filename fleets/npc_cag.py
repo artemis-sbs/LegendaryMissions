@@ -7,6 +7,7 @@ from sbs_utils.procedural.space_objects import target, closest, broad_test_aroun
 from sbs_utils.procedural.roles import role, all_roles, add_role, remove_role, any_role
 from sbs_utils.procedural.spawn import npc_spawn
 from sbs_utils.procedural.links import get_dedicated_link, set_dedicated_link
+from sbs_utils.procedural.sides import side_hostile_members
 from sbs_utils.vec import Vec3
 
 
@@ -60,6 +61,26 @@ class NpcCAG(Agent):
         if None == the_target:
             # Can't use the TSN role currently because that includes the gamemaster ship
             the_target = closest(fighter_id, local_arena & any_role("station,defender,civilian") - role(get_side(fighter_id)))
+
+        return to_id(the_target)
+
+    #--------------------------------------------------------------------------------------
+    # Target for a STRANDED fighter (its carrier is gone). Unlike find_fighter_target_id
+    # this has no local-arena cap - a fighter with nowhere to refit goes hunting anywhere
+    # on the map. Diplomacy-aware ("hostile to them", not merely not-own-side): nearest
+    # hostile player / single-seat craft first, then nearest hostile station, then any
+    # hostile at all. Falls back to not-own-side if the fighter's side has no relations set.
+    def find_stranded_target_id(self, fighter_id):
+        side = get_side(fighter_id)
+        foes = side_hostile_members(fighter_id)
+        if not foes:
+            foes = any_role("__player__,cockpit,station,defender,civilian") - role(side)
+
+        the_target = closest(fighter_id, foes & any_role("__player__,cockpit"))
+        if the_target is None:
+            the_target = closest(fighter_id, foes & any_role("station,defender,civilian"))
+        if the_target is None:
+            the_target = closest(fighter_id, foes)
 
         return to_id(the_target)
 
@@ -190,6 +211,25 @@ class NpcCAG(Agent):
                     e.add_link("inactive_fighter_list", fighter_id)
                     set_timer(carrier, "fighter_refit", seconds=60)
                     sbs.push_to_standby_list(craft.engine_object)
+
+        # Orphaned fighters: when a carrier is destroyed it drops out of the loop above,
+        # so its fighters are never managed again and would just coast on their last order
+        # (or idle once bingo hits, with no carrier to return to). Sweep every NPC fighter
+        # whose carrier is gone and send it hunting the nearest hostile player/station - it
+        # goes down fighting instead of drifting. Docked survivors (on the standby list,
+        # object_exists False) and player-crewed craft are left alone.
+        for fighter_id in all_roles("fighter"):
+            craft = to_object(fighter_id)
+            if craft is None or not object_exists(craft):
+                continue
+            if craft.has_role("__player__") or craft.has_role("cockpit"):
+                continue
+            carrier = to_object(get_dedicated_link(fighter_id, "my_carrier"))
+            if carrier is not None:
+                continue    # still has a live carrier - handled by the loop above
+            t_id = self.find_stranded_target_id(fighter_id)
+            if t_id is not None:
+                target(fighter_id, t_id)
 
         yield AWAIT(delay_sim(seconds=2))
         yield jump(self.tick_fighter_manage)
