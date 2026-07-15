@@ -158,7 +158,12 @@ if CAN_CHANGE_CONSOLE:
             if len(PLAYER_LIST)>0:
                 PLAYER_LIST[client_selected_index].name = ship_name
             client_select_ship = ship_name
-            #gui_update_shared("sh_ship_list", None)
+            # Refresh the ship list on EVERY console, not just this one. The local
+            # `on change ...name` watcher only fires on a console that has the
+            # renamed ship selected, so observers with a different ship selected
+            # kept showing the stale name. A shared refresh re-renders each
+            # console's list box (each preserves its own selection).
+            gui_update_shared("sh_ship_list", None)
 
     ship_sec_not = gui_region(style="area: 10px,60px,400px,105px")
     with ship_sec_not:
@@ -213,6 +218,17 @@ if CAN_CHANGE_CONSOLE:
     gui_row(style="row-height: 45px;")
     gui_blank()
     gui_row()
+
+    # Re-bind the selected item to the CURRENT consoles list. On game start every
+    # client is rerouted through game_started_console, which rebuilds `consoles`
+    # with fresh objects (gui_get_console_type_list mints new DictionaryToObjects
+    # each call). The carried console_select_item is then stale, and the list box
+    # highlights by identity (no __eq__), so the selection was lost on repaint.
+    # CONSOLE_SELECT (the path string) survives, so match on it.
+    for c in consoles:
+        if c.path == CONSOLE_SELECT:
+            console_select_item = c
+            break
 
     console_select_lb = gui_list_box(consoles,"row-height: 0.5em; background:#1572;", item_template=console_select_template, title_template=console_select_title_template, select=True, read_only=console_read_only)
     console_select_lb.set_value(console_select_item)
@@ -278,9 +294,12 @@ if CAN_CHANGE_CONSOLE:
                 ship_name = client_select_ship
                 ship_type = client_select_ship_item.art_id
                 gui_update("sh_ship_picker", ship_type)
-                gui_update("sh_ship_name", ship_name)
-                
-                
+                _display.value = ship_name
+                # Same absolute-region ghost as the rename path: re-present the
+                # whole ship_sec_not region so its clear runs before the redraw.
+                gui_represent(ship_sec_not)
+
+
         on change ship_select_lb.get_value().art_id:
             ship_type = ship_select_lb.get_value().art_id
             gui_update("sh_ship_picker", ship_type)
@@ -290,6 +309,12 @@ if CAN_CHANGE_CONSOLE:
             ship_name = ship_select_lb.get_value().name
             _input.value = ship_name
             _display.value = ship_name
+            # _display lives in the ship_sec_not absolute gui_region. Setting its
+            # .value only marks the child widget dirty, and the dirty pass re-sends
+            # the text into the sub-region WITHOUT a clear - so the old name stays
+            # painted under the new one (the ghost). Re-presenting the whole region
+            # runs region_begin -> send_gui_clear first, giving a clean redraw.
+            gui_represent(ship_sec_not)
             gui_update("sh_ship_list", None)
             
         
