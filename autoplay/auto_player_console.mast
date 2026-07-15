@@ -1,7 +1,10 @@
 #
-# This assure the settings are there
+# This assure the settings are there.
+#   enable    - turn the attract-mode autoplayer on
+#   standoff  - range the ship holds at to open with its EMP/Nuke volley (u)
+#   overpower - engineering boost applied to drive + weapons (1.0 = 100%)
 #
-settings_add_defaults({"AUTO_PLAY": {"enable": False}})
+settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpower": 1.5}})
 
 //signal/game_started if SETTINGS.get("AUTO_PLAY", {}).get("enable")
     await delay_sim(2)
@@ -117,13 +120,41 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
         print("Autoplayer is no more")
         ->END
         
+    # ---- Lethal terrain avoidance (highest priority) ----
+    # Black holes carry role "black_hole" (their art/behavior is "maelstrom", the ROLE is
+    # not - so the old any_role("mine,maelstrom") scan missed them entirely). A hole PULLS
+    # a ship into a lethal core, so the danger zone is its gravity_radius (default ~5000),
+    # not the tiny kill radius - we must flee before the pull grabs us. Mines/maelstroms
+    # are point hazards. If we are inside any hazard's danger zone, steer directly AWAY and
+    # burn, skipping the rest of the helm this tick (guards us even while docking/chasing).
+    _hole = to_object(closest(_ship_id, role("black_hole"), 15000))
+    _flee = None
+    if _hole is not None:
+        _gr = _hole.data_set.get("gravity_radius", 0) or 0
+        if _gr <= 0:
+            _gr = 5000
+        if sbs.distance_id(_ship_id, to_id(_hole)) < _gr + 2000:
+            _flee = _hole
+    if _flee is None:
+        _flee = to_object(closest(_ship_id, any_role("mine,maelstrom"), 2500))
+    if _flee is not None:
+        _away = ship.pos - _flee.pos
+        if _away.length() < 1:
+            _away = Vec3(1, 0, 0)
+        ship.data_set.set("playerThrottle", 3.0, 0)
+        ship.data_set.set("steerToDirDX", _away.x, 0)
+        ship.data_set.set("steerToDirDY", _away.y, 0)
+        ship.data_set.set("steerToDirDZ", _away.z, 0)
+        ship.data_set.set("steeringToDirFlag", 1, 0)
+        await delay_sim(1)
+        jump automated_player_helm_ai
+
     # Foes = raider-tagged ships still HOSTILE to this autoplayer's side (diplomacy),
     # so a ceasefired/neutral clan or a surrendered ship is not chased.
     _foes = side_hostile_members(_ship_id, "raider")
     raider = to_object(closest(_ship_id, _foes))
     close_raider = to_object(closest(_ship_id, _foes, 10000))
     station = to_object(closest(_ship_id, side_allied_members(_ship_id, "station")))
-    danger = to_object(closest(_ship_id, any_role("mine,maelstrom"), 2500))
     upgrade = to_object(closest(_ship_id, all_roles("upgrade"), 5000))
     wreck = to_object(closest(_ship_id, all_roles("wreck"), 7500))
 
@@ -187,27 +218,6 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
         diff =  t.pos - ship.pos
         ln = diff.length()
 
-        if danger is not None:
-            danger_diff =  danger.pos - ship.pos
-            danger_ln = danger_diff.length()
-            if ln > danger_ln:
-                move = Vec3(ship.pos)
-                old = move.y
-                move.y = danger.pos.y
-                if t.pos.y > danger.pos.y:
-                    ~~move.y += 1200~~
-                else:
-                    ~~move.y -= 1200~~
-                if move.y != old:
-                    ship.pos = move
-            elif ln < 2000:
-                move = Vec3(ship.pos)
-                old = move.y
-                move.y = t.pos.y
-                if move.y != old:
-                    ship.pos = move
-        #
-        #
         if ln < 700 and has_roles(t, "tsn, station") and last_go_dock:
             ship.data_set.set("dock_base_id", to_id(t))
             state = ship.data_set.get("dock_state",0)
@@ -330,6 +340,7 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
     if raider is not None:
         rid = to_id(raider)
         rng = raider.distance
+        _standoff = SETTINGS.get("AUTO_PLAY", {}).get("standoff", 5000)
         current = get_weapons_selection(_ship_id)
         if current != rid:
             set_weapons_selection(_ship_id, rid)
@@ -371,8 +382,8 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
         if shields_down and pshock_num > 0:
             # Shields down: PShock is the kill shot on an unshielded hull.
             fire_torpedo(_ship_id, "PShock")
-        elif aoe_safe and rng >= 5000 and rng <= 10000 and opener_target != rid and (emp_num > 0 or nuke_num > 0):
-            # Enemy at range (>= 5000) with no friendlies in the blast: run the EMP/Nuke
+        elif aoe_safe and rng >= _standoff and rng <= 10000 and opener_target != rid and (emp_num > 0 or nuke_num > 0):
+            # Enemy at range (>= standoff) with no friendlies in the blast: run the EMP/Nuke
             # opener ONCE from a 5000 standoff, then close to mop up. Skipped when already
             # close, so we never Nuke point-blank and catch ourselves in the blast.
             set_inventory_value(_ship_id, "opener_target", rid)
@@ -410,15 +421,16 @@ jump automated_player_weapons_ai
     ->END if ship is None
 
     set_weapons_selection(_ship_id, target_id)
-    # Hold at 5000 so the EMP/Nuke detonate well clear of us, not point-blank.
-    set_inventory_value(_ship_id, "weapons_standoff", 5000)
+    # Hold at the configured standoff so the EMP/Nuke detonate well clear of us.
+    _standoff = SETTINGS.get("AUTO_PLAY", {}).get("standoff", 5000)
+    set_inventory_value(_ship_id, "weapons_standoff", _standoff)
 
 --- opener_reach_standoff
     ->END if to_object(_ship_id) is None
     if to_object(target_id) is None:
         set_inventory_value(_ship_id, "weapons_standoff", 0)
         ->END
-    if sbs.distance_id(_ship_id, target_id) > 6000:
+    if sbs.distance_id(_ship_id, target_id) > _standoff + 1000:
         await delay_sim(1)
         jump opener_reach_standoff
 
@@ -522,8 +534,8 @@ jump automated_player_weapons_ai
 
     energy = ds.get("energy", 0) or 0
     # Target overpower level, backed off as energy drops (mirrors the helm thresholds).
-    boost = 1.5
-    if energy < 500:
+    boost = SETTINGS.get("AUTO_PLAY", {}).get("overpower", 1.5)
+    if energy < 500 and boost > 1.2:
         boost = 1.2
     if energy < 250:
         boost = 1.0
