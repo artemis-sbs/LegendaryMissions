@@ -8,6 +8,18 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
     jump automated_player_ai
 
 
+# Server-side, ONCE: ask friendly stations to start building Nukes - the autoplayer's
+# scarce alpha-strike munition (Homing already auto-builds on enable/comms). //shared so
+# it runs a single time on the server, not once per console. build_munition_queue_task
+# no-ops if the station is already on that type, so repeat calls across players are safe.
+//shared/signal/game_started if SETTINGS.get("AUTO_PLAY", {}).get("enable")
+    await delay_sim(3)
+    for player in role("__player__"):
+        for station in side_allied_members(player, "station"):
+            build_munition_queue_task(station, "Nuke")
+    ->END
+
+
 ==== automated_player_move_camera_sync
     await delay_sim(3)
     await task_schedule(automated_player_move_camera)
@@ -39,20 +51,32 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
     # Can you schedule sub_labels?
     #
     for player in role("__player__"):
-        _ship_id = player    
+        _ship_id = player
         await task_schedule(automated_player_hook)
 
-    #await task_schedule(automated_player_respawn)
-    #_ship_id = get_inventory_value(client_id, "AUTO_PLAY_SHIP", None)
-    #await task_schedule(automated_player_hook)
+    # Keep watching for player ships that have no AI (fresh spawn / respawn) and hook them.
+    task_schedule(automated_player_supervisor)
     ->END
 
+
+=== automated_player_supervisor
+    # Re-hook AI onto any player ship that has none. The per-ship AI tasks ->END when
+    # their ship dies; a respawn is a NEW id with no HOOKED flag, so this picks it up.
+    # Replaces the old commented-out respawn wiring.
+    for player in role("__player__"):
+        if not get_inventory_value(player, "AUTO_PLAY_HOOKED", False):
+            task_schedule(automated_player_hook, {"_ship_id": player})
+    await delay_sim(5)
+    jump automated_player_supervisor
+
 === automated_player_hook
+    set_inventory_value(_ship_id, "AUTO_PLAY_HOOKED", True)
     task_schedule(automated_player_helm_ai, {"_ship_id": _ship_id})
     task_schedule(automated_player_science_ai, {"_ship_id": _ship_id})
     task_schedule(automated_player_weapons_ai, {"_ship_id": _ship_id})
     set_inventory_value(_ship_id, "MANUAL_BEAMS_ON", True)
     task_schedule(automated_player_comms_ai, {"_ship_id": _ship_id})
+    task_schedule(automated_player_engineering_ai, {"_ship_id": _ship_id})
     ->END
 
 
@@ -139,12 +163,28 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
         t = upgrade
     elif wreck is not None: 
         t = wreck
-    else:    
+    else:
         t = raider
+
+    # Can we still steer? Consult BOTH the turn damage coeff AND the engineering maneuver
+    # subsystem's damage - a wrecked maneuver system means we cannot turn even before the
+    # coeff bottoms out. When we cannot turn we must not burn straight ahead (see below).
+    turn_coeff = ship.data_set.get("turn_damage_coeff", 1) or 1
+    maneuver_dmg = 0.0
+    for _mi in range(30):
+        _mlbl = ship.data_set.get("eng_control_label", _mi)
+        continue if _mlbl is None or _mlbl == ""
+        if "maneuver" in _mlbl.lower():
+            _msys = ship.data_set.get("eng_control_type_index", _mi) or 0
+            _mmax = ship.data_set.get("system_max_damage", _msys) or 0
+            _mcur = ship.data_set.get("system_damage", _msys) or 0
+            if _mmax > 0:
+                maneuver_dmg = _mcur / _mmax
+    can_turn = turn_coeff >= 0.35 and maneuver_dmg < 0.75
 
 
     if t is not None:
-        diff =  t.pos - ship.pos 
+        diff =  t.pos - ship.pos
         ln = diff.length()
 
         if danger is not None:
@@ -198,6 +238,26 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
             speed = 5
 
 
+        # Standoff engagement: the weapons opener asks us to hold at a set range so the
+        # EMP/Nuke detonate a safe distance away, not point-blank. Ease into the standoff
+        # ring and hold there. Only vs a raider, never while docking/fleeing.
+        standoff = get_inventory_value(_ship_id, "weapons_standoff", 0)
+        if has_roles(t, "raider") and standoff > 0:
+            if ln <= standoff:
+                ship.data_set.set("playerThrottle", 0, 0)
+                speed = 0
+            elif ln <= standoff + 2000:
+                ship.data_set.set("playerThrottle", 0.5, 0)
+                speed = 0.5
+
+        # Damaged steering: if we can barely turn, do NOT charge - a straight-line burn
+        # just flies us off into deep space chasing a target we cannot aim at. Hold station
+        # (the danger-dodge above still nudges us clear of hazards - "only move to avoid
+        # attack") until the maneuver system recovers.
+        if not can_turn and not go_dock:
+            ship.data_set.set("playerThrottle", 0, 0)
+            speed = 0
+
         ship.data_set.set("steerToDirDX", diff.x,0)
         ship.data_set.set("steerToDirDY", diff.y,0)
         ship.data_set.set("steerToDirDZ", diff.z,0)
@@ -213,7 +273,11 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
             wander = Vec3.rand_in_sphere(8000, 25000, False, True)
             set_inventory_value(_ship_id, "wander_target", wander)
         diff = wander - ship.pos
-        ship.data_set.set("playerThrottle", 1.0, 0)
+        # Do not wander off if we cannot turn - we would just fly straight into deep space.
+        _wander_throttle = 1.0
+        if not can_turn:
+            _wander_throttle = 0
+        ship.data_set.set("playerThrottle", _wander_throttle, 0)
         ship.data_set.set("steerToDirDX", diff.x, 0)
         ship.data_set.set("steerToDirDY", diff.y, 0)
         ship.data_set.set("steerToDirDZ", diff.z, 0)
@@ -229,7 +293,11 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
     ##### _ship_id = sbs.get_ship_of_client(client_id) 
     # _ship_id is passed in
     ship = to_object(_ship_id)
-    jump automated_player_science_ai_loop if ship is None
+    # End (do not loop) when our ship is gone: to_object(_ship_id) is None the tick it
+    # is destroyed. Looping here would keep re-resolving the captured _ship_id forever,
+    # and once the engine recycles that id/slot to a new spawn we would start driving an
+    # unrelated object (the recycled-slot corruption path). helm already ->END's; match it.
+    ->END if ship is None
 
     # set_science_selection
     _foes = side_hostile_members(_ship_id, "raider")
@@ -251,32 +319,79 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False}})
     #
     ###_ship_id = sbs.get_ship_of_client(client_id) 
     ship = to_object(_ship_id)
-    jump automated_player_weapons_ai_loop if ship is None
+    # See science AI: ->END on a gone ship rather than looping on a stale/recycled id.
+    ->END if ship is None
 
-    _foes = side_hostile_members(_ship_id, "raider")
+    # Exclude wrecks from the foe/torp set - we only BEAM wrecks, never spend torps on
+    # them. A just-killed raider can linger tagged, so drop anything now roled "wreck".
+    _foes = side_hostile_members(_ship_id, "raider") - role("wreck")
     raider = closest(_ship_id, _foes, 10000)
     wreck = closest(_ship_id, role("wreck"), 10000)
     if raider is not None:
+        rid = to_id(raider)
+        rng = raider.distance
         current = get_weapons_selection(_ship_id)
-        if current!= raider:
-            set_weapons_selection(_ship_id, raider)
-            # follow_route_select_weapon(_ship_id, raider)
-        # Beams auto-fire; torpedoes need an explicit launch. Spend the area munitions
-        # wisely: Nuke a real cluster (3+ raiders in blast range), EMP a pair (strip
-        # their shields for the beams), Homing a lone target. Never waste them on wrecks.
-        # fire_torpedo falls back to a Homing if the chosen type is not loaded.
-        cluster = _foes & broad_test_around(to_id(raider), 2000, 2000, 0x30)
-        if len(cluster) >= 3:
+        if current != rid:
+            set_weapons_selection(_ship_id, rid)
+
+        # Beams auto-fire; torpedoes need an explicit launch. Every launch below is
+        # AMMO-AWARE: fire_torpedo silently falls back to tube 0 (Homing) for a type we
+        # do not carry - and launches even when Homing_NUM has hit 0 - so we read the
+        # real counts first and only fire a type we actually have, stepping DOWN the
+        # doctrine to whatever is loaded and firing nothing when every tube is empty.
+        # (That is what stopped a live, undestroyed ship spitting phantom Homing torps.)
+        cluster = _foes & broad_test_around(rid, 2000, 2000, 0x30)
+        nuke_num = torpedo_get_count_for_ship(_ship_id, "Nuke")[0]
+        emp_num = torpedo_get_count_for_ship(_ship_id, "EMP")[0]
+        homing_num = torpedo_get_count_for_ship(_ship_id, "Homing")[0]
+        pshock_num = torpedo_get_count_for_ship(_ship_id, "PShock")[0]
+        # Friendly-fire guard: allies (other players / allied NPCs, NOT ourselves) within
+        # blast range of the target. Any area torp (Nuke/EMP) is unsafe when this is set.
+        # The target itself may sit in a crowd of ENEMIES - that is fine, we only avoid
+        # catching friendlies; we stand off at 5000 so we are never in our own blast.
+        friends_near = side_allied_members(_ship_id) & broad_test_around(rid, 3000, 3000, 0x30)
+        friends_near = friends_near - {_ship_id}
+        aoe_safe = len(friends_near) == 0
+
+        # Target shields down? (all facings depleted -> a PShock one-shots the hull)
+        shields_down = False
+        blob = to_blob(rid)
+        if blob is not None:
+            scount = blob.get("shield_count", 0) or 0
+            if scount > 0:
+                shields_down = True
+                for s in range(scount):
+                    smax = blob.get("shield_max_val", s) or 0
+                    scur = blob.get("shield_val", s) or 0
+                    if smax > 0 and (scur / smax) >= 0.1:
+                        shields_down = False
+
+        opener_target = get_inventory_value(_ship_id, "opener_target", 0)
+
+        if shields_down and pshock_num > 0:
+            # Shields down: PShock is the kill shot on an unshielded hull.
+            fire_torpedo(_ship_id, "PShock")
+        elif aoe_safe and rng >= 5000 and rng <= 10000 and opener_target != rid and (emp_num > 0 or nuke_num > 0):
+            # Enemy at range (>= 5000) with no friendlies in the blast: run the EMP/Nuke
+            # opener ONCE from a 5000 standoff, then close to mop up. Skipped when already
+            # close, so we never Nuke point-blank and catch ourselves in the blast.
+            set_inventory_value(_ship_id, "opener_target", rid)
+            task_schedule(automated_player_engage_opener, {"_ship_id": _ship_id, "target_id": rid})
+        elif aoe_safe and len(cluster) >= 3 and nuke_num > 0:
             fire_torpedo(_ship_id, "Nuke")
-        elif len(cluster) == 2:
+        elif aoe_safe and len(cluster) == 2 and emp_num > 0:
             fire_torpedo(_ship_id, "EMP")
-        else:
+        elif homing_num > 0:
             fire_torpedo(_ship_id, "Homing")
+        elif emp_num > 0:
+            fire_torpedo(_ship_id, "EMP")
+        elif nuke_num > 0:
+            fire_torpedo(_ship_id, "Nuke")
     elif wreck is not None:
+        wid = to_id(wreck)
         current = get_weapons_selection(_ship_id)
-        if current!= wreck:
-            set_weapons_selection(_ship_id, wreck)
-            # follow_route_select_weapon(_ship_id, wreck)
+        if current != wid:
+            set_weapons_selection(_ship_id, wid)
 
 
 # set_weapons_selection
@@ -285,21 +400,107 @@ await delay_sim(10)
 jump automated_player_weapons_ai
 
 
+=== automated_player_engage_opener
+    # Isolated-target opener. Hold the ship at a 5000u standoff (the helm reads
+    # weapons_standoff), strip shields with an EMP, Nuke, then WAIT for the volley to
+    # detonate before releasing the standoff and closing in to mop up. Always clears the
+    # standoff before ending - even on a mid-volley target death - so the helm is never
+    # left frozen. (data: _ship_id, target_id)
+    ship = to_object(_ship_id)
+    ->END if ship is None
+
+    set_weapons_selection(_ship_id, target_id)
+    # Hold at 5000 so the EMP/Nuke detonate well clear of us, not point-blank.
+    set_inventory_value(_ship_id, "weapons_standoff", 5000)
+
+--- opener_reach_standoff
+    ->END if to_object(_ship_id) is None
+    if to_object(target_id) is None:
+        set_inventory_value(_ship_id, "weapons_standoff", 0)
+        ->END
+    if sbs.distance_id(_ship_id, target_id) > 6000:
+        await delay_sim(1)
+        jump opener_reach_standoff
+
+    # At the standoff ring: EMP to strip shields, wait, then a single Nuke. Re-check for
+    # friendlies in the blast before EACH launch (positions shift during the approach) and
+    # hold fire if any friendly (not ourselves - we are safely out at 5000) is near the
+    # target. Enemies clustered around the target are fine; we only avoid friendly fire.
+    _ff = side_allied_members(_ship_id) & broad_test_around(target_id, 3000, 3000, 0x30)
+    _ff = _ff - {_ship_id}
+    if len(_ff) == 0 and not has_role(target_id, "wreck") and torpedo_get_count_for_ship(_ship_id, "EMP")[0] > 0:
+        fire_torpedo(_ship_id, "EMP")
+    await delay_sim(2)
+    ->END if to_object(_ship_id) is None
+    if to_object(target_id) is not None:
+        _ff = side_allied_members(_ship_id) & broad_test_around(target_id, 3000, 3000, 0x30)
+        _ff = _ff - {_ship_id}
+        if len(_ff) == 0 and not has_role(target_id, "wreck") and torpedo_get_count_for_ship(_ship_id, "Nuke")[0] > 0:
+            fire_torpedo(_ship_id, "Nuke")
+
+    # Wait for the torps to reach the target and explode before moving in (up to ~6s;
+    # break out early once the target is gone).
+    for _w in range(6):
+        ->END if to_object(_ship_id) is None
+        if to_object(target_id) is None:
+            jump opener_mop_up
+        await delay_sim(1)
+
+--- opener_mop_up
+    # Release the standoff - close in and mop up with beams / Homing.
+    ->END if to_object(_ship_id) is None
+    set_inventory_value(_ship_id, "weapons_standoff", 0)
+    ->END
+
+
 === automated_player_comms_ai
     #
     # Look for closest enemy and select it
     #
     ###_ship_id = sbs.get_ship_of_client(client_id) 
     ship = to_object(_ship_id)
-    jump automated_player_comms_ai_loop if ship is None
+    # See science AI: ->END on a gone ship rather than looping on a stale/recycled id.
+    ->END if ship is None
 
     _foes = side_hostile_members(_ship_id, "raider")
     raider = closest(_ship_id, _foes, 10000)
     if raider is not None:
+        rid = to_id(raider)
         current = get_comms_selection(_ship_id)
-        if current!= raider:
-            set_comms_selection(_ship_id, raider)
-            follow_route_select_comms(_ship_id, raider)
+        if current != rid:
+            set_comms_selection(_ship_id, rid)
+            follow_route_select_comms(_ship_id, rid)
+
+        # Player-like comms. Taunt the enemy with the RIGHT line - the one an intel scan
+        # reveals, taunt_data[taunt_trait] - once per target (which enrages their fleet).
+        taunt_list = get_inventory_value(rid, "taunt_data")
+        taunt_done = get_inventory_value(rid, "taunt_attempted", False)
+        taunted = get_inventory_value(_ship_id, "comms_taunted_target", 0)
+        if taunt_list is not None and not taunt_done and taunted != rid:
+            trait = get_inventory_value(rid, "taunt_trait", 0)
+            if trait < len(taunt_list):
+                set_inventory_value(_ship_id, "comms_taunted_target", rid)
+                right_taunt = taunt_list[trait]
+                task_schedule(handle_comms_taunt_raider_select, {"COMMS_ORIGIN_ID": _ship_id, "COMMS_SELECTED_ID": rid, "data": right_taunt, "select_right": True})
+
+        # When the target's shields are down, hail to demand surrender - the LM handler
+        # rolls the chance and messages the result. Once per target.
+        surrender_asked = get_inventory_value(_ship_id, "comms_surrender_target", 0)
+        if surrender_asked != rid and not has_role(rid, "surrendered") and not has_role(rid, "never_surrender"):
+            _blob = to_blob(rid)
+            _down = False
+            if _blob is not None:
+                _sc = _blob.get("shield_count", 0) or 0
+                if _sc > 0:
+                    _down = True
+                    for _s in range(_sc):
+                        _sm = _blob.get("shield_max_val", _s) or 0
+                        _scur = _blob.get("shield_val", _s) or 0
+                        if _sm > 0 and (_scur / _sm) >= 0.1:
+                            _down = False
+            if _down:
+                set_inventory_value(_ship_id, "comms_surrender_target", rid)
+                task_schedule(handle_comms_raider_surrender, {"COMMS_ORIGIN_ID": _ship_id, "COMMS_SELECTED_ID": rid})
 
 
     # set_weapons_selection
@@ -307,4 +508,61 @@ jump automated_player_weapons_ai
 === automated_player_comms_ai_loop
     await delay_sim(10)
     jump automated_player_comms_ai
+
+
+=== automated_player_engineering_ai
+    #
+    # Play engineer: overpower drive + weapons so the ship goes faster and shoots faster,
+    # and balance that against heat with coolant. Ease off when energy runs low so we
+    # never starve the ship. (data: _ship_id)
+    #
+    ship = to_object(_ship_id)
+    ->END if ship is None
+    ds = ship.data_set
+
+    energy = ds.get("energy", 0) or 0
+    # Target overpower level, backed off as energy drops (mirrors the helm thresholds).
+    boost = 1.5
+    if energy < 500:
+        boost = 1.2
+    if energy < 250:
+        boost = 1.0
+
+    # Walk the powered-subsystem controls by label - engine-safe range(30) scan, the same
+    # idiom as set_engineering_value. Overpower drive + weapons; leave shields/sensors at
+    # nominal (they do not help the attract fight and would just burn energy/heat). If the
+    # ship system a control feeds is running hot, hold that control back.
+    for i in range(30):
+        _label = ds.get("eng_control_label", i)
+        continue if _label is None or _label == ""
+        low = _label.lower()
+        want = 1.0
+        if "impulse" in low or "warp" in low or "maneuver" in low or "jump" in low:
+            want = boost
+        elif "beam" in low or "torp" in low or "missile" in low:
+            want = boost
+        sysi = ds.get("eng_control_type_index", i) or 0
+        heat = ds.get("system_cur_heat", sysi) or 0
+        if heat > 0.7:
+            want = 1.0
+        elif heat > 0.5 and want > 1.2:
+            want = 1.2
+        ds.set("eng_control_value", want, i)
+
+    # Coolant: pour the ship's available coolant onto the hottest of the 4 ship systems
+    # first, so the overpowered drive/weapons stay online. Never allocate past what we carry.
+    total_coolant = ds.get("system_coolant_available", 0) or 0
+    remaining = total_coolant
+    for si in range(4):
+        heat = ds.get("system_cur_heat", si) or 0
+        want = 0
+        if heat > 0.25:
+            want = int(total_coolant * heat)
+        if want > remaining:
+            want = remaining
+        ds.set("system_coolant_used", want, si)
+        remaining = remaining - want
+
+    await delay_sim(2)
+    jump automated_player_engineering_ai
 
