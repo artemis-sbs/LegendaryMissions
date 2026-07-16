@@ -279,6 +279,7 @@ hp_speed_up: False
     default rooms = []
     # Verify everything is still valid
     yield fail if to_object(BRAIN_AGENT.host_id) is None
+    yield fail if not grid_object_valid(BRAIN_AGENT_ID)
     hm = sbs.get_hull_map(BRAIN_AGENT.host_id)
     yield fail if hm is None
     idle_state = BRAIN_AGENT.get_inventory_value("idle_state")
@@ -355,6 +356,7 @@ hp_speed_up: False
     yield fail
 
 === ai_grid_moving
+    yield fail if not grid_object_valid(BRAIN_AGENT_ID)
     percent = BRAIN_AGENT.data_set.get("percent",0)
     length = BRAIN_AGENT.data_set.get("path_length",0)
     BRAIN_AGENT.set_inventory_value("idle_state", "stopped")
