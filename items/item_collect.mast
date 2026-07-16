@@ -3,13 +3,17 @@
 # (upgrades/pickup_common.mast). Reads the key stored on the pickup and credits
 # the collector's count. Routes run on the server, so this is authoritative.
 #
-# apply-on-pickup vs must-activate: by default a collected item sits in inventory
-# until the player ACTIVATES it (items/item_activate.mast). An item can instead be
-# APPLIED THE INSTANT IT IS PICKED UP - opt in per item via `apply_on_pickup: true`
-# metadata, or per mission by adding the key to the shared ITEM_APPLY_ON_PICKUP set
-# (e.g. `ITEM_APPLY_ON_PICKUP = {"hidens_powercell"}`). Either way the apply + consume
-# run through the normal activation path.
-default shared ITEM_APPLY_ON_PICKUP = set()
+# pickup-trigger: by default a collected item is STORED in inventory until the collector
+# ACTIVATES it (items/item_activate.mast). An item can instead have its effect run the INSTANT
+# a matching collector picks it up - a beneficial buff (a player grabs a HiDens for instant
+# energy) OR an adversarial trap (an enemy trips a hacking virus). The trigger is a ROLE
+# EXPRESSION (roles.role_matches: `| & - ! ( )`, side counts as a role) tested against the
+# collector, resolved: per-INSTANCE flag on the pickup > item `pickup_trigger` metadata >
+# the mission-level ITEM_PICKUP_TRIGGER map. On a match the effect runs on the collector and
+# the item is consumed (the normal activation path). A non-matching collector STORES it
+# (to carry / deliver / stockpile) unless `pickup_store_if_no_trigger` is false, in which case
+# the pickup is left on the map untouched.
+default shared ITEM_PICKUP_TRIGGER = {}
 
 //collision/interactive if has_role(COLLISION_ORIGIN_ID, "item") and has_any_role(COLLISION_SELECTED_ID, "__player__, cockpit")
     item_key = get_inventory_value(COLLISION_ORIGIN_ID, "item_key", "")
@@ -21,16 +25,33 @@ default shared ITEM_APPLY_ON_PICKUP = set()
     tobj = sim.get_space_object(COLLISION_ORIGIN_ID)
     ->END if tobj is None
     tpos = tobj.pos
+
+    # Resolve the pickup-trigger condition: instance flag > item metadata > mission map.
+    trigger = get_inventory_value(COLLISION_ORIGIN_ID, "pickup_trigger", None)
+    if trigger is None:
+        trigger = item_meta(item_key, "pickup_trigger", None)
+    if trigger is None:
+        trigger = ITEM_PICKUP_TRIGGER.get(item_key, None)
+    triggered = trigger is not None and role_matches(COLLISION_SELECTED_ID, trigger)
+
+    # A collector that does NOT trigger it stores it, unless the item says non-triggers should
+    # leave it on the map (pickup_store_if_no_trigger false) - e.g. a trap only its targets take.
+    if not triggered:
+        store = get_inventory_value(COLLISION_ORIGIN_ID, "pickup_store_if_no_trigger", None)
+        if store is None:
+            store = item_meta(item_key, "pickup_store_if_no_trigger", True)
+        ->END if not store
+
+    # Credit inventory + announce + remove the pickup.
     have = get_inventory_value(COLLISION_SELECTED_ID, item_key, 0)
     set_inventory_value(COLLISION_SELECTED_ID, item_key, have + 1)
-    # Announce the event so GUI/quests/economy can react (decoupled).
     signal_emit("item_collected", {"holder_id": COLLISION_SELECTED_ID, "key": item_key})
-    # apply-on-pickup (any item, via metadata or the ITEM_APPLY_ON_PICKUP set): run the effect
-    # + consume now through the normal activation path, instead of leaving it to be activated.
-    if item_meta(item_key, "apply_on_pickup", False) or item_key in ITEM_APPLY_ON_PICKUP:
-        signal_emit("item_activate", {"holder_id": COLLISION_SELECTED_ID, "key": item_key, "client_id": COLLISION_SELECTED_ID})
     item_name = item_meta(item_key, "display_text", item_key)
     comms_broadcast(COLLISION_SELECTED_ID, f"Pickup: {item_name}", "#E3F")
     delete_object(COLLISION_ORIGIN_ID)
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
+
+    # Trigger: run the effect on the collector + consume, through the normal activation path.
+    if triggered:
+        signal_emit("item_activate", {"holder_id": COLLISION_SELECTED_ID, "key": item_key, "client_id": COLLISION_SELECTED_ID})
     ->END

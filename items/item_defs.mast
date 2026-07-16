@@ -101,6 +101,7 @@ mode: resource
 targets: ship, cockpit
 price: 150
 desc: Instantly restores 500 ship energy when used.
+pickup_trigger: __player__
 ```
     blob = to_blob(UPGRADE_AGENT_ID)
     if blob is not None:
