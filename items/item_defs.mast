@@ -175,3 +175,24 @@ desc: Overcharges beams (3x) for a time.
 ```
     modifier_add(UPGRADE_AGENT_ID, "all_beam_upgrade_coeff", 2.0, key, duration=duration)
     ->END
+
+=== prefab_item_hacking_virus
+metadata:``` yaml
+type: item/trap/hack
+key: hacking_virus
+display_text: Hacking Virus
+art: alien_5a
+mode: consumable
+targets: ship, cockpit
+desc: A cyber weapon. Whoever trips it takes weapons and engine system damage.
+pickup_store_if_no_trigger: false
+```
+    # A TRAP, using the same pickup_trigger path as a buff (item_collect). Place an instance
+    # with a `pickup_trigger` naming its victims - e.g. set_inventory_value(v.id, "pickup_trigger",
+    # "raider | kralien") - so only they trip it; everyone else leaves it on the map
+    # (pickup_store_if_no_trigger false). The effect runs on the ship that tripped it.
+    blob = to_blob(UPGRADE_AGENT_ID)
+    if blob is not None:
+        blob.set("system_damage", 8, sbs.SHPSYS.WEAPONS)
+        blob.set("system_damage", 8, sbs.SHPSYS.ENGINES)
+    ->END
