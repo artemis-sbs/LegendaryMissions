@@ -93,18 +93,7 @@ gui_reroute_clients("client_main")
     # Create all the player ships
     # 
 
-    if PLAYER_CREATE_DEFAULT:
-        # This could cause an side error
-        # if it does the side creation awaited
-        for player_ship_data in PLAYER_LIST:
-            player_ship = to_id(player_spawn(0,0,0, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
-            player_ship_data["id"] = player_ship
-            add_role(player_ship, "default_player_ship")
-            set_face(player_ship, random_face(player_ship_data["face"]))
-            set_inventory_value(player_ship, "respawn_time", 5)
-            signal_emit("create_player_ships", None)
-    else:
-        signal_emit("create_player_ships", None)
+    await task_schedule(create_default_player_ships)
     #
     # Make sure the scan sources update system runs
     extra_scan_sources_schedule()
@@ -405,5 +394,26 @@ Main:
 
     jump pause_screen
     ##############
+
+
+#
+# Create the default player ships from PLAYER_LIST when PLAYER_CREATE_DEFAULT is set.
+# Extracted from server_start so it can be REUSED - e.g. re-established after a clean sim
+# reset in a conformance test - rather than being inline-only in the server startup.
+#
+=== create_default_player_ships
+    if PLAYER_CREATE_DEFAULT:
+        # (side creation is done synchronously before this via create_sides, so the
+        # player_spawn side lookups resolve.)
+        for player_ship_data in PLAYER_LIST:
+            player_ship = to_id(player_spawn(0,0,0, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
+            player_ship_data["id"] = player_ship
+            add_role(player_ship, "default_player_ship")
+            set_face(player_ship, random_face(player_ship_data["face"]))
+            set_inventory_value(player_ship, "respawn_time", 5)
+            signal_emit("create_player_ships", None)
+    else:
+        signal_emit("create_player_ships", None)
+    ->END
 
 
