@@ -412,10 +412,11 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
         elif aoe_safe and len(cluster) == 2 and emp_num > 0:
             fire_torpedo(_ship_id, "EMP")
         elif homing_num > 0:
+            # Homing is single-target (no blast) - always safe, even with allies near.
             fire_torpedo(_ship_id, "Homing")
-        elif emp_num > 0:
+        elif aoe_safe and emp_num > 0:
             fire_torpedo(_ship_id, "EMP")
-        elif nuke_num > 0:
+        elif aoe_safe and nuke_num > 0:
             fire_torpedo(_ship_id, "Nuke")
     elif wreck is not None:
         wid = to_id(wreck)
