@@ -1,0 +1,206 @@
+# Bestiary monster shipData - the five "classic" Artemis space monsters as proper
+# ship entries, so each carries its OWN art, size, exclusion radius and weapon,
+# instead of borrowing typhon geometry via the prefab blob and firing the "-" art's
+# 0-damage beam.
+#
+# Format is HJSON, same as shipData.yaml. To INSTALL: merge the objects inside
+# "#ship-list" below into shipData.yaml's "#ship-list" array. Until they are merged,
+# the LegendaryMissions prefabs point their body geometry at the art directly
+# (body_*_geom_filename = monster2..monster5) as a stopgap - see prefabs/*.mast.
+#
+# Art slots (per project): monster1 = Charybdis, monster2 = Piranha, monster3 =
+# Dragon, monster4 = Shark, monster5 = Insect. Charybdis (monster1) may already be in
+# shipData.yaml - drop the duplicate entry below if so.
+#
+# Stats are lifted from the prefabs (LegendaryMissions/prefabs/*.mast): mature-tier
+# health -> hullpoints, prefab scale -> meshscale/exclusionradius (exclusion = 200 x
+# scale), and the biter beams. Colours, per-age scaling and the custom monster_health
+# system stay in the prefabs; only the mesh/size/weapon belong here.
+#
+# Beams: Piranha and Charybdis stats are exact (Charybdis is peaceful - no beam).
+# Dragon/Shark/Insect had NO beam in the prefab (they fired the 0-damage "-" beam);
+# the values below are proposed for their role (apex / fast strike / weak sting) -
+# tune to taste. shipData beams use damage_coeff (a multiplier on the base beam),
+# not a raw damage number.
+{
+  "#ship-list": [
+    {
+      #------------------- Charybdis - peaceful space-folder (monster1) -------------------
+      "key": "monster1",
+      "name": "Charybdis",
+      "side": "monster",
+      "artfileroot": "monster1",
+      "meshscale": 13.0,
+      "radarscale": 1.0,
+      "exclusionradius": 260.0,
+      "hullpoints": 20000,
+      "roles": "monster, charybdis"
+      # No beam - it never bites; fire on it and it teleports the attacker (prefab).
+    },
+    {
+      #------------------- Piranha - weak biter, deadly in a swarm (monster2) -------------------
+      "key": "monster2",
+      "name": "Piranha",
+      "side": "monster",
+      "artfileroot": "monster2",
+      "meshscale": 4.0,
+      "radarscale": 1.0,
+      "exclusionradius": 80.0,
+      "hullpoints": 800,
+      "roles": "monster, piranha",
+      "hull_port_sets": {
+        "beam Bite": [
+          {
+            "position": [ 0, 0, 0 ],
+            "color": "#f80",
+            "arccolor": "#f80",
+            "cycle_time": 4.0,
+            "damage_coeff": 0.5,
+            "range": 1400,
+            "arcwidth": 120,
+            "barrel_angle": 0
+          }
+        ]
+      }
+    },
+    {
+      #------------------- Dragon - apex predator, self-heals (monster3) -------------------
+      "key": "monster3",
+      "name": "Dragon",
+      "side": "monster",
+      "artfileroot": "monster3",
+      "meshscale": 14.0,
+      "radarscale": 1.0,
+      "exclusionradius": 280.0,
+      "hullpoints": 25000,
+      "roles": "monster, dragon",
+      "monster_style": "wiggle_div_vert:9915.0;  wiggle_div_horz:15.0",
+      "hull_port_sets": {
+        "beam Maw": [
+          {
+            "position": [ 0, 0, 0 ],
+            "color": "#f60",
+            "arccolor": "#f60",
+            "cycle_time": 6.0,
+            "damage_coeff": 2.0,
+            "range": 2000,
+            "arcwidth": 180,
+            "barrel_angle": 0
+          }
+        ]
+      }
+    },
+    {
+      #------------------- Shark - hunts prey, fast strike if provoked (monster4) -------------------
+      "key": "monster4",
+      "name": "Shark",
+      "side": "monster",
+      "artfileroot": "monster4",
+      "meshscale": 10.0,
+      "radarscale": 1.0,
+      "exclusionradius": 200.0,
+      "hullpoints": 6000,
+      "roles": "monster, shark",
+      "hull_port_sets": {
+        "beam Strike": [
+          {
+            "position": [ 0, 0, 0 ],
+            "color": "#f33",
+            "arccolor": "#f33",
+            "cycle_time": 5.0,
+            "damage_coeff": 1.0,
+            "range": 1500,
+            "arcwidth": 90,
+            "barrel_angle": 0
+          }
+        ]
+      }
+    },
+    {
+      #------------------- Insect (NSECT) - fast, weak sting (monster5) -------------------
+      "key": "monster5",
+      "name": "Insect",
+      "side": "monster",
+      "artfileroot": "monster5",
+      "meshscale": 5.0,
+      "radarscale": 1.0,
+      "exclusionradius": 100.0,
+      "hullpoints": 1500,
+      "roles": "monster, insect",
+      "hull_port_sets": {
+        "beam Sting": [
+          {
+            "position": [ 0, 0, 0 ],
+            "color": "#9f3",
+            "arccolor": "#9f3",
+            "cycle_time": 3.0,
+            "damage_coeff": 0.3,
+            "range": 800,
+            "arcwidth": 90,
+            "barrel_angle": 0
+          }
+        ]
+      }
+    }
+  ]
+}
+
+
+
+# ,
+#     {
+#       #---------------------------------- monster data --------------------------------
+#       "key": "monster_dragon",
+#       "name": "Dragon",
+#       "side": "monster",
+#       "artfileroot": "monster3",
+#       "meshscale": 10.0,
+#       "radarscale": 1.0,
+#       "exclusionradius": 120.0,
+#       "health": 100,
+#       "heal_rate": 0.1,
+#       "roles": "dragon,monster",
+#       "monster_style": "wiggle_div_vert:9915.0;  wiggle_div_horz:15.0"
+#     },
+#     {
+#       #---------------------------------- monster data --------------------------------
+#       "key": "monster_piranha",
+#       "name": "Piranha",
+#       "side": "monster",
+#       "artfileroot": "monster2",
+#       "meshscale": 10.0,
+#       "radarscale": 1.0,
+#       "exclusionradius": 120.0,
+#       "health": 100,
+#       "heal_rate": 0.1,
+#       "roles": "piranha,monster",
+#       "monster_style": "wiggle_div_vert:9915.0;  wiggle_div_horz:15.0"
+#     },
+#     {
+#       #---------------------------------- monster data --------------------------------
+#       "key": "monster_shark",
+#       "name": "Shark",
+#       "side": "monster",
+#       "artfileroot": "monster4",
+#       "meshscale": 10.0,
+#       "radarscale": 1.0,
+#       "exclusionradius": 120.0,
+#       "health": 100,
+#       "heal_rate": 0.1,
+#       "roles": "shark,monster",
+#       "monster_style": "wiggle_div_vert:9915.0;  wiggle_div_horz:15.0"
+#     },
+#     {
+#       #---------------------------------- monster data --------------------------------
+#       "key": "monster_insect",
+#       "name": "Insect",
+#       "side": "monster",
+#       "artfileroot": "monster5",
+#       "meshscale": 10.0,
+#       "radarscale": 1.0,
+#       "exclusionradius": 120.0,
+#       "health": 100,
+#       "heal_rate": 0.1,
+#       "roles": "insect,monster",
+#       "monster_style": "wiggle_div_vert:9915.0;  wiggle_div_horz:15.0"
+#     },

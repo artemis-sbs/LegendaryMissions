@@ -1,6 +1,13 @@
 
 import prefab_helpers.py
 
+# Load this addon's monster ship-art data ONCE, merging it into the ship data so the monster
+# arts used by the prefabs below are spawnable. media_read_relative_file reads the file from
+# THIS addon (loose folder in dev, or the packaged .mastlib zip); ship_data_merge_mod_ship_yaml
+# parses + prepends it (the ship_data_ prefix is how the MAST prelude exposes ship_data funcs).
+# `shared` guarantees a single merge across all clients (no duplicate #ship-list entries).
+shared _monster_ship_data = ship_data_merge_mod_ship_yaml(media_read_relative_file("shipData_monsters.yaml"), "LegendaryMissions")
+
 === prefab_typhon_classic
 metadata: ```
 type: prefab/monster
