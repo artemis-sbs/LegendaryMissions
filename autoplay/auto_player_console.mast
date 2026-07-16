@@ -156,15 +156,17 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
     wreck = to_object(closest(_ship_id, all_roles("wreck"), 7500))
 
 
-    energy = ship.data_set.get("energy", 0)
+    # Coalesce to 0 - a data_set field that was never set reads back as None in the engine
+    # (the headless mock returns its 0.0 default), and None < 30 / None/max would crash.
+    energy = ship.data_set.get("energy", 0) or 0
     if energy < 30:
         energy = 300
         ship.data_set.set("energy", energy, 0)
 
-    f_shld = ship.data_set.get("shield_val", 0)
-    f_shld_max = ship.data_set.get("shield_max_val", 0)
-    r_shld = ship.data_set.get("shield_val", 1)
-    r_shld_max = ship.data_set.get("shield_max_val", 1)
+    f_shld = ship.data_set.get("shield_val", 0) or 0
+    f_shld_max = ship.data_set.get("shield_max_val", 0) or 1
+    r_shld = ship.data_set.get("shield_val", 1) or 0
+    r_shld_max = ship.data_set.get("shield_max_val", 1) or 1
 
     if not last_go_dock:
         go_dock = ((f_shld/f_shld_max)< 0.3) 
