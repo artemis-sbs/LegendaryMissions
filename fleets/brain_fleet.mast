@@ -103,7 +103,10 @@ type: brain/npc
     yield fail if to_object(the_target) is None
     #heat = BRAIN_AGENT.get_heat_for(the_target)
     #print("I'm Angry time: {heat}")
-    BRAIN_AGENT.set_inventory_value("blackboard:target", the_target)
+    # to_id: the close-angry fallback above sets the_target from closest() (a CloseData),
+    # while the best-anger paths set a bare id. Normalize so blackboard:target is always an
+    # id (matches ai_fleet_chase_roles; consumers read it as an int).
+    BRAIN_AGENT.set_inventory_value("blackboard:target", to_id(the_target))
     yield success
 
 

@@ -25,17 +25,9 @@
             set_inventory_value(home, upgrade, craft_count + hangar_count)
             set_inventory_value(craft_id, upgrade, 0)
             comms_broadcast(home, "Transfered {craft_count} " + upgrade_list[upgrade]["name"])
-        # Consume any HiDens Power Cells the ship now holds (instant energy).
-        hdp = get_inventory_value(home, "hidens_powercell", 0)
-        if hdp > 0:
-            blob = to_blob(home)
-            if blob is not None:
-                for x in range(hdp):
-                    energy = blob.get("energy", 0)
-                    energy += 500
-                    blob.set("energy", energy, 0)
-                    comms_broadcast(0, "Adding 500 energy")
-            set_inventory_value(home, "hidens_powercell", 0)
+        # HiDens Power Cells are no longer auto-consumed on dock: they are a normal item now
+        # (items/item_defs.mast prefab_item_hidens_powercell) that is ACTIVATED for +500 energy,
+        # or applied on pickup if its key is opted into apply-on-pickup (items/item_collect.mast).
     ->END
 
 
