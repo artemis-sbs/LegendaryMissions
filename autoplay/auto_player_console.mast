@@ -142,6 +142,7 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
             ship.data_set.set("steerToDirDY", _away.y, 0)
             ship.data_set.set("steerToDirDZ", _away.z, 0)
             ship.data_set.set("steeringToDirFlag", 1, 0)
+            set_inventory_value(_ship_id, "ap_helm_mode", "flee")
             await delay_sim(1)
             jump automated_player_helm_ai
 
@@ -196,7 +197,7 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
     # Can we still steer? Consult BOTH the turn damage coeff AND the engineering maneuver
     # subsystem's damage - a wrecked maneuver system means we cannot turn even before the
     # coeff bottoms out. When we cannot turn we must not burn straight ahead (see below).
-    turn_coeff = ship.data_set.get("turn_damage_coeff", 1) or 1
+    turn_coeff = ship.data_set.get("turn_damage_coeff", 0) or 1
     maneuver_dmg = 0.0
     for _mi in range(30):
         _mlbl = ship.data_set.get("eng_control_label", _mi)
@@ -213,6 +214,7 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
     if t is not None:
         diff =  t.pos - ship.pos
         ln = diff.length()
+        _hmode = "pursue"
 
         if ln < 700 and has_roles(t, "tsn, station") and last_go_dock:
             ship.data_set.set("dock_base_id", to_id(t))
@@ -261,6 +263,7 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
         # (the danger-dodge above still nudges us clear of hazards - "only move to avoid
         # attack") until the maneuver system recovers.
         if not can_turn and not go_dock:
+            _hmode = "hold"
             ship.data_set.set("playerThrottle", 0, 0)
             speed = 0
 
@@ -287,6 +290,8 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
             _sx = diff.x + _rx * _f
             _sy = diff.y + _ry * _f
             _sz = diff.z + _rz * _f
+        # Record the helm mode as telemetry (observable in engine or headless).
+        set_inventory_value(_ship_id, "ap_helm_mode", _hmode)
         ship.data_set.set("steerToDirDX", _sx,0)
         ship.data_set.set("steerToDirDY", _sy,0)
         ship.data_set.set("steerToDirDZ", _sz,0)
@@ -398,28 +403,36 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
 
         opener_target = get_inventory_value(_ship_id, "opener_target", 0)
 
+        # Decide the torpedo action first, then act - and record the choice in inventory
+        # ("ap_weapon_choice") as telemetry. The decision is observable that way in ANY
+        # environment (engine or headless), independent of whether a tube physically fires
+        # (torpedoes are player-crew-exclusive, so an NPC never launches one). "opener"
+        # runs the stand-off EMP/Nuke volley; the Homing fallback is single-target (no
+        # blast) so it stays ungated, but the EMP/Nuke fallbacks require aoe_safe.
+        _wpn = "none"
         if shields_down and pshock_num > 0:
-            # Shields down: PShock is the kill shot on an unshielded hull.
-            fire_torpedo(_ship_id, "PShock")
+            _wpn = "PShock"
         elif aoe_safe and rng >= _standoff and rng <= 10000 and opener_target != rid and (emp_num > 0 or nuke_num > 0):
-            # Enemy at range (>= standoff) with no friendlies in the blast: run the EMP/Nuke
-            # opener ONCE from a 5000 standoff, then close to mop up. Skipped when already
-            # close, so we never Nuke point-blank and catch ourselves in the blast.
+            _wpn = "opener"
+        elif aoe_safe and len(cluster) >= 3 and nuke_num > 0:
+            _wpn = "Nuke"
+        elif aoe_safe and len(cluster) == 2 and emp_num > 0:
+            _wpn = "EMP"
+        elif homing_num > 0:
+            _wpn = "Homing"
+        elif aoe_safe and emp_num > 0:
+            _wpn = "EMP"
+        elif aoe_safe and nuke_num > 0:
+            _wpn = "Nuke"
+        set_inventory_value(_ship_id, "ap_weapon_choice", _wpn)
+        if _wpn == "opener":
             set_inventory_value(_ship_id, "opener_target", rid)
             task_schedule(automated_player_engage_opener, {"_ship_id": _ship_id, "target_id": rid})
-        elif aoe_safe and len(cluster) >= 3 and nuke_num > 0:
-            fire_torpedo(_ship_id, "Nuke")
-        elif aoe_safe and len(cluster) == 2 and emp_num > 0:
-            fire_torpedo(_ship_id, "EMP")
-        elif homing_num > 0:
-            # Homing is single-target (no blast) - always safe, even with allies near.
-            fire_torpedo(_ship_id, "Homing")
-        elif aoe_safe and emp_num > 0:
-            fire_torpedo(_ship_id, "EMP")
-        elif aoe_safe and nuke_num > 0:
-            fire_torpedo(_ship_id, "Nuke")
+        elif _wpn == "PShock" or _wpn == "Nuke" or _wpn == "EMP" or _wpn == "Homing":
+            fire_torpedo(_ship_id, _wpn)
     elif wreck is not None:
         wid = to_id(wreck)
+        set_inventory_value(_ship_id, "ap_weapon_choice", "beams_wreck")
         current = get_weapons_selection(_ship_id)
         if current != wid:
             set_weapons_selection(_ship_id, wid)
