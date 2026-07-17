@@ -10,3 +10,7 @@ import priority_docking.mast
 import enemy_stations.mast
 import player_comms.mast
 
+
+# Reusable hosted-lifeform comms-badge dialogue (a lifeform with Host+Scene+Path //comms/lm_cast
+# shows as a badge and plays its scene). Ported from OU; built on shared amd_dialogue+amd_lifeforms.
+import dialogue_cast.mast
