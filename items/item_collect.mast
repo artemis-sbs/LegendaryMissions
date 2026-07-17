@@ -25,6 +25,11 @@ default shared ITEM_PICKUP_TRIGGER = {}
     tobj = sim.get_space_object(COLLISION_ORIGIN_ID)
     ->END if tobj is None
     tpos = tobj.pos
+    # Guard the COLLECTOR too: its py-side role (__player__/cockpit) can linger a tick
+    # after the ship is gone, so a collision can fire with a dead collector. Crediting /
+    # comms_broadcast to a non-live ship raises "invalid space object" (SendMessageToPlayerShip)
+    # in the engine, so bail if it's already gone.
+    ->END if sim.get_space_object(COLLISION_SELECTED_ID) is None
 
     # Resolve the pickup-trigger condition: instance flag > item metadata > mission map.
     trigger = get_inventory_value(COLLISION_ORIGIN_ID, "pickup_trigger", None)
