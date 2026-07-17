@@ -2,6 +2,14 @@ shared ambassador_face = "ter #523b3f 0 0;ter #523b3f 2 0;ter #523b3f 5 2;ter #5
 shared admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 1 2;ter #fff 4 4;ter #964b00 8 4;"
 shared kidnap_status = 0
 
+# Declarative flavor scans for the cargo ships, rendered by the generic science route
+# (science_scans addon) - no hand-authored //science route for these tabs. The intel line
+# resolves each ship's current captain via the {captain} placeholder (a flat inventory key
+# synced in kidnap_caper, after the scenarios that can swap captains between ships). Only
+# the dynamic proximity "Hold 1-4" bio-scan (the actual detection) stays hand-authored.
+science_define_scan("suspect", {"scan": "This is a friendly merchant cargo ship.", "status": "No additional data available.", "intel": "The ship is registered to Captain {captain}.", "bio": "The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan."})
+science_define_scan("discovered", {"scan": "This is an unfriendly merchant cargo ship.", "status": "No additional data available.", "intel": "The ship is registered to Captain {captain}.", "bio": "The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan."})
+
 @map/peacetime "Peacetime"
 " This scenario appears to still be in development.
 " There are very few enemy ships (none below DIFFICULTY 4,
@@ -462,6 +470,11 @@ Properties:
         ds1_pos = ds1_obj.pos
         pickup_spawn(ds1_pos.x, ds1_pos.y, ds1_pos.z - 500, "secret_codecase")
 
+    # Sync each suspect's current captain (cargo3[1]) to a flat 'captain' inventory key so
+    # the declarative scan's "Captain {captain}" intel resolves per ship - done AFTER the
+    # scenario blocks above, which may have swapped captains between ships (scenario 2).
+    for s in suspect_list:
+        set_inventory_value(s, "captain", get_inventory_value(s, "cargo3")[1])
 
     task_schedule(scanning_cargo_containers)
     task_schedule(check_ambassador_rescued)
@@ -762,25 +775,10 @@ yield success
 #-----------------------------------------------------------------------------------------------------------------------------
 # Science Section - Adds "Hold 1", "Hold 2", "Hold 3" and "Hold 4" scans to the suspect ships.
 
-//enable/science if has_roles(SCIENCE_SELECTED_ID, "suspect") and kidnap_status >= 1
-//science if has_roles(SCIENCE_SELECTED_ID, "suspect") and kidnap_status >= 1
-    tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
-    capname = tempcargo[1]
-
-    + "scan":
-        <scan>
-            % This is a friendly merchant cargo ship.
-    + "status":
-        <scan>
-            " No additional data available.
-    + "intel":
-        <scan>
-            % The ship is registered to Captain {capname}.
-
-    + "bio":
-        <scan>
-            % The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
-
+# The suspect ship's flavor scan (scan/status/intel/bio) is DECLARATIVE now - registered
+# via science_define_scan("suspect", ...) at the top of this file and rendered by the
+# generic science route (which also supplies the //enable/science). Only the dynamic
+# proximity "Hold 1-4" bio-scan - the actual kidnapper detection - stays hand-authored.
 //science if has_roles(SCIENCE_SELECTED_ID, "suspect") and kidnap_status >= 1
     ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 600
     k_clue = get_inventory_value(SCIENCE_SELECTED_ID, "kclue")
@@ -905,27 +903,9 @@ yield success
     else:
         + "Surrender now"  handle_kidnapper_surrender
 
-//enable/science if has_roles(SCIENCE_SELECTED_ID, "discovered")
-//science if has_roles(SCIENCE_SELECTED_ID, "discovered")
-    # capname is read by the "intel" scan below; define it here like the suspect
-    # science route does (it was previously undefined -> runtime error on scan).
-    tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
-    capname = tempcargo[1]
-
-    + "scan":
-        <scan>
-            % This is an unfriendly merchant cargo ship.
-    + "status":
-        <scan>
-            " No additional data available.
-    + "intel":
-        <scan>
-            % The ship is registered to Captain {capname}.
-    + "bio":
-        <scan>
-            % The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
-
-    yield success
+# The discovered kidnapper's scan is DECLARATIVE too - science_define_scan("discovered", ...)
+# at the top of this file. When kidnapper_discovered swaps the ship's role suspect->discovered,
+# the generic route just renders the "discovered" flavor instead (captain still via {captain}).
 
 ===== handle_kidnapper_surrender ====
 
