@@ -129,12 +129,25 @@ Properties:
     jobs_value = terrain_to_value(JOBS_SELECT)
     ->END if jobs_value < 1
 
-    # Fixed job target counts - keep in sync with maps/peacetime_jobs.amd. The Jobs
-    # option gates whether the board appears (above); the AMD file owns the targets.
-    drone_n = 5
-    rock_n = 4
-    traffic_n = 4
-    survey_n = 3
+    # Job target counts come straight from the granted quest Goals (the jobs section of
+    # PR_DOC), so the spawn loops below can never drift from the quest completion targets -
+    # the AMD is the single source of truth. Each Goal parses to on_signal/on_scan with a
+    # count; index them by signal name (and scan role) so a spawn loop reads its own target.
+    # (Defaults guard a renamed/removed goal.)
+    jobs_section = amd_section(PR_DOC, "jobs")
+    job_counts = {}
+    for jn in jobs_section.get("children", []):
+        jd = jn.get("data") or {}
+        jsig = jd.get("on_signal")
+        if jsig is not None:
+            job_counts[jsig.get("name")] = jsig.get("count", 1)
+        jscan = jd.get("on_scan")
+        if jscan is not None:
+            job_counts["scan:" + str(jscan.get("role"))] = jscan.get("count", 1)
+    drone_n = job_counts.get("drone_down", 5)
+    rock_n = job_counts.get("rock_cleared", 4)
+    traffic_n = job_counts.get("customs_cleared", 4)
+    survey_n = job_counts.get("scan:anomaly", 3)
 
     # Declarative object scans (the scans section of PR_DOC), rendered by the generic science
     # route - no //science route here. (target_drone is raider-side, so the standard enemy scan
@@ -170,10 +183,9 @@ Properties:
     for v in survey_pts:
         terrain_spawn(v.x, v.y, v.z, "Sensor Anomaly", "#, anomaly", random.choice(anomaly_types), "behav_asteroid")
 
-    # The job board is the jobs section of PR_DOC. Grant it PER PLAYER SHIP so credit rewards
-    # pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses Goal: scan +
-    # Reveals: (the declarative quest-scan path), so this map needs no //science route for it.
-    jobs_section = amd_section(PR_DOC, "jobs")
+    # The job board is the jobs section of PR_DOC (parsed above). Grant it PER PLAYER SHIP so
+    # credit rewards pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses
+    # Goal: scan + Reveals: (the declarative quest-scan path), so this map needs no //science route.
     for p in to_object_list(role("__player__")):
         quest_grant_amd(p.id, jobs_section)
 
