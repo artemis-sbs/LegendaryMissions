@@ -157,5 +157,42 @@ class QuestEndGameTests(unittest.TestCase):
         self.assertEqual(get_inventory_value(ship, "tech", 0), 3)
 
 
+class QuestGrantCountScaleTests(unittest.TestCase):
+    """quest_grant_amd(count_scale=...) scales explicit goal counts (a scalable job board)
+    without touching the shared doc or the singleton (count-less) goals."""
+
+    def setUp(self):
+        reset_mock(sbs)
+
+    def _doc(self):
+        # two jobs: a countable one (count 5) and a singleton (no count)
+        return {"children": [
+            {"key": "job_g", "display_text": "Gunnery", "description": "",
+             "data": {"state": "active", "on_signal": {"name": "drone_down", "count": 5}}},
+            {"key": "job_p", "display_text": "Poacher", "description": "",
+             "data": {"state": "active", "on_signal": {"name": "boarded"}}},
+        ]}
+
+    def test_scale_doubles_countable_goal(self):
+        from sbs_utils.procedural.quest import quest_get_data
+        doc = self._doc()
+        QD.quest_grant_amd(SH, doc, count_scale=2.0)
+        self.assertEqual(quest_get_data(SH, "job_g")["on_signal"]["count"], 10)
+        # singleton goal (no authored count) is left alone
+        self.assertNotIn("count", quest_get_data(SH, "job_p")["on_signal"])
+        # the shared doc was not mutated
+        self.assertEqual(doc["children"][0]["data"]["on_signal"]["count"], 5)
+
+    def test_scale_one_is_identity(self):
+        from sbs_utils.procedural.quest import quest_get_data
+        QD.quest_grant_amd(SH, self._doc())   # default count_scale=1.0
+        self.assertEqual(quest_get_data(SH, "job_g")["on_signal"]["count"], 5)
+
+    def test_scale_rounds_and_floors_at_one(self):
+        from sbs_utils.procedural.quest import quest_get_data
+        QD.quest_grant_amd(SH, self._doc(), count_scale=0.1)   # 5*0.1=0.5 -> round 1, min 1
+        self.assertEqual(quest_get_data(SH, "job_g")["on_signal"]["count"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()

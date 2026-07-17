@@ -144,10 +144,16 @@ Properties:
         jscan = jd.get("on_scan")
         if jscan is not None:
             job_counts["scan:" + str(jscan.get("role"))] = jscan.get("count", 1)
-    drone_n = job_counts.get("drone_down", 5)
-    rock_n = job_counts.get("rock_cleared", 4)
-    traffic_n = job_counts.get("customs_cleared", 4)
-    survey_n = job_counts.get("scan:anomaly", 3)
+    # The Jobs density SCALES the board: few = 0.5x, some = 1x (base), lots = 1.5x, max = 2x
+    # of the AMD Goal counts (jobs_value is 1..4 here). The SAME factor scales the spawn counts
+    # below AND the granted quest Goals (count_scale on the grant), so the two can never
+    # diverge. Singleton jobs (one poacher, one shuttle) carry no authored count, so they never
+    # scale. int(x + 0.5) rounds (round() is not in the MAST eval globals); min 1.
+    job_scale = jobs_value * 0.5
+    drone_n = max(1, int(job_counts.get("drone_down", 5) * job_scale + 0.5))
+    rock_n = max(1, int(job_counts.get("rock_cleared", 4) * job_scale + 0.5))
+    traffic_n = max(1, int(job_counts.get("customs_cleared", 4) * job_scale + 0.5))
+    survey_n = max(1, int(job_counts.get("scan:anomaly", 3) * job_scale + 0.5))
 
     # Declarative object scans (the scans section of PR_DOC), rendered by the generic science
     # route - no //science route here. (target_drone is raider-side, so the standard enemy scan
@@ -187,7 +193,7 @@ Properties:
     # credit rewards pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses
     # Goal: scan + Reveals: (the declarative quest-scan path), so this map needs no //science route.
     for p in to_object_list(role("__player__")):
-        quest_grant_amd(p.id, jobs_section)
+        quest_grant_amd(p.id, jobs_section, count_scale=job_scale)
 
     task_schedule(pr_mercy_watch)
     ->END

@@ -174,8 +174,30 @@ _STATE_NAMES = {
     "complete": QuestState.COMPLETE, "failed": QuestState.FAILED,
 }
 
+# Goal keys whose `count` is a completion target a mission may want to scale by difficulty.
+_COUNT_GOAL_KEYS = ("on_signal", "on_kill", "on_scan", "on_reach", "on_dock", "on_collect")
 
-def quest_grant_amd(agent_id, doc, _prefix=""):
+
+def _scale_goal_counts(data, scale):
+    """Return `data` with every explicit goal `count` scaled by `scale` (rounded, min 1),
+    WITHOUT touching the shared doc (goal dicts are copied only when scaled). Goals with no
+    authored count - singleton objectives like `reach the shuttle` - are left as-is. A scale
+    of 1.0 (or falsy) returns `data` unchanged."""
+    if not scale or scale == 1.0:
+        return data
+    out = None
+    for gk in _COUNT_GOAL_KEYS:
+        g = data.get(gk)
+        if isinstance(g, dict) and "count" in g:
+            if out is None:
+                out = dict(data)
+            g2 = dict(g)
+            g2["count"] = max(1, int(g2["count"] * scale + 0.5))
+            out[gk] = g2
+    return out if out is not None else data
+
+
+def quest_grant_amd(agent_id, doc, _prefix="", count_scale=1.0):
     """Grant all quests from a parsed AMD story doc to an agent at once.
 
     Each heading becomes a quest; its data `state` (active/secret/idle/...) sets
@@ -187,6 +209,11 @@ def quest_grant_amd(agent_id, doc, _prefix=""):
     the arc renders as a collapsible tree in the Quests tab and its steps trigger /
     reveal by their full path. The parent is granted before its children so
     quest_folder can attach them.
+
+    `count_scale` scales every explicit goal COUNT (on_signal/on_kill/on_scan/... `count`)
+    by that factor, so a mission can size a scalable job board by difficulty WITHOUT editing
+    the AMD - pair it with the same factor on the matching spawn counts. Singleton goals (no
+    authored count) never scale; the default 1.0 leaves every existing caller unchanged.
     """
     if doc is None:
         return
@@ -202,10 +229,11 @@ def quest_grant_amd(agent_id, doc, _prefix=""):
         if quest_get_state(target, qid) == QuestState.IDLE:  # skip already-granted
             st = _STATE_NAMES.get(str(data.get("state", "idle")).lower(), QuestState.IDLE)
             quest_add(target, qid, n.get("display_text"),
-                      (n.get("description") or "").strip(), state=st, data=data)
+                      (n.get("description") or "").strip(), state=st,
+                      data=_scale_goal_counts(data, count_scale))
         # Recurse into nested headings, building the child path key `<qid>/<childkey>`.
         if n.get("children"):
-            quest_grant_amd(agent_id, n, _prefix=qid + "/")
+            quest_grant_amd(agent_id, n, _prefix=qid + "/", count_scale=count_scale)
 
 
 def quest_reveal(agent_id, reveal):

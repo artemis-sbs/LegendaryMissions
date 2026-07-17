@@ -78,7 +78,7 @@ State: active
 Goal: signal 5 drone_down
 Pays: 200 credits
 ---
-Weapons drill: destroy all 5 target drones.
+Weapons drill: destroy all the target drones.
 
 ### [Rock Breakers](job_rocks)
 ---
@@ -86,7 +86,7 @@ State: active
 Goal: signal 4 rock_cleared
 Pays: 150 credits
 ---
-Clear 4 hazard asteroids from the shipping lane.
+Clear the hazard asteroids from the shipping lane.
 
 ### [Board the Poacher](job_poacher)
 ---
@@ -112,7 +112,7 @@ State: active
 Goal: signal 4 customs_cleared
 Pays: 120 credits
 ---
-Hail and clear 4 civilian traders for transit.
+Hail and clear the civilian traders for transit.
 
 ### [Anomaly Survey](job_survey)
 ---
@@ -121,7 +121,7 @@ Goal: scan 3 anomaly
 Reveals: Survey logged: a stable subspace distortion. No threat - filed with the science log.
 Pays: 130 credits
 ---
-Have Science scan 3 sensor anomalies and log them.
+Have Science scan the sensor anomalies and log them.
 
 // ---- Declarative object scans (dialogue-native): `Scan of:` = role, `Tab:` = science tab,
 // each `%` body line a random variant. (target_drone uses the enemy scan; anomaly uses
