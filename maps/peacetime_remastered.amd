@@ -357,6 +357,22 @@ Our records show {ship} docked here at {dtime}. It loaded:^^{holds}^^Its flight 
 ### [Preview Missing](preview_missing)
 {ship} docked here at {dtime}. Its flight plan says it is headed for DS {dest}. The cargo manifest... huh, that file has gone missing. You might check with our {crew}.
 
+// ---- Interview REPORT templates (the crew's account of a suspect's stop). florbin_case.mast's
+// generator (fb_generate_case, mission_helper_functions.py) fills these once per stop and stores the
+// two-stop report on the interview contact; the //comms/fb_interview badge renders it. Slots:
+// {ship} (the hauler), {unloaded}/{loaded} (the container it swapped), {holds} (the departing 4-hold
+// manifest), {clue} (a narrative tip - the kidnapper's report carries the paired clue), {newname}
+// (the ship's new registry, rename twist). report_stop = a plain stop; report_stop_clue = a stop
+// that also drops a clue; report_rename = the second stop where the captain re-registers the ship.
+### [Report Stop](report_stop)
+Yes, {ship} docked here. They unloaded {unloaded}. Then they loaded {loaded}. When they left, their cargo manifest was:^^{holds}
+
+### [Report Stop Clue](report_stop_clue)
+Yes, {ship} docked here. They unloaded {unloaded}. Then they loaded {loaded}. When they left, their cargo manifest was:^^{holds}^^Oh, and something else I noticed. {clue}
+
+### [Report Rename](report_rename)
+Yes, {ship} docked here. They unloaded {unloaded}. Then they loaded {loaded}. When they left, their cargo manifest was:^^{holds}^^Oh, and the captain also changed the ship registry. The new name is {newname}.
+
 // ---- Suspect-ship comms (the hailed cargo hauler itself). Rendered by comms_receive from
 // fb_handle_suspect_*; {hailer} = the player ship name, {holds} = fb_holds(cargo3), {last_stop}/
 // {next_stop} = its last/next DS from cargo3.

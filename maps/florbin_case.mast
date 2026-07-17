@@ -35,41 +35,22 @@ shared FB_TIMES = {}
 
     FB_STATUS = 1
 
-    # Add roles to first five stations, makes them easier to identify.
-    # Add a 'record_status' to inventory, 1 = station has cargo manifest, 2 = missing cargo manifest, 3 = computers down
-
     ds_list = []
+    # Tag the first five stations ds1..ds5 and give each a random records_status (1 = manifest on
+    # file, 2 = manifest down, 3 = manifest missing) that fb_preview reads. DRY'd from five near-
+    # identical elif blocks: derive the DS number from the station name.
     for s in to_object_list(role("station")):
-        temp_rand = random.randint(1, 3)
-        if s.name == "DS 1":
-            add_role(s.id, "ds1")
+        ds_num = s.name[3:] if s.name.startswith("DS ") else ""
+        if ds_num in ["1", "2", "3", "4", "5"]:
+            add_role(s.id, "ds" + ds_num)
             ds_list.append(s.id)
-            set_inventory_value(s, "records_status", temp_rand)
-        elif s.name == "DS 2":
-            add_role(s.id, "ds2")
-            ds_list.append(s.id)
-            set_inventory_value(s, "records_status", temp_rand)
-        elif s.name == "DS 3":
-            add_role(s.id, "ds3")
-            ds_list.append(s.id)
-            set_inventory_value(s, "records_status", temp_rand)
-        elif s.name == "DS 4":
-            add_role(s.id, "ds4")
-            ds_list.append(s.id)
-            set_inventory_value(s, "records_status", temp_rand)
-        elif s.name == "DS 5":
-            add_role(s.id, "ds5")
-            ds_list.append(s.id)
-            set_inventory_value(s, "records_status", temp_rand)
+            set_inventory_value(s, "records_status", random.randint(1, 3))
 
-    # The interview stations (everything a suspect can stop at - DS 2..5) share one role so the
-    # station interview board is a single //comms route instead of four near-identical ones.
+    # The interview stations (DS 2..5) share one role so the station board is a single //comms route.
     add_role(any_role("ds2,ds3,ds4,ds5"), "fb_ds")
 
-    # The three interview contacts are authored declaratively in peacetime_remastered.amd
-    # (## Investigation Contacts) and spawned as lifeforms here - name + face (via face_resolve)
-    # + roles all come from the AMD record, the way OU authors its captains/officers. Each is the
-    # informant for one suspect's trail; the interview reports below show their face + name.
+    # The three interview contacts + the Admiral/Ambassador are authored in peacetime_remastered.amd
+    # (## Cast) and spawned as lifeforms - name + face (via face_resolve) + roles from the AMD record.
     fb_cast = lifeforms_spawn(amd_section(PR_DOC, "cast"))
     fb_deck_chief = fb_cast.get("deck_chief")
     fb_maint_chief = fb_cast.get("maint_chief")
@@ -77,400 +58,72 @@ shared FB_TIMES = {}
     fb_admiral = fb_cast.get("admiral")
     fb_florbin = fb_cast.get("florbin")
 
-    # Load the authored prose templates into FB_TEXT {key: template} from the ## Florbin Text
-    # section (via a Python helper, so MAST does not interpolate the {slots} at load time).
+    # Authored prose (## Florbin Text) + the A/B docking times, both via Python helpers so MAST does
+    # not interpolate the {slots} at load time.
     FB_TEXT = fb_text_load(amd_section(PR_DOC, "florbin_text"))
     FB_TIMES = fb_times_map()
 
-    # The lists are loaded in from shipnames.json to help build a fleet of cargo ships with captains, containers, and goods
-    alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
-    civname_list = SHIP_NAME_DATA.get("civilian")
-    peacetime_list = SHIP_NAME_DATA.get("peacetime")
-    capname_list = SHIP_NAME_DATA.get("captain")
-    clue_list = SHIP_NAME_DATA.get("clue_list")
-    goods_list = SHIP_NAME_DATA.get("tradegoods")
-    suspect = []
+    # ---- The suspect trail is generated as pure DATA by fb_generate_case (mission_helper_functions.py),
+    # replacing ~400 lines of per-scenario / per-ship brute force. Pick the ambassador container
+    # (clue0) + its paired clue (clue1) from clue_list[0:20] - a REAL container, guaranteed - then two
+    # decoy clues (clue2/clue3) from the rest. The generator returns one spec per suspect and
+    # GUARANTEES every mystery invariant (unit-tested in maps/test_florbin_case.py over 20 seeds);
+    # the loop below just applies each spec to the engine (spawn + roles + inventory).
+    clue_pool = list(SHIP_NAME_DATA.get("clue_list"))
+    kc = clue_pool.pop(random.randint(0, 19))
+    clue0 = kc["container"]
+    clue1 = kc["clue"]
+    clue2 = clue_pool.pop(random.randint(0, len(clue_pool) - 1))["clue"]
+    clue3 = clue_pool.pop(random.randint(0, len(clue_pool) - 1))["clue"]
 
-    # Kidnapper ship (first suspect) hides the ambassador in a suspicious container, randomized as list index 6, 8, 10, or 12.
-    # The first three suspect ships have a "clue" about the captain/ship. The first one is where the ambassador is hidden, so the 
-    # Clue/Container are loaded as a pair (clue0/clue1). The other two suspects have a clue about the captain/ship 
-    # (clue2 and clue3), but aren't paired to a particular container, since the ambassador isn't hiding on board.
+    fb_case = fb_generate_case(fb_pools(SHIP_NAME_DATA), clue0, [clue1, clue2, clue3], FB_TEXT, random)
+    fb_specs = fb_case["suspects"]
 
-    kidnap_clue = {}
-    kidnap_clue = clue_list.pop(random.randint(0,19))
-    clue0 = kidnap_clue['container']
-    clue1 = kidnap_clue['clue']
-    kidnap_clue = clue_list.pop(random.randint(0,len(clue_list)-1))
-    clue2 = kidnap_clue['clue']
-    kidnap_clue = clue_list.pop(random.randint(0,len(clue_list)-1))
-    clue3 = kidnap_clue['clue']
-
-    # Generate five cargo ships as suspects. The first three are given to the player by DS 1. 
-    # The fourth suspect may wind up as the kidnapper. The fifth is just a decoy. 
-
-    s_count = 1
-    spawn_points = scatter.box(5, 0, 0, 0, 50000, 1000, 50000, centered=True)
-    for c in spawn_points:
-        # First three suspects have "California" names
-        if s_count >= 1 and s_count <= 3:
-            cargo_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + peacetime_list.pop(random.randint(0,len(peacetime_list)-1))
-            c_ship = to_id(npc_spawn(*c, cargo_name, "civ, civilian, suspect", "cargo_ship", "behav_npcship"))
-        # Last two suspects have "Civilian" names
-        else:
-            cargo_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randint(0,len(civname_list)-1))
-            c_ship = to_id(npc_spawn(*c, cargo_name, "civ, civilian, suspect", "cargo_ship", "behav_npcship"))
-        # Sets the last two stations the ship stopped at, and a third station they are heading towards.
-        # Also sets roles on the stations visited so comms messages can be added later.
-        temp_stop = [2, 3, 4, 5]
-        stop1 = temp_stop.pop(random.randint(0, len(temp_stop)-1))
-        temp_role = "clue" + str(s_count) + "A"
-        if stop1 == 2:
-            add_role(role("ds2"), temp_role)
-        elif stop1 == 3:
-            add_role(role("ds3"), temp_role)
-        elif stop1 == 4:
-            add_role(role("ds4"), temp_role)
-        elif stop1 == 5:
-            add_role(role("ds5"), temp_role)
-        stop2 = temp_stop.pop(random.randint(0, len(temp_stop)-1))
-        temp_role = "clue" + str(s_count) + "B"
-        if stop2 == 2:
-            add_role(role("ds2"), temp_role)
-        elif stop2 == 3:
-            add_role(role("ds3"), temp_role)
-        elif stop2 == 4:
-            add_role(role("ds4"), temp_role)
-        elif stop2 == 5:
-            add_role(role("ds5"), temp_role)
-        stop3 = temp_stop.pop(random.randint(0,len(temp_stop)-1))
-        # Populates the Ship Name, Captain Name, and then the contents of the four cargo holds into a list object.
-        # There are three different cargo lists to show the contents at the start (DS1), the first stop, and the second stop.  
-        _captain = capname_list.pop(random.randint(0, len(capname_list)-1))
+    # Spawn each suspect from its spec: cargo snapshots, the kidnapper's ambassador container (kclue),
+    # captain, a civilian face, the kidnapper role, and - for the three tracked ships - tag their two
+    # visited stations clue{N}A / clue{N}B.
+    spawn_points = scatter.box(len(fb_specs), 0, 0, 0, 50000, 1000, 50000, centered=True)
+    for spec, p in zip(fb_specs, spawn_points):
+        c_ship = to_id(npc_spawn(p.x, p.y, p.z, spec["orig_name"], "civ, civilian, suspect", "cargo_ship", "behav_npcship"))
         s_obj = to_object(c_ship)
-        cargo1 = [s_obj.name, _captain, stop1, stop2, stop3]
-        cargo2 = [s_obj.name, _captain, stop1, stop2, stop3]
-        cargo3 = [s_obj.name, _captain, stop1, stop2, stop3]
-        for x in range(8):
-            alpha_container = [ "A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ]
-            _alpha = alpha_container.pop(random.randint(0,len(alpha_container)-1))
-            _alpha += alpha_container.pop(random.randint(0,len(alpha_container)-1))
-            _alpha += alpha_container.pop(random.randint(0,len(alpha_container)-1))
-            _contents = goods_list.pop(random.randint(0, len(goods_list)-1))
-            cargo1.append(_alpha)
-            cargo1.append(_contents)
-            cargo2.append(_alpha)
-            cargo2.append(_contents)
-            cargo3.append(_alpha)
-            cargo3.append(_contents)
-        set_inventory_value(c_ship, "cargo1", cargo1)
-        set_inventory_value(c_ship, "cargo2", cargo2)
-        set_inventory_value(c_ship, "cargo3", cargo3)
-        set_inventory_value(c_ship, "kclue", clue0)
-        
+        if spec["cur_name"] != spec["orig_name"]:
+            s_obj.name = spec["cur_name"]
+        set_inventory_value(c_ship, "cargo1", spec["cargo1"])
+        set_inventory_value(c_ship, "cargo2", spec["cargo2"])
+        set_inventory_value(c_ship, "cargo3", spec["cargo3"])
+        set_inventory_value(c_ship, "kclue", spec["kclue"])
+        set_inventory_value(c_ship, "captain", spec["captain"])
         set_face(c_ship, random_terran(civilian=True))
-        suspect.append(c_ship)
-        s_count += 1
+        if spec["kidnapper"]:
+            add_role(c_ship, "kidnapper")
+        if spec["clueA"] is not None:
+            add_role(role("ds" + str(spec["stops"][0])), spec["clueA"])
+            add_role(role("ds" + str(spec["stops"][1])), spec["clueB"])
 
-    suspect_list = to_object_list(role('suspect'))
-    sus_count = len(suspect_list)
-    -> END if sus_count == 0
+    ->END if len(to_object_list(role("suspect"))) == 0
 
-    # (Per-station manifest snapshots are copied onto the DS stations AFTER the trail below, so
-    # they reflect the container transfers - see "station manifest snapshots" near the end of setup.)
-
-    # This code picks a random container on ship 1 and replaces it with the "suspicious" container chosen earlier.
-    # Then it resets the three different cargo states on the kidnapper ship.  
-
-    rand1 = 4 + (2 * random.randint(1,4))
-    kidnapper_id = suspect_list[0]
-    add_role(suspect_list[0], "kidnapper")
-    for index in range(3):
-        tempval = "cargo" + str(index+1)
-        tempcargo = get_inventory_value(suspect_list[0], tempval)
-        tempcargo[rand1] = clue0
-        set_inventory_value(suspect_list[0], tempval, tempcargo)
-
-    # There are three different 'scenarios' for the Ambassador. The first is two stops where the Kidnapper ship transfers cargo and leaves a clue.
-    # Note: the first scenario was disabled. It was too easy to track down the three ships and scan them. 
-    # Playtesters weren't flying around looking for clues. So the two possible scenarios are #2 "Transfer cargo to new ship"
-    # and #3 "Ship changes name". 
-
-    rand2 = random.randint(2,3)
-    if rand2 == 1:
-        # First ship, first stop, transfers two containers. This section updates the cargo containers and updates fb_message1C.
-        _idx = [6, 8, 10, 12]
-        _cargo2 = get_inventory_value(suspect_list[0], "cargo2")
-        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-        _idx.remove(rand1)
-        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-        xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
-        new_good1 = _cargo2.pop()
-        new_cont1 = _cargo2.pop()
-        new_good2 = _cargo2.pop()
-        new_cont2 = _cargo2.pop()
-        _cargo3.remove(new_good1)
-        _cargo3.remove(new_cont1)
-        _cargo3.remove(new_good2)
-        _cargo3.remove(new_cont2)
-        tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] + " and Container " + _cargo2[xfer_idx2 - 1] + ": " + _cargo2[xfer_idx2]
-        tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
-        _cargo2[xfer_idx1 - 1] = new_cont1
-        _cargo2[xfer_idx1] = new_good1
-        _cargo2[xfer_idx2 - 1] = new_cont2
-        _cargo2[xfer_idx2] = new_good2
-        _cargo3[xfer_idx1 - 1] = new_cont1
-        _cargo3[xfer_idx1] = new_good1
-        _cargo3[xfer_idx2 - 1] = new_cont2
-        _cargo3[xfer_idx2] = new_good2
-        set_inventory_value(suspect_list[0], "cargo2", _cargo2)
-        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-        shared fb_message1C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}"  
-        print(f"fb_message1C: {fb_message1C}")
-        # First ship, second stop, transfers one container. Adds a "clue" to fb_message1D.
-        _idx = [6, 8, 10, 12]
-        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-        _idx.remove(rand1)
-        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-        new_good1 = _cargo3.pop()
-        new_cont1 = _cargo3.pop()
-        tmpmsg1 = "Container " + _cargo3[xfer_idx1 - 1] + ": " + _cargo3[xfer_idx1] 
-        tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
-        _cargo3[xfer_idx1 - 1] = new_cont1
-        _cargo3[xfer_idx1] = new_good1
-        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-        shared fb_message1D = "Yes, " + _cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}^^Oh, and something else I noticed. " + clue1  
-        print(f"fb_message1D: {fb_message1D}")
-    elif rand2 == 2:
-        # First ship, first stop, transfers one container. Adds a "clue" to fb_message1C.
-        _idx = [6, 8, 10, 12]
-        _cargo2 = get_inventory_value(suspect_list[0], "cargo2")
-        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-        _idx.remove(rand1)
-        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-        new_good1 = _cargo2.pop()
-        new_cont1 = _cargo2.pop()
-        _cargo3.remove(new_good1)
-        _cargo3.remove(new_cont1)
-        tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] 
-        tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
-        _cargo2[xfer_idx1 - 1] = new_cont1
-        _cargo2[xfer_idx1] = new_good1
-        _cargo3[xfer_idx1 - 1] = new_cont1
-        _cargo3[xfer_idx1] = new_good1
-        set_inventory_value(suspect_list[0], "cargo2", _cargo2)
-        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-        shared fb_message1C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue1  
-        print(f"fb_message1C: {fb_message1C}")
-        # First ship, second stop, transfers three containers and a captain to a different ship. 
-        remove_role(suspect_list[0], "kidnapper")
-        add_role(suspect_list[3], "kidnapper")
-        kidnapper_id = suspect_list[3]
-        _idx = [6, 8, 10, 12]
-        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-        _cargo4 = get_inventory_value(suspect_list[3], "cargo3")
-        _idx.remove(rand1)
-        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-        xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
-        xfer_cap1 = _cargo3[1]
-        xfer_cap2 = _cargo4[1]
-        _cargo3[1] = xfer_cap2
-        _cargo4[1] = xfer_cap1
-        new_good1 = _cargo3[rand1]
-        new_cont1 = _cargo3[rand1 - 1]
-        new_good2 = _cargo3[xfer_idx1]
-        new_cont2 = _cargo3[xfer_idx1 - 1]
-        new_good3 = _cargo3[xfer_idx2]
-        new_cont3 = _cargo3[xfer_idx2 - 1]
-        _cargo4[rand1 - 1] = new_cont1
-        _cargo4[rand1] = new_good1
-        _cargo4[xfer_idx1 - 1] = new_cont2
-        _cargo4[xfer_idx1] = new_good2
-        _cargo4[xfer_idx2 - 1] = new_cont3
-        _cargo4[xfer_idx2] = new_good3
-        new_good1 = _cargo4.pop()
-        new_cont1 = _cargo4.pop()
-        new_good2 = _cargo4.pop()
-        new_cont2 = _cargo4.pop()
-        new_good3 = _cargo4.pop()
-        new_cont3 = _cargo4.pop()
-        _cargo3[rand1 - 1] = new_cont1
-        _cargo3[rand1] = new_good1
-        _cargo3[xfer_idx1 - 1] = new_cont2
-        _cargo3[xfer_idx1] = new_good2
-        _cargo3[xfer_idx2 - 1] = new_cont3
-        _cargo3[xfer_idx2] = new_good3
-        tmpmsg1 = "Container " + _cargo4[xfer_idx1 - 1] + ": " + _cargo4[xfer_idx1] + ", Container " + _cargo4[rand1 - 1] + ": " + _cargo4[rand1] + ", and Container " + _cargo4[xfer_idx2 - 1] + ": " + _cargo4[xfer_idx2]
-        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-        set_inventory_value(suspect_list[3], "cargo3", _cargo4)
-        shared fb_message1D = "You're looking for the " + _cargo3[0] + "? Well, actually, Captain " + _cargo4[1] + " transferred three cargo containers and left on a different ship. They loaded " + tmpmsg1 + " onto the " + _cargo4[0] + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo4[5]}: {_cargo4[6]}^Hold 2 - Container {_cargo4[7]}: {_cargo4[8]}^Hold 3 - Container {_cargo4[9]}: {_cargo4[10]}^Hold 4 - Container {_cargo4[11]}: {_cargo4[12]}"  
-        print(f"fb_message1D: {fb_message1D}")
-    elif rand2 == 3:
-        # First ship, first stop, transfers one container. Adds a "clue" to fb_message1C.
-        _idx = [6, 8, 10, 12]
-        _cargo2 = get_inventory_value(suspect_list[0], "cargo2")
-        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-        _idx.remove(rand1)
-        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-        new_good1 = _cargo2.pop()
-        new_cont1 = _cargo2.pop()
-        _cargo3.remove(new_good1)
-        _cargo3.remove(new_cont1)
-        tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] 
-        tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
-        _cargo2[xfer_idx1 - 1] = new_cont1
-        _cargo2[xfer_idx1] = new_good1
-        _cargo3[xfer_idx1 - 1] = new_cont1
-        _cargo3[xfer_idx1] = new_good1
-        set_inventory_value(suspect_list[0], "cargo2", _cargo2)
-        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-        shared fb_message1C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue1  
-        print(f"fb_message1C: {fb_message1C}")
-        # First ship, second stop, transfers two containers and then changes the ship registry to a new name. 
-        _idx = [6, 8, 10, 12]
-        _cargo3 = get_inventory_value(suspect_list[0], "cargo3")
-        _idx.remove(rand1)
-        xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-        xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
-        new_good1 = _cargo3.pop()
-        new_cont1 = _cargo3.pop()
-        new_good2 = _cargo3.pop()
-        new_cont2 = _cargo3.pop()
-        tmpmsg1 = "Container " + _cargo3[xfer_idx1 - 1] + ": " + _cargo3[xfer_idx1] + " and Container " + _cargo3[xfer_idx2 - 1] + ": " + _cargo3[xfer_idx2]
-        tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
-        _cargo3[xfer_idx1 - 1] = new_cont1
-        _cargo3[xfer_idx1] = new_good1
-        _cargo3[xfer_idx2 - 1] = new_cont2
-        _cargo3[xfer_idx2] = new_good2
-        old_name = _cargo2[0]
-        alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
-        new_name = random.choice(alpha) + str(random.randint(1,99)).zfill(2) + " " + civname_list.pop(random.randint(0,len(civname_list)-1))
-        s_obj = to_object(suspect_list[0])
-        s_obj.name = new_name
-        _cargo3[0] = new_name
-        set_inventory_value(suspect_list[0], "cargo3", _cargo3)
-        shared fb_message1D = "Yes, " + old_name + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}^^Oh, and the captain also changed the ship registry. The new name is {_cargo3[0]}."  
-        print(f"fb_message1D: {fb_message1D}")
-
-    # Second and third suspect ships also transfer cargo and leave decoy clues.
-    # Second ship (non-kidnapper), first stop. Transfers a container and leaves a clue.
-    _idx = [6, 8, 10, 12]
-    _cargo2 = get_inventory_value(suspect_list[1], "cargo2")
-    _cargo3 = get_inventory_value(suspect_list[1], "cargo3")
-    xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-    new_good1 = _cargo2.pop()
-    new_cont1 = _cargo2.pop()
-    _cargo3.remove(new_good1)
-    _cargo3.remove(new_cont1)
-    tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] 
-    tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
-    _cargo2[xfer_idx1 - 1] = new_cont1
-    _cargo2[xfer_idx1] = new_good1
-    _cargo3[xfer_idx1 - 1] = new_cont1
-    _cargo3[xfer_idx1] = new_good1
-    set_inventory_value(suspect_list[1], "cargo2", _cargo2)
-    set_inventory_value(suspect_list[1], "cargo3", _cargo3)
-    shared fb_message2C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue2  
-    # Second ship (non-kidnapper), second stop. Transfers two containers.
-    _idx = [6, 8, 10, 12]
-    _cargo3 = get_inventory_value(suspect_list[1], "cargo3")
-    xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-    xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
-    new_good1 = _cargo3.pop()
-    new_cont1 = _cargo3.pop()
-    new_good2 = _cargo3.pop()
-    new_cont2 = _cargo3.pop()
-    tmpmsg1 = "Container " + _cargo3[xfer_idx1 - 1] + ": " + _cargo3[xfer_idx1] + " and Container " + _cargo3[xfer_idx2 - 1] + ": " + _cargo3[xfer_idx2]
-    tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
-    _cargo3[xfer_idx1 - 1] = new_cont1
-    _cargo3[xfer_idx1] = new_good1
-    _cargo3[xfer_idx2 - 1] = new_cont2
-    _cargo3[xfer_idx2] = new_good2
-    set_inventory_value(suspect_list[1], "cargo3", _cargo3)
-    shared fb_message2D = "Yes, " + _cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}"  
-    # Third ship (non-kidnapper), first stop. Transfers one container, and leaves a clue.
-    _idx = [6, 8, 10, 12]
-    _cargo2 = get_inventory_value(suspect_list[2], "cargo2")
-    _cargo3 = get_inventory_value(suspect_list[2], "cargo3")
-    xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-    new_good1 = _cargo2.pop()
-    new_cont1 = _cargo2.pop()
-    _cargo3.remove(new_good1)
-    _cargo3.remove(new_cont1)
-    tmpmsg1 = "Container " + _cargo2[xfer_idx1 - 1] + ": " + _cargo2[xfer_idx1] 
-    tmpmsg2 = "Container " + new_cont1 + ": " + new_good1  
-    _cargo2[xfer_idx1 - 1] = new_cont1
-    _cargo2[xfer_idx1] = new_good1
-    _cargo3[xfer_idx1 - 1] = new_cont1
-    _cargo3[xfer_idx1] = new_good1
-    set_inventory_value(suspect_list[2], "cargo2", _cargo2)
-    set_inventory_value(suspect_list[2], "cargo3", _cargo3)
-    shared fb_message3C = "Yes, " + _cargo2[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo2[5]}: {_cargo2[6]}^Hold 2 - Container {_cargo2[7]}: {_cargo2[8]}^Hold 3 - Container {_cargo2[9]}: {_cargo2[10]}^Hold 4 - Container {_cargo2[11]}: {_cargo2[12]}^^Oh, and something else I noticed. " + clue2  
-    # Third ship (non-kidnapper), second stop. Transfers two containers.
-    _idx = [6, 8, 10, 12]
-    _cargo3 = get_inventory_value(suspect_list[2], "cargo3")
-    xfer_idx1 = _idx.pop(random.randint(0,len(_idx)-1))
-    xfer_idx2 = _idx.pop(random.randint(0,len(_idx)-1))
-    new_good1 = _cargo3.pop()
-    new_cont1 = _cargo3.pop()
-    new_good2 = _cargo3.pop()
-    new_cont2 = _cargo3.pop()
-    tmpmsg1 = "Container " + _cargo3[xfer_idx1 - 1] + ": " + _cargo3[xfer_idx1] + " and Container " + _cargo3[xfer_idx2 - 1] + ": " + _cargo3[xfer_idx2]
-    tmpmsg2 = "Container " + new_cont1 + ": " + new_good1 + " and Container " + new_cont2 + ": " + new_good2 
-    _cargo3[xfer_idx1 - 1] = new_cont1
-    _cargo3[xfer_idx1] = new_good1
-    _cargo3[xfer_idx2 - 1] = new_cont2
-    _cargo3[xfer_idx2] = new_good2
-    set_inventory_value(suspect_list[2], "cargo3", _cargo3)
-    shared fb_message3D = "Yes, " + _cargo3[0] + " docked here. They unloaded " + tmpmsg1 + ". Then they loaded " + tmpmsg2 + ". When they left, their cargo manifest was:^^Hold 1 - Container {_cargo3[5]}: {_cargo3[6]}^Hold 2 - Container {_cargo3[7]}: {_cargo3[8]}^Hold 3 - Container {_cargo3[9]}: {_cargo3[10]}^Hold 4 - Container {_cargo3[11]}: {_cargo3[12]}"  
-
-    # Drop a secret codecase near DS1. This allows the scenario to be completed without a Weapons Officer.
+    # Drop a secret codecase near DS1 so the case can be completed without a Weapons Officer.
     if upgrade_value >= 1:
-#        ds1_obj = to_object(ds_list[0])
         ds1_list = to_object_list(role("ds1"))
-        ds1_obj = ds1_list[0]
-        ds1_pos = ds1_obj.pos
-        pickup_spawn(ds1_pos.x, ds1_pos.y, ds1_pos.z - 500, "secret_codecase")
+        if len(ds1_list) > 0:
+            ds1_pos = ds1_list[0].pos
+            pickup_spawn(ds1_pos.x, ds1_pos.y, ds1_pos.z - 500, "secret_codecase")
 
-    # Sync each suspect's current captain (cargo3[1]) to a flat 'captain' inventory key so
-    # the declarative scan's "Captain {captain}" intel resolves per ship - done AFTER the
-    # scenario blocks above, which may have swapped captains between ships (scenario 2).
-    for s in suspect_list:
-        set_inventory_value(s, "captain", get_inventory_value(s, "cargo3")[1])
-
-    # Station manifest snapshots: give every DS station each suspect's three temporal snapshots
-    # (cargo1 = as seen at DS1, cargo2 = first stop, cargo3 = second stop) - so shipK_cargoN is
-    # suspect K's cargoN. Fixed from the original's aliased copy (which stored ONE snapshot under
-    # all three keys, and ran BEFORE the trail); this runs AFTER the trail so cargo2/cargo3 reflect
-    # the container transfers.
+    # Copy each tracked suspect's three temporal snapshots (cargo1 = at DS1, cargo2 = first stop,
+    # cargo3 = second stop) onto every DS station as shipK_cargoN, and stash the DS1 briefing list.
     for ds in ds_list:
-        for x in range(3):
-            temp_inv = "cargo" + str(x + 1)
-            set_inventory_value(ds, "ship1_cargo" + str(x + 1), get_inventory_value(suspect_list[0], temp_inv))
-            set_inventory_value(ds, "ship2_cargo" + str(x + 1), get_inventory_value(suspect_list[1], temp_inv))
-            set_inventory_value(ds, "ship3_cargo" + str(x + 1), get_inventory_value(suspect_list[2], temp_inv))
-    # The DS1 briefing lists the three briefed suspects by their initial (DS1) names, in a random
-    # order so the kidnapper isn't obviously first.
-    fb_n1 = get_inventory_value(suspect_list[0], "cargo1")[0]
-    fb_n2 = get_inventory_value(suspect_list[1], "cargo1")[0]
-    fb_n3 = get_inventory_value(suspect_list[2], "cargo1")[0]
-    rand3 = random.randint(1, 3)
-    if rand3 == 1:
-        investigate_msg = fb_n1 + "^" + fb_n2 + "^" + fb_n3
-    elif rand3 == 2:
-        investigate_msg = fb_n3 + "^" + fb_n1 + "^" + fb_n2
-    else:
-        investigate_msg = fb_n2 + "^" + fb_n3 + "^" + fb_n1
-    for ds in ds_list:
-        set_inventory_value(ds, "investigate_message", investigate_msg)
+        set_inventory_value(ds, "investigate_message", fb_case["investigate_message"])
+        for k in range(3):
+            ts = fb_specs[k]
+            set_inventory_value(ds, "ship" + str(k + 1) + "_cargo1", ts["cargo1"])
+            set_inventory_value(ds, "ship" + str(k + 1) + "_cargo2", ts["cargo2"])
+            set_inventory_value(ds, "ship" + str(k + 1) + "_cargo3", ts["cargo3"])
 
-    # Host each interview contact (lifeform) on the station where its ship first stopped, so it
-    # shows as a comms badge there; stash that ship's report for the //comms/fb_interview badge
-    # route. (Deck Chief -> ship 1 / clue1A, Maintenance -> ship 2, Cargo Master -> ship 3.)
-    # The contact's badge delivers BOTH stops' reports (first stop C + second stop D), so replacing
-    # the two per-stop "Interview" buttons with one badge loses nothing - its ship's whole story.
-    fb_host_contact(fb_deck_chief, "clue1A", fb_message1C + "^^" + fb_message1D)
-    fb_host_contact(fb_maint_chief, "clue2A", fb_message2C + "^^" + fb_message2D)
-    fb_host_contact(fb_cargo_master, "clue3A", fb_message3C + "^^" + fb_message3D)
+    # Host each interview contact on its ship's clue{N}A station (a comms badge) with that ship's
+    # two-stop report. The kidnapper's report carries clue1; the other two carry clue2 / clue3.
+    fb_host_contact(fb_deck_chief, "clue1A", fb_specs[0]["report"])
+    fb_host_contact(fb_maint_chief, "clue2A", fb_specs[1]["report"])
+    fb_host_contact(fb_cargo_master, "clue3A", fb_specs[2]["report"])
 
     task_schedule(fb_scanning_cargo_containers)
     task_schedule(fb_check_ambassador_rescued)
@@ -584,29 +237,9 @@ shared FB_TIMES = {}
     comms_receive(tmpl, title="Info on " + ship, title_color="orange")
     yield success
 
-===== fb_investigate_message_1C =====
-    comms_receive(fb_message1C, title=fb_deck_chief.name, face=get_face(fb_deck_chief.id), title_color="orange")
-    yield success
-
-===== fb_investigate_message_1D =====
-    comms_receive(fb_message1D, title=fb_deck_chief.name, face=get_face(fb_deck_chief.id), title_color="orange")
-    yield success
-
-===== fb_investigate_message_2C =====
-    comms_receive(fb_message2C, title=fb_maint_chief.name, face=get_face(fb_maint_chief.id), title_color="orange")
-    yield success
-
-===== fb_investigate_message_2D =====
-    comms_receive(fb_message2D, title=fb_maint_chief.name, face=get_face(fb_maint_chief.id), title_color="orange")
-    yield success
-
-===== fb_investigate_message_3C =====
-    comms_receive(fb_message3C, title=fb_cargo_master.name, face=get_face(fb_cargo_master.id), title_color="orange")
-    yield success
-
-===== fb_investigate_message_3D =====
-    comms_receive(fb_message3D, title=fb_cargo_master.name, face=get_face(fb_cargo_master.id), title_color="orange")
-    yield success
+# (The old fb_investigate_message_1C..3D labels + the fb_message1C..3D shared strings are gone:
+# each suspect's whole interview report is now generated by fb_generate_case and delivered by the
+# hosted contact badge - see //comms/fb_interview.)
 
 //enable/comms if has_roles(COMMS_SELECTED_ID, "civ, suspect") and FB_STATUS >= 1
 //comms if has_roles(COMMS_SELECTED_ID, "civ, suspect") and FB_STATUS >= 1
