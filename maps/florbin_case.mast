@@ -13,6 +13,14 @@ shared ambassador_face = "ter #523b3f 0 0;ter #523b3f 2 0;ter #523b3f 5 2;ter #5
 shared admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 1 2;ter #fff 4 4;ter #964b00 8 4;"
 shared FB_STATUS = 0
 
+# The three interview contacts are real lifeforms (face + name), so interviewing at a station is
+# talking to a crew member, not reading anonymous text. Each is the informant for one suspect's
+# trail: Deck Chief -> ship 1 (clue1), Maintenance Chief -> ship 2 (clue2), Cargo Master -> ship 3
+# (clue3). Spawned in fb_investigation; their face/name are used by the interview comms below.
+shared fb_deck_chief = None
+shared fb_maint_chief = None
+shared fb_cargo_master = None
+
 ====== fb_investigation ======
 
     FB_STATUS = 1
@@ -43,6 +51,12 @@ shared FB_STATUS = 0
             add_role(s.id, "ds5")
             ds_list.append(s.id)
             set_inventory_value(s, "records_status", temp_rand)
+
+    # The three interview contacts, as lifeforms with a face + name. Interviewing a station's crew
+    # (below) talks to one of these; each is the informant for one suspect's trail.
+    fb_deck_chief = lifeform_spawn("Deck Chief Renner", random_terran(civilian=True), "fb_informant")
+    fb_maint_chief = lifeform_spawn("Chief Engineer Vok", random_terran(civilian=True), "fb_informant")
+    fb_cargo_master = lifeform_spawn("Cargo Master Pell", random_terran(civilian=True), "fb_informant")
 
     # The lists are loaded in from shipnames.json to help build a fleet of cargo ships with captains, containers, and goods
     alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
@@ -624,11 +638,11 @@ shared FB_STATUS = 0
     yield success
 
 ===== fb_investigate_message_1C =====
-    comms_receive(f"""{fb_message1C}""", title="Deck Chief Report", title_color="orange")
+    comms_receive(fb_message1C, title=fb_deck_chief.name, face=get_face(fb_deck_chief.id), title_color="orange")
     yield success
 
 ===== fb_investigate_message_1D =====
-    comms_receive(f"""{fb_message1D}""", title="Deck Chief Report", title_color="orange")
+    comms_receive(fb_message1D, title=fb_deck_chief.name, face=get_face(fb_deck_chief.id), title_color="orange")
     yield success
 
 ===== fb_investigate_message_2A =====
@@ -656,11 +670,11 @@ shared FB_STATUS = 0
     yield success
 
 ===== fb_investigate_message_2C =====
-    comms_receive(f"""{fb_message2C}""", title="Maintenance Crew Report", title_color="orange")
+    comms_receive(fb_message2C, title=fb_maint_chief.name, face=get_face(fb_maint_chief.id), title_color="orange")
     yield success
 
 ===== fb_investigate_message_2D =====
-    comms_receive(f"""{fb_message2D}""", title="Maintenance Crew Report", title_color="orange")
+    comms_receive(fb_message2D, title=fb_maint_chief.name, face=get_face(fb_maint_chief.id), title_color="orange")
     yield success
 
 ===== fb_investigate_message_3A =====
@@ -688,11 +702,11 @@ shared FB_STATUS = 0
     yield success
 
 ===== fb_investigate_message_3C =====
-    comms_receive(f"""{fb_message3C}""", title="Cargo Master's Report", title_color="orange")
+    comms_receive(fb_message3C, title=fb_cargo_master.name, face=get_face(fb_cargo_master.id), title_color="orange")
     yield success
 
 ===== fb_investigate_message_3D =====
-    comms_receive(f"""{fb_message3D}""", title="Cargo Master's Report", title_color="orange")
+    comms_receive(fb_message3D, title=fb_cargo_master.name, face=get_face(fb_cargo_master.id), title_color="orange")
     yield success
 
 //enable/comms if has_roles(COMMS_SELECTED_ID, "civ, suspect") and FB_STATUS >= 1
