@@ -21,6 +21,11 @@ shared fb_deck_chief = None
 shared fb_maint_chief = None
 shared fb_cargo_master = None
 
+# The investigation's authored prose (## Florbin Text in peacetime_remastered.amd), loaded into a
+# {key: template} map in fb_investigation. Templates carry {ship}/{time}/{dest}/{holds}/{role}/
+# {suspects} slots that comms_receive fills from task vars at send time.
+shared FB_TEXT = {}
+
 ====== fb_investigation ======
 
     FB_STATUS = 1
@@ -60,6 +65,10 @@ shared fb_cargo_master = None
     fb_deck_chief = fb_cast.get("deck_chief")
     fb_maint_chief = fb_cast.get("maint_chief")
     fb_cargo_master = fb_cast.get("cargo_master")
+
+    # Load the authored prose templates into FB_TEXT {key: template} from the ## Florbin Text
+    # section (via a Python helper, so MAST does not interpolate the {slots} at load time).
+    FB_TEXT = fb_text_load(amd_section(PR_DOC, "florbin_text"))
 
     # The lists are loaded in from shipnames.json to help build a fleet of cargo ships with captains, containers, and goods
     alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
@@ -455,27 +464,40 @@ shared fb_cargo_master = None
     ship1_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")  
     ship2_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")  
     ship3_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")  
-    comms_receive(f"""Ambassador Florbin has been kidnapped! We believe they were smuggled out in a cargo container. The last three ships to leave were:^^{investigate_msg}^^If you hurry, you might be able to catch them!^^The cargo ships travel from station to station, transferring cargo at each stop, so you may have to follow their flight plan, visit different stations, and interview people to get clues. Someone may have noticed something odd or suspicious.^^When you find the Ambassador, bring him back to DS 1.^""", title="Ambassador Kidnapped", title_color="orange")
-    + "Cargo Manifest {ship1_cargo1[0]}" fb_cargo_manifest_ship1 
-    + "Cargo Manifest {ship2_cargo1[0]}" fb_cargo_manifest_ship2 
+    # Prose is the `briefing` template (## Florbin Text); {suspects} fills from the task var.
+    suspects = investigate_msg
+    comms_receive(FB_TEXT.get("briefing"), title="Ambassador Kidnapped", title_color="orange")
+    + "Cargo Manifest {ship1_cargo1[0]}" fb_cargo_manifest_ship1
+    + "Cargo Manifest {ship2_cargo1[0]}" fb_cargo_manifest_ship2
     + "Cargo Manifest {ship3_cargo1[0]}" fb_cargo_manifest_ship3
 
+# The DS1 manifest previews - the `manifest` template + fb_holds (the 4-hold block). comms_receive
+# interpolates {ship}/{time}/{dest}/{holds} from the task vars set here.
 ===== fb_cargo_manifest_ship1 =====
-    ship1_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")  
-    temp_msg = "Cargo Manifest " + ship1_cargo1[0]
-    comms_receive(f"""Our records indicate {ship1_cargo1[0]} docked at this station at 08:34. It loaded^^Hold 1 - Container {ship1_cargo1[5]}: {ship1_cargo1[6]}^Hold 2 - Container {ship1_cargo1[7]}: {ship1_cargo1[8]}^Hold 3 - Container {ship1_cargo1[9]}: {ship1_cargo1[10]}^Hold 4 - Container {ship1_cargo1[11]}: {ship1_cargo1[12]}^^Their flight plan said they were headed for DS {ship1_cargo1[2]}.^""", title=temp_msg, title_color="orange")
+    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")
+    ship = cargo[0]
+    dtime = "08:34"
+    dest = cargo[2]
+    holds = fb_holds(cargo)
+    comms_receive(FB_TEXT.get("manifest"), title="Cargo Manifest " + ship, title_color="orange")
     yield success
 
 ===== fb_cargo_manifest_ship2 =====
-    ship2_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")  
-    temp_msg = "Cargo Manifest " + ship2_cargo1[0]
-    comms_receive(f"""Our records indicate {ship2_cargo1[0]} docked at this station at 09:18. It loaded^^Hold 1 - Container {ship2_cargo1[5]}: {ship2_cargo1[6]}^Hold 2 - Container {ship2_cargo1[7]}: {ship2_cargo1[8]}^Hold 3 - Container {ship2_cargo1[9]}: {ship2_cargo1[10]}^Hold 4 - Container {ship2_cargo1[11]}: {ship2_cargo1[12]}^^Their flight plan said they were headed for DS {ship2_cargo1[2]}.^""", title=temp_msg, title_color="orange")
+    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")
+    ship = cargo[0]
+    dtime = "09:18"
+    dest = cargo[2]
+    holds = fb_holds(cargo)
+    comms_receive(FB_TEXT.get("manifest"), title="Cargo Manifest " + ship, title_color="orange")
     yield success
 
 ===== fb_cargo_manifest_ship3 =====
-    ship3_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")  
-    temp_msg = "Cargo Manifest " + ship3_cargo1[0]
-    comms_receive(f"""Our records indicate {ship3_cargo1[0]} docked at this station at 10:22. It loaded^^Hold 1 - Container {ship3_cargo1[5]}: {ship3_cargo1[6]}^Hold 2 - Container {ship3_cargo1[7]}: {ship3_cargo1[8]}^Hold 3 - Container {ship3_cargo1[9]}: {ship3_cargo1[10]}^Hold 4 - Container {ship3_cargo1[11]}: {ship3_cargo1[12]}^^Their flight plan said they were headed for DS {ship3_cargo1[2]}.^""", title=temp_msg, title_color="orange")
+    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")
+    ship = cargo[0]
+    dtime = "10:22"
+    dest = cargo[2]
+    holds = fb_holds(cargo)
+    comms_receive(FB_TEXT.get("manifest"), title="Cargo Manifest " + ship, title_color="orange")
     yield success
 
 
@@ -615,29 +637,39 @@ shared fb_cargo_master = None
     if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue3B"):
         + "Interview Cargo Master" fb_investigate_message_3D
 
+# The A/B station previews - `preview_full/down/missing` (## Florbin Text) picked by records_status;
+# comms_receive fills {ship}/{time}/{dest}/{holds}/{role} from the task vars. A = first stop (cargo2,
+# next = stop2); B = second stop (cargo3, next = stop3).
 ===== fb_investigate_message_1A =====
-    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
+    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")
     rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    temp_msg = "Info on " + ship1_cargo2[0]
-    if rec_status == 1:
-        comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. At the time they left, their cargo manifest said they were carrying^^Container {ship1_cargo2[5]}: {ship1_cargo2[6]}^Container {ship1_cargo2[7]}: {ship1_cargo2[8]}^Container {ship1_cargo2[9]}: {ship1_cargo2[10]}^Container {ship1_cargo2[11]}: {ship1_cargo2[12]}""", title=temp_msg, title_color="orange")
-    elif rec_status == 2:
-        comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
+    ship = cargo[0]
+    dtime = "11:41"
+    dest = cargo[3]
+    holds = fb_holds(cargo)
+    crew = "Deck Chief"
+    tmpl = FB_TEXT.get("preview_full")
+    if rec_status == 2:
+        tmpl = FB_TEXT.get("preview_down")
     elif rec_status == 3:
-        comms_receive(f"""{ship1_cargo2[0]} docked here at 11:41. Their flight plan says they are headed for DS {ship1_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
+        tmpl = FB_TEXT.get("preview_missing")
+    comms_receive(tmpl, title="Info on " + ship, title_color="orange")
     yield success
 
 ===== fb_investigate_message_1B =====
-    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")
-    ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
+    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")
     rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    temp_msg = "Info on " + ship1_cargo2[0]
-    if rec_status == 1:
-        comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. At the time they left, their cargo manifest said they were carrying^^Container {ship1_cargo3[5]}: {ship1_cargo3[6]}^Container {ship1_cargo3[7]}: {ship1_cargo3[8]}^Container {ship1_cargo3[9]}: {ship1_cargo3[10]}^Container {ship1_cargo3[11]}: {ship1_cargo3[12]}""", title=temp_msg, title_color="orange")
-    elif rec_status == 2:
-        comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
+    ship = cargo[0]
+    dtime = "12:28"
+    dest = cargo[4]
+    holds = fb_holds(cargo)
+    crew = "Deck Chief"
+    tmpl = FB_TEXT.get("preview_full")
+    if rec_status == 2:
+        tmpl = FB_TEXT.get("preview_down")
     elif rec_status == 3:
-        comms_receive(f"""{ship1_cargo2[0]} docked here at 12:28. Their flight plan says they are headed for DS {ship1_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Deck Chief about that.""", title=temp_msg, title_color="orange")
+        tmpl = FB_TEXT.get("preview_missing")
+    comms_receive(tmpl, title="Info on " + ship, title_color="orange")
     yield success
 
 ===== fb_investigate_message_1C =====
@@ -649,27 +681,35 @@ shared fb_cargo_master = None
     yield success
 
 ===== fb_investigate_message_2A =====
-    ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")
+    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")
     rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    temp_msg = "Info on " + ship2_cargo2[0]
-    if rec_status == 1:
-        comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. At the time they left, their cargo manifest said they were carrying^^Container {ship2_cargo2[5]}: {ship2_cargo2[6]}^Container {ship2_cargo2[7]}: {ship2_cargo2[8]}^Container {ship2_cargo2[9]}: {ship2_cargo2[10]}^Container {ship2_cargo2[11]}: {ship2_cargo2[12]}""", title=temp_msg, title_color="orange")
-    elif rec_status == 2:
-        comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
+    ship = cargo[0]
+    dtime = "11:33"
+    dest = cargo[3]
+    holds = fb_holds(cargo)
+    crew = "Maintenance Crew"
+    tmpl = FB_TEXT.get("preview_full")
+    if rec_status == 2:
+        tmpl = FB_TEXT.get("preview_down")
     elif rec_status == 3:
-        comms_receive(f"""{ship2_cargo2[0]} docked here at 11:33. Their flight plan says they are headed for DS {ship2_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
+        tmpl = FB_TEXT.get("preview_missing")
+    comms_receive(tmpl, title="Info on " + ship, title_color="orange")
     yield success
 
 ===== fb_investigate_message_2B =====
-    ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")
+    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")
     rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    temp_msg = "Info on " + ship2_cargo3[0]
-    if rec_status == 1:
-        comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. At the time they left, their cargo manifest said they were carrying^^Container {ship2_cargo3[5]}: {ship2_cargo3[6]}^Container {ship2_cargo3[7]}: {ship2_cargo3[8]}^Container {ship2_cargo3[9]}: {ship2_cargo3[10]}^Container {ship2_cargo3[11]}: {ship2_cargo3[12]}""", title=temp_msg, title_color="orange")
-    elif rec_status == 2:
-        comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Maintenance Cew about that.""", title=temp_msg, title_color="orange")
+    ship = cargo[0]
+    dtime = "12:44"
+    dest = cargo[4]
+    holds = fb_holds(cargo)
+    crew = "Maintenance Crew"
+    tmpl = FB_TEXT.get("preview_full")
+    if rec_status == 2:
+        tmpl = FB_TEXT.get("preview_down")
     elif rec_status == 3:
-        comms_receive(f"""{ship2_cargo3[0]} docked here at 12:44. Their flight plan says they are headed for DS {ship2_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Maintenance Crew about that.""", title=temp_msg, title_color="orange")
+        tmpl = FB_TEXT.get("preview_missing")
+    comms_receive(tmpl, title="Info on " + ship, title_color="orange")
     yield success
 
 ===== fb_investigate_message_2C =====
@@ -681,27 +721,35 @@ shared fb_cargo_master = None
     yield success
 
 ===== fb_investigate_message_3A =====
-    ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")
+    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")
     rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    temp_msg = "Info on " + ship3_cargo2[0]
-    if rec_status == 1:
-        comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. At the time the left, their cargo manifest said they were carrying^^Container {ship3_cargo2[5]}: {ship3_cargo2[6]}^Container {ship3_cargo2[7]}: {ship3_cargo2[8]}^Container {ship3_cargo2[9]}: {ship3_cargo2[10]}^Container {ship2_cargo3[11]}: {ship3_cargo2[12]}""", title=temp_msg, title_color="orange")
-    elif rec_status == 2:
-        comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
+    ship = cargo[0]
+    dtime = "11:22"
+    dest = cargo[3]
+    holds = fb_holds(cargo)
+    crew = "Cargo Master"
+    tmpl = FB_TEXT.get("preview_full")
+    if rec_status == 2:
+        tmpl = FB_TEXT.get("preview_down")
     elif rec_status == 3:
-        comms_receive(f"""{ship3_cargo2[0]} docked here at 11:22. Their flight plan says they are headed for DS {ship3_cargo2[3]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
+        tmpl = FB_TEXT.get("preview_missing")
+    comms_receive(tmpl, title="Info on " + ship, title_color="orange")
     yield success
 
 ===== fb_investigate_message_3B =====
-    ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")
+    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")
     rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    temp_msg = "Info on " + ship3_cargo3[0]
-    if rec_status == 1:
-        comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. At the time the left, their cargo manifest said they were carrying^^Container {ship3_cargo3[5]}: {ship3_cargo3[6]}^Container {ship3_cargo3[7]}: {ship3_cargo3[8]}^Container {ship3_cargo3[9]}: {ship3_cargo3[10]}^Container {ship3_cargo3[11]}: {ship3_cargo3[12]}""", title=temp_msg, title_color="orange")
-    elif rec_status == 2:
-        comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. Our port management computers are down, so we can't call up the cargo manifest. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
+    ship = cargo[0]
+    dtime = "12:35"
+    dest = cargo[4]
+    holds = fb_holds(cargo)
+    crew = "Cargo Master"
+    tmpl = FB_TEXT.get("preview_full")
+    if rec_status == 2:
+        tmpl = FB_TEXT.get("preview_down")
     elif rec_status == 3:
-        comms_receive(f"""{ship3_cargo3[0]} docked here at 12:35. Their flight plan says they are headed for DS {ship3_cargo3[4]}. The cargo manifest... huh, it looks like that file is missing. You might want to check with our Cargo Master about that.""", title=temp_msg, title_color="orange")
+        tmpl = FB_TEXT.get("preview_missing")
+    comms_receive(tmpl, title="Info on " + ship, title_color="orange")
     yield success
 
 ===== fb_investigate_message_3C =====

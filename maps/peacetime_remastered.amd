@@ -317,3 +317,23 @@ Face: terran_female
 Roles: fb_informant
 ---
 Signs off every manifest at the dock. Little gets loaded here without her seeing it.
+
+// ---- The investigation's authored prose, as declarative templates. florbin_case.mast loads this
+// section into FB_TEXT and fills the {slots} at send time (comms_receive interpolates from task
+// vars): {ship} {dtime} {dest} (next DS#) {holds} (fb_holds manifest block) {crew} {suspects}.
+## [Florbin Text](florbin_text)
+
+### [Briefing](briefing)
+Ambassador Florbin has been kidnapped - we believe he was smuggled off the station inside a cargo container. The last three haulers to leave were:^^{suspects}^^If you hurry you may still catch them. These ships run station to station, shuffling containers at every stop, so follow their flight plans, dock at the stations along the way, and interview the crews. Someone always notices something. When you find the Ambassador, bring him home to DS 1.
+
+### [Manifest](manifest)
+Our records show {ship} docked here at {dtime}. It loaded:^^{holds}^^Its flight plan listed DS {dest} as the next stop.
+
+### [Preview Full](preview_full)
+{ship} docked here at {dtime}. Its flight plan says it is headed for DS {dest}. At the time it left, its cargo manifest listed:^^{holds}
+
+### [Preview Down](preview_down)
+{ship} docked here at {dtime}. Its flight plan says it is headed for DS {dest}. Our port management computers are down, so I cannot call up the cargo manifest - you might check with our {crew}.
+
+### [Preview Missing](preview_missing)
+{ship} docked here at {dtime}. Its flight plan says it is headed for DS {dest}. The cargo manifest... huh, that file has gone missing. You might check with our {crew}.
