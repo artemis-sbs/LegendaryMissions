@@ -596,6 +596,91 @@ def quest_tab_items(client_id, ship_id):
     return quest_log_build_items(sources)
 
 
+# --- Quests-tab action gating ------------------------------------------------
+# WHICH consoles may Accept/Abandon or Engage a quest. Resolution order for a given
+# quest: its own per-quest override (accept_consoles / engage_consoles, authored via
+# the AMD `Accept On:` / `Engage On:` labels) FIRST, else the mission default
+# (QUEST_ACCEPT_CONSOLES / QUEST_ENGAGE_CONSOLES). An empty spec means "any console
+# that shows the tab" (set QUEST_ACCEPT_CONSOLES = "" to restore the old any-console
+# behavior). quest_tab_controls_gate drives the tab: it decides buttons-vs-text per
+# console and returns a signature so the tab repaints once when a selection actually
+# changes what this console may do (a station-specific job).
+def _quest_console_set(spec):
+    """Normalise a console spec ("comms, admiral" or ["comms","admiral"] or None) to a
+    lowercased set. None/"" -> empty set == 'any console'."""
+    if spec is None:
+        return set()
+    if isinstance(spec, str):
+        spec = spec.split(",")
+    return {str(c).strip().lower() for c in spec if str(c).strip()}
+
+
+def _quest_console_allowed(console, spec):
+    """True if `console` may act under `spec` (empty spec allows any console)."""
+    allowed = _quest_console_set(spec)
+    return (not allowed) or ((console or "").strip().lower() in allowed)
+
+
+def _quest_console_names(spec):
+    """Human list of a spec's consoles: 'Comms', 'Comms or Admiral', 'Comms, Admiral or Helm'."""
+    names = [c.capitalize() for c in sorted(_quest_console_set(spec))]
+    if not names:
+        return "any"
+    if len(names) == 1:
+        return names[0]
+    return ", ".join(names[:-1]) + " or " + names[-1]
+
+
+def _quest_effective_consoles(item, key, default_spec):
+    """The per-quest console override for `key` (read fresh off the quest's AMD `data`,
+    where the `Accept On:` / `Engage On:` labels store it, so it need not ride the log
+    row), else the mission `default_spec`."""
+    if item is not None and not gui_list_box_is_header(item):
+        data = quest_get_data(item.get("agent_id"), item.get("key")) or {}
+        per = data.get(key)
+        if per not in (None, ""):
+            return per
+    return default_spec
+
+
+def quest_tab_controls_gate(console, item, accept_consoles, engage_enabled, engage_consoles):
+    """Resolve which Quests-tab action controls THIS console shows for the selected quest.
+
+    Returns a dict:
+      show_accept - show Accept / Abandon buttons (console allowed for accept)
+      show_engage - show Engage button (engage enabled + console allowed + quest ACTIVE)
+      hint        - explanatory text when a control is gated out (naming who can act, or
+                    'accept first'), or "" when nothing needs explaining
+      sig         - signature of the above; the tab repaints once when it changes on a
+                    selection (so a station-specific job flips buttons<->text correctly)
+    """
+    console = (console or "").strip().lower()
+    is_quest = item is not None and not gui_list_box_is_header(item)
+    state = int(item.get("state")) if is_quest and item.get("state") is not None else None
+
+    acc_spec = _quest_effective_consoles(item, "accept_consoles", accept_consoles)
+    show_accept = _quest_console_allowed(console, acc_spec)
+
+    hints = []
+    if not show_accept:
+        hints.append("Manage jobs at the " + _quest_console_names(acc_spec) + " console.")
+
+    # Engage is opt-in (QUEST_ENGAGE_ENABLED) and only relevant on engage-capable consoles;
+    # a non-engage console shows no Engage control and no Engage hint.
+    show_engage = False
+    if engage_enabled:
+        eng_spec = _quest_effective_consoles(item, "engage_consoles", engage_consoles)
+        if _quest_console_allowed(console, eng_spec):
+            if state == int(QuestState.ACTIVE):
+                show_engage = True
+            elif is_quest:
+                hints.append("Accept this job before engaging.")
+
+    hint = "  ".join(hints)
+    sig = f"{int(show_accept)}|{int(show_engage)}|{hint}"
+    return {"show_accept": show_accept, "show_engage": show_engage, "hint": hint, "sig": sig}
+
+
 def quest_tab_accept(item):
     """Accept an available (IDLE) quest. No-op on a section header."""
     if item is None or gui_list_box_is_header(item):

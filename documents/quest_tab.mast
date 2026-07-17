@@ -2,12 +2,23 @@
 # Quest log - a top tab on every console showing the player's quests (ship +
 # client + shared/game), state-ordered (active -> available -> complete ->
 # failed) with the AMD narrative. Gated by the QUEST_TAB_ENABLED setting so a
-# mission can turn it off. (Accept/abandon controls are a follow-up; they need
-# the flattened list to carry each quest's owning agent.)
+# mission can turn it off.
+#
+# The tab DISPLAYS on any console in quest_console_enable(...) below, but the
+# action controls are gated per CONSOLE: Accept/Abandon show only on the consoles
+# in QUEST_ACCEPT_CONSOLES (default comms + admiral), Engage only on those in
+# QUEST_ENGAGE_CONSOLES (default helm) and only once the job is accepted. A quest
+# can override either list for itself via the AMD `Accept On:` / `Engage On:`
+# labels (a station-specific job). On a console that can't act, the buttons are
+# replaced with text naming the console(s) that can. quest_tab_controls_gate
+# resolves all of this.
 #
 default CONSOLE_SELECT = ""              # exists at startup
 default shared QUEST_TAB_ENABLED = True  # missions may set this False
 default shared QUEST_ENGAGE_ENABLED = False  # missions WITH travel set True -> Engage button
+# WHICH consoles may act. "" = any console showing the tab (the pre-gating behavior).
+default shared QUEST_ACCEPT_CONSOLES = "comms,admiral"  # who may Accept/Abandon
+default shared QUEST_ENGAGE_CONSOLES = "helm"           # who may Engage (when enabled)
 
 if QUEST_TAB_ENABLED:
     gui_tab_add_top("quest")
@@ -27,22 +38,41 @@ if QUEST_TAB_ENABLED:
     ship_id = sbs.get_ship_of_client(client_id)
     items = quest_tab_items(client_id, ship_id)
     sel_desc = "Select a quest from the list."
+    # Selection persists across a gate-driven repaint (below) so the panel doesn't
+    # jump when a station-specific job flips the controls.
+    default quest_sel_index = -1
 
     # Quest list (left) + narrative (right) + accept/abandon controls.
     gui_section(style="area: 0,45px, 38,100; background:#1572;")
     qbox = gui_list_box(items, "row-height:0.1em;", item_template=quest_log_template, title_template=quest_log_title, select=True, collapsible=True)
+    if quest_sel_index >= 0:
+        qbox.set_selected_index(quest_sel_index, False)
+
+    sel = qbox.get_value()
+    if sel is not None and not gui_list_box_is_header(sel):
+        sel_desc = sel.get("desc")
 
     gui_section(style="area: 38,45px, 100,90; background:#1572;")
     qdesc = gui_text_area("{sel_desc}", style="tag:q-desc;padding:10px,15px,10px,15px;")
+
+    # Which controls THIS console may show for the selected job (per-quest override ->
+    # mission default). The signature repaints the tab once when a selection changes
+    # what this console can do (see the on-change below), so buttons<->text stay correct.
+    gate = quest_tab_controls_gate(CONSOLE_SELECT, sel, QUEST_ACCEPT_CONSOLES, QUEST_ENGAGE_ENABLED, QUEST_ENGAGE_CONSOLES)
+    gate_sig = gate.get("sig")
+
     on change qbox.get_value():
         sel = qbox.get_value()
+        quest_sel_index = qbox.get_selected_index()
         if sel is not None and not gui_list_box_is_header(sel):
             sel_desc = sel.get("desc")
             qdesc.value = sel_desc
+        if quest_tab_controls_gate(CONSOLE_SELECT, sel, QUEST_ACCEPT_CONSOLES, QUEST_ENGAGE_ENABLED, QUEST_ENGAGE_CONSOLES).get("sig") != gate_sig:
+            jump repaint
 
     gui_section(style="area: 38,90, 100,100;")
     gui_row("row-height: 2em;")
-    if QUEST_ENGAGE_ENABLED:
+    if gate.get("show_engage"):
         # Travel to the selected job's destination. Mission-agnostic: emit the intent with
         # the quest's owner + key; the mission (e.g. Open Universe //signal/quest_engage)
         # resolves the on_reach target and performs the actual jump.
@@ -50,11 +80,14 @@ if QUEST_TAB_ENABLED:
             qsel = qbox.get_value()
             if qsel is not None and not gui_list_box_is_header(qsel):
                 signal_emit("quest_engage", {"QE_SHIP": ship_id, "QE_AGENT": qsel.get("agent_id"), "QE_KEY": qsel.get("key")})
-    on gui_message(gui_button("Accept")):
-        quest_tab_accept(qbox.get_value())
-        jump repaint
-    on gui_message(gui_button("Abandon")):
-        quest_tab_abandon(qbox.get_value())
-        jump repaint
+    if gate.get("show_accept"):
+        on gui_message(gui_button("Accept")):
+            quest_tab_accept(qbox.get_value())
+            jump repaint
+        on gui_message(gui_button("Abandon")):
+            quest_tab_abandon(qbox.get_value())
+            jump repaint
+    if gate.get("hint") != "":
+        gui_text(f"$text:{gate.get('hint')};justify:left;font:gui-1;color:#bbb")
 
     await gui()
