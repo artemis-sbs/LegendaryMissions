@@ -174,9 +174,13 @@ class FlorbinCaseInvariants(unittest.TestCase):
         idxs = set(_generate(seed)[0]["kidnapper_index"] for seed in range(40))
         self.assertGreater(len(idxs), 1, "kidnapper index should vary across seeds")
 
-    def test_fb_fill_missing_slot_is_blank(self):
-        self.assertEqual(MH.fb_fill("a {x} b {y}", {"x": "1"}), "a 1 b ")
-        self.assertEqual(MH.fb_fill("", {"x": "1"}), "")
+    def test_amd_fill_missing_slot_left_literal(self):
+        # fb_generate_case now fills templates via the shared amd_fill (sbs_utils.procedural.amd_doc):
+        # known slots fill, unknown slots stay literal, ""/None template -> "".
+        from sbs_utils.procedural.amd_doc import amd_fill
+        self.assertEqual(amd_fill("a {x} b {y}", {"x": "1"}), "a 1 b {y}")
+        self.assertEqual(amd_fill("", {"x": "1"}), "")
+        self.assertEqual(amd_fill(None, {"x": "1"}), "")
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ import sbs
 from sbs_utils.procedural.query import to_object_list
 from sbs_utils.procedural.roles import role
 from sbs_utils.procedural.comms import comms_message
+from sbs_utils.procedural.amd_doc import amd_fill
 
 
 #**************************************************************************
@@ -37,17 +38,6 @@ def fb_holds(cargo):
     return "^".join(
         "Hold " + str(i + 1) + " - Container " + str(cargo[5 + 2 * i]) + ": " + str(cargo[6 + 2 * i])
         for i in range(4))
-
-
-def fb_text_load(section):
-    """{key: template} from a parsed AMD section's children (florbin_case.mast ## Florbin Text).
-    Built in Python (not a MAST loop) so the template strings - which carry {ship}/{suspects}/...
-    slots - are NOT interpolated at load time; comms_receive fills them per message instead."""
-    out = {}
-    if section is not None:
-        for n in section.get("children", []):
-            out[n.get("key")] = (n.get("description") or "").strip()
-    return out
 
 
 def fb_host_contact(contact, clue_role, report):
@@ -105,26 +95,6 @@ def fb_times_map():
 FB_HOLD_GOODS_IDX = [6, 8, 10, 12]
 # Contact (## Cast key) that informs on each tracked suspect: ship 1 -> Deck Chief, etc.
 FB_CONTACTS = ["deck_chief", "maint_chief", "cargo_master"]
-
-
-class _FBFormatDict(dict):
-    """format_map helper: an unfilled {slot} renders empty rather than raising."""
-    def __missing__(self, key):
-        return ""
-
-
-def fb_fill(template, values):
-    """Fill an AMD prose template's {slots} from a values dict. The report templates live in
-    peacetime_remastered.amd (## Florbin Text: report_stop / report_stop_clue / report_rename);
-    filling them here (once, at generation) instead of in a MAST string literal keeps MAST from
-    interpolating the {slots} at load time. The filled report has no braces left, so the later
-    comms_receive() re-interpolation is a harmless no-op."""
-    if not template:
-        return ""
-    try:
-        return template.format_map(_FBFormatDict(values))
-    except Exception:
-        return template
 
 
 def fb_pools(ship_name_data):
@@ -224,17 +194,17 @@ def fb_generate_case(pools, clue0, clues, templates, rng,
             unl1, load1 = fb_transfer_hold(cargo2, rand1, rng)      # first stop (state = cargo2)
             cargo3 = copy.deepcopy(cargo2)
             unl2, load2 = fb_transfer_hold(cargo3, rand1, rng)      # second stop (state = cargo3)
-            c_part = fb_fill(templates.get("report_stop_clue"), {
+            c_part = amd_fill(templates.get("report_stop_clue"), {
                 "ship": orig_name, "unloaded": unl1, "loaded": load1,
                 "holds": fb_holds(cargo2), "clue": my_clue})
             if is_kidnapper and rng.random() < rename_chance:
                 cur_name = fb_make_name(pools, "civilian", rng)     # the "changed registry" twist
                 cargo3[0] = cur_name
-                d_part = fb_fill(templates.get("report_rename"), {
+                d_part = amd_fill(templates.get("report_rename"), {
                     "ship": orig_name, "unloaded": unl2, "loaded": load2,
                     "holds": fb_holds(cargo3), "newname": cur_name})
             else:
-                d_part = fb_fill(templates.get("report_stop"), {
+                d_part = amd_fill(templates.get("report_stop"), {
                     "ship": orig_name, "unloaded": unl2, "loaded": load2,
                     "holds": fb_holds(cargo3)})
             report = c_part + "^^" + d_part

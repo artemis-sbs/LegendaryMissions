@@ -60,7 +60,7 @@ shared FB_TIMES = {}
 
     # Authored prose (## Florbin Text) + the A/B docking times, both via Python helpers so MAST does
     # not interpolate the {slots} at load time.
-    FB_TEXT = fb_text_load(amd_section(PR_DOC, "florbin_text"))
+    FB_TEXT = amd_text_map(amd_section(PR_DOC, "florbin_text"))
     FB_TIMES = fb_times_map()
 
     # ---- The suspect trail is generated as pure DATA by fb_generate_case (mission_helper_functions.py),
