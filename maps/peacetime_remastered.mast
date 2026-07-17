@@ -169,7 +169,9 @@ Properties:
         quest_add(p.id, "job_poacher", "Board the Poacher", "Disable the unregistered trawler (drop its shields below 50%) and demand its surrender. Do NOT destroy it.", state=1, data={"on_signal": {"name": "poacher_boarded"}, "fail_on_signal": {"name": "poacher_killed"}, "reward": {"credits": 300}})
         quest_add(p.id, "job_mercy", "Mercy Run", "A shuttle is adrift and losing life support. Reach it before the clock runs out.", state=1, data={"on_signal": {"name": "mercy_reached"}, "fail_after": {"minutes": 6}, "reward": {"credits": 250}})
         quest_add(p.id, "job_customs", f"Customs Patrol ({traffic_n})", f"Hail and clear {traffic_n} civilian traders for transit.", state=1, data={"on_signal": {"name": "customs_cleared", "count": traffic_n}, "reward": {"credits": 120}})
-        quest_add(p.id, "job_survey", f"Anomaly Survey ({survey_n})", f"Have Science scan {survey_n} sensor anomalies and log them.", state=1, data={"on_signal": {"name": "anomaly_surveyed", "count": survey_n}, "reward": {"credits": 130}})
+        # Uses the declarative quest-scan path (on_scan + reveal_scan): the quest driver
+        # makes the anomalies scannable and renders the scan text - no //science route here.
+        quest_add(p.id, "job_survey", f"Anomaly Survey ({survey_n})", f"Have Science scan {survey_n} sensor anomalies and log them.", state=1, data={"on_scan": {"role": "anomaly", "count": survey_n}, "reveal_scan": "Survey logged: a stable subspace distortion. No threat - filed with the science log.", "reward": {"credits": 130}})
 
     task_schedule(pr_mercy_watch)
     ->END
@@ -234,14 +236,9 @@ Properties:
 
 
 #-----------------------------------------------------------------------------------------------------------------------------
-# Anomaly Survey (Science): scan a sensor anomaly to log it.
-//enable/science if has_roles(SCIENCE_SELECTED_ID, "anomaly")
-//science if has_roles(SCIENCE_SELECTED_ID, "anomaly")
-    + "scan":
-        signal_emit("quest_signal", {"SIGNAL_NAME": "anomaly_surveyed"})
-        <scan>
-            % Survey logged: a stable subspace distortion, no threat. Data filed with the science log.
-    yield success
+# Anomaly Survey (Science) is fully declarative now: the job_survey quest carries
+# on_scan {role: anomaly} + reveal_scan, and the quest driver makes the anomalies
+# scannable and renders the scan text. No //science route needed here.
 
 
 #-----------------------------------------------------------------------------------------------------------------------------

@@ -323,7 +323,11 @@ def quest_on_kill_shared(destroyed_id):
 
 def quest_on_scan(scanner_id, scanned_id):
     """Advance the scanner's (and game/SHARED) on_scan quests when science scans
-    a target. on_scan {role: <role>} (optional) filters by the scanned role."""
+    a target. on_scan {role: <role>} (optional) filters by the scanned role.
+
+    Each DISTINCT target counts once toward a counted goal (re-scanning the same
+    object does not over-count) - the ids already counted are kept in the quest's
+    ``_scanned`` list."""
     if scanner_id is None:
         return
     for aid in (scanner_id, Agent.SHARED_ID):
@@ -334,7 +338,45 @@ def quest_on_scan(scanner_id, scanned_id):
             want = trig.get("role")
             if want and not has_role(scanned_id, want):
                 continue
+            seen = quest_get_key(aid, qid, "_scanned", None) or []
+            if scanned_id in seen:
+                continue
+            seen.append(scanned_id)
+            quest_set_key(aid, qid, "_scanned", seen)
             _advance_count(aid, qid, data, trig.get("count", 1))
+
+
+def _quest_scan_reveals(scanner_id, scanned_id):
+    """Active on_scan quests (on the scanner or SHARED) that carry declarative scan text
+    (reveal_scan) and whose on_scan role matches the scanned object. Returns the list of
+    reveal-text strings (usually one)."""
+    out = []
+    if scanner_id is None or scanned_id is None:
+        return out
+    for aid in (scanner_id, Agent.SHARED_ID):
+        for qid, data in _active_quests(aid):
+            reveal = data.get("reveal_scan")
+            if not reveal:
+                continue
+            trig = data.get("on_scan")
+            want = trig.get("role") if isinstance(trig, dict) else None
+            if want and not has_role(scanned_id, want):
+                continue
+            out.append(str(reveal))
+    return out
+
+
+def quest_scan_enabled(scanner_id, scanned_id):
+    """True if the scanned object is the target of an active on_scan quest that defines
+    scan text. A //enable/science route gates on this so quest-scan targets become
+    scannable without a hand-authored enable route."""
+    return len(_quest_scan_reveals(scanner_id, scanned_id)) > 0
+
+
+def quest_scan_text(scanner_id, scanned_id):
+    """The declarative scan text to show for a quest-scan target (joins multiple matching
+    quests). Rendered by the driver's //science route as the object's scan result."""
+    return "^^".join(_quest_scan_reveals(scanner_id, scanned_id))
 
 
 def quest_on_dock(ship_id, station_id):

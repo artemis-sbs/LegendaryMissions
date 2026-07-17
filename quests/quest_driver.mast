@@ -48,6 +48,18 @@
     quest_on_scan(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
     ->END
 
+# Declarative quest scan content: a quest carrying `Reveals:`/`reveal_scan` makes its
+# on_scan target scannable (enable) and renders that text as the scan result - so a
+# survey/clue scan needs no hand-authored //science route. The bare //science above
+# still advances the on_scan count.
+//enable/science if quest_scan_enabled(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+
+//science if quest_scan_enabled(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+    quest_scan_reveal = quest_scan_text(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+    + "scan":
+        <scan>
+            " {quest_scan_reveal}
+
 # Ship docked a station - advances on_dock quests (return-to-base etc.).
 //shared/signal/ship_docked
     quest_on_dock(DOCK_SHIP_ID, DOCK_STATION_ID)
