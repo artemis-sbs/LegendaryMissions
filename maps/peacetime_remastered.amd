@@ -218,22 +218,74 @@ Loc: 16000, 0, -12000
 
 // ---- The Florbin cargo ships' flavor scans (suspect/discovered), rendered by the generic
 // science route. Registered for BOTH peacetime maps by peacetime.mast (which runs the shared
-// kidnap_caper); the Intel line resolves each ship's captain via {captain}. Only the dynamic
-// proximity Hold 1-4 bio-scan stays hand-authored in peacetime.mast.
+// kidnap_caper). Dialogue-native form (`Scan of:` role + `Tab:` + `%` variants), same as the
+// ## Scans section - a fresh line each scan. The intel tab resolves each ship's captain via
+// {captain} (filled per object after the random pick). Only the dynamic proximity Hold 1-4
+// bio-scan stays hand-authored in peacetime.mast.
 ## [Cargo Scans](cargo_scans)
 
-### [Merchant Cargo Ship](suspect)
+### [Merchant Cargo Ship](suspect_scan)
 ---
-Scan: This is a friendly merchant cargo ship.
-Status: No additional data available.
-Intel: The ship is registered to Captain {captain}.
-Bio: The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
+Scan of: suspect
+Tab: scan
 ---
+% This is a friendly merchant cargo ship.
+% A civilian freighter, manifest logged, running lawful.
+% Standard merchant hauler - transponder clean, nothing flagged.
 
-### [Suspicious Cargo Ship](discovered)
+### [Merchant Cargo Ship - Status](suspect_status)
 ---
-Scan: This is an unfriendly merchant cargo ship.
-Status: No additional data available.
-Intel: The ship is registered to Captain {captain}.
-Bio: The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
+Scan of: suspect
+Tab: status
 ---
+% No additional data available.
+% Sensors read nothing further at this range.
+
+### [Merchant Cargo Ship - Intel](suspect_intel)
+---
+Scan of: suspect
+Tab: intel
+---
+% The ship is registered to Captain {captain}.
+% Registry lists the master as Captain {captain}.
+
+### [Merchant Cargo Ship - Bio](suspect_bio)
+---
+Scan of: suspect
+Tab: bio
+---
+% The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
+% Shielded holds - close the range for a deeper bio-scan.
+
+### [Suspicious Cargo Ship](discovered_scan)
+---
+Scan of: discovered
+Tab: scan
+---
+% This is an unfriendly merchant cargo ship.
+% A freighter with a falsified transponder - this is our ship.
+% Hostile cargo hauler, running dark. This is the one.
+
+### [Suspicious Cargo Ship - Status](discovered_status)
+---
+Scan of: discovered
+Tab: status
+---
+% No additional data available.
+% Sensors read nothing further at this range.
+
+### [Suspicious Cargo Ship - Intel](discovered_intel)
+---
+Scan of: discovered
+Tab: intel
+---
+% The ship is registered to Captain {captain}.
+% Registry lists the master as Captain {captain} - the record is forged.
+
+### [Suspicious Cargo Ship - Bio](discovered_bio)
+---
+Scan of: discovered
+Tab: bio
+---
+% The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
+% Shielded holds - close the range for a deeper bio-scan.
