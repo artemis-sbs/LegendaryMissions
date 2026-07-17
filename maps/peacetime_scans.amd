@@ -1,33 +1,74 @@
-// Declarative per-role science scans for Peacetime Remastered's job objects, authored in
-// the AMD scan vocabulary (sbs_utils.procedural.amd_science). Loaded once in pr_jobs_setup:
+// Declarative science scans for Peacetime Remastered's job objects, authored in the
+// dialogue-native AMD scan form (mirrors OU dialogue: a fence binds the object+tab, the
+// body holds the %-random lines). Loaded once in pr_jobs_setup:
 //   science_define_scan_amd(document_get_amd_file(".../peacetime_scans.amd", data_parser=amd_scan_data))
-// Each heading # [Name](role) registers science_define_scan(role, {tab: text}); the generic
-// science route makes any object holding that role scannable and renders these tabs. Values
-// may carry {key} placeholders, filled per object from inventory at scan time.
+// One heading per (role, tab): `Scan of:` is the role (like dialogue's Speaker), `Tab:` is
+// which science tab, and each `%` body line is a random variant (one picked per scan).
 // (target_drone is raider-side, covered by the standard enemy scan; the anomaly uses the
 // quest reveal_scan path.)
 
-# [Hazard Rock](hazard_rock)
+# [Hazard Rock](rock_scan)
 ---
-Scan: Dense metallic asteroid drifting in the shipping lane.
-Mat: High nickel-iron content. Flagged for demolition - clear to destroy.
+Scan of: hazard_rock
+Tab: scan
 ---
+% Dense metallic asteroid drifting in the shipping lane.
+% A slow-tumbling nickel-iron boulder, squarely in the lane.
+% Rocky debris on a collision line with the shipping route.
 
-# [Poacher](poacher)
+# [Hazard Rock - Materials](rock_mat)
 ---
-Scan: Unregistered civilian trawler running dark.
-Bio: Holds contain protected space-life specimens. This is a poaching vessel.
-Intel: Falsified transponder. Disable and board - do NOT destroy.
+Scan of: hazard_rock
+Tab: mat
 ---
+% High nickel-iron content. Flagged for demolition - clear to destroy.
 
-# [Civilian Trader](traffic)
+# [Poacher](poacher_scan)
 ---
-Scan: Licensed civilian trader on a filed transit route.
-Intel: Manifest checks out. Safe to clear for transit.
+Scan of: poacher
+Tab: scan
 ---
+% Unregistered civilian trawler running dark.
+% Civilian hull, transponder silent, running without lights.
 
-# [Stranded Shuttle](mercy_target)
+# [Poacher - Bio](poacher_bio)
 ---
-Scan: Civilian shuttle, adrift and unpowered.
-Bio: Life signs aboard, life support failing. Reach it quickly.
+Scan of: poacher
+Tab: bio
 ---
+% Holds contain protected space-life specimens. This is a poaching vessel.
+
+# [Poacher - Intel](poacher_intel)
+---
+Scan of: poacher
+Tab: intel
+---
+% Falsified transponder. Disable and board - do NOT destroy.
+
+# [Civilian Trader](traffic_scan)
+---
+Scan of: traffic
+Tab: scan
+---
+% Licensed civilian trader on a filed transit route.
+
+# [Civilian Trader - Intel](traffic_intel)
+---
+Scan of: traffic
+Tab: intel
+---
+% Manifest checks out. Safe to clear for transit.
+
+# [Stranded Shuttle](mercy_scan)
+---
+Scan of: mercy_target
+Tab: scan
+---
+% Civilian shuttle, adrift and unpowered.
+
+# [Stranded Shuttle - Bio](mercy_bio)
+---
+Scan of: mercy_target
+Tab: bio
+---
+% Life signs aboard, life support failing. Reach it quickly.
