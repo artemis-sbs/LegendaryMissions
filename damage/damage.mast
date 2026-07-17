@@ -1,5 +1,5 @@
 
-//damage/object if has_roles(DAMAGE_TARGET_ID, "tsn, station") or has_roles(DAMAGE_TARGET_ID, "tsn, friendly")
+//damage/object if is_allied_to_players(DAMAGE_TARGET_ID, "station") or is_allied_to_players(DAMAGE_TARGET_ID, "friendly")
 
     fr = to_object(DAMAGE_TARGET_ID)
     ->END if fr is None

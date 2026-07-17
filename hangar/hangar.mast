@@ -10,7 +10,13 @@ default shared HANGAR_QUEST_DOC = None
 #
 #  Background task to look for strays
 #
-shared find_stray = task_schedule(find_stray_crafts)
+# HANGAR_AUTO_MANAGE gates hangar's AMBIENT behavior that fires just from loading the addon:
+# the find_stray_crafts background sweep and the //spawn routes that auto-populate player ships
+# and friendly stations with craft. Defaults True so real missions are unchanged; a harness that
+# only wants the hangar API (e.g. a conformance test range) sets it False to avoid those global
+# spawns + perpetual tasks piling up across many rapidly-cycled scenarios.
+default shared HANGAR_AUTO_MANAGE = True
+shared find_stray = task_schedule(find_stray_crafts) if HANGAR_AUTO_MANAGE else None
 default HANGAR_CONSOLE_ENABLED = True
 # Just make sure the data loads
 hangar_get_craft_data("terran")
@@ -20,7 +26,7 @@ hangar_get_craft_data("terran")
 # jump to another label proper for that item
 # or END which stops running this task/flow 
 #
-//spawn if has_role(SPAWNED_ID, "__player__")
+//spawn if has_role(SPAWNED_ID, "__player__") and HANGAR_AUTO_MANAGE
     #
     # For now put on a fighter on the player ship
     #
@@ -54,10 +60,15 @@ hangar_get_craft_data("terran")
         hangar_random_craft_spawn(SPAWNED_ID, "shuttle")
 
 
-//spawn if has_roles(SPAWNED_ID, "tsn, station")
-    # Minor hack to hope player fighters spawn first
+//spawn if has_role(SPAWNED_ID, "station") and HANGAR_AUTO_MANAGE
+    # Defensive craft go on stations FRIENDLY TO THE PLAYERS - not a hardcoded side.
+    # Fire for any station, wait a tick so player sides exist (also the old "hope player
+    # fighters spawn first" hack), then gate on friendliness. The friendly check lives in the
+    # BODY, not the //spawn condition: is_allied_to_players iterates role("__player__"), so at
+    # spawn-dispatch time (before players are up) a condition-side check would always be False.
     await delay_sim(1)
     ->END if to_object(SPAWNED_ID) is None
+    ->END if not is_allied_to_players(SPAWNED_ID, "station")
 
     shuttle_count = grid_count_grid_data(SPAWNED.art_id, "shuttle", 0)
     fighter_count = grid_count_grid_data(SPAWNED.art_id, "fighter", 0)

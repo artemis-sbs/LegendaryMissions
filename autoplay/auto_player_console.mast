@@ -218,7 +218,7 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
         ln = diff.length()
         _hmode = "pursue"
 
-        if ln < 700 and has_roles(t, "tsn, station") and last_go_dock:
+        if ln < 700 and has_role(t, "station") and side_are_friendly(ship, t) and last_go_dock:
             ship.data_set.set("dock_base_id", to_id(t))
             state = ship.data_set.get("dock_state",0)
             if state != "docked" and state != "dock_start":

@@ -39,8 +39,8 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
             % Reading a mild flu circulating on this station. Shore leave is not recommended.
             % There is no sign of pathogens on this station.
 
-//enable/science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
-//science if has_roles(SCIENCE_SELECTED_ID, "tsn, friendly")
+//enable/science if has_role(SCIENCE_SELECTED_ID, "friendly") and side_are_friendly(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
+//science if has_role(SCIENCE_SELECTED_ID, "friendly") and side_are_friendly(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
 
     + "scan":
         <scan>

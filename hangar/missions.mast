@@ -1,13 +1,18 @@
 
 
-//spawn if has_roles(SPAWNED_ID, "tsn,fighter")
+# Gate on the "hangar" role (only hangar-LAUNCHED player craft carry it - hangar_craft_spawn
+# adds "{side},{craft_type},cockpit,standby,hangar"), NOT a side. An NPC CAG fighter is
+# "{carrier_side}, fighter" + a cockpit role inherited from its art and has NO "hangar" role,
+# so a hardcoded "tsn,fighter" gate used to wrongly schedule a hangar mission on a friendly
+# NPC carrier's CAG fighters. "hangar,fighter" excludes CAG fighters and is side-agnostic.
+//spawn if has_roles(SPAWNED_ID, "hangar,fighter")
     set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a fighter mission")
     CRAFT_ID = SPAWNED_ID
     jump hangar_schedule_mission
     ->END
 
 
-//spawn if has_roles(SPAWNED_ID, "tsn,shuttle")
+//spawn if has_roles(SPAWNED_ID, "hangar,shuttle")
     set_inventory_value(SPAWNED_ID, "briefing", "This is the start of a shuttle mission")
     CRAFT_ID = SPAWNED_ID
     jump hangar_schedule_mission
