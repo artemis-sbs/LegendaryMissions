@@ -289,3 +289,31 @@ Tab: bio
 ---
 % The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
 % Shielded holds - close the range for a deeper bio-scan.
+
+// ---- The three interview contacts, authored as a declarative cast (like OU's captains/officers)
+// and spawned as lifeforms by fb_investigation via lifeforms_spawn(amd_section(PR_DOC,"contacts")).
+// Each is the informant for one suspect's trail: Deck Chief -> ship 1, Maintenance Chief -> ship 2,
+// Cargo Master -> ship 3. Face is a keyword resolved by face_resolve; the interview reports show
+// the contact's face + name (florbin_case.mast resolves them by key).
+## [Investigation Contacts](contacts)
+
+### [Deck Chief Renner](deck_chief)
+---
+Face: terran_male
+Roles: fb_informant
+---
+Keeps the arrival logs. Remembers every hull that ever cleared his dock.
+
+### [Chief Engineer Vok](maint_chief)
+---
+Face: terran
+Roles: fb_informant
+---
+Runs the maintenance bay. Reads a ship by what it leaves behind on the deck.
+
+### [Cargo Master Pell](cargo_master)
+---
+Face: terran_female
+Roles: fb_informant
+---
+Signs off every manifest at the dock. Little gets loaded here without her seeing it.

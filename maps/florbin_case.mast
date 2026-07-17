@@ -52,11 +52,14 @@ shared fb_cargo_master = None
             ds_list.append(s.id)
             set_inventory_value(s, "records_status", temp_rand)
 
-    # The three interview contacts, as lifeforms with a face + name. Interviewing a station's crew
-    # (below) talks to one of these; each is the informant for one suspect's trail.
-    fb_deck_chief = lifeform_spawn("Deck Chief Renner", random_terran(civilian=True), "fb_informant")
-    fb_maint_chief = lifeform_spawn("Chief Engineer Vok", random_terran(civilian=True), "fb_informant")
-    fb_cargo_master = lifeform_spawn("Cargo Master Pell", random_terran(civilian=True), "fb_informant")
+    # The three interview contacts are authored declaratively in peacetime_remastered.amd
+    # (## Investigation Contacts) and spawned as lifeforms here - name + face (via face_resolve)
+    # + roles all come from the AMD record, the way OU authors its captains/officers. Each is the
+    # informant for one suspect's trail; the interview reports below show their face + name.
+    fb_cast = lifeforms_spawn(amd_section(PR_DOC, "contacts"))
+    fb_deck_chief = fb_cast.get("deck_chief")
+    fb_maint_chief = fb_cast.get("maint_chief")
+    fb_cargo_master = fb_cast.get("cargo_master")
 
     # The lists are loaded in from shipnames.json to help build a fleet of cargo ships with captains, containers, and goods
     alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
