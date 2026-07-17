@@ -57,6 +57,10 @@ shared FB_TEXT = {}
             ds_list.append(s.id)
             set_inventory_value(s, "records_status", temp_rand)
 
+    # The interview stations (everything a suspect can stop at - DS 2..5) share one role so the
+    # station interview board is a single //comms route instead of four near-identical ones.
+    add_role(any_role("ds2,ds3,ds4,ds5"), "fb_ds")
+
     # The three interview contacts are authored declaratively in peacetime_remastered.amd
     # (## Investigation Contacts) and spawned as lifeforms here - name + face (via face_resolve)
     # + roles all come from the AMD record, the way OU authors its captains/officers. Each is the
@@ -163,31 +167,8 @@ shared FB_TEXT = {}
     sus_count = len(suspect_list)
     -> END if sus_count == 0
 
-    # Add the cargo contents to the first five stations as inventory, so that the Comms buttons can get cargo/ship information
-    # when the player talks to the stations. 
-
-    for ds in ds_list:
-        for x in range(3):
-            temp_inv0 = "cargo" + str(x + 1)
-            temp_inv1 = "ship1_cargo" + str(x + 1)
-            temp_inv2 = "ship2_cargo" + str(x + 1)
-            temp_inv3 = "ship3_cargo" + str(x + 1)
-            temp_cargo1 = get_inventory_value(suspect_list[0], "cargo1")
-            temp_cargo2 = get_inventory_value(suspect_list[1], "cargo2")
-            temp_cargo3 = get_inventory_value(suspect_list[2], "cargo3")
-            set_inventory_value(ds, temp_inv1, temp_cargo1)
-            set_inventory_value(ds, temp_inv2, temp_cargo2)
-            set_inventory_value(ds, temp_inv3, temp_cargo3)
-            # Randomize the three suspect ships so that the first ship listed isn't automatically the kidnapper.
-            if x == 0:
-                rand3 = random.randint(1, 3)
-                if rand3 == 1:
-                    investigate_msg = temp_cargo1[0] + "^" + temp_cargo2[0] + "^" + temp_cargo3[0]
-                elif rand3 == 2:
-                    investigate_msg = temp_cargo3[0] + "^" + temp_cargo1[0] + "^" + temp_cargo2[0]
-                elif rand3 == 3:
-                    investigate_msg = temp_cargo2[0] + "^" + temp_cargo3[0] + "^" + temp_cargo1[0]
-                set_inventory_value(ds, "investigate_message", investigate_msg)
+    # (Per-station manifest snapshots are copied onto the DS stations AFTER the trail below, so
+    # they reflect the container transfers - see "station manifest snapshots" near the end of setup.)
 
     # This code picks a random container on ship 1 and replaces it with the "suspicious" container chosen earlier.
     # Then it resets the three different cargo states on the kidnapper ship.  
@@ -448,12 +429,40 @@ shared FB_TEXT = {}
     for s in suspect_list:
         set_inventory_value(s, "captain", get_inventory_value(s, "cargo3")[1])
 
+    # Station manifest snapshots: give every DS station each suspect's three temporal snapshots
+    # (cargo1 = as seen at DS1, cargo2 = first stop, cargo3 = second stop) - so shipK_cargoN is
+    # suspect K's cargoN. Fixed from the original's aliased copy (which stored ONE snapshot under
+    # all three keys, and ran BEFORE the trail); this runs AFTER the trail so cargo2/cargo3 reflect
+    # the container transfers.
+    for ds in ds_list:
+        for x in range(3):
+            temp_inv = "cargo" + str(x + 1)
+            set_inventory_value(ds, "ship1_cargo" + str(x + 1), get_inventory_value(suspect_list[0], temp_inv))
+            set_inventory_value(ds, "ship2_cargo" + str(x + 1), get_inventory_value(suspect_list[1], temp_inv))
+            set_inventory_value(ds, "ship3_cargo" + str(x + 1), get_inventory_value(suspect_list[2], temp_inv))
+    # The DS1 briefing lists the three briefed suspects by their initial (DS1) names, in a random
+    # order so the kidnapper isn't obviously first.
+    fb_n1 = get_inventory_value(suspect_list[0], "cargo1")[0]
+    fb_n2 = get_inventory_value(suspect_list[1], "cargo1")[0]
+    fb_n3 = get_inventory_value(suspect_list[2], "cargo1")[0]
+    rand3 = random.randint(1, 3)
+    if rand3 == 1:
+        investigate_msg = fb_n1 + "^" + fb_n2 + "^" + fb_n3
+    elif rand3 == 2:
+        investigate_msg = fb_n3 + "^" + fb_n1 + "^" + fb_n2
+    else:
+        investigate_msg = fb_n2 + "^" + fb_n3 + "^" + fb_n1
+    for ds in ds_list:
+        set_inventory_value(ds, "investigate_message", investigate_msg)
+
     # Host each interview contact (lifeform) on the station where its ship first stopped, so it
     # shows as a comms badge there; stash that ship's report for the //comms/fb_interview badge
     # route. (Deck Chief -> ship 1 / clue1A, Maintenance -> ship 2, Cargo Master -> ship 3.)
-    fb_host_contact(fb_deck_chief, "clue1A", fb_message1C)
-    fb_host_contact(fb_maint_chief, "clue2A", fb_message2C)
-    fb_host_contact(fb_cargo_master, "clue3A", fb_message3C)
+    # The contact's badge delivers BOTH stops' reports (first stop C + second stop D), so replacing
+    # the two per-stop "Interview" buttons with one badge loses nothing - its ship's whole story.
+    fb_host_contact(fb_deck_chief, "clue1A", fb_message1C + "^^" + fb_message1D)
+    fb_host_contact(fb_maint_chief, "clue2A", fb_message2C + "^^" + fb_message2D)
+    fb_host_contact(fb_cargo_master, "clue3A", fb_message3C + "^^" + fb_message3D)
 
     task_schedule(fb_scanning_cargo_containers)
     task_schedule(fb_check_ambassador_rescued)
@@ -521,141 +530,30 @@ shared FB_TEXT = {}
     + !0 "Back" //comms/comms_badge
 
 
-//comms if has_roles(COMMS_SELECTED_ID, "ds2") and FB_STATUS >= 1
-    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
-    ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
-    ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
-    ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
-    ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
-    ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
-    if has_roles(COMMS_SELECTED_ID, "ds2, clue1A"): 
+# The station interview board - ONE route for every interview station (tagged fb_ds), replacing
+# the four near-identical ds2/ds3/ds4/ds5 routes. The A/B "Investigate {ship}" buttons are remote
+# station-records previews, gated by which suspect's clue role this station carries. The actual
+# crew interview is now the hosted comms BADGE (Deck Chief / Maintenance Chief / Cargo Master, see
+# //comms/fb_interview) - so there are no "Interview <role>" buttons here anymore.
+//comms if has_role(COMMS_SELECTED_ID, "fb_ds") and FB_STATUS >= 1
+    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")
+    ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")
+    ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")
+    ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")
+    ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")
+    ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")
+    if has_role(COMMS_SELECTED_ID, "clue1A"):
         + "Investigate {ship1_cargo2[0]}" fb_investigate_message_1A
-    if has_roles(COMMS_SELECTED_ID, "ds2, clue1B"):
+    if has_role(COMMS_SELECTED_ID, "clue1B"):
         + "Investigate {ship1_cargo3[0]}" fb_investigate_message_1B
-    if has_roles(COMMS_SELECTED_ID, "ds2, clue2A"): 
+    if has_role(COMMS_SELECTED_ID, "clue2A"):
         + "Investigate {ship2_cargo2[0]}" fb_investigate_message_2A
-    if has_roles(COMMS_SELECTED_ID, "ds2, clue2B"):
-        + "Investigate {ship2_cargo3[0]}" fb_investigate_message_2B 
-    if has_roles(COMMS_SELECTED_ID, "ds2, clue3A"): 
+    if has_role(COMMS_SELECTED_ID, "clue2B"):
+        + "Investigate {ship2_cargo3[0]}" fb_investigate_message_2B
+    if has_role(COMMS_SELECTED_ID, "clue3A"):
         + "Investigate {ship3_cargo2[0]}" fb_investigate_message_3A
-    if has_roles(COMMS_SELECTED_ID, "ds2, clue3B"):
-        + "Investigate {ship3_cargo3[0]}" fb_investigate_message_3B 
-    dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
-    dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue1A"):
-        + "Interview Deck Chief" fb_investigate_message_1C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue1B"):
-        + "Interview Deck Chief" fb_investigate_message_1D
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue2A"):
-        + "Interview Maintenance Crew" fb_investigate_message_2C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue2B"):
-        + "Interview Maintenance Crew" fb_investigate_message_2D
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue3A"):
-        + "Interview Cargo Master" fb_investigate_message_3C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds2, clue3B"):
-        + "Interview Cargo Master" fb_investigate_message_3D
-
-//comms if has_roles(COMMS_SELECTED_ID, "ds3") and FB_STATUS >= 1
-    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
-    ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
-    ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
-    ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
-    ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
-    ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
-    if has_roles(COMMS_SELECTED_ID, "ds3, clue1A"): 
-        + "Investigate {ship1_cargo2[0]}" fb_investigate_message_1A
-    if has_roles(COMMS_SELECTED_ID, "ds3, clue1B"):
-        + "Investigate {ship1_cargo3[0]}" fb_investigate_message_1B 
-    if has_roles(COMMS_SELECTED_ID, "ds3, clue2A"): 
-        + "Investigate {ship2_cargo2[0]}" fb_investigate_message_2A
-    if has_roles(COMMS_SELECTED_ID, "ds3, clue2B"):
-        + "Investigate {ship2_cargo3[0]}" fb_investigate_message_2B 
-    if has_roles(COMMS_SELECTED_ID, "ds3, clue3A"): 
-        + "Investigate {ship3_cargo2[0]}" fb_investigate_message_3A
-    if has_roles(COMMS_SELECTED_ID, "ds3, clue3B"):
-        + "Investigate {ship3_cargo3[0]}" fb_investigate_message_3B 
-    dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
-    dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue1A"):
-        + "Interview Deck Chief" fb_investigate_message_1C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue1B"):
-        + "Interview Deck Chief" fb_investigate_message_1D
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue2A"):
-        + "Interview Maintenance Crew" fb_investigate_message_2C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue2B"):
-        + "Interview Maintenance Crew" fb_investigate_message_2D
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue3A"):
-        + "Interview Cargo Master" fb_investigate_message_3C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds3, clue3B"):
-        + "Interview Cargo Master" fb_investigate_message_3D
-
-//comms if has_roles(COMMS_SELECTED_ID, "ds4") and FB_STATUS >= 1
-    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
-    ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
-    ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
-    ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
-    ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
-    ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
-    if has_roles(COMMS_SELECTED_ID, "ds4, clue1A"): 
-        + "Investigate {ship1_cargo2[0]}" fb_investigate_message_1A
-    if has_roles(COMMS_SELECTED_ID, "ds4, clue1B"):
-        + "Investigate {ship1_cargo3[0]}" fb_investigate_message_1B 
-    if has_roles(COMMS_SELECTED_ID, "ds4, clue2A"): 
-        + "Investigate {ship2_cargo2[0]}" fb_investigate_message_2A
-    if has_roles(COMMS_SELECTED_ID, "ds4, clue2B"):
-        + "Investigate {ship2_cargo3[0]}" fb_investigate_message_2B 
-    if has_roles(COMMS_SELECTED_ID, "ds4, clue3A"): 
-        + "Investigate {ship3_cargo2[0]}" fb_investigate_message_3A
-    if has_roles(COMMS_SELECTED_ID, "ds4, clue3B"):
-        + "Investigate {ship3_cargo3[0]}" fb_investigate_message_3B 
-    dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
-    dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue1A"):
-        + "Interview Deck Chief" fb_investigate_message_1C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue1B"):
-        + "Interview Deck Chief" fb_investigate_message_1D
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue2A"):
-        + "Interview Maintenance Crew" fb_investigate_message_2C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue2B"):
-        + "Interview Maintenance Crew" fb_investigate_message_2D
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue3A"):
-        + "Interview Cargo Master" fb_investigate_message_3C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds4, clue3B"):
-        + "Interview Cargo Master" fb_investigate_message_3D
-
-//comms if has_roles(COMMS_SELECTED_ID, "ds5") and FB_STATUS >= 1
-    ship1_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")  
-    ship2_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")  
-    ship3_cargo2 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")  
-    ship1_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")  
-    ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")  
-    ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")  
-    if has_roles(COMMS_SELECTED_ID, "ds5, clue1A"): 
-        + "Investigate {ship1_cargo2[0]}" fb_investigate_message_1A
-    if has_roles(COMMS_SELECTED_ID, "ds5, clue1B"):
-        + "Investigate {ship1_cargo3[0]}" fb_investigate_message_1B 
-    if has_roles(COMMS_SELECTED_ID, "ds5, clue2A"): 
-        + "Investigate {ship2_cargo2[0]}" fb_investigate_message_2A
-    if has_roles(COMMS_SELECTED_ID, "ds5, clue2B"):
-        + "Investigate {ship2_cargo3[0]}" fb_investigate_message_2B 
-    if has_roles(COMMS_SELECTED_ID, "ds5, clue3A"): 
-        + "Investigate {ship3_cargo2[0]}" fb_investigate_message_3A
-    if has_roles(COMMS_SELECTED_ID, "ds5, clue3B"):
-        + "Investigate {ship3_cargo3[0]}" fb_investigate_message_3B 
-    dock_status = COMMS_ORIGIN.data_set.get("dock_state", 0)
-    dist = sbs.distance_id(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue1A"):
-        + "Interview Deck Chief" fb_investigate_message_1C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue1B"):
-        + "Interview Deck Chief" fb_investigate_message_1D
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue2A"):
-        + "Interview Maintenance Crew" fb_investigate_message_2C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue2B"):
-        + "Interview Maintenance Crew" fb_investigate_message_2D
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue3A"):
-        + "Interview Cargo Master" fb_investigate_message_3C
-    if dock_status == "docked" and dist <= 600 and has_roles(COMMS_SELECTED_ID, "ds5, clue3B"):
-        + "Interview Cargo Master" fb_investigate_message_3D
+    if has_role(COMMS_SELECTED_ID, "clue3B"):
+        + "Investigate {ship3_cargo3[0]}" fb_investigate_message_3B
 
 # The A/B station previews - `preview_full/down/missing` (## Florbin Text) picked by records_status;
 # comms_receive fills {ship}/{time}/{dest}/{holds}/{role} from the task vars. A = first stop (cargo2,
