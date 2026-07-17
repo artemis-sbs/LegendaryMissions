@@ -269,20 +269,43 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
             ship.data_set.set("playerThrottle", 0, 0)
             speed = 0
 
-        # Mine / maelstrom deflection: steer toward the goal, but bend the course AWAY from
-        # the closest mine instead of fleeing it - so we thread around a minefield and can
-        # still reach a station ringed by mines (a flee would just bounce off the ring). The
-        # repulsion grows as we near the mine, up to the goal vector's own magnitude, so at
-        # contact the two combine to a hard ~sideways arc; far out it barely nudges.
+        # ---- Mine / maelstrom handling: slow down EARLY, then thread the field ----
+        # Find the nearest mine in a wide radius, then two range-scaled responses:
+        #   1) SPEED GOVERNOR - cap throttle by proximity so we always have time to steer.
+        #      Leaving a mined dock this keeps us crawling until we are clear, THEN we speed
+        #      up; approaching a mined station it makes us brake far sooner than the old
+        #      2500u course-deflect ever did (at warp 5 the deflect fired far too late).
+        #   2) COURSE DEFLECT - once inside 2500u, bend the steer vector AWAY from the mine
+        #      instead of fleeing it, so we thread around a minefield and can still reach a
+        #      station ringed by mines (a flee would just bounce off the ring). Repulsion
+        #      grows as we near the mine, up to the goal vector's own magnitude.
         _sx = diff.x
         _sy = diff.y
         _sz = diff.z
-        _mine = to_object(closest(_ship_id, any_role("mine,maelstrom"), 2500))
+        _mine = to_object(closest(_ship_id, any_role("mine,maelstrom"), 8000))
         if _mine is not None:
+            _md = sbs.distance_id(_ship_id, to_id(_mine))
+
+            # Speed governor - a throttle CAP the distance ladder above may exceed. Never a
+            # mid-space full stop (docking/standoff already own speed 0); just hold us slow
+            # enough near mines that the deflection below has room to work.
+            _cap = 5
+            if _md < 2500:
+                _cap = 0.5
+            elif _md < 5000:
+                _cap = 1.0
+            elif _md < 8000:
+                _cap = 2.0
+            if speed > _cap:
+                speed = _cap
+                ship.data_set.set("playerThrottle", speed, 0)
+                _hmode = "mine_slow"
+
+            # Course deflection - only meaningful inside 2500u (farther, _scale clamps to 0).
             _rx = ship.pos.x - _mine.pos.x
             _ry = ship.pos.y - _mine.pos.y
             _rz = ship.pos.z - _mine.pos.z
-            _rd = (_rx*_rx + _ry*_ry + _rz*_rz) ** 0.5
+            _rd = _md
             if _rd < 1:
                 _rd = 1
             _scale = (2500 - _rd) / 2500
