@@ -9,17 +9,17 @@
 # peacetime_remastered.amd, turn the three interview roles (Deck Chief / Maintenance Crew /
 # Cargo Master) into lifeforms, fix the original's latent bugs, and DRY the repeated routes.
 
-shared ambassador_face = "ter #523b3f 0 0;ter #523b3f 2 0;ter #523b3f 5 2;ter #5d0463 7 4 6 -2;ter #5d0463 9 3 12 -2;ter #5d0463 6 4 6 -2;ter #fff 0 7;ter #33ff33 14 1 16 4;"
-shared admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 1 2;ter #fff 4 4;ter #964b00 8 4;"
 shared FB_STATUS = 0
 
-# The three interview contacts are real lifeforms (face + name), so interviewing at a station is
-# talking to a crew member, not reading anonymous text. Each is the informant for one suspect's
-# trail: Deck Chief -> ship 1 (clue1), Maintenance Chief -> ship 2 (clue2), Cargo Master -> ship 3
-# (clue3). Spawned in fb_investigation; their face/name are used by the interview comms below.
+# The whole cast is authored in peacetime_remastered.amd (## Cast) and spawned as lifeforms - no
+# hardcoded face strings or names in this file. The three interview contacts are hosted on stations
+# as comms badges (Deck Chief -> ship 1, Maintenance Chief -> ship 2, Cargo Master -> ship 3); the
+# Admiral and Ambassador are message senders (name + face resolved from their records).
 shared fb_deck_chief = None
 shared fb_maint_chief = None
 shared fb_cargo_master = None
+shared fb_admiral = None
+shared fb_florbin = None
 
 # The investigation's authored prose (## Florbin Text in peacetime_remastered.amd), loaded into a
 # {key: template} map in fb_investigation. Templates carry {ship}/{time}/{dest}/{holds}/{role}/
@@ -65,10 +65,12 @@ shared FB_TEXT = {}
     # (## Investigation Contacts) and spawned as lifeforms here - name + face (via face_resolve)
     # + roles all come from the AMD record, the way OU authors its captains/officers. Each is the
     # informant for one suspect's trail; the interview reports below show their face + name.
-    fb_cast = lifeforms_spawn(amd_section(PR_DOC, "contacts"))
+    fb_cast = lifeforms_spawn(amd_section(PR_DOC, "cast"))
     fb_deck_chief = fb_cast.get("deck_chief")
     fb_maint_chief = fb_cast.get("maint_chief")
     fb_cargo_master = fb_cast.get("cargo_master")
+    fb_admiral = fb_cast.get("admiral")
+    fb_florbin = fb_cast.get("florbin")
 
     # Load the authored prose templates into FB_TEXT {key: template} from the ## Florbin Text
     # section (via a Python helper, so MAST does not interpolate the {slots} at load time).
@@ -754,7 +756,7 @@ yield success
     ds1_list = to_list(role("ds1"))
     ->END if len(ds1_list) < 1
     ds1_id = ds1_list[0]
-    send_general_message("Admiral Harkin", "Ambassador Florbin has been kidnapped! Contact DS1 for details.", admiral_face, ds1_id)
+    send_general_message(fb_admiral.name, FB_TEXT.get("admiral_kidnap"), get_face(fb_admiral.id), ds1_id)
     ->END
 
 ===== fb_scanning_cargo_containers ======
@@ -882,7 +884,7 @@ yield success
         pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
     temp_idx = pest_idx.pop(random.randint(0,len(pest_idx) - 1))
     pest_message = pest_list[temp_idx]
-    comms_receive_internal(f"""{pest_message}""", pest_id, "Ambassador Florbin", title="Passenger Request", face=ambassador_face, title_color="green")
+    comms_receive_internal(pest_message, pest_id, fb_florbin.name, title="Passenger Request", face=get_face(fb_florbin.id), title_color="green")
     jump fb_pest_messages
 
 
@@ -896,9 +898,8 @@ yield success
         dock_status = p_obj.data_set.get("dock_state", 0)
         check_pod = get_inventory_value(p, "escape-pod", 0)
         if dock_status == "docked" and dist <= 600 and check_pod > 0:
-            #admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 4 4;ter #964b00 8 4;"
-            send_general_message("Admiral Harkin", "Ambassador Florbin has been safely delivered back to DS 1! Well done, " + p_obj.name + "!", admiral_face, ds1_id)
-            #comms_message(f"Ambassador Florbin has been safely delivered back to DS 1. Well done, {p_obj.name}!", ds1_id, p, title="Ambassador Rescued", title_color="green")
+            name = p_obj.name
+            send_general_message(fb_admiral.name, mast_format_string(FB_TEXT.get("admiral_rescue")), get_face(fb_admiral.id), ds1_id)
             FB_STATUS = 5
             ->END
     await delay_sim(5)
@@ -910,7 +911,7 @@ yield success
 
 //collision/interactive if has_roles(COLLISION_ORIGIN_ID, "escape-pod") and FB_STATUS == 3
     FB_STATUS = 4
-    send_general_message("Ambassador Florbin", "Thank you for rescuing me! I'll make sure you get a commendation for this. Now, if you could just drop me off back at DS 1, there's a new episode of 'Zed Star Five' I need to get back to.", ambassador_face, COLLISION_SELECTED_ID)
+    send_general_message(fb_florbin.name, FB_TEXT.get("florbin_pod"), get_face(fb_florbin.id), COLLISION_SELECTED_ID)
     pest_id = COLLISION_SELECTED_ID
     pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
     pest_list = SHIP_NAME_DATA.get("complaints")

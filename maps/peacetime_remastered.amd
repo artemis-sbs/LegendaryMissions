@@ -290,12 +290,14 @@ Tab: bio
 % The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
 % Shielded holds - close the range for a deeper bio-scan.
 
-// ---- The three interview contacts, authored as a declarative cast (like OU's captains/officers)
-// and spawned as lifeforms by fb_investigation via lifeforms_spawn(amd_section(PR_DOC,"contacts")).
-// Each is the informant for one suspect's trail: Deck Chief -> ship 1, Maintenance Chief -> ship 2,
-// Cargo Master -> ship 3. Face is a keyword resolved by face_resolve; the interview reports show
-// the contact's face + name (florbin_case.mast resolves them by key).
-## [Investigation Contacts](contacts)
+// ---- The mission's CAST, authored declaratively (like OU's captains/officers) and spawned as
+// lifeforms by fb_investigation via lifeforms_spawn(amd_section(PR_DOC,"cast")). Face is a keyword
+// (face_resolve -> a random face of that kind) OR a literal face string (passed through). The
+// three interview contacts carry Path: //comms/fb_interview + are HOSTED on stations, so they show
+// as comms badges; the Admiral and Ambassador are message senders (no Path/host), resolved by key
+// for their name + face. Each contact is the informant for one suspect's trail (Deck Chief -> ship
+// 1, Maintenance Chief -> ship 2, Cargo Master -> ship 3).
+## [Cast](cast)
 
 ### [Deck Chief Renner](deck_chief)
 ---
@@ -321,6 +323,20 @@ Path: //comms/fb_interview
 ---
 Signs off every manifest at the dock. Little gets loaded here without her seeing it.
 
+### [Admiral Harkin](admiral)
+---
+Face: ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 1 2;ter #fff 4 4;ter #964b00 8 4;
+Roles: fb_brass
+---
+The task-force commander. Briefs the crew on the kidnapping and welcomes the ambassador home.
+
+### [Ambassador Florbin](florbin)
+---
+Face: ter #523b3f 0 0;ter #523b3f 2 0;ter #523b3f 5 2;ter #5d0463 7 4 6 -2;ter #5d0463 9 3 12 -2;ter #5d0463 6 4 6 -2;ter #fff 0 7;ter #33ff33 14 1 16 4;
+Roles: fb_vip
+---
+The kidnapped ambassador - more concerned about missing his shows than the danger.
+
 // ---- The investigation's authored prose, as declarative templates. florbin_case.mast loads this
 // section into FB_TEXT and fills the {slots} at send time (comms_receive interpolates from task
 // vars): {ship} {dtime} {dest} (next DS#) {holds} (fb_holds manifest block) {crew} {suspects}.
@@ -340,3 +356,15 @@ Our records show {ship} docked here at {dtime}. It loaded:^^{holds}^^Its flight 
 
 ### [Preview Missing](preview_missing)
 {ship} docked here at {dtime}. Its flight plan says it is headed for DS {dest}. The cargo manifest... huh, that file has gone missing. You might check with our {crew}.
+
+// ---- Character message text (Admiral Harkin, Ambassador Florbin). Also loaded into FB_TEXT;
+// the sender's name + face come from the ## Cast records. admiral_rescue fills {name} (the
+// rescuing player) at send time.
+### [Admiral Kidnap Alert](admiral_kidnap)
+Ambassador Florbin has been kidnapped! Contact DS 1 for details.
+
+### [Admiral Rescue](admiral_rescue)
+Ambassador Florbin has been safely delivered back to DS 1! Well done, {name}!
+
+### [Florbin Pod](florbin_pod)
+Thank you for rescuing me! I will see you get a commendation for this. Now, if you could just drop me off back at DS 1 - there is a new episode of Zed Star Five I need to get back to.
