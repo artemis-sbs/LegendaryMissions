@@ -163,42 +163,86 @@ Defaults:
     # covers it; the anomaly uses the quest reveal_scan path.)
     science_define_scan_amd(amd_section(PR_DOC, "scans"))
 
-    # Gunnery targets: inert drones squawking hostile IFF for a live-fire drill. No
-    # brain -> they do not maneuver or shoot back; raider side -> Weapons can lock/fire.
-    drone_pts = scatter.box(drone_n, 9000, 0, 9000, 2500, 400, 2500, centered=True)
-    for v in drone_pts:
-        npc_spawn(v.x, v.y, v.z, "Target Drone", "raider, target_drone", "cargo_ship", "behav_npcship")
-
-    # Rock Breakers: hazardous asteroids drifting in a lane, tagged for demolition.
-    rock_types = ship_data_plain_asteroid_keys()
-    rock_pts = scatter.box(rock_n, -11000, 0, 12000, 3500, 400, 3500, centered=True)
-    for v in rock_pts:
-        a_type = random.choice(rock_types)
-        terrain_spawn(v.x, v.y, v.z, "Hazard Rock", "#, hazard_rock", a_type, "behav_asteroid")
-
-    # The fixed-position job objects (the poacher trawler + the stranded shuttle) are placed
-    # via the shared landmark loader - the landmarks section of PR_DOC.
-    landmarks_spawn(amd_section(PR_DOC, "landmarks"))
-
-    # Customs Patrol (Comms): civilian traffic to hail and clear for transit.
-    traffic_pts = scatter.box(traffic_n, -6000, 0, -6000, 3000, 400, 3000, centered=True)
-    for v in traffic_pts:
-        npc_spawn(v.x, v.y, v.z, "Civilian Trader", "civ, civilian, traffic", "cargo_ship", "behav_npcship")
-
-    # Anomaly Survey (Science): sensor anomalies to scan and log. Spawned with the proven
-    # asteroid-terrain pattern (behav_asteroid) so they are stable, selectable and scannable.
-    anomaly_types = ship_data_plain_asteroid_keys()
-    survey_pts = scatter.box(survey_n, 14000, 0, 14000, 3000, 400, 3000, centered=True)
-    for v in survey_pts:
-        terrain_spawn(v.x, v.y, v.z, "Sensor Anomaly", "#, anomaly", random.choice(anomaly_types), "behav_asteroid")
+    # Targets are SPAWNED ON ACCEPT, not at shift start (see pr_job_dispatch): stash the scaled
+    # counts + the landmark records so the spawner reads them when a job is taken on. This keeps
+    # counted jobs from being spoiled by pre-accept kills, and makes the stranded shuttle arrive on
+    # the mayday (when the Mercy Run is accepted) instead of sitting adrift from the first second.
+    shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n}
+    shared PR_LANDMARKS = landmarks_from_section(amd_section(PR_DOC, "landmarks"))
+    # The jobs that spawn targets on accept, checked each dispatch tick.
+    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy"]
 
     # The job board is the jobs section of PR_DOC (parsed above). Grant it PER PLAYER SHIP so
     # credit rewards pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses
     # Goal: scan + Reveals: (the declarative quest-scan path), so this map needs no //science route.
+    # Every job is authored State: idle, so it lands on the quest tab as "Available"; the player
+    # ACCEPTS the ones they want (quest_tab_accept -> ACTIVE), which is also when any Fail after
+    # clock starts and when pr_job_dispatch spawns that job's targets. Nothing completes (or fails,
+    # or clutters space) before a job is taken on.
     for p in to_object_list(role("__player__")):
         quest_grant_amd(p.id, jobs_section, count_scale=job_scale)
 
-    task_schedule(pr_mercy_watch)
+    task_schedule(pr_job_dispatch)
+    ->END
+
+
+#-----------------------------------------------------------------------------------------------------------------------------
+# Spawn-on-accept dispatcher. A server watcher spawns each job's targets the first tick that job
+# goes ACTIVE (a player accepted it from the quest tab). Server-side + guarded, so targets spawn
+# exactly once no matter how many players accept, and never before acceptance.
+===== pr_job_dispatch =====
+    default GAME_ENDED = False
+    spawned = []
+--- pjd_loop
+    await delay_sim(1)
+    ->END if GAME_ENDED
+    for job_key in PR_JOB_KEYS:
+        if job_key not in spawned and pr_job_active(job_key):
+            spawned.append(job_key)
+            task_schedule(pr_job_spawn, {"PR_SPAWN_KEY": job_key})
+    ->END if len(spawned) >= len(PR_JOB_KEYS)
+    jump pjd_loop
+
+
+# Spawn one job's targets, dispatched by PR_SPAWN_KEY (the accepted job's key). Counts come from
+# PR_JOB_COUNTS (already Jobs-density scaled); the two fixed objects come from PR_LANDMARKS. The
+# poacher/mercy cases also drop an info-panel alert so the job's objects arrive with context.
+===== pr_job_spawn =====
+    match PR_SPAWN_KEY:
+        case "job_gunnery":
+            # Inert drones squawking hostile IFF for a live-fire drill: no brain (they neither
+            # maneuver nor shoot back), raider side so Weapons can lock and fire.
+            for v in scatter.box(PR_JOB_COUNTS.get("drone", 5), 9000, 0, 9000, 2500, 400, 2500, centered=True):
+                npc_spawn(v.x, v.y, v.z, "Target Drone", "raider, target_drone", "cargo_ship", "behav_npcship")
+        case "job_rocks":
+            rock_types = ship_data_plain_asteroid_keys()
+            for v in scatter.box(PR_JOB_COUNTS.get("rock", 4), -11000, 0, 12000, 3500, 400, 3500, centered=True):
+                rock = terrain_spawn(v.x, v.y, v.z, "Hazard Rock", "#, hazard_rock", random.choice(rock_types), "behav_asteroid")
+                # Raw terrain spawns default to unselectable; clear it so Weapons can lock and fire.
+                rock.data_set.set("unselectable", 0)
+        case "job_customs":
+            for v in scatter.box(PR_JOB_COUNTS.get("traffic", 4), -6000, 0, -6000, 3000, 400, 3000, centered=True):
+                npc_spawn(v.x, v.y, v.z, "Civilian Trader", "civ, civilian, traffic", "cargo_ship", "behav_npcship")
+        case "job_survey":
+            anomaly_types = ship_data_plain_asteroid_keys()
+            for v in scatter.box(PR_JOB_COUNTS.get("survey", 3), 14000, 0, 14000, 3000, 400, 3000, centered=True):
+                anomaly = terrain_spawn(v.x, v.y, v.z, "Sensor Anomaly", "#, anomaly", random.choice(anomaly_types), "behav_asteroid")
+                # Selectable so Science can pick it on the 2D view to scan it.
+                anomaly.data_set.set("unselectable", 0)
+        case "job_poacher":
+            comms_info_card(all_roles("console, comms"), "Sensors flag an unregistered trawler running dark in the outer lane. Intercept and board - do not destroy.", title="Enforcement Dispatch", color="orange")
+            poacher_rec = pr_landmark_by_key(PR_LANDMARKS, "poacher_lm")
+            if poacher_rec is not None:
+                landmark_spawn(poacher_rec)
+        case "job_mercy":
+            # Build-up: the mayday lands first, then the shuttle arrives a few seconds later, so
+            # the rescue reads as responding to a distress call rather than a target blinking in.
+            comms_info_card(all_roles("console, comms"), "Automated distress beacon: civilian shuttle adrift, life support failing. Last position logged - respond immediately.", title="Mayday", color="red")
+            await delay_sim(4)
+            mercy_rec = pr_landmark_by_key(PR_LANDMARKS, "mercy_lm")
+            if mercy_rec is not None:
+                landmark_spawn(mercy_rec)
+            task_schedule(pr_mercy_watch)
     ->END
 
 
@@ -267,9 +311,11 @@ Defaults:
 
 
 #-----------------------------------------------------------------------------------------------------------------------------
-# Mercy Run (Helm): a patrol ship reaching the stranded shuttle relieves it. Proximity,
-# not docking, so it needs no per-station docking wiring. The quest's own fail_after
-# clock (anchored by the quest driver) handles the "in time" pressure.
+# Mercy Run (Helm): a patrol ship reaching the stranded shuttle relieves it. Proximity, not
+# docking, so it needs no per-station docking wiring. The job starts IDLE like the rest of the
+# board; accepting it anchors the 6-minute fail_after clock AND triggers pr_job_spawn's mercy case
+# (the mayday card, then the shuttle). This watcher is scheduled by that spawn - so on its first
+# tick the shuttle already exists, and `->END if no mercy_target` now means "rescued -> stop".
 ===== pr_mercy_watch =====
     default GAME_ENDED = False
 --- mw_loop

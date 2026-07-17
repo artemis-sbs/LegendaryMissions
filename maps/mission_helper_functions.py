@@ -266,3 +266,29 @@ def fb_generate_case(pools, clue0, clues, templates, rng,
     return {"kidnapper_index": kidnapper_index,
             "investigate_message": "^".join(briefed),
             "suspects": suspects}
+
+
+# ---------------------------------------------------------------------------------------------------
+# Peacetime job board - spawn-on-accept helpers (peacetime_remastered.mast).
+
+def pr_job_active(key):
+    """True if any player ship has the named job quest ACTIVE - i.e. a player has ACCEPTED it from
+    the quest tab. Drives spawn-on-accept: pr_job_dispatch spawns a job's targets the first tick
+    this turns True, so targets never sit in space (spoilable / stale) before the job is taken on."""
+    from sbs_utils.procedural.quest import quest_get_state, QuestState
+    from sbs_utils.procedural.roles import role
+    from sbs_utils.procedural.query import to_object_list
+    for p in to_object_list(role("__player__")):
+        if quest_get_state(p.id, key) == QuestState.ACTIVE:
+            return True
+    return False
+
+
+def pr_landmark_by_key(records, key):
+    """The landmark record with this key from a landmarks_from_section list (None if absent).
+    Lets the mission spawn one fixed job object (the poacher / the shuttle) on accept instead of
+    landmarks_spawn'ing the whole section at shift start."""
+    for r in (records or []):
+        if r.get("key") == key:
+            return r
+    return None

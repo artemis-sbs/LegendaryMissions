@@ -74,7 +74,7 @@ The case is lost if the ship carrying the ambassador is destroyed before he esca
 
 ### [Gunnery Qualification](job_gunnery)
 ---
-State: active
+State: idle
 Goal: signal 5 drone_down
 Pays: 200 credits
 ---
@@ -82,7 +82,7 @@ Weapons drill: destroy all the target drones.
 
 ### [Rock Breakers](job_rocks)
 ---
-State: active
+State: idle
 Goal: signal 4 rock_cleared
 Pays: 150 credits
 ---
@@ -90,7 +90,7 @@ Clear the hazard asteroids from the shipping lane.
 
 ### [Board the Poacher](job_poacher)
 ---
-State: active
+State: idle
 Goal: signal poacher_boarded
 Fail on signal: poacher_killed
 Pays: 300 credits
@@ -99,7 +99,7 @@ Disable the unregistered trawler (drop its shields below 50%) and demand its sur
 
 ### [Mercy Run](job_mercy)
 ---
-State: active
+State: idle
 Goal: signal mercy_reached
 Fail after: 6 minutes
 Pays: 250 credits
@@ -108,7 +108,7 @@ A shuttle is adrift and losing life support. Reach it before the clock runs out.
 
 ### [Customs Patrol](job_customs)
 ---
-State: active
+State: idle
 Goal: signal 4 customs_cleared
 Pays: 120 credits
 ---
@@ -116,7 +116,7 @@ Hail and clear the civilian traders for transit.
 
 ### [Anomaly Survey](job_survey)
 ---
-State: active
+State: idle
 Goal: scan 3 anomaly
 Reveals: Survey logged: a stable subspace distortion. No threat - filed with the science log.
 Pays: 130 credits
