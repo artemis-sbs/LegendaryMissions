@@ -1,0 +1,33 @@
+// Declarative per-role science scans for Peacetime Remastered's job objects, authored in
+// the AMD scan vocabulary (sbs_utils.procedural.amd_science). Loaded once in pr_jobs_setup:
+//   science_define_scan_amd(document_get_amd_file(".../peacetime_scans.amd", data_parser=amd_scan_data))
+// Each heading # [Name](role) registers science_define_scan(role, {tab: text}); the generic
+// science route makes any object holding that role scannable and renders these tabs. Values
+// may carry {key} placeholders, filled per object from inventory at scan time.
+// (target_drone is raider-side, covered by the standard enemy scan; the anomaly uses the
+// quest reveal_scan path.)
+
+# [Hazard Rock](hazard_rock)
+---
+Scan: Dense metallic asteroid drifting in the shipping lane.
+Mat: High nickel-iron content. Flagged for demolition - clear to destroy.
+---
+
+# [Poacher](poacher)
+---
+Scan: Unregistered civilian trawler running dark.
+Bio: Holds contain protected space-life specimens. This is a poaching vessel.
+Intel: Falsified transponder. Disable and board - do NOT destroy.
+---
+
+# [Civilian Trader](traffic)
+---
+Scan: Licensed civilian trader on a filed transit route.
+Intel: Manifest checks out. Safe to clear for transit.
+---
+
+# [Stranded Shuttle](mercy_target)
+---
+Scan: Civilian shuttle, adrift and unpowered.
+Bio: Life signs aboard, life support failing. Reach it quickly.
+---

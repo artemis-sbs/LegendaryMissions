@@ -130,13 +130,10 @@ Properties:
     traffic_n = 4
     survey_n = 3
 
-    # Declarative object scans (per role): make the job objects scannable with flavor via
-    # the generic science route - no //science route here. (target_drone is raider-side, so
+    # Declarative object scans (per role), authored in maps/peacetime_scans.amd and rendered
+    # by the generic science route - no //science route here. (target_drone is raider-side, so
     # the standard enemy scan already covers it; the anomaly uses the quest reveal_scan path.)
-    science_define_scan("hazard_rock", {"scan": "Dense metallic asteroid drifting in the shipping lane.", "mat": "High nickel-iron content. Flagged for demolition - clear to destroy."})
-    science_define_scan("poacher", {"scan": "Unregistered civilian trawler running dark.", "bio": "Holds contain protected space-life specimens. This is a poaching vessel.", "intel": "Falsified transponder. Disable and board - do NOT destroy."})
-    science_define_scan("traffic", {"scan": "Licensed civilian trader on a filed transit route.", "intel": "Manifest checks out. Safe to clear for transit."})
-    science_define_scan("mercy_target", {"scan": "Civilian shuttle, adrift and unpowered.", "bio": "Life signs aboard, life support failing. Reach it quickly."})
+    science_define_scan_amd(document_get_amd_file(get_mission_dir_filename("maps/peacetime_scans.amd"), data_parser=amd_scan_data))
 
     # Gunnery targets: inert drones squawking hostile IFF for a live-fire drill. No
     # brain -> they do not maneuver or shoot back; raider side -> Weapons can lock/fire.
