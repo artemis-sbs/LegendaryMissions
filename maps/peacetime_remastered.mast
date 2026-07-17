@@ -59,6 +59,12 @@ Properties:
     terrain_spawn_monsters(monster_value)
     terrain_spawn_black_holes(lethal_value)
 
+    # ALL of this map's declarative content (the Florbin quest tree, the job board, the
+    # object scans, and the fixed landmarks) lives in ONE file, parsed once here with the
+    # combined mission vocabulary; each section is handed to its own loader (here + in
+    # pr_jobs_setup, which reads this shared doc).
+    shared PR_DOC = document_get_amd_file(get_mission_dir_filename("maps/peacetime_remastered.amd"), data_parser=amd_mission_data)
+
     # The peacekeeping side-jobs (the quest board) and the all-ships-lost loss watch.
     task_schedule(pr_jobs_setup)
     task_schedule(pr_lose_watch)
@@ -66,11 +72,11 @@ Properties:
     # No enemy fleets in Peacetime. The headline case is the Florbin kidnapping, which
     # only runs if there are friendly ships to investigate.
     if friendly_value >= 1:
-        # The Florbin case as a shared quest tree, authored declaratively in
-        # maps/peacetime_florbin.amd and layered over the original investigation.
-        # florbin_quest_watch translates the kidnap_status flag that kidnap_caper drives
-        # into the quest_signal events those steps listen for.
-        quest_grant_amd(SHARED, document_get_amd_file(get_mission_dir_filename("maps/peacetime_florbin.amd"), data_parser=amd_quest_data))
+        # The Florbin case as a shared quest tree (the florbin_case section of PR_DOC),
+        # layered over the original investigation. florbin_quest_watch translates the
+        # kidnap_status flag that kidnap_caper drives into the quest_signal events its steps
+        # listen for.
+        quest_grant_amd(SHARED, amd_section(PR_DOC, "florbin_case"))
         task_schedule(florbin_quest_watch)
         # Reuse the entire original investigation (comms/science routes + surrender).
         jump kidnap_caper
@@ -130,10 +136,10 @@ Properties:
     traffic_n = 4
     survey_n = 3
 
-    # Declarative object scans (per role), authored in maps/peacetime_scans.amd and rendered
-    # by the generic science route - no //science route here. (target_drone is raider-side, so
-    # the standard enemy scan already covers it; the anomaly uses the quest reveal_scan path.)
-    science_define_scan_amd(document_get_amd_file(get_mission_dir_filename("maps/peacetime_scans.amd"), data_parser=amd_scan_data))
+    # Declarative object scans (the scans section of PR_DOC), rendered by the generic science
+    # route - no //science route here. (target_drone is raider-side, so the standard enemy scan
+    # covers it; the anomaly uses the quest reveal_scan path.)
+    science_define_scan_amd(amd_section(PR_DOC, "scans"))
 
     # Gunnery targets: inert drones squawking hostile IFF for a live-fire drill. No
     # brain -> they do not maneuver or shoot back; raider side -> Weapons can lock/fire.
@@ -149,8 +155,8 @@ Properties:
         terrain_spawn(v.x, v.y, v.z, "Hazard Rock", "#, hazard_rock", a_type, "behav_asteroid")
 
     # The fixed-position job objects (the poacher trawler + the stranded shuttle) are placed
-    # declaratively via the shared landmark loader - maps/peacetime_landmarks.amd.
-    landmarks_spawn(document_get_amd_file(get_mission_dir_filename("maps/peacetime_landmarks.amd"), data_parser=amd_landmark_data))
+    # via the shared landmark loader - the landmarks section of PR_DOC.
+    landmarks_spawn(amd_section(PR_DOC, "landmarks"))
 
     # Customs Patrol (Comms): civilian traffic to hail and clear for transit.
     traffic_pts = scatter.box(traffic_n, -6000, 0, -6000, 3000, 400, 3000, centered=True)
@@ -164,13 +170,12 @@ Properties:
     for v in survey_pts:
         terrain_spawn(v.x, v.y, v.z, "Sensor Anomaly", "#, anomaly", random.choice(anomaly_types), "behav_asteroid")
 
-    # The job board is authored declaratively in maps/peacetime_jobs.amd. Grant it PER
-    # PLAYER SHIP so credit rewards pay to the side (a Scope: shared quest gets no credit).
-    # Anomaly Survey there uses Goal: scan + Reveals: (the declarative quest-scan path), so
-    # this map needs no //science route for it.
-    jobs_doc = document_get_amd_file(get_mission_dir_filename("maps/peacetime_jobs.amd"), data_parser=amd_quest_data)
+    # The job board is the jobs section of PR_DOC. Grant it PER PLAYER SHIP so credit rewards
+    # pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses Goal: scan +
+    # Reveals: (the declarative quest-scan path), so this map needs no //science route for it.
+    jobs_section = amd_section(PR_DOC, "jobs")
     for p in to_object_list(role("__player__")):
-        quest_grant_amd(p.id, jobs_doc)
+        quest_grant_amd(p.id, jobs_section)
 
     task_schedule(pr_mercy_watch)
     ->END

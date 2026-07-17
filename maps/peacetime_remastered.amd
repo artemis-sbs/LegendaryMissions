@@ -1,0 +1,215 @@
+// Peacetime Remastered - ALL declarative content in one file (the amd_doc table-of-contents
+// model). Loaded once by peacetime_remastered.mast with the combined mission vocabulary:
+//   PR_DOC = document_get_amd_file(get_mission_dir_filename("maps/peacetime_remastered.amd"),
+//                                  data_parser=amd_mission_data)
+// then each section is handed to its own loader:
+//   quest_grant_amd(SHARED, amd_section(PR_DOC, "florbin_case"))   // the Florbin quest tree
+//   for p in players: quest_grant_amd(p.id, amd_section(PR_DOC, "jobs"))
+//   science_define_scan_amd(amd_section(PR_DOC, "scans"))
+//   landmarks_spawn(amd_section(PR_DOC, "landmarks"))
+// (peacetime.mast's shared cargo-ship scans + LM's global sides stay in their own files.)
+
+# [Peacetime Remastered](peacetime_remastered)
+
+// ---- The Florbin case: a shared quest tree (nested steps -> florbin/brief .. florbin/alive).
+// florbin_quest_watch bridges the reused kidnap_caper kidnap_status flag to these signals.
+## [Florbin Case](florbin_case)
+
+### [The Florbin Affair](florbin)
+---
+Scope: shared
+State: active
+---
+Ambassador Florbin has been kidnapped and smuggled out in a cargo container. Follow the cargo trail, find him, and bring him home to DS 1 - alive.
+
+#### [Take the Case](brief)
+---
+Scope: shared
+State: active
+When: signal case_opened
+Then: reveal florbin/trail
+---
+Contact DS 1 to open the investigation.
+
+#### [Identify the Kidnapper](trail)
+---
+Scope: shared
+State: secret
+When: signal suspect_identified
+Then: reveal florbin/subdue
+---
+Follow the cargo trail: interview stations and bio-scan suspect holds to find which ship is hiding the ambassador.
+
+#### [Subdue the Kidnapper](subdue)
+---
+Scope: shared
+State: secret
+When: signal kidnapper_subdued
+Then: reveal florbin/recover
+---
+Do NOT destroy the ship - the ambassador is aboard. Drop its shields below 50% (or use a secret codecase) to force its surrender.
+
+#### [Recover and Return Florbin](recover)
+---
+Scope: shared
+State: secret
+When: signal florbin_delivered
+---
+Collect the escape pod and dock it at DS 1.
+
+#### [Keep Florbin Alive](alive)
+---
+Scope: shared
+State: active
+Fail on signal: florbin_killed
+---
+The case is lost if the ship carrying the ambassador is destroyed before he escapes.
+
+// ---- The peacetime job board. Granted PER PLAYER SHIP so credit rewards pay to the side.
+// Signals come from the mission's MAST plumbing (//damage/destroy, comms, pr_mercy_watch).
+// Counts here are the targets; pr_jobs_setup spawns matching objects - keep in sync.
+## [Jobs](jobs)
+
+### [Gunnery Qualification](job_gunnery)
+---
+State: active
+Goal: signal 5 drone_down
+Pays: 200 credits
+---
+Weapons drill: destroy all 5 target drones.
+
+### [Rock Breakers](job_rocks)
+---
+State: active
+Goal: signal 4 rock_cleared
+Pays: 150 credits
+---
+Clear 4 hazard asteroids from the shipping lane.
+
+### [Board the Poacher](job_poacher)
+---
+State: active
+Goal: signal poacher_boarded
+Fail on signal: poacher_killed
+Pays: 300 credits
+---
+Disable the unregistered trawler (drop its shields below 50%) and demand its surrender. Do NOT destroy it.
+
+### [Mercy Run](job_mercy)
+---
+State: active
+Goal: signal mercy_reached
+Fail after: 6 minutes
+Pays: 250 credits
+---
+A shuttle is adrift and losing life support. Reach it before the clock runs out.
+
+### [Customs Patrol](job_customs)
+---
+State: active
+Goal: signal 4 customs_cleared
+Pays: 120 credits
+---
+Hail and clear 4 civilian traders for transit.
+
+### [Anomaly Survey](job_survey)
+---
+State: active
+Goal: scan 3 anomaly
+Reveals: Survey logged: a stable subspace distortion. No threat - filed with the science log.
+Pays: 130 credits
+---
+Have Science scan 3 sensor anomalies and log them.
+
+// ---- Declarative object scans (dialogue-native): `Scan of:` = role, `Tab:` = science tab,
+// each `%` body line a random variant. (target_drone uses the enemy scan; anomaly uses
+// the job_survey reveal_scan path.)
+## [Scans](scans)
+
+### [Hazard Rock](rock_scan)
+---
+Scan of: hazard_rock
+Tab: scan
+---
+% Dense metallic asteroid drifting in the shipping lane.
+% A slow-tumbling nickel-iron boulder, squarely in the lane.
+% Rocky debris on a collision line with the shipping route.
+
+### [Hazard Rock - Materials](rock_mat)
+---
+Scan of: hazard_rock
+Tab: mat
+---
+% High nickel-iron content. Flagged for demolition - clear to destroy.
+
+### [Poacher](poacher_scan)
+---
+Scan of: poacher
+Tab: scan
+---
+% Unregistered civilian trawler running dark.
+% Civilian hull, transponder silent, running without lights.
+
+### [Poacher - Bio](poacher_bio)
+---
+Scan of: poacher
+Tab: bio
+---
+% Holds contain protected space-life specimens. This is a poaching vessel.
+
+### [Poacher - Intel](poacher_intel)
+---
+Scan of: poacher
+Tab: intel
+---
+% Falsified transponder. Disable and board - do NOT destroy.
+
+### [Civilian Trader](traffic_scan)
+---
+Scan of: traffic
+Tab: scan
+---
+% Licensed civilian trader on a filed transit route.
+
+### [Civilian Trader - Intel](traffic_intel)
+---
+Scan of: traffic
+Tab: intel
+---
+% Manifest checks out. Safe to clear for transit.
+
+### [Stranded Shuttle](mercy_scan)
+---
+Scan of: mercy_target
+Tab: scan
+---
+% Civilian shuttle, adrift and unpowered.
+
+### [Stranded Shuttle - Bio](mercy_bio)
+---
+Scan of: mercy_target
+Tab: bio
+---
+% Life signs aboard, life support failing. Reach it quickly.
+
+// ---- Fixed-position job objects (the poacher trawler + the stranded shuttle). Explicit Loc
+// (single system). The scattered drones/rocks/traders/anomalies stay in pr_jobs_setup.
+## [Landmarks](landmarks)
+
+### [Unregistered Trawler](poacher_lm)
+---
+Kind: npc
+Side: civ
+Roles: civilian, poacher
+Art: cargo_ship
+Loc: 0, 0, -16000
+---
+
+### [Stranded Shuttle](mercy_lm)
+---
+Kind: npc
+Side: civ
+Roles: civilian, mercy_target
+Art: cargo_ship
+Loc: 16000, 0, -12000
+---
