@@ -448,6 +448,13 @@ shared FB_TEXT = {}
     for s in suspect_list:
         set_inventory_value(s, "captain", get_inventory_value(s, "cargo3")[1])
 
+    # Host each interview contact (lifeform) on the station where its ship first stopped, so it
+    # shows as a comms badge there; stash that ship's report for the //comms/fb_interview badge
+    # route. (Deck Chief -> ship 1 / clue1A, Maintenance -> ship 2, Cargo Master -> ship 3.)
+    fb_host_contact(fb_deck_chief, "clue1A", fb_message1C)
+    fb_host_contact(fb_maint_chief, "clue2A", fb_message2C)
+    fb_host_contact(fb_cargo_master, "clue3A", fb_message3C)
+
     task_schedule(fb_scanning_cargo_containers)
     task_schedule(fb_check_ambassador_rescued)
     task_schedule(fb_kidnap_message)
@@ -499,6 +506,19 @@ shared FB_TEXT = {}
     holds = fb_holds(cargo)
     comms_receive(FB_TEXT.get("manifest"), title="Cargo Manifest " + ship, title_color="orange")
     yield success
+
+
+# Interview badge: each contact lifeform is hosted on the station its ship first stopped at, so it
+# appears as a comms badge. Selecting the badge (COMMS_LIFEFORM_ID, the lifeform's Path is here)
+# delivers that ship's interview report in the contact's own voice (face + name).
+//comms/fb_interview if has_role(COMMS_ORIGIN_ID, "__player__")
+    default COMMS_LIFEFORM_ID = None
+    ->END if COMMS_LIFEFORM_ID is None
+    fb_rep = get_inventory_value(COMMS_LIFEFORM_ID, "fb_report", None)
+    fb_contact = to_object(COMMS_LIFEFORM_ID)
+    if fb_rep is not None and fb_contact is not None:
+        comms_receive(fb_rep, title=fb_contact.name, face=get_face(COMMS_LIFEFORM_ID), title_color="orange")
+    + !0 "Back" //comms/comms_badge
 
 
 //comms if has_roles(COMMS_SELECTED_ID, "ds2") and FB_STATUS >= 1

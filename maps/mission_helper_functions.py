@@ -47,3 +47,19 @@ def fb_text_load(section):
         for n in section.get("children", []):
             out[n.get("key")] = (n.get("description") or "").strip()
     return out
+
+
+def fb_host_contact(contact, clue_role, report):
+    """Host an interview contact (a lifeform) on the station where its ship first stopped (the
+    station carrying clue_role, e.g. 'clue1A'), so it shows as a comms badge there, and store
+    that ship's interview report on it for the //comms/fb_interview badge route to deliver."""
+    if contact is None:
+        return
+    from sbs_utils.procedural.roles import role
+    from sbs_utils.procedural.query import to_list
+    from sbs_utils.procedural.lifeform import lifeform_transfer
+    from sbs_utils.procedural.inventory import set_inventory_value
+    stations = to_list(role(clue_role))
+    if stations:
+        lifeform_transfer(contact.id, stations[0])
+    set_inventory_value(contact, "fb_report", report)
