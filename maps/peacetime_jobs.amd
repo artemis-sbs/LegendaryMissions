@@ -1,0 +1,60 @@
+// The peacetime job board, authored in the AMD quest vocabulary. Granted PER PLAYER SHIP
+// by peacetime_remastered.mast (quest_grant_amd(p.id, ...)) so credit rewards pay to the
+// side. The signals come from the mission's imperative plumbing (which stays in MAST):
+//   drone_down / rock_cleared / poacher_killed  <- //damage/destroy routes
+//   poacher_boarded / customs_cleared           <- poacher & customs comms
+//   mercy_reached                               <- pr_mercy_watch proximity task
+// Anomaly Survey uses the DECLARATIVE scan path: Goal: scan anomaly + Reveals: (the quest
+// driver makes the anomalies scannable and renders the scan text - no //science route).
+// The counts here are the target counts; pr_jobs_setup spawns matching objects - keep in sync.
+
+# [Gunnery Qualification](job_gunnery)
+---
+State: active
+Goal: signal 5 drone_down
+Pays: 200 credits
+---
+Weapons drill: destroy all 5 target drones.
+
+# [Rock Breakers](job_rocks)
+---
+State: active
+Goal: signal 4 rock_cleared
+Pays: 150 credits
+---
+Clear 4 hazard asteroids from the shipping lane.
+
+# [Board the Poacher](job_poacher)
+---
+State: active
+Goal: signal poacher_boarded
+Fail on signal: poacher_killed
+Pays: 300 credits
+---
+Disable the unregistered trawler (drop its shields below 50%) and demand its surrender. Do NOT destroy it.
+
+# [Mercy Run](job_mercy)
+---
+State: active
+Goal: signal mercy_reached
+Fail after: 6 minutes
+Pays: 250 credits
+---
+A shuttle is adrift and losing life support. Reach it before the clock runs out.
+
+# [Customs Patrol](job_customs)
+---
+State: active
+Goal: signal 4 customs_cleared
+Pays: 120 credits
+---
+Hail and clear 4 civilian traders for transit.
+
+# [Anomaly Survey](job_survey)
+---
+State: active
+Goal: scan 3 anomaly
+Reveals: Survey logged: a stable subspace distortion. No threat - filed with the science log.
+Pays: 130 credits
+---
+Have Science scan 3 sensor anomalies and log them.

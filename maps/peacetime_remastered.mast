@@ -66,15 +66,11 @@ Properties:
     # No enemy fleets in Peacetime. The headline case is the Florbin kidnapping, which
     # only runs if there are friendly ships to investigate.
     if friendly_value >= 1:
-        # The Florbin case as a shared quest tree, layered over the original
-        # investigation. florbin_quest_watch translates the kidnap_status flag that
-        # kidnap_caper drives into the quest_signal events these listen for.
-        quest_add(SHARED, "florbin", "The Florbin Affair", "Ambassador Florbin has been kidnapped and smuggled out in a cargo container. Follow the cargo trail, find him, and bring him home to DS 1 - alive.", state=1)
-        quest_add(SHARED, "florbin/brief", "Take the Case", "Contact DS 1 to open the investigation.", state=1, data={"on_signal": {"name": "case_opened"}, "reveal": "florbin/trail"})
-        quest_add(SHARED, "florbin/trail", "Identify the Kidnapper", "Follow the cargo trail: interview stations and bio-scan suspect holds to find which ship is hiding the ambassador.", state=2, data={"on_signal": {"name": "suspect_identified"}, "reveal": "florbin/subdue"})
-        quest_add(SHARED, "florbin/subdue", "Subdue the Kidnapper", "Do NOT destroy the ship - the ambassador is aboard. Drop its shields below 50% (or use a secret codecase) to force its surrender.", state=2, data={"on_signal": {"name": "kidnapper_subdued"}, "reveal": "florbin/recover"})
-        quest_add(SHARED, "florbin/recover", "Recover and Return Florbin", "Collect the escape pod and dock it at DS 1.", state=2, data={"on_signal": {"name": "florbin_delivered"}})
-        quest_add(SHARED, "florbin/alive", "Keep Florbin Alive", "The case is lost if the ship carrying the ambassador is destroyed before he escapes.", state=1, data={"fail_on_signal": {"name": "florbin_killed"}})
+        # The Florbin case as a shared quest tree, authored declaratively in
+        # maps/peacetime_florbin.amd and layered over the original investigation.
+        # florbin_quest_watch translates the kidnap_status flag that kidnap_caper drives
+        # into the quest_signal events those steps listen for.
+        quest_grant_amd(SHARED, document_get_amd_file(get_mission_dir_filename("maps/peacetime_florbin.amd"), data_parser=amd_quest_data))
         task_schedule(florbin_quest_watch)
         # Reuse the entire original investigation (comms/science routes + surrender).
         jump kidnap_caper
@@ -127,8 +123,12 @@ Properties:
     jobs_value = terrain_to_value(JOBS_SELECT)
     ->END if jobs_value < 1
 
-    drone_n = 2 + jobs_value
-    rock_n = 1 + jobs_value
+    # Fixed job target counts - keep in sync with maps/peacetime_jobs.amd. The Jobs
+    # option gates whether the board appears (above); the AMD file owns the targets.
+    drone_n = 5
+    rock_n = 4
+    traffic_n = 4
+    survey_n = 3
 
     # Gunnery targets: inert drones squawking hostile IFF for a live-fire drill. No
     # brain -> they do not maneuver or shoot back; raider side -> Weapons can lock/fire.
@@ -150,28 +150,24 @@ Properties:
     npc_spawn(16000, 0, -12000, "Stranded Shuttle", "civ, civilian, mercy_target", "cargo_ship", "behav_npcship")
 
     # Customs Patrol (Comms): civilian traffic to hail and clear for transit.
-    traffic_n = 2 + jobs_value
     traffic_pts = scatter.box(traffic_n, -6000, 0, -6000, 3000, 400, 3000, centered=True)
     for v in traffic_pts:
         npc_spawn(v.x, v.y, v.z, "Civilian Trader", "civ, civilian, traffic", "cargo_ship", "behav_npcship")
 
     # Anomaly Survey (Science): sensor anomalies to scan and log. Spawned with the proven
     # asteroid-terrain pattern (behav_asteroid) so they are stable, selectable and scannable.
-    survey_n = 1 + jobs_value
     anomaly_types = ship_data_plain_asteroid_keys()
     survey_pts = scatter.box(survey_n, 14000, 0, 14000, 3000, 400, 3000, centered=True)
     for v in survey_pts:
         terrain_spawn(v.x, v.y, v.z, "Sensor Anomaly", "#, anomaly", random.choice(anomaly_types), "behav_asteroid")
 
+    # The job board is authored declaratively in maps/peacetime_jobs.amd. Grant it PER
+    # PLAYER SHIP so credit rewards pay to the side (a Scope: shared quest gets no credit).
+    # Anomaly Survey there uses Goal: scan + Reveals: (the declarative quest-scan path), so
+    # this map needs no //science route for it.
+    jobs_doc = document_get_amd_file(get_mission_dir_filename("maps/peacetime_jobs.amd"), data_parser=amd_quest_data)
     for p in to_object_list(role("__player__")):
-        quest_add(p.id, "job_gunnery", f"Gunnery Qualification ({drone_n})", f"Weapons drill: destroy all {drone_n} target drones.", state=1, data={"on_signal": {"name": "drone_down", "count": drone_n}, "reward": {"credits": 200}})
-        quest_add(p.id, "job_rocks", f"Rock Breakers ({rock_n})", f"Clear {rock_n} hazard asteroids from the shipping lane.", state=1, data={"on_signal": {"name": "rock_cleared", "count": rock_n}, "reward": {"credits": 150}})
-        quest_add(p.id, "job_poacher", "Board the Poacher", "Disable the unregistered trawler (drop its shields below 50%) and demand its surrender. Do NOT destroy it.", state=1, data={"on_signal": {"name": "poacher_boarded"}, "fail_on_signal": {"name": "poacher_killed"}, "reward": {"credits": 300}})
-        quest_add(p.id, "job_mercy", "Mercy Run", "A shuttle is adrift and losing life support. Reach it before the clock runs out.", state=1, data={"on_signal": {"name": "mercy_reached"}, "fail_after": {"minutes": 6}, "reward": {"credits": 250}})
-        quest_add(p.id, "job_customs", f"Customs Patrol ({traffic_n})", f"Hail and clear {traffic_n} civilian traders for transit.", state=1, data={"on_signal": {"name": "customs_cleared", "count": traffic_n}, "reward": {"credits": 120}})
-        # Uses the declarative quest-scan path (on_scan + reveal_scan): the quest driver
-        # makes the anomalies scannable and renders the scan text - no //science route here.
-        quest_add(p.id, "job_survey", f"Anomaly Survey ({survey_n})", f"Have Science scan {survey_n} sensor anomalies and log them.", state=1, data={"on_scan": {"role": "anomaly", "count": survey_n}, "reveal_scan": "Survey logged: a stable subspace distortion. No threat - filed with the science log.", "reward": {"credits": 130}})
+        quest_grant_amd(p.id, jobs_doc)
 
     task_schedule(pr_mercy_watch)
     ->END
