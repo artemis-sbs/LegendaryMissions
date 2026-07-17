@@ -1,0 +1,289 @@
+# Peacetime Remastered - a peacekeeping patrol shift.
+#
+# Reimagines maps/peacetime.mast. It REUSES that map's proven "Ambassador Florbin
+# kidnapping" investigation (the kidnap_caper label + its comms/science routes, all
+# gated on kidnap_status >= 1), but:
+#   * surfaces the case as a proper QUEST TREE in the quest log (florbin_quest_watch
+#     bridges the old kidnap_status flag to quest_signal), instead of a hidden flag, and
+#   * adds a board of peacetime side-jobs that keep the whole crew busy - Weapons
+#     especially. The peacetime Weapons doctrine here is "enforcer & hazard-clearer,
+#     not destroyer": qualify on target drones, demolish hazard rocks, and DISABLE
+#     (don't destroy) a poacher.
+#
+# The original Peacetime map is untouched and still selectable; this is a new @map.
+
+@map/peacetime_remastered "Peacetime Remastered"
+" A quiet border patrol shift. Work the quest board: run down the Florbin
+" kidnapping, qualify the gunnery crew, clear hazards, and police the lanes.
+" Weapons stays busy - just not at war.
+metadata:``` yaml
+Properties:
+  Main:
+    Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
+    Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
+  Map:
+    Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'
+    Lethal Terrain: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, max", var="LETHAL_SELECT")'
+    Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, max", var="FRIENDLY_SELECT")'
+    Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, max", var="MONSTER_SELECT")'
+    Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
+    Jobs: 'gui_drop_down("$text: {JOBS_SELECT};list: none, few, some, lots, max", var= "JOBS_SELECT")'
+    Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
+    Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
+```
+
+    default JOBS_SELECT = "some"
+    terrain_value = terrain_to_value(TERRAIN_SELECT)
+    lethal_value =  terrain_to_value(LETHAL_SELECT)
+    friendly_value = terrain_to_value(FRIENDLY_SELECT)
+    monster_value = terrain_to_value(MONSTER_SELECT)
+    upgrade_value = terrain_to_value(UPGRADE_SELECT)
+    # Seed arrives from a gui_input typein / loaded game code, so it can be a
+    # string; normalize to int before any comparison or arithmetic.
+    seed_value = safe_int(seed_value)
+
+    if seed_value != 0:
+        random.seed(seed_value)
+        print(f"Seed Value: {seed_value}")
+
+    # Same sandbox world as Peacetime.
+    terrain_spawn_stations(DIFFICULTY, lethal_value, min_num=5)
+    await task_schedule(spawn_friendly_npc)
+    await task_schedule(spawn_players)
+    await task_schedule(default_player_friendly_eyes)
+    await task_schedule(docking_standard_player_station)
+
+    terrain_asteroid_clusters(terrain_value)
+    terrain_spawn_nebula_clusters(terrain_value)
+    terrain_spawn_pickups(upgrade_value)
+    terrain_spawn_monsters(monster_value)
+    terrain_spawn_black_holes(lethal_value)
+
+    # The peacekeeping side-jobs (the quest board) and the all-ships-lost loss watch.
+    task_schedule(pr_jobs_setup)
+    task_schedule(pr_lose_watch)
+
+    # No enemy fleets in Peacetime. The headline case is the Florbin kidnapping, which
+    # only runs if there are friendly ships to investigate.
+    if friendly_value >= 1:
+        # The Florbin case as a shared quest tree, layered over the original
+        # investigation. florbin_quest_watch translates the kidnap_status flag that
+        # kidnap_caper drives into the quest_signal events these listen for.
+        quest_add(SHARED, "florbin", "The Florbin Affair", "Ambassador Florbin has been kidnapped and smuggled out in a cargo container. Follow the cargo trail, find him, and bring him home to DS 1 - alive.", state=1)
+        quest_add(SHARED, "florbin/brief", "Take the Case", "Contact DS 1 to open the investigation.", state=1, data={"on_signal": {"name": "case_opened"}, "reveal": "florbin/trail"})
+        quest_add(SHARED, "florbin/trail", "Identify the Kidnapper", "Follow the cargo trail: interview stations and bio-scan suspect holds to find which ship is hiding the ambassador.", state=2, data={"on_signal": {"name": "suspect_identified"}, "reveal": "florbin/subdue"})
+        quest_add(SHARED, "florbin/subdue", "Subdue the Kidnapper", "Do NOT destroy the ship - the ambassador is aboard. Drop its shields below 50% (or use a secret codecase) to force its surrender.", state=2, data={"on_signal": {"name": "kidnapper_subdued"}, "reveal": "florbin/recover"})
+        quest_add(SHARED, "florbin/recover", "Recover and Return Florbin", "Collect the escape pod and dock it at DS 1.", state=2, data={"on_signal": {"name": "florbin_delivered"}})
+        quest_add(SHARED, "florbin/alive", "Keep Florbin Alive", "The case is lost if the ship carrying the ambassador is destroyed before he escapes.", state=1, data={"fail_on_signal": {"name": "florbin_killed"}})
+        task_schedule(florbin_quest_watch)
+        # Reuse the entire original investigation (comms/science routes + surrender).
+        jump kidnap_caper
+    else:
+        task_schedule(task_peacetime_end_game)
+        ->END
+
+
+#-----------------------------------------------------------------------------------------------------------------------------
+# Quest bridge: map the original kidnap_status flag (0..5) to the Florbin quest tree.
+# kidnap_caper / kidnapper_discovered / handle_kidnapper_surrender / check_ambassador_rescued
+# all still drive kidnap_status; we just translate the transitions into quest_signal.
+
+===== florbin_quest_watch =====
+    prev_status = 0
+    seen_kidnapper = False
+--- fqw_loop
+    await delay_sim(1)
+    cur = kidnap_status
+    if cur >= 1 and prev_status < 1:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "case_opened"})
+    if cur >= 2 and prev_status < 2:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "suspect_identified"})
+    if cur >= 3 and prev_status < 3:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "kidnapper_subdued"})
+    if cur >= 5 and prev_status < 5:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "florbin_delivered"})
+        ->END
+    # Killed-before-rescue: the kidnapper role only vanishes when that ship is destroyed.
+    kcount = len(to_list(role("kidnapper")))
+    if kcount > 0:
+        seen_kidnapper = True
+    if seen_kidnapper and kcount == 0 and cur < 3:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "florbin_killed"})
+        ->END
+    prev_status = cur
+    jump fqw_loop
+
+
+#-----------------------------------------------------------------------------------------------------------------------------
+# The peacetime job board. Weapons doctrine: enforce and clear hazards, don't wage war.
+#   * Gunnery Qualification - destroy inert practice drones (simulated hostiles).
+#   * Rock Breakers        - demolish hazard asteroids clogging a shipping lane.
+#   * Board the Poacher    - DISABLE (shields < 50%) and board a neutral trawler;
+#                            destroying it FAILS the job (it is a civilian ship).
+# Each is a per-ship quest so its credit reward pays to the side.
+
+===== pr_jobs_setup =====
+    default JOBS_SELECT = "some"
+    jobs_value = terrain_to_value(JOBS_SELECT)
+    ->END if jobs_value < 1
+
+    drone_n = 2 + jobs_value
+    rock_n = 1 + jobs_value
+
+    # Gunnery targets: inert drones squawking hostile IFF for a live-fire drill. No
+    # brain -> they do not maneuver or shoot back; raider side -> Weapons can lock/fire.
+    drone_pts = scatter.box(drone_n, 9000, 0, 9000, 2500, 400, 2500, centered=True)
+    for v in drone_pts:
+        npc_spawn(v.x, v.y, v.z, "Target Drone", "raider, target_drone", "cargo_ship", "behav_npcship")
+
+    # Rock Breakers: hazardous asteroids drifting in a lane, tagged for demolition.
+    rock_types = ship_data_plain_asteroid_keys()
+    rock_pts = scatter.box(rock_n, -11000, 0, 12000, 3500, 400, 3500, centered=True)
+    for v in rock_pts:
+        a_type = random.choice(rock_types)
+        terrain_spawn(v.x, v.y, v.z, "Hazard Rock", "#, hazard_rock", a_type, "behav_asteroid")
+
+    # Poacher: a lone neutral trawler to be disabled and boarded - not destroyed.
+    npc_spawn(0, 0, -16000, "Unregistered Trawler", "civ, civilian, poacher", "cargo_ship", "behav_npcship")
+
+    # Mercy Run (Helm): a shuttle adrift and losing life support - reach it in time.
+    npc_spawn(16000, 0, -12000, "Stranded Shuttle", "civ, civilian, mercy_target", "cargo_ship", "behav_npcship")
+
+    # Customs Patrol (Comms): civilian traffic to hail and clear for transit.
+    traffic_n = 2 + jobs_value
+    traffic_pts = scatter.box(traffic_n, -6000, 0, -6000, 3000, 400, 3000, centered=True)
+    for v in traffic_pts:
+        npc_spawn(v.x, v.y, v.z, "Civilian Trader", "civ, civilian, traffic", "cargo_ship", "behav_npcship")
+
+    # Anomaly Survey (Science): sensor anomalies to scan and log. Spawned with the proven
+    # asteroid-terrain pattern (behav_asteroid) so they are stable, selectable and scannable.
+    survey_n = 1 + jobs_value
+    anomaly_types = ship_data_plain_asteroid_keys()
+    survey_pts = scatter.box(survey_n, 14000, 0, 14000, 3000, 400, 3000, centered=True)
+    for v in survey_pts:
+        terrain_spawn(v.x, v.y, v.z, "Sensor Anomaly", "#, anomaly", random.choice(anomaly_types), "behav_asteroid")
+
+    for p in to_object_list(role("__player__")):
+        quest_add(p.id, "job_gunnery", f"Gunnery Qualification ({drone_n})", f"Weapons drill: destroy all {drone_n} target drones.", state=1, data={"on_signal": {"name": "drone_down", "count": drone_n}, "reward": {"credits": 200}})
+        quest_add(p.id, "job_rocks", f"Rock Breakers ({rock_n})", f"Clear {rock_n} hazard asteroids from the shipping lane.", state=1, data={"on_signal": {"name": "rock_cleared", "count": rock_n}, "reward": {"credits": 150}})
+        quest_add(p.id, "job_poacher", "Board the Poacher", "Disable the unregistered trawler (drop its shields below 50%) and demand its surrender. Do NOT destroy it.", state=1, data={"on_signal": {"name": "poacher_boarded"}, "fail_on_signal": {"name": "poacher_killed"}, "reward": {"credits": 300}})
+        quest_add(p.id, "job_mercy", "Mercy Run", "A shuttle is adrift and losing life support. Reach it before the clock runs out.", state=1, data={"on_signal": {"name": "mercy_reached"}, "fail_after": {"minutes": 6}, "reward": {"credits": 250}})
+        quest_add(p.id, "job_customs", f"Customs Patrol ({traffic_n})", f"Hail and clear {traffic_n} civilian traders for transit.", state=1, data={"on_signal": {"name": "customs_cleared", "count": traffic_n}, "reward": {"credits": 120}})
+        quest_add(p.id, "job_survey", f"Anomaly Survey ({survey_n})", f"Have Science scan {survey_n} sensor anomalies and log them.", state=1, data={"on_signal": {"name": "anomaly_surveyed", "count": survey_n}, "reward": {"credits": 130}})
+
+    task_schedule(pr_mercy_watch)
+    ->END
+
+
+# Weapons-job events -> quest_signal. Using //damage/destroy (reliable for both npc
+# drones and terrain asteroids) keeps every job on the same event path.
+//damage/destroy if has_role(DESTROYED_ID, "target_drone")
+    signal_emit("quest_signal", {"SIGNAL_NAME": "drone_down"})
+
+//damage/destroy if has_role(DESTROYED_ID, "hazard_rock")
+    signal_emit("quest_signal", {"SIGNAL_NAME": "rock_cleared"})
+
+//damage/destroy if has_role(DESTROYED_ID, "poacher")
+    signal_emit("quest_signal", {"SIGNAL_NAME": "poacher_killed"})
+
+
+# Poacher comms: the enforcement surface. The surrender check mirrors the kidnapper's -
+# shields below 50% forces the boarding. This is the "disable, don't destroy" mechanic.
+//enable/comms if has_roles(COMMS_SELECTED_ID, "poacher")
+//comms if has_roles(COMMS_SELECTED_ID, "poacher")
+    + "Demand Surrender" pr_poacher_surrender
+
+===== pr_poacher_surrender =====
+    blob = to_blob(COMMS_SELECTED_ID)
+    ->END if blob is None
+    shield_count = blob.get("shield_count", 0)
+    s_ratio = 100
+    for s in range(shield_count):
+        s_max = blob.get("shield_max_val", s)
+        s_cur = blob.get("shield_val", s)
+        if s_max > 0:
+            s_ratio = min(s_cur/s_max, s_ratio)
+    if s_ratio < 0.5:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "poacher_boarded"})
+        remove_role(COMMS_SELECTED_ID, "poacher")
+        e_obj = to_engine_object(COMMS_SELECTED_ID)
+        _pos = e_obj.pos
+        target_pos(COMMS_SELECTED_ID, _pos.x, _pos.y, _pos.z, throttle=0.0, target_id=0, stop_dist=200)
+        comms_receive(f"""All right, all right! We surrender. Cutting engines - your boarding party is clear to dock.""", title="Poacher Surrenders", title_color="green")
+    else:
+        comms_receive(f"""You have no authority out here! Back off.""", title="Refused", title_color="red")
+    yield success
+
+
+#-----------------------------------------------------------------------------------------------------------------------------
+# Customs Patrol (Comms): hail civilian traffic and clear it for transit.
+//enable/comms if has_roles(COMMS_SELECTED_ID, "traffic")
+//comms if has_roles(COMMS_SELECTED_ID, "traffic")
+    + "Request Manifest" pr_customs_manifest
+    + "Clear for Transit" pr_customs_clear
+
+===== pr_customs_manifest =====
+    comms_receive(f"""Routine haul, officer - machine parts and foodstuffs, all logged. Happy to hold for inspection.""", title="Manifest", title_color="green")
+    yield success
+
+===== pr_customs_clear =====
+    signal_emit("quest_signal", {"SIGNAL_NAME": "customs_cleared"})
+    remove_role(COMMS_SELECTED_ID, "traffic")
+    comms_receive(f"""Transit cleared. Safe travels, and thank you for keeping the lanes tidy.""", title="Customs", title_color="green")
+    yield success
+
+
+#-----------------------------------------------------------------------------------------------------------------------------
+# Anomaly Survey (Science): scan a sensor anomaly to log it.
+//enable/science if has_roles(SCIENCE_SELECTED_ID, "anomaly")
+//science if has_roles(SCIENCE_SELECTED_ID, "anomaly")
+    + "scan":
+        signal_emit("quest_signal", {"SIGNAL_NAME": "anomaly_surveyed"})
+        <scan>
+            % Survey logged: a stable subspace distortion, no threat. Data filed with the science log.
+    yield success
+
+
+#-----------------------------------------------------------------------------------------------------------------------------
+# Mercy Run (Helm): a patrol ship reaching the stranded shuttle relieves it. Proximity,
+# not docking, so it needs no per-station docking wiring. The quest's own fail_after
+# clock (anchored by the quest driver) handles the "in time" pressure.
+===== pr_mercy_watch =====
+    default GAME_ENDED = False
+--- mw_loop
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    m_list = to_list(role("mercy_target"))
+    ->END if len(m_list) < 1
+    m_id = m_list[0]
+    for p in role("__player__"):
+        if sbs.distance_id(p, m_id) <= 900:
+            # Quest completion auto-broadcasts "Mission complete: Mercy Run"; no comms
+            # context here (background task), so don't call comms_receive.
+            signal_emit("quest_signal", {"SIGNAL_NAME": "mercy_reached"})
+            remove_role(m_id, "mercy_target")
+            ->END
+    jump mw_loop
+
+
+#-----------------------------------------------------------------------------------------------------------------------------
+# Shift end: an all-patrol-ships-lost loss. The shift-timer win is handled by
+# task_peacetime_end_game (scheduled by kidnap_caper, or above when there is no case).
+
+===== pr_lose_watch =====
+    default GAME_ENDED = False
+    seen_players = False
+--- plw_loop
+    await delay_sim(4)
+    ->END if GAME_ENDED
+    pc = len(to_list(role("__player__")))
+    if pc > 0:
+        seen_players = True
+    if seen_players and pc == 0:
+        START_TEXT = "All patrol ships were lost."
+        GAME_STARTED = False
+        GAME_ENDED = True
+        sbs.play_music_file(0, "music/default/failure")
+        signal_emit("show_game_results", None)
+        ->END
+    jump plw_loop

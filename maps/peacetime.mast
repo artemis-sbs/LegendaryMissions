@@ -907,6 +907,10 @@ yield success
 
 //enable/science if has_roles(SCIENCE_SELECTED_ID, "discovered")
 //science if has_roles(SCIENCE_SELECTED_ID, "discovered")
+    # capname is read by the "intel" scan below; define it here like the suspect
+    # science route does (it was previously undefined -> runtime error on scan).
+    tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
+    capname = tempcargo[1]
 
     + "scan":
         <scan>
@@ -1003,6 +1007,6 @@ yield success
     pest_list = SHIP_NAME_DATA.get("complaints")
     task_schedule(pest_messages)
 
-//damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby")
+//damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby") and WORLD_SELECT.path == "peacetime"
     if kidnap_status < 3:
         jump peacetime_ambassador_killed
