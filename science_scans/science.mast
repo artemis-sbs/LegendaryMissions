@@ -11,6 +11,35 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
 
 
 
+# Generic declarative object scans. Any object whose ROLE was registered with
+# science_define_scan(role, {tab: text}) becomes scannable here and renders those tabs -
+# no hand-authored //science route per object type. The tab show-condition and the scan
+# text both read the registry via SCIENCE_SELECTED_ID (self-contained, so they survive the
+# button block running out of the route's task). Standard tabs: scan/status/intel/mat/bio.
+//enable/science if science_has_scan_def(SCIENCE_SELECTED_ID)
+//science if science_has_scan_def(SCIENCE_SELECTED_ID)
+    + "scan" if science_scan_tab(SCIENCE_SELECTED_ID, "scan") != "":
+        sci_txt = science_scan_tab(SCIENCE_SELECTED_ID, "scan")
+        <scan>
+            " {sci_txt}
+    + "status" if science_scan_tab(SCIENCE_SELECTED_ID, "status") != "":
+        sci_txt = science_scan_tab(SCIENCE_SELECTED_ID, "status")
+        <scan>
+            " {sci_txt}
+    + "intel" if science_scan_tab(SCIENCE_SELECTED_ID, "intel") != "":
+        sci_txt = science_scan_tab(SCIENCE_SELECTED_ID, "intel")
+        <scan>
+            " {sci_txt}
+    + "mat" if science_scan_tab(SCIENCE_SELECTED_ID, "mat") != "":
+        sci_txt = science_scan_tab(SCIENCE_SELECTED_ID, "mat")
+        <scan>
+            " {sci_txt}
+    + "bio" if science_scan_tab(SCIENCE_SELECTED_ID, "bio") != "":
+        sci_txt = science_scan_tab(SCIENCE_SELECTED_ID, "bio")
+        <scan>
+            " {sci_txt}
+
+
 //enable/science if side_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
 
 //science if side_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
