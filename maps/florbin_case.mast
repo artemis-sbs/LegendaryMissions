@@ -22,14 +22,19 @@ shared fb_admiral = None
 shared fb_florbin = None
 
 # The investigation's authored prose (## Florbin Text in peacetime_remastered.amd), loaded into a
-# {key: template} map in fb_investigation. Templates carry {ship}/{time}/{dest}/{holds}/{role}/
+# {key: template} map in fb_investigation. Templates carry {ship}/{dtime}/{dest}/{holds}/{crew}/
 # {suspects} slots that comms_receive fills from task vars at send time.
 shared FB_TEXT = {}
 
-# Docking-time strings for the A/B station previews, keyed by ship+cargo snapshot. Built in Python
-# (fb_times_map, mission_helper_functions.py) so a colon-in-a-time-value never becomes a MAST
-# data-dict literal; fb_preview looks the time up by ckey instead of carrying it in a button dict.
-shared FB_TIMES = {}
+# Ambassador Florbin's post-rescue passenger complaints, authored as an amd_chatter line-pool
+# (## Florbin Complaints in the .amd) and loaded once in fb_investigation. fb_pest_messages pulls a
+# random line with chatter_line(FB_COMPLAINTS, "complaint").
+shared FB_COMPLAINTS = {}
+
+# Cargo is an FbCargo record (mission_helper_functions.py), not a positional list: MAST reads
+# cargo.ship / cargo.stops[n] / cargo.holds[n] / cargo.manifest_text() / cargo.amb_hold, and the
+# manifest's departure time is just cargo.dep_time (retiring the old FB_TIMES map + its
+# colon-in-a-data-dict workaround).
 
 ====== fb_investigation ======
 
@@ -58,10 +63,10 @@ shared FB_TIMES = {}
     fb_admiral = fb_cast.get("admiral")
     fb_florbin = fb_cast.get("florbin")
 
-    # Authored prose (## Florbin Text) + the A/B docking times, both via Python helpers so MAST does
-    # not interpolate the {slots} at load time.
+    # Authored prose (## Florbin Text) via a Python helper so MAST does not interpolate the {slots}
+    # at load time. (Docking times now ride on each FbCargo as cargo.dep_time.)
     FB_TEXT = amd_text_map(amd_section(PR_DOC, "florbin_text"))
-    FB_TIMES = fb_times_map()
+    FB_COMPLAINTS = chatter_scenes(amd_section(PR_DOC, "florbin_complaints"))
 
     # ---- The suspect trail is generated as pure DATA by fb_generate_case (mission_helper_functions.py),
     # replacing ~400 lines of per-scenario / per-ship brute force. Pick the ambassador container
@@ -69,19 +74,23 @@ shared FB_TIMES = {}
     # decoy clues (clue2/clue3) from the rest. The generator returns one spec per suspect and
     # GUARANTEES every mystery invariant (unit-tested in maps/test_florbin_case.py over 20 seeds);
     # the loop below just applies each spec to the engine (spawn + roles + inventory).
-    clue_pool = list(SHIP_NAME_DATA.get("clue_list"))
+    # The clues are authored in peacetime_remastered.amd (## Florbin Clues) as generic AMD RECORDS:
+    # each `### [Container](slug)` heading's DISPLAY is a container the ambassador can hide inside and
+    # its BODY is the clue pointing at that captain. amd_records hands them back as {display, body},
+    # so clue0 = a container name, clue1 = its paired clue. clue2/clue3 are decoy clue text.
+    clue_pool = amd_records(amd_section(PR_DOC, "florbin_clues"))
     kc = clue_pool.pop(random.randint(0, 19))
-    clue0 = kc["container"]
-    clue1 = kc["clue"]
-    clue2 = clue_pool.pop(random.randint(0, len(clue_pool) - 1))["clue"]
-    clue3 = clue_pool.pop(random.randint(0, len(clue_pool) - 1))["clue"]
+    clue0 = kc.get("display")
+    clue1 = kc.get("body")
+    clue2 = clue_pool.pop(random.randint(0, len(clue_pool) - 1)).get("body")
+    clue3 = clue_pool.pop(random.randint(0, len(clue_pool) - 1)).get("body")
 
     fb_case = fb_generate_case(fb_pools(SHIP_NAME_DATA), clue0, [clue1, clue2, clue3], FB_TEXT, random)
     fb_specs = fb_case["suspects"]
 
-    # Spawn each suspect from its spec: cargo snapshots, the kidnapper's ambassador container (kclue),
-    # captain, a civilian face, the kidnapper role, and - for the three tracked ships - tag their two
-    # visited stations clue{N}A / clue{N}B.
+    # Spawn each suspect from its spec: cargo snapshots (FbCargo records, the kidnapper's carrying the
+    # ambassador in cargo.amb_hold), captain, a civilian face, the kidnapper role, and - for the three
+    # tracked ships - tag their two visited stations clue{N}A / clue{N}B.
     spawn_points = scatter.box(len(fb_specs), 0, 0, 0, 50000, 1000, 50000, centered=True)
     for spec, p in zip(fb_specs, spawn_points):
         c_ship = to_id(npc_spawn(p.x, p.y, p.z, spec["orig_name"], "civ, civilian, suspect", "cargo_ship", "behav_npcship"))
@@ -91,7 +100,6 @@ shared FB_TIMES = {}
         set_inventory_value(c_ship, "cargo1", spec["cargo1"])
         set_inventory_value(c_ship, "cargo2", spec["cargo2"])
         set_inventory_value(c_ship, "cargo3", spec["cargo3"])
-        set_inventory_value(c_ship, "kclue", spec["kclue"])
         set_inventory_value(c_ship, "captain", spec["captain"])
         set_face(c_ship, random_terran(civilian=True))
         if spec["kidnapper"]:
@@ -138,42 +146,26 @@ shared FB_TIMES = {}
 
 //comms/fb_investigate_kidnapping
     investigate_msg = get_inventory_value(COMMS_SELECTED_ID, "investigate_message")
-    ship1_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")  
-    ship2_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")  
-    ship3_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")  
+    ship1_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")
+    ship2_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")
+    ship3_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")
     # Prose is the `briefing` template (## Florbin Text); {suspects} fills from the task var.
     suspects = investigate_msg
     comms_receive(FB_TEXT.get("briefing"), title="Ambassador Kidnapped", title_color="orange")
-    + "Cargo Manifest {ship1_cargo1[0]}" fb_cargo_manifest_ship1
-    + "Cargo Manifest {ship2_cargo1[0]}" fb_cargo_manifest_ship2
-    + "Cargo Manifest {ship3_cargo1[0]}" fb_cargo_manifest_ship3
+    + "Cargo Manifest {ship1_cargo1.ship}" fb_cargo_manifest {"ckey":"ship1_cargo1"}
+    + "Cargo Manifest {ship2_cargo1.ship}" fb_cargo_manifest {"ckey":"ship2_cargo1"}
+    + "Cargo Manifest {ship3_cargo1.ship}" fb_cargo_manifest {"ckey":"ship3_cargo1"}
 
-# The DS1 manifest previews - the `manifest` template + fb_holds (the 4-hold block). comms_receive
-# interpolates {ship}/{time}/{dest}/{holds} from the task vars set here.
-===== fb_cargo_manifest_ship1 =====
-    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")
-    ship = cargo[0]
-    dtime = "08:34"
-    dest = cargo[2]
-    holds = fb_holds(cargo)
-    comms_receive(FB_TEXT.get("manifest"), title="Cargo Manifest " + ship, title_color="orange")
-    yield success
-
-===== fb_cargo_manifest_ship2 =====
-    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")
-    ship = cargo[0]
-    dtime = "09:18"
-    dest = cargo[2]
-    holds = fb_holds(cargo)
-    comms_receive(FB_TEXT.get("manifest"), title="Cargo Manifest " + ship, title_color="orange")
-    yield success
-
-===== fb_cargo_manifest_ship3 =====
-    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")
-    ship = cargo[0]
-    dtime = "10:22"
-    dest = cargo[2]
-    holds = fb_holds(cargo)
+# The DS1 manifest preview - ONE label for all three ships (was fb_cargo_manifest_ship1/2/3, which
+# differed only by inventory key + a hardcoded time). ckey selects the snapshot; ship / departure
+# time / first destination / holds all read off the FbCargo record. comms_receive fills the
+# `manifest` template's {ship}/{dtime}/{dest}/{holds} from these task vars.
+===== fb_cargo_manifest =====
+    cargo = get_inventory_value(COMMS_SELECTED_ID, ckey)
+    ship = cargo.ship
+    dtime = cargo.dep_time
+    dest = cargo.stops[0]
+    holds = cargo.manifest_text()
     comms_receive(FB_TEXT.get("manifest"), title="Cargo Manifest " + ship, title_color="orange")
     yield success
 
@@ -204,31 +196,31 @@ shared FB_TIMES = {}
     ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")
     ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")
     if has_role(COMMS_SELECTED_ID, "clue1A"):
-        + "Investigate {ship1_cargo2[0]}" fb_preview {"ckey":"ship1_cargo2","crew":"Deck Chief","nfield":3}
+        + "Investigate {ship1_cargo2.ship}" fb_preview {"ckey":"ship1_cargo2","crew":"Deck Chief","stop":1}
     if has_role(COMMS_SELECTED_ID, "clue1B"):
-        + "Investigate {ship1_cargo3[0]}" fb_preview {"ckey":"ship1_cargo3","crew":"Deck Chief","nfield":4}
+        + "Investigate {ship1_cargo3.ship}" fb_preview {"ckey":"ship1_cargo3","crew":"Deck Chief","stop":2}
     if has_role(COMMS_SELECTED_ID, "clue2A"):
-        + "Investigate {ship2_cargo2[0]}" fb_preview {"ckey":"ship2_cargo2","crew":"Maintenance Crew","nfield":3}
+        + "Investigate {ship2_cargo2.ship}" fb_preview {"ckey":"ship2_cargo2","crew":"Maintenance Crew","stop":1}
     if has_role(COMMS_SELECTED_ID, "clue2B"):
-        + "Investigate {ship2_cargo3[0]}" fb_preview {"ckey":"ship2_cargo3","crew":"Maintenance Crew","nfield":4}
+        + "Investigate {ship2_cargo3.ship}" fb_preview {"ckey":"ship2_cargo3","crew":"Maintenance Crew","stop":2}
     if has_role(COMMS_SELECTED_ID, "clue3A"):
-        + "Investigate {ship3_cargo2[0]}" fb_preview {"ckey":"ship3_cargo2","crew":"Cargo Master","nfield":3}
+        + "Investigate {ship3_cargo2.ship}" fb_preview {"ckey":"ship3_cargo2","crew":"Cargo Master","stop":1}
     if has_role(COMMS_SELECTED_ID, "clue3B"):
-        + "Investigate {ship3_cargo3[0]}" fb_preview {"ckey":"ship3_cargo3","crew":"Cargo Master","nfield":4}
+        + "Investigate {ship3_cargo3.ship}" fb_preview {"ckey":"ship3_cargo3","crew":"Cargo Master","stop":2}
 
 # The A/B station previews - ONE label for all six buttons. Parameters arrive from the comms
 # button's data dict: ckey (which cargo snapshot to read), crew (this station's interview role, used
-# by preview_down/preview_missing), nfield (cargo index of the NEXT destination - 3 for the A/first
-# stop, 4 for the B/second stop). The docking time comes from FB_TIMES[ckey] (built in Python to keep
-# the colon out of a MAST literal). `preview_full/down/missing` (## Florbin Text) is picked by
-# records_status; comms_receive fills {ship}/{dtime}/{dest}/{holds}/{crew} from the task vars.
+# by preview_down/preview_missing), stop (index into cargo.stops of the NEXT destination - 1 for the
+# A/first stop, 2 for the B/second stop). The docking time is cargo.dep_time. `preview_full/down/
+# missing` (## Florbin Text) is picked by records_status; comms_receive fills {ship}/{dtime}/{dest}/
+# {holds}/{crew} from the task vars.
 ===== fb_preview =====
     cargo = get_inventory_value(COMMS_SELECTED_ID, ckey)
     rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    ship = cargo[0]
-    dest = cargo[nfield]
-    holds = fb_holds(cargo)
-    dtime = FB_TIMES.get(ckey)
+    ship = cargo.ship
+    dest = cargo.stops[stop]
+    holds = cargo.manifest_text()
+    dtime = cargo.dep_time
     tmpl = FB_TEXT.get("preview_full")
     if rec_status == 2:
         tmpl = FB_TEXT.get("preview_down")
@@ -257,14 +249,14 @@ shared FB_TIMES = {}
 
 ===== fb_handle_suspect_cargo ======
     cargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
-    holds = fb_holds(cargo)
+    holds = cargo.manifest_text()
     comms_receive(FB_TEXT.get("suspect_cargo"), title="Cargo Manifest", title_color="green")
     yield success
 
 ===== fb_handle_suspect_itinerary ======
     cargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
-    last_stop = cargo[3]
-    next_stop = cargo[4]
+    last_stop = cargo.stops[1]
+    next_stop = cargo.stops[2]
     comms_receive(FB_TEXT.get("suspect_itinerary"), title="Itinerary", title_color="green")
     yield success
 
@@ -277,41 +269,35 @@ shared FB_TIMES = {}
 # proximity "Hold 1-4" bio-scan - the actual kidnapper detection - stays hand-authored.
 //science if has_roles(SCIENCE_SELECTED_ID, "suspect") and FB_STATUS >= 1
     ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 600
-    k_clue = get_inventory_value(SCIENCE_SELECTED_ID, "kclue")
-    tempcargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
+    cargo = get_inventory_value(SCIENCE_SELECTED_ID, "cargo3")
 
+    # One call per hold (four static buttons - the closure trap rules out a loop). fb_hold_scan
+    # returns (is_ambassador, scan_line): the flag drives fb_kidnapper_discovered, the line renders.
+    # The hold identity lives in cargo.amb_hold, so no cargo[5..12] indices appear here anymore.
     + "Hold 1":
-        if tempcargo[6] == k_clue:
+        hit, line = fb_hold_scan(cargo, 0)
+        if hit:
             task_schedule(fb_kidnapper_discovered)
-            <scan>
-                % Container {tempcargo[5]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
-        else:
-            <scan>
-                % Container {tempcargo[5]}: {tempcargo[6]}. Contents verified.
+        <scan>
+            % {line}
     + "Hold 2":
-        if tempcargo[8] == k_clue:
+        hit, line = fb_hold_scan(cargo, 1)
+        if hit:
             task_schedule(fb_kidnapper_discovered)
-            <scan>
-                % Container {tempcargo[7]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
-        else: 
-            <scan>
-                % Container {tempcargo[7]}: {tempcargo[8]}. Contents verified.
+        <scan>
+            % {line}
     + "Hold 3":
-        if tempcargo[10] == k_clue:
+        hit, line = fb_hold_scan(cargo, 2)
+        if hit:
             task_schedule(fb_kidnapper_discovered)
-            <scan>
-                % Container {tempcargo[9]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
-        else: 
-            <scan>
-                % Container {tempcargo[9]}: {tempcargo[10]}. Contents verified.
+        <scan>
+            % {line}
     + "Hold 4":
-        if tempcargo[12] == k_clue:
+        hit, line = fb_hold_scan(cargo, 3)
+        if hit:
             task_schedule(fb_kidnapper_discovered)
-            <scan>
-                % Container {tempcargo[11]}: !!!ALERT!!! Bio-scan matches Ambassador Florbin. 
-        else: 
-            <scan>
-                % Container {tempcargo[11]}: {tempcargo[12]}. Contents verified.
+        <scan>
+            % {line}
 
     #-----------------------------------------------------------------------------------------------------------------------------
     # Miscellanous notification and upkeep tasks.
@@ -445,10 +431,8 @@ shared FB_TIMES = {}
     await delay_sim(random.randint(180,300))
     if FB_STATUS >= 5:
         ->END
-    if len(pest_idx) < 1:
-        pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-    temp_idx = pest_idx.pop(random.randint(0,len(pest_idx) - 1))
-    pest_message = pest_list[temp_idx]
+    # One random complaint from the amd_chatter pool (## Florbin Complaints).
+    pest_message = chatter_line(FB_COMPLAINTS, "complaint")
     comms_receive_internal(pest_message, pest_id, fb_florbin.name, title="Passenger Request", face=get_face(fb_florbin.id), title_color="green")
     jump fb_pest_messages
 
@@ -478,8 +462,6 @@ shared FB_TIMES = {}
     FB_STATUS = 4
     send_general_message(fb_florbin.name, FB_TEXT.get("florbin_pod"), get_face(fb_florbin.id), COLLISION_SELECTED_ID)
     pest_id = COLLISION_SELECTED_ID
-    pest_idx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-    pest_list = SHIP_NAME_DATA.get("complaints")
     task_schedule(fb_pest_messages)
 
 //damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby") and WORLD_SELECT.path == "peacetime_remastered"

@@ -4,9 +4,9 @@ fb_generate_case replaced ~400 lines of brute-force per-scenario/per-ship trail 
 florbin_case.mast. These tests pin the mystery invariants the mission depends on, over many seeds:
 
   1. Exactly ONE tracked suspect is the kidnapper.
-  2. The kidnapper carries the ambassador container (clue0 == kclue) in one cargo3 hold-goods slot
-     (index 6/8/10/12); no OTHER suspect's holds contain clue0 -> the bio hold-scan matches on
-     exactly that ship.
+  2. The kidnapper hides the ambassador container (clue0 == kclue) in exactly one cargo3 hold
+     (cargo3.holds[cargo3.amb_hold].goods == clue0); no OTHER suspect's holds contain clue0 -> the
+     bio hold-scan matches on exactly that ship.
   3. clue0 is a real container name from clue_list[0:20] (never empty).
   4. The kidnapper's interview report carries the paired narrative clue (clue1); the other two
      tracked reports carry clue2 / clue3, never clue1.
@@ -66,16 +66,14 @@ def _generate(seed, n_tracked=3, n_decoy=2):
     return case, clue0, clues
 
 
-HOLD_IDX = MH.FB_HOLD_GOODS_IDX  # [6, 8, 10, 12]
-
-
 def _kidnapper(case):
     kids = [s for s in case["suspects"] if s["kidnapper"]]
     return kids
 
 
 def _holds_contain(cargo, value):
-    return [gi for gi in HOLD_IDX if gi < len(cargo) and cargo[gi] == value]
+    """Hold indices (0-3) of an FbCargo whose goods equal value."""
+    return [i for i, h in enumerate(cargo.holds) if h.goods == value]
 
 
 class FlorbinCaseInvariants(unittest.TestCase):
@@ -95,14 +93,19 @@ class FlorbinCaseInvariants(unittest.TestCase):
             self.assertEqual(kid["kclue"], clue0)
             hit = _holds_contain(kid["cargo3"], clue0)
             self.assertEqual(len(hit), 1,
-                             f"seed {seed}: kidnapper cargo3 must hold clue0 in exactly one hold slot, got {hit}")
-            self.assertIn(hit[0], HOLD_IDX)
+                             f"seed {seed}: kidnapper cargo3 must hold clue0 in exactly one hold, got {hit}")
+            # amb_hold is authoritative and points at exactly that hold (the bio-scan reads amb_hold).
+            self.assertIn(kid["cargo3"].amb_hold, (0, 1, 2, 3))
+            self.assertEqual(hit[0], kid["cargo3"].amb_hold,
+                             f"seed {seed}: amb_hold must be the hold that holds clue0")
             # No OTHER suspect's holds contain clue0.
             for s in case["suspects"]:
                 if s is kid:
                     continue
                 self.assertEqual(_holds_contain(s["cargo3"], clue0), [],
                                  f"seed {seed}: decoy {s['orig_name']} must NOT hold clue0")
+                self.assertIsNone(s["cargo3"].amb_hold,
+                                  f"seed {seed}: non-kidnapper {s['orig_name']} must have no amb_hold")
                 self.assertEqual(s["kclue"], clue0)  # every suspect knows the search target
 
     def test_inv3_container_is_real(self):
@@ -151,16 +154,37 @@ class FlorbinCaseInvariants(unittest.TestCase):
                     self.assertIsNone(s["report"])
 
     def test_cargo_snapshots_shape(self):
-        # cargo1/2/3 keep holds 1-4 present (indices 5..12) so fb_holds + the hold-scan never crash.
+        # cargo1/2/3 keep exactly four holds so manifest_text + the hold-scan never crash, and each
+        # snapshot's ship name matches (a renamed kidnapper's cargo3 carries its new registry name).
         for seed in self.SEEDS:
             case, _, _ = _generate(seed)
             for s in case["suspects"]:
                 for key in ("cargo1", "cargo2", "cargo3"):
                     cargo = s[key]
-                    self.assertGreaterEqual(len(cargo), 13, f"seed {seed}: {key} lost holds")
-                    self.assertEqual(cargo[0], s["orig_name"] if key != "cargo3" else s["cur_name"])
-                # fb_holds renders 4 hold lines.
+                    self.assertEqual(len(cargo.holds), 4, f"seed {seed}: {key} lost holds")
+                    for h in cargo.holds:
+                        self.assertTrue(h.code and h.goods, f"seed {seed}: {key} empty hold")
+                    self.assertEqual(cargo.ship, s["orig_name"] if key != "cargo3" else s["cur_name"])
+                # manifest_text (== fb_holds) renders 4 hold lines.
+                self.assertEqual(s["cargo3"].manifest_text().count("Hold "), 4)
                 self.assertEqual(MH.fb_holds(s["cargo3"]).count("Hold "), 4)
+
+    def test_hold_scan_matches_only_ambassador(self):
+        # fb_hold_scan(cargo, n) flags True on exactly the ambassador hold, False everywhere else.
+        for seed in self.SEEDS:
+            case, _, _ = _generate(seed)
+            kid = _kidnapper(case)[0]
+            for n in range(4):
+                hit, line = MH.fb_hold_scan(kid["cargo3"], n)
+                self.assertEqual(hit, n == kid["cargo3"].amb_hold, f"seed {seed}: hold {n} flag")
+                self.assertTrue(line)
+                if hit:
+                    self.assertIn("ALERT", line)
+            # A decoy never flags on any hold.
+            decoy = next(s for s in case["suspects"] if not s["kidnapper"])
+            for n in range(4):
+                hit, _ = MH.fb_hold_scan(decoy["cargo3"], n)
+                self.assertFalse(hit, f"seed {seed}: decoy hold {n} must not flag")
 
     def test_determinism(self):
         a, _, _ = _generate(7)

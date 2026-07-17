@@ -30,14 +30,61 @@ def send_general_message(nName, textLine, face, srcID):
 
 
 
+class Hold:
+    """One cargo hold: a container code + the goods stored in it. `goods` is normally a whimsical
+    trade good ("Albatross Soup"); in the kidnapper's ambassador hold it is the clue0 container
+    name (Ambassador Florbin, riding disguised as innocuous freight)."""
+    def __init__(self, code, goods):
+        self.code = code
+        self.goods = goods
+
+
+class FbCargo:
+    """A Florbin suspect's cargo manifest as a NAMED record instead of a 13-slot positional list,
+    so florbin_case.mast reads `cargo.ship` / `cargo.holds[n].goods` / `cargo.amb_hold` instead of
+    decoding cargo[0] / cargo[2] / cargo[6]... The generator builds these; the MAST labels only read.
+
+      ship      : display name at THIS snapshot (a renamed kidnapper differs from orig_name)
+      captain   : captain name (shown by the declarative science scan)
+      stops     : [stop1, stop2, stop3] DS numbers (2..5) - the itinerary / destinations
+      dep_time  : departure/arrival time on this snapshot's manifest ("08:34"); pure flavor
+      holds     : four Hold objects (holds 1-4, what a manifest / bio-scan reads)
+      reserve   : spare Holds a stop-transfer swaps in, so the manifest changes station to station
+      amb_hold  : index 0-3 of the hold hiding Ambassador Florbin, or None (decoys / pre-abduction)
+    """
+    def __init__(self, ship, captain, stops, holds, reserve, dep_time=""):
+        self.ship = ship
+        self.captain = captain
+        self.stops = list(stops)
+        self.dep_time = dep_time
+        self.holds = holds
+        self.reserve = reserve
+        self.amb_hold = None
+
+    def manifest_text(self):
+        """The 4-hold manifest block: 'Hold 1 - Container ABC: Albatross Soup^Hold 2 - ...'
+        (^ = the engine newline). One formatter instead of the manifest f-string repeated a dozen
+        times, and the only place a hold's shape is spelled out."""
+        return "^".join(
+            "Hold " + str(i + 1) + " - Container " + str(h.code) + ": " + str(h.goods)
+            for i, h in enumerate(self.holds))
+
+
 def fb_holds(cargo):
-    """The 4-hold cargo manifest block for a Florbin suspect's cargo array (florbin_case.mast).
-    Holds live at indices 5..12: (container-code, goods) pairs for holds 1-4. Returns
-    "Hold 1 - Container <code>: <goods>^..." (^ = the engine newline). One formatter instead of
-    the manifest f-string repeated a dozen times."""
-    return "^".join(
-        "Hold " + str(i + 1) + " - Container " + str(cargo[5 + 2 * i]) + ": " + str(cargo[6 + 2 * i])
-        for i in range(4))
+    """Back-compat / MAST-friendly alias for cargo.manifest_text() (the 4-hold manifest block)."""
+    return cargo.manifest_text()
+
+
+def fb_hold_scan(cargo, n):
+    """Bio-scan of hold `n` (0-3) for the Florbin science route. Returns (is_ambassador, line):
+    a True flag when this hold hides the ambassador (so MAST schedules fb_kidnapper_discovered) and
+    the scan-result line to render. Replaces four near-identical MAST branches full of cargo[5..12]
+    indices with one call - the hold identity lives in cargo.amb_hold, not in a magic index."""
+    h = cargo.holds[n]
+    if cargo.amb_hold == n:
+        return (True, "Container " + str(h.code)
+                + ": !!!ALERT!!! Bio-scan matches Ambassador Florbin.")
+    return (False, "Container " + str(h.code) + ": " + str(h.goods) + ". Contents verified.")
 
 
 def fb_host_contact(contact, clue_role, report):
@@ -56,22 +103,6 @@ def fb_host_contact(contact, clue_role, report):
     set_inventory_value(contact, "fb_report", report)
 
 
-def fb_times_map():
-    """Docking-time strings for the Florbin A/B station previews (florbin_case.mast fb_preview),
-    keyed by ship+cargo snapshot. Built in Python (NOT a MAST dict literal) so the colon inside a
-    time value ('11:41') never reaches the MAST compiler as a data-dict literal - a literal string
-    value with a colon in a comms-button data dict is an untested idiom that can desync the parser.
-    fb_preview looks the time up by ckey instead of carrying it in the button's data dict."""
-    return {
-        "ship1_cargo2": "11:41",
-        "ship1_cargo3": "12:28",
-        "ship2_cargo2": "11:33",
-        "ship2_cargo3": "12:44",
-        "ship3_cargo2": "11:22",
-        "ship3_cargo3": "12:35",
-    }
-
-
 # ---------------------------------------------------------------------------------------------------
 # Florbin suspect-trail GENERATOR (pure Python, engine-free, deterministic under a seeded rng).
 #
@@ -82,19 +113,25 @@ def fb_times_map():
 #
 # The mystery invariants this core guarantees (asserted by tests/test_florbin_case.py over 20 seeds):
 #   1. Exactly ONE tracked suspect is the kidnapper.
-#   2. That kidnapper carries the ambassador container (clue0) in one cargo3 hold-goods slot
-#      (index 6/8/10/12) == kclue; no other suspect's holds contain clue0 -> the bio hold-scan
-#      matches on exactly that ship.
+#   2. That kidnapper hides the ambassador container (clue0) in exactly one cargo3 hold
+#      (cargo3.holds[cargo3.amb_hold].goods == clue0); no other suspect's holds contain clue0 ->
+#      the bio hold-scan matches on exactly that ship.
 #   3. clue0 is a real container name (passed from clue_list[0:20], never "Empty").
 #   4. The kidnapper's interview report carries the paired narrative clue (clue1); the other two
 #      tracked reports carry clue2 / clue3, never clue1.
 #   5. Each tracked suspect gets two distinct DS-2..5 stops tagged clue{N}A / clue{N}B.
 #   6. Each tracked suspect has a non-empty interview report (hosted on its clue{N}A station).
 
-# Hold-goods indices for holds 1-4 in a cargo array (container code lives at idx-1).
-FB_HOLD_GOODS_IDX = [6, 8, 10, 12]
 # Contact (## Cast key) that informs on each tracked suspect: ship 1 -> Deck Chief, etc.
 FB_CONTACTS = ["deck_chief", "maint_chief", "cargo_master"]
+# Departure/arrival times shown on each tracked ship's three snapshots (DS1 manifest, stop A, stop B).
+# Pure flavor - no rng, so adding them never perturbs the mystery draws. Attached to FbCargo.dep_time,
+# which retires the old FB_TIMES map + the colon-in-a-data-dict workaround it existed to avoid.
+FB_TIMES_BY_SHIP = [
+    ("08:34", "11:41", "12:28"),
+    ("09:18", "11:33", "12:44"),
+    ("10:22", "11:22", "12:35"),
+]
 
 
 def fb_pools(ship_name_data):
@@ -120,35 +157,35 @@ def fb_make_name(pools, kind, rng):
             + " " + _pop_rand(pools[kind], rng, "Freighter"))
 
 
-def fb_make_cargo(name, captain, stops, pools, rng):
-    """Build a fresh cargo array: [name, captain, stop1, stop2, stop3, (container,good) x8].
-    Holds 1-4 are pairs 0-3 (indices 5..12); pairs 4-7 are the 'reserve' fb_transfer_hold draws
-    from to simulate loading new containers at a stop."""
-    cargo = [name, captain, stops[0], stops[1], stops[2]]
-    for _ in range(8):
-        letters = ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "M", "N",
-                   "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
-        code = "".join(letters.pop(rng.randint(0, len(letters) - 1)) for _ in range(3))
-        cargo.append(code)
-        cargo.append(_pop_rand(pools["tradegoods"], rng, "Cargo"))
-    return cargo
+def _make_hold(pools, rng):
+    """One Hold: a random 3-letter container code + a good popped from the trade-goods pool."""
+    letters = ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "M", "N",
+               "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+    code = "".join(letters.pop(rng.randint(0, len(letters) - 1)) for _ in range(3))
+    return Hold(code, _pop_rand(pools["tradegoods"], rng, "Cargo"))
 
 
-def fb_transfer_hold(cargo, avoid_idx, rng):
-    """Transfer ONE hold at a stop: swap a hold's (container,good) for a reserve pair pulled off
-    the end of the array, so the manifest genuinely changes station to station. Never touches
-    avoid_idx (the hold hiding the ambassador). Mutates cargo; returns (unloaded, loaded) strings."""
-    candidates = [gi for gi in FB_HOLD_GOODS_IDX if gi != avoid_idx and gi < len(cargo)]
-    if not candidates or len(cargo) < 7:
+def fb_make_cargo(name, captain, stops, pools, rng, dep_time=""):
+    """Build a fresh FbCargo: four active holds + four reserve holds (spares a stop-transfer swaps
+    in). Draw order (4 holds, then 4 reserve) matches the old flat build, so seeds are unchanged."""
+    holds = [_make_hold(pools, rng) for _ in range(4)]
+    reserve = [_make_hold(pools, rng) for _ in range(4)]
+    return FbCargo(name, captain, stops, holds, reserve, dep_time)
+
+
+def fb_transfer_hold(cargo, rng):
+    """Transfer ONE hold at a stop: swap a hold for a reserve hold (pulled off the end), so the
+    manifest genuinely changes station to station. Never touches cargo.amb_hold (the hold hiding
+    the ambassador). Mutates cargo; returns (unloaded, loaded) strings for the interview report."""
+    candidates = [i for i in range(len(cargo.holds)) if i != cargo.amb_hold]
+    if not candidates or not cargo.reserve:
         return ("", "")
-    gi = candidates[rng.randint(0, len(candidates) - 1)]
-    old_cont, old_good = cargo[gi - 1], cargo[gi]
-    new_good = cargo.pop()
-    new_cont = cargo.pop()
-    cargo[gi - 1] = new_cont
-    cargo[gi] = new_good
-    return ("Container " + str(old_cont) + ": " + str(old_good),
-            "Container " + str(new_cont) + ": " + str(new_good))
+    i = candidates[rng.randint(0, len(candidates) - 1)]
+    old = cargo.holds[i]
+    new = cargo.reserve.pop()
+    cargo.holds[i] = new
+    return ("Container " + str(old.code) + ": " + str(old.goods),
+            "Container " + str(new.code) + ": " + str(new.goods))
 
 
 def fb_generate_case(pools, clue0, clues, templates, rng,
@@ -178,12 +215,14 @@ def fb_generate_case(pools, clue0, clues, templates, rng,
         avail = [2, 3, 4, 5]
         stops = [avail.pop(rng.randint(0, len(avail) - 1)) for _ in range(3)]
 
-        cargo1 = fb_make_cargo(orig_name, captain, stops, pools, rng)
-        rand1 = None
+        times = FB_TIMES_BY_SHIP[i] if tracked and i < len(FB_TIMES_BY_SHIP) else ("", "", "")
+
+        cargo1 = fb_make_cargo(orig_name, captain, stops, pools, rng, times[0])
         if is_kidnapper:
-            rand1 = FB_HOLD_GOODS_IDX[rng.randint(0, len(FB_HOLD_GOODS_IDX) - 1)]
-            cargo1[rand1] = clue0          # the ambassador rides in this hold, as innocuous "goods"
-        cargo2 = copy.deepcopy(cargo1)
+            cargo1.amb_hold = rng.randint(0, 3)                     # which hold hides the ambassador
+            cargo1.holds[cargo1.amb_hold].goods = clue0            # ...riding as innocuous "goods"
+        cargo2 = copy.deepcopy(cargo1)                              # amb_hold rides along on the copy
+        cargo2.dep_time = times[1]
 
         cur_name, report, clueA, clueB, contact = orig_name, None, None, None, None
         if tracked:
@@ -191,15 +230,16 @@ def fb_generate_case(pools, clue0, clues, templates, rng,
             clueB = "clue" + str(i + 1) + "B"
             contact = FB_CONTACTS[i]
             my_clue = clues[0] if is_kidnapper else (decoy_clues.pop(0) if decoy_clues else "")
-            unl1, load1 = fb_transfer_hold(cargo2, rand1, rng)      # first stop (state = cargo2)
+            unl1, load1 = fb_transfer_hold(cargo2, rng)             # first stop (state = cargo2)
             cargo3 = copy.deepcopy(cargo2)
-            unl2, load2 = fb_transfer_hold(cargo3, rand1, rng)      # second stop (state = cargo3)
+            cargo3.dep_time = times[2]
+            unl2, load2 = fb_transfer_hold(cargo3, rng)             # second stop (state = cargo3)
             c_part = amd_fill(templates.get("report_stop_clue"), {
                 "ship": orig_name, "unloaded": unl1, "loaded": load1,
                 "holds": fb_holds(cargo2), "clue": my_clue})
             if is_kidnapper and rng.random() < rename_chance:
                 cur_name = fb_make_name(pools, "civilian", rng)     # the "changed registry" twist
-                cargo3[0] = cur_name
+                cargo3.ship = cur_name
                 d_part = amd_fill(templates.get("report_rename"), {
                     "ship": orig_name, "unloaded": unl2, "loaded": load2,
                     "holds": fb_holds(cargo3), "newname": cur_name})
