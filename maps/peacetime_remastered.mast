@@ -79,8 +79,9 @@ Defaults:
         # listen for.
         quest_grant_amd(SHARED, amd_section(PR_DOC, "florbin_case"))
         task_schedule(florbin_quest_watch)
-        # Reuse the entire original investigation (comms/science routes + surrender).
-        jump kidnap_caper
+        # The investigation is now NATIVE to the remaster (fb_investigation in florbin_case.mast),
+        # not a jump into the original peacetime map - its own FB_STATUS state + fb_ routes.
+        jump fb_investigation
     else:
         task_schedule(task_peacetime_end_game)
         ->END
@@ -88,15 +89,15 @@ Defaults:
 
 #-----------------------------------------------------------------------------------------------------------------------------
 # Quest bridge: map the original kidnap_status flag (0..5) to the Florbin quest tree.
-# kidnap_caper / kidnapper_discovered / handle_kidnapper_surrender / check_ambassador_rescued
-# all still drive kidnap_status; we just translate the transitions into quest_signal.
+# fb_investigation / fb_kidnapper_discovered / fb_handle_kidnapper_surrender /
+# fb_check_ambassador_rescued all drive FB_STATUS; we translate the transitions into quest_signal.
 
 ===== florbin_quest_watch =====
     prev_status = 0
     seen_kidnapper = False
 --- fqw_loop
     await delay_sim(1)
-    cur = kidnap_status
+    cur = FB_STATUS
     if cur >= 1 and prev_status < 1:
         signal_emit("quest_signal", {"SIGNAL_NAME": "case_opened"})
     if cur >= 2 and prev_status < 2:
