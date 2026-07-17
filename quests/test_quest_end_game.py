@@ -19,6 +19,7 @@ from sbs_utils.agent import Agent
 from sbs_utils.procedural.quest import quest_add, quest_get_state, QuestState
 from sbs_utils.procedural.a2x.spawn import create_enemy
 from sbs_utils.procedural.query import to_id
+from sbs_utils.procedural.timers import is_timer_set, TICK_PER_SECONDS
 
 import quest_driver as QD
 
@@ -155,6 +156,50 @@ class QuestEndGameTests(unittest.TestCase):
         QD.quest_mark_failed(ship, "job")
         self.assertEqual(int(quest_get_state(ship, "job")), int(QuestState.FAILED))
         self.assertEqual(get_inventory_value(ship, "tech", 0), 3)
+
+
+class QuestFailAfterAnchorTests(unittest.TestCase):
+    """`Fail after:` anchors LAZILY - quest_tick_fail_after sets the deadline timer on the first
+    tick a quest is ACTIVE, never while it is IDLE. So an "Available" (idle) job's clock does not
+    start until it is ACCEPTED. This is exactly what makes the peacetime job board's Mercy Run
+    6-minute window start on acceptance, not at shift start (the whole idle-until-accepted design
+    leans on it), so pin it here."""
+
+    def setUp(self):
+        reset_mock(sbs)
+        # quest_mark_failed may emit signals; capture without a live MAST scheduler.
+        self._real_emit = QD.signal_emit
+        QD.signal_emit = lambda name, data=None: None
+
+    def tearDown(self):
+        QD.signal_emit = self._real_emit
+
+    def _advance(self, seconds):
+        sbs.sim._time_tick_counter += int(seconds * TICK_PER_SECONDS)
+
+    def _mercy(self):
+        quest_add(SH, "mercy", "Mercy Run", "", state=QuestState.IDLE,
+                  data={"fail_after": {"minutes": 6}})
+
+    def test_idle_job_clock_never_starts(self):
+        self._mercy()
+        QD.quest_tick_fail_after()      # the watcher runs...
+        self._advance(600)              # ...and ten minutes pass with the job still on the board
+        QD.quest_tick_fail_after()
+        self.assertFalse(is_timer_set(SH, "qfail:mercy"), "an idle job must not anchor a clock")
+        self.assertEqual(int(quest_get_state(SH, "mercy")), int(QuestState.IDLE))
+
+    def test_accept_anchors_then_fails_after_deadline(self):
+        self._mercy()
+        QD.quest_mark_active(SH, "mercy")       # player Accepts the job
+        QD.quest_tick_fail_after()              # first ACTIVE tick anchors the 6-minute clock
+        self.assertTrue(is_timer_set(SH, "qfail:mercy"), "accepting must anchor the clock")
+        self._advance(300)                      # 5 minutes in - still time on the clock
+        QD.quest_tick_fail_after()
+        self.assertEqual(int(quest_get_state(SH, "mercy")), int(QuestState.ACTIVE))
+        self._advance(120)                      # 7 minutes total - past the 6-minute deadline
+        QD.quest_tick_fail_after()
+        self.assertEqual(int(quest_get_state(SH, "mercy")), int(QuestState.FAILED))
 
 
 class QuestGrantCountScaleTests(unittest.TestCase):
