@@ -148,11 +148,9 @@ Properties:
         a_type = random.choice(rock_types)
         terrain_spawn(v.x, v.y, v.z, "Hazard Rock", "#, hazard_rock", a_type, "behav_asteroid")
 
-    # Poacher: a lone neutral trawler to be disabled and boarded - not destroyed.
-    npc_spawn(0, 0, -16000, "Unregistered Trawler", "civ, civilian, poacher", "cargo_ship", "behav_npcship")
-
-    # Mercy Run (Helm): a shuttle adrift and losing life support - reach it in time.
-    npc_spawn(16000, 0, -12000, "Stranded Shuttle", "civ, civilian, mercy_target", "cargo_ship", "behav_npcship")
+    # The fixed-position job objects (the poacher trawler + the stranded shuttle) are placed
+    # declaratively via the shared landmark loader - maps/peacetime_landmarks.amd.
+    landmarks_spawn(document_get_amd_file(get_mission_dir_filename("maps/peacetime_landmarks.amd"), data_parser=amd_landmark_data))
 
     # Customs Patrol (Comms): civilian traffic to hail and clear for transit.
     traffic_pts = scatter.box(traffic_n, -6000, 0, -6000, 3000, 400, 3000, centered=True)

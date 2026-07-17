@@ -1,0 +1,25 @@
+// Peacetime Remastered's fixed-position job objects, placed declaratively via the shared
+// landmark loader (sbs_utils.procedural.amd_landmarks). Loaded in pr_jobs_setup:
+//   landmarks_spawn(document_get_amd_file(".../peacetime_landmarks.amd", data_parser=amd_landmark_data))
+// Single-system placement: each names an explicit Loc (no System/placer needed). Kind picks
+// the spawner (npc -> npc_spawn) + a behavior default; Side + Roles become the spawn role csv.
+// (The drills/rocks/traffic/anomalies stay in pr_jobs_setup - they scatter at random positions,
+// which explicit-Loc landmarks don't model.)
+
+# [Unregistered Trawler](poacher_lm)
+---
+Kind: npc
+Side: civ
+Roles: civilian, poacher
+Art: cargo_ship
+Loc: 0, 0, -16000
+---
+
+# [Stranded Shuttle](mercy_lm)
+---
+Kind: npc
+Side: civ
+Roles: civilian, mercy_target
+Art: cargo_ship
+Loc: 16000, 0, -12000
+---
