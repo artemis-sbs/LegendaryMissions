@@ -63,3 +63,19 @@ def fb_host_contact(contact, clue_role, report):
     if stations:
         lifeform_transfer(contact.id, stations[0])
     set_inventory_value(contact, "fb_report", report)
+
+
+def fb_times_map():
+    """Docking-time strings for the Florbin A/B station previews (florbin_case.mast fb_preview),
+    keyed by ship+cargo snapshot. Built in Python (NOT a MAST dict literal) so the colon inside a
+    time value ('11:41') never reaches the MAST compiler as a data-dict literal - a literal string
+    value with a colon in a comms-button data dict is an untested idiom that can desync the parser.
+    fb_preview looks the time up by ckey instead of carrying it in the button's data dict."""
+    return {
+        "ship1_cargo2": "11:41",
+        "ship1_cargo3": "12:28",
+        "ship2_cargo2": "11:33",
+        "ship2_cargo3": "12:44",
+        "ship3_cargo2": "11:22",
+        "ship3_cargo3": "12:35",
+    }

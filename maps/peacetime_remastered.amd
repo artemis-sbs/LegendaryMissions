@@ -357,6 +357,18 @@ Our records show {ship} docked here at {dtime}. It loaded:^^{holds}^^Its flight 
 ### [Preview Missing](preview_missing)
 {ship} docked here at {dtime}. Its flight plan says it is headed for DS {dest}. The cargo manifest... huh, that file has gone missing. You might check with our {crew}.
 
+// ---- Suspect-ship comms (the hailed cargo hauler itself). Rendered by comms_receive from
+// fb_handle_suspect_*; {hailer} = the player ship name, {holds} = fb_holds(cargo3), {last_stop}/
+// {next_stop} = its last/next DS from cargo3.
+### [Suspect Hail](suspect_hail)
+Hello, {hailer}.  We're moving cargo between the stations in this sector.
+
+### [Suspect Cargo](suspect_cargo)
+We are currently carrying:^{holds}
+
+### [Suspect Itinerary](suspect_itinerary)
+We last docked at DS {last_stop}. Now heading for DS {next_stop}.
+
 // ---- Character message text (Admiral Harkin, Ambassador Florbin). Also loaded into FB_TEXT;
 // the sender's name + face come from the ## Cast records. admiral_rescue fills {name} (the
 // rescuing player) at send time.

@@ -26,6 +26,11 @@ shared fb_florbin = None
 # {suspects} slots that comms_receive fills from task vars at send time.
 shared FB_TEXT = {}
 
+# Docking-time strings for the A/B station previews, keyed by ship+cargo snapshot. Built in Python
+# (fb_times_map, mission_helper_functions.py) so a colon-in-a-time-value never becomes a MAST
+# data-dict literal; fb_preview looks the time up by ckey instead of carrying it in a button dict.
+shared FB_TIMES = {}
+
 ====== fb_investigation ======
 
     FB_STATUS = 1
@@ -75,6 +80,7 @@ shared FB_TEXT = {}
     # Load the authored prose templates into FB_TEXT {key: template} from the ## Florbin Text
     # section (via a Python helper, so MAST does not interpolate the {slots} at load time).
     FB_TEXT = fb_text_load(amd_section(PR_DOC, "florbin_text"))
+    FB_TIMES = fb_times_map()
 
     # The lists are loaded in from shipnames.json to help build a fleet of cargo ships with captains, containers, and goods
     alpha = [ "B", "C", "F", "G", "H", "J", "R", "S", "U", "V", "Y", "Z" ]
@@ -545,45 +551,31 @@ shared FB_TEXT = {}
     ship2_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")
     ship3_cargo3 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")
     if has_role(COMMS_SELECTED_ID, "clue1A"):
-        + "Investigate {ship1_cargo2[0]}" fb_investigate_message_1A
+        + "Investigate {ship1_cargo2[0]}" fb_preview {"ckey":"ship1_cargo2","crew":"Deck Chief","nfield":3}
     if has_role(COMMS_SELECTED_ID, "clue1B"):
-        + "Investigate {ship1_cargo3[0]}" fb_investigate_message_1B
+        + "Investigate {ship1_cargo3[0]}" fb_preview {"ckey":"ship1_cargo3","crew":"Deck Chief","nfield":4}
     if has_role(COMMS_SELECTED_ID, "clue2A"):
-        + "Investigate {ship2_cargo2[0]}" fb_investigate_message_2A
+        + "Investigate {ship2_cargo2[0]}" fb_preview {"ckey":"ship2_cargo2","crew":"Maintenance Crew","nfield":3}
     if has_role(COMMS_SELECTED_ID, "clue2B"):
-        + "Investigate {ship2_cargo3[0]}" fb_investigate_message_2B
+        + "Investigate {ship2_cargo3[0]}" fb_preview {"ckey":"ship2_cargo3","crew":"Maintenance Crew","nfield":4}
     if has_role(COMMS_SELECTED_ID, "clue3A"):
-        + "Investigate {ship3_cargo2[0]}" fb_investigate_message_3A
+        + "Investigate {ship3_cargo2[0]}" fb_preview {"ckey":"ship3_cargo2","crew":"Cargo Master","nfield":3}
     if has_role(COMMS_SELECTED_ID, "clue3B"):
-        + "Investigate {ship3_cargo3[0]}" fb_investigate_message_3B
+        + "Investigate {ship3_cargo3[0]}" fb_preview {"ckey":"ship3_cargo3","crew":"Cargo Master","nfield":4}
 
-# The A/B station previews - `preview_full/down/missing` (## Florbin Text) picked by records_status;
-# comms_receive fills {ship}/{time}/{dest}/{holds}/{role} from the task vars. A = first stop (cargo2,
-# next = stop2); B = second stop (cargo3, next = stop3).
-===== fb_investigate_message_1A =====
-    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo2")
+# The A/B station previews - ONE label for all six buttons. Parameters arrive from the comms
+# button's data dict: ckey (which cargo snapshot to read), crew (this station's interview role, used
+# by preview_down/preview_missing), nfield (cargo index of the NEXT destination - 3 for the A/first
+# stop, 4 for the B/second stop). The docking time comes from FB_TIMES[ckey] (built in Python to keep
+# the colon out of a MAST literal). `preview_full/down/missing` (## Florbin Text) is picked by
+# records_status; comms_receive fills {ship}/{dtime}/{dest}/{holds}/{crew} from the task vars.
+===== fb_preview =====
+    cargo = get_inventory_value(COMMS_SELECTED_ID, ckey)
     rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
     ship = cargo[0]
-    dtime = "11:41"
-    dest = cargo[3]
+    dest = cargo[nfield]
     holds = fb_holds(cargo)
-    crew = "Deck Chief"
-    tmpl = FB_TEXT.get("preview_full")
-    if rec_status == 2:
-        tmpl = FB_TEXT.get("preview_down")
-    elif rec_status == 3:
-        tmpl = FB_TEXT.get("preview_missing")
-    comms_receive(tmpl, title="Info on " + ship, title_color="orange")
-    yield success
-
-===== fb_investigate_message_1B =====
-    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo3")
-    rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    ship = cargo[0]
-    dtime = "12:28"
-    dest = cargo[4]
-    holds = fb_holds(cargo)
-    crew = "Deck Chief"
+    dtime = FB_TIMES.get(ckey)
     tmpl = FB_TEXT.get("preview_full")
     if rec_status == 2:
         tmpl = FB_TEXT.get("preview_down")
@@ -600,76 +592,12 @@ shared FB_TEXT = {}
     comms_receive(fb_message1D, title=fb_deck_chief.name, face=get_face(fb_deck_chief.id), title_color="orange")
     yield success
 
-===== fb_investigate_message_2A =====
-    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo2")
-    rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    ship = cargo[0]
-    dtime = "11:33"
-    dest = cargo[3]
-    holds = fb_holds(cargo)
-    crew = "Maintenance Crew"
-    tmpl = FB_TEXT.get("preview_full")
-    if rec_status == 2:
-        tmpl = FB_TEXT.get("preview_down")
-    elif rec_status == 3:
-        tmpl = FB_TEXT.get("preview_missing")
-    comms_receive(tmpl, title="Info on " + ship, title_color="orange")
-    yield success
-
-===== fb_investigate_message_2B =====
-    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo3")
-    rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    ship = cargo[0]
-    dtime = "12:44"
-    dest = cargo[4]
-    holds = fb_holds(cargo)
-    crew = "Maintenance Crew"
-    tmpl = FB_TEXT.get("preview_full")
-    if rec_status == 2:
-        tmpl = FB_TEXT.get("preview_down")
-    elif rec_status == 3:
-        tmpl = FB_TEXT.get("preview_missing")
-    comms_receive(tmpl, title="Info on " + ship, title_color="orange")
-    yield success
-
 ===== fb_investigate_message_2C =====
     comms_receive(fb_message2C, title=fb_maint_chief.name, face=get_face(fb_maint_chief.id), title_color="orange")
     yield success
 
 ===== fb_investigate_message_2D =====
     comms_receive(fb_message2D, title=fb_maint_chief.name, face=get_face(fb_maint_chief.id), title_color="orange")
-    yield success
-
-===== fb_investigate_message_3A =====
-    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo2")
-    rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    ship = cargo[0]
-    dtime = "11:22"
-    dest = cargo[3]
-    holds = fb_holds(cargo)
-    crew = "Cargo Master"
-    tmpl = FB_TEXT.get("preview_full")
-    if rec_status == 2:
-        tmpl = FB_TEXT.get("preview_down")
-    elif rec_status == 3:
-        tmpl = FB_TEXT.get("preview_missing")
-    comms_receive(tmpl, title="Info on " + ship, title_color="orange")
-    yield success
-
-===== fb_investigate_message_3B =====
-    cargo = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo3")
-    rec_status = get_inventory_value(COMMS_SELECTED_ID, "records_status")
-    ship = cargo[0]
-    dtime = "12:35"
-    dest = cargo[4]
-    holds = fb_holds(cargo)
-    crew = "Cargo Master"
-    tmpl = FB_TEXT.get("preview_full")
-    if rec_status == 2:
-        tmpl = FB_TEXT.get("preview_down")
-    elif rec_status == 3:
-        tmpl = FB_TEXT.get("preview_missing")
-    comms_receive(tmpl, title="Info on " + ship, title_color="orange")
     yield success
 
 ===== fb_investigate_message_3C =====
@@ -686,21 +614,25 @@ shared FB_TEXT = {}
 + "Cargo" fb_handle_suspect_cargo
 + "Itinerary" fb_handle_suspect_itinerary
 
+# The suspect ship's own comms - hail / cargo / itinerary. Bodies moved to ## Florbin Text
+# (suspect_hail / suspect_cargo / suspect_itinerary); comms_receive renders each green incoming
+# transmission (the old <<[green] structure), filling the slots from the task vars set here.
 ===== fb_handle_suspect_hail ======
-<<[green] "Hail"
-    " Hello, {COMMS_ORIGIN.name}.  We're moving cargo between the stations in this sector.
-yield success
+    hailer = COMMS_ORIGIN.name
+    comms_receive(FB_TEXT.get("suspect_hail"), title="Hail", title_color="green")
+    yield success
 
 ===== fb_handle_suspect_cargo ======
-    tempcargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
-    <<[green] "Cargo Manifest"
-        " We are currently carrying:^Hold 1 - Container {tempcargo[5]}: {tempcargo[6]}^Hold 2 - Container {tempcargo[7]}: {tempcargo[8]}^Hold 3 - Container {tempcargo[9]}: {tempcargo[10]}^Hold 4 - Container {tempcargo[11]}: {tempcargo[12]}
+    cargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
+    holds = fb_holds(cargo)
+    comms_receive(FB_TEXT.get("suspect_cargo"), title="Cargo Manifest", title_color="green")
     yield success
 
 ===== fb_handle_suspect_itinerary ======
-    tempcargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
-    <<[green] "Itinerary"
-        " We last docked at DS {tempcargo[3]}. Now heading for DS {tempcargo[4]}.
+    cargo = get_inventory_value(COMMS_SELECTED_ID, "cargo3")
+    last_stop = cargo[3]
+    next_stop = cargo[4]
+    comms_receive(FB_TEXT.get("suspect_itinerary"), title="Itinerary", title_color="green")
     yield success
 
 #-----------------------------------------------------------------------------------------------------------------------------
