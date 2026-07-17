@@ -1,0 +1,63 @@
+# Hosted-lifeform-as-comms-badge dialogue - a reusable LM capability, ported from OU's
+# universe_cast / universe_dialogue_enter render routes onto the SHARED pieces (amd_dialogue for
+# the scene logic, amd_lifeforms for the cast + speaker). A lifeform spawned via amd_lifeforms
+# with a Host, a Scene, and Path "//comms/lm_cast" shows as a comms badge on its host; selecting
+# the badge plays its Scene through the dialogue driver, spoken in the lifeform's own voice.
+#
+# A mission plugs in its scenes once:  shared LM_DIALOGUE_SCENES = dialogue_scenes(<amd section>)
+# The per-conversation state (current scene + who is speaking) lives on the player (COMMS_ORIGIN)
+# inventory, so a route condition never reads an undefined task var.
+
+default shared LM_DIALOGUE_SCENES = None
+
+
+# Cast bridge: a hailed lifeform's `path`. COMMS_LIFEFORM_ID is set by the engine when a badge is
+# selected; read that lifeform's authored Scene and enter the dialogue.
+//comms/lm_cast if has_role(COMMS_ORIGIN_ID, "__player__")
+    default COMMS_LIFEFORM_ID = None
+    ->END if COMMS_LIFEFORM_ID is None
+    lm_scene = get_inventory_value(COMMS_LIFEFORM_ID, "scene", None)
+    ->END if lm_scene is None
+    set_inventory_value(COMMS_ORIGIN_ID, "lm_dlg_scene", lm_scene)
+    set_inventory_value(COMMS_ORIGIN_ID, "lm_dlg_spk", COMMS_LIFEFORM_ID)
+    jump lm_dialogue_enter
+
+
+# Deliver the current scene's spoken line (in the lifeform's voice), then render its choices.
+# Reached on badge select and after every choice, so each line is delivered exactly once.
+=== lm_dialogue_enter
+    lm_scene_key = get_inventory_value(COMMS_ORIGIN_ID, "lm_dlg_scene", None)
+    lm_spk_id = get_inventory_value(COMMS_ORIGIN_ID, "lm_dlg_spk", None)
+    lm_node = dialogue_get(LM_DIALOGUE_SCENES, lm_scene_key)
+    if lm_node is not None:
+        lm_scene_p = dialogue_parse(lm_node)
+        lm_spk = lifeform_speaker_of(lm_spk_id)
+        lm_line = dialogue_pick_line(lm_scene_p, COMMS_ORIGIN_ID, lm_spk)
+        comms_receive(mast_format_string(lm_line), title=lm_spk.name, face=get_face(lm_spk_id), title_color=lm_spk.color)
+    comms_navigate("//comms/lm_dialogue")
+    ->END
+
+
+# The dialogue page: one button per eligible choice, plus Leave. The spoken line was already
+# delivered by lm_dialogue_enter. A scene with no choices is just the line + Leave (the end).
+//comms/lm_dialogue if has_role(COMMS_ORIGIN_ID, "__player__")
+    lm_scene_key = get_inventory_value(COMMS_ORIGIN_ID, "lm_dlg_scene", None)
+    if lm_scene_key is not None:
+        lm_node = dialogue_get(LM_DIALOGUE_SCENES, lm_scene_key)
+        if lm_node is not None:
+            lm_scene_p = dialogue_parse(lm_node)
+            lm_spk = lifeform_speaker_of(get_inventory_value(COMMS_ORIGIN_ID, "lm_dlg_spk", None))
+            for lm_ch in dialogue_choices(lm_scene_p, COMMS_ORIGIN_ID, lm_spk):
+                + "{lm_ch.label}" lm_dialogue_choose {"lm_to": lm_ch.target, "lm_outcomes": lm_ch.outcomes}
+    + !0 "Leave" //comms
+
+
+# Apply a chosen line's outcomes (signal/credits/reputation via dialogue_apply) and advance to the
+# choice's target scene. A target of None (or empty) ends the conversation.
+=== lm_dialogue_choose
+    lm_spk_id = get_inventory_value(COMMS_ORIGIN_ID, "lm_dlg_spk", None)
+    lm_spk = lifeform_speaker_of(lm_spk_id)
+    dialogue_apply(COMMS_ORIGIN_ID, lm_spk, lm_outcomes)
+    set_inventory_value(COMMS_ORIGIN_ID, "lm_dlg_scene", lm_to)
+    ->END if lm_to is None
+    jump lm_dialogue_enter
