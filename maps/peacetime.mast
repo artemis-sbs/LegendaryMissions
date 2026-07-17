@@ -2,13 +2,12 @@ shared ambassador_face = "ter #523b3f 0 0;ter #523b3f 2 0;ter #523b3f 5 2;ter #5
 shared admiral_face = "ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 1 2;ter #fff 4 4;ter #964b00 8 4;"
 shared kidnap_status = 0
 
-# Declarative flavor scans for the cargo ships, rendered by the generic science route
-# (science_scans addon) - no hand-authored //science route for these tabs. The intel line
-# resolves each ship's current captain via the {captain} placeholder (a flat inventory key
-# synced in kidnap_caper, after the scenarios that can swap captains between ships). Only
-# the dynamic proximity "Hold 1-4" bio-scan (the actual detection) stays hand-authored.
-science_define_scan("suspect", {"scan": "This is a friendly merchant cargo ship.", "status": "No additional data available.", "intel": "The ship is registered to Captain {captain}.", "bio": "The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan."})
-science_define_scan("discovered", {"scan": "This is an unfriendly merchant cargo ship.", "status": "No additional data available.", "intel": "The ship is registered to Captain {captain}.", "bio": "The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan."})
+# Declarative flavor scans for the cargo ships, authored in maps/peacetime_cargo_scans.amd
+# and rendered by the generic science route (science_scans addon) - no hand-authored
+# //science route for these tabs. The intel line resolves each ship's current captain via
+# the {captain} placeholder (a flat inventory key synced in kidnap_caper, after the scenarios
+# that can swap captains). Only the dynamic proximity "Hold 1-4" bio-scan stays hand-authored.
+science_define_scan_amd(document_get_amd_file(get_mission_dir_filename("maps/peacetime_cargo_scans.amd"), data_parser=amd_scan_data))
 
 @map/peacetime "Peacetime"
 " This scenario appears to still be in development.
