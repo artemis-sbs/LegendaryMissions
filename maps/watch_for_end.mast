@@ -13,32 +13,10 @@
     # sides are addressed by KEY below. Adding an await here re-introduces the
     # side/player ordering race this was written to fix.
     #
-    # Some examples of different ways to set up a new side.
-
-    #region Spawn TSN side
-    prefab_spawn(prefab_side_generic, data={"key":"tsn"}) #Spawn using only the key
-    # Add a display name, description and color programatically (by key)
-    side_set_display_name("tsn", "TSN")
-    side_set_description("tsn", "The Terran Stellar Navy")
-    side_set_icon_color("tsn", "#07F")
-    #endregion
-
-    #region Spawn Raider side
-    # Everything can be set in the prefab data.
-    prefab_spawn(prefab_side_generic, data={"key":"raider", "name": "Raider", "color": "#F00", "desc":"Hostile Aliens"})
-    #endregion
-
-    #region Spawn Civ side
-    # Some combination of prefab and functions can be nice.
-    prefab_spawn(prefab_side_generic, data={"key":"civ","name": "Civ"})
-    side_set_description("civ", "Civilians. Protect them from attack.")
-    side_set_icon_color("civ", "white") #NOTE that you can use color names in addition to hexidecimal
-    #endregion
-
-    # Now we set the relationships between the sides (by key).
-    side_set_relations("tsn", "raider", sbs.DIPLOMACY.HOSTILE)
-    side_set_relations("raider", "civ", sbs.DIPLOMACY.HOSTILE)
-    side_set_relations("civ", "tsn", sbs.DIPLOMACY.NEUTRAL)
+    # The sides (identity + diplomacy) are authored declaratively in maps/sides.amd and
+    # created here in one call - the whole tsn/raider/civ setup as data. sides_declare is
+    # two-pass and synchronous (no await), matching this route's requirements.
+    sides_declare_amd(document_get_amd_file(get_mission_dir_filename("maps/sides.amd"), data_parser=amd_side_data))
 
     #The colors for diplomatic relations can be set via script.
     sim.set_diplomacy_color(sbs.DIPLOMACY.HOSTILE,"#F00")

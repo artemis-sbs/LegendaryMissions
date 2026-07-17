@@ -23,49 +23,9 @@ icon_index:
     if len(_sides) > 0:
         # The side with the given key already exists
         yield fail
-    if name is None:
-        name = key
-    if desc is None:
-        desc = name
-    id = prefab.get_id()
-    # add_role(id, key) #Probably don't need this.
-    add_role(id, "__side__")
-    # Convert to Sets
-    if allies is None:
-        ally_list = set()
-    else:
-        ally_list = set(allies.split(","))
-    if enemies is None:
-        enemy_list = set()
-    else:
-        enemy_list = set(enemies.split(","))
-    if races is None:
-        races_list = set()
-    else:
-        races_list = set(races.split(","))
-    # Remove whitespaces from beginning and end of each item
-    ally_list = ~~{item.strip() for item in ally_list}~~
-    enemy_list = ~~{item.strip() for item in enemy_list}~~
-    races_list = ~~{item.strip() for item in races_list}~~
-    set_inventory_value(id, "side_name", name)
-    set_inventory_value(id, "side_key", key)
-    set_inventory_value(id, "side_races", races_list) # TODO: Implement uses for this.
-    set_inventory_value(id, "side_desc", desc)
-
-    # If the color is specified, set the icon color
-    if color is not None:
-        side_set_icon_color(id, color) # This also sets the side color inventory value, so we don't need to set that here.
-    if icon_index is not None:
-        side_set_side_icon_index(id, icon_index)
-    # Now we need to update the other sides' ally and enemy lists
-    # This does assume that the other side has been defined already.
-    for item in ally_list:
-        side_set_relations(key, item, sbs.DIPLOMACY.ALLIED)
-    for item in enemy_list:
-        side_set_relations(key, item, sbs.DIPLOMACY.HOSTILE)
-    
-    # Why is this necessary? Seems really redundant? But it was in the code I've been using for reference...
-    side_set_relations(key,key,sbs.DIPLOMACY.ALLIED)
-
+    # The whole side setup (create + name/desc/races/color/icon + ally/enemy diplomacy +
+    # self-ally) is now the shared Python side_create; this prefab is a thin wrapper that
+    # keeps the fail-on-existing guard above and the prefab/data interface for callers.
+    id = side_create(key, name, desc, color, icon_index, races, allies, enemies)
     yield result id
     ->END
