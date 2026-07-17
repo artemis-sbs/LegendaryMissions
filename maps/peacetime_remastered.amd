@@ -7,7 +7,9 @@
 //   for p in players: quest_grant_amd(p.id, amd_section(PR_DOC, "jobs"))
 //   science_define_scan_amd(amd_section(PR_DOC, "scans"))
 //   landmarks_spawn(amd_section(PR_DOC, "landmarks"))
-// (peacetime.mast's shared cargo-ship scans + LM's global sides stay in their own files.)
+// The cargo-ship scans (## Cargo Scans, suspect/discovered) also live here so the remaster
+// owns them; peacetime.mast registers that section for BOTH maps during the transition (the
+// original still runs the same kidnap_caper). LM's global sides stay in their own file.
 
 # [Peacetime Remastered](peacetime_remastered)
 
@@ -212,4 +214,26 @@ Side: civ
 Roles: civilian, mercy_target
 Art: cargo_ship
 Loc: 16000, 0, -12000
+---
+
+// ---- The Florbin cargo ships' flavor scans (suspect/discovered), rendered by the generic
+// science route. Registered for BOTH peacetime maps by peacetime.mast (which runs the shared
+// kidnap_caper); the Intel line resolves each ship's captain via {captain}. Only the dynamic
+// proximity Hold 1-4 bio-scan stays hand-authored in peacetime.mast.
+## [Cargo Scans](cargo_scans)
+
+### [Merchant Cargo Ship](suspect)
+---
+Scan: This is a friendly merchant cargo ship.
+Status: No additional data available.
+Intel: The ship is registered to Captain {captain}.
+Bio: The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
+---
+
+### [Suspicious Cargo Ship](discovered)
+---
+Scan: This is an unfriendly merchant cargo ship.
+Status: No additional data available.
+Intel: The ship is registered to Captain {captain}.
+Bio: The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
 ---
