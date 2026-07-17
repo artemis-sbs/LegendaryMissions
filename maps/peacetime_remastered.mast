@@ -30,9 +30,10 @@ Properties:
     Jobs: 'gui_drop_down("$text: {JOBS_SELECT};list: none, few, some, lots, max", var= "JOBS_SELECT")'
     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
     Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
+Defaults:
+  JOBS_SELECT: some
 ```
 
-    default JOBS_SELECT = "some"
     terrain_value = terrain_to_value(TERRAIN_SELECT)
     lethal_value =  terrain_to_value(LETHAL_SELECT)
     friendly_value = terrain_to_value(FRIENDLY_SELECT)
@@ -125,7 +126,8 @@ Properties:
 # Each is a per-ship quest so its credit reward pays to the side.
 
 ===== pr_jobs_setup =====
-    default JOBS_SELECT = "some"
+    # JOBS_SELECT is seeded by the map's Defaults metadata (set-if-absent shared) at panel
+    # present + map-task start, so it is always defined here - no local default needed.
     jobs_value = terrain_to_value(JOBS_SELECT)
     ->END if jobs_value < 1
 

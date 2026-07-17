@@ -199,6 +199,10 @@ gui_reroute_clients("client_main")
         #         jump show_server_menu
 
         gui_row()
+        # Seed the selected map's Defaults (set-if-absent shared vars) BEFORE the panel renders,
+        # so a map-local property var (e.g. JOBS_SELECT) shows its starting value instead of
+        # blank/0. Settings.yaml / story / game-code values already set are left untouched.
+        map_apply_defaults(WORLD_SELECT)
         gui_property_list_box(name="Options")
         p = map_get_properties(WORLD_SELECT)
         if sbs.is_demo():
@@ -248,6 +252,10 @@ Main:
 
 
     if WORLD_SELECT is not None:
+        # Re-apply the map's Defaults on the launch path: AUTO_START reaches `start` without
+        # ever presenting the panel, so this guarantees the map body's vars exist (set-if-absent,
+        # so anything the operator changed on the panel is preserved).
+        map_apply_defaults(WORLD_SELECT)
         task_schedule(WORLD_SELECT)
 
     #
