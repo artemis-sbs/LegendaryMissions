@@ -16,7 +16,7 @@
     # The sides (identity + diplomacy) are authored declaratively in maps/sides.amd and
     # created here in one call - the whole tsn/raider/civ setup as data. sides_declare is
     # two-pass and synchronous (no await), matching this route's requirements.
-    sides_declare_amd(document_get_amd_file(get_mission_dir_filename("maps/sides.amd"), data_parser=amd_side_data))
+    sides_load_amd("maps/sides.amd")
 
     #The colors for diplomatic relations can be set via script.
     sim.set_diplomacy_color(sbs.DIPLOMACY.HOSTILE,"#F00")

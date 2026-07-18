@@ -1,7 +1,8 @@
 // The LegendaryMissions sides, authored declaratively. Loaded once by the create_sides
 // route (maps/watch_for_end.mast) via:
-//   sides_declare_amd(document_get_amd_file(get_mission_dir_filename("maps/sides.amd"),
-//                                           data_parser=amd_side_data))
+//   sides_load_amd("maps/sides.amd")
+// (sides_load_amd bakes in the amd_side_data parser so a `Color: #07F` value isn't dropped
+//  by the default YAML reader, which reads the `#` as a comment.)
 // One heading per side: the display is the name, the body the description; Color sets the
 // icon color; Enemies/Neutral/Allies (comma lists) set diplomacy (symmetric, so declaring
 // it on one side is enough). sides_declare is two-pass, so forward references resolve.
@@ -9,6 +10,7 @@
 # [TSN](tsn)
 ---
 Color: #07F
+Enemies: raider
 ---
 The Terran Stellar Navy.
 
