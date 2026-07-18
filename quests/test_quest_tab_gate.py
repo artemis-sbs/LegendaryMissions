@@ -21,7 +21,7 @@ import sbs_utils.mast_sbs.story_nodes  # import first to break a circular import
 from cosmos_dev.mock import sbs as sbs
 from tests.reset_helper import reset_mock
 from sbs_utils.agent import Agent
-from sbs_utils.procedural.quest import quest_add, QuestState
+from sbs_utils.procedural.quest import quest_add, quest_set_key, QuestState
 from sbs_utils.procedural.a2x.spawn import create_enemy
 from sbs_utils.procedural.query import to_id
 from sbs_utils.mast.mast_node import MastDataObject
@@ -51,7 +51,29 @@ class QuestTabGateTests(unittest.TestCase):
         item = self._job("j", QuestState.IDLE)
         g = self._gate("comms", item)
         self.assertTrue(g["show_accept"])
+        self.assertFalse(g["show_abandon"])
         self.assertEqual(g["hint"], "")
+
+    # --- Accept/Abandon are STATE gated --------------------------------------
+    def test_accept_only_for_idle(self):
+        self.assertTrue(self._gate("comms", self._job("i", QuestState.IDLE))["show_accept"])
+        self.assertFalse(self._gate("comms", self._job("a", QuestState.ACTIVE))["show_accept"])
+        self.assertFalse(self._gate("comms", self._job("c", QuestState.COMPLETE))["show_accept"])
+        self.assertFalse(self._gate("comms", self._job("f", QuestState.FAILED))["show_accept"])
+
+    def test_abandon_only_for_active(self):
+        self.assertFalse(self._gate("comms", self._job("i", QuestState.IDLE))["show_abandon"])
+        self.assertTrue(self._gate("comms", self._job("a", QuestState.ACTIVE))["show_abandon"])
+        self.assertFalse(self._gate("comms", self._job("c", QuestState.COMPLETE))["show_abandon"])
+        self.assertFalse(self._gate("comms", self._job("f", QuestState.FAILED))["show_abandon"])
+
+    def test_completed_failed_show_no_controls(self):
+        for st in (QuestState.COMPLETE, QuestState.FAILED):
+            g = self._gate("comms", self._job("q" + str(int(st)), st), engage_enabled=True)
+            self.assertFalse(g["show_accept"])
+            self.assertFalse(g["show_abandon"])
+            self.assertFalse(g["show_engage"])
+            self.assertEqual(g["hint"], "")
 
     def test_admiral_also_allowed(self):
         item = self._job("j", QuestState.IDLE)
@@ -86,12 +108,12 @@ class QuestTabGateTests(unittest.TestCase):
         self.assertFalse(self._gate("helm", item, engage_enabled=False)["show_engage"])
 
     def test_non_engage_console_no_engage_and_no_engage_hint(self):
-        # comms is an accept console; engage is helm-only. comms shows accept buttons and
-        # no Engage control, and must NOT nag about engaging.
+        # comms is an accept console; engage is helm-only. An ACTIVE job on comms shows the
+        # Abandon control and no Engage control, and must NOT nag about engaging.
         item = self._job("j", QuestState.ACTIVE)
         g = self._gate("comms", item, engage_enabled=True)
         self.assertFalse(g["show_engage"])
-        self.assertTrue(g["show_accept"])
+        self.assertTrue(g["show_abandon"])
         self.assertNotIn("engag", g["hint"].lower())
 
     # --- Per-quest override --------------------------------------------------
@@ -106,15 +128,19 @@ class QuestTabGateTests(unittest.TestCase):
         self.assertTrue(self._gate("weapons", item, engage_enabled=True)["show_engage"])
         self.assertFalse(self._gate("helm", item, engage_enabled=True)["show_engage"])
 
-    # --- Header / no selection uses the console-level default ----------------
-    def test_header_item_uses_console_default(self):
+    # --- Header / no selection shows no action controls ----------------------
+    def test_header_item_shows_no_controls(self):
         header = QD.gui_list_box_header("Ship", data={})
-        self.assertTrue(self._gate("comms", header)["show_accept"])
-        self.assertFalse(self._gate("helm", header)["show_accept"])
+        g = self._gate("comms", header, engage_enabled=True)
+        self.assertFalse(g["show_accept"])
+        self.assertFalse(g["show_abandon"])
+        self.assertFalse(g["show_engage"])
 
-    def test_none_item_uses_console_default(self):
-        self.assertTrue(self._gate("comms", None)["show_accept"])
-        self.assertFalse(self._gate("helm", None)["show_accept"])
+    def test_none_item_shows_no_controls(self):
+        g = self._gate("comms", None, engage_enabled=True)
+        self.assertFalse(g["show_accept"])
+        self.assertFalse(g["show_abandon"])
+        self.assertFalse(g["show_engage"])
 
     # --- Signature changes only when availability changes --------------------
     def test_signature_stable_across_same_gate_quests(self):
@@ -126,6 +152,27 @@ class QuestTabGateTests(unittest.TestCase):
         plain = self._job("plain", QuestState.IDLE)
         sci = self._job("sci", QuestState.IDLE, {"accept_consoles": ["science"]})
         self.assertNotEqual(self._gate("science", plain)["sig"], self._gate("science", sci)["sig"])
+
+    # --- Live-refresh state signature ----------------------------------------
+    def test_state_sig_changes_on_state_change(self):
+        self._job("j", QuestState.IDLE)
+        s1 = QD.quest_tab_state_sig(0, self.player)
+        quest_set_key(self.player, "j", "state", QuestState.ACTIVE)
+        self.assertNotEqual(s1, QD.quest_tab_state_sig(0, self.player))
+
+    def test_state_sig_changes_on_add_and_reveal(self):
+        self._job("secret", QuestState.SECRET)
+        s1 = QD.quest_tab_state_sig(0, self.player)
+        self._job("new", QuestState.IDLE)              # a new quest appears
+        s2 = QD.quest_tab_state_sig(0, self.player)
+        self.assertNotEqual(s1, s2)
+        quest_set_key(self.player, "secret", "state", QuestState.ACTIVE)  # revealed
+        self.assertNotEqual(s2, QD.quest_tab_state_sig(0, self.player))
+
+    def test_state_sig_stable_when_unchanged(self):
+        self._job("j", QuestState.ACTIVE)
+        self.assertEqual(QD.quest_tab_state_sig(0, self.player),
+                         QD.quest_tab_state_sig(0, self.player))
 
     # --- AMD label parsing ---------------------------------------------------
     def test_amd_console_list(self):

@@ -646,39 +646,77 @@ def _quest_effective_consoles(item, key, default_spec):
 def quest_tab_controls_gate(console, item, accept_consoles, engage_enabled, engage_consoles):
     """Resolve which Quests-tab action controls THIS console shows for the selected quest.
 
+    Controls are gated by BOTH the console AND the quest's state: Accept is only for an
+    available (IDLE) job, Abandon only for an accepted (ACTIVE) one, Engage only for an
+    ACTIVE one. A completed/failed job (or a section header / no selection) shows no
+    action controls.
+
     Returns a dict:
-      show_accept - show Accept / Abandon buttons (console allowed for accept)
-      show_engage - show Engage button (engage enabled + console allowed + quest ACTIVE)
-      hint        - explanatory text when a control is gated out (naming who can act, or
-                    'accept first'), or "" when nothing needs explaining
-      sig         - signature of the above; the tab repaints once when it changes on a
-                    selection (so a station-specific job flips buttons<->text correctly)
+      show_accept  - show the Accept button  (console allowed + job IDLE)
+      show_abandon - show the Abandon button (console allowed + job ACTIVE)
+      show_engage  - show the Engage button  (engage enabled + console allowed + job ACTIVE)
+      hint         - one line of guidance when this console shows no control for an
+                     actionable job (who can act, or 'accept first'), else ""
+      sig          - signature of the above; the tab repaints once when it changes on a
+                     selection (so a differing state / station-specific job flips the
+                     controls correctly)
     """
     console = (console or "").strip().lower()
     is_quest = item is not None and not gui_list_box_is_header(item)
     state = int(item.get("state")) if is_quest and item.get("state") is not None else None
+    IDLE = int(QuestState.IDLE)
+    ACTIVE = int(QuestState.ACTIVE)
 
     acc_spec = _quest_effective_consoles(item, "accept_consoles", accept_consoles)
-    show_accept = _quest_console_allowed(console, acc_spec)
+    can_accept = _quest_console_allowed(console, acc_spec)
+    eng_spec = _quest_effective_consoles(item, "engage_consoles", engage_consoles)
+    can_engage = engage_enabled and _quest_console_allowed(console, eng_spec)
 
-    hints = []
-    if not show_accept:
-        hints.append("Manage jobs at the " + _quest_console_names(acc_spec) + " console.")
+    show_accept = can_accept and state == IDLE
+    show_abandon = can_accept and state == ACTIVE
+    show_engage = can_engage and state == ACTIVE
 
-    # Engage is opt-in (QUEST_ENGAGE_ENABLED) and only relevant on engage-capable consoles;
-    # a non-engage console shows no Engage control and no Engage hint.
-    show_engage = False
-    if engage_enabled:
-        eng_spec = _quest_effective_consoles(item, "engage_consoles", engage_consoles)
-        if _quest_console_allowed(console, eng_spec):
-            if state == int(QuestState.ACTIVE):
-                show_engage = True
-            elif is_quest:
-                hints.append("Accept this job before engaging.")
+    # One context-appropriate hint when this console offers no control for an actionable
+    # (IDLE/ACTIVE) job. Engage consoles explain the accept-first step; other non-accept
+    # consoles point to the console that manages jobs.
+    hint = ""
+    if can_engage and state == IDLE:
+        if can_accept:
+            hint = "Accept this job before engaging."
+        else:
+            hint = "Accept this job at the " + _quest_console_names(acc_spec) + " console before engaging."
+    elif not can_accept and state in (IDLE, ACTIVE):
+        hint = "Manage jobs at the " + _quest_console_names(acc_spec) + " console."
 
-    hint = "  ".join(hints)
-    sig = f"{int(show_accept)}|{int(show_engage)}|{hint}"
-    return {"show_accept": show_accept, "show_engage": show_engage, "hint": hint, "sig": sig}
+    sig = f"{int(show_accept)}|{int(show_abandon)}|{int(show_engage)}|{hint}"
+    return {"show_accept": show_accept, "show_abandon": show_abandon,
+            "show_engage": show_engage, "hint": hint, "sig": sig}
+
+
+def _quest_sig_walk(children, aid, parts):
+    for cid, q in (children or {}).items():
+        parts.append(f"{aid}:{q.get('id') or cid}:{int(q.get('state', 0) or 0)}")
+        _quest_sig_walk(q.get("children"), aid, parts)
+
+
+def quest_tab_state_sig(client_id, ship_id):
+    """A lightweight signature of the quest log shown on this console - every quest's
+    (agent, key, state) across the same sources as quest_tab_items (including SECRET, so a
+    reveal is caught). Changes whenever a quest is added, revealed, or changes state.
+
+    Drive an `on change` off this to repaint the Quests tab when a quest's status changes
+    from ANYWHERE - a kill/scan/dock completing it, a timer failing it, or another console
+    accepting it - not just from this console's own buttons."""
+    sources = [Agent.SHARED_ID]
+    if client_id and client_id != 0:
+        sources.append(client_id)
+    if ship_id and ship_id != 0:
+        sources.append(ship_id)
+    parts = []
+    for aid in sources:
+        tree = quest_agent_quests(aid)
+        _quest_sig_walk(tree.get("children") if tree is not None else None, aid, parts)
+    return "|".join(parts)
 
 
 def quest_tab_accept(item):

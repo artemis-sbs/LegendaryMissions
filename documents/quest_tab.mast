@@ -70,6 +70,12 @@ if QUEST_TAB_ENABLED:
         if quest_tab_controls_gate(CONSOLE_SELECT, sel, QUEST_ACCEPT_CONSOLES, QUEST_ENGAGE_ENABLED, QUEST_ENGAGE_CONSOLES).get("sig") != gate_sig:
             jump repaint
 
+    # Repaint when any displayed quest changes state (added / revealed / accepted /
+    # completed / failed) from ANYWHERE - a kill, a timer, or another console - so the
+    # list and buttons never go stale.
+    on change quest_tab_state_sig(client_id, ship_id):
+        jump repaint
+
     gui_section(style="area: 38,90, 100,100;")
     gui_row("row-height: 2em;")
     if gate.get("show_engage"):
@@ -84,6 +90,7 @@ if QUEST_TAB_ENABLED:
         on gui_message(gui_button("Accept")):
             quest_tab_accept(qbox.get_value())
             jump repaint
+    if gate.get("show_abandon"):
         on gui_message(gui_button("Abandon")):
             quest_tab_abandon(qbox.get_value())
             jump repaint
