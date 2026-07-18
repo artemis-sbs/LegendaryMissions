@@ -44,14 +44,25 @@
     wr_posz = wr_eobj.pos.z
     wr_pos = wr_eobj.pos        # Need this vector for the particle effect
     wr_origin = wr.origin ##get_inventory_value(wr.id, "hull_side", 0)
+    # Read the nest flag BEFORE deleting the wreck (inventory on a deleted object won't read back).
+    wr_nest = get_inventory_value(DAMAGE_TARGET_ID, "piranha_nest", 0)
 
-    # Once we have the position and the side value, destroy the wreck, delete the engine object, and generate a particle effect. 
+    # Remove the wreck (tombstone now + deferred native free), then a particle effect at its spot.
+    # Use the held reference's obj.delete_object() - it does destroyed() AND queues the native free
+    # in one step. The old `wr.destroyed(); delete_object(DAMAGE_TARGET_ID)` was a latent bug:
+    # destroyed() drops the agent from the registry, so the following delete_object(id) re-resolved
+    # to None and NEVER freed the wreck - it lingered in the sim ("the wreck won't clear").
 
-    wr.destroyed()
-    delete_object(DAMAGE_TARGET_ID)
+    wr.delete_object()
     sbs.particle_at(wr_pos, "color:#FA0,#F00; lifespan:60; image_cell:12; size:3; speed:1; count:100,1000")
 
-    # From the Start Mission screen, UPGRADE_SELECT determines how frequently upgrades are dropped. 
+    # Piranha NEST: ~30% of wrecks (flagged at creation, destroy.mast) spring a swarm on the ship
+    # that disturbs them. A nest springs INSTEAD of dropping an upgrade - the wreck is already gone.
+    if wr_nest == 1:
+        prefab_spawn("prefab_piranha_swarm", None, wr_posx, wr_posy, wr_posz)
+        ->END
+
+    # From the Start Mission screen, UPGRADE_SELECT determines how frequently upgrades are dropped.
 
     upg_dropchance = 0
     if "few" == UPGRADE_SELECT:

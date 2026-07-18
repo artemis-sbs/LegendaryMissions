@@ -92,12 +92,12 @@
     # wr_side = get_inventory_value(wr.id, "hull_side", 0)
     # wr_hull = get_inventory_value(wr.id, "hull_type", 0)
 
-    # A wreck may be a Piranha NEST: ~30% of hulks hatch a swarm that erupts at the
-    # wreck, springing on ships that come to salvage it (the bestiary Piranha hook).
-    # Erupt-on-creation for now; an erupt-when-the-wreck-is-shot variant is a future
-    # option. Piranha are the one monster that can appear regardless of monster count.
+    # A wreck may be a Piranha NEST: ~30% of hulks are flagged here at creation, and the swarm
+    # springs when a ship DISTURBS the wreck by shooting it (see the wreck //damage/object handler
+    # in damage.mast) - the bestiary Piranha hook, now a salvage trap on the ship that fires. A nest
+    # springs instead of dropping an upgrade. Piranha are the one monster that ignores monster count.
     if random.randint(1, 10) <= 3:
-        prefab_spawn("prefab_piranha_swarm", None, dest_posx, dest_posy, dest_posz)
+        set_inventory_value(wr.id, "piranha_nest", 1)
 
     ->END
 
