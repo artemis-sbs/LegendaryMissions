@@ -26,7 +26,40 @@
             "envFile": "${workspaceFolder}/../LegendaryMissions/.env",
             "args": [".", "--map", "0"],
             "subProcess": false
+        },
+
+        // --- MAST source debugger (breakpoints in .mast) --------------------
+        // One click: run the "Debug MAST (mission + attach)" COMPOUND below —
+        // it starts the mission and attaches the MAST debugger together. Because
+        // the runner uses --dap-wait, it holds map auto-start until the debugger
+        // is attached, so breakpoints that run at map start aren't missed.
+        // Requires the "Artemis AMD" VS Code extension. See
+        // sbs_utils/mkdocs/docs/tooling/mast-debugger.md
+        {
+            "name": "MAST: run mission (debug port)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "cosmos_dev.mission_runner",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/../LegendaryMissions",
+            "envFile": "${workspaceFolder}/../LegendaryMissions/.env",
+            "args": [".", "--gui", "--map", "0", "--dap-port", "4711", "--dap-wait"],
+            "subProcess": false
+        },
+        {
+            "name": "MAST: attach debugger",
+            "type": "mast",
+            "request": "attach",
+            "host": "127.0.0.1",
+            "port": 4711
         }
 
+    ],
+    "compounds": [
+        {
+            "name": "Debug MAST (mission + attach)",
+            "configurations": ["MAST: run mission (debug port)", "MAST: attach debugger"],
+            "stopAll": true
+        }
     ]
 }
