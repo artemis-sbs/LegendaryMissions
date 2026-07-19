@@ -63,6 +63,18 @@
             "host": "127.0.0.1",
             "port": 4711,
             "preLaunchTask": "mast-run-plain"
+        },
+        {
+            // SIMPLEST: the extension launches `sbs debug` itself, attaches, and
+            // stops it when you end the session. No task, no manual cleanup.
+            // Runs plain via sbs.pyz, so Step-into-Python works; library source is
+            // read (read-only) from the .sbslib zip. Add "useWorkingTree": true for
+            // editable library source (needs an sbs.pyz built with --use-working-tree).
+            "name": "MAST: Debug mission (one click)",
+            "type": "mast",
+            "request": "launch",
+            "mission": "${workspaceFolder}/../LegendaryMissions",
+            "map": "0"
         }
 
     ],
