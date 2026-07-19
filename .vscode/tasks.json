@@ -89,6 +89,29 @@
         "isDefault": true
       }
     },
-    
+    {
+      // Runs the mission PLAIN (no debugpy) so MAST step-into-Python works.
+      // Used as the preLaunchTask of "MAST: debug (plain, Python step-in)".
+      // Background: VS Code treats it "ready" once the runner prints LISTENING.
+      "label": "mast-run-plain",
+      "type": "shell",
+      "command": "python",
+      // --use-working-tree: load sbs_utils from SOURCE, not the packaged .sbslib,
+      // so Python frames point at real editable files (not a path inside the zip).
+      "args": ["-m", "cosmos_dev.mission_runner", ".", "--gui", "--map", "0", "--dap-port", "4711", "--dap-wait", "--use-working-tree"],
+      "options": {
+        "cwd": "${workspaceFolder}/../LegendaryMissions",
+        "env": { "PYTHONPATH": "../sbs_utils;../../../PyAddons" }
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": [{ "regexp": "__mast_never_match__", "file": 1, "location": 1, "message": 1 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "\\[runner\\]",
+          "endsPattern": "MAST debug adapter LISTENING"
+        }
+      }
+    }
   ]
 }

@@ -52,6 +52,17 @@
             "request": "attach",
             "host": "127.0.0.1",
             "port": 4711
+        },
+        {
+            // ONE CLICK for Python step-in: starts the mission PLAIN (no debugpy,
+            // via the mast-run-plain task), waits for it to listen, then attaches.
+            // Because the runner is plain, Step In descends into Python.
+            "name": "MAST: debug (plain, Python step-in)",
+            "type": "mast",
+            "request": "attach",
+            "host": "127.0.0.1",
+            "port": 4711,
+            "preLaunchTask": "mast-run-plain"
         }
 
     ],
