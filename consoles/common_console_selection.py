@@ -22,35 +22,43 @@ def console_select_tab(event, sender):
 # `row-height: 1em` on the description meant the extra lines drew over the row
 # below, because the engine does not clip.
 _DESC_FONT = "gui-2"
-_TITLE_PX = 28          # one line of gui-3
-_ROW_PAD_PX = 13        # the `padding:13px` on each row
-# The listbox adds an indent and a selection tick this template cannot see from
-# here, so measure against a NARROWER width than the row really has. Erring
-# narrow makes the row slightly too tall (a harmless gap); erring wide brings
-# the overlap straight back.
-_UNSEEN_CHROME_PX = 60
+# The title row is `row-height: 1em` and the row declares no font, so it is one
+# line of the DEFAULT font (24px), not of the gui-3 it draws. That 4px under-ask
+# is deliberate and unchanged -- it reads better in engine, and it is what keeps
+# an ordinary one-line row at exactly its old 2em.
+_TITLE_PX = 24
+# `padding:13px` does NOT come out of the row height here -- the audit reports a
+# box exactly as tall as the row. So padding is subtracted from the measuring
+# WIDTH and never added to the height. Adding it to the height was the first
+# attempt and it doubled every row.
+_ROW_PAD_PX = 13
+# The listbox adds an indent and a selection tick the template cannot see from
+# here. Measure against a narrower width than the row really has: erring narrow
+# makes a row slightly too tall (a harmless gap), erring wide brings the overlap
+# back.
+_UNSEEN_CHROME_PX = 40
 
 
 def _console_item_px(item, listbox):
     """(description px, whole item px), measured rather than assumed.
 
     Returns (None, None) when there is nothing to measure against, so the caller
-    can fall back to the old fixed heights instead of guessing.
+    falls back to the old fixed heights instead of guessing.
     """
     if listbox is None:
         return None, None
     ar = get_client_aspect_ratio(FrameContext.client_id)
     if ar is None or not ar.x:
         return None, None
-    width_px = listbox.bounds.width / 100 * ar.x - _UNSEEN_CHROME_PX - 2 * _ROW_PAD_PX
+    width_px = listbox.bounds.width / 100 * ar.x - _UNSEEN_CHROME_PX - _ROW_PAD_PX
     if width_px <= 0:
         return None, None
     desc_px = measure_block_height(_DESC_FONT, item.description or "", int(width_px))
     if desc_px is None:
         return None, None
-    # Each row pays its own padding out of its height.
-    desc_px += 2 * _ROW_PAD_PX
-    return desc_px, _TITLE_PX + 2 * _ROW_PAD_PX + desc_px
+    # A one-line description gives 24 + 24 = 48px, which is exactly the 2em this
+    # row has always been. Only a description that genuinely wraps grows.
+    return desc_px, _TITLE_PX + desc_px
 
 
 def console_select_template(item, **kwargs):
