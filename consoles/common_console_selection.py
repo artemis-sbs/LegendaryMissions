@@ -62,11 +62,16 @@ def _console_item_px(item, listbox):
 
 
 def console_select_template(item, **kwargs):
+    #
+    # Size the ROWS and let the listbox measure them. Do NOT return a height:
+    # LayoutListbox only calls sec.resize_to_content() when the template returns
+    # None, and each item's section starts with ZERO height -- so returning a
+    # size leaves the section degenerate and the row becomes unclickable
+    # (no selection highlight, no click region). The rows below already carry
+    # the real heights, which resize_to_content sums correctly.
+    #
     desc_px, item_px = _console_item_px(item, kwargs.get("listbox"))
-    item_pct = None
     if item_px is not None:
-        ar = get_client_aspect_ratio(FrameContext.client_id)
-        item_pct = item_px / ar.y * 100
         gui_row(f"row-height: {item_px}px;")
     else:
         gui_row("row-height: 2em;")
@@ -92,13 +97,13 @@ def console_select_template(item, **kwargs):
     con.sub_section.click_background = click_color
 
     if not FrameContext.client_task.get_variable("ALLOW_CONSOLE_TABS", False):
-        return item_pct
+        return
 
     console = item.path.upper()
     if item.path in gui_tab_get_list():
         selected = kwargs.get("selected")
         if selected:
-            return item_pct
+            return
             # cb = gui_icon(f"icon_index: 101;color:white;")
         #else:
         #    cb = gui_checkbox(f"icon_index: 101;color:white;", var=f"{console}_TAB_ENABLED")
@@ -109,9 +114,6 @@ def console_select_template(item, **kwargs):
         b.__console = console
 
         gui_message_callback(b, console_select_tab)
-    # Fall-through must report the same height as every other exit -- a None
-    # here would put this row back on resize_to_content and re-open the gap.
-    return item_pct
 
 
         
