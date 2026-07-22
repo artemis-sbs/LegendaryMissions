@@ -61,7 +61,19 @@ distance: 6000
 
     ship_list = to_list(linked_to(BRAIN_AGENT_ID, "ship_list"))
     yield fail if len(ship_list) ==0
-    lead_ship_id = ship_list[0]
+    # Lead the fleet with the first ship that still EXISTS, culling dead members
+    # as we go. A destroyed lead makes get_side(lead) == "" so the chase brains
+    # resolve no enemies and never set a target - which also starves the prune in
+    # ai_fleet_calc_forward_vector (it bails on a null target first). The dead lead
+    # would then sit at ship_list[0] forever, re-resolving an empty side every tick
+    # and blocking the fleet from re-acquiring.
+    lead_ship_id = None
+    for s in ship_list:
+        if not object_exists(s):
+            BRAIN_AGENT.remove_link("ship_list", s)
+        elif lead_ship_id is None:
+            lead_ship_id = s
+    yield fail if lead_ship_id is None
     BRAIN_AGENT.set_inventory_value("blackboard:lead_ship_id", lead_ship_id)
 
     around = broad_test_around(lead_ship_id, distance, distance, 0xF0)
