@@ -28,7 +28,7 @@ default shared cv_view_consoles = None   # list of console names
 default shared cv_view_ships    = None   # list of ship ids
 
 @console/director !0 ^94 "Director" if DIRECTOR_enabled
-    " Direct which console (per ship) shows on one or more program/stream screens: multi-select + Apply for a multiview wall, carousel to rotate, screenshots (dev).
+    " route any ship's console to program screens multiview wall, rotating carousel, developer screenshots.
     jump director_pin_gate
 
 === director_pin_gate
