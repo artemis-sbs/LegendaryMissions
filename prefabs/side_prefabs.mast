@@ -17,7 +17,7 @@ icon_index:
         # key is the only critical property
         yield fail
     _sides = role("__side__") & role(key)
-    id = to_side_id(key)
+    id = to_side_id(key, warn=False)   # existence probe: a miss is the normal create case, not an error
     if id is not None: # Check if the side with this key exists, if it does, then fail.
         yield fail
     if len(_sides) > 0:

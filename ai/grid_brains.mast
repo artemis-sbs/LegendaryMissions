@@ -387,15 +387,7 @@ hp_speed_up: False
 
 #signal_emit("life_form_hp_changed", {"SHIP_ID": ship_id, "LIFE_FORM_ID": _id, "HP": hp})
 //shared/signal/life_form_hp_changed
-    mv = get_data_set_value(LIFE_FORM_ID, "move_speed", 0)
     mod = modifier_add(LIFE_FORM_ID, "move_speed", HP, "HP_SPEED",2)
-    mv = get_data_set_value(LIFE_FORM_ID, "move_speed", 0)
-
-
-//shared/signal/life_form_hp_changed
-    mv = get_data_set_value(LIFE_FORM_ID, "move_speed", 0)
-    mod = modifier_add(LIFE_FORM_ID, "move_speed", HP, "HP_SPEED",2)
-    mv = get_data_set_value(LIFE_FORM_ID, "move_speed", 0)
 
 
 # //shared/signal/modifier_removed
