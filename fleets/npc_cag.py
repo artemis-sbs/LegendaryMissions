@@ -230,7 +230,11 @@ class NpcCAG(Agent):
                 continue    # carrier still alive - handled by the per-carrier loop above
             craft = to_object(fighter_id)
             if craft is None or not object_exists(craft):
-                continue    # truly gone, or docked on standby (object_exists False) - skip
+                continue    # truly gone (destroyed) - skip
+            if sbs.in_standby_list_id(to_id(fighter_id)):
+                continue    # docked on standby - skip. NOT object_exists: a standby craft
+                            # is existence-valid in the engine (only arena-suspended), so
+                            # object_exists stays True; the standby list is the real signal.
             t_id = self.find_stranded_target_id(fighter_id)
             if t_id is not None:
                 target(fighter_id, t_id)
