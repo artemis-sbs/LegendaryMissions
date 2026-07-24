@@ -1,0 +1,28 @@
+# [Fabricator Recipes](recipes)
+
+Recipes for the Fabricator, authored as data. One heading per recipe. The Engineering
+Fabricator lists these; a build consumes the Inputs and, after Time seconds, yields the
+Output into the managed build inventory. Program carries extra data stamped on the output
+(for beacons, the kind; the monster + attract/repel come from the Weapons request).
+
+## [Bio Beacon](recipe_beacon_bio)
+---
+Output: Beacon
+Inputs: bio_sample x1, salvage x5
+Time: 30
+Build at: engineering
+Program: kind=bio
+---
+A distress-beacon hull rewired to broadcast an ultrawave carrier that attracts or repels a
+chosen space monster across the sector.
+
+## [Sensor Beacon](recipe_beacon_sensor)
+---
+Output: Beacon
+Inputs: salvage x8
+Time: 20
+Build at: engineering
+Program: kind=sensor
+---
+A passive relay that brightens sensor returns around its position - a future kind; drops
+and scans like any beacon.

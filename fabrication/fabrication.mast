@@ -18,6 +18,11 @@
 # Salvage is stored per-ship under the inventory key "salvage".
 # ============================================================================
 
+# Load the addon's built-in recipes (data-driven, see recipes.py + beacon_recipes.amd). A
+# mission can author more .amd recipes and call fabrication_load_recipes_amd() itself. The
+# item-def craft_cost path below still works for back-compat (OU/StormsBeacon craftables).
+fabrication_load_recipes_amd(document_get_amd_file(None, "Recipes", content=media_read_relative_file("beacon_recipes.amd")))
+
 # The tab CONTENT. Registered by existing as a //gui/tab route; a mission ENABLES it
 # per console (gui_tab_add_top is intentionally NOT used - it adds the tab globally and
 # is fragile). Lists craftable items; Fabricate spends salvage and starts the build.
