@@ -95,8 +95,10 @@
     # A wreck may be a Piranha NEST: ~30% of hulks are flagged here at creation, and the swarm
     # springs when a ship DISTURBS the wreck by shooting it (see the wreck //damage/object handler
     # in damage.mast) - the bestiary Piranha hook, now a salvage trap on the ship that fires. A nest
-    # springs instead of dropping an upgrade. Piranha are the one monster that ignores monster count.
-    if random.randint(1, 10) <= 3:
+    # springs instead of dropping an upgrade. Nest chance scales with the map's Monsters option
+    # (terrain_to_value: none=0, few=1, some=2, lots=3, max=4), so "none" never nests and higher
+    # settings seed swarms more often: few~20%, some~40%, lots~60%, max~80%.
+    if random.randint(1, 10) <= 2 * terrain_to_value(MONSTER_SELECT):
         set_inventory_value(wr.id, "piranha_nest", 1)
 
     ->END
