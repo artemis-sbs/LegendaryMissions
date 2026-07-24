@@ -86,10 +86,12 @@ gui_tab_add_top("cargo")
     # RIGHT (program): only beacon recipes carry a monster + attract/repel
     gui_section(style="area: 47, 57, 95, 80;")
     if fab_is_beacon:
-        gui_row()
+        # taller rows so the drop-down (whose open list inherits the control height) and the
+        # radio present cleanly.
+        gui_row("row-height: 45px;")
         """col-width: 7em; $text: Monster"""
         fab_dd = gui_drop_down(f"$text:{fab_monster};list:shark,dragon,piranha,leech,charybdis,grazer,any", var="fab_monster")
-        gui_row()
+        gui_row("row-height: 45px;")
         """col-width: 7em; $text: Effect"""
         fab_rb = gui_radio("attract,repel", var="fab_mode")
 
