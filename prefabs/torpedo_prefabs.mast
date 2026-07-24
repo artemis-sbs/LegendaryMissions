@@ -309,6 +309,32 @@ build_times:
 ```
     jump prefab_torpedo_type
 
+=== prefab_beacon_torpedo
+" A general Beacon ordnance (Artemis 2.8 lineage). Dropped aft like a mine, it broadcasts
+" for a wide radius, is scannable, expires, and is recoverable. ONE native type; the
+" specific behaviour (bio attract/repel a monster, and future sensor/comms/decoy kinds) is
+" the per-instance PROGRAM carried via the deliver queue and stamped on the object at
+" launch. The native round is harmless (damage 0, tiny/brief); the real broadcasting beacon
+" object is spawned aft on //launch/missile (see the fabrication addon). Fabricate-only: NO
+" build_times, so stations never produce it.
+metadata: ```
+key: Beacon
+gui_name: Beacon
+speed: 3
+lifetime: 2
+flare_color: #0cf
+trail_color: #088
+warhead: standard
+damage: 0
+explosion_size: 1
+explosion_color: #0cf
+behavior: mine
+energy_conversion_value: 100
+default_max_count: 8
+player_ship_roles: tsn
+```
+    jump prefab_torpedo_type
+
 
 
 #/*

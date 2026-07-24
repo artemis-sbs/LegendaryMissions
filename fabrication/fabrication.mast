@@ -1,0 +1,77 @@
+# ============================================================================
+# Fabrication - a generic crafting engine (Open Universe addon)
+# ----------------------------------------------------------------------------
+# A console tab where the player turns a SALVAGE resource into gear that takes
+# BUILD TIME to make. The loop: gather salvage (the mission grants it) -> Fabricate
+# (spend salvage + start a build timer) -> the finished item lands in the ship
+# inventory -> ACTIVATE it from the standard Upgrades tab (LM items addon).
+#
+# This addon provides the ENGINE only. A mission supplies the content:
+#   - which console(s) show the tab: enable it with gui_tab_enable("fabrication")
+#     from that console's `//gui/normal_<console>` route (e.g. //gui/normal_engi).
+#   - the SALVAGE sources (e.g. grant salvage on a //science derelict scan).
+#   - the craftable ITEM DEFS: ordinary item-system prefabs (type: item/...) that
+#     carry two extra metadata fields, `craft_cost` and `craft_time`. The panel
+#     lists any item with a craft_cost, so THE RECIPES ARE THE ITEM DEFS - there is
+#     no separate recipe list (and no list-of-dicts literal, which breaks compiles).
+#
+# Salvage is stored per-ship under the inventory key "salvage".
+# ============================================================================
+
+# The tab CONTENT. Registered by existing as a //gui/tab route; a mission ENABLES it
+# per console (gui_tab_add_top is intentionally NOT used - it adds the tab globally and
+# is fragile). Lists craftable items; Fabricate spends salvage and starts the build.
+//gui/tab/fabrication
+    jump fabrication_screen
+
+=== fabrication_screen
+    gui_tab_back(CONSOLE_SELECT)
+    ship_id = sbs.get_ship_of_client(client_id)
+    gui_section(style="area: 5, 12, 95, 100; row-height: 2.2em;")
+    _sal = get_inventory_value(ship_id, "salvage", 0)
+    """color:white; font:gui-3; justify:center; $text:Fabrication   Salvage: {_sal}"""
+    for lbl in items_get_list():
+        _k = lbl.get_inventory_value("key")
+        _cost = lbl.get_inventory_value("craft_cost", 0)
+        continue if _cost <= 0
+        _nm = lbl.get_inventory_value("display_text", _k)
+        _have_item = get_inventory_value(ship_id, _k, 0)
+        gui_row()
+        """col-width: 18em; $text: {_nm}   ({_cost} salvage)   have x{_have_item}"""
+        if not is_timer_finished(ship_id, "fab_" + _k):
+            _t = format_time_remaining(ship_id, "fab_" + _k)
+            """color:#ff0; $text: building {_t}"""
+        elif _sal >= _cost:
+            _fb = gui_button("$text:Fabricate;justify:center;", data={"fk": _k})
+            on gui_message(_fb):
+                signal_emit("fabricate", {"ship_id": ship_id, "key": fk})
+        else:
+            """color:#888; $text: need {_cost} salvage"""
+    on signal item_changed:
+        jump fabrication_screen
+    await gui()
+
+# Fabricate intent (from the panel) -> server validates, spends salvage, starts the
+# build timer. //shared/signal so it runs ONCE on the server, like item_activate. Cost
+# and time come from the item's own metadata.
+//shared/signal/fabricate
+    _cost = item_meta(key, "craft_cost", 0)
+    ->END if _cost <= 0
+    ->END if not is_timer_finished(ship_id, "fab_" + key)
+    _have = get_inventory_value(ship_id, "salvage", 0)
+    ->END if _have < _cost
+    _time = item_meta(key, "craft_time", 30)
+    set_inventory_value(ship_id, "salvage", _have - _cost)
+    set_timer(ship_id, "fab_" + key, seconds=_time)
+    task_schedule(fabricate_build, {"bship": ship_id, "bkey": key, "btime": _time})
+    signal_emit("item_changed", {"holder_id": ship_id})
+    ->END
+
+# Build completes: grant the finished item into the ship inventory (where the Upgrades
+# tab picks it up for activation).
+=== fabricate_build
+    await delay_sim(btime)
+    ->END if to_object(bship) is None
+    set_inventory_value(bship, bkey, get_inventory_value(bship, bkey, 0) + 1)
+    signal_emit("item_changed", {"holder_id": bship})
+    ->END

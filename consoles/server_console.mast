@@ -88,6 +88,9 @@ gui_reroute_clients("client_main")
     # PShocks destroys unshielded ships.
     prefab_spawn(prefab_pshock_torpedo)
     prefab_spawn(prefab_tag_torpedo)
+    # Beacon: general fabricate-only ordnance (no station build_times). Fires like a harmless
+    # mine; the real broadcasting beacon is spawned aft on //launch/missile (see fabrication).
+    prefab_spawn(prefab_beacon_torpedo)
 
     #
     # Create all the player ships

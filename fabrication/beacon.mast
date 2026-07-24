@@ -1,0 +1,103 @@
+# ==========================================================================
+# Beacon effect + deploy (general Beacon ordnance).
+# --------------------------------------------------------------------------
+# The Beacon torpedo type (prefabs/torpedo_prefabs.mast : prefab_beacon_torpedo) fires
+# through the stock tube UI but its native round is harmless (damage 0, brief). The REAL
+# broadcasting beacon is spawned aft here on //launch/missile, stamped with the per-instance
+# PROGRAM that the Engineering deliver step queued (kind + monster + attract/repel), then it
+# lives for a while: attracting or repelling matching monsters over a wide radius, scannable
+# by Science, expiring when its power fades, and recoverable by flying over it.
+#
+# Program shape (a dict): {"kind": "bio", "monster": <role or "any">, "mode": "attract"|"repel"}.
+# The delivered programs sit FIFO on the ship inventory key "beacon_program_queue".
+# ==========================================================================
+
+# --- deploy: a fired Beacon drops a broadcasting beacon ~635u aft of the ship ---
+//launch/missile
+    ->END if (LAUNCH_TYPE or "").lower() != "beacon"
+    beacon_ship = LAUNCH_ORIGIN_ID
+    ->END if to_object(beacon_ship) is None
+    # pop the next delivered program (FIFO); fall back to a default if none was queued
+    beacon_q = get_inventory_value(beacon_ship, "beacon_program_queue", [])
+    if len(beacon_q) > 0:
+        beacon_prog = beacon_q[0]
+        set_inventory_value(beacon_ship, "beacon_program_queue", beacon_q[1:])
+    else:
+        beacon_prog = {"kind": "bio", "monster": "any", "mode": "attract"}
+    beacon_eo = to_engine_object(beacon_ship)
+    ->END if beacon_eo is None
+    beacon_fwd = beacon_eo.forward_vector()
+    beacon_x = beacon_eo.pos.x + beacon_fwd.x * -635
+    beacon_y = beacon_eo.pos.y + beacon_fwd.y * -635
+    beacon_z = beacon_eo.pos.z + beacon_fwd.z * -635
+    # role "beacon" (NOT "item") so only our recover route below fires, not the generic
+    # items/item_collect route. behav_pickup makes fly-over trigger //collision/interactive.
+    beacon_obj = terrain_spawn(beacon_x, beacon_y, beacon_z, "Beacon", "#,beacon", "danger_4a", "behav_pickup")
+    beacon_id = beacon_obj.id
+    set_inventory_value(beacon_id, "beacon_kind", beacon_prog["kind"])
+    set_inventory_value(beacon_id, "beacon_monster", beacon_prog["monster"])
+    set_inventory_value(beacon_id, "beacon_mode", beacon_prog["mode"])
+    comms_broadcast(beacon_ship, f"Beacon deployed: {beacon_prog['mode']} / {beacon_prog['monster']}", "#0cf")
+    task_schedule(beacon_life, {"bid": beacon_id, "monster": beacon_prog["monster"], "mode": beacon_prog["mode"], "radius": 50000, "life": 120, "throttle": 0.6, "interval": 2})
+    ->END
+
+# --- lifetime: broadcast to attract/repel matching monsters until power runs out ---
+== beacon_life
+    set_timer(bid, "beacon_power", seconds=life)
+--- beacon_sweep
+    ->beacon_expire if not object_exists(bid)
+    ->beacon_expire if is_timer_finished(bid, "beacon_power")
+    bpos = get_pos(bid)
+    for mo in to_object_list(role("monster")):
+        mid = mo.id
+        continue if monster != "any" and not has_role(mid, monster)
+        mpos = get_pos(mid)
+        dx = mpos.x - bpos.x
+        dy = mpos.y - bpos.y
+        dz = mpos.z - bpos.z
+        continue if (dx * dx + dy * dy + dz * dz) > radius * radius
+        if mode == "attract":
+            target_pos(mid, bpos.x, bpos.y, bpos.z, throttle)
+        else:
+            # repel: steer to a point on the far side of the monster from the beacon
+            target_pos(mid, mpos.x + dx, mpos.y + dy, mpos.z + dz, throttle)
+    await delay_sim(interval)
+    jump beacon_sweep
+--- beacon_expire
+    if object_exists(bid):
+        delete_object(bid)
+    ->END
+
+# Fabricate-only: players carry Beacon capacity (MAX) but start with 0 loaded rounds; the
+# prefab registrar would otherwise fill tsn ships to max. Zero the loadable count on spawn.
+//spawn if has_role(SPAWNED_ID, "__player__")
+    beacon_max = get_data_set_value(SPAWNED_ID, "Beacon_MAX")
+    if beacon_max is not None:
+        set_data_set_value(SPAWNED_ID, "Beacon_NUM", 0)
+
+# --- recover: fly over a live/dead beacon to add it back as a loadable round ---
+# Beacon_NUM is the ship's loadable tube count -- a DATA_SET value (not inventory).
+//collision/interactive if has_role(COLLISION_ORIGIN_ID, "beacon") and has_any_role(COLLISION_SELECTED_ID, "__player__,cockpit")
+    beacon_have = get_data_set_value(COLLISION_SELECTED_ID, "Beacon_NUM")
+    if beacon_have is None:
+        beacon_have = 0
+    set_data_set_value(COLLISION_SELECTED_ID, "Beacon_NUM", beacon_have + 1)
+    # also re-queue the recovered program so the relaunched round keeps its behaviour
+    beacon_rk = get_inventory_value(COLLISION_ORIGIN_ID, "beacon_kind", "bio")
+    beacon_rm = get_inventory_value(COLLISION_ORIGIN_ID, "beacon_monster", "any")
+    beacon_rmode = get_inventory_value(COLLISION_ORIGIN_ID, "beacon_mode", "attract")
+    beacon_rq = get_inventory_value(COLLISION_SELECTED_ID, "beacon_program_queue", [])
+    beacon_rq.append({"kind": beacon_rk, "monster": beacon_rm, "mode": beacon_rmode})
+    set_inventory_value(COLLISION_SELECTED_ID, "beacon_program_queue", beacon_rq)
+    comms_broadcast(COLLISION_SELECTED_ID, "Beacon recovered - reprogram and relaunch", "#0cf")
+    delete_object(COLLISION_ORIGIN_ID)
+    ->END
+
+# --- science: scan a beacon to read its program ---
+//enable/science if has_role(SCIENCE_SELECTED_ID, "beacon")
+//science if has_role(SCIENCE_SELECTED_ID, "beacon")
+    sci_mode = get_inventory_value(SCIENCE_SELECTED_ID, "beacon_mode", "unknown")
+    sci_mon = get_inventory_value(SCIENCE_SELECTED_ID, "beacon_monster", "unknown")
+    + "scan":
+        <scan>
+            % Beacon - a {sci_mode} broadcast tuned to '{sci_mon}'. It emits an ultrawave carrier across the sector; monsters of that type are drawn to (or driven from) this point until its power fades.

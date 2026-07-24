@@ -28,6 +28,7 @@
         "basic_player_destroy",
         "basic_random_skybox",
         "collisions",
+        "fabrication",
         "data_panels",
         "documents",
         "director",
