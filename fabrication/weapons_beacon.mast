@@ -1,0 +1,26 @@
+# ==========================================================================
+# Weapons "Request Beacon" panel.
+# --------------------------------------------------------------------------
+# A small overlay on the weapons console: the Weapons officer picks a monster + attract/
+# repel and sends a REQUEST to Engineering (//shared/signal/beacon_request). Engineering
+# fabricates it and delivers it back to the tube (see beacon_workflow.mast + the Fabricate/
+# Cargo tabs). A second //gui/normal_weap handler is fine -- the base overlay still runs.
+# ==========================================================================
+
+//gui/normal_weap
+    wb_ship = sbs.get_ship_of_client(client_id)
+    default wb_monster = "shark"
+    default wb_mode = "attract"
+    wb_region = gui_region("area: 0,22,24,52;")
+    with gui_rebuild(wb_region):
+        gui_row("row-height: 1.6em;")
+        """color:#0cf; justify:center; $text: Request Beacon"""
+        gui_row("row-height: 2.2em;")
+        wb_dd = gui_drop_down(f"$text:{wb_monster};list:shark,dragon,piranha,leech,charybdis,grazer,any", var="wb_monster")
+        gui_row("row-height: 2.2em;")
+        wb_rb = gui_radio("attract,repel", var="wb_mode")
+        gui_row("row-height: 2.2em;")
+        on gui_message(gui_button("$text:Request;justify:center;")):
+            signal_emit("beacon_request", {"ship_id": wb_ship, "recipe": "recipe_beacon_bio", "monster": wb_monster, "mode": wb_mode})
+            comms_broadcast(wb_ship, f"Beacon requested from Engineering: {wb_mode} {wb_monster}", "#fc0")
+    yield idle

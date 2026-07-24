@@ -24,21 +24,27 @@
         set_inventory_value(beacon_ship, "beacon_program_queue", beacon_q[1:])
     else:
         beacon_prog = {"kind": "bio", "monster": "any", "mode": "attract"}
-    beacon_eo = to_engine_object(beacon_ship)
-    ->END if beacon_eo is None
-    beacon_fwd = beacon_eo.forward_vector()
-    beacon_x = beacon_eo.pos.x + beacon_fwd.x * -635
-    beacon_y = beacon_eo.pos.y + beacon_fwd.y * -635
-    beacon_z = beacon_eo.pos.z + beacon_fwd.z * -635
-    # role "beacon" (NOT "item") so only our recover route below fires, not the generic
-    # items/item_collect route. behav_pickup makes fly-over trigger //collision/interactive.
-    beacon_obj = terrain_spawn(beacon_x, beacon_y, beacon_z, "Beacon", "#,beacon", "danger_4a", "behav_pickup")
-    beacon_id = beacon_obj.id
-    set_inventory_value(beacon_id, "beacon_kind", beacon_prog["kind"])
-    set_inventory_value(beacon_id, "beacon_monster", beacon_prog["monster"])
-    set_inventory_value(beacon_id, "beacon_mode", beacon_prog["mode"])
     comms_broadcast(beacon_ship, f"Beacon deployed: {beacon_prog['mode']} / {beacon_prog['monster']}", "#0cf")
-    task_schedule(beacon_life, {"bid": beacon_id, "monster": beacon_prog["monster"], "mode": beacon_prog["mode"], "radius": 50000, "life": 120, "throttle": 0.6, "interval": 2})
+    task_schedule(beacon_spawn_aft, {"sp_ship": beacon_ship, "sp_kind": beacon_prog["kind"], "sp_monster": beacon_prog["monster"], "sp_mode": beacon_prog["mode"], "sp_live": True})
+    ->END
+
+# Spawn a beacon object ~635u aft of a ship, stamped with a program. Shared by the launch
+# deploy (sp_live=True -> starts broadcasting) and the cargo Eject (sp_live=False -> inert,
+# just a recoverable anomaly). role "beacon" (NOT "item") so only our recover route fires.
+== beacon_spawn_aft
+    sp_eo = to_engine_object(sp_ship)
+    ->END if sp_eo is None
+    sp_fwd = sp_eo.forward_vector()
+    sp_x = sp_eo.pos.x + sp_fwd.x * -635
+    sp_y = sp_eo.pos.y + sp_fwd.y * -635
+    sp_z = sp_eo.pos.z + sp_fwd.z * -635
+    sp_obj = terrain_spawn(sp_x, sp_y, sp_z, "Beacon", "#,beacon", "danger_4a", "behav_pickup")
+    sp_id = sp_obj.id
+    set_inventory_value(sp_id, "beacon_kind", sp_kind)
+    set_inventory_value(sp_id, "beacon_monster", sp_monster)
+    set_inventory_value(sp_id, "beacon_mode", sp_mode)
+    if sp_live:
+        task_schedule(beacon_life, {"bid": sp_id, "monster": sp_monster, "mode": sp_mode, "radius": 50000, "life": 120, "throttle": 0.6, "interval": 2})
     ->END
 
 # --- lifetime: broadcast to attract/repel matching monsters until power runs out ---

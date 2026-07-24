@@ -1,0 +1,79 @@
+# ==========================================================================
+# Engineering tabs for the beacon/cargo workflow: FABRICATE (build requested beacons) and
+# CARGO (deliver built beacons to Weapons; eject cargo). Two linked tabs sharing the ship's
+# inventory. They only emit the //shared/signal intents; beacon_workflow.mast does the work.
+# The generic //gui/tab/fabrication (salvage crafting) is separate and unchanged.
+# ==========================================================================
+default CONSOLE_SELECT = ""
+gui_tab_add_top("fabricate")
+gui_tab_add_top("cargo")
+
+# Show both tabs on the Engineering console.
+//gui/normal_engi
+    gui_tab_enable("fabricate")
+    gui_tab_enable("cargo")
+
+# --- FABRICATE: outstanding Weapons requests, each with a Build action ---
+//gui/tab/fabricate
+--- fab_repaint
+    gui_tab_back(CONSOLE_SELECT)
+    gui_activate_console("fabricate")
+    ship_id = sbs.get_ship_of_client(client_id)
+    gui_section(style="area: 5, 12, 95, 100; row-height: 2.4em;")
+    """color:#8cf; justify:center; font:gui-3; $text: Fabricate - build requested beacons"""
+    fab_reqs = get_inventory_value(ship_id, "beacon_requests", [])
+    fab_building = not is_timer_finished(ship_id, "beacon_fab")
+    if len(fab_reqs) == 0:
+        """color:#888; $text: No outstanding requests. Weapons requests beacons."""
+    for fab_r in fab_reqs:
+        fab_rec = fabrication_get_recipe(fab_r["recipe"])
+        continue if fab_rec is None
+        fab_mon = fab_r["monster"]
+        fab_mode = fab_r["mode"]
+        fab_name = fab_rec["name"]
+        fab_afford = fabrication_recipe_affordable(ship_id, fab_r["recipe"])
+        gui_row()
+        """col-width: 20em; $text: {fab_mode} beacon for {fab_mon}"""
+        if fab_building:
+            fab_t = format_time_remaining(ship_id, "beacon_fab")
+            """color:#ff0; $text: building {fab_t}"""
+        elif fab_afford:
+            fab_btn = gui_button("$text:Build;justify:center;", data={"rk": fab_r["recipe"], "rm": fab_mon, "rd": fab_mode})
+            on gui_message(fab_btn):
+                signal_emit("beacon_build", {"ship_id": ship_id, "recipe": rk, "monster": rm, "mode": rd})
+        else:
+            """color:#888; $text: need materials"""
+    on signal item_changed:
+        jump fab_repaint
+    if fab_building:
+        await gui(timeout=delay_sim(1))
+    else:
+        await gui()
+    jump fab_repaint
+
+# --- CARGO: built beacons (deliver to the tube) + eject ---
+//gui/tab/cargo
+--- cargo_repaint
+    gui_tab_back(CONSOLE_SELECT)
+    gui_activate_console("cargo")
+    ship_id = sbs.get_ship_of_client(client_id)
+    gui_section(style="area: 5, 12, 95, 100; row-height: 2.4em;")
+    """color:#8cf; justify:center; font:gui-3; $text: Cargo"""
+    car_built = get_inventory_value(ship_id, "beacon_built", [])
+    if len(car_built) == 0:
+        """color:#888; $text: No built beacons. Fabricate one first."""
+    for car_b in car_built:
+        car_mon = car_b["monster"]
+        car_mode = car_b["mode"]
+        gui_row()
+        """col-width: 18em; $text: Beacon: {car_mode} / {car_mon}"""
+        car_dv = gui_button("$text:Deliver to Weapons;justify:center;", data={"bk": car_b["kind"], "bm": car_mon, "bd": car_mode})
+        on gui_message(car_dv):
+            signal_emit("beacon_deliver", {"ship_id": ship_id, "kind": bk, "monster": bm, "mode": bd})
+        car_ej = gui_button("$text:Eject;justify:center;", data={"ek": car_b["kind"], "em": car_mon, "ed": car_mode})
+        on gui_message(car_ej):
+            signal_emit("beacon_eject", {"ship_id": ship_id, "kind": ek, "monster": em, "mode": ed})
+    on signal item_changed:
+        jump cargo_repaint
+    await gui()
+    jump cargo_repaint

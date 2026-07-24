@@ -2,3 +2,5 @@ import recipes.py
 import fabrication.mast
 import beacon.mast
 import beacon_workflow.mast
+import weapons_beacon.mast
+import beacon_tabs.mast

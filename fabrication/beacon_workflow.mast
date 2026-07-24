@@ -85,3 +85,20 @@
     comms_broadcast(ship_id, f"Beacon delivered to tube: {mode} {monster}", "#0cf")
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END
+
+# --- eject: jettison a built beacon into space (inert, but recoverable by fly-over) ---
+//shared/signal/beacon_eject
+    bw_built = get_inventory_value(ship_id, "beacon_built", [])
+    bw_keep = []
+    bw_found = None
+    for bw_b in bw_built:
+        if bw_found is None and bw_b["kind"] == kind and bw_b["monster"] == monster and bw_b["mode"] == mode:
+            bw_found = bw_b
+        else:
+            bw_keep.append(bw_b)
+    ->END if bw_found is None
+    set_inventory_value(ship_id, "beacon_built", bw_keep)
+    task_schedule(beacon_spawn_aft, {"sp_ship": ship_id, "sp_kind": kind, "sp_monster": monster, "sp_mode": mode, "sp_live": False})
+    comms_broadcast(ship_id, "Cargo ejected", "#888")
+    signal_emit("item_changed", {"holder_id": ship_id})
+    ->END
