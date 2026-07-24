@@ -13,7 +13,10 @@ from sbs_utils.procedural.quest import (
     quest_get_key, quest_set_key, quest_get_display_name, quest_add, QuestState,
     quest_log_build_items)
 from sbs_utils.procedural.roles import has_role, role
-from sbs_utils.procedural.query import to_object, to_object_list, to_id, is_space_object_id
+from sbs_utils.procedural.query import to_object, to_object_list, to_id, to_id_list, is_space_object_id
+from sbs_utils.procedural.links import linked_to
+from sbs_utils.procedural.gui.overlay import _show_transient
+from sbs_utils.procedural.amd_overlay import overlay_amd, _PRIMARY, _DEFAULT_SLOT
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.sides import to_side_id, side_are_enemies, is_hostile_to_players
 from sbs_utils.procedural.timers import set_timer, is_timer_set, is_timer_finished
@@ -33,6 +36,52 @@ def _quest_audience(agent_id):
     if is_space_object_id(agent_id):
         return agent_id
     return role("__player__")
+
+
+def _quest_overlay_audience(agent_id):
+    """The CONSOLE clients that should see a quest's overlays: the participant
+    ships' linked consoles (overlays target consoles, not ships). Falls back to the
+    audience itself if a target has no linked consoles."""
+    consoles = set()
+    for ship in to_id_list(_quest_audience(agent_id)):
+        consoles |= linked_to(ship, "consoles")
+    return consoles
+
+
+def _fire_overlay_directive(directive, to):
+    """Fire one inline overlay directive: ``<kind> <text>`` (e.g. ``hero CONVOY
+    SAVED``) or ``overlay <key>`` to fire a declared amd_overlays record. The kind's
+    primary field (title/text/line) receives the text."""
+    directive = str(directive or "").strip()
+    if not directive:
+        return
+    parts = directive.split(None, 1)
+    kind = parts[0].lower()
+    rest = parts[1].strip() if len(parts) > 1 else ""
+    if kind == "overlay":
+        overlay_amd(rest, to=to)
+        return
+    slot = _DEFAULT_SLOT.get(kind, "center_hero")
+    prim = _PRIMARY.get(kind, "title")
+    _show_transient(slot, kind, to, None, {prim: rest})
+
+
+def _quest_fire_overlays(agent_id, data, ref_key, inline_key):
+    """Fire a quest lifecycle overlay to the quest's participant consoles. Supports
+    BOTH forms: a declared-record reference (``ref_key`` -> ``overlay_amd(key)``) and
+    an inline directive (``inline_key`` -> ``<kind> <text>``)."""
+    if not data:
+        return
+    # accept underscore or space authoring: `complete_overlay` or `Complete Overlay`
+    ref = data.get(ref_key) or data.get(ref_key.replace("_", " "))
+    inline = data.get(inline_key) or data.get(inline_key.replace("_", " "))
+    if not ref and not inline:
+        return
+    to = _quest_overlay_audience(agent_id)
+    if ref:
+        overlay_amd(str(ref).strip(), to=to)
+    if inline:
+        _fire_overlay_directive(inline, to)
 
 
 def quest_grant_reward(agent_id, reward):
@@ -141,6 +190,8 @@ def quest_mark_active(agent_id, quest_id):
     if quest_get_state(agent_id, quest_id) == QuestState.ACTIVE:
         return
     quest_set_key(agent_id, quest_id, "state", QuestState.ACTIVE)
+    _quest_fire_overlays(agent_id, quest_get_data(agent_id, quest_id) or {},
+                         "accept_overlay", "on_accept")
 
 
 def quest_mark_complete(agent_id, quest_id):
@@ -158,6 +209,7 @@ def quest_mark_complete(agent_id, quest_id):
     if sig:
         signal_emit(sig, {"AGENT_ID": agent_id, "QUEST_ID": quest_id})
     signal_emit("quest_finished", {"AGENT_ID": agent_id, "QUEST_ID": quest_id, "DATA": data})
+    _quest_fire_overlays(agent_id, data, "complete_overlay", "on_complete")
     name = quest_get_display_name(agent_id, quest_id) or quest_id
     comms_broadcast(_quest_audience(agent_id), "Mission complete: " + str(name), "#0f0")
     # A game-ending mission quest wins the game; then bubble up to a parent mission.
@@ -263,6 +315,7 @@ def quest_mark_failed(agent_id, quest_id):
     quest_set_key(agent_id, quest_id, "state", QuestState.FAILED)
     data = quest_get_data(agent_id, quest_id) or {}
     quest_grant_penalty(agent_id, data.get("penalty"))
+    _quest_fire_overlays(agent_id, data, "fail_overlay", "on_fail")
     name = quest_get_display_name(agent_id, quest_id) or quest_id
     comms_broadcast(_quest_audience(agent_id), "Mission failed: " + str(name), "#f33")
     _quest_maybe_end_game(agent_id, quest_id, data, win=False)
