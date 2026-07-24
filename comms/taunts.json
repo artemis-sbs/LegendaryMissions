@@ -2,7 +2,7 @@
     "kralien": [
         {
             "button": "Taunt ship's battle damage",
-            "transmit": "You call that a ship? Where I come from that’s a rusting bucket of table scraps!",
+            "transmit": "You call that a ship? Where I come from that's a rusting bucket of table scraps!",
             "failure": "Your ship is rustier and also very stupid, {name}.",
             "success": "Rust you say? Prepare to meet the gods, sniveling infidels!",
             "science": "The ship's hull is battle-scarred and shows extensive repair work from previous battles."
@@ -374,7 +374,7 @@
         },
         {
             "button": "Taunt captain's courage",
-            "transmit": "You wouldn’t dare fight me, you cowering Lepusian mud mouse!",
+            "transmit": "You wouldn't dare fight me, you cowering Lepusian mud mouse!",
             "failure": "I'll get around to fighting you eventually, {name}. Right now I have more important concerns.",
             "success": "I have ten times your courage, {name}! And I am coming to kill you!",
             "science": "One of our agents has reported that the captain is inexperienced and insecure about their own courage."
