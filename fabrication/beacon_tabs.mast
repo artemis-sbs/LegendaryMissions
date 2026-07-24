@@ -1,10 +1,12 @@
 # ==========================================================================
-# Engineering tabs for the beacon/cargo workflow: FABRICATE (pick a recipe + program, build)
-# and CARGO (deliver a built beacon to Weapons, or eject). Two linked tabs sharing the ship
-# inventory, each a list box + detail panel (item_gui.mast style). They only emit the
-# //shared/signal intents; beacon_workflow.mast does the work. The Weapons officer simply
-# TELLS the engineer which beacon to make -- there is no request signal. The generic
-# //gui/tab/fabrication (salvage crafting) is separate and unchanged.
+# Engineering tabs: FABRICATE (a general recipe fabricator) and CARGO (a general inventory
+# manager). Two linked tabs sharing the ship inventory, each a list box + detail panel
+# (item_gui.mast style). They only emit //shared/signal intents; the workflow lives in
+# beacon_workflow.mast / fabrication.mast. Beacons are one KIND of recipe/cargo, not the
+# whole story: Fabricate lists every recipe (beacon + material), Cargo lists everything the
+# ship carries (beacons + items + materials). The Weapons officer simply tells the engineer
+# which beacon to make -- there is no request signal. The generic salvage-crafting
+# //gui/tab/fabrication is separate and unchanged.
 # ==========================================================================
 default CONSOLE_SELECT = ""
 gui_tab_add_top("fabricate")
@@ -15,8 +17,9 @@ gui_tab_add_top("cargo")
     gui_tab_enable("fabricate")
     gui_tab_enable("cargo")
 
-# --- FABRICATE: a list box of beacon recipes (left) + a detail panel with the program
-# selectors (monster + attract/repel) and a Build action (right). ---
+# --- FABRICATE: list box of ALL recipes (left) + detail panel (right). Beacon recipes show
+# the program selectors (monster + attract/repel) and build via beacon_build; other recipes
+# just build their Output into inventory via fabricate_recipe. ---
 //gui/tab/fabricate
 --- fab_repaint
     gui_tab_back(CONSOLE_SELECT)
@@ -25,13 +28,8 @@ gui_tab_add_top("cargo")
     default fab_monster = "shark"
     default fab_mode = "attract"
     default fab_sel_key = None
-    fab_building = not is_timer_finished(ship_id, "beacon_fab")
 
-    # the selectable items = beacon recipes (output "Beacon")
-    fab_items = []
-    for fab_r in fabrication_recipes():
-        if fab_r["output"] == "Beacon":
-            fab_items.append(fab_r)
+    fab_items = fabrication_recipes()
     if fab_sel_key is None and len(fab_items) > 0:
         fab_sel_key = fab_items[0]["key"]
     # resolve the selected recipe (index for the highlight, dict for the detail)
@@ -47,6 +45,17 @@ gui_tab_add_top("cargo")
         fab_sel = fab_items[0]
         fab_idx = 0
         fab_sel_key = fab_sel["key"]
+
+    # is the selected recipe a beacon? which build timer applies?
+    fab_is_beacon = False
+    fab_timer = "beacon_fab"
+    if fab_sel is not None:
+        fab_is_beacon = fab_sel["output"] == "Beacon"
+        if not fab_is_beacon:
+            fab_timer = "fab_" + fab_sel_key
+    fab_building = False
+    if fab_sel is not None:
+        fab_building = not is_timer_finished(ship_id, fab_timer)
 
     # LEFT: recipe list box
     gui_section(style="area: 5, 12, 45, 100; background:#1572;")
@@ -64,7 +73,7 @@ gui_tab_add_top("cargo")
         fab_nm = fab_sel["name"]
         """color:#8cf; justify:center; font:gui-4; $text: {fab_nm}"""
     else:
-        """color:#aaa; justify:center; $text: No beacon recipes."""
+        """color:#aaa; justify:center; $text: No recipes."""
 
     # RIGHT (middle): description + input cost
     gui_section(style="area: 47, 25, 95, 55; background:#1571;")
@@ -74,24 +83,28 @@ gui_tab_add_top("cargo")
         gui_text_area("{fab_desc}")
         """color:#8a8; $text: Cost: {fab_cost}"""
 
-    # RIGHT (program): monster + attract/repel the built beacon will carry
+    # RIGHT (program): only beacon recipes carry a monster + attract/repel
     gui_section(style="area: 47, 57, 95, 80;")
-    gui_row()
-    """col-width: 7em; $text: Monster"""
-    fab_dd = gui_drop_down(f"$text:{fab_monster};list:shark,dragon,piranha,leech,charybdis,grazer,any", var="fab_monster")
-    gui_row()
-    """col-width: 7em; $text: Effect"""
-    fab_rb = gui_radio("attract,repel", var="fab_mode")
+    if fab_is_beacon:
+        gui_row()
+        """col-width: 7em; $text: Monster"""
+        fab_dd = gui_drop_down(f"$text:{fab_monster};list:shark,dragon,piranha,leech,charybdis,grazer,any", var="fab_monster")
+        gui_row()
+        """col-width: 7em; $text: Effect"""
+        fab_rb = gui_radio("attract,repel", var="fab_mode")
 
     # RIGHT (action band): Build / building countdown / need materials
     gui_section(style="area: 47, 82, 95, 92;")
     if fab_sel is not None and fab_building:
-        fab_t = format_time_remaining(ship_id, "beacon_fab")
+        fab_t = format_time_remaining(ship_id, fab_timer)
         """color:#ff0; justify:center; $text: building {fab_t}"""
     elif fab_sel is not None and fabrication_recipe_affordable(ship_id, fab_sel_key):
-        fab_btn = gui_button("$text:Build;justify:center;", data={"rk": fab_sel_key, "rm": fab_monster, "rd": fab_mode})
+        fab_btn = gui_button("$text:Build;justify:center;", data={"rk": fab_sel_key, "rm": fab_monster, "rd": fab_mode, "rb": fab_is_beacon})
         on gui_message(fab_btn):
-            signal_emit("beacon_build", {"ship_id": ship_id, "recipe": rk, "monster": rm, "mode": rd})
+            if rb:
+                signal_emit("beacon_build", {"ship_id": ship_id, "recipe": rk, "monster": rm, "mode": rd})
+            else:
+                signal_emit("fabricate_recipe", {"ship_id": ship_id, "key": rk})
     elif fab_sel is not None:
         """color:#888; justify:center; $text: need materials"""
 
@@ -103,50 +116,63 @@ gui_tab_add_top("cargo")
         await gui()
     jump fab_repaint
 
-# --- CARGO: a list box of built beacons (left) + a detail panel with Deliver / Eject (right). ---
+# --- CARGO: list box of ALL carried cargo (left) + detail panel (right). Beacons offer
+# Deliver to Weapons + Eject; items/materials offer Eject. ---
 //gui/tab/cargo
 --- cargo_repaint
     gui_tab_back(CONSOLE_SELECT)
     gui_activate_console("cargo")
     ship_id = sbs.get_ship_of_client(client_id)
-    default cargo_sel = 0
-    car_built = get_inventory_value(ship_id, "beacon_built", [])
-    if cargo_sel >= len(car_built):
-        cargo_sel = 0
-    car_sel = None
-    if len(car_built) > 0:
-        car_sel = car_built[cargo_sel]
+    default cargo_sel_cid = None
 
-    # LEFT: built-beacon list box
+    car_items = cargo_list(ship_id)
+    if cargo_sel_cid is None and len(car_items) > 0:
+        cargo_sel_cid = car_items[0]["cid"]
+    # resolve the selected cargo entry
+    car_idx = -1
+    car_sel = None
+    car_i = 0
+    for car_it in car_items:
+        if car_it["cid"] == cargo_sel_cid:
+            car_idx = car_i
+            car_sel = car_it
+        car_i = car_i + 1
+    if car_sel is None and len(car_items) > 0:
+        car_sel = car_items[0]
+        car_idx = 0
+        cargo_sel_cid = car_sel["cid"]
+
+    # LEFT: cargo list box
     gui_section(style="area: 5, 12, 45, 100; background:#1572;")
-    if len(car_built) == 0:
-        """color:#888; $text: No built beacons. Fabricate one first."""
-    car_box = gui_list_box(car_built, "row-height: 0.1em;", item_template=beacon_cargo_row, title_template=beacon_cargo_title, select=True)
-    if len(car_built) > 0:
-        car_box.set_selected_index(cargo_sel, False)
+    if len(car_items) == 0:
+        """color:#888; $text: Cargo hold empty."""
+    car_box = gui_list_box(car_items, "row-height: 0.1em;", item_template=cargo_row, title_template=cargo_title, select=True)
+    if car_idx >= 0:
+        car_box.set_selected_index(car_idx, False)
     on change car_box.get_value():
         car_v = car_box.get_value()
-        car_j = 0
-        for car_b in car_built:
-            if car_b is car_v:
-                cargo_sel = car_j
-            car_j = car_j + 1
+        cargo_sel_cid = car_v["cid"] if car_v is not None else None
         jump cargo_repaint
 
-    # RIGHT: selected beacon detail + actions
+    # RIGHT (top): selected cargo name
     gui_section(style="area: 47, 12, 95, 30;")
     if car_sel is not None:
-        car_mon = car_sel["monster"]
-        car_mode = car_sel["mode"]
-        """color:#8cf; justify:center; font:gui-4; $text: {car_mode} beacon / {car_mon}"""
-    gui_section(style="area: 47, 40, 95, 62;")
-    if car_sel is not None:
+        car_nm = car_sel["name"]
+        """color:#8cf; justify:center; font:gui-4; $text: {car_nm}"""
+
+    # RIGHT (actions): beacon -> Deliver + Eject; item/material -> Eject
+    gui_section(style="area: 47, 40, 95, 68;")
+    if car_sel is not None and car_sel["ckind"] == "beacon":
         car_dv = gui_button("$text:Deliver to Weapons;justify:center;", data={"bk": car_sel["kind"], "bm": car_sel["monster"], "bd": car_sel["mode"]})
         on gui_message(car_dv):
             signal_emit("beacon_deliver", {"ship_id": ship_id, "kind": bk, "monster": bm, "mode": bd})
         car_ej = gui_button("$text:Eject;justify:center;", data={"ek": car_sel["kind"], "em": car_sel["monster"], "ed": car_sel["mode"]})
         on gui_message(car_ej):
             signal_emit("beacon_eject", {"ship_id": ship_id, "kind": ek, "monster": em, "mode": ed})
+    elif car_sel is not None:
+        car_ejg = gui_button("$text:Eject;justify:center;", data={"gk": car_sel["key"]})
+        on gui_message(car_ejg):
+            signal_emit("cargo_eject", {"ship_id": ship_id, "key": gk})
 
     on signal item_changed:
         jump cargo_repaint

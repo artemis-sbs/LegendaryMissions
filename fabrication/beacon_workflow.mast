@@ -84,3 +84,25 @@
     comms_broadcast(ship_id, "Cargo ejected", "#888")
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END
+
+# --- general cargo eject: jettison one of a held item/material (beacons use beacon_eject) ---
+# Decrement the inventory key and drop a recoverable pickup aft (item_spawn stamps item_key,
+# so the generic items/item_collect fly-over route credits it back).
+//shared/signal/cargo_eject
+    ce_have = get_inventory_value(ship_id, key, 0)
+    ->END if ce_have < 1
+    set_inventory_value(ship_id, key, ce_have - 1)
+    task_schedule(cargo_eject_drop, {"ship_id": ship_id, "key": key})
+    comms_broadcast(ship_id, f"Ejected {key}", "#888")
+    signal_emit("item_changed", {"holder_id": ship_id})
+    ->END
+
+== cargo_eject_drop
+    ce_eo = to_engine_object(ship_id)
+    ->END if ce_eo is None
+    ce_fwd = ce_eo.forward_vector()
+    ce_x = ce_eo.pos.x + ce_fwd.x * -400
+    ce_y = ce_eo.pos.y + ce_fwd.y * -400
+    ce_z = ce_eo.pos.z + ce_fwd.z * -400
+    item_spawn(key, ce_x, ce_y, ce_z)
+    ->END

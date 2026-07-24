@@ -1,0 +1,39 @@
+# [Fabricator Recipes](recipes)
+
+Recipes for the Fabricator, authored as data. One heading per recipe. The Engineering
+Fabricate tab lists these; a build consumes the Inputs and, after Time seconds, yields the
+Output. Beacon recipes (Output: Beacon) also carry a Program (kind) and take a monster +
+attract/repel chosen at build time; non-beacon recipes just produce their Output into the
+ship inventory.
+
+## [Bio Beacon](recipe_beacon_bio)
+---
+Output: Beacon
+Inputs: bio_sample x1, salvage x5
+Time: 30
+Build at: engineering
+Program: kind=bio
+---
+A distress-beacon hull rewired to broadcast an ultrawave carrier that attracts or repels a
+chosen space monster across the sector.
+
+## [Sensor Beacon](recipe_beacon_sensor)
+---
+Output: Beacon
+Inputs: salvage x8
+Time: 20
+Build at: engineering
+Program: kind=sensor
+---
+A passive relay that brightens sensor returns around its position - a future kind; drops and
+scans like any beacon.
+
+## [Coolant Cell](recipe_coolant_cell)
+---
+Output: coolant_cell
+Inputs: salvage x4
+Time: 15
+Build at: engineering
+---
+A general (non-beacon) example: fabricates a spare coolant cell into the ship inventory,
+proving the Fabricator builds more than beacons.

@@ -157,15 +157,60 @@ def recipe_row(item):
 
 def recipe_title():
     gui_row("row-height: 1.1em; padding:8px; background:#1578;")
-    gui_text("$text:Beacon recipes;justify:center;")
+    gui_text("$text:Recipes;justify:center;")
 
 
-def beacon_cargo_row(item):
-    """One built-beacon row in the Cargo list box."""
+def cargo_list(ship_id):
+    """A general cargo manifest for the Cargo tab: built beacons + held registry items + held
+    non-beacon recipe outputs (materials). Each entry: {ckind, name, count, ...}. Beacons carry
+    their program (kind/monster/mode) and a cidx into beacon_built; items/materials carry a key.
+    So the Cargo tab isn't beacon-only -- it lists everything the ship is carrying."""
+    out = []
+    # built beacons (one row each, so a single one can be delivered / ejected)
+    built = get_inventory_value(ship_id, "beacon_built", []) or []
+    idx = 0
+    for b in built:
+        out.append({
+            "ckind": "beacon", "cidx": idx, "count": 1, "cid": f"b{idx}",
+            "name": f"Beacon: {b.get('mode', '?')} / {b.get('monster', '?')}",
+            "kind": b.get("kind"), "monster": b.get("monster"), "mode": b.get("mode"),
+        })
+        idx += 1
+    seen = set()
+    # held tangible items from the items registry
+    try:
+        from sbs_utils.procedural.items import items_get_list
+        for lbl in items_get_list():
+            k = lbl.get_inventory_value("key")
+            if not k or k in seen:
+                continue
+            n = get_inventory_value(ship_id, k, 0) or 0
+            if n > 0:
+                out.append({"ckind": "item", "key": k, "count": n, "cid": f"i{k}",
+                            "name": lbl.get_inventory_value("display_text", k)})
+                seen.add(k)
+    except Exception:
+        pass
+    # held non-beacon recipe outputs (fabricated materials)
+    for r in _RECIPES.values():
+        ok = r.get("output")
+        if not ok or ok == "Beacon" or ok in seen:
+            continue
+        n = get_inventory_value(ship_id, ok, 0) or 0
+        if n > 0:
+            out.append({"ckind": "material", "key": ok, "count": n, "cid": f"m{ok}", "name": ok})
+            seen.add(ok)
+    return out
+
+
+def cargo_row(item):
+    """One cargo row in the Cargo list box (name + count for stacks)."""
     gui_row("row-height: 1.1em; padding:8px;")
-    gui_text(f"$text:Beacon: {item.get('mode', '?')} / {item.get('monster', '?')};justify:left;")
+    cnt = item.get("count", 1)
+    suffix = f"  x{cnt}" if cnt and cnt > 1 else ""
+    gui_text(f"$text:{item.get('name', '?')}{suffix};justify:left;")
 
 
-def beacon_cargo_title():
+def cargo_title():
     gui_row("row-height: 1.1em; padding:8px; background:#1578;")
-    gui_text("$text:Built beacons;justify:center;")
+    gui_text("$text:Cargo;justify:center;")

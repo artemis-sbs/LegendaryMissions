@@ -21,7 +21,29 @@
 # Load the addon's built-in recipes (data-driven, see recipes.py + beacon_recipes.amd). A
 # mission can author more .amd recipes and call fabrication_load_recipes_amd() itself. The
 # item-def craft_cost path below still works for back-compat (OU/StormsBeacon craftables).
-fabrication_load_recipes_amd(document_get_amd_file(None, "Recipes", content=media_read_relative_file("beacon_recipes.amd")))
+fabrication_load_recipes_amd(document_get_amd_file(None, "Recipes", content=media_read_relative_file("recipes.amd")))
+
+# Generic recipe build (non-beacon Outputs): consume the recipe inputs, wait its Time, then
+# grant the Output into the ship inventory. Beacon recipes go through beacon_build instead
+# (they carry a program + deliver-to-tube step). The Fabricate tab picks the right one.
+//shared/signal/fabricate_recipe
+    fr_recipe = fabrication_get_recipe(key)
+    ->END if fr_recipe is None
+    ->END if not is_timer_finished(ship_id, "fab_" + key)
+    ->END if not fabrication_recipe_consume(ship_id, key)
+    fr_time = fr_recipe["time"]
+    fr_out = fr_recipe["output"]
+    set_timer(ship_id, "fab_" + key, seconds=fr_time)
+    task_schedule(fabricate_recipe_done, {"ship_id": ship_id, "output": fr_out, "btime": fr_time})
+    ->END
+
+== fabricate_recipe_done
+    await delay_sim(btime)
+    ->END if to_object(ship_id) is None
+    set_inventory_value(ship_id, output, get_inventory_value(ship_id, output, 0) + 1)
+    comms_broadcast(ship_id, f"Fabricated: {output}", "#0f8")
+    signal_emit("item_changed", {"holder_id": ship_id})
+    ->END
 
 # The tab CONTENT. Registered by existing as a //gui/tab route; a mission ENABLES it
 # per console (gui_tab_add_top is intentionally NOT used - it adds the tab globally and
