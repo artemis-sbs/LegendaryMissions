@@ -92,8 +92,11 @@ yield fail if fleet_obj is None
 enrage_value = fleet_obj.get_heat_for(ship_id)
 this_taunt_data = get_inventory_value(COMMS_SELECTED_ID, "taunt_data")
 has_been_taunted = get_inventory_value(COMMS_SELECTED_ID, "taunt_attempted", False)
+# a2x: 2.8 tauntImmunityIndex (0 none / 1 temp / 2 perm) written to inventory. Cosmos has
+# no temp-duration taunt model, so both 1 and 2 currently mean "immune" (hide the taunt).
+a2x_taunt_immune = get_inventory_value(COMMS_SELECTED_ID, "a2x_taunt_immunity", 0) >= 1
 
-hide_taunt = this_taunt_data is None or has_role(ship_id, "surrendered") or has_been_taunted
+hide_taunt = this_taunt_data is None or has_role(ship_id, "surrendered") or has_been_taunted or a2x_taunt_immune
 if hide_taunt==True:
     <<[$raider] "Taunt Worthless"
         % Your taunts are worthless to us, {name}.

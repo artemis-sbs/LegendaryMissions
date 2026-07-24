@@ -6,6 +6,8 @@ shared _surrender_return = task_schedule(take_surrendered_home)
 
     yield fail if has_role(COMMS_SELECTED_ID, "never_surrender")
     yield fail if has_role(COMMS_SELECTED_ID, "surrendered")
+    # a2x: 2.8 surrenderChance == 0 means the ship never surrenders (hide the button).
+    yield fail if get_inventory_value(COMMS_SELECTED_ID, "a2x_surrender_chance", -1) == 0
 
     surrender_count = get_inventory_value(COMMS_SELECTED_ID, "surrender_count", 0)
     hide_surr = surrender_count >= 4
@@ -86,6 +88,13 @@ shared _surrender_return = task_schedule(take_surrendered_home)
     s_chance = s_chance + s_mod
     print("Difficulty Modifier: " + str(DIFFICULTY * 2))
     s_chance = s_chance + (DIFFICULTY * 2)
+    # a2x: 2.8 surrenderChance (0-100) written to inventory by a2x_set_object_property.
+    # Higher chance -> readier to surrender -> lower s_chance. Centered on 50 (no effect);
+    # 0 is handled as "never" by hiding the button above. -1 = property was never set.
+    a2x_surr = get_inventory_value(COMMS_SELECTED_ID, "a2x_surrender_chance", -1)
+    if a2x_surr >= 0:
+        s_chance = s_chance - (a2x_surr - 50)
+        print("a2x surrenderChance " + str(a2x_surr) + " -> chance " + str(s_chance))
     print("Modified Chance: " + str(s_chance))
 
     if s_ratio >= 0.5:
