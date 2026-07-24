@@ -1,14 +1,13 @@
 # ==========================================================================
 # Beacon acquisition workflow (in the fabrication addon).
 # --------------------------------------------------------------------------
-# Slow, comms-heavy by design: Weapons REQUESTS a beacon (a recipe + monster + attract/
-# repel), Engineering BUILDS it via that data-driven recipe into a managed build inventory,
-# then DELIVERS one to Weapons -- which is what puts a loadable round in the tube. The
-# console UI (cargo manager tab + weapons request panel) only emits these //shared/signal
-# intents; the server-side state changes live here so they run once.
+# Slow, comms-heavy by design -- the coordination is the two humans talking: the Weapons
+# officer TELLS the engineer what to make; Engineering picks that spec on the Fabricate tab
+# and BUILDS it via a data-driven recipe into a managed build inventory, then DELIVERS one to
+# Weapons -- which is what puts a loadable round in the tube. The console tabs only emit these
+# //shared/signal intents; the server-side state changes live here so they run once.
 #
 # Per-ship state (inventory unless noted):
-#   beacon_requests        : list of {recipe, monster, mode} the Weapons team asked for
 #   beacon_built           : list of {kind, monster, mode} built-but-undelivered beacons
 #   Beacon_NUM  (DATA_SET) : the loadable tube count -- ONLY delivery raises it
 #   beacon_program_queue   : FIFO of {kind, monster, mode}, one per delivered-but-unfired round
@@ -16,15 +15,8 @@
 # time, and the beacon KIND; the monster + attract/repel come from the Weapons request.
 # ==========================================================================
 
-# --- request: Weapons asks Engineering for a recipe + target program ---
-//shared/signal/beacon_request
-    bw_reqs = get_inventory_value(ship_id, "beacon_requests", [])
-    bw_reqs.append({"recipe": recipe, "monster": monster, "mode": mode})
-    set_inventory_value(ship_id, "beacon_requests", bw_reqs)
-    comms_broadcast(ship_id, f"Weapons requests a {mode} beacon for {monster}", "#fc0")
-    ->END
-
-# --- build: Engineering fabricates a request via its data-driven recipe ---
+# --- build: Engineering fabricates a beacon via its data-driven recipe ---
+# (Weapons just tells the engineer what to make; there is no request signal.)
 //shared/signal/beacon_build
     bw_recipe = fabrication_get_recipe(recipe)
     ->END if bw_recipe is None
@@ -43,16 +35,6 @@
     bw_built = get_inventory_value(ship_id, "beacon_built", [])
     bw_built.append({"kind": kind, "monster": monster, "mode": mode})
     set_inventory_value(ship_id, "beacon_built", bw_built)
-    # drop the fulfilled request (first match on recipe + monster + mode)
-    bw_reqs = get_inventory_value(ship_id, "beacon_requests", [])
-    bw_kept = []
-    bw_done = False
-    for bw_r in bw_reqs:
-        if not bw_done and bw_r["recipe"] == recipe and bw_r["monster"] == monster and bw_r["mode"] == mode:
-            bw_done = True
-        else:
-            bw_kept.append(bw_r)
-    set_inventory_value(ship_id, "beacon_requests", bw_kept)
     comms_broadcast(ship_id, f"Beacon built: {mode} {monster} (ready to deliver)", "#0f8")
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END

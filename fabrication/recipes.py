@@ -27,6 +27,7 @@ extra data stamped on the output, e.g. a beacon's kind). The body is the descrip
 """
 from sbs_utils.procedural.amd import amd_parse_facts
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+from sbs_utils.procedural.gui import gui_row, gui_text
 
 # key -> {key, name, output, inputs{key:count}, time, build_at, program{}, desc}
 _RECIPES = {}
@@ -115,7 +116,7 @@ def fabrication_load_recipes_amd(doc):
             time=data.get("time", 30),
             build_at=(data.get("build at") or data.get("build_at") or ""),
             program=_parse_program(data.get("program")),
-            name=n.get("title") or data.get("name") or key,
+            name=n.get("display_text") or data.get("name") or key,
             desc=n.get("description") or "",
         )
 
@@ -140,3 +141,31 @@ def fabrication_recipe_consume(ship_id, key):
     for ik, need in r["inputs"].items():
         set_inventory_value(ship_id, ik, (get_inventory_value(ship_id, ik, 0) or 0) - need)
     return True
+
+
+def recipe_inputs_text(recipe):
+    """'bio_sample x1, salvage x5' summary of a recipe's inputs (for a detail panel)."""
+    return ", ".join(f"{k} x{v}" for k, v in (recipe.get("inputs") or {}).items())
+
+
+# --- list-box templates (item_gui.mast style: item_template=row, title_template=title) ---
+def recipe_row(item):
+    """One recipe row in the Fabricate list box."""
+    gui_row("row-height: 1.1em; padding:8px;")
+    gui_text(f"$text:{item.get('name', '?')};justify:left;")
+
+
+def recipe_title():
+    gui_row("row-height: 1.1em; padding:8px; background:#1578;")
+    gui_text("$text:Beacon recipes;justify:center;")
+
+
+def beacon_cargo_row(item):
+    """One built-beacon row in the Cargo list box."""
+    gui_row("row-height: 1.1em; padding:8px;")
+    gui_text(f"$text:Beacon: {item.get('mode', '?')} / {item.get('monster', '?')};justify:left;")
+
+
+def beacon_cargo_title():
+    gui_row("row-height: 1.1em; padding:8px; background:#1578;")
+    gui_text("$text:Built beacons;justify:center;")
