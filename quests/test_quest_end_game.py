@@ -202,6 +202,62 @@ class QuestFailAfterAnchorTests(unittest.TestCase):
         self.assertEqual(int(quest_get_state(SH, "mercy")), int(QuestState.FAILED))
 
 
+class QuestCompleteAfterTests(unittest.TestCase):
+    """`Complete after:` is symmetric to `Fail after:` - quest_tick_complete_after anchors
+    the deadline lazily on the first ACTIVE tick, then COMPLETES the quest (rather than
+    failing it) when it elapses. On completion the quest's `reveal` fires, so a chain of
+    timed beats advances step by step - a purely timed narrative sequence authored as
+    quests instead of a hand-written timer loop."""
+
+    def setUp(self):
+        reset_mock(sbs)
+        self._real_emit = QD.signal_emit
+        QD.signal_emit = lambda name, data=None: None
+
+    def tearDown(self):
+        QD.signal_emit = self._real_emit
+
+    def _advance(self, seconds):
+        sbs.sim._time_tick_counter += int(seconds * TICK_PER_SECONDS)
+
+    def test_idle_beat_clock_never_starts(self):
+        quest_add(SH, "beat", "Beat", "", state=QuestState.IDLE,
+                  data={"complete_after": {"seconds": 60}})
+        QD.quest_tick_complete_after()
+        self._advance(120)
+        QD.quest_tick_complete_after()
+        self.assertFalse(is_timer_set(SH, "qdone:beat"), "an idle beat must not anchor a clock")
+        self.assertEqual(int(quest_get_state(SH, "beat")), int(QuestState.IDLE))
+
+    def test_active_beat_completes_after_deadline(self):
+        quest_add(SH, "beat", "Beat", "", state=QuestState.ACTIVE,
+                  data={"complete_after": {"seconds": 60}})
+        QD.quest_tick_complete_after()                       # first ACTIVE tick anchors
+        self.assertTrue(is_timer_set(SH, "qdone:beat"))
+        self._advance(30)
+        QD.quest_tick_complete_after()
+        self.assertEqual(int(quest_get_state(SH, "beat")), int(QuestState.ACTIVE))
+        self._advance(40)                                    # 70s total - past 60s
+        QD.quest_tick_complete_after()
+        self.assertEqual(int(quest_get_state(SH, "beat")), int(QuestState.COMPLETE))
+
+    def test_reveal_chain_advances_on_timed_completion(self):
+        # beat1 active + reveals beat2; beat2 secret until beat1's timed completion.
+        quest_add(SH, "beat1", "Beat 1", "", state=QuestState.ACTIVE,
+                  data={"complete_after": {"seconds": 60}, "reveal": "beat2"})
+        quest_add(SH, "beat2", "Beat 2", "", state=QuestState.SECRET,
+                  data={"complete_after": {"seconds": 60}})
+        QD.quest_tick_complete_after()                       # anchor beat1's clock (lazy)
+        self._advance(70)
+        QD.quest_tick_complete_after()                       # beat1 completes -> reveals beat2
+        self.assertEqual(int(quest_get_state(SH, "beat1")), int(QuestState.COMPLETE))
+        self.assertEqual(int(quest_get_state(SH, "beat2")), int(QuestState.ACTIVE))
+        QD.quest_tick_complete_after()                       # anchor beat2's clock
+        self._advance(70)
+        QD.quest_tick_complete_after()                       # beat2 completes
+        self.assertEqual(int(quest_get_state(SH, "beat2")), int(QuestState.COMPLETE))
+
+
 class QuestGrantCountScaleTests(unittest.TestCase):
     """quest_grant_amd(count_scale=...) scales explicit goal counts (a scalable job board)
     without touching the shared doc or the singleton (count-less) goals."""

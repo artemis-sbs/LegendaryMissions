@@ -100,4 +100,5 @@
 --- watch
     await delay_sim(2)
     quest_tick_fail_after()
+    quest_tick_complete_after()
     jump watch

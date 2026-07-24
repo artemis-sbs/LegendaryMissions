@@ -486,6 +486,27 @@ def quest_tick_fail_after():
                 quest_mark_failed(aid, qid)
 
 
+def quest_tick_complete_after():
+    """Watcher tick: COMPLETE ACTIVE quests whose complete_after deadline elapsed.
+    Symmetric to quest_tick_fail_after - the deadline is anchored lazily (a per-quest
+    timer set on first ACTIVE sight), so a purely timed step needs no activation hook.
+    On completion the quest's Then: reveal fires, advancing a reveal chain; this lets a
+    timed narrative beat be authored as a quest instead of a hand-written timer loop."""
+    for aid in [Agent.SHARED_ID] + [s.id for s in to_object_list(role("__player__"))]:
+        for qid, data in _active_quests(aid):
+            trig = data.get("complete_after")
+            if not isinstance(trig, dict):
+                continue
+            secs = int(trig.get("seconds", 0) or 0) + int(trig.get("minutes", 0) or 0) * 60
+            if secs <= 0:
+                continue
+            tname = "qdone:" + str(qid)
+            if not is_timer_set(aid, tname):
+                set_timer(aid, tname, seconds=secs)
+            elif is_timer_finished(aid, tname):
+                quest_mark_complete(aid, qid)
+
+
 def quest_on_arrive(i, j):
     """Complete on_reach(sector) quests for every player arriving at (i,j).
 
