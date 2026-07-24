@@ -507,6 +507,39 @@ def quest_tick_complete_after():
                 quest_mark_complete(aid, qid)
 
 
+def _obj_distance(id_a, id_b):
+    """Straight-line distance between two space objects by id (Cosmos space), or a huge
+    number if either is gone."""
+    from sbs_utils.procedural.query import to_space_object
+    a, b = to_space_object(id_a), to_space_object(id_b)
+    if a is None or b is None:
+        return float("inf")
+    pa, pb = a.engine_object.pos, b.engine_object.pos
+    return ((pa.x - pb.x) ** 2 + (pa.y - pb.y) ** 2 + (pa.z - pb.z) ** 2) ** 0.5
+
+
+def quest_tick_reach():
+    """Watcher tick: complete active ``on_reach{role[,radius]}`` quests when a player
+    comes within ``radius`` of any object holding that role. This is the 2.8 "fly within
+    R of <object>" navigation objective (absolute coords, not a sector); the sector form
+    ``on_reach{sector}`` is handled event-style by :func:`quest_on_arrive`. One shared
+    tick replaces a per-objective polling watcher."""
+    players = to_object_list(role("__player__"))
+    if not players:
+        return
+    for aid in [Agent.SHARED_ID] + [p.id for p in players]:
+        for qid, data in _active_quests(aid):
+            trig = data.get("on_reach")
+            if not isinstance(trig, dict) or not trig.get("role"):
+                continue  # sector form (or not a reach) -> not ours
+            radius = float(trig.get("radius", 5000) or 5000)
+            targets = to_object_list(role(trig["role"]))
+            if not targets:
+                continue
+            if any(_obj_distance(p.id, t.id) <= radius for p in players for t in targets):
+                quest_mark_complete(aid, qid)
+
+
 def quest_on_arrive(i, j):
     """Complete on_reach(sector) quests for every player arriving at (i,j).
 

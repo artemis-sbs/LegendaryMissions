@@ -258,6 +258,43 @@ class QuestCompleteAfterTests(unittest.TestCase):
         self.assertEqual(int(quest_get_state(SH, "beat2")), int(QuestState.COMPLETE))
 
 
+class QuestReachTests(unittest.TestCase):
+    """`quest_tick_reach` completes an active on_reach{role,radius} quest when a player
+    comes within radius of any object holding that role (the 2.8 'fly within R of an
+    object' navigation objective). The sector form is left to quest_on_arrive."""
+
+    def setUp(self):
+        reset_mock(sbs)
+        self._real_emit = QD.signal_emit
+        QD.signal_emit = lambda name, data=None: None
+
+    def tearDown(self):
+        QD.signal_emit = self._real_emit
+
+    def test_completes_when_player_within_radius(self):
+        from sbs_utils.procedural.a2x.spawn import create_player, create_enemy
+        from sbs_utils.procedural.a2x.props import set_object_property
+        from sbs_utils.procedural.roles import add_role
+        player = create_player(0, 0, 0, "tsn_light_cruiser", name="Art")
+        relay = create_enemy(0, 0, 100000, "kralien_cruiser", name="Relay")  # far off
+        add_role(to_id(player), "__player__")
+        add_role(to_id(relay), "relay")
+        quest_add(SH, "go", "Reach Relay", "", state=QuestState.ACTIVE,
+                  data={"on_reach": {"role": "relay", "radius": 5000}})
+        QD.quest_tick_reach()
+        self.assertEqual(int(quest_get_state(SH, "go")), int(QuestState.ACTIVE))  # still far
+        set_object_property(relay, "positionZ", 0)                                # move it close
+        QD.quest_tick_reach()
+        self.assertEqual(int(quest_get_state(SH, "go")), int(QuestState.COMPLETE))
+
+    def test_sector_form_ignored_by_reach_tick(self):
+        # a sector on_reach must be left for quest_on_arrive, not completed by proximity
+        quest_add(SH, "sec", "Reach 6,4", "", state=QuestState.ACTIVE,
+                  data={"on_reach": {"sector": [6, 4]}})
+        QD.quest_tick_reach()
+        self.assertEqual(int(quest_get_state(SH, "sec")), int(QuestState.ACTIVE))
+
+
 class QuestGrantCountScaleTests(unittest.TestCase):
     """quest_grant_amd(count_scale=...) scales explicit goal counts (a scalable job board)
     without touching the shared doc or the singleton (count-less) goals."""
