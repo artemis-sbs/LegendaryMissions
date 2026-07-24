@@ -68,13 +68,72 @@ def _parse_program(s):
     return out
 
 
-def fabrication_add_recipe(key, output, inputs=None, time=30, build_at="", program=None, name=None, desc=""):
+def _parse_properties(s):
+    """Parse a recipe's Properties into build-time option specs. Grammar (';'-separated):
+        name:type=opt1,opt2,...     e.g. 'monster:list=shark,dragon,any; mode:radio=attract,repel'
+    type in {list (drop-down), radio, toggle, int, text}. Default value = first option. These
+    render as a property grid (like a map's Properties) in the Fabricate detail panel."""
+    out = []
+    for part in str(s or "").split(";"):
+        part = part.strip()
+        if not part or "=" not in part:
+            continue
+        left, right = part.split("=", 1)
+        if ":" not in left:
+            continue
+        name, typ = left.split(":", 1)
+        opts = [o.strip() for o in right.split(",") if o.strip()]
+        out.append({"name": name.strip(), "type": typ.strip().lower(),
+                    "options": opts, "default": opts[0] if opts else ""})
+    return out
+
+
+def _prop_control_expr(prop):
+    """A property spec -> the gui control-expression string the property grid evaluates
+    (mirrors how a map's Properties YAML holds 'gui_drop_down(...)' strings). Each binds to a
+    shared var named for the property, so Build can read it back with get_shared_variable."""
+    name = prop["name"]
+    typ = prop["type"]
+    opts = ", ".join(prop["options"])
+    if typ == "radio":
+        return f'gui_radio("{opts}", var="{name}")'
+    if typ == "toggle":
+        return 'gui_checkbox("$text: {' + name + '};", var="' + name + '")'
+    if typ in ("int", "text"):
+        return f'gui_input("desc: {typ};", var="{name}")'
+    # default: a list -> drop-down (its open list inherits the control height)
+    return 'gui_drop_down("$text: {' + name + '};list: ' + opts + '", var="' + name + '")'
+
+
+def recipe_property_grid(recipe):
+    """A recipe -> the {section: {label: control_expr}} dict for gui_properties_set, or {} when
+    the recipe declares no Properties."""
+    props = recipe.get("properties") or []
+    if not props:
+        return {}
+    inner = {}
+    for p in props:
+        inner[p["name"].capitalize()] = _prop_control_expr(p)
+    return {"Program": inner}
+
+
+def recipe_property_names(recipe):
+    """The property (shared-var) names a recipe declares, in order."""
+    return [p["name"] for p in (recipe.get("properties") or [])]
+
+
+def recipe_property_defaults(recipe):
+    """{name: default} for a recipe's properties (used to seed the shared vars)."""
+    return {p["name"]: p["default"] for p in (recipe.get("properties") or [])}
+
+
+def fabrication_add_recipe(key, output, inputs=None, time=30, build_at="", program=None, name=None, desc="", properties=None):
     """Register (or replace) a recipe by key. Returns the key."""
     _RECIPES[key] = {
         "key": key, "name": name or key, "output": output,
         "inputs": inputs or {}, "time": int(time or 30),
         "build_at": str(build_at or ""), "program": program or {},
-        "desc": desc or "",
+        "properties": properties or [], "desc": desc or "",
     }
     return key
 
@@ -116,6 +175,7 @@ def fabrication_load_recipes_amd(doc):
             time=data.get("time", 30),
             build_at=(data.get("build at") or data.get("build_at") or ""),
             program=_parse_program(data.get("program")),
+            properties=_parse_properties(data.get("properties")),
             name=n.get("display_text") or data.get("name") or key,
             desc=n.get("description") or "",
         )

@@ -25,17 +25,23 @@
     bw_time = bw_recipe["time"]
     bw_kind = bw_recipe["program"].get("kind", "bio")
     set_timer(ship_id, "beacon_fab", seconds=bw_time)
-    task_schedule(beacon_build_done, {"ship_id": ship_id, "kind": bw_kind, "recipe": recipe, "monster": monster, "mode": mode, "btime": bw_time})
+    task_schedule(beacon_build_done, {"ship_id": ship_id, "kind": bw_kind, "prog": program, "btime": bw_time})
     ->END
 
 == beacon_build_done
     await delay_sim(btime)
     ->END if to_object(ship_id) is None
-    # credit the built beacon into the managed build inventory
+    # a built beacon = its kind + the program properties (monster/mode/... from the grid),
+    # flattened so deliver/effect read them as before.
+    bw_entry = {"kind": kind}
+    for bw_pk in prog:
+        bw_entry[bw_pk] = prog[bw_pk]
     bw_built = get_inventory_value(ship_id, "beacon_built", [])
-    bw_built.append({"kind": kind, "monster": monster, "mode": mode})
+    bw_built.append(bw_entry)
     set_inventory_value(ship_id, "beacon_built", bw_built)
-    comms_broadcast(ship_id, f"Beacon built: {mode} {monster} (ready to deliver)", "#0f8")
+    bw_mon = prog.get("monster", kind)
+    bw_mode = prog.get("mode", "")
+    comms_broadcast(ship_id, f"Beacon built: {bw_mode} {bw_mon} (ready to deliver)", "#0f8")
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END
 

@@ -25,8 +25,6 @@ gui_tab_add_top("cargo")
     gui_tab_back(CONSOLE_SELECT)
     gui_activate_console("fabricate")
     ship_id = sbs.get_ship_of_client(client_id)
-    default fab_monster = "shark"
-    default fab_mode = "attract"
     default fab_sel_key = None
 
     fab_items = fabrication_recipes()
@@ -83,17 +81,21 @@ gui_tab_add_top("cargo")
         gui_text_area("{fab_desc}")
         """color:#8a8; $text: Cost: {fab_cost}"""
 
-    # RIGHT (program): only beacon recipes carry a monster + attract/repel
+    # RIGHT (program): a property grid built from the recipe's declared Properties -- the same
+    # gui_property_list_box + gui_properties_set pattern a map's Properties panel uses. Each
+    # control binds to a TASK var named for the property (no shared scope needed -- the grid
+    # and Build are the same tab task); seed any unset var with the property's default.
     gui_section(style="area: 47, 57, 95, 80;")
-    if fab_is_beacon:
-        # taller rows so the drop-down (whose open list inherits the control height) and the
-        # radio present cleanly.
-        gui_row("row-height: 45px;")
-        """col-width: 7em; $text: Monster"""
-        fab_dd = gui_drop_down(f"$text:{fab_monster};list:shark,dragon,piranha,leech,charybdis,grazer,any", var="fab_monster")
-        gui_row("row-height: 45px;")
-        """col-width: 7em; $text: Effect"""
-        fab_rb = gui_radio("attract,repel", var="fab_mode")
+    fab_pnames = []
+    if fab_sel is not None:
+        fab_pnames = recipe_property_names(fab_sel)
+    if len(fab_pnames) > 0:
+        fab_pdefs = recipe_property_defaults(fab_sel)
+        for fab_pn in fab_pnames:
+            if get_variable(fab_pn) is None:
+                set_variable(fab_pn, fab_pdefs[fab_pn])
+        gui_property_list_box("Program")
+        gui_properties_set(recipe_property_grid(fab_sel))
 
     # RIGHT (action band): Build / building countdown / need materials
     gui_section(style="area: 47, 82, 95, 92;")
@@ -101,10 +103,13 @@ gui_tab_add_top("cargo")
         fab_t = format_time_remaining(ship_id, fab_timer)
         """color:#ff0; justify:center; $text: building {fab_t}"""
     elif fab_sel is not None and fabrication_recipe_affordable(ship_id, fab_sel_key):
-        fab_btn = gui_button("$text:Build;justify:center;", data={"rk": fab_sel_key, "rm": fab_monster, "rd": fab_mode, "rb": fab_is_beacon})
+        fab_btn = gui_button("$text:Build;justify:center;", data={"rk": fab_sel_key, "rb": fab_is_beacon, "rnames": fab_pnames})
         on gui_message(fab_btn):
             if rb:
-                signal_emit("beacon_build", {"ship_id": ship_id, "recipe": rk, "monster": rm, "mode": rd})
+                fab_prog = {}
+                for fab_rn in rnames:
+                    fab_prog[fab_rn] = get_variable(fab_rn)
+                signal_emit("beacon_build", {"ship_id": ship_id, "recipe": rk, "program": fab_prog})
             else:
                 signal_emit("fabricate_recipe", {"ship_id": ship_id, "key": rk})
     elif fab_sel is not None:
