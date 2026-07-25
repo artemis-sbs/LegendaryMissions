@@ -123,6 +123,42 @@ Pays: 130 credits
 ---
 Have Science scan the sensor anomalies and log them.
 
+// ---- Beacon jobs. These lean on the fabrication addon: Engineering builds a beacon on the
+// Fabricate tab and delivers it to Weapons, who fires it. Sensor Beacons establish a picket
+// (the old 2.8 Probe, brought forward); Bio Beacons herd wildlife without a shot fired.
+
+### [Sensor Net](job_sensor_net)
+---
+State: idle
+Goal: signal 3 sensor_deployed
+Pays: 220 credits
+---
+Establish a sensor picket. Have Engineering fabricate Sensor Beacons on the Fabricate tab and deliver them to Weapons, then deploy three across the patrol lanes.
+
+### [Recover Lost Probes](job_probes)
+---
+State: idle
+Goal: signal 3 probe_recovered
+Pays: 160 credits
+---
+Three old survey probes have gone adrift in the sector. Fly your ship over each one to bring it aboard - a recovered probe also tops up your beacon tube.
+
+### [Clear the Grazing Herd](job_herd)
+---
+State: idle
+Goal: signal herd_cleared
+Pays: 180 credits
+---
+A pod of grazers has drifted into a shipping lane. Do NOT fire on them - they turn hostile if provoked. Fabricate a Bio Beacon set to REPEL grazers, deploy it among the pod, and drive them clear.
+
+### [Bait the Ravener](job_ravener)
+---
+State: idle
+Goal: signal predator_baited
+Pays: 350 credits
+---
+A Ravener is loose in the lanes. It FEEDS on weapon fire - shooting only heals it - so do not engage. Fabricate a Bio Beacon set to ATTRACT the ravener, deploy it beside the black hole, and let the hole do the rest.
+
 // ---- Declarative object scans (dialogue-native): `Scan of:` = role, `Tab:` = science tab,
 // each `%` body line a random variant. (target_drone uses the enemy scan; anomaly uses
 // the job_survey reveal_scan path.)

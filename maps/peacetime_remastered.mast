@@ -157,6 +157,9 @@ Defaults:
     rock_n = max(1, int(job_counts.get("rock_cleared", 4) * job_scale + 0.5))
     traffic_n = max(1, int(job_counts.get("customs_cleared", 4) * job_scale + 0.5))
     survey_n = max(1, int(job_counts.get("scan:anomaly", 3) * job_scale + 0.5))
+    # Beacon jobs: probes recovered (goal count) and the grazer pod size (fixed 4, scaled).
+    probe_n = max(1, int(job_counts.get("probe_recovered", 3) * job_scale + 0.5))
+    herd_n = max(2, int(4 * job_scale + 0.5))
 
     # Declarative object scans (the scans section of PR_DOC), rendered by the generic science
     # route - no //science route here. (target_drone is raider-side, so the standard enemy scan
@@ -167,10 +170,10 @@ Defaults:
     # counts + the landmark records so the spawner reads them when a job is taken on. This keeps
     # counted jobs from being spoiled by pre-accept kills, and makes the stranded shuttle arrive on
     # the mayday (when the Mercy Run is accepted) instead of sitting adrift from the first second.
-    shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n}
+    shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n, "probe": probe_n, "herd": herd_n}
     shared PR_LANDMARKS = landmarks_from_section(amd_section(PR_DOC, "landmarks"))
     # The jobs that spawn targets on accept, checked each dispatch tick.
-    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy"]
+    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener"]
 
     # The job board is the jobs section of PR_DOC (parsed above). Grant it PER PLAYER SHIP so
     # credit rewards pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses
@@ -182,6 +185,8 @@ Defaults:
     for p in to_object_list(role("__player__")):
         quest_grant_amd(p.id, jobs_section, count_scale=job_scale)
 
+    # Server watcher that credits the Sensor Net job as Sensor Beacons are deployed.
+    task_schedule(pr_beacon_watch)
     task_schedule(pr_job_dispatch)
     ->END
 
@@ -243,6 +248,32 @@ Defaults:
             if mercy_rec is not None:
                 landmark_spawn(mercy_rec)
             task_schedule(pr_mercy_watch)
+        case "job_sensor_net":
+            # No targets to spawn - the crew fabricates and deploys the beacons themselves.
+            # pr_beacon_watch credits each Sensor Beacon as it is deployed.
+            comms_info_card(all_roles("console, comms"), "Fleet wants a sensor picket. Engineering: fabricate Sensor Beacons on the Fabricate tab and deliver them to Weapons. Weapons: deploy three across the lanes.", title="Survey Order", color="#0cf")
+        case "job_probes":
+            # Scatter inert survey probes (old sensor beacons) for the crew to recover by fly-over.
+            comms_info_card(all_roles("console, comms"), "Three survey probes have gone adrift. Recover them - fly your ship over each to bring it aboard.", title="Recovery Order", color="#0cf")
+            for v in scatter.box(PR_JOB_COUNTS.get("probe", 3), -14000, 0, -2000, 4000, 400, 4000, centered=True):
+                probe = terrain_spawn(v.x, v.y, v.z, "Survey Probe", "#, beacon, lost_probe", "danger_4a", "behav_pickup")
+                set_inventory_value(probe.id, "beacon_kind", "sensor")
+                # Empty mode so a recovered-then-refired probe stays a passive sensor (the
+                # fabrication recover route defaults an unset mode to "attract").
+                set_inventory_value(probe.id, "beacon_mode", "")
+                probe.data_set.set("unselectable", 0)
+        case "job_herd":
+            comms_info_card(all_roles("console, comms"), "Grazers have drifted into the lane. Do NOT fire on them - they retaliate if provoked. Fabricate a Bio Beacon set to REPEL grazers and deploy it among the pod to clear them.", title="Wildlife Advisory", color="#fa0")
+            for v in scatter.box(PR_JOB_COUNTS.get("herd", 4), 12000, 0, -9000, 2000, 300, 2000, centered=True):
+                herd_id = await prefab_spawn(prefab_grazer, {"START_X": v.x, "START_Y": v.y, "START_Z": v.z})
+                add_role(herd_id, "herd_grazer")
+            task_schedule(pr_herd_watch, {"herd_x": 12000, "herd_y": 0, "herd_z": -9000})
+        case "job_ravener":
+            comms_info_card(all_roles("console, comms"), "A Ravener is loose. It FEEDS on weapon fire - do NOT shoot. Fabricate a Bio Beacon set to ATTRACT the ravener and deploy it beside the black hole.", title="Predator Alert", color="#f44")
+            terrain_spawn_black_hole(-20000, 0, 16000)
+            ravener_id = await prefab_spawn(prefab_ravener, {"START_X": -6000, "START_Y": 0, "START_Z": 12000})
+            add_role(ravener_id, "lure_predator")
+            task_schedule(pr_ravener_watch, {"rv_id": ravener_id, "hole_x": -20000, "hole_y": 0, "hole_z": 16000})
     ->END
 
 
@@ -332,6 +363,78 @@ Defaults:
             remove_role(m_id, "mercy_target")
             ->END
     jump mw_loop
+
+
+#-----------------------------------------------------------------------------------------------------------------------------
+# Beacon jobs plumbing. These lean on the fabrication addon: the crew builds a beacon on the
+# Engineering Fabricate tab, delivers it to Weapons, and fires it. Each job emits quest_signal,
+# credited to whichever players hold the matching job.
+
+# Sensor Net: credit the job as each Sensor Beacon is deployed (a role "beacon" object whose
+# beacon_kind is "sensor"). The adrift lost probes carry role "lost_probe" and are skipped.
+===== pr_beacon_watch =====
+    default GAME_ENDED = False
+    seen_beacons = []
+--- pbw_loop
+    await delay_sim(1)
+    ->END if GAME_ENDED
+    for b in to_object_list(role("beacon")):
+        if b.id not in seen_beacons:
+            seen_beacons.append(b.id)
+            if get_inventory_value(b.id, "beacon_kind", "bio") == "sensor" and not has_role(b.id, "lost_probe"):
+                signal_emit("quest_signal", {"SIGNAL_NAME": "sensor_deployed"})
+    jump pbw_loop
+
+
+# Recover Lost Probes: flying a ship over an adrift probe credits the job. The fabrication addon's
+# own beacon-recover route also fires (adding a beacon round back), so this only emits the signal.
+//collision/interactive if has_role(COLLISION_ORIGIN_ID, "lost_probe") and has_any_role(COLLISION_SELECTED_ID, "__player__,cockpit")
+    signal_emit("quest_signal", {"SIGNAL_NAME": "probe_recovered"})
+
+
+# Clear the Grazing Herd: complete once no living herd grazer remains near the lane center - a
+# repel Bio Beacon drives them out. (Killing a provoked grazer also removes it, but that risks a
+# fight; the beacon is the clean solution.)
+===== pr_herd_watch =====
+    default GAME_ENDED = False
+--- hw_loop
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    still_here = 0
+    for g in to_object_list(role("herd_grazer")):
+        gp = get_pos(g.id)
+        dxg = gp.x - herd_x
+        dyg = gp.y - herd_y
+        dzg = gp.z - herd_z
+        if (dxg * dxg + dyg * dyg + dzg * dzg) <= 6000 * 6000:
+            still_here = still_here + 1
+    if still_here == 0:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "herd_cleared"})
+        ->END
+    jump hw_loop
+
+
+# Bait the Ravener: it heals on any weapon hit, so only the black hole can remove it. When an
+# attract Bio Beacon has pulled it within the hole's reach, consume it and credit the job. A real
+# engine black-hole kill (//damage/destroy below) also credits it, as a fallback.
+===== pr_ravener_watch =====
+    default GAME_ENDED = False
+--- rvw_loop
+    await delay_sim(1)
+    ->END if GAME_ENDED
+    ->END if not object_exists(rv_id)
+    rvp = get_pos(rv_id)
+    dxr = rvp.x - hole_x
+    dyr = rvp.y - hole_y
+    dzr = rvp.z - hole_z
+    if (dxr * dxr + dyr * dyr + dzr * dzr) <= 1400 * 1400:
+        delete_object(rv_id)
+        signal_emit("quest_signal", {"SIGNAL_NAME": "predator_baited"})
+        ->END
+    jump rvw_loop
+
+//damage/destroy if has_role(DESTROYED_ID, "lure_predator")
+    signal_emit("quest_signal", {"SIGNAL_NAME": "predator_baited"})
 
 
 #-----------------------------------------------------------------------------------------------------------------------------

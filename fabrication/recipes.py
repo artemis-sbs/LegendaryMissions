@@ -222,9 +222,14 @@ def cargo_list(ship_id):
     built = get_inventory_value(ship_id, "beacon_built", []) or []
     idx = 0
     for b in built:
+        # A Sensor Beacon carries no monster/mode; name it plainly rather than "? / ?".
+        if b.get("kind") == "sensor":
+            b_name = "Sensor Beacon"
+        else:
+            b_name = f"Beacon: {b.get('mode', '?')} / {b.get('monster', '?')}"
         out.append({
             "ckind": "beacon", "cidx": idx, "count": 1, "cid": f"b{idx}",
-            "name": f"Beacon: {b.get('mode', '?')} / {b.get('monster', '?')}",
+            "name": b_name,
             "kind": b.get("kind"), "monster": b.get("monster"), "mode": b.get("mode"),
         })
         idx += 1

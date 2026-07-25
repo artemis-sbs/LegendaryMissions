@@ -24,8 +24,16 @@
         set_inventory_value(beacon_ship, "beacon_program_queue", beacon_q[1:])
     else:
         beacon_prog = {"kind": "bio", "monster": "any", "mode": "attract"}
-    comms_broadcast(beacon_ship, f"Beacon deployed: {beacon_prog['mode']} / {beacon_prog['monster']}", "#0cf")
-    task_schedule(beacon_spawn_aft, {"sp_ship": beacon_ship, "sp_kind": beacon_prog["kind"], "sp_monster": beacon_prog["monster"], "sp_mode": beacon_prog["mode"], "sp_live": True})
+    # A Sensor Beacon program carries no monster/mode (it does not herd wildlife), so read
+    # every field with a default -- direct indexing would KeyError on a sensor round.
+    beacon_kind = beacon_prog.get("kind", "bio")
+    beacon_mon = beacon_prog.get("monster", "any")
+    beacon_mode = beacon_prog.get("mode", "")
+    if beacon_kind == "sensor":
+        comms_broadcast(beacon_ship, "Sensor Beacon deployed", "#0cf")
+    else:
+        comms_broadcast(beacon_ship, f"Beacon deployed: {beacon_mode} / {beacon_mon}", "#0cf")
+    task_schedule(beacon_spawn_aft, {"sp_ship": beacon_ship, "sp_kind": beacon_kind, "sp_monster": beacon_mon, "sp_mode": beacon_mode, "sp_live": True})
     ->END
 
 # Spawn a beacon object ~635u aft of a ship, stamped with a program. Shared by the launch
@@ -54,19 +62,22 @@
     ->beacon_expire if not object_exists(bid)
     ->beacon_expire if is_timer_finished(bid, "beacon_power")
     bpos = get_pos(bid)
-    for mo in to_object_list(role("monster")):
-        mid = mo.id
-        continue if monster != "any" and not has_role(mid, monster)
-        mpos = get_pos(mid)
-        dx = mpos.x - bpos.x
-        dy = mpos.y - bpos.y
-        dz = mpos.z - bpos.z
-        continue if (dx * dx + dy * dy + dz * dz) > radius * radius
-        if mode == "attract":
-            target_pos(mid, bpos.x, bpos.y, bpos.z, throttle)
-        else:
-            # repel: steer to a point on the far side of the monster from the beacon
-            target_pos(mid, mpos.x + dx, mpos.y + dy, mpos.z + dz, throttle)
+    # Only a bio beacon (mode attract/repel) herds wildlife; a Sensor Beacon (mode "") just
+    # sits and expires -- skip the steering sweep for it.
+    if mode == "attract" or mode == "repel":
+        for mo in to_object_list(role("monster")):
+            mid = mo.id
+            continue if monster != "any" and not has_role(mid, monster)
+            mpos = get_pos(mid)
+            dx = mpos.x - bpos.x
+            dy = mpos.y - bpos.y
+            dz = mpos.z - bpos.z
+            continue if (dx * dx + dy * dy + dz * dz) > radius * radius
+            if mode == "attract":
+                target_pos(mid, bpos.x, bpos.y, bpos.z, throttle)
+            else:
+                # repel: steer to a point on the far side of the monster from the beacon
+                target_pos(mid, mpos.x + dx, mpos.y + dy, mpos.z + dz, throttle)
     await delay_sim(interval)
     jump beacon_sweep
 --- beacon_expire

@@ -51,7 +51,7 @@
     bw_keep = []
     bw_prog = None
     for bw_b in bw_built:
-        if bw_prog is None and bw_b["kind"] == kind and bw_b["monster"] == monster and bw_b["mode"] == mode:
+        if bw_prog is None and bw_b["kind"] == kind and bw_b.get("monster") == monster and bw_b.get("mode") == mode:
             bw_prog = bw_b
         else:
             bw_keep.append(bw_b)
@@ -80,7 +80,7 @@
     bw_keep = []
     bw_found = None
     for bw_b in bw_built:
-        if bw_found is None and bw_b["kind"] == kind and bw_b["monster"] == monster and bw_b["mode"] == mode:
+        if bw_found is None and bw_b["kind"] == kind and bw_b.get("monster") == monster and bw_b.get("mode") == mode:
             bw_found = bw_b
         else:
             bw_keep.append(bw_b)
