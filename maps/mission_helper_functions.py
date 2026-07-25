@@ -284,6 +284,17 @@ def pr_job_active(key):
     return False
 
 
+def pr_arc_holders(parent_key):
+    """Player ids that have ACCEPTED a multi-step arc (its container parent quest is ACTIVE).
+    A step sequencer uses this to reveal/complete each visible child step (job_ghost/hail, ...)
+    for every holder - the bridge quest_tab_accept doesn't provide (it marks only the accepted
+    parent active, not its children)."""
+    from sbs_utils.procedural.quest import quest_get_state, QuestState
+    from sbs_utils.procedural.roles import role
+    from sbs_utils.procedural.query import to_object_list
+    return [p.id for p in to_object_list(role("__player__")) if quest_get_state(p.id, parent_key) == QuestState.ACTIVE]
+
+
 def pr_landmark_by_key(records, key):
     """The landmark record with this key from a landmarks_from_section list (None if absent).
     Lets the mission spawn one fixed job object (the poacher / the shuttle) on accept instead of

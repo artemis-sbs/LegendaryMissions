@@ -517,12 +517,23 @@ Defaults:
     for s in to_object_list(role("station")):
         if s.name == "DS 1":
             ds1 = s.id
-    comms_info_card(all_roles("console, comms"), "The freighter SS Meridian has gone silent, drifting toward a black hole. COMMS: hail her.", title="Silent Running", color="#0cf")
+    # Step 1 - Hail (Comms). Reveal the first child for everyone holding the arc.
+    for gpid in pr_arc_holders("job_ghost"):
+        quest_mark_active(gpid, "job_ghost/hail")
+    comms_info_card(all_roles("console, comms"), "The SS Meridian has gone silent, drifting toward a black hole. COMMS: hail her.", title="Silent Running", color="#0cf")
     await signal_next("ghost_hailed")
     ->END if GAME_ENDED
+    # Step 2 - Scan (Science).
+    for gpid in pr_arc_holders("job_ghost"):
+        quest_mark_complete(gpid, "job_ghost/hail")
+        quest_mark_active(gpid, "job_ghost/scan")
     comms_info_card(all_roles("console, comms"), "No live response - just an automated loop. SCIENCE: scan the derelict.", title="Silent Running", color="#0cf")
     await signal_next("ghost_scanned")
     ->END if GAME_ENDED
+    # Step 3 - Tow clear of the hole (proximity).
+    for gpid in pr_arc_holders("job_ghost"):
+        quest_mark_complete(gpid, "job_ghost/scan")
+        quest_mark_active(gpid, "job_ghost/clear")
     comms_info_card(all_roles("console, comms"), "Crew in cryo, reactor critical. WEAPONS/HELM: grav-tether her and tow her CLEAR of the black hole - now.", title="Silent Running", color="orange")
 --- ghost_clear
     await delay_sim(2)
@@ -531,6 +542,10 @@ Defaults:
     ->END if len(g_list) < 1
     if (Vec3(g_list[0].pos) - ghost_hole).length() < 6000:
         jump ghost_clear
+    # Step 4 - Tow home (proximity).
+    for gpid in pr_arc_holders("job_ghost"):
+        quest_mark_complete(gpid, "job_ghost/clear")
+        quest_mark_active(gpid, "job_ghost/home")
     comms_info_card(all_roles("console, comms"), "Clear of the well. Now tow her home to DS 1.", title="Silent Running", color="#0cf")
 --- ghost_home
     await delay_sim(2)
@@ -540,7 +555,9 @@ Defaults:
     ->END if len(g_list) < 1
     if sbs.distance_id(g_list[0].id, ds1) > 1800:
         jump ghost_home
-    signal_emit("quest_signal", {"SIGNAL_NAME": "ghost_home"})
+    # Completing the last child auto-completes the container parent -> the arc pays out.
+    for gpid in pr_arc_holders("job_ghost"):
+        quest_mark_complete(gpid, "job_ghost/home")
     ->END
 
 

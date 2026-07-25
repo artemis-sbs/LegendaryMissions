@@ -202,13 +202,40 @@ A comms relay has drifted off station. Grav-tether it and tow it to its marked p
 // every step done in order. pr_ghost_seq / pr_sweep_seq drive them; //comms + //science routes
 // and proximity emit the step signals.
 
+// job_ghost is a NESTED arc: a container parent (no own Goal) with visible child steps. The
+// parent completes when all children complete. pr_ghost_seq reveals/completes each child in order
+// for every holder (pr_arc_holders) - so the steps show + progress in the quest log, robustly
+// ordered by the sequencer. This is the template for the other multi-step jobs.
 ### [The Ghost Freighter](job_ghost)
 ---
 State: idle
-Goal: signal ghost_home
 Pays: 400 credits
 ---
-The freighter SS Meridian has gone silent and is drifting toward a black hole. HAIL her (Comms), SCAN her (Science), then grav-tether her CLEAR of the hole and tow her home to DS 1. Follow the dispatch prompts.
+The freighter SS Meridian has gone silent and is drifting toward a black hole. Work the steps in order - the case pays on completion.
+
+#### [Hail the Meridian](hail)
+---
+State: secret
+---
+COMMS: hail the silent freighter.
+
+#### [Scan the Derelict](scan)
+---
+State: secret
+---
+SCIENCE: scan her to assess the situation.
+
+#### [Tow Clear of the Hole](clear)
+---
+State: secret
+---
+WEAPONS / HELM: grav-tether her and tow her clear of the black hole.
+
+#### [Tow Her Home](home)
+---
+State: secret
+---
+WEAPONS / HELM: tow her back to DS 1.
 
 ### [Sweep and Recover](job_sweep)
 ---
