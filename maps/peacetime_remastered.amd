@@ -218,6 +218,22 @@ Pays: 380 credits
 ---
 Run a sensor sweep and recover what it finds. ENGINEERING fabricates a Sensor Beacon and WEAPONS deploys it; SCIENCE scans the flagged contact; then grav-tether the find and tow it to DS 1. Follow the dispatch prompts.
 
+### [Cache in the Rocks](job_cache)
+---
+State: idle
+Goal: signal cache_done
+Pays: 360 credits
+---
+A tipster says contraband is stashed in an asteroid cluster. COMMS: hail them for the drop. SCIENCE: scan the cluster to find the loaded rock. Then grav-tether the shielded pod out and tow it to DS 1.
+
+### [Herd on the Lane](job_herd_arc)
+---
+State: idle
+Goal: signal herd_arc_done
+Pays: 340 credits
+---
+A grazer pod has drifted into a shipping lane. SCIENCE: scan them. COMMS: warn the civilian convoy to hold. ENGINEERING/WEAPONS: fabricate a Bio Beacon set to REPEL and deploy it to drive the pod clear. Then grav-tether the drift netting off a snared grazer to free it. Do NOT fire on the grazers.
+
 // ---- Declarative object scans (dialogue-native): `Scan of:` = role, `Tab:` = science tab,
 // each `%` body line a random variant. (target_drone uses the enemy scan; anomaly uses
 // the job_survey reveal_scan path.)

@@ -174,7 +174,7 @@ Defaults:
     shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n, "probe": probe_n, "herd": herd_n, "salvage": salvage_n}
     shared PR_LANDMARKS = landmarks_from_section(amd_section(PR_DOC, "landmarks"))
     # The jobs that spawn targets on accept, checked each dispatch tick.
-    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage", "job_lifepod", "job_relay", "job_ghost", "job_sweep"]
+    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage", "job_lifepod", "job_relay", "job_ghost", "job_sweep", "job_cache", "job_herd_arc"]
 
     # The job board is the jobs section of PR_DOC (parsed above). Grant it PER PLAYER SHIP so
     # credit rewards pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses
@@ -313,6 +313,29 @@ Defaults:
             find = npc_spawn(15000, 0, -13000, "Stranded Pod", "civ, civilian, sweep_find", "cargo_ship", "behav_npcship")
             find.data_set.set("unselectable", 0)
             task_schedule(pr_sweep_seq)
+        case "job_cache":
+            # Multi-step: hail a tipster (Comms), scan the cluster to find the loaded rock
+            # (Science), then tether the shielded pod out and tow it to DS 1.
+            npc_spawn(11000, 0, -3000, "Loitering Freighter", "civ, tipster", "cargo_ship", "behav_npcship")
+            cache_rocks = ship_data_plain_asteroid_keys()
+            for v in scatter.box(6, 13000, 0, 3000, 2500, 400, 2500, centered=True):
+                rk = terrain_spawn(v.x, v.y, v.z, "Asteroid", "#, asteroid", random.choice(cache_rocks), "behav_asteroid")
+                rk.data_set.set("unselectable", 0)
+            cache = npc_spawn(13000, 0, 3000, "Shielded Pod", "civ, cache_find", "cargo_ship", "behav_npcship")
+            cache.data_set.set("unselectable", 0)
+            task_schedule(pr_cache_seq)
+        case "job_herd_arc":
+            # Multi-step wildlife: scan (Science) -> warn convoy (Comms) -> bio REPEL beacon
+            # (Engineering/Weapons) -> reel the drift netting off a snared grazer (Weapons/Helm).
+            npc_spawn(8000, 0, 12000, "Civilian Convoy", "civ, convoy", "cargo_ship", "behav_npcship")
+            for v in scatter.box(3, 6000, 0, 14000, 1500, 300, 1500, centered=True):
+                gz = await prefab_spawn(prefab_grazer, {"START_X": v.x, "START_Y": v.y, "START_Z": v.z})
+                add_role(gz, "arc_grazer")
+            # The SNARED grazer is STUCK - a stationary npc (not a wandering prefab), so only
+            # reeling the netting away increases their separation and frees it.
+            npc_spawn(5000, 0, 16000, "Snared Grazer", "civ, arc_grazer, snared_grazer", "cargo_ship", "behav_npcship")
+            npc_spawn(5150, 0, 16000, "Drift Netting", "civ, snag_debris", "cargo_ship", "behav_npcship")
+            task_schedule(pr_herd_arc_seq)
     ->END
 
 
@@ -569,6 +592,86 @@ Defaults:
 //science if has_roles(SCIENCE_SELECTED_ID, "sweep_find")
     ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 900
     signal_emit("sweep_scanned")
+
+
+# Cache in the Rocks (multi-console): hail the tipster (Comms) -> scan the cluster to find the
+# loaded rock (Science) -> tether the pod out and tow it to DS 1 (Weapons/Helm).
+===== pr_cache_seq =====
+    default GAME_ENDED = False
+    ds1 = None
+    for s in to_object_list(role("station")):
+        if s.name == "DS 1":
+            ds1 = s.id
+    comms_info_card(all_roles("console, comms"), "A tipster is loitering near the lane. COMMS: hail them for the drop location.", title="Cold Tip", color="#0cf")
+    await signal_next("cache_tip")
+    ->END if GAME_ENDED
+    comms_info_card(all_roles("console, comms"), "The cache is hidden in the rock cluster. SCIENCE: scan the cluster to find the loaded one.", title="Cold Tip", color="#0cf")
+    await signal_next("cache_found")
+    ->END if GAME_ENDED
+    comms_info_card(all_roles("console, comms"), "Found it - a shielded cargo pod. Grav-tether it out of the rocks and tow it to DS 1.", title="Cold Tip", color="#0cf")
+--- cache_home
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    ->END if ds1 is None
+    c_list = to_object_list(role("cache_find"))
+    ->END if len(c_list) < 1
+    if sbs.distance_id(c_list[0].id, ds1) > 1800:
+        jump cache_home
+    signal_emit("quest_signal", {"SIGNAL_NAME": "cache_done"})
+    ->END
+
+
+# Cache step signals: hailing the tipster (Comms) and scanning the loaded rock (Science).
+//comms if has_roles(COMMS_SELECTED_ID, "tipster")
+    comms_receive("Alright - the drop's in the rock cluster off the lane. Shielded pod, reads like just another boulder. You didn't hear it from me.", title="Tipster", title_color="#0cf")
+    signal_emit("cache_tip")
+
+//science if has_roles(SCIENCE_SELECTED_ID, "cache_find")
+    ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 900
+    signal_emit("cache_found")
+
+
+# Herd on the Lane (multi-console wildlife): scan (Science) -> warn convoy (Comms) -> bio REPEL
+# beacon (Engineering/Weapons) -> reel the drift netting off a snared grazer (Weapons/Helm).
+===== pr_herd_arc_seq =====
+    default GAME_ENDED = False
+    comms_info_card(all_roles("console, comms"), "A grazer pod has drifted into the lane. SCIENCE: scan the pod.", title="Wildlife on the Lane", color="#fa0")
+    await signal_next("herd_scanned")
+    ->END if GAME_ENDED
+    comms_info_card(all_roles("console, comms"), "They're spooked and drifting into traffic. COMMS: warn the civilian convoy to hold.", title="Wildlife on the Lane", color="#fa0")
+    await signal_next("herd_warned")
+    ->END if GAME_ENDED
+    comms_info_card(all_roles("console, comms"), "ENGINEERING/WEAPONS: fabricate a Bio Beacon set to REPEL and deploy it among the pod to drive them clear. Do NOT fire.", title="Wildlife on the Lane", color="#fa0")
+--- herd_repel
+    await delay_sim(1)
+    ->END if GAME_ENDED
+    got_bio = False
+    for b in to_object_list(role("beacon")):
+        if get_inventory_value(b.id, "beacon_kind", "sensor") == "bio":
+            got_bio = True
+    if not got_bio:
+        jump herd_repel
+    comms_info_card(all_roles("console, comms"), "Pod's moving off. One grazer is snared in drifting netting - grav-tether the netting clear to free it.", title="Wildlife on the Lane", color="#fa0")
+--- herd_free
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    s_list = to_object_list(role("snared_grazer"))
+    d_list = to_object_list(role("snag_debris"))
+    ->END if len(s_list) < 1 or len(d_list) < 1
+    if sbs.distance_id(s_list[0].id, d_list[0].id) < 2500:
+        jump herd_free
+    signal_emit("quest_signal", {"SIGNAL_NAME": "herd_arc_done"})
+    ->END
+
+
+# Herd step signals: scanning a grazer (Science) and warning the convoy (Comms).
+//science if has_roles(SCIENCE_SELECTED_ID, "arc_grazer")
+    ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 900
+    signal_emit("herd_scanned")
+
+//comms if has_roles(COMMS_SELECTED_ID, "convoy")
+    comms_receive("Convoy copies - holding station until the lane is clear. Thanks for the heads-up, patrol.", title="Civilian Convoy", title_color="#0cf")
+    signal_emit("herd_warned")
 
 
 #-----------------------------------------------------------------------------------------------------------------------------
