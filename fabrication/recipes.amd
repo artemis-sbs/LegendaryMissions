@@ -13,7 +13,12 @@ Inputs: bio_sample x1, salvage x5
 Time: 30
 Build at: engineering
 Program: kind=bio
-Properties: monster:list=shark,dragon,piranha,leech,charybdis,grazer,any; mode:list=attract,repel
+Properties:
+  Monster: 'gui_drop_down("list: shark, dragon, piranha, leech, charybdis, grazer, any", var="monster")'
+  Mode: 'gui_drop_down("list: attract, repel", var="mode")'
+Defaults:
+  monster: shark
+  mode: attract
 ---
 A distress-beacon hull rewired to broadcast an ultrawave carrier that attracts or repels a
 chosen space monster across the sector.

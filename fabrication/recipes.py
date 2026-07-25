@@ -18,24 +18,37 @@ AMD form (one heading per recipe):
     Time: 30
     Build at: engineering
     Program: kind=bio
+    Properties:              # map-format: {label: 'gui_control_expr'}, fed to gui_properties_set
+      Monster: 'gui_drop_down("list: shark, dragon, any", var="monster")'
+      Mode: 'gui_drop_down("list: attract, repel", var="mode")'
+    Defaults:                # {var: value} seed values (like a map's Defaults block)
+      monster: shark
+      mode: attract
     ---
     A distress-beacon hull rewired to broadcast to xeno-organisms.
 
 Fields: Output (produced cargo/torpedo key), Inputs ("key xN, key xM" -> {key:count}),
 Time (build seconds), Build at (console/station gate, optional), Program (k=v,k=v -> dict of
-extra data stamped on the output, e.g. a beacon's kind). The body is the description.
+extra data stamped on the output, e.g. a beacon's kind). Optional Properties + Defaults blocks
+use the SAME format a map's Properties panel uses (a {label: 'gui_control_expr'} dict + a
+{var: value} defaults dict), rendered by gui_property_list_box / gui_properties_set. The body
+is the description.
 """
-from sbs_utils.procedural.amd import amd_parse_facts
+import re
+from sbs_utils.fs import load_yaml_string
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.gui import gui_row, gui_text
 
-# key -> {key, name, output, inputs{key:count}, time, build_at, program{}, desc}
+# key -> {key, name, output, inputs{key:count}, time, build_at, program{}, properties{},
+#         defaults{}, desc}
 _RECIPES = {}
 
 
 def amd_recipe_data(text):
-    """data_parser for a recipe .amd file (parses one heading's --- fence into a dict)."""
-    return amd_parse_facts(text)
+    """data_parser for a recipe .amd fence. Parses as YAML so a recipe can carry a map-style
+    Properties block (a {label: 'gui_control_expr'} dict) and a Defaults block natively -- the
+    same format a map's Properties panel uses -- rather than a bespoke grammar."""
+    return load_yaml_string(text) or {}
 
 
 def _parse_inputs(s):
@@ -68,74 +81,50 @@ def _parse_program(s):
     return out
 
 
-def _parse_properties(s):
-    """Parse a recipe's Properties into build-time option specs. Grammar (';'-separated):
-        name:type=opt1,opt2,...     e.g. 'monster:list=shark,dragon,any; mode:radio=attract,repel'
-    type in {list (drop-down), radio, toggle, int, text}. Default value = first option. These
-    render as a property grid (like a map's Properties) in the Fabricate detail panel."""
-    out = []
-    for part in str(s or "").split(";"):
-        part = part.strip()
-        if not part or "=" not in part:
-            continue
-        left, right = part.split("=", 1)
-        if ":" not in left:
-            continue
-        name, typ = left.split(":", 1)
-        opts = [o.strip() for o in right.split(",") if o.strip()]
-        out.append({"name": name.strip(), "type": typ.strip().lower(),
-                    "options": opts, "default": opts[0] if opts else ""})
-    return out
-
-
-def _prop_control_expr(prop):
-    """A property spec -> the gui control-expression string the property grid evaluates
-    (mirrors how a map's Properties YAML holds 'gui_drop_down(...)' strings). Each binds to a
-    shared var named for the property, so Build can read it back with get_shared_variable."""
-    name = prop["name"]
-    typ = prop["type"]
-    opts = ", ".join(prop["options"])
-    if typ == "radio":
-        return f'gui_radio("{opts}", var="{name}")'
-    if typ == "toggle":
-        return 'gui_checkbox("$text: {' + name + '};", var="' + name + '")'
-    if typ in ("int", "text"):
-        return f'gui_input("desc: {typ};", var="{name}")'
-    # default: a list -> drop-down. No "$text:{var}" (that interpolation crashes before the
-    # var is seeded) -- the drop-down shows its own bound selection; its open list inherits the
-    # control height.
-    return f'gui_drop_down("list: {opts}", var="{name}")'
-
-
 def recipe_property_grid(recipe):
-    """A recipe -> the {section: {label: control_expr}} dict for gui_properties_set, or {} when
-    the recipe declares no Properties."""
-    props = recipe.get("properties") or []
-    if not props:
-        return {}
-    inner = {}
-    for p in props:
-        inner[p["name"].capitalize()] = _prop_control_expr(p)
-    return {"Program": inner}
+    """The recipe's Properties -- a map-style {section/label: 'gui_control_expr'} dict, passed
+    straight to gui_properties_set (no bespoke generation). {} when the recipe declares none."""
+    return recipe.get("properties") or {}
+
+
+_VAR_RE = re.compile(r'var\s*=\s*"([^"]+)"')
 
 
 def recipe_property_names(recipe):
-    """The property (shared-var) names a recipe declares, in order."""
-    return [p["name"] for p in (recipe.get("properties") or [])]
+    """The control var names a recipe's Properties bind, in order -- walk the dict tree and pull
+    every var="..." out of the control strings (like maps._map_property_vars), so Build can read
+    each back with get_variable."""
+    found = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, (list, tuple)):
+            for v in node:
+                walk(v)
+        elif isinstance(node, str):
+            for m in _VAR_RE.finditer(node):
+                if m.group(1) not in found:
+                    found.append(m.group(1))
+
+    walk(recipe.get("properties") or {})
+    return found
 
 
 def recipe_property_defaults(recipe):
-    """{name: default} for a recipe's properties (used to seed the shared vars)."""
-    return {p["name"]: p["default"] for p in (recipe.get("properties") or [])}
+    """{var: default} from the recipe's Defaults block (seeds the property vars before render)."""
+    return recipe.get("defaults") or {}
 
 
-def fabrication_add_recipe(key, output, inputs=None, time=30, build_at="", program=None, name=None, desc="", properties=None):
-    """Register (or replace) a recipe by key. Returns the key."""
+def fabrication_add_recipe(key, output, inputs=None, time=30, build_at="", program=None, name=None, desc="", properties=None, defaults=None):
+    """Register (or replace) a recipe by key. Returns the key. `properties` is a map-style
+    Properties dict ({label: 'gui_control_expr'}); `defaults` a {var: value} seed dict."""
     _RECIPES[key] = {
         "key": key, "name": name or key, "output": output,
         "inputs": inputs or {}, "time": int(time or 30),
         "build_at": str(build_at or ""), "program": program or {},
-        "properties": properties or [], "desc": desc or "",
+        "properties": properties or {}, "defaults": defaults or {}, "desc": desc or "",
     }
     return key
 
@@ -177,7 +166,8 @@ def fabrication_load_recipes_amd(doc):
             time=data.get("time", 30),
             build_at=(data.get("build at") or data.get("build_at") or ""),
             program=_parse_program(data.get("program")),
-            properties=_parse_properties(data.get("properties")),
+            properties=data.get("properties") or {},
+            defaults=data.get("defaults") or {},
             name=n.get("display_text") or data.get("name") or key,
             desc=n.get("description") or "",
         )
