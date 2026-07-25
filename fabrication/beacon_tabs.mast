@@ -82,15 +82,17 @@ gui_tab_add_top("cargo")
         """color:#8a8; $text: Cost: {fab_cost}"""
 
     # RIGHT (program): a property grid built from the recipe's declared Properties -- the same
-    # gui_property_list_box + gui_properties_set pattern a map's Properties panel uses. Each
-    # control binds to a TASK var named for the property (no shared scope needed -- the grid
-    # and Build are the same tab task); seed any unset var with the property's default.
+    # gui_property_list_box + gui_properties_set pattern a map's Properties panel uses. The grid
+    # controls bind var= to the client TASK scope (per-client, not shared -- gui_drop_down uses
+    # task.get_id()). Seed each property's default set-if-absent BEFORE the panel renders so the
+    # controls have a starting value.
     gui_section(style="area: 47, 57, 95, 80;")
     fab_pnames = []
+    fab_pdefs = {}
     if fab_sel is not None:
         fab_pnames = recipe_property_names(fab_sel)
-    if len(fab_pnames) > 0:
         fab_pdefs = recipe_property_defaults(fab_sel)
+    if len(fab_pnames) > 0:
         for fab_pn in fab_pnames:
             if get_variable(fab_pn) is None:
                 set_variable(fab_pn, fab_pdefs[fab_pn])
@@ -103,12 +105,15 @@ gui_tab_add_top("cargo")
         fab_t = format_time_remaining(ship_id, fab_timer)
         """color:#ff0; justify:center; $text: building {fab_t}"""
     elif fab_sel is not None and fabrication_recipe_affordable(ship_id, fab_sel_key):
-        fab_btn = gui_button("$text:Build;justify:center;", data={"rk": fab_sel_key, "rb": fab_is_beacon, "rnames": fab_pnames})
+        fab_btn = gui_button("$text:Build;justify:center;", data={"rk": fab_sel_key, "rb": fab_is_beacon, "rnames": fab_pnames, "rdefs": fab_pdefs})
         on gui_message(fab_btn):
             if rb:
                 fab_prog = {}
                 for fab_rn in rnames:
-                    fab_prog[fab_rn] = get_variable(fab_rn)
+                    fab_val = get_variable(fab_rn)
+                    if fab_val is None:
+                        fab_val = rdefs[fab_rn]
+                    fab_prog[fab_rn] = fab_val
                 signal_emit("beacon_build", {"ship_id": ship_id, "recipe": rk, "program": fab_prog})
             else:
                 signal_emit("fabricate_recipe", {"ship_id": ship_id, "key": rk})

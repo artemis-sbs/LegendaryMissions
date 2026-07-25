@@ -101,8 +101,10 @@ def _prop_control_expr(prop):
         return 'gui_checkbox("$text: {' + name + '};", var="' + name + '")'
     if typ in ("int", "text"):
         return f'gui_input("desc: {typ};", var="{name}")'
-    # default: a list -> drop-down (its open list inherits the control height)
-    return 'gui_drop_down("$text: {' + name + '};list: ' + opts + '", var="' + name + '")'
+    # default: a list -> drop-down. No "$text:{var}" (that interpolation crashes before the
+    # var is seeded) -- the drop-down shows its own bound selection; its open list inherits the
+    # control height.
+    return f'gui_drop_down("list: {opts}", var="{name}")'
 
 
 def recipe_property_grid(recipe):
