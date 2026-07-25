@@ -9,10 +9,13 @@
 # //gui/tab/fabrication is separate and unchanged.
 # ==========================================================================
 default CONSOLE_SELECT = ""
-gui_tab_add_top("fabricate")
-gui_tab_add_top("cargo")
 
-# Show both tabs on the Engineering console.
+# The Fabricate/Cargo tabs are CONTENT only (the //gui/tab/fabricate and //gui/tab/cargo
+# routes below); they are SCOPED by being ENABLED per console, not added globally. Do NOT
+# call gui_tab_add_top("fabricate"/"cargo") -- that adds them to EVERY console. Enabling
+# from the Engineering activation hook (//gui/normal_engi) is what limits them to
+# Engineering, exactly like the Casino scopes itself from //gui/hangar. See GUI.md
+# "Adding a console tab (the clean, per-console way)".
 //gui/normal_engi
     gui_tab_enable("fabricate")
     gui_tab_enable("cargo")

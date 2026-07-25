@@ -43,6 +43,7 @@ Load only the addons you use &mdash; each one adds labels to the global namespac
 | `gamemaster` / `gamemaster_comms` | GM console + spawn/message/map tools |
 | `hangar` | landing bay, bar, hangar comms, sorties |
 | `biomech` | [BioMech](biomech.md) creatures — a passive/collective/evolving swarm |
+| `fabrication` | [Fabrication & Beacons](fabrication.md) — Engineering build tab + fabricate-only Sensor/Bio beacons |
 | `avatar_editor` | [Avatar Editor](avatar.md) — in-game WYSIWYG face customizer |
 | `internal_comms` | crew department comms (sickbay, security, ...) |
 | `operator` | operator/admin console for venue use |
