@@ -356,7 +356,9 @@ hangar_get_craft_data("terran")
 
 
 ==== launch_to_cockpit ======
-
+    # ride_select is set in show_hangar (same task) before falling through here; default
+    # it so a fresh entry is a clean None (the next line guards it) and the linter is quiet.
+    default ride_select = None
     jump show_hangar if ride_select is None
     jump show_hangar if not has_role(ride_select, "standby")
 
@@ -414,19 +416,19 @@ hangar_get_craft_data("terran")
     gui_row(style="row-height:50px;")
     brain = gui_button("icon_index:134;color:#fff", on_press="hangar_grid_select", data={"sel_role":"computer"}, is_sub_task=True)
 
-    # Grav-tether: one press acquires the nearest tetherable object and tethers it
-    # (release on a second press). Icon 135 is a placeholder - swap for the real glyph.
+    # Grav-tether: one press nose-aim acquires a tetherable object and tethers it
+    # (release on a second press); button goes cyan while tethered.
     gui_row(style="row-height:50px;")
-    grav_tether = gui_button("icon_index:135;color:#fff", on_press="hangar_grav_tether", is_sub_task=True)
+    grav_tether = gui_button("icon_index:54;color:#fff", on_press="hangar_grav_tether", is_sub_task=True)
 
     # Reflect the ACTUAL tether state on the button (fires for a press, a warp-snap, or an
     # auto-release): cyan while this fighter is tethered, white when free. .update replaces
     # the whole style, so both props are carried.
     on change grav_tether_involves(sbs.get_ship_of_client(client_id)):
         if grav_tether_involves(sbs.get_ship_of_client(client_id)):
-            grav_tether.update("icon_index:135;color:#0ff")
+            grav_tether.update("icon_index:54;color:#0ff")
         else:
-            grav_tether.update("icon_index:135;color:#fff")
+            grav_tether.update("icon_index:54;color:#fff")
 
     await gui()
 
