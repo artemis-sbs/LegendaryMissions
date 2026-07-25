@@ -1,0 +1,48 @@
+# a2x: drives the 2.8 set_special CAPTAIN personalities that need active behavior beyond
+# the surrender chance a2x already writes. a2x_set_captain (in sbs_utils) sets
+# a2x_captain_trait on the ship and schedules a2x_captain_driver BY NAME (a2x never imports
+# LM -- same feature-detection pattern as elite abilities). cowardly / brave / exceptional
+# are fully covered by the a2x_surrender_chance a2x set (see enemy_surrender.mast); this
+# file adds bombastic (proactive taunts) and seething (starts enraged). duplicitous
+# (fake-surrender then re-engage) is handled at surrender time in enemy_surrender.mast.
+
+==== a2x_captain_driver
+    ->END if CAP_ID is None
+    ship = to_object(CAP_ID)
+    ->END if ship is None
+    trait = get_inventory_value(CAP_ID, "a2x_captain_trait", None)
+
+    if trait == "seething":
+        # Start angry at a player so the fleet presses the attack from the outset.
+        fleet_obj = to_object(get_inventory_value(CAP_ID, "my_fleet_id"))
+        if fleet_obj is not None:
+            players = to_object_list(role("__player__"))
+            if len(players) > 0:
+                fleet_obj.make_enraged_by(players[0].id)
+    elif trait == "bombastic":
+        await task_schedule(a2x_bombastic_hail, {"CAP_ID": CAP_ID})
+    ->END
+
+
+# Bombastic captains hail the players with unprompted taunts every so often until they
+# surrender or die. Reuses the ship's own spawn-assigned taunt lines (set by enemy_taunt's
+# //spawn handler); {name} resolves to the targeted player.
+==== a2x_bombastic_hail
+    await delay_sim(random.randint(45, 90))
+    ship = to_object(CAP_ID)
+    ->END if ship is None
+    ->END if has_role(CAP_ID, "surrendered")
+
+    players = to_object_list(role("__player__"))
+    ->END if len(players) == 0
+    victim = random.choice(players)
+    name = victim.name
+
+    taunts = get_inventory_value(CAP_ID, "taunt_data", None)
+    if taunts is not None and len(taunts) > 0:
+        line = random.choice(taunts)["transmit"]
+    else:
+        line = "You are no match for us, {name}!"
+    line = mast_format_string(line)
+    comms_message(line, CAP_ID, victim.id, title="Hail", color="red", is_receive=True)
+    jump a2x_bombastic_hail

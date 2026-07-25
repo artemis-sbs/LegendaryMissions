@@ -57,6 +57,10 @@ distance: 600
 +++ enable
     yield fail if DOCKING_NPC_ID == 0
     yield fail if  not side_are_allies(DOCKING_PLAYER_ID, DOCKING_NPC_ID)
+    # a2x: 2.8 pirateRepWithStations. Only applies to a "pirate"-role player ship: a
+    # reputation of 0 (the default) means stations refuse to let it dock; >0 lets it dock.
+    # Non-pirates are unaffected. a2x writes a2x_pirate_rep off the pirate's inventory.
+    yield fail if has_role(DOCKING_PLAYER_ID, "pirate") and get_inventory_value(DOCKING_PLAYER_ID, "a2x_pirate_rep", 0) <= 0
 
 +++ undocking
 # This is called when docking is released

@@ -151,7 +151,31 @@ shared _surrender_return = task_schedule(take_surrendered_home)
     side_surrender(COMMS_SELECTED_ID)
     fleet_remove_ship(COMMS_SELECTED_ID)
 
+    # a2x: a duplicitous captain (2.8 set_special captain=4) only feigns surrender --
+    # schedule a re-engage so it turns on the players after a short lull.
+    if get_inventory_value(COMMS_SELECTED_ID, "a2x_captain_trait", None) == "duplicitous":
+        await task_schedule(a2x_duplicitous_reengage, {"DUP_ID": COMMS_SELECTED_ID})
 
+    yield SUCCESS
+
+
+#
+# a2x: 2.8 duplicitous captain -- surrenders for a short while, then turns and attacks.
+# One-shot: clears the trait so it cannot loop the feint. take_surrendered_home leaves
+# duplicitous ships in place (see its guard below) so this can fire before they are
+# flown off and deleted.
+#
+======== a2x_duplicitous_reengage ========
+    await delay_sim(random.randint(60, 150))
+    ship = to_object(DUP_ID)
+    ->END if ship is None
+    ->END if not has_role(DUP_ID, "surrendered")
+
+    side_unsurrender(DUP_ID)
+    set_inventory_value(DUP_ID, "a2x_captain_trait", None)
+    players = to_object_list(role("__player__"))
+    if len(players) > 0:
+        comms_message("It was a ruse! Prepare to be destroyed!", DUP_ID, players, title="Ambush", color="red", is_receive=True)
     yield SUCCESS
 
 
@@ -168,6 +192,9 @@ shared _surrender_return = task_schedule(take_surrendered_home)
     for ship in surrendered:
         ship_obj = to_object(ship)
         continue if ship_obj is None
+        # a2x: a duplicitous captain is only feigning -- leave it in place to re-engage
+        # (a2x_duplicitous_reengage handles it), don't fly it home and delete it.
+        continue if get_inventory_value(ship, "a2x_captain_trait", None) == "duplicitous"
 
         spawn_pos = Vec3(ship_obj.spawn_pos)
         _pos = ship_obj.pos
