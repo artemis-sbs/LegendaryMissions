@@ -54,6 +54,19 @@ Defaults:
     await task_schedule(default_player_friendly_eyes)
     await task_schedule(docking_standard_player_station)
 
+    # Capture the crew's starting credits (banked per side) so the end screen can show
+    # Credits Earned = end total - this baseline. CREDIT_SIDE_IDS persists even if ships die.
+    _cids = []
+    for cp in to_object_list(role("__player__")):
+        _sid = to_side_id(cp.side)
+        if _sid not in _cids:
+            _cids.append(_sid)
+    _cc0 = 0
+    for _s in _cids:
+        _cc0 = _cc0 + get_inventory_value(_s, "credits", 0)
+    shared CREDIT_SIDE_IDS = _cids
+    shared CREDITS_START = _cc0
+
     terrain_asteroid_clusters(terrain_value)
     terrain_spawn_nebula_clusters(terrain_value)
     terrain_spawn_pickups(upgrade_value)
