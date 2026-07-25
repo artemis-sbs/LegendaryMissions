@@ -190,10 +190,15 @@ stop_dist: 500
     throttle = BRAIN_AGENT.get_inventory_value("blackboard:throttle", 1.0)
 
     points = linked_to(BRAIN_AGENT_ID, "ship_list")
-        
+    # Formation spread: a fleet can widen/tighten its scatter ring by setting fleet_spacing
+    # (inner radius) and fleet_max_radius (outer radius) on its fleet agent; defaults keep
+    # the original 300..500 ring.
+    inner = BRAIN_AGENT.get_inventory_value("fleet_spacing", 300)
+    outer = BRAIN_AGENT.get_inventory_value("fleet_max_radius", 500)
+
     for _id in points:
         pos = Vec3(the_target_position)
-        pos = pos.rand_offset(300, 500, ring=True)
+        pos = pos.rand_offset(inner, outer, ring=True)
         target_pos(_id, *pos.xyz, throttle, the_target, stop_dist=stop_dist)
     yield success
     
