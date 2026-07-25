@@ -202,7 +202,7 @@ hangar_get_craft_data("terran")
         ride_choice = ride_picker.get_value()
         ride_choice_id = to_id(ride_choice)
         if ride_choice is not None:
-            fighter = ride_choice
+            fighter = to_id(to_object(ride_choice))
             dock = get_science_selection(fighter)
             dock = to_object(dock)
             fighter_change += 1
@@ -414,7 +414,10 @@ hangar_get_craft_data("terran")
     gui_row(style="row-height:50px;")
     brain = gui_button("icon_index:134;color:#fff", on_press="hangar_grid_select", data={"sel_role":"computer"}, is_sub_task=True)
 
-
+    # Grav-tether: one press acquires the nearest object ahead and tethers it (release
+    # on a second press). Icon 135 is a placeholder - swap for the real tether glyph.
+    gui_row(style="row-height:50px;")
+    grav_tether = gui_button("icon_index:135;color:#fff", on_press="hangar_grav_tether", is_sub_task=True)
 
     await gui()
 
@@ -435,6 +438,26 @@ hangar_get_craft_data("terran")
     set_grid_selection(_ship_id,new_id)
     follow_route_select_grid(_ship_id, new_id)
 
+
+--- hangar_grav_tether
+    _ship_id = sbs.get_ship_of_client(client_id)
+    ->END if _ship_id is None or _ship_id==0
+    # Toggle: second press releases whatever this fighter is tethered to.
+    if grav_tether_involves(_ship_id):
+        grav_tether_release_any(_ship_id)
+        ->END
+    # Acquire the nearest tetherable object ahead and pick the mode by its role.
+    _cd = closest(_ship_id, any_role("__npc__,item,upgrade,station,asteroid"), max_dist=8000)
+    ->END if _cd is None
+    _tid = _cd.id
+    if has_any_role(_tid, "item,upgrade"):
+        grav_tether_reel(_ship_id, _tid)
+    else:
+        if has_any_role(_tid, "asteroid"):
+            grav_tether_swing(_tid, _ship_id, 800)
+        else:
+            grav_tether_tow(_ship_id, _tid, 500)
+    ->END
 
 
 //gui/cockpit
