@@ -180,6 +180,23 @@ Pays: 240 credits
 ---
 Wrecked hulls are cluttering the lane. Grav-tether each salvage hulk and tow it to the Refinery Platform for processing.
 
+### [Rescue the Lifepod](job_lifepod)
+---
+State: idle
+Goal: signal lifepod_delivered
+Fail after: 5 minutes
+Pays: 320 credits
+---
+A lifepod is tumbling out of a wreck field with its beacon failing. Grav-tether it and tow it to DS 1 before life support runs out.
+
+### [Reposition the Relay](job_relay)
+---
+State: idle
+Goal: signal relay_placed
+Pays: 200 credits
+---
+A comms relay has drifted off station. Grav-tether it and tow it to its marked position in the lane, then let it settle.
+
 // ---- Declarative object scans (dialogue-native): `Scan of:` = role, `Tab:` = science tab,
 // each `%` body line a random variant. (target_drone uses the enemy scan; anomaly uses
 // the job_survey reveal_scan path.)

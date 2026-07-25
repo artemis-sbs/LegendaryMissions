@@ -174,7 +174,7 @@ Defaults:
     shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n, "probe": probe_n, "herd": herd_n, "salvage": salvage_n}
     shared PR_LANDMARKS = landmarks_from_section(amd_section(PR_DOC, "landmarks"))
     # The jobs that spawn targets on accept, checked each dispatch tick.
-    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage"]
+    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage", "job_lifepod", "job_relay"]
 
     # The job board is the jobs section of PR_DOC (parsed above). Grant it PER PLAYER SHIP so
     # credit rewards pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses
@@ -289,6 +289,18 @@ Defaults:
             for v in scatter.box(PR_JOB_COUNTS.get("salvage", 3), -9000, 0, -12000, 3000, 400, 3000, centered=True):
                 npc_spawn(v.x, v.y, v.z, "Salvage Hulk", "civ, salvage_hulk", "cargo_ship", "behav_npcship")
             task_schedule(pr_salvage_watch)
+        case "job_lifepod":
+            # A drifting lifepod - tow it to DS 1 before the Fail after clock (anchored on accept).
+            comms_info_card(all_roles("console, comms"), "A lifepod is tumbling from a wreck field, beacon failing. Grav-tether it and tow it to DS 1 - fast.", title="Life Support Critical", color="red")
+            npc_spawn(-10000, 0, -14000, "Lifepod", "civ, civilian, tow_lifepod", "cargo_ship", "behav_npcship")
+            task_schedule(pr_lifepod_watch)
+        case "job_relay":
+            # A drifted comms relay towed back to a marked POINT (a navpoint shows where) - the one
+            # job that delivers to a position, not a station.
+            comms_info_card(all_roles("console, comms"), "A comms relay drifted off station. Grav-tether it and tow it to the marked position in the lane.", title="Comms Order", color="#0cf")
+            npc_spawn(6000, 0, 9000, "Comms Relay", "tsn, relay, tow_relay", "cargo_ship", "behav_npcship")
+            sim.add_navpoint(4000, 0, -10000, "Relay Position", "#0cf")
+            task_schedule(pr_relay_watch)
     ->END
 
 
@@ -419,6 +431,45 @@ Defaults:
             remove_role(h, "salvage_hulk")
     ->END if len(to_list(role("salvage_hulk"))) < 1
     jump psw_loop
+
+
+# Rescue the Lifepod (grav-tether, TIMED): tow the pod to DS 1 before the Fail after clock
+# (anchored on accept). Same proximity-to-DS-1 delivery as the barge.
+===== pr_lifepod_watch =====
+    default GAME_ENDED = False
+    ds1 = None
+    for s in to_object_list(role("station")):
+        if s.name == "DS 1":
+            ds1 = s.id
+--- plpw_loop
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    ->END if ds1 is None
+    p_list = to_list(role("tow_lifepod"))
+    ->END if len(p_list) < 1
+    if sbs.distance_id(p_list[0], ds1) <= 1800:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "lifepod_delivered"})
+        remove_role(p_list[0], "tow_lifepod")
+        ->END
+    jump plpw_loop
+
+
+# Reposition the Relay (grav-tether): tow the relay to its marked position - a fixed POINT shown
+# by a navpoint, not a station. Distance-to-point delivery.
+===== pr_relay_watch =====
+    default GAME_ENDED = False
+    relay_target = Vec3(4000, 0, -10000)
+--- prw_loop
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    r_list = to_object_list(role("tow_relay"))
+    ->END if len(r_list) < 1
+    r = r_list[0]
+    if (Vec3(r.pos) - relay_target).length() <= 1500:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "relay_placed"})
+        remove_role(r.id, "tow_relay")
+        ->END
+    jump prw_loop
 
 
 #-----------------------------------------------------------------------------------------------------------------------------
