@@ -1,0 +1,32 @@
+# grav_tether addon - Weapons hold-click popup for the sbs_utils grav_tether primitive.
+#
+# The physics + impulse enforcement live in sbs_utils.procedural.grav_tether (the
+# primitive auto-runs its own tick, so just loading this addon + calling attach is
+# enough - no activation step). This file is only the UX: a Weapons HOLD-CLICK on an
+# object raises a hold-menu whose action is chosen by the target's ROLE.
+#
+# Engine-verified: the hold-click popup shows and toggles tether state in real Cosmos.
+#
+# Role -> mode (confirmed roles; pickups carry item,upgrade):
+#   item / upgrade                -> Reel (draw in for collection)
+#   station / asteroid / __npc__  -> Tow  (rope rest-length 500, stiffness ~5)
+#   anything else                 -> Lock (rigid grab)
+#   already tethered              -> Release
+#
+# Impulse-only is canonical (old-game Arena a28): the primitive caps the source back to
+# impulse by default (grav_tether_set_overspeed_default to change to snap/off).
+
+//popup/weapons if has_any_role(WEAPONS_ORIGIN_ID, "__player__")
+    gt_has = grav_tether_get(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID) is not None
+    if gt_has:
+        + "Release":
+            grav_tether_release(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)
+    if not gt_has and has_any_role(WEAPONS_SELECTED_ID, "item,upgrade"):
+        + "Grav Reel":
+            grav_tether_reel(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)
+    if not gt_has and has_any_role(WEAPONS_SELECTED_ID, "station,asteroid,__npc__"):
+        + "Grav Tow":
+            grav_tether_tow(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID, 500)
+    if not gt_has and not has_any_role(WEAPONS_SELECTED_ID, "item,upgrade,station,asteroid,__npc__"):
+        + "Grav Lock":
+            grav_tether_lock(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)

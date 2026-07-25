@@ -29,6 +29,7 @@
         "basic_random_skybox",
         "collisions",
         "fabrication",
+        "grav_tether",
         "data_panels",
         "documents",
         "director",
