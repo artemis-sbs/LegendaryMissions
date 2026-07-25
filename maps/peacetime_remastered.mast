@@ -579,7 +579,10 @@ Defaults:
     for s in to_object_list(role("station")):
         if s.name == "DS 1":
             ds1 = s.id
-    comms_info_card(all_roles("console, comms"), "Fleet wants a sensor sweep of the outer lane. ENGINEERING: fabricate a Sensor Beacon on the Fabricate tab and hand it to WEAPONS to deploy.", title="Sweep Order", color="#0cf")
+    # Step 1 - Deploy the picket (Engineering/Weapons).
+    for spid in pr_arc_holders("job_sweep"):
+        quest_mark_active(spid, "job_sweep/deploy")
+    comms_info_card(all_roles("console, comms"), "Fleet wants a sensor sweep of the outer lane. ENGINEERING/WEAPONS: fabricate a Sensor Beacon on the Fabricate tab and deploy it.", title="Sweep Order", color="#0cf")
 --- sweep_beacon
     await delay_sim(1)
     ->END if GAME_ENDED
@@ -589,9 +592,17 @@ Defaults:
             have_sensor = True
     if not have_sensor:
         jump sweep_beacon
+    # Step 2 - Scan the flagged contact (Science).
+    for spid in pr_arc_holders("job_sweep"):
+        quest_mark_complete(spid, "job_sweep/deploy")
+        quest_mark_active(spid, "job_sweep/scan")
     comms_info_card(all_roles("console, comms"), "Picket up - it flags a drifting contact in the outer lane. SCIENCE: scan it.", title="Sweep Order", color="#0cf")
     await signal_next("sweep_scanned")
     ->END if GAME_ENDED
+    # Step 3 - Recover the find (Weapons/Helm).
+    for spid in pr_arc_holders("job_sweep"):
+        quest_mark_complete(spid, "job_sweep/scan")
+        quest_mark_active(spid, "job_sweep/recover")
     comms_info_card(all_roles("console, comms"), "It's a stranded cargo pod. Grav-tether it and tow it home to DS 1.", title="Sweep Order", color="#0cf")
 --- sweep_home
     await delay_sim(2)
@@ -601,7 +612,8 @@ Defaults:
     ->END if len(f_list) < 1
     if sbs.distance_id(f_list[0].id, ds1) > 1800:
         jump sweep_home
-    signal_emit("quest_signal", {"SIGNAL_NAME": "sweep_done"})
+    for spid in pr_arc_holders("job_sweep"):
+        quest_mark_complete(spid, "job_sweep/recover")
     ->END
 
 
@@ -619,12 +631,23 @@ Defaults:
     for s in to_object_list(role("station")):
         if s.name == "DS 1":
             ds1 = s.id
+    # Step 1 - Get the tip (Comms).
+    for cpid in pr_arc_holders("job_cache"):
+        quest_mark_active(cpid, "job_cache/tip")
     comms_info_card(all_roles("console, comms"), "A tipster is loitering near the lane. COMMS: hail them for the drop location.", title="Cold Tip", color="#0cf")
     await signal_next("cache_tip")
     ->END if GAME_ENDED
+    # Step 2 - Find the cache (Science).
+    for cpid in pr_arc_holders("job_cache"):
+        quest_mark_complete(cpid, "job_cache/tip")
+        quest_mark_active(cpid, "job_cache/find")
     comms_info_card(all_roles("console, comms"), "The cache is hidden in the rock cluster. SCIENCE: scan the cluster to find the loaded one.", title="Cold Tip", color="#0cf")
     await signal_next("cache_found")
     ->END if GAME_ENDED
+    # Step 3 - Recover the pod (Weapons/Helm).
+    for cpid in pr_arc_holders("job_cache"):
+        quest_mark_complete(cpid, "job_cache/find")
+        quest_mark_active(cpid, "job_cache/recover")
     comms_info_card(all_roles("console, comms"), "Found it - a shielded cargo pod. Grav-tether it out of the rocks and tow it to DS 1.", title="Cold Tip", color="#0cf")
 --- cache_home
     await delay_sim(2)
@@ -634,7 +657,8 @@ Defaults:
     ->END if len(c_list) < 1
     if sbs.distance_id(c_list[0].id, ds1) > 1800:
         jump cache_home
-    signal_emit("quest_signal", {"SIGNAL_NAME": "cache_done"})
+    for cpid in pr_arc_holders("job_cache"):
+        quest_mark_complete(cpid, "job_cache/recover")
     ->END
 
 
@@ -652,12 +676,23 @@ Defaults:
 # beacon (Engineering/Weapons) -> reel the drift netting off a snared grazer (Weapons/Helm).
 ===== pr_herd_arc_seq =====
     default GAME_ENDED = False
+    # Step 1 - Scan the pod (Science).
+    for hpid in pr_arc_holders("job_herd_arc"):
+        quest_mark_active(hpid, "job_herd_arc/scan")
     comms_info_card(all_roles("console, comms"), "A grazer pod has drifted into the lane. SCIENCE: scan the pod.", title="Wildlife on the Lane", color="#fa0")
     await signal_next("herd_scanned")
     ->END if GAME_ENDED
+    # Step 2 - Warn the convoy (Comms).
+    for hpid in pr_arc_holders("job_herd_arc"):
+        quest_mark_complete(hpid, "job_herd_arc/scan")
+        quest_mark_active(hpid, "job_herd_arc/warn")
     comms_info_card(all_roles("console, comms"), "They're spooked and drifting into traffic. COMMS: warn the civilian convoy to hold.", title="Wildlife on the Lane", color="#fa0")
     await signal_next("herd_warned")
     ->END if GAME_ENDED
+    # Step 3 - Deploy a bio REPEL beacon (Engineering/Weapons).
+    for hpid in pr_arc_holders("job_herd_arc"):
+        quest_mark_complete(hpid, "job_herd_arc/warn")
+        quest_mark_active(hpid, "job_herd_arc/repel")
     comms_info_card(all_roles("console, comms"), "ENGINEERING/WEAPONS: fabricate a Bio Beacon set to REPEL and deploy it among the pod to drive them clear. Do NOT fire.", title="Wildlife on the Lane", color="#fa0")
 --- herd_repel
     await delay_sim(1)
@@ -668,6 +703,10 @@ Defaults:
             got_bio = True
     if not got_bio:
         jump herd_repel
+    # Step 4 - Free the snared grazer (Weapons/Helm).
+    for hpid in pr_arc_holders("job_herd_arc"):
+        quest_mark_complete(hpid, "job_herd_arc/repel")
+        quest_mark_active(hpid, "job_herd_arc/free")
     comms_info_card(all_roles("console, comms"), "Pod's moving off. One grazer is snared in drifting netting - grav-tether the netting clear to free it.", title="Wildlife on the Lane", color="#fa0")
 --- herd_free
     await delay_sim(2)
@@ -677,7 +716,8 @@ Defaults:
     ->END if len(s_list) < 1 or len(d_list) < 1
     if sbs.distance_id(s_list[0].id, d_list[0].id) < 2500:
         jump herd_free
-    signal_emit("quest_signal", {"SIGNAL_NAME": "herd_arc_done"})
+    for hpid in pr_arc_holders("job_herd_arc"):
+        quest_mark_complete(hpid, "job_herd_arc/free")
     ->END
 
 
