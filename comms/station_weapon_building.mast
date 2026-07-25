@@ -28,7 +28,8 @@ shared surrender_color = "yellow"
 
 //comms if side_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "Station") and not has_role(COMMS_ORIGIN_ID, "gamemaster")
     + "Hail"  handle_comms_station_hail
-    + "Build Weapons" //comms/station/build
+    # a2x: 2.8 canBuild=0 -> hide the build option for this station (default 1 = can build)
+    + "Build Weapons" //comms/station/build if get_inventory_value(COMMS_SELECTED_ID, "a2x_can_build", 1) != 0
 
 //comms/station/build
     comms_id = COMMS_ORIGIN.name
