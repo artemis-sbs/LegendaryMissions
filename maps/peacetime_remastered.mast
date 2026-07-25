@@ -174,7 +174,7 @@ Defaults:
     shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n, "probe": probe_n, "herd": herd_n, "salvage": salvage_n}
     shared PR_LANDMARKS = landmarks_from_section(amd_section(PR_DOC, "landmarks"))
     # The jobs that spawn targets on accept, checked each dispatch tick.
-    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage", "job_lifepod", "job_relay"]
+    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage", "job_lifepod", "job_relay", "job_ghost", "job_sweep"]
 
     # The job board is the jobs section of PR_DOC (parsed above). Grant it PER PLAYER SHIP so
     # credit rewards pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses
@@ -301,6 +301,18 @@ Defaults:
             npc_spawn(6000, 0, 9000, "Comms Relay", "tsn, relay, tow_relay", "cargo_ship", "behav_npcship")
             sim.add_navpoint(4000, 0, -10000, "Relay Position", "#0cf")
             task_schedule(pr_relay_watch)
+        case "job_ghost":
+            # Multi-step: a silent derelict drifting toward a black hole. pr_ghost_seq guides the
+            # crew hail -> scan -> tow-clear -> tow-home.
+            terrain_spawn_black_hole(-16000, 0, -16000)
+            derelict = npc_spawn(-13000, 0, -13000, "SS Meridian", "civ, civilian, derelict", "cargo_ship", "behav_npcship")
+            derelict.data_set.set("unselectable", 0)
+            task_schedule(pr_ghost_seq)
+        case "job_sweep":
+            # Multi-step: fabricate/deploy a sensor beacon, scan the flagged contact, tow it home.
+            find = npc_spawn(15000, 0, -13000, "Stranded Pod", "civ, civilian, sweep_find", "cargo_ship", "behav_npcship")
+            find.data_set.set("unselectable", 0)
+            task_schedule(pr_sweep_seq)
     ->END
 
 
@@ -470,6 +482,93 @@ Defaults:
         remove_role(r.id, "tow_relay")
         ->END
     jump prw_loop
+
+
+# The Ghost Freighter (multi-console guided sequence): hail (Comms) -> scan (Science) -> tow clear
+# of the black hole (Weapons/Helm) -> tow home to DS 1. The //comms and //science routes below emit
+# the hail/scan step signals (awaited via signal_next); the two tether legs are proximity.
+===== pr_ghost_seq =====
+    default GAME_ENDED = False
+    ghost_hole = Vec3(-16000, 0, -16000)
+    ds1 = None
+    for s in to_object_list(role("station")):
+        if s.name == "DS 1":
+            ds1 = s.id
+    comms_info_card(all_roles("console, comms"), "The freighter SS Meridian has gone silent, drifting toward a black hole. COMMS: hail her.", title="Silent Running", color="#0cf")
+    await signal_next("ghost_hailed")
+    ->END if GAME_ENDED
+    comms_info_card(all_roles("console, comms"), "No live response - just an automated loop. SCIENCE: scan the derelict.", title="Silent Running", color="#0cf")
+    await signal_next("ghost_scanned")
+    ->END if GAME_ENDED
+    comms_info_card(all_roles("console, comms"), "Crew in cryo, reactor critical. WEAPONS/HELM: grav-tether her and tow her CLEAR of the black hole - now.", title="Silent Running", color="orange")
+--- ghost_clear
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    g_list = to_object_list(role("derelict"))
+    ->END if len(g_list) < 1
+    if (Vec3(g_list[0].pos) - ghost_hole).length() < 6000:
+        jump ghost_clear
+    comms_info_card(all_roles("console, comms"), "Clear of the well. Now tow her home to DS 1.", title="Silent Running", color="#0cf")
+--- ghost_home
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    ->END if ds1 is None
+    g_list = to_object_list(role("derelict"))
+    ->END if len(g_list) < 1
+    if sbs.distance_id(g_list[0].id, ds1) > 1800:
+        jump ghost_home
+    signal_emit("quest_signal", {"SIGNAL_NAME": "ghost_home"})
+    ->END
+
+
+# Ghost Freighter step signals: hailing the derelict (Comms) and scanning it (Science).
+//comms if has_roles(COMMS_SELECTED_ID, "derelict")
+    comms_receive("SS Meridian automated distress: reactor breach imminent, crew in emergency cryo, no conscious crew aboard. Tow to safety requested.", title="SS Meridian", title_color="orange")
+    signal_emit("ghost_hailed")
+
+//science if has_roles(SCIENCE_SELECTED_ID, "derelict")
+    ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 900
+    signal_emit("ghost_scanned")
+
+
+# Sweep and Recover (multi-console guided sequence): fabricate + deploy a Sensor Beacon
+# (Engineering/Weapons) -> scan the flagged contact (Science) -> tow it home (Weapons/Helm).
+===== pr_sweep_seq =====
+    default GAME_ENDED = False
+    ds1 = None
+    for s in to_object_list(role("station")):
+        if s.name == "DS 1":
+            ds1 = s.id
+    comms_info_card(all_roles("console, comms"), "Fleet wants a sensor sweep of the outer lane. ENGINEERING: fabricate a Sensor Beacon on the Fabricate tab and hand it to WEAPONS to deploy.", title="Sweep Order", color="#0cf")
+--- sweep_beacon
+    await delay_sim(1)
+    ->END if GAME_ENDED
+    have_sensor = False
+    for b in to_object_list(role("beacon")):
+        if get_inventory_value(b.id, "beacon_kind", "bio") == "sensor" and not has_role(b.id, "lost_probe"):
+            have_sensor = True
+    if not have_sensor:
+        jump sweep_beacon
+    comms_info_card(all_roles("console, comms"), "Picket up - it flags a drifting contact in the outer lane. SCIENCE: scan it.", title="Sweep Order", color="#0cf")
+    await signal_next("sweep_scanned")
+    ->END if GAME_ENDED
+    comms_info_card(all_roles("console, comms"), "It's a stranded cargo pod. Grav-tether it and tow it home to DS 1.", title="Sweep Order", color="#0cf")
+--- sweep_home
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    ->END if ds1 is None
+    f_list = to_object_list(role("sweep_find"))
+    ->END if len(f_list) < 1
+    if sbs.distance_id(f_list[0].id, ds1) > 1800:
+        jump sweep_home
+    signal_emit("quest_signal", {"SIGNAL_NAME": "sweep_done"})
+    ->END
+
+
+# Sweep step signal: scanning the flagged contact (Science).
+//science if has_roles(SCIENCE_SELECTED_ID, "sweep_find")
+    ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 900
+    signal_emit("sweep_scanned")
 
 
 #-----------------------------------------------------------------------------------------------------------------------------
