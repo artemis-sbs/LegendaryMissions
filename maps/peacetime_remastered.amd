@@ -159,6 +159,27 @@ Pays: 350 credits
 ---
 A Ravener is loose in the lanes. It FEEDS on weapon fire - shooting only heals it - so do not engage. Fabricate a Bio Beacon set to ATTRACT the ravener, deploy it beside the black hole, and let the hole do the rest.
 
+// ---- Grav-tether haul jobs. Non-combat "collect & deliver" work for the tractor beam: tow a
+// dead-in-space barge home, and haul salvage hulks to the refinery. Weapons hold-clicks the
+// object for the Grav Tow option (fighters use the cockpit tether button). The delivery watchers
+// (pr_barge_watch / pr_salvage_watch) emit the completion signals when an object reaches its drop.
+
+### [Tow the Barge](job_barge)
+---
+State: idle
+Goal: signal barge_delivered
+Pays: 300 credits
+---
+A power-dead ore barge is adrift in the shipping lane with no drive of its own. Grav-tether it and tow it back to DS 1.
+
+### [Salvage Sweep](job_salvage)
+---
+State: idle
+Goal: signal 3 salvage_delivered
+Pays: 240 credits
+---
+Wrecked hulls are cluttering the lane. Grav-tether each salvage hulk and tow it to the Refinery Platform for processing.
+
 // ---- Declarative object scans (dialogue-native): `Scan of:` = role, `Tab:` = science tab,
 // each `%` body line a random variant. (target_drone uses the enemy scan; anomaly uses
 // the job_survey reveal_scan path.)

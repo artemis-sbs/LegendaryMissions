@@ -160,6 +160,7 @@ Defaults:
     # Beacon jobs: probes recovered (goal count) and the grazer pod size (fixed 4, scaled).
     probe_n = max(1, int(job_counts.get("probe_recovered", 3) * job_scale + 0.5))
     herd_n = max(2, int(4 * job_scale + 0.5))
+    salvage_n = max(1, int(job_counts.get("salvage_delivered", 3) * job_scale + 0.5))
 
     # Declarative object scans (the scans section of PR_DOC), rendered by the generic science
     # route - no //science route here. (target_drone is raider-side, so the standard enemy scan
@@ -170,10 +171,10 @@ Defaults:
     # counts + the landmark records so the spawner reads them when a job is taken on. This keeps
     # counted jobs from being spoiled by pre-accept kills, and makes the stranded shuttle arrive on
     # the mayday (when the Mercy Run is accepted) instead of sitting adrift from the first second.
-    shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n, "probe": probe_n, "herd": herd_n}
+    shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n, "probe": probe_n, "herd": herd_n, "salvage": salvage_n}
     shared PR_LANDMARKS = landmarks_from_section(amd_section(PR_DOC, "landmarks"))
     # The jobs that spawn targets on accept, checked each dispatch tick.
-    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener"]
+    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage"]
 
     # The job board is the jobs section of PR_DOC (parsed above). Grant it PER PLAYER SHIP so
     # credit rewards pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses
@@ -274,6 +275,20 @@ Defaults:
             ravener_id = await prefab_spawn(prefab_ravener, {"START_X": -6000, "START_Y": 0, "START_Z": 12000})
             add_role(ravener_id, "lure_predator")
             task_schedule(pr_ravener_watch, {"rv_id": ravener_id, "hole_x": -20000, "hole_y": 0, "hole_z": 16000})
+        case "job_barge":
+            # A dead-in-space barge (behav_npcship, no orders -> it just idles); the crew
+            # grav-tethers it and tows it home. pr_barge_watch credits arrival at DS 1.
+            comms_info_card(all_roles("console, comms"), "A power-dead ore barge is adrift in the lane. Grav-tether it and tow it back to DS 1.", title="Haul Order", color="#0cf")
+            npc_spawn(-13000, 0, 7000, "Ore Barge", "civ, civilian, tow_barge", "cargo_ship", "behav_npcship")
+            task_schedule(pr_barge_watch)
+        case "job_salvage":
+            # Scatter idle salvage hulks + a stationary Refinery Platform as the drop-off; the
+            # crew tows each hulk to the refinery. pr_salvage_watch credits each delivery.
+            comms_info_card(all_roles("console, comms"), "Salvage hulks are cluttering the lane. Grav-tether each one and tow it to the Refinery Platform.", title="Salvage Order", color="#0cf")
+            npc_spawn(-18000, 0, -6000, "Refinery Platform", "tsn, station, refinery", "starbase_command", "behav_station")
+            for v in scatter.box(PR_JOB_COUNTS.get("salvage", 3), -9000, 0, -12000, 3000, 400, 3000, centered=True):
+                npc_spawn(v.x, v.y, v.z, "Salvage Hulk", "civ, salvage_hulk", "cargo_ship", "behav_npcship")
+            task_schedule(pr_salvage_watch)
     ->END
 
 
@@ -363,6 +378,47 @@ Defaults:
             remove_role(m_id, "mercy_target")
             ->END
     jump mw_loop
+
+
+# Tow the Barge (grav-tether): the barge is dead-in-space; towing it within docking range of
+# DS 1 completes the job. Proximity, so it needs no docking wiring. (Refinery also has role
+# "station" but a different name, so the DS 1 name filter skips it.)
+===== pr_barge_watch =====
+    default GAME_ENDED = False
+    ds1 = None
+    for s in to_object_list(role("station")):
+        if s.name == "DS 1":
+            ds1 = s.id
+--- pbargew_loop
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    ->END if ds1 is None
+    b_list = to_list(role("tow_barge"))
+    ->END if len(b_list) < 1
+    if sbs.distance_id(b_list[0], ds1) <= 1800:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "barge_delivered"})
+        remove_role(b_list[0], "tow_barge")
+        ->END
+    jump pbargew_loop
+
+
+# Salvage Sweep (grav-tether): tow each salvage hulk to the Refinery Platform; each arrival
+# credits one delivery (Goal: signal 3 salvage_delivered). to_list snapshots, so removing the
+# role mid-iteration is safe.
+===== pr_salvage_watch =====
+    default GAME_ENDED = False
+--- psw_loop
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    ref_list = to_list(role("refinery"))
+    ->END if len(ref_list) < 1
+    ref = ref_list[0]
+    for h in to_list(role("salvage_hulk")):
+        if sbs.distance_id(h, ref) <= 1800:
+            signal_emit("quest_signal", {"SIGNAL_NAME": "salvage_delivered"})
+            remove_role(h, "salvage_hulk")
+    ->END if len(to_list(role("salvage_hulk"))) < 1
+    jump psw_loop
 
 
 #-----------------------------------------------------------------------------------------------------------------------------
