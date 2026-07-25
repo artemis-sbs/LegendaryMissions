@@ -455,8 +455,9 @@ hangar_get_craft_data("terran")
     if grav_tether_involves(_ship_id):
         grav_tether_release_any(_ship_id)
         ->END
-    # Acquire the nearest tetherable object (any direction) and pick the mode by role.
-    _cd = closest(_ship_id, any_role("__npc__,item,upgrade,station,asteroid"), max_dist=8000)
+    # Nose-aim: nearest tetherable object in the fighter's forward cone (no engine
+    # raycast exists; closest_in_front cone-filters closest). Pick the mode by role.
+    _cd = closest_in_front(_ship_id, any_role("__npc__,item,upgrade,station,asteroid"), max_dist=8000, cone_deg=40)
     ->END if _cd is None
     _tid = _cd.id
     if has_any_role(_tid, "item,upgrade"):
