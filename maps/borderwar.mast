@@ -164,7 +164,7 @@ Properties:
     war_delay = safe_int(WAR_TIME_DELAY)
 
     if war_delay == 0:
-        comms_broadcast(players, "WAR HAS BEEN DECLARED!", "yellow")
+        overlay_banner("WAR HAS BEEN DECLARED", color="#f44", to=players, seconds=12)
         for p in players:
             comms_receive_internal(f"""WAR HAS BEEN DECLARED!""", p, "TSN Command", title="WAR DECLARED", title_color="yellow")
         war_declared = 1
@@ -181,20 +181,21 @@ Properties:
         ->END
 
     if war_delay == safe_int(WAR_TIME_DELAY):
-        # Send "WAR IN X MINUTES!" message to all player ships.
-        comms_broadcast(players, f"""WAR STARTS IN {war_delay} MINUTES!""", "yellow")
+        # A countdown is the textbook banner: re-showing the slot updates it in
+        # place. comms_receive_internal below stays as the durable record.
+        overlay_banner(f"""WAR STARTS IN {war_delay} MINUTES""", to=players, seconds=15)
         for p in players:
             comms_receive_internal(f"""WAR STARTS IN {war_delay} MINUTES!""", p, "TSN Command", title="PREPARE FOR WAR", title_color="yellow")
 
     if war_delay == 5:
         # Send 5-minute warning.
-        comms_broadcast(players, "WAR STARTS IN 5 MINUTES!", "yellow")
+        overlay_banner("WAR STARTS IN 5 MINUTES", to=players, seconds=20)
         for p in players:
             comms_receive_internal(f"""WAR STARTS IN 5 MINUTES!""", p, "TSN Command", title="WAR 5 MIN", title_color="yellow")
 
     if war_delay == 1:
         # Send 1-minute warning.
-        comms_broadcast(players, "WAR IMMINENT!", "yellow")
+        overlay_banner("WAR IMMINENT", color="#f44", to=players, seconds=30)
         for p in players:
             comms_receive_internal(f"""WAR STARTS IN 1 MINUTE!""", p, "TSN Command", title="WAR IMMINENT", title_color="yellow")
 
@@ -202,7 +203,7 @@ Properties:
     await delay_sim(seconds=60)
 
     if war_delay == 0:
-        comms_broadcast(players, "WAR DECLARED!", "yellow")
+        overlay_banner("WAR DECLARED", color="#f44", to=players, seconds=15)
         for p in players:
             comms_receive_internal(f"""WAR HAS BEEN DECLARED!""", p, "TSN Command", title="WAR DECLARED", title_color="yellow")
         war_declared = 1
@@ -220,7 +221,8 @@ Properties:
             war_declared = 2
 
     if war_declared == 2:
-        comms_broadcast(players, "NEUTRAL ZONE VIOLATION", "red")
+        overlay_flash("#f006", to=players)
+        overlay_banner("NEUTRAL ZONE VIOLATION", color="#f44", to=players, seconds=10)
         for p in players:
             comms_receive_internal(f"""NEUTRAL ZONE VIOLATION - Mission Failed!""", p, "TSN Command", title="NETURAL ZONE VIOLATION", title_color="red")
         await delay_sim(seconds=6)

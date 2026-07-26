@@ -41,7 +41,7 @@
     set_inventory_value(ship_id, "beacon_built", bw_built)
     bw_mon = prog.get("monster", kind)
     bw_mode = prog.get("mode", "")
-    comms_broadcast(ship_id, f"Beacon built: {bw_mode} {bw_mon} (ready to deliver)", "#0f8")
+    overlay_toast(f"Beacon built: {bw_mode} {bw_mon} (ready to deliver)", to=ship_id)
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END
 
@@ -70,7 +70,7 @@
     bw_q = get_inventory_value(ship_id, "beacon_program_queue", [])
     bw_q.append(bw_prog)
     set_inventory_value(ship_id, "beacon_program_queue", bw_q)
-    comms_broadcast(ship_id, f"Beacon delivered to tube: {mode} {monster}", "#0cf")
+    overlay_toast(f"Beacon delivered to tube: {mode} {monster}", to=ship_id)
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END
 
@@ -87,7 +87,7 @@
     ->END if bw_found is None
     set_inventory_value(ship_id, "beacon_built", bw_keep)
     task_schedule(beacon_spawn_aft, {"sp_ship": ship_id, "sp_kind": kind, "sp_monster": monster, "sp_mode": mode, "sp_live": False})
-    comms_broadcast(ship_id, "Cargo ejected", "#888")
+    overlay_toast("Cargo ejected", to=ship_id)
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END
 
@@ -99,7 +99,7 @@
     ->END if ce_have < 1
     set_inventory_value(ship_id, key, ce_have - 1)
     task_schedule(cargo_eject_drop, {"ship_id": ship_id, "key": key})
-    comms_broadcast(ship_id, f"Ejected {key}", "#888")
+    overlay_toast(f"Ejected {key}", to=ship_id)
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END
 

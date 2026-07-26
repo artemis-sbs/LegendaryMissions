@@ -37,6 +37,18 @@
         gm_message = gui_get_variable("gm_message", "")
         to = role("__player__")
         comms_message(gm_message, COMMS_SELECTED_ID, to)
+    # Directing attention is the GM's job, so give them the attention layer too.
+    # Both of these still send the comms_message, so the players keep the record.
+    +[$gamemaster] "Send to All as Banner":
+        gm_message = gui_get_variable("gm_message", "")
+        to = role("__player__")
+        comms_message(gm_message, COMMS_SELECTED_ID, to)
+        overlay_banner(announce_headline(gm_message), to=to, seconds=10)
+    +[$gamemaster] "Send to All as Card":
+        gm_message = gui_get_variable("gm_message", "")
+        to = role("__player__")
+        comms_message(gm_message, COMMS_SELECTED_ID, to)
+        overlay_hero(announce_headline(gm_message), to=to, seconds=6)
 
 //comms/gamemaster/message/side if has_role(COMMS_ORIGIN_ID, 'gamemaster') and not has_role(COMMS_SELECTED_ID, "__player__")
     gui_sub_task_schedule(handle_gamemaster_message_properties)
@@ -50,6 +62,15 @@
             jump END
         to = role("__player__") & role(side)
         comms_message(gm_message, COMMS_SELECTED_ID, to)
+    +[$gamemaster] "Send to Side as Banner":
+        gm_message = gui_get_variable("gm_message", "")
+        side = get_side(COMMS_SELECTED_ID)
+        if side is None:
+            print("SIDE IS NONE")
+            jump END
+        to = role("__player__") & role(side)
+        comms_message(gm_message, COMMS_SELECTED_ID, to)
+        overlay_banner(announce_headline(gm_message), to=to, seconds=10)
 
 # //comms/gamemaster/message/send
 

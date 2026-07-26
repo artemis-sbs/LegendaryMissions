@@ -4,20 +4,26 @@ import sbs
 from sbs_utils.procedural.query import to_object_list
 from sbs_utils.procedural.roles import role
 from sbs_utils.procedural.comms import comms_message
+from sbs_utils.procedural.gui.overlay import overlay_lower_third
+from sbs_utils.procedural.announce import announce_headline
 from sbs_utils.procedural.amd_doc import amd_fill
 
 
 #**************************************************************************
 def send_general_message(nName, textLine, face, srcID):
+    """Narration from a character to everyone: a lower third over the main
+    screens, and the per-player comms_message that is the durable record.
 
+    The main screens used to get a hand-fanned-out send_story_dialog. A lower
+    third draws over the live view instead of interrupting it, and carries the
+    speaker's face. The comms_message below is unchanged - it is where a player
+    reads the full line back, so nothing is lost if a card is missed."""
+    # The host/server screen has no "mainscreen" role, so it keeps the dialog.
     sbs.send_story_dialog(0, nName, textLine, face, "#444")
 
-    main_screen_client_list = to_object_list(role("mainscreen") & role("console"))
-
-#    print(f"main screen client count = {len(main_screen_client_list)}")
-    for c in main_screen_client_list:
-        print(c.client_id)
-        sbs.send_story_dialog(c.client_id, nName, textLine, face, "#444")
+    overlay_lower_third(announce_headline(nName, 40),
+                        announce_headline(textLine, 90),
+                        to=role("mainscreen") & role("console"), seconds=10)
 
     # send it to all comms players as well
     my_players = to_object_list(role("__player__"))

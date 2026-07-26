@@ -30,9 +30,9 @@
     beacon_mon = beacon_prog.get("monster", "any")
     beacon_mode = beacon_prog.get("mode", "")
     if beacon_kind == "sensor":
-        comms_broadcast(beacon_ship, "Sensor Beacon deployed", "#0cf")
+        overlay_toast("Sensor Beacon deployed", to=beacon_ship)
     else:
-        comms_broadcast(beacon_ship, f"Beacon deployed: {beacon_mode} / {beacon_mon}", "#0cf")
+        overlay_toast(f"Beacon deployed: {beacon_mode} / {beacon_mon}", to=beacon_ship)
     task_schedule(beacon_spawn_aft, {"sp_ship": beacon_ship, "sp_kind": beacon_kind, "sp_monster": beacon_mon, "sp_mode": beacon_mode, "sp_live": True})
     ->END
 
@@ -106,7 +106,7 @@
     beacon_rq = get_inventory_value(COLLISION_SELECTED_ID, "beacon_program_queue", [])
     beacon_rq.append({"kind": beacon_rk, "monster": beacon_rm, "mode": beacon_rmode})
     set_inventory_value(COLLISION_SELECTED_ID, "beacon_program_queue", beacon_rq)
-    comms_broadcast(COLLISION_SELECTED_ID, "Beacon recovered - reprogram and relaunch", "#0cf")
+    overlay_toast("Beacon recovered - reprogram and relaunch", to=COLLISION_SELECTED_ID)
     delete_object(COLLISION_ORIGIN_ID)
     ->END
 

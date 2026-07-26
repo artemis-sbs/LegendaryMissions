@@ -79,7 +79,7 @@ distance: 600
         with comms_override(DOCKING_PLAYER_ID, DOCKING_PLAYER_ID, from_name="Docking"):
             <<[red,white] "Enemies Near"
                 % Attempting dock when enemies are near is ill advised.
-        comms_broadcast(DOCKING_PLAYER_ID, "docking disable, enemy near")
+        overlay_toast("Docking disabled - enemy near", to=DOCKING_PLAYER_ID)
         yield fail
 
 # This is called every 1 second
@@ -191,7 +191,7 @@ distance: 600
     if warning > 5:
         start_counter(DOCKING_PLAYER_ID,"throttle_warning")
         comms_message("Engines running when attempting to docked can hurt our systems.", npc_id, player_id,  "GEEZ! YOU'RE STILL DOCKED", None, "white", "red")
-        comms_broadcast(player_id, "Docking moors active")
+        overlay_toast("Docking moors active", to=player_id)
     yield fail
 
     

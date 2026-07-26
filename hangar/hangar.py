@@ -18,6 +18,7 @@ from sbs_utils.agent import Agent
 from sbs_utils.procedural.query import get_science_selection
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.comms import comms_broadcast
+from sbs_utils.procedural.gui.overlay import overlay_hud, overlay_toast, overlay_clear
 import random
 
 from sbs_utils.procedural.internal_damage import grid_rebuild_grid_objects
@@ -248,9 +249,11 @@ def hangar_craft_spawn(docked_id, craft_data):
     return craft
 
 def hangar_objective_started(CRAFT_ID, OBJECTIVE_ID, objective):
+    """The pilot's current objective is persistent state, so it goes in the sticky
+    objective slot over the cockpit view - not two lines in a text waterfall strip
+    that scrolls them away."""
     client_id = get_inventory_value(CRAFT_ID, "client_id", 0)
-    comms_broadcast(client_id, f"Objective", "#B90")
-    comms_broadcast(client_id, f"{objective}", "#B90")
+    overlay_hud(rows=[("Objective", objective)], to=client_id, slot="objective")
 
 def hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, objective):
     # Get the current load
@@ -265,8 +268,10 @@ def hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, objective):
         c += 1
         set_inventory_value(client_id, "completed_objectives", c)
 
-    comms_broadcast(client_id, "Objective complete", "#090")
-    comms_broadcast(client_id, f"   \x02 {objective}", "#090")
+    # Retire the tracker, tell the pilot it landed, and keep the carrier's log line
+    # (that broadcast is the record the rest of the crew reads).
+    overlay_clear("objective", to=client_id)
+    overlay_toast(f"Objective complete: {objective}", to=client_id, seconds=5)
     comms_broadcast(OBJECTIVE_ID, f"{pilot} {objective}",  "#090")
 
 

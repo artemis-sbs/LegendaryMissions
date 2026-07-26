@@ -657,6 +657,7 @@ Defaults:
     # Step 1 - Hail (Comms). Reveal the first child for everyone holding the arc.
     for gpid in pr_arc_holders("job_ghost"):
         quest_mark_active(gpid, "job_ghost/hail")
+    overlay_hero("SILENT RUNNING", subtitle="The SS Meridian has gone dark", to=all_roles("console"), seconds=5)
     comms_info_card(all_roles("console, comms"), "The SS Meridian has gone silent, drifting toward a black hole. COMMS: hail her.", title="Silent Running", color="#0cf")
     ghost_hail_data = await signal_next("ghost_hailed")
     ->END if GAME_ENDED
@@ -729,6 +730,7 @@ Defaults:
     # Step 1 - Deploy the picket (Engineering/Weapons). Shared prep - the SCAN is the claim point.
     for spid in pr_arc_holders("job_sweep"):
         quest_mark_active(spid, "job_sweep/deploy")
+    overlay_hero("SWEEP ORDER", subtitle="Picket the outer lane", to=all_roles("console"), seconds=5)
     comms_info_card(all_roles("console, comms"), "Fleet wants a sensor sweep of the outer lane. ENGINEERING/WEAPONS: fabricate a Sensor Beacon on the Fabricate tab and deploy it.", title="Sweep Order", color="#0cf")
 --- sweep_beacon
     await delay_sim(1)
@@ -790,6 +792,7 @@ Defaults:
     # Step 1 - Get the tip (Comms).
     for cpid in pr_arc_holders("job_cache"):
         quest_mark_active(cpid, "job_cache/tip")
+    overlay_hero("COLD TIP", subtitle="Someone wants to talk", to=all_roles("console"), seconds=5)
     comms_info_card(all_roles("console, comms"), "A tipster is loitering near the lane. COMMS: hail them for the drop location.", title="Cold Tip", color="#0cf")
     cache_tip_data = await signal_next("cache_tip")
     ->END if GAME_ENDED
@@ -844,6 +847,7 @@ Defaults:
     # Step 1 - Scan the pod (Science).
     for hpid in pr_arc_holders("job_herd_arc"):
         quest_mark_active(hpid, "job_herd_arc/scan")
+    overlay_hero("WILDLIFE ON THE LANE", subtitle="Do not fire on them", to=all_roles("console"), seconds=5)
     comms_info_card(all_roles("console, comms"), "A grazer pod has drifted into the lane. SCIENCE: scan the pod.", title="Wildlife on the Lane", color="#fa0")
     herd_scan_data = await signal_next("herd_scanned")
     ->END if GAME_ENDED

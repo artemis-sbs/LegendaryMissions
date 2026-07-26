@@ -41,7 +41,7 @@ fabrication_load_recipes_amd(document_get_amd_file(None, "Recipes", content=medi
     await delay_sim(btime)
     ->END if to_object(ship_id) is None
     set_inventory_value(ship_id, output, get_inventory_value(ship_id, output, 0) + 1)
-    comms_broadcast(ship_id, f"Fabricated: {output}", "#0f8")
+    overlay_toast(f"Fabricated: {output}", to=ship_id)
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END
 
