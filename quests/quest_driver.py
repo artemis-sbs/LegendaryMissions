@@ -513,6 +513,23 @@ def quest_credit_signal(agent_id, name):
                 _advance_count(agent_id, qid, data, trig.get("count", 1))
 
 
+def quest_set_owner(target, ship):
+    """Claim a quest TARGET for a ship (peacetime multiplayer: shared-pool targets owned per-
+    target so a non-owner can't complete or steal it). ship 0/None clears the claim. Stored as
+    the target's 'quest_owner' inventory value."""
+    set_inventory_value(to_id(target), "quest_owner", to_id(ship) if ship else 0)
+
+
+def quest_owner(target):
+    """The ship id that has claimed this quest target (0 = unclaimed)."""
+    return get_inventory_value(to_id(target), "quest_owner", 0) or 0
+
+
+def quest_is_owner(ship, target):
+    """True if ship is the claimed owner of target."""
+    return quest_owner(target) == to_id(ship)
+
+
 def quest_fail_on_all_dead(destroyed_id=None):
     """Fail ACTIVE quests whose fail_on_all_dead {role} guard just emptied - the
     last holder of that role has died. Called from the killed route; the victim is
