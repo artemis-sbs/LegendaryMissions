@@ -28,7 +28,7 @@ Properties:
     Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, max", var="MONSTER_SELECT")'
     Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
     Jobs: 'gui_drop_down("$text: {JOBS_SELECT};list: none, few, some, lots, max", var= "JOBS_SELECT")'
-    Quest Mode: 'gui_drop_down("$text: {QUEST_MODE};list: Protected, Claim-jump", var="QUEST_MODE")'
+    Quest Mode: 'gui_drop_down("$text: {QUEST_MODE};list: Co-op, Protected, Claim-jump", var="QUEST_MODE")'
     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
     Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
 Defaults:
@@ -69,15 +69,21 @@ Defaults:
     shared CREDIT_SIDE_IDS = _cids
     shared CREDITS_START = _cc0
 
-    # Multiplayer quest ownership (PEACETIME_PVP_PLAN). Protected = a claimed target is hard-
-    # locked to its owner: install the grav-tether veto so non-owners can't tether it, and run
-    # pr_claim_watch to assign ownership (first tetherer) + eject non-owner tethers. Claim-jump
-    # clears the veto so targets can be stolen.
+    # Multiplayer quest ownership (PEACETIME_PVP_PLAN). Three modes:
+    #  Co-op      - fully shared: no claiming, no veto. Targets stay unclaimed so the job watchers
+    #               broadcast (every holder credited), and the multi-step arcs advance for all
+    #               holders together. Friendly group play (the legacy shared behaviour).
+    #  Protected  - a claimed target is hard-locked to its owner: install the grav-tether veto so
+    #               non-owners can't tether it, and run pr_claim_watch to assign ownership (first
+    #               tetherer) + eject non-owner tethers. Owner-only credit, no grief. Default.
+    #  Claim-jump - claimed but stealable: no veto; ownership follows the current tetherer.
     if QUEST_MODE == "Protected":
         grav_tether_set_attach_policy(pr_tether_ownership_policy)
     else:
         grav_tether_set_attach_policy(None)
-    task_schedule(pr_claim_watch)
+    # Co-op does no claiming (targets stay unclaimed -> watchers broadcast to every holder).
+    if QUEST_MODE != "Co-op":
+        task_schedule(pr_claim_watch)
     task_schedule(pr_standings_ticker)
 
     terrain_asteroid_clusters(terrain_value)
@@ -637,6 +643,9 @@ Defaults:
 # the hail/scan step signals (awaited via signal_next); the two tether legs are proximity.
 ===== pr_ghost_seq =====
     default GAME_ENDED = False
+    default QUEST_MODE = "Protected"
+    coop = QUEST_MODE == "Co-op"
+    ghost_owner = 0
     ghost_hole = Vec3(-16000, 0, -16000)
     ds1 = None
     for s in to_object_list(role("station")):
@@ -646,17 +655,24 @@ Defaults:
     for gpid in pr_arc_holders("job_ghost"):
         quest_mark_active(gpid, "job_ghost/hail")
     comms_info_card(all_roles("console, comms"), "The SS Meridian has gone silent, drifting toward a black hole. COMMS: hail her.", title="Silent Running", color="#0cf")
-    await signal_next("ghost_hailed")
+    ghost_hail_data = await signal_next("ghost_hailed")
     ->END if GAME_ENDED
+    # Owned modes: the first hailer CLAIMS the arc + its derelict (veto-protects the tow legs;
+    # other accepters can no longer advance it). Co-op leaves owner 0 -> all holders advance.
+    if not coop and ghost_owner == 0:
+        ghost_owner = pr_signal_who(ghost_hail_data)
+        if ghost_owner != 0:
+            for gd in to_list(role("derelict")):
+                pr_quest_claim(gd, ghost_owner)
     # Step 2 - Scan (Science).
-    for gpid in pr_arc_holders("job_ghost"):
+    for gpid in pr_arc_recipients("job_ghost", ghost_owner, coop):
         quest_mark_complete(gpid, "job_ghost/hail")
         quest_mark_active(gpid, "job_ghost/scan")
     comms_info_card(all_roles("console, comms"), "No live response - just an automated loop. SCIENCE: scan the derelict.", title="Silent Running", color="#0cf")
     await signal_next("ghost_scanned")
     ->END if GAME_ENDED
     # Step 3 - Tow clear of the hole (proximity).
-    for gpid in pr_arc_holders("job_ghost"):
+    for gpid in pr_arc_recipients("job_ghost", ghost_owner, coop):
         quest_mark_complete(gpid, "job_ghost/scan")
         quest_mark_active(gpid, "job_ghost/clear")
     comms_info_card(all_roles("console, comms"), "Crew in cryo, reactor critical. WEAPONS/HELM: grav-tether her and tow her CLEAR of the black hole - now.", title="Silent Running", color="orange")
@@ -668,7 +684,7 @@ Defaults:
     if (Vec3(g_list[0].pos) - ghost_hole).length() < 6000:
         jump ghost_clear
     # Step 4 - Tow home (proximity).
-    for gpid in pr_arc_holders("job_ghost"):
+    for gpid in pr_arc_recipients("job_ghost", ghost_owner, coop):
         quest_mark_complete(gpid, "job_ghost/clear")
         quest_mark_active(gpid, "job_ghost/home")
     comms_info_card(all_roles("console, comms"), "Clear of the well. Now tow her home to DS 1.", title="Silent Running", color="#0cf")
@@ -681,7 +697,7 @@ Defaults:
     if sbs.distance_id(g_list[0].id, ds1) > 1800:
         jump ghost_home
     # Completing the last child auto-completes the container parent -> the arc pays out.
-    for gpid in pr_arc_holders("job_ghost"):
+    for gpid in pr_arc_recipients("job_ghost", ghost_owner, coop):
         quest_mark_complete(gpid, "job_ghost/home")
     ->END
 
@@ -689,7 +705,7 @@ Defaults:
 # Ghost Freighter step signals: hailing the derelict (Comms) and scanning it (Science).
 //comms if has_roles(COMMS_SELECTED_ID, "derelict")
     comms_receive("SS Meridian automated distress: reactor breach imminent, crew in emergency cryo, no conscious crew aboard. Tow to safety requested.", title="SS Meridian", title_color="orange")
-    signal_emit("ghost_hailed")
+    signal_emit("ghost_hailed", {"who": COMMS_ORIGIN_ID})
 
 //science if has_roles(SCIENCE_SELECTED_ID, "derelict")
     ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 900
@@ -700,11 +716,14 @@ Defaults:
 # (Engineering/Weapons) -> scan the flagged contact (Science) -> tow it home (Weapons/Helm).
 ===== pr_sweep_seq =====
     default GAME_ENDED = False
+    default QUEST_MODE = "Protected"
+    coop = QUEST_MODE == "Co-op"
+    sweep_owner = 0
     ds1 = None
     for s in to_object_list(role("station")):
         if s.name == "DS 1":
             ds1 = s.id
-    # Step 1 - Deploy the picket (Engineering/Weapons).
+    # Step 1 - Deploy the picket (Engineering/Weapons). Shared prep - the SCAN is the claim point.
     for spid in pr_arc_holders("job_sweep"):
         quest_mark_active(spid, "job_sweep/deploy")
     comms_info_card(all_roles("console, comms"), "Fleet wants a sensor sweep of the outer lane. ENGINEERING/WEAPONS: fabricate a Sensor Beacon on the Fabricate tab and deploy it.", title="Sweep Order", color="#0cf")
@@ -722,10 +741,16 @@ Defaults:
         quest_mark_complete(spid, "job_sweep/deploy")
         quest_mark_active(spid, "job_sweep/scan")
     comms_info_card(all_roles("console, comms"), "Picket up - it flags a drifting contact in the outer lane. SCIENCE: scan it.", title="Sweep Order", color="#0cf")
-    await signal_next("sweep_scanned")
+    sweep_scan_data = await signal_next("sweep_scanned")
     ->END if GAME_ENDED
+    # Owned modes: the first scanner CLAIMS the arc + its find (veto-protects the tow leg).
+    if not coop and sweep_owner == 0:
+        sweep_owner = pr_signal_who(sweep_scan_data)
+        if sweep_owner != 0:
+            for sf in to_list(role("sweep_find")):
+                pr_quest_claim(sf, sweep_owner)
     # Step 3 - Recover the find (Weapons/Helm).
-    for spid in pr_arc_holders("job_sweep"):
+    for spid in pr_arc_recipients("job_sweep", sweep_owner, coop):
         quest_mark_complete(spid, "job_sweep/scan")
         quest_mark_active(spid, "job_sweep/recover")
     comms_info_card(all_roles("console, comms"), "It's a stranded cargo pod. Grav-tether it and tow it home to DS 1.", title="Sweep Order", color="#0cf")
@@ -737,7 +762,7 @@ Defaults:
     ->END if len(f_list) < 1
     if sbs.distance_id(f_list[0].id, ds1) > 1800:
         jump sweep_home
-    for spid in pr_arc_holders("job_sweep"):
+    for spid in pr_arc_recipients("job_sweep", sweep_owner, coop):
         quest_mark_complete(spid, "job_sweep/recover")
     ->END
 
@@ -745,13 +770,16 @@ Defaults:
 # Sweep step signal: scanning the flagged contact (Science).
 //science if has_roles(SCIENCE_SELECTED_ID, "sweep_find")
     ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 900
-    signal_emit("sweep_scanned")
+    signal_emit("sweep_scanned", {"who": SCIENCE_ORIGIN_ID})
 
 
 # Cache in the Rocks (multi-console): hail the tipster (Comms) -> scan the cluster to find the
 # loaded rock (Science) -> tether the pod out and tow it to DS 1 (Weapons/Helm).
 ===== pr_cache_seq =====
     default GAME_ENDED = False
+    default QUEST_MODE = "Protected"
+    coop = QUEST_MODE == "Co-op"
+    cache_owner = 0
     ds1 = None
     for s in to_object_list(role("station")):
         if s.name == "DS 1":
@@ -760,17 +788,23 @@ Defaults:
     for cpid in pr_arc_holders("job_cache"):
         quest_mark_active(cpid, "job_cache/tip")
     comms_info_card(all_roles("console, comms"), "A tipster is loitering near the lane. COMMS: hail them for the drop location.", title="Cold Tip", color="#0cf")
-    await signal_next("cache_tip")
+    cache_tip_data = await signal_next("cache_tip")
     ->END if GAME_ENDED
+    # Owned modes: the first to get the tip CLAIMS the arc + its pod (veto-protects the tow leg).
+    if not coop and cache_owner == 0:
+        cache_owner = pr_signal_who(cache_tip_data)
+        if cache_owner != 0:
+            for cf in to_list(role("cache_find")):
+                pr_quest_claim(cf, cache_owner)
     # Step 2 - Find the cache (Science).
-    for cpid in pr_arc_holders("job_cache"):
+    for cpid in pr_arc_recipients("job_cache", cache_owner, coop):
         quest_mark_complete(cpid, "job_cache/tip")
         quest_mark_active(cpid, "job_cache/find")
     comms_info_card(all_roles("console, comms"), "The cache is hidden in the rock cluster. SCIENCE: scan the cluster to find the loaded one.", title="Cold Tip", color="#0cf")
     await signal_next("cache_found")
     ->END if GAME_ENDED
     # Step 3 - Recover the pod (Weapons/Helm).
-    for cpid in pr_arc_holders("job_cache"):
+    for cpid in pr_arc_recipients("job_cache", cache_owner, coop):
         quest_mark_complete(cpid, "job_cache/find")
         quest_mark_active(cpid, "job_cache/recover")
     comms_info_card(all_roles("console, comms"), "Found it - a shielded cargo pod. Grav-tether it out of the rocks and tow it to DS 1.", title="Cold Tip", color="#0cf")
@@ -782,7 +816,7 @@ Defaults:
     ->END if len(c_list) < 1
     if sbs.distance_id(c_list[0].id, ds1) > 1800:
         jump cache_home
-    for cpid in pr_arc_holders("job_cache"):
+    for cpid in pr_arc_recipients("job_cache", cache_owner, coop):
         quest_mark_complete(cpid, "job_cache/recover")
     ->END
 
@@ -790,7 +824,7 @@ Defaults:
 # Cache step signals: hailing the tipster (Comms) and scanning the loaded rock (Science).
 //comms if has_roles(COMMS_SELECTED_ID, "tipster")
     comms_receive("Alright - the drop's in the rock cluster off the lane. Shielded pod, reads like just another boulder. You didn't hear it from me.", title="Tipster", title_color="#0cf")
-    signal_emit("cache_tip")
+    signal_emit("cache_tip", {"who": COMMS_ORIGIN_ID})
 
 //science if has_roles(SCIENCE_SELECTED_ID, "cache_find")
     ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 900
@@ -801,21 +835,30 @@ Defaults:
 # beacon (Engineering/Weapons) -> reel the drift netting off a snared grazer (Weapons/Helm).
 ===== pr_herd_arc_seq =====
     default GAME_ENDED = False
+    default QUEST_MODE = "Protected"
+    coop = QUEST_MODE == "Co-op"
+    herd_owner = 0
     # Step 1 - Scan the pod (Science).
     for hpid in pr_arc_holders("job_herd_arc"):
         quest_mark_active(hpid, "job_herd_arc/scan")
     comms_info_card(all_roles("console, comms"), "A grazer pod has drifted into the lane. SCIENCE: scan the pod.", title="Wildlife on the Lane", color="#fa0")
-    await signal_next("herd_scanned")
+    herd_scan_data = await signal_next("herd_scanned")
     ->END if GAME_ENDED
+    # Owned modes: the first scanner CLAIMS the arc + the snared netting (veto-protects the reel).
+    if not coop and herd_owner == 0:
+        herd_owner = pr_signal_who(herd_scan_data)
+        if herd_owner != 0:
+            for sd in to_list(role("snag_debris")):
+                pr_quest_claim(sd, herd_owner)
     # Step 2 - Warn the convoy (Comms).
-    for hpid in pr_arc_holders("job_herd_arc"):
+    for hpid in pr_arc_recipients("job_herd_arc", herd_owner, coop):
         quest_mark_complete(hpid, "job_herd_arc/scan")
         quest_mark_active(hpid, "job_herd_arc/warn")
     comms_info_card(all_roles("console, comms"), "They're spooked and drifting into traffic. COMMS: warn the civilian convoy to hold.", title="Wildlife on the Lane", color="#fa0")
     await signal_next("herd_warned")
     ->END if GAME_ENDED
     # Step 3 - Deploy a bio REPEL beacon (Engineering/Weapons).
-    for hpid in pr_arc_holders("job_herd_arc"):
+    for hpid in pr_arc_recipients("job_herd_arc", herd_owner, coop):
         quest_mark_complete(hpid, "job_herd_arc/warn")
         quest_mark_active(hpid, "job_herd_arc/repel")
     comms_info_card(all_roles("console, comms"), "ENGINEERING/WEAPONS: fabricate a Bio Beacon set to REPEL and deploy it among the pod to drive them clear. Do NOT fire.", title="Wildlife on the Lane", color="#fa0")
@@ -829,7 +872,7 @@ Defaults:
     if not got_bio:
         jump herd_repel
     # Step 4 - Free the snared grazer (Weapons/Helm).
-    for hpid in pr_arc_holders("job_herd_arc"):
+    for hpid in pr_arc_recipients("job_herd_arc", herd_owner, coop):
         quest_mark_complete(hpid, "job_herd_arc/repel")
         quest_mark_active(hpid, "job_herd_arc/free")
     comms_info_card(all_roles("console, comms"), "Pod's moving off. One grazer is snared in drifting netting - grav-tether the netting clear to free it.", title="Wildlife on the Lane", color="#fa0")
@@ -841,7 +884,7 @@ Defaults:
     ->END if len(s_list) < 1 or len(d_list) < 1
     if sbs.distance_id(s_list[0].id, d_list[0].id) < 2500:
         jump herd_free
-    for hpid in pr_arc_holders("job_herd_arc"):
+    for hpid in pr_arc_recipients("job_herd_arc", herd_owner, coop):
         quest_mark_complete(hpid, "job_herd_arc/free")
     ->END
 
@@ -849,7 +892,7 @@ Defaults:
 # Herd step signals: scanning a grazer (Science) and warning the convoy (Comms).
 //science if has_roles(SCIENCE_SELECTED_ID, "arc_grazer")
     ->END if sbs.distance_id(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) > 900
-    signal_emit("herd_scanned")
+    signal_emit("herd_scanned", {"who": SCIENCE_ORIGIN_ID})
 
 //comms if has_roles(COMMS_SELECTED_ID, "convoy")
     comms_receive("Convoy copies - holding station until the lane is clear. Thanks for the heads-up, patrol.", title="Civilian Convoy", title_color="#0cf")

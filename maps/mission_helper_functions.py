@@ -295,6 +295,26 @@ def pr_arc_holders(parent_key):
     return [p.id for p in to_object_list(role("__player__")) if quest_get_state(p.id, parent_key) == QuestState.ACTIVE]
 
 
+def pr_arc_recipients(parent_key, owner, coop):
+    """Who a multi-step arc sequencer should mark for the NEXT step.
+
+    Co-op (coop True) or not-yet-claimed (owner 0) -> EVERY holder (shared progress, the legacy
+    behaviour). Owned modes once a ship has claimed the arc (owner != 0) -> ONLY that owner, so a
+    claimed arc advances for its owner alone (first-to-engage locks it; other accepters wait)."""
+    if coop or not owner:
+        return pr_arc_holders(parent_key)
+    from sbs_utils.procedural.quest import quest_get_state, QuestState
+    # Only if the owner still actually holds the arc active (abandoned -> nobody, sequencer ends).
+    return [owner] if quest_get_state(owner, parent_key) == QuestState.ACTIVE else []
+
+
+def pr_signal_who(data):
+    """Extract the acting ship id ('who') from a step-signal payload; 0 if absent/none."""
+    if isinstance(data, dict):
+        return data.get("who", 0) or 0
+    return 0
+
+
 def pr_quest_owner(target):
     """The ship id that has CLAIMED this quest target (0 = unclaimed). Peacetime multiplayer
     (PEACETIME_PVP_PLAN): shared-pool targets are owned per-target once a ship works one."""
