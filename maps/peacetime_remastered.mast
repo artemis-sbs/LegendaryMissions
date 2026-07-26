@@ -365,13 +365,28 @@ Defaults:
     ->END
 
 
-# Weapons-job events -> quest_signal. Using //damage/destroy (reliable for both npc
-# drones and terrain asteroids) keeps every job on the same event path.
+# Weapons-job events -> quest credit. Using //damage/destroy (reliable for both npc
+# drones and terrain asteroids) keeps every job on the same event path. Credit the KILLER
+# (parent = firing/owning ship, else source/origin) so in a competitive board one ship's
+# kills don't pay every holder; fall back to a broadcast when there is no player attacker
+# (script/lifetime destroy) so co-op/unattributed kills still count (no regression).
 //damage/destroy if has_role(DESTROYED_ID, "target_drone")
-    signal_emit("quest_signal", {"SIGNAL_NAME": "drone_down"})
+    default DAMAGE_PARENT_ID = 0
+    default DAMAGE_SOURCE_ID = 0
+    pr_killer = DAMAGE_PARENT_ID if DAMAGE_PARENT_ID else DAMAGE_SOURCE_ID
+    if has_role(pr_killer, "__player__"):
+        quest_credit_signal(pr_killer, "drone_down")
+    else:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "drone_down"})
 
 //damage/destroy if has_role(DESTROYED_ID, "hazard_rock")
-    signal_emit("quest_signal", {"SIGNAL_NAME": "rock_cleared"})
+    default DAMAGE_PARENT_ID = 0
+    default DAMAGE_SOURCE_ID = 0
+    pr_killer = DAMAGE_PARENT_ID if DAMAGE_PARENT_ID else DAMAGE_SOURCE_ID
+    if has_role(pr_killer, "__player__"):
+        quest_credit_signal(pr_killer, "rock_cleared")
+    else:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "rock_cleared"})
 
 //damage/destroy if has_role(DESTROYED_ID, "poacher")
     default QUEST_MODE = "Protected"
