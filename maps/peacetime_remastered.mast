@@ -374,7 +374,17 @@ Defaults:
     signal_emit("quest_signal", {"SIGNAL_NAME": "rock_cleared"})
 
 //damage/destroy if has_role(DESTROYED_ID, "poacher")
-    signal_emit("quest_signal", {"SIGNAL_NAME": "poacher_killed"})
+    default QUEST_MODE = "Protected"
+    if QUEST_MODE == "Protected":
+        # Multiplayer no-grief: a destroyed trawler is REPLACED by a fresh runner instead of
+        # failing everyone's job. Destroying it just wastes the shot (at most one exists at a
+        # time). Other modes keep the original "don't destroy or you fail" tension.
+        poacher_rec2 = pr_landmark_by_key(PR_LANDMARKS, "poacher_lm")
+        if poacher_rec2 is not None:
+            landmark_spawn(poacher_rec2)
+        comms_info_card(all_roles("console, comms"), "The trawler was destroyed - but another unregistered runner has slipped into the lane. Intercept and BOARD it; do not destroy.", title="Enforcement Dispatch", color="orange")
+    else:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "poacher_killed"})
 
 
 # Poacher comms: the enforcement surface. The surrender check mirrors the kidnapper's -
