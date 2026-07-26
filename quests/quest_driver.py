@@ -501,6 +501,18 @@ def quest_on_signal(name):
                     quest_mark_failed(aid, qid)
 
 
+def quest_credit_signal(agent_id, name):
+    """Owner-scoped on_signal advance: like quest_on_signal but for ONE agent only, so a
+    shared/contested quest target can credit the ship that completed it (peacetime
+    multiplayer) instead of every holder. Crediting only (no fail-trigger handling)."""
+    for qid, data in _active_quests(agent_id):
+        trig = data.get("on_signal") or data.get("on_comms")
+        if isinstance(trig, dict):
+            want = trig.get("name") or trig.get("option")
+            if not want or want == name:
+                _advance_count(agent_id, qid, data, trig.get("count", 1))
+
+
 def quest_fail_on_all_dead(destroyed_id=None):
     """Fail ACTIVE quests whose fail_on_all_dead {role} guard just emptied - the
     last holder of that role has died. Called from the killed route; the victim is

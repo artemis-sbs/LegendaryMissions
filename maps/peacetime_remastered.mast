@@ -312,18 +312,18 @@ Defaults:
             comms_info_card(all_roles("console, comms"), "Salvage hulks are cluttering the lane. Grav-tether each one and tow it to the Refinery Platform.", title="Salvage Order", color="#0cf")
             npc_spawn(-18000, 0, -6000, "Refinery Platform", "tsn, station, refinery", "starbase_command", "behav_station")
             for v in scatter.box(PR_JOB_COUNTS.get("salvage", 3), -9000, 0, -12000, 3000, 400, 3000, centered=True):
-                npc_spawn(v.x, v.y, v.z, "Salvage Hulk", "civ, salvage_hulk", "cargo_ship", "behav_npcship")
+                npc_spawn(v.x, v.y, v.z, "Salvage Hulk", "civ, salvage_hulk, claimable", "cargo_ship", "behav_npcship")
             task_schedule(pr_salvage_watch)
         case "job_lifepod":
             # A drifting lifepod - tow it to DS 1 before the Fail after clock (anchored on accept).
             comms_info_card(all_roles("console, comms"), "A lifepod is tumbling from a wreck field, beacon failing. Grav-tether it and tow it to DS 1 - fast.", title="Life Support Critical", color="red")
-            npc_spawn(-10000, 0, -14000, "Lifepod", "civ, civilian, tow_lifepod", "cargo_ship", "behav_npcship")
+            npc_spawn(-10000, 0, -14000, "Lifepod", "civ, civilian, tow_lifepod, claimable", "cargo_ship", "behav_npcship")
             task_schedule(pr_lifepod_watch)
         case "job_relay":
             # A drifted comms relay towed back to a marked POINT (a navpoint shows where) - the one
             # job that delivers to a position, not a station.
             comms_info_card(all_roles("console, comms"), "A comms relay drifted off station. Grav-tether it and tow it to the marked position in the lane.", title="Comms Order", color="#0cf")
-            npc_spawn(6000, 0, 9000, "Comms Relay", "tsn, relay, tow_relay", "cargo_ship", "behav_npcship")
+            npc_spawn(6000, 0, 9000, "Comms Relay", "tsn, relay, tow_relay, claimable", "cargo_ship", "behav_npcship")
             sim.add_navpoint(4000, 0, -10000, "Relay Position", "#0cf")
             task_schedule(pr_relay_watch)
         case "job_ghost":
@@ -521,7 +521,11 @@ Defaults:
     ref = ref_list[0]
     for h in to_list(role("salvage_hulk")):
         if sbs.distance_id(h, ref) <= 1800:
-            signal_emit("quest_signal", {"SIGNAL_NAME": "salvage_delivered"})
+            salvage_owner = pr_quest_owner(h)
+            if salvage_owner != 0:
+                quest_credit_signal(salvage_owner, "salvage_delivered")
+            else:
+                signal_emit("quest_signal", {"SIGNAL_NAME": "salvage_delivered"})
             remove_role(h, "salvage_hulk")
     ->END if len(to_list(role("salvage_hulk"))) < 1
     jump psw_loop
@@ -542,7 +546,11 @@ Defaults:
     p_list = to_list(role("tow_lifepod"))
     ->END if len(p_list) < 1
     if sbs.distance_id(p_list[0], ds1) <= 1800:
-        signal_emit("quest_signal", {"SIGNAL_NAME": "lifepod_delivered"})
+        lifepod_owner = pr_quest_owner(p_list[0])
+        if lifepod_owner != 0:
+            quest_mark_complete(lifepod_owner, "job_lifepod")
+        else:
+            signal_emit("quest_signal", {"SIGNAL_NAME": "lifepod_delivered"})
         remove_role(p_list[0], "tow_lifepod")
         ->END
     jump plpw_loop
@@ -560,7 +568,11 @@ Defaults:
     ->END if len(r_list) < 1
     r = r_list[0]
     if (Vec3(r.pos) - relay_target).length() <= 1500:
-        signal_emit("quest_signal", {"SIGNAL_NAME": "relay_placed"})
+        relay_owner = pr_quest_owner(r.id)
+        if relay_owner != 0:
+            quest_mark_complete(relay_owner, "job_relay")
+        else:
+            signal_emit("quest_signal", {"SIGNAL_NAME": "relay_placed"})
         remove_role(r.id, "tow_relay")
         ->END
     jump prw_loop
