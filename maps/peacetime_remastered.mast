@@ -472,6 +472,7 @@ Defaults:
         barge_owner = pr_quest_owner(b_list[0])
         if barge_owner != 0:
             quest_mark_complete(barge_owner, "job_barge")
+            pr_award(barge_owner, 300)
         else:
             signal_emit("quest_signal", {"SIGNAL_NAME": "barge_delivered"})
         remove_role(b_list[0], "tow_barge")
@@ -524,6 +525,7 @@ Defaults:
             salvage_owner = pr_quest_owner(h)
             if salvage_owner != 0:
                 quest_credit_signal(salvage_owner, "salvage_delivered")
+                pr_award(salvage_owner, 80)
             else:
                 signal_emit("quest_signal", {"SIGNAL_NAME": "salvage_delivered"})
             remove_role(h, "salvage_hulk")
@@ -549,6 +551,7 @@ Defaults:
         lifepod_owner = pr_quest_owner(p_list[0])
         if lifepod_owner != 0:
             quest_mark_complete(lifepod_owner, "job_lifepod")
+            pr_award(lifepod_owner, 320)
         else:
             signal_emit("quest_signal", {"SIGNAL_NAME": "lifepod_delivered"})
         remove_role(p_list[0], "tow_lifepod")
@@ -571,6 +574,7 @@ Defaults:
         relay_owner = pr_quest_owner(r.id)
         if relay_owner != 0:
             quest_mark_complete(relay_owner, "job_relay")
+            pr_award(relay_owner, 200)
         else:
             signal_emit("quest_signal", {"SIGNAL_NAME": "relay_placed"})
         remove_role(r.id, "tow_relay")

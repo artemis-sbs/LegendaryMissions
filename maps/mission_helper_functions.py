@@ -328,6 +328,29 @@ def pr_tether_ownership_policy(src, tgt):
     return owner == src
 
 
+def pr_award(ship, credits):
+    """Add to a ship's PER-SHIP earnings tally ('pt_earned') - the multiplayer leaderboard
+    metric. Distinct from the side credit bank (which same-side ships share), so ships can be
+    ranked against each other."""
+    from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+    from sbs_utils.procedural.query import to_id
+    sid = to_id(ship)
+    set_inventory_value(sid, "pt_earned", get_inventory_value(sid, "pt_earned", 0) + credits)
+
+
+def pr_standings():
+    """Player ships ranked by pt_earned, high to low: [(name, earned), ...]. For a live board
+    or the results screen. Empty if nobody has earned (non-MP or nothing done yet)."""
+    from sbs_utils.procedural.inventory import get_inventory_value
+    from sbs_utils.procedural.roles import role
+    from sbs_utils.procedural.query import to_object_list
+    rows = []
+    for p in to_object_list(role("__player__")):
+        rows.append((p.name, get_inventory_value(p.id, "pt_earned", 0) or 0))
+    rows.sort(key=lambda r: r[1], reverse=True)
+    return rows
+
+
 def pr_landmark_by_key(records, key):
     """The landmark record with this key from a landmarks_from_section list (None if absent).
     Lets the mission spawn one fixed job object (the poacher / the shuttle) on accept instead of
