@@ -539,9 +539,12 @@ Defaults:
                 for tw in ct_towers:
                     if tw != ct_owner:
                         grav_tether_release(tw, ct)
+                        pr_claim_notify(tw, ct, "locked")
             else:
                 if len(ct_towers) > 0 and ct_towers[0] != ct_owner:
                     pr_quest_claim(ct, ct_towers[0])
+                    pr_claim_notify(ct_owner, ct, "lost")
+                    pr_claim_notify(ct_towers[0], ct, "stole")
     jump pcw_loop
 
 

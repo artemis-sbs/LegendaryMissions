@@ -335,17 +335,56 @@ def pr_is_quest_owner(ship, target):
     return pr_quest_owner(target) == to_id(ship)
 
 
+def pr_claim_name(target):
+    """A readable name for a claim target ('the salvage hulk' fallback)."""
+    from sbs_utils.procedural.query import to_object
+    o = to_object(target)
+    nm = getattr(o, "name", None) if o is not None else None
+    return nm if nm else "the target"
+
+
+def pr_claim_notify(ship, target, kind):
+    """Per-ship comms feedback for claim events, with a short per-ship+target+kind cooldown so
+    it can be called every tick / every attach attempt without spamming. Targets only the
+    affected ship's OWN comms consoles. kind: 'stole' | 'lost' | 'locked'."""
+    from sbs_utils.procedural.query import to_id
+    from sbs_utils.procedural.links import linked_to
+    from sbs_utils.procedural.roles import all_roles
+    from sbs_utils.procedural.timers import set_timer, is_timer_set, is_timer_finished
+    from sbs_utils.procedural.comms import comms_info_card
+    sid = to_id(ship)
+    tid = to_id(target)
+    if not sid or not tid:
+        return
+    key = "pr_claim_msg_" + str(tid) + "_" + kind
+    if is_timer_set(sid, key) and not is_timer_finished(sid, key):
+        return
+    set_timer(sid, key, seconds=6)
+    consoles = linked_to(sid, "consoles") & all_roles("console, comms")
+    nm = pr_claim_name(tid)
+    if kind == "stole":
+        comms_info_card(consoles, "You claimed " + nm + ".", title="Claim", color="#0f0")
+    elif kind == "lost":
+        comms_info_card(consoles, nm + " was claim-jumped out from under you.", title="Claim Lost", color="orange")
+    elif kind == "locked":
+        comms_info_card(consoles, nm + " is claimed by another ship - you cannot tether it.", title="Claimed", color="orange")
+
+
 def pr_tether_ownership_policy(src, tgt):
     """grav_tether attach veto (installed only in Protected mode): only the OWNER may tether
     a CLAIMED 'claimable' target; unclaimed or non-quest targets are free (the claim watcher
-    assigns an unclaimed one to whoever grabs it first)."""
+    assigns an unclaimed one to whoever grabs it first). A blocked non-owner gets a one-off
+    'claimed by another ship' card (cooldowned) so the failed tether isn't silent."""
     from sbs_utils.procedural.roles import has_role
     if not has_role(tgt, "claimable"):
         return True
     owner = pr_quest_owner(tgt)
     if not owner:
         return True
-    return owner == src
+    if owner == src:
+        return True
+    pr_claim_notify(src, tgt, "locked")
+    return False
 
 
 def pr_award(ship, credits):
