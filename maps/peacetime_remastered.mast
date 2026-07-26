@@ -393,7 +393,9 @@ Defaults:
         if s_max > 0:
             s_ratio = min(s_cur/s_max, s_ratio)
     if s_ratio < 0.5:
-        signal_emit("quest_signal", {"SIGNAL_NAME": "poacher_boarded"})
+        # Credit the boarding ship (the comms origin), not every holder.
+        quest_credit_signal(COMMS_ORIGIN_ID, "poacher_boarded")
+        pr_award(COMMS_ORIGIN_ID, 300)
         remove_role(COMMS_SELECTED_ID, "poacher")
         e_obj = to_engine_object(COMMS_SELECTED_ID)
         _pos = e_obj.pos
@@ -416,7 +418,9 @@ Defaults:
     yield success
 
 ===== pr_customs_clear =====
-    signal_emit("quest_signal", {"SIGNAL_NAME": "customs_cleared"})
+    # Credit the clearing ship (comms origin) so each patroller banks its own clears.
+    quest_credit_signal(COMMS_ORIGIN_ID, "customs_cleared")
+    pr_award(COMMS_ORIGIN_ID, 30)
     remove_role(COMMS_SELECTED_ID, "traffic")
     comms_receive(f"""Transit cleared. Safe travels, and thank you for keeping the lanes tidy.""", title="Customs", title_color="green")
     yield success
