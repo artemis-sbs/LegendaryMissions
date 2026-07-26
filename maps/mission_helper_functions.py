@@ -295,6 +295,39 @@ def pr_arc_holders(parent_key):
     return [p.id for p in to_object_list(role("__player__")) if quest_get_state(p.id, parent_key) == QuestState.ACTIVE]
 
 
+def pr_quest_owner(target):
+    """The ship id that has CLAIMED this quest target (0 = unclaimed). Peacetime multiplayer
+    (PEACETIME_PVP_PLAN): shared-pool targets are owned per-target once a ship works one."""
+    from sbs_utils.procedural.inventory import get_inventory_value
+    from sbs_utils.procedural.query import to_id
+    return get_inventory_value(to_id(target), "quest_owner", 0) or 0
+
+
+def pr_quest_claim(target, ship):
+    """Claim a quest target for a ship (last claim wins)."""
+    from sbs_utils.procedural.inventory import set_inventory_value
+    from sbs_utils.procedural.query import to_id
+    set_inventory_value(to_id(target), "quest_owner", to_id(ship))
+
+
+def pr_is_quest_owner(ship, target):
+    from sbs_utils.procedural.query import to_id
+    return pr_quest_owner(target) == to_id(ship)
+
+
+def pr_tether_ownership_policy(src, tgt):
+    """grav_tether attach veto (installed only in Protected mode): only the OWNER may tether
+    a CLAIMED 'claimable' target; unclaimed or non-quest targets are free (the claim watcher
+    assigns an unclaimed one to whoever grabs it first)."""
+    from sbs_utils.procedural.roles import has_role
+    if not has_role(tgt, "claimable"):
+        return True
+    owner = pr_quest_owner(tgt)
+    if not owner:
+        return True
+    return owner == src
+
+
 def pr_landmark_by_key(records, key):
     """The landmark record with this key from a landmarks_from_section list (None if absent).
     Lets the mission spawn one fixed job object (the poacher / the shuttle) on accept instead of

@@ -28,10 +28,12 @@ Properties:
     Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, max", var="MONSTER_SELECT")'
     Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
     Jobs: 'gui_drop_down("$text: {JOBS_SELECT};list: none, few, some, lots, max", var= "JOBS_SELECT")'
+    Quest Mode: 'gui_drop_down("$text: {QUEST_MODE};list: Protected, Claim-jump", var="QUEST_MODE")'
     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
     Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
 Defaults:
   JOBS_SELECT: some
+  QUEST_MODE: Protected
 ```
 
     terrain_value = terrain_to_value(TERRAIN_SELECT)
@@ -66,6 +68,16 @@ Defaults:
         _cc0 = _cc0 + get_inventory_value(_s, "credits", 0)
     shared CREDIT_SIDE_IDS = _cids
     shared CREDITS_START = _cc0
+
+    # Multiplayer quest ownership (PEACETIME_PVP_PLAN). Protected = a claimed target is hard-
+    # locked to its owner: install the grav-tether veto so non-owners can't tether it, and run
+    # pr_claim_watch to assign ownership (first tetherer) + eject non-owner tethers. Claim-jump
+    # clears the veto so targets can be stolen.
+    if QUEST_MODE == "Protected":
+        grav_tether_set_attach_policy(pr_tether_ownership_policy)
+    else:
+        grav_tether_set_attach_policy(None)
+    task_schedule(pr_claim_watch)
 
     terrain_asteroid_clusters(terrain_value)
     terrain_spawn_nebula_clusters(terrain_value)
@@ -292,7 +304,7 @@ Defaults:
             # A dead-in-space barge (behav_npcship, no orders -> it just idles); the crew
             # grav-tethers it and tows it home. pr_barge_watch credits arrival at DS 1.
             comms_info_card(all_roles("console, comms"), "A power-dead ore barge is adrift in the lane. Grav-tether it and tow it back to DS 1.", title="Haul Order", color="#0cf")
-            npc_spawn(-13000, 0, 7000, "Ore Barge", "civ, civilian, tow_barge", "cargo_ship", "behav_npcship")
+            npc_spawn(-13000, 0, 7000, "Ore Barge", "civ, civilian, tow_barge, claimable", "cargo_ship", "behav_npcship")
             task_schedule(pr_barge_watch)
         case "job_salvage":
             # Scatter idle salvage hulks + a stationary Refinery Platform as the drop-off; the
@@ -456,10 +468,44 @@ Defaults:
     b_list = to_list(role("tow_barge"))
     ->END if len(b_list) < 1
     if sbs.distance_id(b_list[0], ds1) <= 1800:
-        signal_emit("quest_signal", {"SIGNAL_NAME": "barge_delivered"})
+        # Credit the OWNER (whoever claimed + towed it); fall back to broadcast if unclaimed.
+        barge_owner = pr_quest_owner(b_list[0])
+        if barge_owner != 0:
+            quest_mark_complete(barge_owner, "job_barge")
+        else:
+            signal_emit("quest_signal", {"SIGNAL_NAME": "barge_delivered"})
         remove_role(b_list[0], "tow_barge")
         ->END
     jump pbargew_loop
+
+
+# Claim watcher (PEACETIME_PVP_PLAN): assign an unclaimed CLAIMABLE quest target to whoever
+# first tethers it. Protected -> eject any non-owner tether so a claimed target is fully locked
+# to its owner (paired with the grav-tether veto). Claim-jump -> ownership follows the current
+# tetherer (stealing allowed; there's no veto, so a rival takes over by tethering).
+===== pr_claim_watch =====
+    default GAME_ENDED = False
+--- pcw_loop
+    await delay_sim(1)
+    ->END if GAME_ENDED
+    for ct in to_list(role("claimable")):
+        ct_owner = pr_quest_owner(ct)
+        ct_towers = []
+        for tw in grav_tether_sources_of(ct):
+            if has_role(tw, "__player__"):
+                ct_towers.append(tw)
+        if ct_owner == 0:
+            if len(ct_towers) > 0:
+                pr_quest_claim(ct, ct_towers[0])
+        else:
+            if QUEST_MODE == "Protected":
+                for tw in ct_towers:
+                    if tw != ct_owner:
+                        grav_tether_release(tw, ct)
+            else:
+                if len(ct_towers) > 0 and ct_towers[0] != ct_owner:
+                    pr_quest_claim(ct, ct_towers[0])
+    jump pcw_loop
 
 
 # Salvage Sweep (grav-tether): tow each salvage hulk to the Refinery Platform; each arrival
