@@ -8,5 +8,8 @@
 # The generic quest ENGINE lives in sbs_utils (procedural.quest_driver); this
 # addon only supplies the sortie helpers + content and loads them into
 # HANGAR_QUEST_DOC for the hangar's guarded panel to read.
+provides hangar.sortie_board
+suggests hangar             # augments the hangar; warns (never fails) if hangar absent
+
 import hangar_board.py
 import hangar_board.mast

@@ -1,3 +1,5 @@
+provides admiral
+
 import admiral.mast
 import admiral.py
 import move_to_lib.py

@@ -1,3 +1,5 @@
+requires gamemaster         # GM comms drive the gamemaster console/tools (gamemaster addon)
+
 import gamemaster_comms.mast
 import gamemaster_comms_maps.mast
 import gamemaster_comms_messages.mast

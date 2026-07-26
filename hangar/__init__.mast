@@ -1,3 +1,5 @@
+provides hangar
+
 import hangar.py
 import hangar_loadout.mast
 import hangar.mast

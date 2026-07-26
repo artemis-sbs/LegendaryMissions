@@ -1,3 +1,5 @@
+provides gamemaster
+
 import gamemaster.mast
 import gamemaster_controls.py
 import gamemaster_info_panel.py
