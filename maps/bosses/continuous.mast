@@ -25,5 +25,5 @@
     # siege_watch declares siege_won once they are gone).
     surrender_lines = ~~["This is too much - all ships retreat!", "Fall back! We can't break them!", "Break off! Break off!", "Signal the withdrawal - now!"]~~
     comms_broadcast(role("__player__"), random.choice(surrender_lines), "#fa0")
-    remove_role(role("raider"), "raider")
+    players_ceasefire()
     ->END

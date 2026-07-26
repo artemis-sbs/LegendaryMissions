@@ -881,7 +881,10 @@ yield success
     temp_list = to_list(role("kidnapper"))
     kidnapper_id = temp_list[0]
     remove_role(kidnapper_id, "suspect")
-    remove_role(kidnapper_id, "civ")
+    # No side-named role to strip: side_set_object_side(..., "raider") below moves the
+    # kidnapper's ALLEGIANCE, and membership is read from the side, not a tag.
+    # "civilian" is a ship CLASS role (from shipData), not a faction - it goes because
+    # the unmasked pirate is no longer a civilian vessel.
     remove_role(kidnapper_id, "civilian")
     add_role(kidnapper_id, "pirate")
     add_role(kidnapper_id, "discovered")

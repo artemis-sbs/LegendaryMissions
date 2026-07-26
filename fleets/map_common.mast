@@ -102,7 +102,11 @@
             # make sure the id is cleared dry docked ships
             player_ship.art_id = "invisible"
             player_ship.remove_role("__player__")
-            player_ship.remove_role("tsn")
+            # Clear the SIDE rather than stripping a side-named role: membership is by
+            # actual side, so dropping the role alone would leave this ship in
+            # side_members_set("tsn"). "" is the legitimate "no side" value (handled
+            # silently by to_side_id), unlike an invented key -- see the note below.
+            player_ship.side = ""
             # NOTE: do NOT set an unregistered side here (was side = "unused").
             # The ship is de-roled and about to be deleted; tagging it with a
             # side key that isn't a real side made downstream lookups (e.g. the

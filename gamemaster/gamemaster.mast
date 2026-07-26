@@ -552,7 +552,6 @@ buttons:
     #     set_inventory_value(client_id, "gamemaster_cur_side", gm_side)
     # # print(f"{gm_side}")
     # r = side_enemy_members_set(gm_side)
-    # # r = role("raider") 
     # count=len(r)
     # gui_update_shared("sh_raider_count", f"$text:{count};justify:left;font:gui-3;")
 

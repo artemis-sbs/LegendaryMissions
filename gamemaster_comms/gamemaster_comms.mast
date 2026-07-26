@@ -279,7 +279,9 @@ default gamemaster_face = random_terran()
 //comms/gamemaster/commands/count if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     +^1[$gamemaster]"Back" //comms
     +[$gamemaster]"Raider":
-        count = len(role("raider"))
+        # Hostile to the players by DIPLOMACY -- a ceasefired or defected side stops
+        # counting here the moment its relation changes.
+        count = len(players_hostile_ships())
         comms_broadcast(client_id, f"Raiders remaining {count}")    
     +[$gamemaster]"Stations":
         count = len(role("station"))
@@ -293,7 +295,7 @@ default gamemaster_face = random_terran()
 //comms/gamemaster/commands/jump if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     +^1[$gamemaster]"Back" //comms
     +[$gamemaster]"Raider":
-        raider = closest(COMMS_ORIGIN_ID, role("raider"))
+        raider = closest(COMMS_ORIGIN_ID, players_hostile_ships())
         if raider:
             raider = to_object(raider)
             COMMS_ORIGIN.pos = raider.pos

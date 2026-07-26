@@ -95,7 +95,7 @@ def _biomech_any_enraged():
 BIOMECH_BRAIN = ["ai_biomech_hunt", "ai_biomech_feed"]
 
 
-def biomech_spawn(x, y, z, art="biomech_a", roles="biomech, raider", name="BioMech"):
+def biomech_spawn(x, y, z, art="biomech_a", roles="biomech", name="BioMech"):
     """THE single BioMech spawn path. Spawn one hull of the given stage `art` with the
     shared passive/hunt brain, so every BioMech gets the full shipData stats for its
     stage and starts PASSIVE. Remembers its `roles` so an evolve can respawn with the
@@ -195,7 +195,7 @@ def biomech_evolve():
         return 0
     old, idx = random.choice(growable)
     pos = old.pos
-    roles = get_inventory_value(old.id, "biomech:roles", "biomech, raider")
+    roles = get_inventory_value(old.id, "biomech:roles", "biomech")
     enraged = get_inventory_value(old.id, "biomech:enraged", 0)
     tgt = get_inventory_value(old.id, "biomech:target", 0)
     had_stage4 = biomech_has_stage4()                       # before this hull matures

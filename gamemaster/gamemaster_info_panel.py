@@ -187,7 +187,6 @@ def show_gm_stats(client_id, top, left, width, height):
         # for m in r:
         #     o = to_object(m)
             # comms_broadcast(0, o.name)
-        # r = role("raider") 
         count=len(r)
         if count > 0:
             gui_text(f"$text: {side_display_name(side)};justify:right;font:gui-2;")

@@ -32,9 +32,9 @@
     if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"):
         # Count/stop only ships still hostile to the players (diplomacy, not the bare
         # raider tag); remove_role strips the tag from all raiders to end the attack.
-        c = len(players_hostile_members("raider"))
+        c = len(players_hostile_ships())
         # End attack
-        remove_role(role("raider"), "raider")
+        players_ceasefire()
         START_TEXT = "Mission time has run out! {c} enemies left."
         GAME_STARTED = False
         GAME_ENDED = True
@@ -55,7 +55,7 @@
 
         ->END
 
-    raiders = players_hostile_members("raider")
+    raiders = players_hostile_ships()
     if len(raiders)==0 and WORLD_SELECT.path !="peacetime":
         START_TEXT = "Mission is won!  All the enemies have been destroyed."
         GAME_STARTED = False
@@ -76,9 +76,9 @@
     if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"):
         # Count/stop only ships still hostile to the players (diplomacy, not the bare
         # raider tag); remove_role strips the tag from all raiders to end the attack.
-        c = len(players_hostile_members("raider"))
+        c = len(players_hostile_ships())
         # End attack
-        remove_role(role("raider"), "raider")
+        players_ceasefire()
         START_TEXT = "Mission time has run out! {c} enemies left."
         GAME_STARTED = False
         GAME_ENDED = True
@@ -91,7 +91,7 @@
     # Count the remaining enemy stations and raiders
 
     stations = role('enemy') & role('station')
-    raiders = players_hostile_members("raider")
+    raiders = players_hostile_ships()
 
     # Check to see if any stations no longer exist. If so, delete the navpoint associated with that station.
 
@@ -150,9 +150,9 @@
     if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"):
         # Count/stop only ships still hostile to the players (diplomacy, not the bare
         # raider tag); remove_role strips the tag from all raiders to end the attack.
-        c = len(players_hostile_members("raider"))
+        c = len(players_hostile_ships())
         # End attack
-        remove_role(role("raider"), "raider")
+        players_ceasefire()
         START_TEXT = "Mission time has run out! {c} enemies left."
         GAME_STARTED = False
         GAME_ENDED = True
@@ -174,7 +174,7 @@
     # Count the remaining enemy stations and raiders
 
     stations = role('enemy') & role('station')
-    raiders = players_hostile_members("raider")
+    raiders = players_hostile_ships()
 
     # Check to see if any enemy stations no longer exist. If so, delete the navpoint associated with that station.
 

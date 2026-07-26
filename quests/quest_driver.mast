@@ -18,10 +18,11 @@
     quest_mark_failed(AGENT_ID, QUEST_ID)
     ->END
 
-# KILLED, not DESTROY: the victim is still registered here, so the on_kill role
-# filter (has_role(victim, "raider")) works. On the DESTROY route the victim is
-# often already gone (to_object -> None -> has_role False), so role-filtered kill
-# quests like "destroy N raiders" silently never advanced. Victim = DAMAGE_SELECTED_ID.
+# KILLED, not DESTROY: the victim is still registered here, so the on_kill filters
+# still resolve -- both the {hostile: true} diplomacy test (was the victim an enemy?)
+# and any class-role filter. On the DESTROY route the victim is often already gone
+# (to_object -> None -> every test False), so filtered kill quests like "destroy N
+# enemies" silently never advanced. Victim = DAMAGE_SELECTED_ID.
 //damage/killed
     quest_on_kill(DAMAGE_SOURCE_ID, DAMAGE_SELECTED_ID)
     # Also credit the owning ship (e.g. a fighter's carrier); parent 0 = none.

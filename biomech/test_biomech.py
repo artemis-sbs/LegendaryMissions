@@ -32,11 +32,13 @@ class BioMechTests(unittest.TestCase):
         BM.brain_add = self._real_brain_add
 
     def test_spawn_sets_role_remembers_roles_and_starts_passive(self):
-        bid = BM.biomech_spawn(0, 0, 0, "biomech_a", "biomech, raider")
+        # A second role stands in for any mission-supplied tag; allegiance itself comes
+        # from the SIDE (passive "biomech" -> enraged BIOMECH_ENRAGED_SIDE), not a tag.
+        bid = BM.biomech_spawn(0, 0, 0, "biomech_a", "biomech, colony")
         o = to_object(bid)
         self.assertTrue(o.has_role("biomech"))
-        self.assertTrue(o.has_role("raider"))
-        self.assertEqual(BM.get_inventory_value(bid, "biomech:roles", None), "biomech, raider")
+        self.assertTrue(o.has_role("colony"))
+        self.assertEqual(BM.get_inventory_value(bid, "biomech:roles", None), "biomech, colony")
         self.assertEqual(BM.get_inventory_value(bid, "biomech:enraged", None), 0)  # passive
         self.assertEqual(BM.biomech_count(), 1)
         self.assertEqual(BM.biomech_stage(o), 0)
@@ -105,7 +107,7 @@ class BioMechTests(unittest.TestCase):
 
     def test_evolve_respawns_next_stage_at_same_pos(self):
         # ONE growable hull, so evolve is deterministic.
-        old = BM.biomech_spawn(1234, 0, -567, "biomech_a", "biomech, raider")
+        old = BM.biomech_spawn(1234, 0, -567, "biomech_a", "biomech, colony")
         oldpos = to_object(old).pos
         new_id = BM.biomech_evolve()
 
@@ -116,7 +118,7 @@ class BioMechTests(unittest.TestCase):
         self.assertEqual(o.art_id, "biomech_b")          # promoted one stage
         self.assertAlmostEqual(o.pos.x, oldpos.x, places=3)
         self.assertAlmostEqual(o.pos.z, oldpos.z, places=3)
-        self.assertTrue(o.has_role("biomech") and o.has_role("raider"))  # roles carried
+        self.assertTrue(o.has_role("biomech") and o.has_role("colony"))  # roles carried
 
     def test_evolve_climbs_to_stage4_then_stops(self):
         BM.biomech_spawn(0, 0, 0, "biomech_a")

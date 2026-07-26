@@ -9,7 +9,7 @@
 # BIO_ART, BIO_ROLES}), or call biomech_spawn(x,y,z,art,roles) directly.
 === prefab_biomech
     default BIO_ART = "biomech_a"
-    default BIO_ROLES = "biomech, raider"
+    default BIO_ROLES = "biomech"
     yield result biomech_spawn(START_X, START_Y, START_Z, BIO_ART, BIO_ROLES)
 
 
@@ -18,7 +18,7 @@
 # of Stage 1, bounded by a population cap (INFEST_CAP + DIFFICULTY) and a fixed cycle count
 # so it stays winnable. All data vars optional; schedule with
 # prefab_spawn(biomech_infestation, {...}) or name it as a boss Hook. BioMechs are
-# raider-roled by default (an extermination threat).
+# hostile-by-diplomacy once roused (an extermination threat).
 === biomech_infestation
     default GAME_ENDED = False
     default DIFFICULTY = 5
@@ -26,7 +26,7 @@
     default INFEST_CAP = 12
     default INFEST_CYCLES = 10
     default INFEST_WAVE = 25
-    default INFEST_ROLES = "biomech, raider"
+    default INFEST_ROLES = "biomech"
     default INFEST_X = 0
     default INFEST_Y = 0
     default INFEST_Z = 0

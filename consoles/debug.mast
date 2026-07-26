@@ -45,7 +45,8 @@ if is_dev_build():
         
     gui_row()
     on gui_message(gui_button("Kill enemy shields")):
-        for e in role("raider"):
+        # Enemies by DIPLOMACY, not a combat tag: a ceasefired side drops out here.
+        for e in players_hostile_ships():
             r_blob = to_blob(e)
             continue if r_blob is None
             r_blob.set("shield_val", 0, 0)
@@ -296,7 +297,8 @@ if is_dev_build():
 ==== debug_fake_scan_all =====
 
     for p in role("__player__"):
-        for r in role("raider"):
+        # Scan every object currently hostile to the players (diplomacy-driven).
+        for r in side_hostile_ships(p):
             science_set_scan_data(p, r, "Debug Default scan")
 
     jump debug_screen

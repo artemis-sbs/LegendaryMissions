@@ -291,7 +291,7 @@ GameCode:
     # 8+DIFFICULTY = 13), fewer on easy, more on hard, never below 3.
     ace_target = quest_kill_count_for_difficulty(6, DIFFICULTY, floor=3)
     for p in to_object_list(role("__player__")):
-        quest_add(p.id, "siege_ace", f"Ace: {ace_target} raider kills", f"Optional: destroy {ace_target} raiders this siege.", state=1, data={"on_kill": {"role": "raider", "count": ace_target}, "reward": {"credits": 300, "items": {"tech": 1}}})
+        quest_add(p.id, "siege_ace", f"Ace: {ace_target} raider kills", f"Optional: destroy {ace_target} raiders this siege.", state=1, data={"on_kill": {"hostile": True, "count": ace_target}, "reward": {"credits": 300, "items": {"tech": 1}}})
         quest_add(p.id, "siege_guardian", "Guardian: keep every starbase", "Optional: finish the siege without losing a starbase.", state=1, data={"on_signal": {"name": "siege_survived"}, "reward": {"credits": 500}})
     ->END
 
@@ -309,7 +309,7 @@ GameCode:
 --- loop
     await delay_sim(4)
     ->END if GAME_ENDED
-    raider_count = len(players_hostile_members("raider"))
+    raider_count = len(players_hostile_ships())
     if raider_count > peak_raiders:
         peak_raiders = raider_count
     if raider_count > 0:
@@ -332,7 +332,7 @@ GameCode:
         ->END
     # Time limit reached: the outcome is the "Survive Clock" map option.
     if is_timer_set(SHARED, "time_limit") and is_timer_finished(SHARED, "time_limit"):
-        remove_role(role("raider"), "raider")
+        players_ceasefire()
         if SIEGE_TIMEOUT == "Loss":
             signal_emit("quest_signal", {"SIGNAL_NAME": "siege_time_lost"})
         else:

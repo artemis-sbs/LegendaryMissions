@@ -10,8 +10,9 @@
             % Ragnarok led us to ruin. I am done taking orders - point me at the flagship.
             % You speak true. Ragnarok betrayed the fleet. I am yours; I will take the juggernaut myself.
         # XORN switches to the player's side and hunts its former masters (Ragnarok's
-        # raiders are now its enemies); a fresh chase-npc brain drives it.
-        remove_role(COMMS_SELECTED_ID, "raider")
+        # raiders are now its enemies); a fresh chase-npc brain drives it. Moving the
+        # SIDE is the whole defection - diplomacy re-points every hostile/ally query at
+        # once, so there is no combat tag to strip alongside it.
         add_role(COMMS_SELECTED_ID, "defected")
         COMMS_SELECTED.side = COMMS_ORIGIN.side
         brain_clear(COMMS_SELECTED_ID)

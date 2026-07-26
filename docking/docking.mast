@@ -71,9 +71,10 @@ distance: 600
 +++ docking
     set_weapons_selection(DOCKING_PLAYER_ID, 0)
     _too_close = 300+(DIFFICULTY+1)*200
-    # Only a genuinely HOSTILE ship blocks docking: a ceasefired/neutral raider-tagged
-    # ship parked nearby should not (diplomacy, not the bare raider tag).
-    raider = closest(DOCKING_PLAYER_ID, side_hostile_members(DOCKING_PLAYER_ID, "raider"), _too_close)
+    # Only a genuinely HOSTILE object blocks docking -- decided by DIPLOMACY alone, so a
+    # ceasefired/neutral side stops blocking the moment its relation changes (no combat
+    # tag to keep in sync). side_hostile_ships already drops wrecks and surrendered ships.
+    raider = closest(DOCKING_PLAYER_ID, side_hostile_ships(DOCKING_PLAYER_ID), _too_close)
     if raider is not None:
         # comms_message("Attempting dock when enemies is ill advised.", DOCKING_PLAYER_ID, DOCKING_PLAYER_ID,  "Enemies near", None, "white", "red", from_name="Docking")
         with comms_override(DOCKING_PLAYER_ID, DOCKING_PLAYER_ID, from_name="Docking"):
