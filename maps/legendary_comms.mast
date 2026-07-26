@@ -205,12 +205,12 @@ prefab_spawn(prefab_lifeform_generic, {"name": "TSNN", "path": "//comms/tsnn"})
 ############################################################################
 === test_info_button
     face = __MESSAGE__.get("face")
-    gui_info_panel_send_message(gui_client_id(), "Thanks for pushing that button", history=False, face=face, time=3)
+    gui_info_panel_send_message(gui_client_id(), "Thanks for pushing that button", history=False, face=face, time=3, notify=True)
     ->END
 
 === test_info_button_cancel
     face = __MESSAGE__.get("face")
-    gui_info_panel_send_message(gui_client_id(), "Sorry you didn't acknowledge", history=False, face=face, time=3)
+    gui_info_panel_send_message(gui_client_id(), "Sorry you didn't acknowledge", history=False, face=face, time=3, notify=True)
     ->END
 
 
@@ -224,7 +224,7 @@ prefab_spawn(prefab_lifeform_generic, {"name": "TSNN", "path": "//comms/tsnn"})
     
     + "Server":
         face = random_face()
-        gui_info_panel_send_message(0, str(flash_message), face=face, time=3)
+        gui_info_panel_send_message(0, str(flash_message), face=face, time=3, notify=True)
     + "All":
         face = random_face()
         # message would normally keep returning random
@@ -232,20 +232,20 @@ prefab_spawn(prefab_lifeform_generic, {"name": "TSNN", "path": "//comms/tsnn"})
         # by calling str() it makes it a string
         all_message = str(flash_message)
         for gui in role("__gui__"):
-            gui_info_panel_send_message(gui, all_message, face=face, time=3)
+            gui_info_panel_send_message(gui, all_message, face=face, time=3, notify=True)
     + "This console":
         face = random_face()
-        gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, icon_index=78+random.randint(2,6), time=3)
+        gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, icon_index=78+random.randint(2,6), time=3, notify=True)
     + "This console with button":
         face = random_face()
         buns = [("Acknowledge", test_info_button), ("Cancel", test_info_button_cancel)]
         gui_info_panel_send_message(gui_client_id(), str(flash_message), banner="Incoming", title="You have a View screen message", title_color="pink", face=face, button=buns, history=True, time=0)
     + "This console no flash":
         face = random_face()
-        gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, time=0)
+        gui_info_panel_send_message(gui_client_id(), str(flash_message), face=face, time=0, notify=True)
     + "This console objective":
         face = random_face()
-        gui_info_panel_send_message(gui_client_id(), "Some objective complete", path="objective", title="You finished something", title_color="cyan", banner="Complete", banner_color="green", time=3)
+        gui_info_panel_send_message(gui_client_id(), "Some objective complete", path="objective", title="You finished something", title_color="cyan", banner="Complete", banner_color="green", time=3, notify=True)
     + "This console Waterfall":
         <var chatter>
             % Some text

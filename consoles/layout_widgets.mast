@@ -20,9 +20,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         #gui_layout_widget("ship_data")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
+        # The log/replay tab: every card ever filed, re-readable. Cards only take
+        # over the "message" tab when they interrupt (a button, or notify=True).
+        gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
         # if is_dev_build():
         #     gui_info_panel_add("upgrades", 105, gui_panel_upgrade_list,None)
-        #     gui_info_panel_add("messages", 84, gui_panel_console_message_list,None)
         #     gui_info_panel_add("objective", 85, gui_panel_console_message,None)
         #     gui_info_panel_add("objectives", 86, gui_panel_console_message_list,None)
 
@@ -98,6 +100,9 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     gui_row("row-height: 400px;col-width:280px;")
     gui_info_panel(tab=tab)
     gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
+    # The log/replay tab: every card ever filed, re-readable. Cards only take
+    # over the "message" tab when they interrupt (a button, or notify=True).
+    gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
 
     gui_section(style="area:0,45px,100,100;")
     with gui_sub_section():
@@ -154,6 +159,9 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
+        # The log/replay tab: every card ever filed, re-readable. Cards only take
+        # over the "message" tab when they interrupt (a button, or notify=True).
+        gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
     with gui_sub_section():
         gui_row()
         # gui_section(style="area:285px,90px,800px,390px;")
@@ -194,6 +202,9 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
+        # The log/replay tab: every card ever filed, re-readable. Cards only take
+        # over the "message" tab when they interrupt (a button, or notify=True).
+        gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
 
 //gui/normal_weap
     default tab = 1
@@ -203,6 +214,9 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
+        # The log/replay tab: every card ever filed, re-readable. Cards only take
+        # over the "message" tab when they interrupt (a button, or notify=True).
+        gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
 
 //gui/normal_main
     default tab = 1
@@ -212,6 +226,9 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row("row-height: 400px;")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
+        # The log/replay tab: every card ever filed, re-readable. Cards only take
+        # over the "message" tab when they interrupt (a button, or notify=True).
+        gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
 
 
 
@@ -230,6 +247,9 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         #gui_layout_widget("ship_data")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
+        # The log/replay tab: every card ever filed, re-readable. Cards only take
+        # over the "message" tab when they interrupt (a button, or notify=True).
+        gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
 
         gui_row()
         gui_blank()

@@ -369,11 +369,11 @@ def pr_claim_notify(ship, target, kind):
     consoles = linked_to(sid, "consoles") & all_roles("console, comms")
     nm = pr_claim_name(tid)
     if kind == "stole":
-        comms_info_card(consoles, "You claimed " + nm + ".", title="Claim", color="#0f0")
+        comms_info_card(consoles, "You claimed " + nm + ".", title="Claim", color="#0f0", notify=True)
     elif kind == "lost":
-        comms_info_card(consoles, nm + " was claim-jumped out from under you.", title="Claim Lost", color="orange")
+        comms_info_card(consoles, nm + " was claim-jumped out from under you.", title="Claim Lost", color="orange", notify=True)
     elif kind == "locked":
-        comms_info_card(consoles, nm + " is claimed by another ship - you cannot tether it.", title="Claimed", color="orange")
+        comms_info_card(consoles, nm + " is claimed by another ship - you cannot tether it.", title="Claimed", color="orange", notify=True)
 
 
 def pr_tether_ownership_policy(src, tgt):
