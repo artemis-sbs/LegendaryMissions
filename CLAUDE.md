@@ -62,7 +62,8 @@ LegendaryMissions/
 ├── __lib__.json            # packaging manifest: which addons -> mastlibs + version
 ├── settings.yaml           # difficulty / PLAYER_LIST / docking defaults
 ├── maps/                   # LOCAL addon: playable scenarios + mission_story, legendary_comms, game_objectives
-├── quests/                 # quest system (quest_driver, hangar_board, bridge_story) - PACKAGED mastlib
+├── quests/                 # quest route-wiring (quest_driver.mast) + bridge_story content - PACKAGED mastlib (engine is in sbs_utils)
+├── hangar_sorties/         # OPTIONAL addon: hangar sortie-order board (hangar_board + hangar_quests.amd) - PACKAGED mastlib
 ├── items/                  # items/upgrades registry - LOCAL addon
 └── <addon>/                # each is an addon with __init__.mast:
     ai, comms, consoles, damage, docking, fleets, prefabs, commerce,

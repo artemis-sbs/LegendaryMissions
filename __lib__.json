@@ -12,6 +12,7 @@
         "fleets",
         "grid_comms",
         "hangar",
+        "hangar_sorties",
         "casino",
         "internal_comms",
         "operator",

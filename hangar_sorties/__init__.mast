@@ -1,0 +1,12 @@
+# Hangar sortie board (optional addon).
+#
+# Augments the hangar with a per-cockpit "sortie orders" quest board. Like the
+# casino addon, the hangar does NOT depend on this - hangar.mast defaults
+# HANGAR_QUEST_DOC to None and guards its board panel, so the hangar runs fine
+# with or without this addon loaded. Load this mastlib to turn the board on.
+#
+# The generic quest ENGINE lives in sbs_utils (procedural.quest_driver); this
+# addon only supplies the sortie helpers + content and loads them into
+# HANGAR_QUEST_DOC for the hangar's guarded panel to read.
+import hangar_board.py
+import hangar_board.mast
