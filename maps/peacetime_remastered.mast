@@ -78,6 +78,7 @@ Defaults:
     else:
         grav_tether_set_attach_policy(None)
     task_schedule(pr_claim_watch)
+    task_schedule(pr_standings_ticker)
 
     terrain_asteroid_clusters(terrain_value)
     terrain_spawn_nebula_clusters(terrain_value)
@@ -511,6 +512,26 @@ Defaults:
                 if len(ct_towers) > 0 and ct_towers[0] != ct_owner:
                     pr_quest_claim(ct, ct_towers[0])
     jump pcw_loop
+
+
+# Live standings: post the per-ship earnings race to the info panel periodically, but only
+# when there's actually a multi-ship competition with someone on the board.
+===== pr_standings_ticker =====
+    default GAME_ENDED = False
+--- pst_loop
+    await delay_sim(90)
+    ->END if GAME_ENDED
+    board = pr_standings()
+    if len(board) > 1:
+        std_msg = ""
+        std_any = False
+        for std_row in board:
+            if std_row[1] > 0:
+                std_any = True
+            std_msg = std_msg + std_row[0] + ": " + str(std_row[1]) + "   "
+        if std_any:
+            comms_info_card(all_roles("console, comms"), std_msg, title="Patrol Standings", color="#0cf")
+    jump pst_loop
 
 
 # Salvage Sweep (grav-tether): tow each salvage hulk to the Refinery Platform; each arrival
