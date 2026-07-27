@@ -64,6 +64,14 @@ default shared grid_data = grid_get_grid_data()
     obj = to_object(SPAWNED_ID)
     # The damcons is no longer
     ->END if this_blob is None or obj is None
+    #
+    # ...and neither is the SHIP it walks around in. Everything below reads
+    # obj.host_id (grid_objects, get_hull_map, grid_repair_grid_objects), so a
+    # damcon that outlives its ship errors on every pass -- and this loop
+    # re-enters every 3s, forever. Deleting a ship now takes its grid objects
+    # with it, which stops the orphan being made; this is the belt to that
+    # braces, since the guard above only proves the DAMCON still exists.
+    ->END if to_object(obj.host_id) is None
 
     # Update status so times are accurate
     grid_damcons_detailed_status(SPAWNED_ID)
