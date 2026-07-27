@@ -426,15 +426,33 @@ Main:
 
 
 #
-# Create the default player ships from PLAYER_LIST when PLAYER_CREATE_DEFAULT is set.
-# Extracted from server_start so it can be REUSED - e.g. re-established after a clean sim
-# reset in a conformance test - rather than being inline-only in the server startup.
+# Create the default player ships from the settings roster when PLAYER_CREATE_DEFAULT
+# is set. Extracted from server_start so it can be REUSED - e.g. re-established after a
+# clean sim reset in a conformance test - rather than being inline-only in the server
+# startup.
+#
+# Reads SETTINGS directly rather than the shared PLAYER_LIST. That shared name carries
+# TWO unrelated things: the settings roster of dicts (seeded at the top of start_server)
+# and, in common_console_select / start, the LIVE player objects from
+# to_object_list(role("__player__")). A console-select screen that builds before the ships
+# exist assigns [] over the roster, so this loop then iterates zero times and no player
+# ships are ever created -- and because the seed is `default shared` (set-if-absent), a
+# later start_server does NOT restore it, so the failure is STICKY for the whole engine
+# process: every restart after the first stays broken.
+#
+# Diagnosed in-engine via debug.log: CREATE_DEFAULT=True but PLAYER_LIST_len=0 at this
+# point, where a fresh session reports 8. The symptom is a mission where the game ends
+# the instant it starts (destroyed_all(role("__player__")) is true immediately) and every
+# console-select shows "No Player Ships" (the len(PLAYER_LIST)==0 branch).
+#
+# This was the only remaining consumer of the roster meaning, so reading SETTINGS here
+# leaves the shared name meaning exactly one thing (live objects) everywhere it is used.
 #
 === create_default_player_ships
     if PLAYER_CREATE_DEFAULT:
         # (side creation is done synchronously before this via create_sides, so the
         # player_spawn side lookups resolve.)
-        for player_ship_data in PLAYER_LIST:
+        for player_ship_data in SETTINGS.get("PLAYER_LIST"):
             player_ship = to_id(player_spawn(0,0,0, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
             player_ship_data["id"] = player_ship
             add_role(player_ship, "default_player_ship")
