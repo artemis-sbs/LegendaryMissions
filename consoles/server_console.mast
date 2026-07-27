@@ -190,7 +190,7 @@ gui_reroute_clients("client_main")
         # save/copy/load glyphs you want from the icon atlas.
         default GAME_CODE_PRESET = ""
         default GAME_CODE_NAME = ""
-        presets = game_code_presets_for_map(WORLD_SELECT.path)
+        presets = game_code_presets_for_map(map_path(WORLD_SELECT))
         preset_labels = [p["name"] for p in presets]
         gui_row("row-height: 30px;")
         preset_dd = gui_drop_down(f"text: Presets ({len(presets)}); list: {','.join(preset_labels)}", var="GAME_CODE_PRESET")

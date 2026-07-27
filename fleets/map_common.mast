@@ -7,8 +7,8 @@
 
 =========== spawn_friendly_npc ===========
 
-    print(f"World Select: {WORLD_SELECT.path}")
-    if WORLD_SELECT.path == "deep_strike":
+    print(f"World Select: {map_path(WORLD_SELECT)}")
+    if map_path(WORLD_SELECT) == "deep_strike":
         FRIENDLY_SELECT = "none"
 
     match FRIENDLY_SELECT:

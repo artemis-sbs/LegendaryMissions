@@ -467,5 +467,5 @@ shared FB_COMPLAINTS = {}
     pest_id = COLLISION_SELECTED_ID
     task_schedule(fb_pest_messages)
 
-//damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby") and WORLD_SELECT.path == "peacetime_remastered"
+//damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby") and map_path(WORLD_SELECT) == "peacetime_remastered"
     if FB_STATUS < 3:
