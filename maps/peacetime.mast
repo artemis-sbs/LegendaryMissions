@@ -990,6 +990,6 @@ yield success
     pest_list = SHIP_NAME_DATA.get("complaints")
     task_schedule(pest_messages)
 
-//damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby") and WORLD_SELECT.path == "peacetime"
+//damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby") and map_path(WORLD_SELECT) == "peacetime"
     if kidnap_status < 3:
         jump peacetime_ambassador_killed
