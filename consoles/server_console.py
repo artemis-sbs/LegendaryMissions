@@ -1,5 +1,7 @@
+from sbs_utils.procedural.gui.text import gui_text_area
 
 from sbs_utils.procedural.gui import gui_row, gui_text
+from sbs_utils.helpers import gui_text_escape
 
 def main_mission_select_template(item):
     gui_row("row-height:2px;background:#ddd;padding:10px,0,10px,3px;")
@@ -15,8 +17,21 @@ def main_mission_select_template(item):
     # sizing inside a listbox still falls back to flex.
     gui_row("row-height: 1em+10px;padding:10px,10px,10px,0;font:gui-3;")
     gui_text(f"$text:`{item.display_name}`;justify: left;font:gui-3;")
-    gui_row("row-height:15em;padding:10px,0,10px,3px;")
-    gui_text(f"$text:`{item.desc}`;justify: left;color:#999;font:gui-2;")
+    # The description fills WHAT IS LEFT of the item (1fr, the default). It was
+    # a fixed `15em`, which is 360px at every resolution: correct in a 768-tall
+    # window, but at 1024x600 it put the text's box at 108% -- off the bottom of
+    # the screen. A carousel item now gets the picker's real height (see
+    # LayoutListbox._present), so a flex row here tracks the window.
+    #
+    # A description too long for that space scrolls inside the text area rather
+    # than spilling, which is what the text area was reached for in the first
+    # place -- it only started doing it once TextArea stopped treating a long
+    # one-line message as a simple label.
+    #
+    # gui_text_escape: a description containing ':' or ';' would otherwise be
+    # read as further style props and lose its tail.
+    gui_row("padding:10px,0,10px,3px;font:gui-2;")
+    gui_text_area(f"$text:{gui_text_escape(item.desc)};justify: left;color:#999;font:gui-2;")
     
     
 
