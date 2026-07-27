@@ -4,8 +4,15 @@
 // (sides_load_amd bakes in the amd_side_data parser so a `Color: #07F` value isn't dropped
 //  by the default YAML reader, which reads the `#` as a comment.)
 // One heading per side: the display is the name, the body the description; Color sets the
-// icon color; Enemies/Neutral/Allies (comma lists) set diplomacy (symmetric, so declaring
-// it on one side is enough). sides_declare is two-pass, so forward references resolve.
+// icon color; Enemies/Neutral/Allies (comma lists) set diplomacy. sides_declare is two-pass,
+// so forward references resolve.
+//
+// Declaring a relation on ONE side is enough, but only because side_set_relations mirrors it
+// into the engine's table for you -- that table is DIRECTIONAL (colouring looks up
+// viewer-side -> contact-side), not symmetric. This file happens to declare tsn/raider
+// hostility from both ends, which is why LegendaryMissions looked correct for years while a
+// mission declaring each pair once drew every enemy grey. Do not "tidy up" the duplication
+// as redundant, and do not read this as the engine being symmetric.
 
 # [TSN](tsn)
 ---

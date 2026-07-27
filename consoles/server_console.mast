@@ -70,6 +70,24 @@ gui_reroute_clients("client_main")
     shared WORLD_SELECT_path  = SETTINGS.get("WORLD_SELECT")
     sim_create()
     #
+    # Yield a frame before create_sides. sim_create() replaces the simulation, but
+    # FrameContext.context.sim still holds the handle the engine passed in at the top of
+    # THIS event and sbs exposes no module-level sim to re-read, so every sim.* write made
+    # in this same frame - set_side_relationship / set_side_icon_color /
+    # set_diplomacy_color, i.e. the whole engine-facing half of create_sides - is written
+    # against the pre-sim_create simulation and lost SILENTLY. Nothing raises: spawns
+    # survive because they go through module-level sbs.* functions, so the mission looks
+    # fine except that contacts draw as UNKNOWN (grey) with no allied/hostile split.
+    #
+    # NOT delay_app(0): Delay(0) sets timeout = time.time() and done() is
+    # `timeout < time.time()`, so if the system clock ticks over between the await node's
+    # enter() and its first poll() the await resolves in the SAME tick and never yields
+    # (measured ~4 in 5000). Any delay above the clock granularity yields unconditionally.
+    #
+    # Ordering is unchanged - player ships and the menu still come after create_sides
+    # within this task, just one frame later.
+    await delay_app(0.1)
+    #
     # Create the sides + diplomacy BEFORE player ships and before any map runs,
     # so side keys like "tsn" resolve. The //signal/create_sides route is
     # synchronous (no await), so sides exist when this returns. (Was a
