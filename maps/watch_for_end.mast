@@ -56,7 +56,7 @@
         ->END
 
     raiders = players_hostile_ships()
-    if len(raiders)==0 and map_path(WORLD_SELECT) !="peacetime":
+    if len(raiders)==0 and WORLD_SELECT.path !="peacetime":
         START_TEXT = "Mission is won!  All the enemies have been destroyed."
         GAME_STARTED = False
         GAME_ENDED = True
@@ -163,7 +163,7 @@
         ->END
 
     # For Border War, game ends if a player ship enters the Neutral Zone
-    if map_path(WORLD_SELECT) == "border_war" and war_declared == 3:
+    if WORLD_SELECT.path == "border_war" and war_declared == 3:
         START_TEXT = "Mission Failed! TSN entered Neutral Zone before war declared."
         GAME_STARTED = False
         GAME_ENDED = True

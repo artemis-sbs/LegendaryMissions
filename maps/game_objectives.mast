@@ -41,7 +41,7 @@
         ->END
 
     raiders = players_hostile_ships()
-    if len(raiders)==0 and map_path(WORLD_SELECT) !="peacetime":
+    if len(raiders)==0 and WORLD_SELECT.path !="peacetime":
         START_TEXT = "Mission is won!  All the enemies have been destroyed."
         GAME_STARTED = False
         GAME_ENDED = True
