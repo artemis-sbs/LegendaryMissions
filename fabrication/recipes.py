@@ -6,8 +6,9 @@ Recipes come from two sources, both surfaced through this registry:
     fabrication tab still lists those directly, and a mission can also mirror them in
     here via fabrication_add_recipe if it wants multi-input costs.
 
-Mirrors the amd_science / amd_quest layering: a data_parser (amd_recipe_data) + a loader
-(fabrication_load_recipes_amd) that reads each heading's fence data + body into the registry.
+The fence is read by the SHARED AMD reader (no bespoke parser); this module is just the
+loader (fabrication_load_recipes_amd) that reads each heading's fence data + body into
+the registry.
 
 AMD form (one heading per recipe):
 
@@ -35,7 +36,6 @@ use the SAME format a map's Properties panel uses (a {label: 'gui_control_expr'}
 is the description.
 """
 import re
-from sbs_utils.fs import load_yaml_string
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.gui import gui_row, gui_text
 
@@ -44,41 +44,39 @@ from sbs_utils.procedural.gui import gui_row, gui_text
 _RECIPES = {}
 
 
-def amd_recipe_data(text):
-    """data_parser for a recipe .amd fence. Parses as YAML so a recipe can carry a map-style
-    Properties block (a {label: 'gui_control_expr'} dict) and a Defaults block natively -- the
-    same format a map's Properties panel uses -- rather than a bespoke grammar."""
-    return load_yaml_string(text) or {}
+# `amd_recipe_data` used to live here: a data_parser that called load_yaml_string
+# directly, because the friendly reader could not do the nested Properties/Defaults
+# blocks a recipe needs. That made recipes a THIRD fence dialect - the game read a
+# nested dict while amd_core (the linter and the Inspector) read `properties: ''`
+# plus two keys that collided with Defaults. The shared reader does block nesting
+# natively now, and the mission never passed the parser anyway, so it is gone.
+#
+# `_parse_inputs` / `_parse_program` went with it: they are the `counted` and `kv`
+# value types in sbs_utils.procedural.amd, declared rather than hand-rolled.
+from sbs_utils.procedural.amd import amd_counted as _parse_inputs, amd_kv as _parse_program
 
 
-def _parse_inputs(s):
-    """'bio_sample x1, salvage x5' -> {'bio_sample': 1, 'salvage': 5}. Bare key -> count 1."""
-    out = {}
-    for part in str(s or "").split(","):
-        part = part.strip()
-        if not part:
-            continue
-        bits = part.split()
-        key = bits[0]
-        count = 1
-        if len(bits) > 1:
-            c = bits[-1].lstrip("xX")
-            if c.isdigit():
-                count = int(c)
-        out[key] = count
-    return out
+def _declare_recipe_vocabulary():
+    """Tell the shared registry what a recipe fence looks like, so the linter checks
+    these values and the VS Code Inspector renders a real widget for each - the same
+    treatment core fields get. Raises on a clash with a core field."""
+    from sbs_utils.procedural.amd_schema import (
+        amd_register_fields, amd_register_section_names,
+        text, integer, counted, kv, enum)
+    amd_register_fields("recipe", {
+        "output": text(hint="the cargo/torpedo key this produces"),
+        "inputs": counted(hint="salvage x5, bio_sample x1"),
+        "time": integer(hint="build seconds"),
+        "build at": enum("engineering", "science", "weapons", "comms", "helm", open=True),
+        "program": kv(hint="kind=bio, range=medium"),
+    }, domain="fabrication")
+    amd_register_section_names(("recipes",), "recipe", domain="fabrication")
 
 
-def _parse_program(s):
-    """'kind=bio, mode=attract' -> {'kind': 'bio', 'mode': 'attract'}."""
-    out = {}
-    for part in str(s or "").split(","):
-        part = part.strip()
-        if "=" not in part:
-            continue
-        k, v = part.split("=", 1)
-        out[k.strip()] = v.strip()
-    return out
+try:
+    _declare_recipe_vocabulary()
+except Exception as _e:      # a vocabulary clash must not stop the mission loading
+    print(f"recipes: vocabulary not declared - {_e}")
 
 
 def recipe_property_grid(recipe):
@@ -150,7 +148,7 @@ def _iter_nodes(node):
 
 def fabrication_load_recipes_amd(doc):
     """Register every recipe heading in a parsed AMD doc (from document_get_amd_file with
-    data_parser=amd_recipe_data, or a mission's amd_mission_data + amd_section). A heading is
+    the shared reader, or a mission's amd_mission_data + amd_section). A heading is
     a recipe if its fence has an Output; the root/section headings without one are skipped."""
     if doc is None:
         return
