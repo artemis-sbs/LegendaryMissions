@@ -1,6 +1,8 @@
 {
     "sbslib": [
         "artemis-sbs.sbs_utils.v1.4.0.sbslib"
+    ],
+    "shared_media": [
+        "artemis-sbs.LegendaryMissions.media.v1.4.0.zip"
     ]
 }
-

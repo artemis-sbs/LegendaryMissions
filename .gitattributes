@@ -1,2 +1,14 @@
 *.mast linguist-language=Python
 *.amd linguist-language=markdown
+
+# The GitHub ARCHIVE (what `sbs.pyz fetch` downloads) leaves these out; a clone and the
+# release workflow's `actions/checkout` still get everything, so the media pack is built
+# from the real art as before. `export-ignore` only governs `git archive`.
+#
+# media/ travels as its own release asset instead - unpacked ONCE into `__lib__/media`
+# and read from there, rather than copied into every mission that uses it. story.json
+# declares it under `shared_media`, which resolves mission-local first, so a clone keeps
+# editing art in place.
+media/          export-ignore
+mkdocs/         export-ignore
+.github/        export-ignore
