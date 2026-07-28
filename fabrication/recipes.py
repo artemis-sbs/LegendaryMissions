@@ -69,6 +69,11 @@ def _declare_recipe_vocabulary():
         "time": integer(hint="build seconds"),
         "build at": enum("engineering", "science", "weapons", "comms", "helm", open=True),
         "program": kv(hint="kind=bio, range=medium"),
+        # Blocks, not scalars: a {label: 'gui_control_expr'} property grid and a
+        # {var: value} seed map. Their INNER names belong to the recipe, so they are
+        # declared as text and the linter does not look inside them.
+        "properties": text(hint="a nested block of gui control expressions"),
+        "defaults": text(hint="a nested block of {var: value} seeds"),
     }, domain="fabrication")
     amd_register_section_names(("recipes",), "recipe", domain="fabrication")
 
