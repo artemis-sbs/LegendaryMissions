@@ -44,10 +44,10 @@ def bar_declare_vocabulary():
     the day one of them gets a brain - and a rumor is DIALOGUE: a line someone says,
     with the payoff shown if the tip pans out."""
     from sbs_utils.procedural.amd_schema import (
-        amd_register_fields, amd_register_section_names, text, pct, multiline)
+        amd_register_fields, amd_register_section_names, text, multiline)
     amd_register_fields("lifeform", {
         "call sign": text(hint="what the room calls them"),
-        "reliability": pct(hint="0.55 - how often their tips pan out"),
+        # `Reliability:` is the shared `reputation` trait's - every person has one.
     }, domain="casino")
     amd_register_fields("dialogue", {
         "intel": multiline(hint="the payoff line, shown when the tip turns out true"),
