@@ -20,15 +20,15 @@
 ### [The Florbin Affair](florbin)
 ---
 Scope: shared
-State: active
+Starts when: at once
 ---
 Ambassador Florbin has been kidnapped and smuggled out in a cargo container. Follow the cargo trail, find him, and bring him home to DS 1 - alive.
 
 #### [Take the Case](brief)
 ---
 Scope: shared
-State: active
-When: signal case_opened
+Starts when: at once
+Done when: signal case_opened
 Then: reveal florbin/trail
 ---
 Contact DS 1 to open the investigation.
@@ -36,8 +36,8 @@ Contact DS 1 to open the investigation.
 #### [Identify the Kidnapper](trail)
 ---
 Scope: shared
-State: secret
-When: signal suspect_identified
+Starts when: revealed
+Done when: signal suspect_identified
 Then: reveal florbin/subdue
 ---
 Follow the cargo trail: interview stations and bio-scan suspect holds to find which ship is hiding the ambassador.
@@ -45,8 +45,8 @@ Follow the cargo trail: interview stations and bio-scan suspect holds to find wh
 #### [Subdue the Kidnapper](subdue)
 ---
 Scope: shared
-State: secret
-When: signal kidnapper_subdued
+Starts when: revealed
+Done when: signal kidnapper_subdued
 Then: reveal florbin/recover
 ---
 Do NOT destroy the ship - the ambassador is aboard. Drop its shields below 50% (or use a secret codecase) to force its surrender.
@@ -54,15 +54,15 @@ Do NOT destroy the ship - the ambassador is aboard. Drop its shields below 50% (
 #### [Recover and Return Florbin](recover)
 ---
 Scope: shared
-State: secret
-When: signal florbin_delivered
+Starts when: revealed
+Done when: signal florbin_delivered
 ---
 Collect the escape pod and dock it at DS 1.
 
 #### [Keep Florbin Alive](alive)
 ---
 Scope: shared
-State: active
+Starts when: at once
 Fail on signal: florbin_killed
 ---
 The case is lost if the ship carrying the ambassador is destroyed before he escapes.
@@ -74,64 +74,65 @@ The case is lost if the ship carrying the ambassador is destroyed before he esca
 
 ### [Gunnery Qualification](job_gunnery)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Gunnery Qualification
 On complete: toast Job complete: Gunnery Qualification
-Goal: signal 5 drone_down
-Pays: 200 credits
+Done when: signal 5 drone_down
+Reward: 200 credits
 ---
 Weapons drill: destroy all the target drones.
 
 ### [Rock Breakers](job_rocks)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Rock Breakers
 On complete: toast Job complete: Rock Breakers
-Goal: signal 4 rock_cleared
-Pays: 150 credits
+Done when: signal 4 rock_cleared
+Reward: 150 credits
 ---
 Clear the hazard asteroids from the shipping lane.
 
 ### [Board the Poacher](job_poacher)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Board the Poacher
 On complete: toast Job complete: Board the Poacher
-Goal: signal poacher_boarded
+Done when: signal poacher_boarded
 Fail on signal: poacher_killed
-Pays: 300 credits
+Reward: 300 credits
 ---
 Disable the unregistered trawler (drop its shields below 50%) and demand its surrender. Do NOT destroy it.
 
 ### [Mercy Run](job_mercy)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Mercy Run
 On complete: toast Job complete: Mercy Run
-Goal: signal mercy_reached
-Fail after: 6 minutes
-Pays: 250 credits
+Done when: signal mercy_reached
+Fails when: 6 minutes
+Reward: 250 credits
+Penalty: 100 credits
 ---
 A shuttle is adrift and losing life support. Reach it before the clock runs out.
 
 ### [Customs Patrol](job_customs)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Customs Patrol
 On complete: toast Job complete: Customs Patrol
-Goal: signal 4 customs_cleared
-Pays: 120 credits
+Done when: signal 4 customs_cleared
+Reward: 120 credits
 ---
 Hail and clear the civilian traders for transit.
 
 ### [Anomaly Survey](job_survey)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Anomaly Survey
 On complete: toast Job complete: Anomaly Survey
-Goal: scan 3 anomaly
-Reveals: Survey logged: a stable subspace distortion. No threat - filed with the science log.
-Pays: 130 credits
+Done when: scan 3 anomaly
+Scan says: Survey logged: a stable subspace distortion. No threat - filed with the science log.
+Reward: 130 credits
 ---
 Have Science scan the sensor anomalies and log them.
 
@@ -141,41 +142,41 @@ Have Science scan the sensor anomalies and log them.
 
 ### [Sensor Net](job_sensor_net)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Sensor Net
 On complete: toast Job complete: Sensor Net
-Goal: signal 3 sensor_deployed
-Pays: 220 credits
+Done when: signal 3 sensor_deployed
+Reward: 220 credits
 ---
 Establish a sensor picket. Have Engineering fabricate Sensor Beacons on the Fabricate tab and deliver them to Weapons, then deploy three across the patrol lanes.
 
 ### [Recover Lost Probes](job_probes)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Recover Lost Probes
 On complete: toast Job complete: Recover Lost Probes
-Goal: signal 3 probe_recovered
-Pays: 160 credits
+Done when: signal 3 probe_recovered
+Reward: 160 credits
 ---
 Three old survey probes have gone adrift in the sector. Fly your ship over each one to bring it aboard - a recovered probe also tops up your beacon tube.
 
 ### [Clear the Grazing Herd](job_herd)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Clear the Grazing Herd
 On complete: toast Job complete: Clear the Grazing Herd
-Goal: signal herd_cleared
-Pays: 180 credits
+Done when: signal herd_cleared
+Reward: 180 credits
 ---
 A pod of grazers has drifted into a shipping lane. Do NOT fire on them - they turn hostile if provoked. Fabricate a Bio Beacon set to REPEL grazers, deploy it among the pod, and drive them clear.
 
 ### [Bait the Ravener](job_ravener)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Bait the Ravener
 On complete: toast Job complete: Bait the Ravener
-Goal: signal predator_baited
-Pays: 350 credits
+Done when: signal predator_baited
+Reward: 350 credits
 ---
 A Ravener is loose in the lanes. It FEEDS on weapon fire - shooting only heals it - so do not engage. Fabricate a Bio Beacon set to ATTRACT the ravener, deploy it beside the black hole, and let the hole do the rest.
 
@@ -186,42 +187,43 @@ A Ravener is loose in the lanes. It FEEDS on weapon fire - shooting only heals i
 
 ### [Tow the Barge](job_barge)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Tow the Barge
 On complete: toast Job complete: Tow the Barge
-Goal: signal barge_delivered
-Pays: 300 credits
+Done when: signal barge_delivered
+Reward: 300 credits
 ---
 A power-dead ore barge is adrift in the shipping lane with no drive of its own. Grav-tether it and tow it back to DS 1.
 
 ### [Salvage Sweep](job_salvage)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Salvage Sweep
 On complete: toast Job complete: Salvage Sweep
-Goal: signal 3 salvage_delivered
-Pays: 240 credits
+Done when: signal 3 salvage_delivered
+Reward: 240 credits
 ---
 Wrecked hulls are cluttering the lane. Grav-tether each salvage hulk and tow it to the Refinery Platform for processing.
 
 ### [Rescue the Lifepod](job_lifepod)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Rescue the Lifepod
 On complete: toast Job complete: Rescue the Lifepod
-Goal: signal lifepod_delivered
-Fail after: 5 minutes
-Pays: 320 credits
+Done when: signal lifepod_delivered
+Fails when: 5 minutes
+Reward: 320 credits
+Penalty: 150 credits
 ---
 A lifepod is tumbling out of a wreck field with its beacon failing. Grav-tether it and tow it to DS 1 before life support runs out.
 
 ### [Reposition the Relay](job_relay)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Reposition the Relay
 On complete: toast Job complete: Reposition the Relay
-Goal: signal relay_placed
-Pays: 200 credits
+Done when: signal relay_placed
+Reward: 200 credits
 ---
 A comms relay has drifted off station. Grav-tether it and tow it to its marked position in the lane, then let it settle.
 
@@ -236,121 +238,121 @@ A comms relay has drifted off station. Grav-tether it and tow it to its marked p
 // ordered by the sequencer. This is the template for the other multi-step jobs.
 ### [The Ghost Freighter](job_ghost)
 ---
-State: idle
+Job
 On accept: toast Job accepted: The Ghost Freighter
 On complete: toast Job complete: The Ghost Freighter
-Pays: 400 credits
+Reward: 400 credits
 ---
 The freighter SS Meridian has gone silent and is drifting toward a black hole. Work the steps in order - the case pays on completion.
 
 #### [Hail the Meridian](hail)
 ---
-State: secret
+Starts when: revealed
 ---
 COMMS: hail the silent freighter.
 
 #### [Scan the Derelict](scan)
 ---
-State: secret
+Starts when: revealed
 ---
 SCIENCE: scan her to assess the situation.
 
 #### [Tow Clear of the Hole](clear)
 ---
-State: secret
+Starts when: revealed
 ---
 WEAPONS / HELM: grav-tether her and tow her clear of the black hole.
 
 #### [Tow Her Home](home)
 ---
-State: secret
+Starts when: revealed
 ---
 WEAPONS / HELM: tow her back to DS 1.
 
 ### [Sweep and Recover](job_sweep)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Sweep and Recover
 On complete: toast Job complete: Sweep and Recover
-Pays: 380 credits
+Reward: 380 credits
 ---
 Run a sensor sweep and recover what it finds. Work the steps in order.
 
 #### [Deploy the Picket](deploy)
 ---
-State: secret
+Starts when: revealed
 ---
 ENGINEERING / WEAPONS: fabricate a Sensor Beacon on the Fabricate tab and deploy it.
 
 #### [Scan the Contact](scan)
 ---
-State: secret
+Starts when: revealed
 ---
 SCIENCE: scan the contact the picket flags.
 
 #### [Recover the Find](recover)
 ---
-State: secret
+Starts when: revealed
 ---
 WEAPONS / HELM: grav-tether the find and tow it to DS 1.
 
 ### [Cache in the Rocks](job_cache)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Cache in the Rocks
 On complete: toast Job complete: Cache in the Rocks
-Pays: 360 credits
+Reward: 360 credits
 ---
 A tipster says contraband is stashed in an asteroid cluster. Work the steps in order.
 
 #### [Get the Tip](tip)
 ---
-State: secret
+Starts when: revealed
 ---
 COMMS: hail the loitering tipster for the drop location.
 
 #### [Find the Cache](find)
 ---
-State: secret
+Starts when: revealed
 ---
 SCIENCE: scan the rock cluster to find the loaded one.
 
 #### [Recover the Pod](recover)
 ---
-State: secret
+Starts when: revealed
 ---
 WEAPONS / HELM: grav-tether the shielded pod out and tow it to DS 1.
 
 ### [Herd on the Lane](job_herd_arc)
 ---
-State: idle
+Job
 On accept: toast Job accepted: Herd on the Lane
 On complete: toast Job complete: Herd on the Lane
-Pays: 340 credits
+Reward: 340 credits
 ---
 A grazer pod has drifted into a shipping lane. Work the steps in order. Do NOT fire on the grazers - they retaliate if provoked.
 
 #### [Scan the Pod](scan)
 ---
-State: secret
+Starts when: revealed
 ---
 SCIENCE: scan the grazer pod.
 
 #### [Warn the Convoy](warn)
 ---
-State: secret
+Starts when: revealed
 ---
 COMMS: warn the civilian convoy to hold.
 
 #### [Deploy a Repel Beacon](repel)
 ---
-State: secret
+Starts when: revealed
 ---
 ENGINEERING / WEAPONS: fabricate a Bio Beacon set to REPEL and deploy it to drive the pod clear.
 
 #### [Free the Snared Grazer](free)
 ---
-State: secret
+Starts when: revealed
 ---
 WEAPONS / HELM: grav-tether the drift netting off the snared grazer to free it.
 

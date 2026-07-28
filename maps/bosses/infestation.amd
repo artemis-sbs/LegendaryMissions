@@ -20,6 +20,6 @@ Scope: shared
 State: active
 Parent: siege_mission
 Goal: destroy 10 biomechs
-Pays: 700 credits
+Reward: 700 credits
 ---
 Cull the BioMech swarm - every hull you burn slows the breeding.
