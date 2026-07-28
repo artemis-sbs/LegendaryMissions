@@ -326,7 +326,13 @@ Main:
     gui_console("mainscreen")
     set_inventory_value(client_id, "CONSOLE_TYPE", "mainscreen")
     link(ship_id,"consoles", client_id)
-    # add_role(client_id, "console, mainscreen")
+    # The ROLE has to be set as well as CONSOLE_TYPE. Anything that addresses an
+    # audience narrows with any_role(...) -- overlays (hero cards, lower thirds,
+    # banners), announce(), comms targeting -- so a screen with CONSOLE_TYPE but no
+    # role is invisible to all of them and the message is dropped in silence.
+    # Safe: common_console_select removes every console role before adding the new
+    # one, so this cannot leave a stale mainscreen on a console that moved away.
+    add_role(client_id, "console, mainscreen")
 
 
 
