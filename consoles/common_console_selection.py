@@ -160,8 +160,9 @@ def console_get_console_type():
 import glob
 def console_get_images(console):
     # "media/helm/consoles0001"
+    from sbs_utils.procedural.media_paths import media_shared
     d = fs.get_mission_dir()
-    cd = f"{d}/media/LegendaryMissions/{console}"
+    cd = os.path.join(d, *media_shared(console).split("/"))
 
     if not os.path.isdir(cd):
         return []

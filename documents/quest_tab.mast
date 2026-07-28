@@ -26,8 +26,8 @@ if QUEST_TAB_ENABLED:
     quest_console_enable("helm,weapons,science,engineering,comms,mainscreen")
     if is_dev_build():
         # Dev-only sample art for the quest test data.
-        gui_image_add_atlas("test", "media/LegendaryMissions/operator")
-        gui_image_add_atlas("test2", "media/LegendaryMissions/operator", 645, 570, 950, 820)
+        gui_image_add_atlas("test", media_shared("operator"))
+        gui_image_add_atlas("test2", media_shared("operator"), 645, 570, 950, 820)
 
 
 //gui/tab/quest if QUEST_TAB_ENABLED and quest_is_console_enabled(CONSOLE_SELECT)

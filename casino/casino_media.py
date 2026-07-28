@@ -7,12 +7,13 @@ packaged addon the media may need to live under the mission's media
 resources; adjust CASINO_MEDIA if paths don't resolve in-engine.
 """
 from sbs_utils.procedural.gui import gui_image_add_atlas
+from sbs_utils.procedural.media_paths import media_shared
 
-# Card sheets live in the LM media source (media/LegendaryMissions/casino/) so
-# they resolve the same way as the hangar's media - the image atlas checks the
-# path against the running mission's folder (<mission>/media/LegendaryMissions/
-# casino/*.png), which the LM media resource populates.
-CASINO_MEDIA = "media/LegendaryMissions/casino"
+# Card sheets live in the LM media pack. `media_shared` finds them wherever they are:
+# this mission's own `media/` when LM runs from its own tree, else the pack the mission
+# pinned, unpacked once beside the libraries. The version in that path is exactly why
+# nothing here writes it.
+CASINO_MEDIA = media_shared("casino")
 _ARV_CELL = 256                 # arvonian_deck.png cell size
 _TER_W, _TER_H = 190, 280       # terran_deck.png cell size
 RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"]

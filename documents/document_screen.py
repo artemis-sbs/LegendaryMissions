@@ -1,4 +1,7 @@
 from sbs_utils.procedural.gui import gui_row, gui_text, gui_icon
+# MAST sees every module-level name an addon's `.py` imports - this is how
+# quest_tab.mast reaches the shared-media resolver.
+from sbs_utils.procedural.media_paths import media_shared
 from sbs_utils.procedural.quest import QuestState, document_get_amd_file 
 
 from sbs_utils.procedural.gui.listbox import gui_list_box_is_header
