@@ -5,6 +5,7 @@
 
 # [Ragnarok](ragnarok)
 ---
+Boss
 Trigger: enemies_low
 Low: 30%
 Flies: pirate

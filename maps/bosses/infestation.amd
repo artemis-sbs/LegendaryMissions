@@ -8,6 +8,7 @@
 
 # [Infestation](infestation)
 ---
+Boss
 Trigger: enemies_low
 Low: 40%
 Hook: biomech_infestation

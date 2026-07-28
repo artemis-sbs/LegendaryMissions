@@ -5,6 +5,7 @@
 
 # [Warlord](warlord)
 ---
+Boss
 Trigger: enemies_low
 Low: 25%
 Flies: 50% Kralien, 50% Torgoth

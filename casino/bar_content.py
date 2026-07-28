@@ -36,6 +36,25 @@ def _patron_node(key):
     return None
 
 
+def bar_declare_vocabulary():
+    """Teach the format the casino's words, so the editor types them and the linter
+    checks them (the same move the universe makes for its sides).
+
+    A patron is a CHARACTER - a person in the bar, which is what it will have to be
+    the day one of them gets a brain - and a rumor is DIALOGUE: a line someone says,
+    with the payoff shown if the tip pans out."""
+    from sbs_utils.procedural.amd_schema import (
+        amd_register_fields, amd_register_section_names, text, pct, multiline)
+    amd_register_fields("lifeform", {
+        "call sign": text(hint="what the room calls them"),
+        "reliability": pct(hint="0.55 - how often their tips pan out"),
+    }, domain="casino")
+    amd_register_fields("dialogue", {
+        "intel": multiline(hint="the payoff line, shown when the tip turns out true"),
+    }, domain="casino")
+    amd_register_section_names(("patrons", "bar"), "lifeform", domain="casino")
+
+
 def bar_patrons():
     """Ordered patron definitions from bar.amd: key, call_sign, face_kind,
     reliability. Faces are generated in MAST from face_kind (see
@@ -45,8 +64,11 @@ def bar_patrons():
         d = n.get("data") or {}
         out.append({
             "key": n.get("key"),
-            "call_sign": d.get("call_sign", n.get("display_text", "pilot")),
-            "face_kind": d.get("face_kind", "terran"),
+            # `Call sign:` reads as two words now; the old key still parses.
+            "call_sign": d.get("call_sign") or d.get("call sign")
+                         or n.get("display_text", "pilot"),
+            # `Face:` is the shared word every Character uses; `Face kind:` still parses.
+            "face_kind": d.get("face") or d.get("face_kind", "terran"),
             "reliability": d.get("reliability", 0.5),
         })
     return out

@@ -8,6 +8,9 @@
 
 # Load the authored bar content (patrons, rumors, chatter) from bar.amd, the
 # same way the quest board loads hangar_quests.amd.
+# Teach the format the casino's words before the file is read, so a patron types as a
+# Character and its Reliability as a percentage - in the editor and the linter too.
+bar_declare_vocabulary()
 shared BAR_DOC = bar_set_doc(document_get_amd_file(None, "Bar", content=media_read_relative_file("bar.amd")))
 shared bar_pilots = bar_build_pilots(faces)
 shared bar_barkeep = bar_pilots.get("barkeep", {}).get("face", faces.random_torgoth())
