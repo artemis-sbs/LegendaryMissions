@@ -202,10 +202,22 @@ if CAN_CHANGE_CONSOLE:
         ship_list = player_list_all[:PLAYER_COUNT]
     else:
         ship_list = []
-    ship_select_lb = gui_list_box(ship_list,"background:#1572;tag:sh_ship_list;", item_template=console_ship_select_template, title_template=console_ship_select_title_template, select=True)
+    # reveal keeps a restored selection on screen; hint keeps it in the same slot.
+    #
+    # With 8 player ships and a dozen-plus consoles BOTH lists overflow their boxes,
+    # so both need this. They fail differently, which is why the two calls below read
+    # differently:
+    #   - the ship list restored with set_selected_index(i) and NO second argument,
+    #     so set_cur was True: always visible, but slammed to the TOP every rebuild.
+    #   - the console list restores with set_value(), which never touches `cur` at
+    #     all: nothing moved the view, so the selected console sat below the fold.
+    # Passing False hands the view to reveal/hint instead of the slam, so a restored
+    # selection is shown with the SMALLEST move that makes it visible.
+    default console_ship_hint = None
+    ship_select_lb = gui_list_box(ship_list,"background:#1572;tag:sh_ship_list;", item_template=console_ship_select_template, title_template=console_ship_select_title_template, select=True, reveal=True, hint=console_ship_hint)
 
     if len(ship_list)>0:
-        ship_select_lb.set_selected_index(client_selected_index)
+        ship_select_lb.set_selected_index(client_selected_index, False)
 
 
     #
@@ -230,7 +242,15 @@ if CAN_CHANGE_CONSOLE:
             console_select_item = c
             break
 
-    console_select_lb = gui_list_box(consoles,"row-height: 0.5em; background:#1572;", item_template=console_select_template, title_template=console_select_title_template, select=True, read_only=console_read_only)
+    # THIS is the one that could come back selected-but-invisible. set_value() sets
+    # `selected` and never touches `cur`, so unlike the ship list above there is
+    # nothing moving the view to the selection -- and a mission can register well
+    # over a dozen consoles (helm, weapons, engineering, science, comms, mainscreen,
+    # cinematic, hangar, director, gamemaster, display_panels, plus map-gated ones),
+    # so the selected console is easily below the fold. `reveal` is the fix here;
+    # the hint is what stops it moving on the rebuilds we can capture.
+    default console_sel_hint = None
+    console_select_lb = gui_list_box(consoles,"row-height: 0.5em; background:#1572;", item_template=console_select_template, title_template=console_select_title_template, select=True, read_only=console_read_only, reveal=True, hint=console_sel_hint)
     console_select_lb.set_value(console_select_item)
 
     #
@@ -257,7 +277,16 @@ if CAN_CHANGE_CONSOLE:
             # Otherwise can refresh faster if adding ships
             ship_list = player_list_all[:PLAYER_COUNT]
             ship_select_lb.items = ship_list
-            ship_select_lb.set_selected_index(min(client_selected_index, len(ship_list)))
+            # len(ship_list)-1, not len(ship_list): set_selected_index ignores an
+            # index that is not < len, so the old clamp silently CLEARED the
+            # selection whenever the count shrank past it. The line above already
+            # clamps client_selected_index the right way.
+            #
+            # False so this in-place update does not jump to the top either. It
+            # re-arms the reveal, so the next present scrolls the selection into
+            # view -- and clamps `cur`, which matters here because the list just
+            # got shorter.
+            ship_select_lb.set_selected_index(min(client_selected_index, len(ship_list)-1), False)
         
 
     on change console_select_lb.get_value():
@@ -283,6 +312,13 @@ if CAN_CHANGE_CONSOLE:
 
     on signal player_ship_destroyed:
         await delay_app(0)
+        # The only rebuild driven from this live page, so the only place a hint can
+        # be taken. The others (select_console_clear_ready, game_started_console)
+        # are entered from elsewhere with no presented widget to read -- there
+        # `reveal` alone carries it, which is why reveal is the fix here and the
+        # hint is the bonus.
+        console_ship_hint = ship_select_lb.get_selection_hint()
+        console_sel_hint = console_select_lb.get_selection_hint()
         jump select_console_clear_ship
 
     if len(ship_list) >0:
