@@ -53,14 +53,24 @@ gui_tab_add_top("upgrade")
     _consoles = _sel["consoles"] if _sel is not None else ""
     _ready = _sel["ready"] if _sel is not None else True
 
+    # The selection survives a repaint by key (above); the VIEW needs carrying too.
+    # This tab repaints harder than most: on selection, on either item signal, and
+    # -- while anything is counting down -- ONCE A SECOND from the timeout below. A
+    # list scrolled down would have snapped back to the top every second, which
+    # reads as "the list keeps jumping", not as a selection bug.
+    default upgrade_sel_hint = None
+
     # Left: scrolling list of owned/active upgrades.
     gui_section(style="area: 5, 5, 45, 100; background:#1572;")
-    ubox = gui_list_box(_items, "row-height: 0.1em;", item_template=item_upgrade_row, title_template=item_upgrade_title, select=True)
+    ubox = gui_list_box(_items, "row-height: 0.1em;", item_template=item_upgrade_row, title_template=item_upgrade_title, select=True, reveal=True, hint=upgrade_sel_hint)
     if _idx >= 0:
         ubox.set_selected_index(_idx, False)
     on change ubox.get_value():
         _v = ubox.get_value()
         upgrade_sel_key = _v["key"] if _v is not None else None
+        # From THIS widget, before the jump: it holds the view and never presents
+        # again once the page is rebuilt.
+        upgrade_sel_hint = ubox.get_selection_hint()
         jump repaint
 
     # Right (top): selected item name.
@@ -88,8 +98,10 @@ gui_tab_add_top("upgrade")
 
     # Repaint when items change (collected/activated) - signals are server-wide.
     on signal item_changed:
+        upgrade_sel_hint = ubox.get_selection_hint()
         jump repaint
     on signal item_activated:
+        upgrade_sel_hint = ubox.get_selection_hint()
         jump repaint
 
     # While something is counting down, self-tick every second so the timer
@@ -98,4 +110,8 @@ gui_tab_add_top("upgrade")
         await gui(timeout=delay_sim(1))
     else:
         await gui()
+    # The self-tick rebuild, and the reason this tab needed the hint most. Taken
+    # after await gui() returns, never before it: a listbox has no view until it
+    # has presented, so a hint captured at build time carries nothing.
+    upgrade_sel_hint = ubox.get_selection_hint()
     jump repaint
