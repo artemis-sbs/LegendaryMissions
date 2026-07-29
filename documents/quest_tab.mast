@@ -41,11 +41,24 @@ if QUEST_TAB_ENABLED:
     # Selection persists across a gate-driven repaint (below) so the panel doesn't
     # jump when a station-specific job flips the controls.
     default quest_sel_index = -1
+    # ...and so does the VIEW. Keeping the selection was never enough on its own: a
+    # repaint builds a different listbox that starts at the top, so a job selected
+    # below the fold came back held but invisible, and the row you clicked moved out
+    # from under the cursor. `reveal` keeps it on screen, `hint` keeps it in the same
+    # slot. This log is rebuilt from four places (a gate flip, any quest changing
+    # state anywhere, Accept, Abandon), and three of those the player did not ask
+    # for -- so the view moving is least expected exactly when it moved most.
+    default quest_sel_hint = None
 
     # Quest list (left) + narrative (right) + accept/abandon controls.
     gui_section(style="area: 0,45px, 38,100; background:#1572;")
-    qbox = gui_list_box(items, "row-height:0.1em;", item_template=quest_log_template, title_template=quest_log_title, select=True, collapsible=True)
-    if quest_sel_index >= 0:
+    qbox = gui_list_box(items, "row-height:0.1em;", item_template=quest_log_template, title_template=quest_log_title, select=True, collapsible=True, reveal=True, hint=quest_sel_hint)
+    # An explicit selection beats the hint's, which is what makes this order safe:
+    # the hint restores the VIEW, this line restores the SELECTION.
+    #
+    # `is not None` as well as >= 0: get_selected_index() returns None when nothing
+    # is selected (a list that lost its selected job), and `None >= 0` raises.
+    if quest_sel_index is not None and quest_sel_index >= 0:
         qbox.set_selected_index(quest_sel_index, False)
 
     sel = qbox.get_value()
@@ -68,12 +81,20 @@ if QUEST_TAB_ENABLED:
             sel_desc = sel.get("desc")
             qdesc.value = sel_desc
         if quest_tab_controls_gate(CONSOLE_SELECT, sel, QUEST_ACCEPT_CONSOLES, QUEST_ENGAGE_ENABLED, QUEST_ENGAGE_CONSOLES).get("sig") != gate_sig:
+            # Taken from THIS widget, before the jump. It holds the view and will
+            # never present again once the page is rebuilt, so there is nothing to
+            # read it from afterwards.
+            quest_sel_hint = qbox.get_selection_hint()
             jump repaint
 
     # Repaint when any displayed quest changes state (added / revealed / accepted /
     # completed / failed) from ANYWHERE - a kill, a timer, or another console - so the
     # list and buttons never go stale.
     on change quest_tab_state_sig(client_id, ship_id):
+        # The repaint the player did NOT ask for, so the view moving is most
+        # jarring here. qbox is still the live widget and has presented, so its
+        # hint is the current view even though no selection changed.
+        quest_sel_hint = qbox.get_selection_hint()
         jump repaint
 
     gui_section(style="area: 38,90, 100,100;")
@@ -89,10 +110,15 @@ if QUEST_TAB_ENABLED:
     if gate.get("show_accept"):
         on gui_message(gui_button("Accept")):
             quest_tab_accept(qbox.get_value())
+            # Captured here rather than reused from the last selection change: the
+            # player may have scrolled since, and the hint carries the SCROLL, not
+            # just the selection.
+            quest_sel_hint = qbox.get_selection_hint()
             jump repaint
     if gate.get("show_abandon"):
         on gui_message(gui_button("Abandon")):
             quest_tab_abandon(qbox.get_value())
+            quest_sel_hint = qbox.get_selection_hint()
             jump repaint
     if gate.get("hint") != "":
         gui_text(f"$text:{gate.get('hint')};justify:left;font:gui-1;color:#bbb")
