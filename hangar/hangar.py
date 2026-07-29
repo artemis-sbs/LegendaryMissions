@@ -704,3 +704,37 @@ def hangar_console_dock_title_template():
     gui_text(f"$text:Hangar Location;justify: left;")
 
 
+
+
+# --- listbox view continuity -------------------------------------------------
+# The hangar page is a loop: `await gui()` falls through to `jump show_hangar`, so
+# ANY interaction rebuilds the whole page and all three listboxes with it. Held
+# selections were already restored; the VIEW was not, so a dock, craft or sortie
+# selected below the fold came back invisible, and the row you clicked moved.
+#
+# gui_list_box(hint=...) carries the view across a rebuild, but three lists times
+# three rebuild sites is nine lines of near-identical bookkeeping in the MAST. One
+# dict instead: capture all three at each jump, read each one back by name.
+def hangar_hints_capture(*boxes):
+    """Take the view hint from each listbox that exists, keyed in argument order.
+
+    Called from the LIVE widgets immediately before a `jump show_hangar` -- they
+    hold the view and never present again once the page is rebuilt, so there is
+    nothing to read it from afterwards.
+
+    quest_box is None when the quests addon is not loaded, hence the guard rather
+    than three separate call sites.
+    """
+    names = ("dock", "ride", "quest")
+    out = {}
+    for name, box in zip(names, boxes):
+        if box is not None:
+            out[name] = box.get_selection_hint()
+    return out
+
+
+def hangar_hint(hints, name):
+    """Read one hint back, or None on the first build."""
+    if not hints:
+        return None
+    return hints.get(name)

@@ -153,8 +153,18 @@ hangar_get_craft_data("terran")
 
     gui_section(style="area: 20px,6+50px, 40, 60;")
     
-    dock_picker = gui_list_box(docks,"background:#1572;padding:0,0,10px,0;", item_template=hangar_console_dock_template, title_template=hangar_console_dock_title_template, select=True)
-    ride_picker = gui_list_box(crafts,"background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True)
+    # reveal keeps a restored selection ON SCREEN; hint keeps it in the same SLOT.
+    # This page is a loop -- await gui() falls through to `jump show_hangar` -- so
+    # every interaction rebuilds all three lists, and without the hint each one
+    # snaps back to its first screenful.
+    #
+    # set_value() below is enough to arm the reveal: it is armed in the listbox
+    # CONSTRUCTOR, and a rebuild is a new listbox, so the restore only has to
+    # happen before the first present. (set_selected_index re-arms it for a later
+    # selection change on an already-presented widget; that is a different case.)
+    default hangar_hints = None
+    dock_picker = gui_list_box(docks,"background:#1572;padding:0,0,10px,0;", item_template=hangar_console_dock_template, title_template=hangar_console_dock_title_template, select=True, reveal=True, hint=hangar_hint(hangar_hints, "dock"))
+    ride_picker = gui_list_box(crafts,"background:#1572;", item_template=hangar_console_ship_template, title_template=hangar_console_title_template, select=True, reveal=True, hint=hangar_hint(hangar_hints, "ride"))
     # Restore selection
     if dock_choice is not None:
         dock_picker.set_value(dock_choice)
@@ -185,7 +195,7 @@ hangar_get_craft_data("terran")
     if HANGAR_QUEST_DOC is not None:
         cockpit_type = hangar_cockpit_type(ride_choice)
         gui_section(style="area: 20px,60, 50,100-90px;background: #1572;")
-        quest_box = gui_list_box(hangar_quest_items(HANGAR_QUEST_DOC, cockpit_type), "padding:0,0,10px,0;", item_template=hangar_quest_template, title_template=hangar_quest_title_template, select=True)
+        quest_box = gui_list_box(hangar_quest_items(HANGAR_QUEST_DOC, cockpit_type), "padding:0,0,10px,0;", item_template=hangar_quest_template, title_template=hangar_quest_title_template, select=True, reveal=True, hint=hangar_hint(hangar_hints, "quest"))
 
         gui_section(style="area: 50,60, 100,100-90px;background: #1572;")
         quest_brief_area = gui_text_area("{quest_brief}", style="tag:quest-brief;padding: 10px,15px,10px,15px;")
@@ -274,6 +284,9 @@ hangar_get_craft_data("terran")
 
     # If a thing launches or docks things need to refresh
     on change hangar_version:
+        # A rebuild the player did not ask for -- somebody else launched or docked.
+        # Least expected place for the view to move, so most worth carrying.
+        hangar_hints = hangar_hints_capture(dock_picker, ride_picker, quest_box)
         jump show_hangar
 
     gui_section(style="area: 0,100-90px, 35,100;")
@@ -305,6 +318,7 @@ hangar_get_craft_data("terran")
             if quest_choice is not None and HANGAR_QUEST_DOC is not None:
                 hangar_assign_quest(to_id(ride_select), HANGAR_QUEST_DOC, cockpit_type, quest_choice)
             jump launch_to_cockpit
+        hangar_hints = hangar_hints_capture(dock_picker, ride_picker, quest_box)
         jump show_hangar
 
 
@@ -323,6 +337,11 @@ hangar_get_craft_data("terran")
     #        #jump show_hangar
 
 
+    # The loop rebuild, reached after any interaction that no handler consumed.
+    # Captured HERE and not before await gui(): a listbox has no view until it has
+    # presented -- its `sections` do not exist until then -- so a hint taken at
+    # build time would carry nothing and quietly do nothing.
+    hangar_hints = hangar_hints_capture(dock_picker, ride_picker, quest_box)
     jump show_hangar
 
 
