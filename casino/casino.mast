@@ -56,16 +56,24 @@ default shared CASINO_ENABLED = True
         gui_row()
         """color:#ffd76a;justify:center;$text:{_comp}"""
     gui_row()
+    # game_box is assigned further down, but these handlers RUN after the whole page
+    # is built, so it is bound by then.
     on gui_message(gui_button("Buy 10")):
         casino_chips_buy(client_id, side_id, 10)
+        casino_sel_hint = game_box.get_selection_hint()
         jump show_casino
     on gui_message(gui_button("Cash Out")):
         casino_chips_cash_out(client_id, side_id)
+        casino_sel_hint = game_box.get_selection_hint()
         jump show_casino
 
-    # Games list (left)
+    # Games list (left). reveal keeps a restored selection on screen; hint keeps it
+    # in the same slot -- this page rebuilds on a chip buy, a cash out, a selection,
+    # a chip-count change from anywhere, and any unconsumed interaction, and without
+    # the hint the list snapped to the top on all five.
+    default casino_sel_hint = None
     gui_section(style="area: 10, 28, 42, 90; background:#1572;")
-    game_box = gui_list_box(_games, "", item_template=casino_game_list_template, title_template=casino_game_list_title, select=True)
+    game_box = gui_list_box(_games, "", item_template=casino_game_list_template, title_template=casino_game_list_title, select=True, reveal=True, hint=casino_sel_hint)
     if _idx >= 0:
         game_box.set_selected_index(_idx, False)
 
@@ -84,11 +92,18 @@ default shared CASINO_ENABLED = True
     on change game_box.get_value():
         _v = game_box.get_value()
         casino_selected_key = _v["key"] if _v is not None else None
+        # From THIS widget, before the jump -- it holds the view and never presents
+        # again once the page is rebuilt.
+        casino_sel_hint = game_box.get_selection_hint()
         jump show_casino
     on change casino_chips_get(client_id):
+        casino_sel_hint = game_box.get_selection_hint()
         jump show_casino
 
     await gui()
+    # After await gui() returns, never before it: a listbox has no view until it has
+    # presented, so a hint taken at build time carries nothing.
+    casino_sel_hint = game_box.get_selection_hint()
     jump show_casino
 
 # Shared "out of chips" screen - games jump here instead of each defining one.
