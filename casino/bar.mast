@@ -120,9 +120,13 @@ help: |
         gui_row("row-height:1.8em;")
         gui_button(f"$text:{_a.get('label', '')};justify:center;", data={"bar_act": _a.get('act', '')}, on_press="bar_action")
 
-    # Patrons list.
+    # Patrons list. This page is the busiest rebuilder in the addon: a selection, a
+    # patron arriving or leaving, EVERY conversation line, every drink, and any
+    # unconsumed interaction all rebuild it. Without the hint the patron list
+    # snapped to the top each time somebody spoke.
+    default bar_sel_hint = None
     gui_section(style="area: 30, 4, 50, 88; background:#1572;")
-    patron_box = gui_list_box(_patrons, "", item_template=bar_patron_template, title_template=bar_patron_title, select=True)
+    patron_box = gui_list_box(_patrons, "", item_template=bar_patron_template, title_template=bar_patron_title, select=True, reveal=True, hint=bar_sel_hint)
     if _sel_idx >= 0:
         patron_box.set_selected_index(_sel_idx, False)
 
@@ -142,6 +146,7 @@ help: |
                 bar_messages.pop(0)
             message = ""
             bar_message_id += 1
+            bar_sel_hint = patron_box.get_selection_hint()
             jump bar_show
 
     # Drink + Leave buttons render in this bottom bar (from await gui below).
@@ -151,23 +156,32 @@ help: |
     on change patron_box.get_value():
         _pv = patron_box.get_value()
         bar_selected_cs = _pv.get("call_sign") if _pv is not None else None
+        # From THIS widget, before the jump -- it holds the view and never presents
+        # again once the page is rebuilt.
+        bar_sel_hint = patron_box.get_selection_hint()
         jump bar_show
     on change len(bar_customers.values()):
+        bar_sel_hint = patron_box.get_selection_hint()
         jump bar_show
     on change bar_message_id:
+        bar_sel_hint = patron_box.get_selection_hint()
         jump bar_show
     on change bar_beer+bar_martinis+bar_vodka:
+        bar_sel_hint = patron_box.get_selection_hint()
         jump bar_show
 
     await gui():
         + "Martini" if bar_martinis > 0:
             shared bar_martinis = bar_martinis - 1
+            bar_sel_hint = patron_box.get_selection_hint()
             jump bar_show
         + "Beer" if bar_beer > 0:
             shared bar_beer = bar_beer - 1
+            bar_sel_hint = patron_box.get_selection_hint()
             jump bar_show
         + "Vodka" if bar_vodka > 0:
             shared bar_vodka = bar_vodka - 1
+            bar_sel_hint = patron_box.get_selection_hint()
             jump bar_show
         + "Leave":
             bar_customers.pop(client_id, None)
