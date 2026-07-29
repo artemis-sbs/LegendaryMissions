@@ -58,14 +58,21 @@ default CONSOLE_SELECT = ""
     if fab_sel is not None:
         fab_building = not is_timer_finished(ship_id, fab_timer)
 
-    # LEFT: recipe list box
+    # LEFT: recipe list box. reveal keeps a restored selection on screen; hint keeps
+    # it in the same slot. Like the upgrades tab this one self-ticks ONCE A SECOND
+    # while a build is running, so a scrolled recipe list snapped to the top every
+    # second -- with a long recipe book that is the whole list moving under you.
+    default fab_sel_hint = None
     gui_section(style="area: 5, 12, 45, 100; background:#1572;")
-    fab_box = gui_list_box(fab_items, "row-height: 0.1em;", item_template=recipe_row, title_template=recipe_title, select=True)
+    fab_box = gui_list_box(fab_items, "row-height: 0.1em;", item_template=recipe_row, title_template=recipe_title, select=True, reveal=True, hint=fab_sel_hint)
     if fab_idx >= 0:
         fab_box.set_selected_index(fab_idx, False)
     on change fab_box.get_value():
         fab_v = fab_box.get_value()
         fab_sel_key = fab_v["key"] if fab_v is not None else None
+        # From THIS widget, before the jump -- it holds the view and never presents
+        # again once the page is rebuilt.
+        fab_sel_hint = fab_box.get_selection_hint()
         jump fab_repaint
 
     # RIGHT (top): selected recipe name
@@ -124,11 +131,16 @@ default CONSOLE_SELECT = ""
         """color:#888; justify:center; $text: need materials"""
 
     on signal item_changed:
+        fab_sel_hint = fab_box.get_selection_hint()
         jump fab_repaint
     if fab_building:
         await gui(timeout=delay_sim(1))
     else:
         await gui()
+    # After await gui() returns, never before it: a listbox has no view until it has
+    # presented, so a hint taken at build time carries nothing. This is also the
+    # 1-second build tick, so it is the capture that matters most here.
+    fab_sel_hint = fab_box.get_selection_hint()
     jump fab_repaint
 
 # --- CARGO: list box of ALL carried cargo (left) + detail panel (right). Beacons offer
@@ -161,12 +173,14 @@ default CONSOLE_SELECT = ""
     gui_section(style="area: 5, 12, 45, 100; background:#1572;")
     if len(car_items) == 0:
         """color:#888; $text: Cargo hold empty."""
-    car_box = gui_list_box(car_items, "row-height: 0.1em;", item_template=cargo_row, title_template=cargo_title, select=True)
+    default cargo_sel_hint = None
+    car_box = gui_list_box(car_items, "row-height: 0.1em;", item_template=cargo_row, title_template=cargo_title, select=True, reveal=True, hint=cargo_sel_hint)
     if car_idx >= 0:
         car_box.set_selected_index(car_idx, False)
     on change car_box.get_value():
         car_v = car_box.get_value()
         cargo_sel_cid = car_v["cid"] if car_v is not None else None
+        cargo_sel_hint = car_box.get_selection_hint()
         jump cargo_repaint
 
     # RIGHT (top): selected cargo name
@@ -189,7 +203,11 @@ default CONSOLE_SELECT = ""
         on gui_message(car_ejg):
             signal_emit("cargo_eject", {"ship_id": ship_id, "key": gk})
 
+    # A cargo hold changes from under the player constantly -- salvage picked up,
+    # a beacon delivered, an eject. Every one of those rebuilds this list.
     on signal item_changed:
+        cargo_sel_hint = car_box.get_selection_hint()
         jump cargo_repaint
     await gui()
+    cargo_sel_hint = car_box.get_selection_hint()
     jump cargo_repaint
