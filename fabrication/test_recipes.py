@@ -49,6 +49,66 @@ class ParseInputsTests(unittest.TestCase):
         self.assertEqual(R._parse_inputs("salvage"), {"salvage": 1})
 
 
+class LoadRecipesAmdTests(unittest.TestCase):
+    """The real recipes.amd through the real reader -- the gap that let a runtime error
+    ship. The parser tests above feed the loader's helpers a STRING, but the reader hands
+    the loader an already-parsed value for every declared field type (Inputs is `counted`,
+    Program is `kv`), so the loader was parsing twice: Inputs came out
+    {"{'bio_sample':": 1} and Program came out {} silently. Nothing was ever affordable,
+    every beacon lost its kind, and `Cost: {'bio_sample': x1` crashed the Fabricate tab
+    on the unclosed brace. Load the file, not a hand-made string."""
+
+    @classmethod
+    def setUpClass(cls):
+        from sbs_utils.procedural.quest import document_get_amd_file
+        amd = os.path.join(os.path.dirname(__file__), "recipes.amd")
+        with open(amd) as f:
+            doc = document_get_amd_file(None, "Recipes", content=f.read())
+        R.fabrication_load_recipes_amd(doc)
+
+    def test_every_recipe_loaded(self):
+        keys = {r["key"] for r in R.fabrication_recipes()}
+        self.assertIn("recipe_beacon_bio", keys)
+        self.assertIn("recipe_beacon_sensor", keys)
+        self.assertIn("recipe_coolant_cell", keys)
+
+    def test_inputs_are_the_authored_counts(self):
+        r = R.fabrication_get_recipe("recipe_beacon_bio")
+        self.assertEqual(r["inputs"], {"bio_sample": 1, "salvage": 5})
+        self.assertEqual(R.fabrication_get_recipe("recipe_beacon_sensor")["inputs"],
+                         {"salvage": 8})
+
+    def test_program_survives_the_read(self):
+        self.assertEqual(R.fabrication_get_recipe("recipe_beacon_bio")["program"],
+                         {"kind": "bio"})
+        self.assertEqual(R.fabrication_get_recipe("recipe_beacon_sensor")["program"],
+                         {"kind": "sensor", "range": "medium"})
+
+    def test_cost_text_carries_no_braces(self):
+        # A MAST `x = f()` re-formats a string result as an f-string, so a `{` in this
+        # text is a runtime SyntaxError on the panel that shows it -- not just a typo.
+        for r in R.fabrication_recipes():
+            text = R.recipe_inputs_text(r)
+            self.assertNotIn("{", text, f"{r['key']}: {text!r}")
+            self.assertNotIn("}", text, f"{r['key']}: {text!r}")
+        self.assertEqual(R.recipe_inputs_text(R.fabrication_get_recipe("recipe_beacon_bio")),
+                         "bio_sample x1, salvage x5")
+
+    def test_affordable_reads_real_inventory_keys(self):
+        reset_mock(sbs)
+        pid = to_id(create_enemy(0, 0, 0, "tsn_light_cruiser", name="P"))
+        self.assertFalse(R.fabrication_recipe_affordable(pid, "recipe_coolant_cell"))
+        set_inventory_value(pid, "salvage", 4)
+        self.assertTrue(R.fabrication_recipe_affordable(pid, "recipe_coolant_cell"))
+        self.assertTrue(R.fabrication_recipe_consume(pid, "recipe_coolant_cell"))
+
+    def test_properties_block_binds_its_vars(self):
+        r = R.fabrication_get_recipe("recipe_beacon_bio")
+        self.assertEqual(R.recipe_property_names(r), ["monster", "mode"])
+        self.assertEqual(R.recipe_property_defaults(r),
+                         {"monster": "shark", "mode": "attract"})
+
+
 class CargoListNamingTests(unittest.TestCase):
     def setUp(self):
         reset_mock(sbs)
