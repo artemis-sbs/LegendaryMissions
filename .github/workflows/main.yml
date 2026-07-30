@@ -25,51 +25,60 @@ jobs:
       matrix:
         item: ${{ fromJson(needs.setup.outputs.matrix) }}
 
-    steps:
-      - name: Set env version
-        id: get_version
-        #run: echo "{VERSION}={${GITHUB_REF/refs\/tags\//}}" >> $GITHUB_OUTPUT
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    env:
+      # Name it exactly what `sbs lib` writes into __lib__ and what a mission's
+      # story.json refers to: {owner}.{repo}.{addon}.{tag}.mastlib. Publishing the bare
+      # addon name meant no consumer could resolve it - every fetch 404'd and fell back
+      # to whatever happened to be on disk, so releases only ever worked on a machine
+      # that had already run `sbs lib` locally.
+      ASSET: ${{ github.repository_owner }}.${{ github.event.repository.name }}.${{ matrix.item }}.${{ github.ref_name }}.mastlib
 
+    steps:
       - uses: actions/checkout@master
-      - name: Archive autoplay addon
-        uses: thedoctor0/zip-release@main
-        with:
-          type: 'zip'
-          filename: '${{ matrix.item }}.${{ steps.get_version.outputs.VERSION }}.mastlib'
-          #directory: 'sbs_utils'
-          #exclusions: 'LICENSE. *.* .* *. *.git* /docs/* /mock/* /typings/* /sphinx/* /tests/* *.py .nojekyll'
-          path: "${{ matrix.item }}"
+
+      # FLAT, and that is load-bearing: MAST opens the .mastlib and reads `__init__.mast`
+      # at the ZIP ROOT (Mast.import_content -> content_from_lib_or_file, which calls
+      # ZipFile(lib).open("__init__.mast")). The old `zip-release` step passed
+      # `path: <addon>`, which nests the folder, so the archive held
+      # `<addon>/__init__.mast`, that open() raised, and the addon silently never
+      # loaded - the mission compiled to ZERO labels and still reported PASS.
+      # `sbs lib` builds these flat (file_help.zipdir, skipping __pycache__); this has
+      # to match it, because both feed the same __lib__ folder.
+      - name: Archive addon (flat, matching `sbs lib`)
+        env:
+          SRC: ${{ matrix.item }}
+        run: python .github/zip_flat.py "$SRC" "$ASSET"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: '${{ matrix.item }}'
-          path: '${{ matrix.item }}.${{ steps.get_version.outputs.VERSION }}.mastlib'
+          path: ${{ env.ASSET }}
           retention-days: 1
 
   build_media:
     runs-on: ubuntu-latest
+    # github.ref_name IS the tag on a tag push - no step needed. The old
+    # `echo "{VERSION}={...}" >> $GITHUB_OUTPUT` line was not valid output syntax
+    # (it writes a literal, setting nothing), so the version came out EMPTY and the
+    # asset was named "media..zip". GitHub normalises that to the existing
+    # "media.zip", so the upload collided with it and 422'd - after most of the
+    # mastlibs had already been replaced, leaving the release half-updated.
+    env:
+      # Same repo-namespaced name a mission's story.json `shared_media` refers to.
+      ASSET: ${{ github.repository_owner }}.${{ github.event.repository.name }}.media.${{ github.ref_name }}.zip
     steps:
       - uses: actions/checkout@master
-      # github.ref_name IS the tag on a tag push - no step needed. The old
-      # `echo "{VERSION}={...}" >> $GITHUB_OUTPUT` line was not valid output syntax
-      # (it writes a literal, setting nothing), so the version came out EMPTY and the
-      # asset was named "media..zip". GitHub normalises that to the existing
-      # "media.zip", so the upload collided with it and 422'd - after most of the
-      # mastlibs had already been replaced, leaving the release half-updated.
-      - name: Archive media zip
-        uses: thedoctor0/zip-release@main
-        with:
-          type: 'zip'
-          filename: 'media.${{ github.ref_name }}.zip'
-          path: "media"
+      # Flat for the same reason as the mastlibs: expand_resources unpacks this straight
+      # into the mission's media folder, so a nested archive would land as media/media/.
+      - name: Archive media zip (flat, matching `sbs lib`)
+        run: python .github/zip_flat.py media "$ASSET"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: media
-          path: 'media.${{ github.ref_name }}.zip'
+          path: ${{ env.ASSET }}
           retention-days: 1
 
   build_release:
