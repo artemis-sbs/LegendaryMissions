@@ -454,19 +454,29 @@ Main:
 # This was the only remaining consumer of the roster meaning, so reading SETTINGS here
 # leaves the shared name meaning exactly one thing (live objects) everywhere it is used.
 #
+#
+# Creation is keyed by SLOT (player_ensure), so running this twice re-uses the roster
+# instead of doubling it. It used to spawn unconditionally, so a second run produced 16
+# ships -- and a re-entered start_server was measured taking a live session from 8 to 33.
+# Keying on the slot rather than a did-I-run flag is what keeps the deliberate re-runs
+# working: after a sim wipe the ships are gone and this rebuilds them (the reuse case the
+# comment above describes), and a run that died partway completes the set. Ships already
+# present are returned untouched, so faces/respawn_time are re-applied but nothing moves.
+#
 === create_default_player_ships
     if PLAYER_CREATE_DEFAULT:
         # (side creation is done synchronously before this via create_sides, so the
         # player_spawn side lookups resolve.)
-        for player_ship_data in SETTINGS.get("PLAYER_LIST"):
-            player_ship = to_id(player_spawn(0,0,0, player_ship_data["name"], player_ship_data["side"], player_ship_data["ship"]))
+        for slot, player_ship_data in enumerate(SETTINGS.get("PLAYER_LIST")):
+            player_ship = player_ensure(slot, 0,0,0, player_ship_data["ship"], player_ship_data["name"], player_ship_data["side"])
             player_ship_data["id"] = player_ship
             add_role(player_ship, "default_player_ship")
             set_face(player_ship, random_face(player_ship_data["face"]))
             set_inventory_value(player_ship, "respawn_time", 5)
-            signal_emit("create_player_ships", None)
-    else:
-        signal_emit("create_player_ships", None)
+    # ONE emit, after the roster is complete. This used to sit inside the loop, so the
+    # branches disagreed: 8 emits when creating defaults, 1 otherwise -- and every
+    # handler ran 8 times, seeing a half-built roster on all but the last.
+    signal_emit("create_player_ships", None)
     ->END
 
 
