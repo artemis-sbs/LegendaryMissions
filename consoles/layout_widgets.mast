@@ -74,7 +74,10 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 
 
 
-        if ss.x < 1600:
+        # gui_screen_size returns a 1024x768 PLACEHOLDER (z==99) until the client
+        # reports its size, which read as a small screen and cramped wide displays.
+        # When unknown, assume the LARGER layout - it degrades better.
+        if gui_screen_size_known(client_id) and ss.x < 1600:
             gui_row("row-height: 35px;col-width:25px;")
         else:
             gui_row("row-height: 35px;col-width:45px;")
@@ -120,7 +123,10 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row("row-height: 35px;")
         default follow_tag = False
         gui_checkbox("Follow","col-width:90px;", var="follow_tag")
-        if ss.x < 1600:
+        # gui_screen_size returns a 1024x768 PLACEHOLDER (z==99) until the client
+        # reports its size, which read as a small screen and cramped wide displays.
+        # When unknown, assume the LARGER layout - it degrades better.
+        if gui_screen_size_known(client_id) and ss.x < 1600:
             gui_row("row-height: 35px;col-width:25px;")
         else:
             gui_row("row-height: 35px;col-width:45px;")
@@ -311,7 +317,10 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 
 
 
-        if ss.x < 1600:
+        # gui_screen_size returns a 1024x768 PLACEHOLDER (z==99) until the client
+        # reports its size, which read as a small screen and cramped wide displays.
+        # When unknown, assume the LARGER layout - it degrades better.
+        if gui_screen_size_known(client_id) and ss.x < 1600:
             gui_row("row-height: 35px;col-width:25px;")
         else:
             gui_row("row-height: 35px;col-width:45px;")
