@@ -1,0 +1,11 @@
+# LegendaryMissions LORE - the in-game reading, not the machinery.
+#
+# Split out of the `documents` addon so a mission can build on LM's document/quest
+# SCREENS without inheriting LM's fiction: Storm's Beacon loads documents for the
+# renderer and the quest log, and used to get a Zunok galactic helpfile with them.
+# Content is a separate addon for the same reason LM's maps are not in an addon at all.
+#
+# Registering is all there is to it - `lore_register` is what makes the Library tab
+# exist, so a mission that omits this addon has no LM chapter and, if nothing else
+# registers, no Library at all.
+lore_register("lm", "A Zunok's Galactic Helpfile", "library_docs.amd")

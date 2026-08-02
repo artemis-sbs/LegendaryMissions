@@ -1,21 +1,20 @@
 default CONSOLE_SELECT = "" # Make sure variable exist at startup
 
+# The shared LIBRARY tab. It renders every registered lore source merged into one book,
+# a chapter per contributor - LM's own helpfile, Open Universe's codex, a mission's own
+# lore - instead of each shipping a near-identical tab over the same renderer. The Codex
+# was that duplicate: same document_screen, different hard-coded filename.
+#
+# NOTHING is registered here. `lore_register` (in the lm_lore addon, in universe_core,
+# or in a mission) is what makes this tab exist, so a mission that loads this addon for
+# the RENDERER and the quest log does not inherit anybody's fiction - and gets no empty
+# Library either.
 
-gui_tab_add_top("library")
-# Example images
-#gui_image_add_atlas("test", "media/LegendaryMissions/operator")
-#gui_image_add_atlas("test2", "media/LegendaryMissions/operator", 645,570, 950,820)
-
-
-
-
-//gui/tab/library 
-    document_content = amd_read_content("library_docs.amd")
-    document_root = document_get_amd_file(None, "Overview", content=document_content)
+//gui/tab/library
+    document_root = lore_document("Library")
     document = document_flatten(document_root)
     document_type = "Library"
     document_topic = CONSOLE_SELECT.lower()
     document_back_tab = CONSOLE_SELECT
 
     jump document_screen
-
