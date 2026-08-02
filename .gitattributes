@@ -52,5 +52,6 @@ fabrication/          export-ignore
 grav_tether/          export-ignore
 data_panels/          export-ignore
 documents/            export-ignore
+lm_lore/              export-ignore
 director/             export-ignore
 avatar_editor/        export-ignore
