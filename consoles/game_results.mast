@@ -68,6 +68,12 @@ shared game_stats = ~~{
     START_TEXT = START_TEXT.strip()
     if START_TEXT == "":
         START_TEXT = "Game Over"
+    # This route is MEANT to run per console - every console shows the end-of-game
+    # results screen, which is what gui_task_jump below does. The save is scheduled per
+    # console too, but save_game_results_yaml opens with `default shared RESULTS_SAVED`
+    # and returns immediately once set, so the file is written once however many consoles
+    # fire it. The ticker rule cannot see a guard inside the task it points at.
+    # lint: allow signal-side-effect-ticker
     task_schedule(save_game_results_yaml)
     gui_task_jump(show_game_results_gui)
 
