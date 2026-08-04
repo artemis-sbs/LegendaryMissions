@@ -368,22 +368,40 @@ if CAN_CHANGE_CONSOLE:
 
 
 ====== game_started_console ====
+    #
+    # Every client lands here the moment the server presses Start, which is
+    # BEFORE the map task has run a single line. Two things are not ready yet:
+    # the console-gating variables a map sets in its opening code (a map-gated
+    # Navigation/Admiral console), and the player ships - spawn_players resets
+    # art, position and roles on them, so console_selected can pick a ship that
+    # is about to move, and its grid objects may not exist yet.
+    #
+    # This used to be two flat `delay_sim(1)`s - one for each of those - which
+    # every client paid in full on every start whether or not anything was
+    # actually pending. Poll the readiness flag instead: spawn_players sets
+    # `players_cleaned` as its LAST act (fleets/map_common.mast), which is
+    # exactly the moment both waits were guessing at.
+    #
+    # Capped at the 1 second the flat wait always cost, so the worst case is
+    # unchanged. A map that never runs spawn_players (florbin_case) never sets
+    # the flag and so still pays the cap - it can opt out by setting
+    # `shared players_cleaned = True` itself, since its players are ready from
+    # the moment the server made them.
+    #
+    default shared players_cleaned = False
+    default console_ready = False
+    _map_wait = 0
+    for x while not players_cleaned and _map_wait < 5:
+        await delay_sim(0.2)
+        _map_wait += 1
+
     if not console_ready:
-        # The console list was computed at connect time, BEFORE the map ran -
-        # @console labels whose conditions depend on map state (a map-gated
-        # Navigation/Admiral console) were filtered out then. Give the map's
-        # opening code a beat to set those variables, then rebuild the list so
-        # the re-shown selection screen offers the full set.
-        await delay_sim(1)
+        # The console list was computed at connect time, BEFORE the map ran, so
+        # map-gated @console labels were filtered out of it. The map has had its
+        # say now, so rebuild the list and re-show the selection screen with the
+        # full set.
         consoles = gui_get_console_type_list()
         jump select_console
-    #
-    # This delay lets the server finish
-    # building the map, some times
-    # a race condition occurs like the grid objects
-    # or player ship aren't spawn first
-    #
-    await delay_sim(1)
 
 ====== console_selected ====
     jump show_console_selected if len(PLAYER_LIST) ==0
