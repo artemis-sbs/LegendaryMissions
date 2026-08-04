@@ -26,10 +26,9 @@ shared fb_florbin = None
 # {suspects} slots that comms_receive fills from task vars at send time.
 shared FB_TEXT = {}
 
-# Ambassador Florbin's post-rescue passenger complaints, authored as an amd_chatter line-pool
-# (## Florbin Complaints in the .amd) and loaded once in fb_investigation. fb_pest_messages pulls a
-# random line with chatter_line(FB_COMPLAINTS, "complaint").
-shared FB_COMPLAINTS = {}
+# Florbin's post-rescue passenger requests are an URGE authored under his cast record
+# (#### [Passenger requests] in the .amd) - condition, cadence and lines in one place.
+# Installed when he comes aboard; it retires itself when he is delivered.
 
 # Cargo is an FbCargo record (mission_helper_functions.py), not a positional list: MAST reads
 # cargo.ship / cargo.stops[n] / cargo.holds[n] / cargo.manifest_text() / cargo.amb_hold, and the
@@ -66,7 +65,6 @@ shared FB_COMPLAINTS = {}
     # Authored prose (## Florbin Text) via a Python helper so MAST does not interpolate the {slots}
     # at load time. (Docking times now ride on each FbCargo as cargo.dep_time.)
     FB_TEXT = amd_text_map(amd_section(PR_DOC, "florbin_text"))
-    FB_COMPLAINTS = chatter_scenes(amd_section(PR_DOC, "florbin_complaints"))
 
     # ---- The suspect trail is generated as pure DATA by fb_generate_case (mission_helper_functions.py),
     # replacing ~400 lines of per-scenario / per-ship brute force. Pick the ambassador container
@@ -429,17 +427,6 @@ shared FB_COMPLAINTS = {}
 
     yield success
 
-===== fb_pest_messages =====
-
-    await delay_sim(random.randint(180,300))
-    if FB_STATUS >= 5:
-        ->END
-    # One random complaint from the amd_chatter pool (## Florbin Complaints).
-    pest_message = chatter_line(FB_COMPLAINTS, "complaint")
-    comms_receive_internal(pest_message, pest_id, fb_florbin.name, title="Passenger Request", face=get_face(fb_florbin.id), title_color="green")
-    jump fb_pest_messages
-
-
 ===== fb_check_ambassador_rescued ======
     for p in role("__player__"):
         ds1_list = to_list(role("ds1"))
@@ -453,6 +440,8 @@ shared FB_COMPLAINTS = {}
             name = p_obj.name
             send_general_message(fb_admiral.name, mast_format_string(FB_TEXT.get("admiral_rescue")), get_face(fb_admiral.id), ds1_id)
             FB_STATUS = 5
+            # Retires his passenger-requests urge (Until: has role fb_delivered).
+            add_role(fb_florbin, "fb_delivered")
             ->END
     await delay_sim(5)
     jump fb_check_ambassador_rescued
@@ -465,7 +454,10 @@ shared FB_COMPLAINTS = {}
     FB_STATUS = 4
     send_general_message(fb_florbin.name, FB_TEXT.get("florbin_pod"), get_face(fb_florbin.id), COLLISION_SELECTED_ID)
     pest_id = COLLISION_SELECTED_ID
-    task_schedule(fb_pest_messages)
+    # He is aboard now: host him on the ship (so his requests arrive as internal crew
+    # comms, with his own face) and install the urge authored under his cast record.
+    lifeform_transfer(fb_florbin, pest_id)
+    urges_install_on(fb_florbin, amd_section(PR_DOC, "cast"), "florbin")
 
 //damage/destroy if has_role(DESTROYED_ID, "kidnapper") and not has_role(DESTROYED_ID, "standby") and WORLD_SELECT.path == "peacetime_remastered"
     if FB_STATUS < 3:
