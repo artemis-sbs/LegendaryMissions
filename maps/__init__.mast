@@ -15,8 +15,6 @@ import florbin_case.mast
 import borderwar.mast
 import watch_for_end.mast
 import sandbox.mast
-# TEMPORARY - Phase 0 terrain burst measurement. Remove with the file.
-import terrain_probe_map.mast
 import legendary_comms.mast
 import hangar_tabs.mast
 
