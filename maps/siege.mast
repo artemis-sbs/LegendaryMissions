@@ -136,7 +136,12 @@ GameCode:
     # and is unaffected by friendly / player / monster / lethal choices.
     neb_chance = terrain_value * 0.0010
     ast_chance = terrain_value * 0.0008
+    # Sowed: the field is created over 6 seconds instead of in one frame. The keyed
+    # spawner already re-seeds per cell and restores the RNG, so deferring it does
+    # not shift the stream at all - this field is identical sowed or not.
+    terrain_sow_begin(over=6)
     terrain_spawn_field_keyed(map_key, 1000, -inner, -inner, inner, inner, terrain_value, neb_chance, ast_chance, exclude=stations, exclude_radius=15_000)
+    terrain_sow_end()
 
     # Keyed candidate pool for pickups / monsters / black holes (clear of
     # stations). They sample the pool, so they need not match across sizes.

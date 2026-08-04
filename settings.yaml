@@ -1,13 +1,13 @@
 
 # Auto start will automatically start the mission when it is selected
-AUTO_START: true
+AUTO_START: false
 
 # Auto play is a special mode
 # Typically used for testing
 # But could be useful with
 # attracting attention
 AUTO_PLAY:
-    enable: true
+    enable: false
     # Range (u) the ship holds at to open with its EMP/Nuke volley, clear of the blast.
     standoff: 5000
     # Engineering overpower applied to drive + weapons (1.0 = 100%); eased off on low energy.
@@ -78,7 +78,7 @@ WAR_TIME_DELAY: 10
 
 # Player related settings
 PLAYER_CREATE_DEFAULT: true
-PLAYER_COUNT: 6
+PLAYER_COUNT: 1
 PLAYER_SHIP_RESPAWN: false
 PLAYER_LIST: 
     -   name: "Artemis"

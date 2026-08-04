@@ -50,8 +50,12 @@ Properties:
     await task_schedule(default_player_friendly_eyes)
     await task_schedule(docking_standard_player_station)
     
+    # Sow the field instead of creating it all in one frame: ~280 ms of
+    # engine work becomes a few ms a tick, spread nearest-first.
+    terrain_sow_begin(over=6)
     terrain_asteroid_clusters(terrain_value)
     terrain_spawn_nebula_clusters(terrain_value)
+    terrain_sow_end()
     terrain_spawn_pickups(upgrade_value)
     terrain_spawn_monsters(monster_value)
     terrain_spawn_black_holes(lethal_value)
