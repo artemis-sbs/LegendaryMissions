@@ -1,0 +1,31 @@
+ship: biomech_d
+layout: default
+size: 20x20
+legend:
+  a: aft-shield
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  w: warp
+---
+ 
+         ..
+       . .. .
+       ......
+       ......
+     .f......f.
+   ..............
+   .ws........sw.
+  .m wi......iw m.
+ .    ai....ia    .
+        ....
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

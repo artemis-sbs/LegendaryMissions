@@ -40,7 +40,12 @@
         "interiors_ximni",
         "interiors_arvonian",
         "interiors_usfp",
-        "interiors_starbases"
+        "interiors_starbases",
+        "interiors_torgoth",
+        "interiors_skaraan",
+        "interiors_kralien",
+        "interiors_biomech",
+        "interiors_pirate"
     ],
     "zip": [
         "media"

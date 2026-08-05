@@ -1,0 +1,27 @@
+ship: torgoth_destroyer
+layout: default
+size: 10x14
+legend:
+  a: aft-shield
+  b: beam-port-fwd
+  e: beam-starboard-fwd
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  w: warp
+---
+ ........
+ ........
+ b.......
+ b.f..f.e
+ .s....s.
+ .s....s.
+ ........
+ .m....m.
+ ..i..i..
+ .ii..ii.
+..wa..aw..
+..w....w..
+.  ....  .
+ 

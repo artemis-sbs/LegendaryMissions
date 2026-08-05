@@ -1,0 +1,26 @@
+ship: pirate_brigantine
+layout: default
+size: 12x12
+legend:
+  a: aft-shield
+  b: beam-port-fwd
+  e: beam-starboard-fwd
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  t: torpedo-tube
+  w: warp
+---
+ 
+ 
+ 
+     be
+     tt
+    b..f
+    f..m
+   s....s
+   ai..ia
+  mi....i.
+  ww....ww
+ ..........

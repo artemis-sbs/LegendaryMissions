@@ -1,0 +1,31 @@
+ship: pirate_strongbow
+layout: default
+size: 17x17
+legend:
+  a: aft-shield
+  b: beam-port-fwd
+  e: beam-starboard-fwd
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  t: torpedo-tube
+  w: warp
+---
+ 
+ 
+ 
+      .....
+     bf...fe
+    b.t...t.e
+    s.......s
+    s. ... .s
+       ...
+       ...
+       ...
+    i ..... i
+   mia.....aim
+ ....i.....i....
+...ww.......ww...
+.................
+ .  . ..... .  .

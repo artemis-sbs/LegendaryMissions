@@ -11,3 +11,7 @@ grid_merge_ascii(media_read_relative_file("starbase_command.grid"), "interiors_s
 grid_merge_ascii(media_read_relative_file("starbase_industry.grid"), "interiors_starbases")
 grid_merge_ascii(media_read_relative_file("starbase_kralien.grid"), "interiors_starbases")
 grid_merge_ascii(media_read_relative_file("starbase_science.grid"), "interiors_starbases")
+grid_merge_ascii(media_read_relative_file("starbase_arvonian.grid"), "interiors_starbases")
+grid_merge_ascii(media_read_relative_file("starbase_civil.grid"), "interiors_starbases")
+grid_merge_ascii(media_read_relative_file("starbase_skaraan.grid"), "interiors_starbases")
+grid_merge_ascii(media_read_relative_file("starbase_torgoth.grid"), "interiors_starbases")

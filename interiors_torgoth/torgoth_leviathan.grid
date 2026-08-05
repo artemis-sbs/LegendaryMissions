@@ -1,0 +1,33 @@
+ship: torgoth_leviathan
+layout: default
+size: 19x20
+legend:
+  a: aft-shield
+  b: beam-port-fwd
+  e: beam-starboard-fwd
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  w: warp
+---
+         .
+      .......
+     .........
+    ...........
+  bb..f.....f..ee
+  .b.............
+  ...............
+  ..s.........s..
+  ..s.........s..
+  ...............
+  . m.........m .
+...  .........  ...
+. .  i.......i  . .
+. .   i.....i   . .
+.     ai...ia     .
+.     w.....w     .
+.     w.....w     .
+.       ...       .
+.                 .
+ 

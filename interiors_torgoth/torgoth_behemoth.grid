@@ -1,0 +1,37 @@
+ship: torgoth_behemoth
+layout: default
+size: 15x24
+legend:
+  a: aft-shield
+  b: beam-port-fwd
+  e: beam-starboard-fwd
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  w: warp
+---
+     .....
+   .........
+  ...........
+ .b.........e.
+ .b.........e.
+ .bbf.....fee.
+ .b.........e.
+ .............
+ ..s.......s..
+  .s.......s.
+  ...........
+   .........
+   m.......m
+    .......
+    .......
+    i.....i
+    i.....i
+    ai...ia
+    w.....w
+    w.....w
+       .
+ 
+ 
+ 

@@ -1,0 +1,28 @@
+ship: kralien_dreadnought
+layout: default
+size: 15x15
+legend:
+  a: aft-shield
+  b: beam-port-fwd
+  e: beam-starboard-fwd
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  w: warp
+---
+     .   .
+    .......
+     f...f
+      ...
+  b   ...   e
+ .bs.......s..
+ .............
+ .............
+ ..mi.....im..
+ ..   ...   ..
+      i.i
+     a...a
+     w...w
+     w   w
+ 

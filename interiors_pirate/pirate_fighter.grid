@@ -1,0 +1,22 @@
+ship: pirate_fighter
+layout: default
+size: 7x9
+legend:
+  a: aft-shield
+  b: beam-port-fwd
+  e: beam-starboard-fwd
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  w: warp
+---
+   .
+  i.m
+ bfmse
+  wiw
+   a
+ 
+ 
+ 
+ 

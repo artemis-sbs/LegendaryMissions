@@ -1,0 +1,28 @@
+ship: pirate_longbow
+layout: default
+size: 15x15
+legend:
+  a: aft-shield
+  b: beam-port-fwd
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  t: torpedo-tube
+  w: warp
+---
+       .
+       .
+      ...
+      f..
+     b...f
+     t...s
+     s....
+     .....
+    .......
+ .mwi.....iwm.
+  .wai...iaw.
+     .....
+      ...
+      . .
+ 
