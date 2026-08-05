@@ -2,30 +2,37 @@ ship: pirate_strongbow
 layout: default
 size: 17x17
 legend:
-  a: aft-shield
-  b: beam-port-fwd
-  e: beam-starboard-fwd
+  g: gun-deck / system,weapon,beam
+  t: tube-deck / system,weapon,torpedo
   f: fwd-shield
-  i: impulse
-  m: maneuver
+  a: aft-shield
   s: sensors
-  t: torpedo-tube
+  b: crew-berths / room,cabin,quarters
+  c: captains-cabin / room,cabin,vip
+  y: surgery / room,med,sickbay
+  r: brig
+  m: maneuver
+  n: mess-deck / room,cabin,mess
+  q: grog-locker / room,cabin,saloon
+  p: plunder-hold / room,bay,cargo
+  i: impulse
   w: warp
+  o: boat-bay / room,bay,shuttle
 ---
- 
- 
- 
-      .....
-     bf...fe
-    b.t...t.e
-    s.......s
-    s. ... .s
-       ...
-       ...
-       ...
-    i ..... i
-   mia.....aim
- ....i.....i....
-...ww.......ww...
-.................
- .  . ..... .  .
+                 
+                 
+                 
+      gg.gg      
+     ft...tf     
+    sbb.c.bbs    
+    y.bb.bb.y    
+    mr ... rm    
+       n.n       
+       .q.       
+       n.n       
+    i pp.pp i    
+   appp...pppa   
+ pppppp.o.pppppp 
+wiipppp...ppppiiw
+wwiippp...pppiiww
+ w  w w...w w  w 
