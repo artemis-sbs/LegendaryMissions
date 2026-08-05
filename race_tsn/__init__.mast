@@ -1,0 +1,34 @@
+# Everything that belongs to one race.
+#
+# Today that is ship INTERIORS - one ASCII floor plan per hull, see
+# sbs_utils/GRID_ASCII_FORMAT.md. The folder is named for the RACE, not for the
+# interiors, because fleet composition and other per-race configuration are meant to
+# join them here rather than stay scattered across the library the way they are now
+# (see sbs_utils/SHIP_MOD_PLAN.md s5).
+#
+# The hull outline in each floor plan is the ENGINE's own is_grid_point_open, captured
+# by the LM_TestRange "PROBE hull map" map. Regenerate rather than hand-editing an
+# outline; the rooms inside it are yours to move.
+provides race_tsn
+
+# Skipped entirely unless 'TSN' is in the PLAYABLE_RACES setting. An interior is
+# only ever built for a PLAYER ship, so floor plans for a race nobody can fly would be
+# parsed at load and never used.
+if settings_race_is_playable("TSN"):
+    grid_merge_ascii(media_read_relative_file("tsn_battle_cruiser.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_battleship.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_bomber.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_carrier.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_destroyer.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_dreadnought.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_escort.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_fighter.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_heavy_cruiser.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_juggernaut.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_light_carrier.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_light_cruiser.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_mine_layer.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_missile_cruiser.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_scout.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_shuttle.grid"), "race_tsn")
+    grid_merge_ascii(media_read_relative_file("tsn_warpster.grid"), "race_tsn")

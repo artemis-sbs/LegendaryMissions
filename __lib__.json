@@ -36,16 +36,15 @@
         "lm_lore",
         "director",
         "avatar_editor",
-        "interiors_tsn",
-        "interiors_ximni",
-        "interiors_arvonian",
-        "interiors_usfp",
-        "interiors_starbases",
-        "interiors_torgoth",
-        "interiors_skaraan",
-        "interiors_kralien",
-        "interiors_biomech",
-        "interiors_pirate"
+        "race_arvonian",
+        "race_biomech",
+        "race_kralien",
+        "race_pirate",
+        "race_skaraan",
+        "race_torgoth",
+        "race_tsn",
+        "race_usfp",
+        "race_ximni"
     ],
     "zip": [
         "media"

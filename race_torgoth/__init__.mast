@@ -1,0 +1,22 @@
+# Everything that belongs to one race.
+#
+# Today that is ship INTERIORS - one ASCII floor plan per hull, see
+# sbs_utils/GRID_ASCII_FORMAT.md. The folder is named for the RACE, not for the
+# interiors, because fleet composition and other per-race configuration are meant to
+# join them here rather than stay scattered across the library the way they are now
+# (see sbs_utils/SHIP_MOD_PLAN.md s5).
+#
+# The hull outline in each floor plan is the ENGINE's own is_grid_point_open, captured
+# by the LM_TestRange "PROBE hull map" map. Regenerate rather than hand-editing an
+# outline; the rooms inside it are yours to move.
+provides race_torgoth
+
+# Skipped entirely unless 'Torgoth' is in the PLAYABLE_RACES setting. An interior is
+# only ever built for a PLAYER ship, so floor plans for a race nobody can fly would be
+# parsed at load and never used.
+if settings_race_is_playable("Torgoth"):
+    grid_merge_ascii(media_read_relative_file("starbase_torgoth.grid"), "race_torgoth")
+    grid_merge_ascii(media_read_relative_file("torgoth_behemoth.grid"), "race_torgoth")
+    grid_merge_ascii(media_read_relative_file("torgoth_destroyer.grid"), "race_torgoth")
+    grid_merge_ascii(media_read_relative_file("torgoth_goliath.grid"), "race_torgoth")
+    grid_merge_ascii(media_read_relative_file("torgoth_leviathan.grid"), "race_torgoth")
