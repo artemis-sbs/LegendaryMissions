@@ -1,0 +1,86 @@
+# Pirate raiding fleets, by difficulty.
+#
+# Eleven tiers, five variants each; a variant is the ship keys that make up one
+# fleet. Loaded by this race's addon when the race is in the NPC_RACES setting.
+#
+# Moved out of LegendaryMissions/fleets/map_common.py, where six of these lived as
+# Python literals behind an if/elif chain that no mod could extend.
+race: pirate
+fleets:
+  # difficulty 0
+  -
+    - [pirate_longbow]
+    - [pirate_longbow]
+    - [pirate_longbow]
+    - [pirate_longbow]
+    - [pirate_longbow]
+  # difficulty 1
+  -
+    - [pirate_longbow]
+    - [pirate_longbow]
+    - [pirate_longbow]
+    - [pirate_longbow, pirate_longbow]
+    - [pirate_longbow, pirate_longbow]
+  # difficulty 2
+  -
+    - [pirate_longbow]
+    - [pirate_longbow]
+    - [pirate_longbow, pirate_longbow]
+    - [pirate_longbow, pirate_longbow]
+    - [pirate_strongbow]
+  # difficulty 3
+  -
+    - [pirate_longbow]
+    - [pirate_longbow, pirate_longbow]
+    - [pirate_longbow, pirate_longbow]
+    - [pirate_strongbow]
+    - [pirate_strongbow]
+  # difficulty 4
+  -
+    - [pirate_longbow]
+    - [pirate_longbow, pirate_longbow]
+    - [pirate_strongbow]
+    - [pirate_strongbow]
+    - [pirate_strongbow]
+  # difficulty 5
+  -
+    - [pirate_longbow, pirate_longbow]
+    - [pirate_strongbow]
+    - [pirate_strongbow, pirate_longbow]
+    - [pirate_strongbow, pirate_longbow]
+    - [pirate_strongbow, pirate_longbow, pirate_longbow]
+  # difficulty 6
+  -
+    - [pirate_longbow, pirate_longbow, pirate_longbow]
+    - [pirate_strongbow, pirate_longbow, pirate_longbow]
+    - [pirate_strongbow, pirate_longbow, pirate_longbow]
+    - [pirate_strongbow, pirate_longbow, pirate_longbow]
+    - [pirate_brigantine]
+  # difficulty 7
+  -
+    - [pirate_strongbow, pirate_longbow, pirate_longbow]
+    - [pirate_strongbow, pirate_longbow, pirate_longbow]
+    - [pirate_strongbow, pirate_longbow, pirate_longbow]
+    - [pirate_brigantine, pirate_longbow]
+    - [pirate_brigantine, pirate_longbow, pirate_longbow]
+  # difficulty 8
+  -
+    - [pirate_strongbow, pirate_longbow, pirate_longbow]
+    - [pirate_strongbow, pirate_longbow, pirate_longbow, pirate_longbow]
+    - [pirate_brigantine, pirate_longbow, pirate_longbow]
+    - [pirate_brigantine, pirate_longbow, pirate_longbow]
+    - [pirate_brigantine, pirate_longbow, pirate_longbow, pirate_longbow]
+  # difficulty 9
+  -
+    - [pirate_strongbow, pirate_strongbow, pirate_longbow, pirate_longbow]
+    - [pirate_brigantine, pirate_longbow, pirate_longbow, pirate_longbow]
+    - [pirate_strongbow, pirate_brigantine, pirate_longbow, pirate_longbow]
+    - [pirate_brigantine, pirate_brigantine, pirate_longbow, pirate_longbow]
+    - [pirate_strongbow, pirate_strongbow, pirate_brigantine, pirate_longbow, pirate_longbow]
+  # difficulty 10
+  -
+    - [pirate_strongbow, pirate_strongbow, pirate_strongbow, pirate_brigantine, pirate_brigantine, pirate_brigantine]
+    - [pirate_strongbow, pirate_strongbow, pirate_strongbow, pirate_brigantine, pirate_brigantine, pirate_brigantine]
+    - [pirate_strongbow, pirate_strongbow, pirate_strongbow, pirate_brigantine, pirate_brigantine, pirate_brigantine]
+    - [pirate_strongbow, pirate_strongbow, pirate_strongbow, pirate_brigantine, pirate_brigantine, pirate_brigantine]
+    - [pirate_strongbow, pirate_strongbow, pirate_strongbow, pirate_brigantine, pirate_brigantine, pirate_brigantine]

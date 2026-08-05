@@ -1,0 +1,86 @@
+# Skaraan raiding fleets, by difficulty.
+#
+# Eleven tiers, five variants each; a variant is the ship keys that make up one
+# fleet. Loaded by this race's addon when the race is in the NPC_RACES setting.
+#
+# Moved out of LegendaryMissions/fleets/map_common.py, where six of these lived as
+# Python literals behind an if/elif chain that no mod could extend.
+race: skaraan
+fleets:
+  # difficulty 0
+  -
+    - [skaraan_defiler]
+    - [skaraan_defiler]
+    - [skaraan_defiler]
+    - [skaraan_defiler]
+    - [skaraan_defiler]
+  # difficulty 1
+  -
+    - [skaraan_defiler]
+    - [skaraan_defiler]
+    - [skaraan_defiler]
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+  # difficulty 2
+  -
+    - [skaraan_defiler]
+    - [skaraan_defiler]
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+  # difficulty 3
+  -
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+  # difficulty 4
+  -
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+    - [skaraan_executor]
+  # difficulty 5
+  -
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+    - [skaraan_executor]
+    - [skaraan_executor]
+  # difficulty 6
+  -
+    - [skaraan_enforcer]
+    - [skaraan_enforcer]
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]
+  # difficulty 7
+  -
+    - [skaraan_enforcer]
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]
+  # difficulty 8
+  -
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]
+  # difficulty 9
+  -
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]
+  # difficulty 10
+  -
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]
+    - [skaraan_executor]

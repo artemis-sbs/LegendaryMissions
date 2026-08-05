@@ -1,0 +1,86 @@
+# Kralien raiding fleets, by difficulty.
+#
+# Eleven tiers, five variants each; a variant is the ship keys that make up one
+# fleet. Loaded by this race's addon when the race is in the NPC_RACES setting.
+#
+# Moved out of LegendaryMissions/fleets/map_common.py, where six of these lived as
+# Python literals behind an if/elif chain that no mod could extend.
+race: kralien
+fleets:
+  # difficulty 0
+  -
+    - [kralien_cruiser]
+    - [kralien_cruiser, kralien_cruiser]
+    - [kralien_battleship]
+    - [kralien_battleship, kralien_cruiser]
+    - [kralien_dreadnought]
+  # difficulty 1
+  -
+    - [kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_battleship, kralien_battleship]
+    - [kralien_battleship, kralien_battleship]
+    - [kralien_dreadnought, kralien_cruiser]
+  # difficulty 2
+  -
+    - [kralien_battleship, kralien_cruiser, kralien_cruiser]
+    - [kralien_battleship, kralien_cruiser, kralien_cruiser]
+    - [kralien_battleship, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_cruiser]
+    - [kralien_dreadnought, kralien_cruiser]
+  # difficulty 3
+  -
+    - [kralien_battleship, kralien_battleship, kralien_cruiser]
+    - [kralien_cruiser, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_cruiser, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_dreadnought]
+  # difficulty 4
+  -
+    - [kralien_battleship, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_battleship, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_battleship, kralien_battleship, kralien_battleship]
+    - [kralien_battleship, kralien_battleship, kralien_battleship]
+    - [kralien_dreadnought, kralien_battleship, kralien_cruiser]
+  # difficulty 5
+  -
+    - [kralien_battleship, kralien_battleship, kralien_cruiser, kralien_cruiser]
+    - [kralien_cruiser, kralien_cruiser, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_cruiser]
+    - [kralien_dreadnought, kralien_battleship, kralien_battleship]
+  # difficulty 6
+  -
+    - [kralien_battleship, kralien_battleship, kralien_battleship, kralien_cruiser, kralien_cruiser]
+    - [kralien_battleship, kralien_cruiser, kralien_cruiser, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_battleship, kralien_battleship, kralien_battleship]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_battleship, kralien_cruiser]
+    - [kralien_dreadnought, kralien_battleship, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+  # difficulty 7
+  -
+    - [kralien_dreadnought, kralien_battleship, kralien_battleship, kralien_cruiser, kralien_cruiser]
+    - [kralien_battleship, kralien_battleship, kralien_cruiser, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_battleship, kralien_battleship]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_cruiser]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+  # difficulty 8
+  -
+    - [kralien_dreadnought, kralien_dreadnought, kralien_battleship, kralien_battleship, kralien_cruiser]
+    - [kralien_dreadnought, kralien_battleship, kralien_battleship, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_battleship, kralien_battleship, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_battleship, kralien_battleship, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_battleship, kralien_battleship, kralien_battleship, kralien_battleship]
+  # difficulty 9
+  -
+    - [kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_battleship, kralien_battleship]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_cruiser]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_battleship, kralien_battleship, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_cruiser, kralien_cruiser, kralien_cruiser]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_battleship]
+  # difficulty 10
+  -
+    - [kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought]
+    - [kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought, kralien_dreadnought]

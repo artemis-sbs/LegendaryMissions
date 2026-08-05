@@ -1,0 +1,86 @@
+# Ximni raiding fleets, by difficulty.
+#
+# Eleven tiers, five variants each; a variant is the ship keys that make up one
+# fleet. Loaded by this race's addon when the race is in the NPC_RACES setting.
+#
+# Moved out of LegendaryMissions/fleets/map_common.py, where six of these lived as
+# Python literals behind an if/elif chain that no mod could extend.
+race: ximni
+fleets:
+  # difficulty 0
+  -
+    - [xim_scout]
+    - [xim_scout]
+    - [xim_scout]
+    - [xim_scout]
+    - [xim_corsair]
+  # difficulty 1
+  -
+    - [xim_scout]
+    - [xim_scout]
+    - [xim_scout]
+    - [xim_corsair]
+    - [xim_light_cruiser]
+  # difficulty 2
+  -
+    - [xim_scout]
+    - [xim_scout]
+    - [xim_corsair]
+    - [xim_corsair]
+    - [xim_light_cruiser]
+  # difficulty 3
+  -
+    - [xim_scout]
+    - [xim_corsair]
+    - [xim_corsair]
+    - [xim_light_cruiser]
+    - [xim_light_cruiser]
+  # difficulty 4
+  -
+    - [xim_scout]
+    - [xim_corsair]
+    - [xim_light_cruiser]
+    - [xim_light_cruiser]
+    - [xim_light_cruiser]
+  # difficulty 5
+  -
+    - [xim_corsair]
+    - [xim_light_cruiser]
+    - [xim_light_cruiser]
+    - [xim_light_cruiser]
+    - [xim_light_cruiser]
+  # difficulty 6
+  -
+    - [xim_light_cruiser]
+    - [xim_light_cruiser]
+    - [xim_light_cruiser]
+    - [xim_dreadnought]
+    - [xim_dreadnought]
+  # difficulty 7
+  -
+    - [xim_dreadnought]
+    - [xim_dreadnought]
+    - [xim_dreadnought]
+    - [xim_dreadnought]
+    - [xim_battleship]
+  # difficulty 8
+  -
+    - [xim_dreadnought]
+    - [xim_dreadnought]
+    - [xim_battleship]
+    - [xim_battleship]
+    - [xim_battleship]
+  # difficulty 9
+  -
+    - [xim_dreadnought]
+    - [xim_battleship]
+    - [xim_battleship]
+    - [xim_dreadnought, xim_dreadnought]
+    - [xim_battleship, xim_battleship]
+  # difficulty 10
+  -
+    - [xim_dreadnought, xim_dreadnought, xim_dreadnought, xim_battleship, xim_battleship, xim_battleship]
+    - [xim_dreadnought, xim_dreadnought, xim_dreadnought, xim_battleship, xim_battleship, xim_battleship]
+    - [xim_dreadnought, xim_dreadnought, xim_dreadnought, xim_battleship, xim_battleship, xim_battleship]
+    - [xim_dreadnought, xim_dreadnought, xim_dreadnought, xim_battleship, xim_battleship, xim_battleship]
+    - [xim_dreadnought, xim_dreadnought, xim_dreadnought, xim_battleship, xim_battleship, xim_battleship]

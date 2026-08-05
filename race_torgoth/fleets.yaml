@@ -1,0 +1,86 @@
+# Torgoth raiding fleets, by difficulty.
+#
+# Eleven tiers, five variants each; a variant is the ship keys that make up one
+# fleet. Loaded by this race's addon when the race is in the NPC_RACES setting.
+#
+# Moved out of LegendaryMissions/fleets/map_common.py, where six of these lived as
+# Python literals behind an if/elif chain that no mod could extend.
+race: torgoth
+fleets:
+  # difficulty 0
+  -
+    - [torgoth_destroyer]
+    - [torgoth_destroyer]
+    - [torgoth_destroyer]
+    - [torgoth_destroyer]
+    - [torgoth_destroyer]
+  # difficulty 1
+  -
+    - [torgoth_destroyer]
+    - [torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_goliath]
+    - [torgoth_goliath]
+  # difficulty 2
+  -
+    - [torgoth_destroyer]
+    - [torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_goliath]
+    - [torgoth_goliath, torgoth_destroyer]
+    - [torgoth_goliath, torgoth_destroyer]
+  # difficulty 3
+  -
+    - [torgoth_destroyer]
+    - [torgoth_goliath]
+    - [torgoth_goliath, torgoth_destroyer]
+    - [torgoth_goliath, torgoth_destroyer]
+    - [torgoth_goliath, torgoth_destroyer, torgoth_destroyer]
+  # difficulty 4
+  -
+    - [torgoth_goliath, torgoth_destroyer]
+    - [torgoth_goliath, torgoth_destroyer]
+    - [torgoth_goliath, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_goliath, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_leviathan, torgoth_destroyer, torgoth_destroyer]
+  # difficulty 5
+  -
+    - [torgoth_goliath, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_goliath, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_goliath, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_leviathan, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_leviathan, torgoth_destroyer, torgoth_destroyer]
+  # difficulty 6
+  -
+    - [torgoth_goliath, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_goliath, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_leviathan, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_leviathan, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_behemoth, torgoth_destroyer, torgoth_destroyer]
+  # difficulty 7
+  -
+    - [torgoth_goliath, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_leviathan, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_leviathan, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_behemoth, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_behemoth, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer]
+  # difficulty 8
+  -
+    - [torgoth_goliath, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_leviathan, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_leviathan, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_behemoth, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_behemoth, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer]
+  # difficulty 9
+  -
+    - [torgoth_goliath, torgoth_goliath, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_leviathan, torgoth_leviathan, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_leviathan, torgoth_leviathan, torgoth_leviathan, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_behemoth, torgoth_behemoth, torgoth_destroyer, torgoth_destroyer, torgoth_destroyer]
+    - [torgoth_behemoth, torgoth_behemoth, torgoth_leviathan, torgoth_destroyer, torgoth_destroyer]
+  # difficulty 10
+  -
+    - [torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth]
+    - [torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth]
+    - [torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth]
+    - [torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth]
+    - [torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth, torgoth_behemoth]

@@ -1,0 +1,86 @@
+# Arvonian raiding fleets, by difficulty.
+#
+# Eleven tiers, five variants each; a variant is the ship keys that make up one
+# fleet. Loaded by this race's addon when the race is in the NPC_RACES setting.
+#
+# Moved out of LegendaryMissions/fleets/map_common.py, where six of these lived as
+# Python literals behind an if/elif chain that no mod could extend.
+race: arvonian
+fleets:
+  # difficulty 0
+  -
+    - [arvonian_destroyer]
+    - [arvonian_destroyer]
+    - [arvonian_destroyer]
+    - [arvonian_destroyer]
+    - [arvonian_destroyer]
+  # difficulty 1
+  -
+    - [arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+  # difficulty 2
+  -
+    - [arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+  # difficulty 3
+  -
+    - [arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_light_carrier]
+  # difficulty 4
+  -
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_light_carrier]
+    - [arvonian_light_carrier, arvonian_destroyer]
+    - [arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer]
+  # difficulty 5
+  -
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+  # difficulty 6
+  -
+    - [arvonian_destroyer, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_destroyer, arvonian_destroyer]
+  # difficulty 7
+  -
+    - [arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+  # difficulty 8
+  -
+    - [arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_light_carrier, arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+  # difficulty 9
+  -
+    - [arvonian_carrier, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_carrier, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_light_carrier, arvonian_light_carrier, arvonian_destroyer, arvonian_destroyer]
+    - [arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_destroyer, arvonian_destroyer, arvonian_destroyer]
+  # difficulty 10
+  -
+    - [arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier]
+    - [arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier]
+    - [arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier]
+    - [arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier]
+    - [arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier, arvonian_carrier]

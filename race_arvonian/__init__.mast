@@ -20,3 +20,8 @@ if settings_race_is_playable("Arvonian"):
     grid_merge_ascii(media_read_relative_file("arvonian_fighter.grid"), "race_arvonian")
     grid_merge_ascii(media_read_relative_file("arvonian_light_carrier.grid"), "race_arvonian")
     grid_merge_ascii(media_read_relative_file("starbase_arvonian.grid"), "race_arvonian")
+
+# Skipped unless 'Arvonian' is in the NPC_RACES setting. A race with no
+# registered ladder cannot be spawned as a fleet and is not picked by "random".
+if settings_race_is_npc("Arvonian"):
+    fleet_table_load_yaml(media_read_relative_file("fleets.yaml"), "race_arvonian")
