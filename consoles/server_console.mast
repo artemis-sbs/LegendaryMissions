@@ -68,6 +68,22 @@ gui_reroute_clients("client_main")
     shared mission_list = maps_get_list()
     shared mission_overview = maps_get_init()
     shared WORLD_SELECT_path  = SETTINGS.get("WORLD_SELECT")
+
+    # A map named on the ENGINE COMMAND LINE wins, and starts without the picker:
+    #     Artemis3-x64-release.exe autostartserver defaultmission=LM_TestRange map=sandbox
+    # `map=` is not an engine flag - engine 1.3.5 passes unrecognized key=value arguments
+    # straight through to command_line_dict(), which is what makes this possible at all.
+    # This is the engine-side twin of cosmos_dev's --map, so an automated run and a headless
+    # one select a map the same way. maps_find accepts an index, a path, a display name or
+    # an unambiguous substring, and returns None rather than guessing between two matches.
+    cli_map = command_line_get("map")
+    if cli_map is not None:
+        cli_selected = maps_find(cli_map)
+        if cli_selected is None:
+            log(f"command line map '{cli_map}' matched no map - showing the picker", "server_console", "warning")
+        else:
+            WORLD_SELECT_path = cli_selected.path
+            AUTO_START = True
     sim_create()
     #
     # Yield a frame before create_sides. sim_create() replaces the simulation, but
