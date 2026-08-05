@@ -1,0 +1,32 @@
+ship: xim_corvette
+layout: default
+size: 9x10
+legend:
+  a: aft-shield
+  i: airlock
+  b: beam-fwd
+  c: cargo
+  r: cargo_hatch
+  o: conference-room
+  e: crew-galley
+  w: crew-quarters
+  f: fwd-shield
+  m: impulse
+  j: jump-drive
+  u: maneuver
+  p: passenger
+  s: science-lab
+  S: sensors
+  t: torpedo-tube
+  k: workshop
+---
+ 
+ 
+   S f
+   bpt
+   ueu
+  pjojp
+  c.m.c
+ kcwawcs
+ r m m i
+ 

@@ -1,0 +1,58 @@
+ship: starbase_kralien
+layout: default
+size: 30x30
+legend:
+  a: astro-lab
+  b: beam
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  e: crew-mess
+  w: crew-quarters
+  g: galley
+  y: gymnasium
+  s: observation-lounge
+  f: officer-quarters
+  p: physics-lab
+  t: priest-quarters
+  d: production
+  -: rec-room
+  l: saloon
+  n: sensors
+  h: shield
+  S: shrine
+  u: shuttle-bay
+  V: vip-quarters
+  k: workshop
+---
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+             naho
+           uVV..VVu
+          wcc.ee.ccw
+          wk.gee..kw
+         swrr.tt.--ws
+         hwrr.SS.--wh
+          wy..SS.lyw
+          wccdipdccw
+           uVVffVVu
+             nohb
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

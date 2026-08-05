@@ -1,0 +1,51 @@
+ship: starbase_industry
+layout: default
+size: 31x31
+legend:
+  c: cargo
+  o: conference-room
+  r: crew-galley
+  e: crew-mess
+  w: crew-quarters
+  g: galley
+  y: gymnasium
+  p: production
+  -: rec-room
+  s: school
+  i: science-lab
+  n: sensors
+  h: shield
+  u: shuttle-bay
+  k: sick-bay
+---
+ 
+ 
+               e
+               e
+             o.r.h
+            c.pp.c.
+            c pp. u
+            c.pp.cu
+            c....c.
+             .....
+               .
+              k.k
+     cccc   wwwywww  cccc.
+    hpppp.  w.ee..w  pppp.h
+  eer ppp. kwsge.-wk pppp ee.
+  ee.pppp...ysge.-y..ppppree.
+    opppp. kw.ee.iwk pppp..
+    .cccc.  w..y..w  cccco.
+     .uu.   www.www   .uu.
+              k.k
+               .
+            c....c
+            c.pp.c.
+            c.pp.cu
+            c.pp.cu
+            . r.o .
+             hee..
+               e
+              ...
+               n
+ 

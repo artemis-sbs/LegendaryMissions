@@ -1,0 +1,46 @@
+ship: tsn_missile_cruiser
+layout: default
+size: 15x16
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-aft
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  e: crew-mess
+  w: crew-quarters
+  f: fwd-shield
+  g: galley
+  y: gymnasium
+  m: impulse
+  u: maneuver
+  t: observation-lounge
+  -: officer-quarters
+  F: officers-mess
+  p: physics-lab
+  S: sensors
+  h: shuttle-bay
+  k: sick-bay
+  d: torpedo-tube
+  V: vip-quarters
+  W: warp
+  R: workshop
+---
+    --tFF--
+ w -..ooo..- w
+ w...fegef...w
+ w.p..ded....w
+ w.y.cdedc.y.w
+ w..S.kVVVS..w
+ w.mikkkkk.m.w
+   m.rr.rr.m
+     r...r
+      .s.
+  RRcc...ccRR
+ .RRuc...cuRR.
+ WWa.......aWW
+ WW.. hbh ..WW
+   .. WWW ..
+       .

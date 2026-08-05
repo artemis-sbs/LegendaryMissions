@@ -1,0 +1,48 @@
+ship: xim_corsair
+layout: default
+size: 14x19
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-fwd
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  e: crew-galley
+  w: crew-mess
+  -: crew-quarters
+  f: fwd-shield
+  g: gymnasium
+  m: impulse
+  j: jump-drive
+  u: maneuver
+  p: physics-lab
+  R: rec-room
+  l: saloon
+  h: school
+  S: sensors
+  t: shuttle-bay
+  k: sick-bay
+  d: torpedo-tube
+  W: workshop
+---
+ 
+ 
+     -ff-
+     -ew-
+     .ww.
+    blkr.b
+   -. kk .-
+      ..
+     jjjj
+      ..
+     jjjj
+      ..
+ u  cR..gc  u
+ .dWcc..ccWd.
+oiS..atta..S.s
+.. mm    mm ..
+.            .
+p            h
+ 

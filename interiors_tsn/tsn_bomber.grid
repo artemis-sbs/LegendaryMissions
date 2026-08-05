@@ -1,0 +1,20 @@
+ship: tsn_bomber
+layout: default
+size: 7x7
+legend:
+  a: aft-shield
+  b: beam-fwd
+  c: computer
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  t: torpedo-tube
+---
+   b
+   t
+  cfs
+  .i.
+ imami
+ 
+ 

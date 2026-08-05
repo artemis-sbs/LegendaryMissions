@@ -1,0 +1,13 @@
+# Ship interiors, migrated from data/grid_data.json.
+#
+# One ASCII floor plan per hull - see sbs_utils/GRID_ASCII_FORMAT.md. The hull
+# outline in each file is the ENGINE's own is_grid_point_open, captured by the
+# LM_TestRange 'PROBE hull map' map, so a room cannot sit outside the hull.
+#
+# Regenerate rather than hand-editing the outline; rooms are yours to move.
+provides interiors_arvonian
+
+grid_merge_ascii(media_read_relative_file("arvonian_carrier.grid"), "interiors_arvonian")
+grid_merge_ascii(media_read_relative_file("arvonian_destroyer.grid"), "interiors_arvonian")
+grid_merge_ascii(media_read_relative_file("arvonian_fighter.grid"), "interiors_arvonian")
+grid_merge_ascii(media_read_relative_file("arvonian_light_carrier.grid"), "interiors_arvonian")

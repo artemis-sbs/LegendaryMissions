@@ -1,0 +1,30 @@
+ship: tsn_escort
+layout: default
+size: 9x8
+legend:
+  a: aft-shield
+  b: beam-port-fwd
+  e: beam-starboard-fwd
+  c: cargo
+  o: conference-room
+  r: crew-mess
+  w: crew-quarters
+  f: fwd-shield
+  g: galley
+  y: gymnasium
+  i: impulse
+  m: maneuver
+  -: officer-quarters
+  s: sensors
+  h: shuttle-bay
+  k: sick-bay
+  p: workshop
+---
+   -r-
+  bfsfe
+. wgkow .
+mww.y.wwm
+i pahac i
+   i i
+   . .
+ 

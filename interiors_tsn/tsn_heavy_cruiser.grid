@@ -1,0 +1,46 @@
+ship: tsn_heavy_cruiser
+layout: default
+size: 13x17
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam
+  r: brig
+  c: cargo
+  o: conference-room
+  e: crew-mess
+  w: crew-quarters
+  f: fwd-shield
+  g: galley
+  y: gymnasium
+  i: impulse
+  m: maneuver
+  t: observation-lounge
+  -: officers-mess
+  u: officers-quarters
+  l: saloon
+  S: sensors
+  h: shuttle-bay
+  k: sick-bay
+  p: torpedo-tube
+  V: vip-quarters
+  W: warp
+  R: workshop
+---
+ 
+  ss--t--oo
+ uub.gb.ebuu
+ u.fkpSpef.u
+ wSfkVVVefSw
+ w..k..gee.w
+ww...rrr...ww
+ wiii...iiiw
+   ll...yy
+      .
+ ..m .m. m..
+ .a.R...R.a.
+ .aWhc.chWa.
+  .W c.c W.
+ .WW c.c WW.
+     c.c
+     W.W

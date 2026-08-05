@@ -1,0 +1,59 @@
+ship: arvonian_carrier
+layout: default
+size: 20x20
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-port
+  e: beam-port-aft
+  m: beam-port-fwd
+  -: beam-starboard
+  t: beam-starboard-aft
+  r: beam-starboard-fwd
+  i: bio-lab
+  g: brig
+  c: cargo
+  o: computer
+  f: conference-room
+  w: crew-mess
+  u: crew-quarters
+  h: fighter-bay
+  d: fwd-shield
+  l: galley
+  y: gymnasium
+  p: hyper-drive
+  M: impulse
+  A: maneuver
+  B: observation-lounge
+  F: officer-quarters
+  E: officers-galley
+  R: officers-mess
+  P: physics-lab
+  _: ready_room
+  j: rec-room
+  S: saloon
+  N: sensors
+  k: sick-bay
+  V: vip-quarters
+  W: workshop
+---
+ 
+    m.B      B.r
+   u..S      S..u
+   u.d.      .d.u
+  uu.dw  BB  wd.uu
+  uN.lw  FF  wl.Nu
+  u.chw  FF  whc.u
+  u.ch.  FF  .hc.u
+  u.ch_  FF  _hc.u
+  P.ch_  ER  _hc.s
+  b..h.  RR  .h..-
+  y.ph.VVffVV.hp.y
+ gA.p...kkkk...p.Aj
+ gA.poo .MM. oop.Aj
+ gNWpacc MM ccapWNi
+ e.Wpacc    ccapW.t
+  ....cc    cc....
+  MMM          MMM
+ 
+ 

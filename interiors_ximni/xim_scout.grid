@@ -1,0 +1,42 @@
+ship: xim_scout
+layout: default
+size: 12x12
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-fwd
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  e: crew-mess
+  w: crew-quarters
+  f: fwd-shield
+  g: galley
+  y: gymnasium
+  m: impulse
+  j: jump-drive
+  u: maneuver
+  t: observation-lounge
+  p: physics-lab
+  -: rec-room
+  l: saloon
+  h: school
+  S: sensors
+  H: shuttle-bay
+  k: sick-bay
+  d: torpedo-tube
+  W: workshop
+---
+   tl  ot
+  w..bd..w
+  wfkge.fw
+ wSukye.uSw
+ wS..-iW.Sw
+ c c.Hp.c c
+ r  .jj.  h
+ u  .jj.  u
+   sa  as
+    mmmm
+ 
+ 

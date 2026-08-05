@@ -1,0 +1,46 @@
+ship: tsn_carrier
+layout: default
+size: 13x11
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-port-fwd
+  e: beam-starboard-fwd
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  w: crew-mess
+  -: crew-quarters
+  f: fighter-bay
+  d: fwd-shield
+  g: galley
+  y: gymnasium
+  m: impulse
+  u: maneuver
+  t: observation-lounge
+  F: officer-quarters
+  I: officers-mess
+  p: physics-lab
+  _: ready_room
+  R: rec-room
+  S: saloon
+  E: sensors
+  h: shuttle-bay
+  k: sick-bay
+  T: torpedo-tube
+  V: vip-quarters
+  W: warp
+  K: workshop
+---
+  E       E
+  E       E
+ bFFFItIFFFe
+ FdwwgTVoodF
+ -.wfKcKfp.-
+ -u.fcccf.u-
+ -i.f___f.S-
+ -s.fKhKf.S-
+ -Wr.kkk.RW-
+ WWrmcWcmyWW
+   am.W.ma

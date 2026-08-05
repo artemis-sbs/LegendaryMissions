@@ -1,0 +1,45 @@
+ship: xim_missile_cruiser
+layout: default
+size: 14x16
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-aft
+  i: bio-lab
+  c: cargo
+  o: conference-room
+  r: crew-galley
+  e: crew-mess
+  w: crew-quarters
+  f: fwd-shield
+  g: gymnasium
+  m: impulse
+  j: jump-drive
+  u: maneuver
+  t: observation-lounge
+  p: physics-lab
+  -: rec-room
+  l: saloon
+  h: school
+  S: sensors
+  y: shuttle-bay
+  k: sick-bay
+  d: torpedo-tube
+  W: workshop
+---
+ 
+     t  s
+   wwwwwwww
+   w.f..f.w
+   w......w
+  wS.eeee.Sw
+  o.udrrdu.i
+  h  d..d  p
+     W..-
+   gg.kk.ll
+  jjjj..jjjj
+      ..
+    acyWca
+     c..c
+     cbmc
+      mm

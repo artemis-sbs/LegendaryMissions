@@ -1,0 +1,54 @@
+ship: tsn_dreadnought
+layout: default
+size: 17x17
+legend:
+  a: aft-shield
+  b: beam-aft
+  e: beam-fwd
+  m: beam-port-fwd
+  -: beam-starboard-fwd
+  r: brig
+  c: cargo
+  o: conference-room
+  w: crew-galley
+  s: crew-mess
+  q: crew-quarters
+  f: fighter-bay
+  d: fwd-shield
+  y: gymnasium
+  i: impulse
+  u: maneuver
+  t: observation-lounge
+  F: officer-quarters
+  l: officers-galley
+  E: officers-mess
+  R: officers-quarters
+  _: ready_room
+  M: rec-room
+  S: saloon
+  N: science-lab
+  h: sensors
+  H: shuttle-bay
+  k: sick-bay
+  p: torpedo-tube
+  V: vip-quarters
+  W: warp
+  K: workshop
+---
+ 
+      EEEEt
+     FlleooF
+    Fmswpws-F
+   RRspVVVpsRR
+   hdsoVVVosdh
+  qhddkkVkkddhq
+ qq.yyykkkMMMSqq
+ quuii.r.r.iiuuq
+  uuii.r.r.iiuu
+     i.r.r.i
+    ccc . ccc
+  K ccc . ccc K
+ aaaNqqqb_FFSaaa
+  WW.KWfHfWK.WW
+  WW WW f WW WW
+  W  WW   WW  W

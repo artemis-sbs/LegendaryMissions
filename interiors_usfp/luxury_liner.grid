@@ -1,0 +1,45 @@
+ship: luxury_liner
+layout: default
+size: 20x20
+legend:
+  a: aft-shield
+  c: cargo
+  r: cargo_hatch
+  o: conference-room
+  e: crew-galley
+  w: crew-mess
+  f: fwd-shield
+  g: galley
+  i: impulse
+  m: maneuver
+  b: observation-lounge
+  s: officers-mess
+  p: passenger-mess
+  -: passenger-quarters
+  R: rec-room
+  l: saloon
+  S: sensors
+  h: shuttle-bay
+  k: sick-bay
+  W: workshop
+---
+ 
+        bbbb
+       S.ll.S
+     --fcggcf--
+     --RpoopR--
+     --.pppp.--
+     --RwggsR--
+     --.wkks.--
+     --R.kk.R--
+     --.hcch.--
+     --.hWWh.--
+     --.hcch.--
+      -......-
+      o.RRRR.o
+     mo......om
+   bll.ccwwcc.llb
+     ccccewcccc
+      .aWiira.
+        .ii.
+         ii

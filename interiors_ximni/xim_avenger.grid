@@ -1,0 +1,18 @@
+ship: xim_avenger
+layout: default
+size: 7x5
+legend:
+  a: aft-shield
+  b: beam-fwd
+  c: computer
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  t: torpedo-tube
+---
+ .fbs.
+m.cit.m
+  iai
+ 
+ 

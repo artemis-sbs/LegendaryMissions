@@ -1,0 +1,55 @@
+ship: arvonian_light_carrier
+layout: default
+size: 16x17
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-port-aft
+  e: beam-port-fwd
+  m: beam-starboard-aft
+  -: beam-starboard-fwd
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: computer
+  f: conference-room
+  w: crew-mess
+  q: crew-quarters
+  h: fighter-bay
+  d: fwd-shield
+  l: galley
+  y: gymnasium
+  p: hyper-drive
+  u: impulse
+  M: maneuver
+  t: observation-lounge
+  F: officer-quarters
+  E: officers-galley
+  R: officers-mess
+  P: physics-lab
+  _: ready_room
+  j: rec-room
+  S: saloon
+  N: sensors
+  H: shuttle-bay
+  k: sick-bay
+  V: vip-quarters
+  W: workshop
+---
+ 
+  e    tt    -
+  .   FREF   .
+  s    FF    i
+ q.    ..    .q
+ q.    ..    .q
+ q.   dVfd   .q
+ q.   ....   .q
+ q.H.r.kk.y.h.q
+ ..hj.owjo._h..
+ S.h..WwlW..h.P
+ Mph acccca hpM
+ Np   cuuc   pN
+ .p          p.
+ b.          .m
+ uu          uu
+ 

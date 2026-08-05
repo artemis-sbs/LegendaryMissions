@@ -1,0 +1,55 @@
+ship: tsn_juggernaut
+layout: default
+size: 18x18
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-port
+  e: beam-port-fwd
+  m: beam-starboard
+  -: beam-starboard-fwd
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  w: crew-galley
+  R: crew-mess
+  q: crew-quarters
+  f: fighter-bay
+  d: fwd-shield
+  y: gymnasium
+  p: impulse
+  u: maneuver
+  t: observation-lounge
+  F: officer-quarters
+  l: officers-galley
+  E: officers-mess
+  h: physics-lab
+  _: ready_room
+  M: rec-room
+  S: sensors
+  H: shuttle-bay
+  k: sick-bay
+  T: torpedo-tube
+  V: vip-quarters
+  W: warp
+  K: workshop
+---
+     eEEttEE-
+   FFFllEEooFFF
+  FF..cc..ss..FF
+ bF.SdTT..TTdS.qm
+  q..dVVkkVVd..q
+  q.MdVVkkVVdM.q
+  q.ydVVkkVVdy.q
+  q.uppokkoppu.q
+ qquuppooooppuuqq
+ q.uuppRwwRppuu.q
+ qiiaRRRccRRRahhq
+ q.cay.fK_f.yac.q
+ q.caM.fHHf.Mac.q
+ .ScarrrccrrracS.
+ ..cc.S.rr.S.cc..
+WWWWW...WW...WWWWW
+WWWWW  WWWW  WWWWW
+       WWWW

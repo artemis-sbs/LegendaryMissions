@@ -1,0 +1,41 @@
+ship: tsn_scout
+layout: default
+size: 12x11
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  e: crew-mess
+  w: crew-quarters
+  f: fwd-shield
+  g: galley
+  y: gymnasium
+  m: impulse
+  u: maneuver
+  t: observation-lounge
+  -: officers-mess
+  F: officers-quarters
+  p: physics-lab
+  R: rec-room / room,cabin,brig
+  S: sensors
+  h: shuttle-bay
+  k: sick-bay
+  d: torpedo-tube
+  W: warp
+  K: workshop
+---
+ 
+   sFFF-t
+  wegbdo.F
+ FSfk..ifSF
+ FS.kryiRSF
+  .mm..mm.
+    p..p
+ ..uuKKuu..
+ .ccch.ccc.
+ ..ha..ac..
+ .W .WW. W.

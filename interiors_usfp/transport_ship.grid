@@ -1,0 +1,50 @@
+ship: transport_ship
+layout: default
+size: 20x21
+legend:
+  a: aft-shield
+  c: cargo
+  r: cargo_hatch
+  o: conference-room
+  e: crew-galley
+  w: crew-mess
+  -: crew-quarters
+  f: fwd-shield
+  g: galley
+  y: gymnasium
+  i: impulse
+  m: maneuver
+  b: observation-lounge
+  u: officer-quarters
+  s: officers-galley
+  F: officers-mess
+  p: passenger-mess
+  t: passenger-quarters
+  R: rec-room
+  l: saloon
+  S: sensors
+  h: shuttle-bay
+  k: sick-bay
+  W: workshop
+---
+         ..
+       bbbbbb
+      S..ll..S
+      .pppppp.
+     o.ppggpp.o
+     o.ppggpp.o
+   tmf..cccc..fmt
+tttttyy..sF..RRttttt
+tttttyy.uFFu.RRttttt
+ttttt...uccu...ttttt
+ttttt.hc.cc.ch.ttttt
+ttttt.hcW..Wch.ttttt
+ttttt.hc.cc.ch.ttttt
+ttttt....cc....ttttt
+tii...-kcccc.-...iit
+tiiaii-kweew.-iiaiit
+...mii-kwwww.-iim...
+   ...-iiccii-...
+     ..iiccii..
+       ..rr..
+         ..

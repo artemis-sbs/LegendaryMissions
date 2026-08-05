@@ -1,0 +1,50 @@
+ship: xim_dreadnought
+layout: default
+size: 19x19
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-aft
+  e: beam-fwd
+  m: beam-port-fwd
+  -: beam-starboard-fwd
+  i: bio-lab
+  r: brig
+  c: conference-room
+  w: crew-galley
+  R: crew-mess
+  q: crew-quarters
+  f: fighter-bay
+  d: fwd-shield
+  y: gymnasium
+  p: impulse
+  j: jump-drive
+  u: maneuver
+  o: observation-lounge
+  _: ready_room
+  l: saloon
+  h: school
+  S: sensors
+  t: shuttle-bay
+  k: sick-bay
+  V: vip-quarters
+---
+       q   q
+      qqoooqq
+     qq.ccc.qq
+    qq..cec..qq
+    .ddVV.VVdd.
+.m  .ddVV.VVdd.  -.
+q. ly.RRwwwRR.ys .q
+qS.u..RRRRRRR..u.Sq
+qS.....kkkkk.....Sq
+qSf..jjjjjjjjj..fSq
+q.f_.jjjjjjjjj._f.q
+..t....kkkkk....t..
+ .tuy..rrrrr..yuth
+ i u..aarrraa..u h
+ h pp.aa...aa.pp h
+   pp.pp...pp.pp
+     .pplblpp.
+ 
+ 

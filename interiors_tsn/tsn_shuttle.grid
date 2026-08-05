@@ -1,0 +1,20 @@
+ship: tsn_shuttle
+layout: default
+size: 7x6
+legend:
+  a: aft-shield
+  b: beam
+  c: cargo
+  r: cargo_hatch
+  o: computer
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+---
+   b
+  cfs
+  .o.
+ mc.cm
+ rcacr
+  i i

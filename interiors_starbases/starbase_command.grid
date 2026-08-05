@@ -1,0 +1,52 @@
+ship: starbase_command
+layout: default
+size: 30x30
+legend:
+  b: beam
+  r: brig
+  c: cargo
+  o: conference-room
+  e: crew-mess
+  w: crew-quarters
+  g: gymnasium
+  s: observation-lounge
+  f: officer-quarters
+  i: officers-mess
+  p: passenger-quarters
+  a: saloon
+  n: sensors
+  h: shield
+  u: shuttle-bay
+  t: torpedo-tube
+  -: vip-quarters
+---
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+            u ff u
+ 
+          s hwwwwh s
+           ccpppacc
+        u hca.....ch u
+          w...--...w
+        f wg.-bt-.gw f
+        f wg.-nn-.gw f
+          w...oo...w
+        u hc..oo.ach u
+         i ccarrrcc i
+          e hwwwwh e
+           e      e
+            u ff u
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

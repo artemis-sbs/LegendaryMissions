@@ -1,0 +1,48 @@
+ship: tsn_battle_cruiser
+layout: default
+size: 16x14
+legend:
+  a: aft-shield
+  b: beam-port-aft
+  e: beam-port-fwd
+  m: beam-starboard-aft
+  -: beam-starboard-fwd
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  w: crew-galley
+  s: crew-mess
+  q: crew-quarters
+  f: fwd-shield
+  y: gymnasium
+  p: impulse
+  u: maneuver
+  l: officers-galley
+  F: officers-mess
+  t: officers-quarters
+  h: physics-lab
+  R: rec-room / room,cabin,gym
+  S: saloon
+  E: sensors
+  H: shuttle-bay
+  k: sick-bay
+  d: torpedo-tube
+  V: vip-quarters
+  W: warp
+  K: workshop
+---
+       FF
+  tttt..F.tttt
+ qqeff.ddlff-qq
+ qqEikkVVoohEqq
+ qqESkkVVoowEqq
+ qqbS.yssssRmqq
+  qppprrrrppp.
+     ......
+ .uu  ....  uu.
+..Kaacc..ccaaK..
+ .W.Hcc..ccH.W.
+ WW.  c..c  .WW
+ WW   ....   WW
+       WW

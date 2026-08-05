@@ -1,0 +1,46 @@
+ship: tsn_battleship
+layout: default
+size: 17x15
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  e: crew-mess
+  w: crew-quarters
+  f: fwd-shield
+  g: galley
+  y: gymnasium
+  m: impulse
+  u: maneuver
+  -: officer-quarters
+  F: officers-mess
+  p: physics-lab
+  R: rec-room
+  l: saloon
+  S: sensors
+  h: shuttle-bay
+  k: sick-bay
+  t: torpedo-tube
+  V: vip-quarters
+  W: warp
+  K: workshop
+---
+      bFFFb
+   b----F----b
+  wee.gtotg.eew
+ wwSfkkVVVoRfSww
+ w.SfkkVVVoRfS.w
+ ww.ikkyyy.R..ww
+   mmmmrrrmmmm
+     ..rrr..
+      l..ps
+ .uu  l....  uu.
+.aa.ccc.K.ccc.aa.
+ .WWhcc.K.cchWW.
+ .WW.  ...  .WW.
+ WWW   .W.   WWW
+       WWW

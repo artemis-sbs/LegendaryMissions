@@ -1,0 +1,47 @@
+ship: xim_carrier
+layout: default
+size: 16x16
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-port-fwd
+  e: beam-starboard-fwd
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  w: crew-galley
+  -: crew-mess
+  q: crew-quarters
+  f: fighter-bay
+  y: gymnasium
+  m: impulse
+  j: jump-drive
+  u: maneuver
+  t: observation-lounge
+  p: physics-lab
+  R: rec-room
+  l: saloon
+  h: school
+  S: shuttle-bay
+  k: sick-bay
+  d: torpedo-tube
+  V: vip-quarters
+  W: workshop
+---
+ 
+      s  t
+     q----q
+     q.wl.q
+     q.do.q
+ b  qq.Vk.qq  e
+ . jfa.yk.afj .
+ .ujfc..k.cfju.
+q..jfcWlRWcfj..q
+q..jfcc..ccfj..q
+..m S c..c S m..
+..  . .rr. .  ..
+hi    .rr.    ph
+      a..a
+      .mm.
+ 

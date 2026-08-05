@@ -1,0 +1,44 @@
+ship: science_ship
+layout: default
+size: 13x17
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  e: crew-mess
+  w: crew-quarters
+  f: fwd-shield
+  g: galley
+  y: gymnasium
+  i: impulse
+  j: jump-drive
+  m: maneuver
+  -: officer-quarters
+  p: physics-lab
+  R: rec-room
+  l: saloon
+  S: sensors
+  h: shuttle-bay
+  k: sick-bay
+  t: torpedo-tube
+---
+ 
+ 
+ 
+ 
+SS  -gfe   SS
+  t -kRyw t
+ssm.-lowwwmss
+  i  ppp  i
+  i .bbb. i
+    jjjjj
+    .crc.
+     .h.
+     .h.
+     chc
+     c.c
+     cac
+ 

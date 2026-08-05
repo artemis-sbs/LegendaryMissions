@@ -1,0 +1,19 @@
+ship: arvonian_fighter
+layout: default
+size: 10x7
+legend:
+  a: aft-shield
+  b: beam-fwd
+  c: computer
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+---
+  .b  b.
+  f    f
+  .    .
+ mm sc mm
+.ii.aa.ii.
+ 
+ 

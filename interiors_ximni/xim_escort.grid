@@ -1,0 +1,30 @@
+ship: xim_escort
+layout: default
+size: 10x10
+legend:
+  a: aft-shield
+  b: beam
+  c: conference-room
+  r: crew-galley
+  e: crew-quarters
+  f: fwd-shield
+  g: gymnasium
+  i: impulse
+  j: jump-drive
+  m: maneuver
+  s: science-lab
+  o: sensors
+  h: shuttle-bay
+  k: sick-bay
+  w: workshop
+---
+ 
+ 
+   bffb
+   e..e
+   ekre
+  ejsoje
+  echwge
+ maiiiiam
+ .      .
+ 

@@ -1,0 +1,19 @@
+ship: tsn_fighter
+layout: default
+size: 7x6
+legend:
+  a: aft-shield
+  b: beam
+  c: computer
+  f: fwd-shield
+  i: impulse
+  m: maneuver
+  s: sensors
+  t: torpedo-tube
+---
+   b
+   f
+  mtm
+  cis
+  iai
+ 

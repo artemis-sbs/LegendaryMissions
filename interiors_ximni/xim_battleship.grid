@@ -1,0 +1,53 @@
+ship: xim_battleship
+layout: default
+size: 20x20
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-fwd
+  e: beam-port-fwd
+  m: beam-starboard-fwd
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  w: crew-galley
+  -: crew-mess
+  q: crew-quarters
+  f: fwd-shield
+  y: gymnasium
+  p: impulse
+  j: jump-drive
+  u: maneuver
+  t: observation-lounge
+  h: physics-lab
+  R: rec-room
+  l: saloon
+  S: school
+  E: sensors
+  H: shuttle-bay
+  k: sick-bay
+  d: torpedo-tube
+  V: vip-quarters
+  W: workshop
+---
+ 
+        q  q
+       qqVVqq
+      qq.VV.qq
+      qbfVVfbq
+     t.ofddfo.t
+     h.o-ww-o.s
+e   hh..----..ss   m
+..  l..jjkkjj..R  ..
+q.  l..j.kk.j..R  .q
+q..    jr  rj    ..q
+qEcc   jr  rj   ccEq
+qEccuiijr  rjSSuccEq
+..cc..yj.kk.jl..cc..
+ ...u.yjjkkjjl.u...
+ H  WW...RR...WW  H
+ H  ............  H
+     ppaa..aapp
+     p  pppp  p
+ 

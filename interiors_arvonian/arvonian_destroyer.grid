@@ -1,0 +1,40 @@
+ship: arvonian_destroyer
+layout: default
+size: 12x12
+legend:
+  a: aft-shield
+  b: beam-port
+  e: beam-port-fwd
+  m: beam-starboard
+  -: beam-starboard-fwd
+  r: brig
+  c: cargo
+  o: computer
+  f: conference-room
+  w: crew-mess
+  q: crew-quarters
+  d: fwd-shield
+  l: galley
+  y: gymnasium
+  h: hyper-drive
+  i: impulse
+  u: maneuver
+  s: observation-lounge
+  t: officer-quarters
+  S: sensors
+  H: shuttle-bay
+  k: sick-bay
+  p: workshop
+---
+ e   sf   -
+ .   Sd   .
+q.   tt   .q
+q.   ..   .q
+q.  .lw.  .q
+uh  .ww.  hu
+.h...oo...h.
+bh.y.rk.y.hm
+..  c..c  ..
+.i  HapH  i.
+ i  ....  i
+ 

@@ -1,0 +1,39 @@
+ship: tsn_light_carrier
+layout: default
+size: 11x9
+legend:
+  a: aft-shield
+  b: beam-port-fwd
+  e: beam-starboard-fwd
+  r: brig
+  c: cargo
+  o: conference-room
+  w: crew-mess
+  -: crew-quarters
+  f: fighter-bay
+  d: fwd-shield
+  g: galley
+  y: gymnasium
+  i: impulse
+  m: maneuver
+  u: officer-quarters
+  s: officers-mess
+  _: ready_room
+  R: rec-room
+  l: saloon
+  S: science-lab
+  E: sensors
+  h: shuttle-bay
+  k: sick-bay
+  p: warp
+  W: workshop
+---
+ 
+ E  usu  E
+ buu.g.uue
+ -dfwwwfd-
+-m.f_._f.m-
+-S.fWcWf.l-
+-p.cchkkRp-
+apr..o..ypa
+   .ipi.

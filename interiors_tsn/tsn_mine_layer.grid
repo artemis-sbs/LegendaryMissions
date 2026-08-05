@@ -1,0 +1,36 @@
+ship: tsn_mine_layer
+layout: default
+size: 11x10
+legend:
+  b: beam-fwd
+  r: brig
+  c: cargo
+  o: conference-room
+  e: crew-mess
+  w: crew-quarters
+  g: galley
+  y: gymnasium
+  i: impulse
+  m: maneuver
+  f: officer-quarters
+  s: officers-mess
+  -: rec-room
+  a: saloon
+  l: science-lab
+  S: sensors
+  h: shuttle-bay
+  k: sick-bay
+  t: torpedo-tube
+  p: warp
+  W: workshop
+---
+    sfo
+  w.fbf.w
+  wSegeSw
+  w..a..w
+ w.cyk-c.w
+ wcc.r.ccw
+.mcii.iicm.
+..WWhplWW..
+.ptt.p.ttp.
+pp       pp

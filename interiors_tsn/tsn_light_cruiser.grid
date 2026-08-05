@@ -1,0 +1,50 @@
+ship: tsn_light_cruiser
+layout: default
+size: 10x17
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-port
+  e: beam-starboard
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  w: crew-mess
+  -: crew-quarters
+  f: fwd-shield
+  g: galley
+  y: gymnasium
+  m: impulse
+  u: maneuver
+  t: observation-lounge
+  F: officer-quarters
+  I: officers-mess
+  p: physics-lab
+  R: rec-room / room,cabin,rec
+  S: saloon
+  E: sensors
+  h: shuttle-bay
+  k: sick-bay
+  d: torpedo-tube
+  V: vip-quarters
+  W: warp
+  K: workshop
+---
+   tIIs
+ FFf.ofFF
+ -b.dd.e-
+ -i....p-
+-E.kVVS.E-
+-..kwwS..-
+ -.ywgR.-
+ -mmrrmm-
+   ....
+    ..
+ .u .. u.
+ .cc..cc.
+ .ac..ca.
+ WWh..KWW
+ .W .. W.
+    ..
+    WW

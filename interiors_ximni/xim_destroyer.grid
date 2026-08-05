@@ -1,0 +1,36 @@
+ship: xim_destroyer
+layout: default
+size: 12x12
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam
+  c: cargo
+  o: conference-room
+  r: crew-galley
+  e: crew-mess
+  w: crew-quarters
+  f: fwd-shield
+  g: gymnasium
+  i: impulse
+  j: jump-drive
+  m: maneuver
+  l: saloon
+  -: science-lab
+  S: sensors
+  h: shuttle-bay
+  k: sick-bay
+  p: workshop
+---
+ 
+    s  l
+    wbbw
+    wo.w
+   w.re.w
+ wmfj..jfmw
+.w.-.gk.S.w.
+.. .apha. ..
+.c   ii   c.
+.    ..    .
+     ii
+ 

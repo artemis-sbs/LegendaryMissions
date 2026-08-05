@@ -1,0 +1,56 @@
+ship: starbase_science
+layout: default
+size: 30x30
+legend:
+  a: astro-lab
+  b: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  e: crew-mess
+  w: crew-quarters
+  g: galley
+  y: gymnasium
+  f: officer-quarters
+  i: officers-mess
+  p: physics-lab
+  d: production
+  -: rec-room
+  s: school
+  n: sensors
+  h: shield
+  u: shuttle-bay
+  k: sick-bay
+  t: vip-quarters
+  W: workshop
+---
+              aa
+             a..a
+            o-eego
+             pppp
+             nccn
+             bbbb
+             yy..
+             kkkk
+             cWWc
+             ....
+            wwwwww
+          www....www
+         ft..ciic..tf
+         ft.ycggck.tf
+         ft.rree--.tf
+..  .. uhu..kseedy..uhu ..  ..
+          w..seed..w
+           w......w
+            wwwwww
+             .dd.
+             .dd.
+             cWWc
+             kkkk
+             ..yy
+             bbbb
+             nccn
+             pppp
+            ogee-o
+             a..a
+              aa

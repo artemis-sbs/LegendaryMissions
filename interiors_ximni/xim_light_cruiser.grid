@@ -1,0 +1,49 @@
+ship: xim_light_cruiser
+layout: default
+size: 17x17
+legend:
+  a: aft-shield
+  s: astro-lab
+  b: beam-fwd
+  e: beam-port-fwd
+  m: beam-starboard-fwd
+  i: bio-lab
+  r: brig
+  c: cargo
+  o: conference-room
+  w: crew-galley
+  -: crew-mess
+  q: crew-quarters
+  f: fwd-shield
+  y: gymnasium
+  p: impulse
+  j: jump-drive
+  u: maneuver
+  t: observation-lounge
+  h: physics-lab
+  R: rec-room
+  l: saloon
+  S: school
+  E: sensors
+  H: shuttle-bay
+  d: torpedo-tube
+  V: vip-quarters
+  k: workshop
+---
+ 
+       q q
+      qqbqq
+      qdVdq
+      .fof.
+      R.V.R
+      h...i
+       .y.
+       jjj
+ e    jjjjj    m
+qq      .      qq
+ qE     .     Eq
+ qcc.u.-w-.u.ccq
+ Hcck..---..kccH
+ s  a..rrr..a  S
+     pp...pp
+       tll
