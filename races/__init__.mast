@@ -1,0 +1,122 @@
+# Every race's content, in one add-on.
+#
+# Ship INTERIORS - one ASCII floor plan per hull, see sbs_utils/GRID_ASCII_FORMAT.md - and
+# FLEET LADDERS, the ships that make up a raiding fleet at each difficulty.
+#
+# One add-on rather than one per race, because the per-race control already lives in the
+# SETTINGS below: splitting the package too only made every mission list nine mastlibs
+# instead of one, without granting anything the settings did not already give.
+#
+# Two gates, because they answer different questions:
+#   PLAYABLE_RACES - whose ship interiors load. An interior is only ever built for a
+#                    PLAYER ship, so plans for a race nobody can fly are parsed and unused.
+#   NPC_RACES      - whose fleet ladders load. A race with no ladder cannot be spawned as
+#                    a fleet and is not picked by "random".
+#
+# The hull outline in each floor plan is the ENGINE's own is_grid_point_open, captured by
+# the LM_TestRange "PROBE hull map" map. Regenerate rather than hand-editing an outline;
+# the rooms inside it are yours to move.
+provides races
+
+
+# ---- TSN -----------------------------------------------------------
+if settings_race_is_playable("TSN"):
+    grid_merge_ascii(media_read_relative_file("tsn_battle_cruiser.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_battleship.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_bomber.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_carrier.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_destroyer.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_dreadnought.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_escort.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_fighter.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_heavy_cruiser.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_juggernaut.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_light_carrier.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_light_cruiser.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_mine_layer.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_missile_cruiser.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_scout.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_shuttle.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("tsn_warpster.grid"), "races")
+
+# ---- Ximni ---------------------------------------------------------
+if settings_race_is_playable("Ximni"):
+    grid_merge_ascii(media_read_relative_file("xim_avenger.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("xim_battleship.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("xim_carrier.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("xim_corsair.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("xim_corvette.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("xim_destroyer.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("xim_dreadnought.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("xim_escort.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("xim_light_carrier.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("xim_light_cruiser.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("xim_missile_cruiser.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("xim_scout.grid"), "races")
+if settings_race_is_npc("Ximni"):
+    fleet_table_load_yaml(media_read_relative_file("ximni_fleets.yaml"), "races")
+
+# ---- USFP ----------------------------------------------------------
+if settings_race_is_playable("USFP"):
+    grid_merge_ascii(media_read_relative_file("cargo_ship.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("luxury_liner.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("science_ship.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("starbase_civil.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("starbase_command.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("starbase_industry.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("starbase_science.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("transport_ship.grid"), "races")
+
+# ---- Arvonian ------------------------------------------------------
+if settings_race_is_playable("Arvonian"):
+    grid_merge_ascii(media_read_relative_file("arvonian_carrier.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("arvonian_destroyer.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("arvonian_fighter.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("arvonian_light_carrier.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("starbase_arvonian.grid"), "races")
+if settings_race_is_npc("Arvonian"):
+    fleet_table_load_yaml(media_read_relative_file("arvonian_fleets.yaml"), "races")
+
+# ---- Torgoth -------------------------------------------------------
+if settings_race_is_playable("Torgoth"):
+    grid_merge_ascii(media_read_relative_file("starbase_torgoth.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("torgoth_behemoth.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("torgoth_destroyer.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("torgoth_goliath.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("torgoth_leviathan.grid"), "races")
+if settings_race_is_npc("Torgoth"):
+    fleet_table_load_yaml(media_read_relative_file("torgoth_fleets.yaml"), "races")
+
+# ---- Skaraan -------------------------------------------------------
+if settings_race_is_playable("Skaraan"):
+    grid_merge_ascii(media_read_relative_file("skaraan_defiler.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("skaraan_enforcer.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("skaraan_executor.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("starbase_skaraan.grid"), "races")
+if settings_race_is_npc("Skaraan"):
+    fleet_table_load_yaml(media_read_relative_file("skaraan_fleets.yaml"), "races")
+
+# ---- Kralien -------------------------------------------------------
+if settings_race_is_playable("Kralien"):
+    grid_merge_ascii(media_read_relative_file("kralien_battleship.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("kralien_cruiser.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("kralien_dreadnought.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("starbase_kralien.grid"), "races")
+if settings_race_is_npc("Kralien"):
+    fleet_table_load_yaml(media_read_relative_file("kralien_fleets.yaml"), "races")
+
+# ---- Biomech -------------------------------------------------------
+if settings_race_is_playable("Biomech"):
+    grid_merge_ascii(media_read_relative_file("biomech_a.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("biomech_b.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("biomech_c.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("biomech_d.grid"), "races")
+
+# ---- Pirate --------------------------------------------------------
+if settings_race_is_playable("Pirate"):
+    grid_merge_ascii(media_read_relative_file("pirate_brigantine.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("pirate_fighter.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("pirate_longbow.grid"), "races")
+    grid_merge_ascii(media_read_relative_file("pirate_strongbow.grid"), "races")
+if settings_race_is_npc("Pirate"):
+    fleet_table_load_yaml(media_read_relative_file("pirate_fleets.yaml"), "races")

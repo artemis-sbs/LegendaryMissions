@@ -38,15 +38,7 @@
         "artemis-sbs.LegendaryMissions.lm_lore.v1.4.0.mastlib",
         "artemis-sbs.LegendaryMissions.director.v1.4.0.mastlib",
         "artemis-sbs.LegendaryMissions.avatar_editor.v1.4.0.mastlib",
-        "artemis-sbs.LegendaryMissions.race_tsn.v1.4.0.mastlib",
-        "artemis-sbs.LegendaryMissions.race_ximni.v1.4.0.mastlib",
-        "artemis-sbs.LegendaryMissions.race_arvonian.v1.4.0.mastlib",
-        "artemis-sbs.LegendaryMissions.race_usfp.v1.4.0.mastlib",
-        "artemis-sbs.LegendaryMissions.race_torgoth.v1.4.0.mastlib",
-        "artemis-sbs.LegendaryMissions.race_skaraan.v1.4.0.mastlib",
-        "artemis-sbs.LegendaryMissions.race_kralien.v1.4.0.mastlib",
-        "artemis-sbs.LegendaryMissions.race_biomech.v1.4.0.mastlib",
-        "artemis-sbs.LegendaryMissions.race_pirate.v1.4.0.mastlib"
+        "artemis-sbs.LegendaryMissions.races.v1.4.0.mastlib"
     ],
     "shared_media": [
         "artemis-sbs.LegendaryMissions.media.v1.4.0.zip"

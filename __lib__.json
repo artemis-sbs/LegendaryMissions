@@ -36,15 +36,7 @@
         "lm_lore",
         "director",
         "avatar_editor",
-        "race_arvonian",
-        "race_biomech",
-        "race_kralien",
-        "race_pirate",
-        "race_skaraan",
-        "race_torgoth",
-        "race_tsn",
-        "race_usfp",
-        "race_ximni"
+        "races"
     ],
     "zip": [
         "media"
