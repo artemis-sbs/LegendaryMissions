@@ -2,25 +2,30 @@ ship: pirate_brigantine
 layout: default
 size: 12x12
 legend:
-  a: aft-shield
-  b: beam-port-fwd
-  e: beam-starboard-fwd
+  g: gun-deck / system,weapon,beam
+  t: tube-deck / system,weapon,torpedo
   f: fwd-shield
-  i: impulse
-  m: maneuver
+  a: aft-shield
   s: sensors
-  t: torpedo-tube
+  b: crew-berths / room,cabin,quarters
+  c: captains-cabin / room,cabin,vip
+  y: surgery / room,med,sickbay
+  r: brig
+  m: maneuver
+  p: plunder-hold / room,bay,cargo
+  i: impulse
   w: warp
+  o: boat-bay / room,bay,shuttle
 ---
- 
- 
- 
-     be
-     tt
-    b..f
-    f..m
-   s....s
-   ai..ia
-  mi....i.
-  ww....ww
- ..........
+            
+            
+            
+     gg     
+     tt     
+    fssf    
+    bccb    
+   by..yb   
+   mr..rm   
+  pp....pp  
+  app..ppa  
+ wwiigoiiww 
