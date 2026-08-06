@@ -396,37 +396,48 @@ if CAN_CHANGE_CONSOLE:
 
 ====== game_started_console ====
     #
-    # Every client lands here the moment the server presses Start, which is
-    # BEFORE the map task has run a single line. Two things are not ready yet:
-    # the console-gating variables a map sets in its opening code (a map-gated
-    # Navigation/Admiral console), and the player ships - spawn_players resets
-    # art, position and roles on them, so console_selected can pick a ship that
-    # is about to move, and its grid objects may not exist yet.
+    # Every client lands here the moment the server presses Start, and goes straight
+    # on to its console. There is deliberately no wait in this label.
     #
-    # This used to be two flat `delay_sim(1)`s - one for each of those - which
-    # every client paid in full on every start whether or not anything was
-    # actually pending. Poll the readiness flag instead: spawn_players sets
-    # `players_cleaned` as its LAST act (fleets/map_common.mast), which is
-    # exactly the moment both waits were guessing at.
+    # There used to be one: first two flat `delay_sim(1)`s, then a poll on
+    # `players_cleaned`, so that no console was on screen while spawn_players culled
+    # the unused hulls and rebuilt the survivors. That was a delay every crew paid on
+    # every start to hide something cosmetic - eight identical unused ships stacked on
+    # the origin, blinking out. The stack is what got fixed instead: the roster now
+    # spawns line abreast (create_default_player_ships in server_console.mast), so
+    # there is nothing worth not looking at.
     #
-    # Capped at the 1 second the flat wait always cost, so the worst case is
-    # unchanged. A map that never runs spawn_players (florbin_case) never sets
-    # the flag and so still pays the cap - it can opt out by setting
-    # `shared players_cleaned = True` itself, since its players are ready from
-    # the moment the server made them.
+    # What is left is not an ordering question at all. A console is displayable as soon
+    # as it has a valid player ship, and it has had one since the server console opened -
+    # `create_default_player_ships` builds the whole roster then. The roster is also
+    # already FINAL here: `start` fires //shared/signal/reconcile_player_roster before it
+    # schedules the map, and a //shared/signal route with no await completes inside the
+    # emit. So the ship a console attaches to is the ship it keeps, and there is nothing
+    # left to wait for. The map itself is deferred and builds the world from the next
+    # frame on; none of it is a precondition for painting a console.
     #
-    default shared players_cleaned = False
+    # `console_selected` still guards on the ship actually resolving
+    # (`jump select_console if _ship_id is None`), which is the real check and was always
+    # there - the old wait was belt-and-braces on top of it.
+    #
     default console_ready = False
-    _map_wait = 0
-    for x while not players_cleaned and _map_wait < 5:
-        await delay_sim(0.2)
-        _map_wait += 1
 
     if not console_ready:
-        # The console list was computed at connect time, BEFORE the map ran, so
-        # map-gated @console labels were filtered out of it. The map has had its
-        # say now, so rebuild the list and re-show the selection screen with the
-        # full set.
+        # PICKER path only - this console has not chosen yet, so it goes back to the
+        # selection screen rather than to a console.
+        #
+        # One tick, and only here. The console list was computed at connect time, BEFORE
+        # the map ran, so map-gated @console labels were filtered out of it - OU's
+        # Navigation and Admiral consoles gate on UNIVERSE_ACTIVE, which its map body
+        # sets. With the map deferred, that has not happened yet in this frame, so
+        # rebuilding right now would drop those consoles from the list.
+        #
+        # The assumption, stated plainly: a map sets its console-gating variables in its
+        # opening code, before its first yield (OU sets UNIVERSE_ACTIVE on the first line
+        # of universe_map_begin), so one tick is enough. This costs nothing anyone
+        # notices - it is a menu, not a crew station, and the consoles that DID choose
+        # never reach this branch.
+        await delay_sim(0)
         consoles = gui_get_console_type_list()
         jump select_console
 

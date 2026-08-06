@@ -76,28 +76,52 @@
     ->END
 
 
-====== spawn_players =======
+#
+# ROSTER RECONCILIATION - the half of the old spawn_players that needs nothing from the
+# map: cull the roster to PLAYER_COUNT, apply a game code's loadout hull/name, rebuild
+# stats, hand the server its ship.
+#
+# server_console's `start` fires this BEFORE it schedules the map, which is the whole
+# point. A console only ever needed one thing to be displayable - a valid player ship -
+# and it has had one since the server console opened. Running this first means the ship
+# it attaches to is the ship it KEEPS: already culled, already carrying the coded hull.
+# Without that, a crew with a game-code loadout would watch their hull and stats change
+# underneath a live console.
+#
+# A //shared/signal route with no await runs synchronously inside signal_emit (the same
+# property create_sides relies on), so the roster is final by the time `start` returns
+# from the emit - no flag, no poll, no wait.
+#
+# //shared so it runs ONCE on the server, not once per connected console.
+#
+# Guarded on PLAYER_CREATE_DEFAULT: if a mission did not let LM build the roster, LM has
+# no business culling it. a2x-converted missions build players on their own side and turn
+# the flag off (arme2cosmos convert.py), and PLAYER_COUNT means nothing to them.
+#
+# Idempotent by IDENTITY rather than by a latch: the list is default_player_ship AND
+# __player__, and culling strips __player__ - so an already-culled hull drops out of the
+# list and a second emit is a no-op instead of a double delete.
+#
+//shared/signal/reconcile_player_roster if PLAYER_CREATE_DEFAULT
     #
-    # No longer "Spawn" but move an remove
+    # Latched, so emitting this more than once is free. It is emitted from two places on
+    # purpose - `start`, early, and spawn_players, as a backstop for any path that starts
+    # a map without going through `start` - and re-running the body would re-apply
+    # setup_from_data, wiping anything a map had set on a ship in between.
     #
+    # `players_cleaned` IS the latch: create_default_player_ships clears it whenever it
+    # builds a roster, so a rebuild after a sim wipe re-arms this without a special case.
+    #
+    default shared players_cleaned = False
+    ->END if players_cleaned
     c=0
     first = True
-
-    #test_func(3)
-
-
-    await delay_sim(0)
-    spawn_pos = Vec3(0,0,0)
     # Sorted by id so slot N maps to the same ship the loadout was captured from
     # (player_loadout_from_ships also sorts by id). loadout is [] unless a game
     # code carried a SHIP_LOADOUT, so this is a no-op for maps that don't use it.
-    player_ships = sorted(to_object_list(role("default_player_ship")), key=lambda s: s.id)
+    player_ships = sorted(to_object_list(role("default_player_ship") & role("__player__")), key=lambda s: s.id)
     loadout = player_loadout_active()
-    #------------------------------------------------------------------------------------------------------------
     for player_ship in player_ships:
-        side = player_ship.side
-        stations_friendly = to_object_list(side_members_set(side)  & role("station"))
-
         if c>= PLAYER_COUNT:
             # make sure the id is cleared dry docked ships
             player_ship.art_id = "invisible"
@@ -128,19 +152,55 @@
         sbs.player_ship_setup_defaults(player_ship.engine_object)
         sbs.player_ship_setup_from_data(player_ship.engine_object)
         player_ship.name = name
+        c+=1
+        if first:
+            assign_client_to_ship(0,to_id(player_ship))
+            first = False
 
+    # "the roster is final". Nothing waits on it any more - it is kept because missions
+    # ask the question, and select_console reads it to sync PLAYER_COUNT.
+    shared players_cleaned = True
+    ->END
+
+
+====== spawn_players =======
+    #
+    # PLACEMENT. Despite the name this has not spawned anything for a long time, and it
+    # no longer culls either - that moved to //shared/signal/reconcile_player_roster
+    # above, which runs before the map is even scheduled. Every ship reaching this loop
+    # is one that is staying.
+    #
+    # What is left genuinely needs the map: put the players near a friendly station and
+    # link them to friendly eyes. Only the map knows where those are, which is why this
+    # stays a label a map calls rather than becoming a route - a map that wants its own
+    # placement positions its ships after calling this (deepstrike, OU do exactly that),
+    # or never calls it at all.
+    #
+    # The name stays as it is. It is public surface: at least seven missions outside LM
+    # call it by name, the ai_scripting guide documents it as the fleets addon's entry
+    # point, and arme2cosmos has a test asserting converted missions do NOT call it.
+    #
+    # BACKSTOP. `start` normally reconciles the roster before the map is scheduled, but
+    # not every path goes through `start` - cosmos_dev's `--map` schedules a map label
+    # directly, and so can a mission that drives its own map. Calling spawn_players has
+    # always been enough to get a culled roster and it stays enough. The route is
+    # latched, so on the normal path this emit is free.
+    signal_emit("reconcile_player_roster")
+    spawn_pos = Vec3(0,0,0)
+    # Sorted by id, not raw set order: placement draws from the RNG per ship, so a stable
+    # order is what keeps a seeded map reproducible.
+    player_ships = sorted(to_object_list(role("default_player_ship") & role("__player__")), key=lambda s: s.id)
+    for player_ship in player_ships:
+        side = player_ship.side
+        stations_friendly = to_object_list(side_members_set(side)  & role("station"))
 
         if len(stations_friendly) > 0:
             so = random.choice(stations_friendly)
             spawn_pos = so.pos
             spawn_pos = spawn_pos.rand_offset(3500, 5300, ring=True)
             player_ship.pos = spawn_pos
-        c+=1
-        if first:
-            assign_client_to_ship(0,to_id(player_ship))
-            first = False
 
-        # 
+        #
         # schedule and set friendly eyes
         # link or unlink extra_scan_source
         #
@@ -149,7 +209,12 @@
 
         #player_ship_update_friendly(player_ship, stations_friendly, True)
 
-    shared players_cleaned = True
+    #
+    # One yield, here rather than nowhere. A map body is otherwise entirely synchronous,
+    # so without a break somewhere the whole opening - stations, NPCs, terrain, fleets -
+    # lands in a single frame. Breaking after placement splits it where it costs least.
+    #
+    await delay_sim(0)
     ->END
 
 ==== default_player_friendly_eyes

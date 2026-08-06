@@ -36,8 +36,13 @@ Properties:
 
 
     terrain_spawn_stations(DIFFICULTY, lethal_value)
-    await task_schedule(spawn_friendly_npc)
+    # spawn_players FIRST, ahead of everything else this map builds. The map body runs
+    # inline in the frame that handled the Start button, and this label is the last
+    # thing that has to finish before the consoles can leave the selection screen - so
+    # whatever sits ahead of it is charged straight to the crew's wait. The friendly
+    # NPCs need the stations, not the players, so they cost nothing by moving behind it.
     await task_schedule(spawn_players)
+    await task_schedule(spawn_friendly_npc)
     await task_schedule(default_player_friendly_eyes)
     await task_schedule(docking_standard_player_station)
     

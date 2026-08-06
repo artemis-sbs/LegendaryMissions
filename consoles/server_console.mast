@@ -293,7 +293,27 @@ Main:
         # ever presenting the panel, so this guarantees the map body's vars exist (set-if-absent,
         # so anything the operator changed on the panel is preserved).
         map_apply_defaults(WORLD_SELECT)
-        task_schedule(WORLD_SELECT)
+        #
+        # ROSTER BEFORE WORLD. //shared/signal/reconcile_player_roster (fleets/map_common.mast)
+        # culls the roster to PLAYER_COUNT and applies any game-code loadout. It needs nothing
+        # the map builds, and a //shared/signal route with no await runs synchronously inside
+        # signal_emit - the same property the create_sides emit above relies on - so the roster
+        # is final by the time this line returns. Must be AFTER map_apply_defaults, which is
+        # what settles PLAYER_COUNT.
+        #
+        # This is what makes the deferred schedule below safe.
+        signal_emit("reconcile_player_roster")
+        #
+        # DEFERRED on purpose, and this is the point of the whole exercise. The map body is the
+        # mission's entire opening burst - stations, minefields, NPCs, terrain, fleets - and
+        # scheduled inline it all ran inside the frame that handled this button, before a single
+        # console repainted. Nothing down there is a precondition for showing a console: a
+        # console needs a valid player ship, and it has had one since the server console opened.
+        # So the map gets the next frame and the crew gets this one.
+        #
+        # The visible cost is that players are still in their staging formation for a frame or
+        # two before the map moves them to a starbase.
+        task_schedule(WORLD_SELECT, defer=True)
 
     #
     # Consoles are waiting to be started 
@@ -480,11 +500,38 @@ Main:
 # present are returned untouched, so faces/respawn_time are re-applied but nothing moves.
 #
 === create_default_player_ships
+    # A new roster is by definition not reconciled yet. This clears the latch on
+    # //shared/signal/reconcile_player_roster (fleets/map_common.mast), so a roster
+    # rebuilt after a sim wipe gets culled again without needing a special case.
+    shared players_cleaned = False
     if PLAYER_CREATE_DEFAULT:
         # (side creation is done synchronously before this via create_sides, so the
         # player_spawn side lookups resolve.)
-        for slot, player_ship_data in enumerate(SETTINGS.get("PLAYER_LIST")):
-            player_ship = player_ensure(slot, 0,0,0, player_ship_data["ship"], player_ship_data["name"], player_ship_data["side"])
+        #
+        # Line abreast, NOT a pile on the origin. The whole roster exists from the moment
+        # the server console opens, because the crew picks among them - but only the first
+        # PLAYER_COUNT survive spawn_players. So for the entire selection screen, and for
+        # the first frames after Start, the unused hulls are real visible objects. Spawned
+        # at 0,0,0 they were a stack of identical ships sitting exactly where the camera
+        # starts, which is what made them conspicuous both while they sat there and at the
+        # moment they winked out. Spread on a row they read as a staging formation, and one
+        # of them disappearing is unremarkable.
+        #
+        # This is the fix for that; it is not a delay. Consoles used to wait out the purge
+        # behind a `players_cleaned` poll (game_started_console) purely so nobody watched
+        # it happen. Make the thing not worth hiding and the wait is not needed.
+        #
+        # Centred on the origin, so the group's centre of mass is where it has always been
+        # and a mission that never repositions its players is unaffected. The half-step
+        # that centring produces, plus the Z offset, means no slot ever lands exactly on
+        # 0,0,0 for any roster size, odd or even. Maps move these near a friendly station
+        # in spawn_players, so the formation only has to hold up until then.
+        _roster = SETTINGS.get("PLAYER_LIST")
+        _slot_gap = 2000
+        _slot_mid = (len(_roster)-1)/2.0
+        for slot, player_ship_data in enumerate(_roster):
+            _slot_x = (slot - _slot_mid) * _slot_gap
+            player_ship = player_ensure(slot, _slot_x, 0, 2000, player_ship_data["ship"], player_ship_data["name"], player_ship_data["side"])
             player_ship_data["id"] = player_ship
             add_role(player_ship, "default_player_ship")
             set_face(player_ship, random_face(player_ship_data["face"]))
