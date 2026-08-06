@@ -110,6 +110,33 @@ if CAN_CHANGE_CONSOLE:
             CONSOLE_SELECT = consoles[i].path
             console_select_item = consoles[i]
 
+    # A console named on the ENGINE COMMAND LINE wins, and enters straight away:
+    #     Artemis3-x64-release.exe autostartclient console=weapons
+    # `console=` is not an engine flag - 1.3.5 passes unrecognized key=value arguments
+    # through to command_line_dict(), so this needs nothing from the engine.
+    #
+    # It replaces what `sbs run` does today: rewriting data/client_string_set.txt inside the
+    # game install before each launch to set console_previous, then restoring it afterwards.
+    # That is a shared global being used to configure a per-process choice - two runs
+    # corrupt each other and a crash leaves the file clobbered. A command-line argument is
+    # per-process by nature, so there is nothing to share, restore, or clean up.
+    #
+    # Placed AFTER the mode/previous_console branches on purpose: `mode` jumps away when it
+    # matches, so reaching here means nothing forced a console, and a preselected
+    # `previous_console` is exactly what a launch argument should be allowed to override.
+    cli_console = command_line_get("console")
+    if cli_console is not None and len(cli_console) > 0:
+        cli_console = cli_console.strip().lower()
+        for cli_i in range(len(consoles)):
+            continue if cli_console != consoles[cli_i].path
+            CONSOLE_SELECT = consoles[cli_i].path
+            console_select_item = consoles[cli_i]
+            jump console_selected
+        # Reached only when nothing matched - the loop jumps out on a hit. Say so rather
+        # than silently showing the picker: a typo in a launch argument that quietly does
+        # nothing is the failure mode that wasted the most time getting here.
+        log(f"console='{cli_console}' matched no console - showing the picker", "console_select", "warning")
+
     if AUTO_START and console_select_item:
         jump(console_selected)
         
