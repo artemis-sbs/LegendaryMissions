@@ -31,7 +31,8 @@ Load only the addons you use &mdash; each one adds labels to the global namespac
 
 | Addon | Provides |
 |---|---|
-| `fleets` | `spawn_players`, enemy fleet prefabs (`prefab_fleet_raider`, ...) |
+| `fleets` | `spawn_players`, enemy fleet prefabs (`prefab_fleet_raider`, ...). Needs `races` for its composition ladders &mdash; see below |
+| `races` | Per-race content the other addons look up: the **fleet composition ladders** `fleets` reads (gated on `NPC_RACES`) and the **ship interiors** for hulls the base game ships without one (gated on `PLAYABLE_RACES`) |
 | `docking` | player/station docking logic (`docking_standard_player_station`) |
 | `prefabs` | sides (`prefab_side_generic`), station/terrain prefabs |
 | `comms` | enemy taunt/surrender comms, player comms menus |
@@ -49,8 +50,15 @@ Load only the addons you use &mdash; each one adds labels to the global namespac
 | `operator` | operator/admin console for venue use |
 | `side_missions` | structured optional objectives |
 
-**A standard multi-console combat mission** typically loads: `fleets`, `docking`,
-`prefabs`, `comms`, `consoles`, `damage`.
+**A standard multi-console combat mission** typically loads: `fleets`, `races`,
+`docking`, `prefabs`, `comms`, `consoles`, `damage`.
+
+`races` is on that list because the composition ladders moved OUT of `fleets` and into
+it: with `fleets` alone, `fleet_create` finds no table for the race, prints one line and
+returns `None` &mdash; a fleet that spawns nothing and a mission that quietly has no
+enemies. It also matters as soon as the crew flies a non-TSN hull: every Torgoth,
+Skaraan, Kralien, Biomech and Pirate entry in the base `grid_data.json` is **empty**, and
+a hull with no interior has a dead Engineering console.
 
 ## Minimum without LegendaryMissions
 
