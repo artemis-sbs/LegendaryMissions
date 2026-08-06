@@ -18,6 +18,7 @@
 ## [Florbin Case](florbin_case)
 
 ### [The Florbin Affair](florbin)
+= The spine of the map. Four steps, each one a different console's problem.
 ---
 Arc
 Scope: shared
@@ -26,6 +27,7 @@ Starts when: at once
 Ambassador Florbin has been kidnapped and smuggled out in a cargo container. Follow the cargo trail, find him, and bring him home to DS 1 - alive.
 
 #### [Take the Case](brief)
+= Opening. Comms hails DS 1; nothing else is revealed until this lands.
 ---
 Scope: shared
 Starts when: at once
@@ -35,6 +37,7 @@ Then: reveal florbin/trail
 Contact DS 1 to open the investigation.
 
 #### [Identify the Kidnapper](trail)
+= Midpoint. Science work - the crew learns Florbin is alive and aboard.
 ---
 Scope: shared
 Starts when: revealed
@@ -44,6 +47,7 @@ Then: reveal florbin/subdue
 Follow the cargo trail: interview stations and bio-scan suspect holds to find which ship is hiding the ambassador.
 
 #### [Subdue the Kidnapper](subdue)
+= The trap. Weapons must NOT solve this the usual way; that is the whole beat.
 ---
 Scope: shared
 Starts when: revealed
@@ -53,6 +57,7 @@ Then: reveal florbin/recover
 Do NOT destroy the ship - the ambassador is aboard. Drop its shields below 50% (or use a secret codecase) to force its surrender.
 
 #### [Recover and Return Florbin](recover)
+= Payoff. Helm and docking; deliberately quiet after the standoff.
 ---
 Scope: shared
 Starts when: revealed
@@ -61,6 +66,7 @@ Done when: signal florbin_delivered
 Collect the escape pod and dock it at DS 1.
 
 #### [Keep Florbin Alive](alive)
+= The stake, running underneath all four steps. Never listed as a task.
 ---
 Scope: shared
 Starts when: at once

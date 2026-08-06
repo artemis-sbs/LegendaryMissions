@@ -6,6 +6,7 @@
 // addons.
 
 # [Patrol Briefing](story_patrol)
+= Step 1 of 3. Teaches the scan verb before anything depends on it.
 ---
 state: active
 on_scan: { role: station }
@@ -16,6 +17,7 @@ Have Science scan this starbase to download the patrol briefing, then proceed
 to your sweep.
 
 # [Patrol Sweep](story_patrol_b)
+= Step 2 of 3. The only combat beat; count is low on purpose.
 ---
 state: secret
 on_kill: { role: raider, count: 3 }
@@ -24,6 +26,7 @@ reveal: story_patrol_c
 Raiders are working the shipping lanes. Destroy three of them.
 
 # [Report In](story_patrol_c)
+= Step 3 of 3. Docking, and the payout that closes the chain.
 ---
 state: secret
 on_dock: {}
