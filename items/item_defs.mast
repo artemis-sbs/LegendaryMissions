@@ -196,3 +196,23 @@ pickup_store_if_no_trigger: false
         blob.set("system_damage", 8, sbs.SHPSYS.WEAPONS)
         blob.set("system_damage", 8, sbs.SHPSYS.ENGINES)
     ->END
+
+=== prefab_item_escape_pod
+metadata:``` yaml
+type: item/quest/rescue
+key: escape-pod
+display_text: Escape Pod
+art: escape-pod
+mode: quest
+targets: ship, cockpit
+desc: A life-support capsule. Carry it home - dock it to deliver whoever is inside.
+```
+    # A QUEST item, not an upgrade: it is carried and delivered, never activated, so the
+    # body is empty. `item/quest/...` keeps it out of the random scatter
+    # (terrain_spawn_items samples upgrade/resource only) and off the Upgrades tab, and
+    # omitting `price` keeps it out of station markets.
+    #
+    # The art matters: escape-pod carries interactionradius 603 in shipData, which is what
+    # makes //collision/interactive fire. Without a registered art item_spawn falls back to
+    # a mesh with NO interaction radius, and the pod becomes uncollectable - see PRM-1.
+    ->END

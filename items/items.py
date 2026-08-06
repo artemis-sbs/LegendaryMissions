@@ -48,9 +48,10 @@ def item_describe(lbl):
 def items_upgrade_tab_list(ship_id):
     """Rows for the Upgrades console tab (item_gui.mast): the ship's owned
     activatable items, plus any consumable still counting down (its `have` may be
-    0 after activation) so the timer stays visible. Trade goods are cargo (sold
-    at markets), not upgrades, so they are excluded. Each row is a dict carrying
-    live cooldown state; the tab rebuilds the list each repaint."""
+    0 after activation) so the timer stays visible. Two categories are excluded
+    because they are not activatable: `trade` goods are cargo (sold at markets),
+    and `quest` items are carried and delivered (an escape pod). Each row is a
+    dict carrying live cooldown state; the tab rebuilds the list each repaint."""
     rows = []
     for lbl in items_get_list():
         k = lbl.get_inventory_value("key")
@@ -58,7 +59,8 @@ def items_upgrade_tab_list(ship_id):
         ready = is_timer_finished(ship_id, "item_cd_" + k)
         if have <= 0 and ready:
             continue
-        if "trade" in (lbl.get_inventory_value("type", "") or ""):
+        cats = (lbl.get_inventory_value("type", "") or "").split("/")
+        if "trade" in cats or "quest" in cats:
             continue
         rows.append({
             "key": k,
