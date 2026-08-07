@@ -19,7 +19,14 @@ if CAN_CHANGE_CONSOLE:
 
 ==== on_change_console
     jump select_console if not GAME_ENDED
-    ->END
+    # Once the game has ended there is no console selection to go to - but ->END here
+    # killed the client's ONE gui task, and that task was the results screen (parked in
+    # `await gui()` in show_game_results_gui). With nothing presenting, the last frame
+    # stayed up and every tab stopped responding: it read as a total GUI lockup, though
+    # the engine, the sim and every other client were fine.
+    # Go back to the results screen instead. The button does nothing visible, which is
+    # what the guard intended, and the tabs keep working.
+    jump show_game_results_gui
 
 #
 # Expects shared data 

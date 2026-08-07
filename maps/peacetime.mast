@@ -501,9 +501,17 @@ Properties:
     ship1_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")  
     ship2_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")  
     ship3_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")  
-    comms_receive(f"""Ambassador Florbin has been kidnapped! We believe they were smuggled out in a cargo container. The last three ships to leave were:^^{investigate_msg}^^If you hurry, you might be able to catch them!^^The cargo ships travel from station to station, transferring cargo at each stop, so you may have to follow their flight plan, visit different stations, and interview people to get clues. Someone may have noticed something odd or suspicious.^^When you find the Ambassador, bring him back to DS 1.^""", title="Ambassador Kidnapped", title_color="orange")
-    + "Cargo Manifest {ship1_cargo1[0]}" cargo_manifest_ship1 
-    + "Cargo Manifest {ship2_cargo1[0]}" cargo_manifest_ship2 
+    # Send the briefing ONCE per ship - a comms route body re-runs whenever the menu is
+    # rebuilt, and pressing a manifest button below rebuilds it, so an unguarded
+    # comms_receive re-sent "Ambassador Kidnapped" on every manifest press (issue #687).
+    # Same defect and same fix as maps/florbin_case.mast.
+    briefed = get_inventory_value(COMMS_ORIGIN_ID, "kidnap_briefed", 0)
+    if briefed == 0:
+        set_inventory_value(COMMS_ORIGIN_ID, "kidnap_briefed", 1)
+        comms_receive(f"""Ambassador Florbin has been kidnapped! We believe they were smuggled out in a cargo container. The last three ships to leave were:^^{investigate_msg}^^If you hurry, you might be able to catch them!^^The cargo ships travel from station to station, transferring cargo at each stop, so you may have to follow their flight plan, visit different stations, and interview people to get clues. Someone may have noticed something odd or suspicious.^^When you find the Ambassador, bring him back to DS 1.^""", title="Ambassador Kidnapped", title_color="orange")
+    + !0 "Back" //comms
+    + "Cargo Manifest {ship1_cargo1[0]}" cargo_manifest_ship1
+    + "Cargo Manifest {ship2_cargo1[0]}" cargo_manifest_ship2
     + "Cargo Manifest {ship3_cargo1[0]}" cargo_manifest_ship3
 
 ===== cargo_manifest_ship1 =====

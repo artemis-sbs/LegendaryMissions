@@ -209,7 +209,14 @@ gui_reroute_clients("client_main")
         presets = game_code_presets_for_map(WORLD_SELECT.path)
         preset_labels = [p["name"] for p in presets]
         gui_row("row-height: 30px;")
-        preset_dd = gui_drop_down(f"text: Presets ({len(presets)}); list: {','.join(preset_labels)}", var="GAME_CODE_PRESET")
+        # Show the SELECTED preset, like every other dropdown in the mission
+        # ($text: {VAR}). This was the literal string "Presets (N)", so whenever
+        # GAME_CODE_PRESET did not resolve to a list entry the widget fell back to that
+        # label - and players read it as an option that was not in the list ("Presets (3)"
+        # with three named presets). Interpolated inline rather than via an intermediate
+        # variable: a bare MAST string assignment is re-run through f-string formatting,
+        # and a preset name is user-typed text that may contain a brace.
+        preset_dd = gui_drop_down(f"$text: {GAME_CODE_PRESET or 'Presets'}; list: {','.join(preset_labels)}", var="GAME_CODE_PRESET")
         on gui_message(preset_dd):
             for p in presets:
                 if p["name"] == preset_dd.value:

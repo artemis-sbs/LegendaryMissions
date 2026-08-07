@@ -149,7 +149,17 @@ shared FB_TEXT = {}
     ship3_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")
     # Prose is the `briefing` template (## Florbin Text); {suspects} fills from the task var.
     suspects = investigate_msg
-    comms_receive(FB_TEXT.get("briefing"), title="Ambassador Kidnapped", title_color="orange")
+    # Send the briefing ONCE per ship. A comms route body re-runs every time the menu is
+    # rebuilt - and pressing one of the manifest buttons below rebuilds it - so an
+    # unguarded comms_receive here re-sent "Ambassador Kidnapped" on every manifest
+    # press. That is issue #687: the duplicate is the BRIEFING, triggered by an
+    # unrelated button. Only menu construction belongs in a route body; a one-time
+    # narrative beat needs a guard.
+    fb_briefed = get_inventory_value(COMMS_ORIGIN_ID, "fb_briefed", 0)
+    if fb_briefed == 0:
+        set_inventory_value(COMMS_ORIGIN_ID, "fb_briefed", 1)
+        comms_receive(FB_TEXT.get("briefing"), title="Ambassador Kidnapped", title_color="orange")
+    + !0 "Back" //comms
     + "Cargo Manifest {ship1_cargo1.ship}" fb_cargo_manifest {"ckey":"ship1_cargo1"}
     + "Cargo Manifest {ship2_cargo1.ship}" fb_cargo_manifest {"ckey":"ship2_cargo1"}
     + "Cargo Manifest {ship3_cargo1.ship}" fb_cargo_manifest {"ckey":"ship3_cargo1"}
