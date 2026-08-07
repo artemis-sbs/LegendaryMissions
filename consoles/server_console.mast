@@ -279,6 +279,20 @@ Main:
 
 
 ===== start ======
+    # AUTO_START (headless / dev launch) can reach here BEFORE the story's top-level
+    # `main` has finished: @map labels register at COMPILE time, so the console is ready
+    # to launch while the `default shared` assignments in main have not run. Launching
+    # then emits game_started against a story with no shared state, so any route whose
+    # `if` reads one raises - autoplay's
+    # `//signal/game_started if SETTINGS.get("AUTO_PLAY", ...)` died with
+    # `name 'SETTINGS' is not defined`. A human never hits it: they click Start long
+    # after main. So settle only on the automated path, and only here on the launch -
+    # NOT in show_server_menu, where waiting stalls the server GUI task itself.
+    #
+    # delay_app (wall clock), not delay_sim: the start screen's sim is PAUSED, so a sim
+    # delay never fires - the same reason game_code_reload above uses delay_app.
+    if AUTO_START:
+        await delay_app(1)
     # sim_create()
     sim_resume()
     #
