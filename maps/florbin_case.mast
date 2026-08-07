@@ -159,6 +159,13 @@ shared FB_TEXT = {}
     if fb_briefed == 0:
         set_inventory_value(COMMS_ORIGIN_ID, "fb_briefed", 1)
         comms_receive(FB_TEXT.get("briefing"), title="Ambassador Kidnapped", title_color="orange")
+        # THIS is "Take the Case" - the crew hailing DS 1 and being briefed, which is what
+        # the step's text promises. It used to be bridged off FB_STATUS >= 1, but that is
+        # set during map setup (fb_investigation's first line), so the step completed
+        # itself about a second into the shift. The quest is shared, so whoever hails
+        # first opens it for everyone; quest_mark_complete is idempotent, so a second
+        # ship hailing later is harmless.
+        signal_emit("quest_signal", {"SIGNAL_NAME": "case_opened"})
     + !0 "Back" //comms
     + "Cargo Manifest {ship1_cargo1.ship}" fb_cargo_manifest {"ckey":"ship1_cargo1"}
     + "Cargo Manifest {ship2_cargo1.ship}" fb_cargo_manifest {"ckey":"ship2_cargo1"}

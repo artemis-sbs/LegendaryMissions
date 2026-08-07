@@ -139,8 +139,13 @@ Defaults:
 --- fqw_loop
     await delay_sim(1)
     cur = FB_STATUS
-    if cur >= 1 and prev_status < 1:
-        signal_emit("quest_signal", {"SIGNAL_NAME": "case_opened"})
+    # NOTE: `case_opened` is NOT bridged from FB_STATUS. FB_STATUS = 1 is the first line
+    # of fb_investigation, which runs during map setup - so bridging it here completed
+    # "Take the Case" about a second into the shift, before the crew could do anything,
+    # while its text still read "Contact DS 1 to open the investigation". FB_STATUS >= 1
+    # means "the investigation machinery is initialized" (stations tagged, records
+    # seeded), not "someone contacted DS 1". The signal is emitted from the comms route
+    # the player actually uses (//comms/fb_investigate_kidnapping in florbin_case.mast).
     if cur >= 2 and prev_status < 2:
         signal_emit("quest_signal", {"SIGNAL_NAME": "suspect_identified"})
     if cur >= 3 and prev_status < 3:
@@ -1008,3 +1013,4 @@ Defaults:
         signal_emit("show_game_results", None)
         ->END
     jump plw_loop
+
