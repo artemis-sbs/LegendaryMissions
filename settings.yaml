@@ -64,7 +64,7 @@ DOCKING:
 # see grid_theme.json
 GRID_THEME: 0
 
-DIFFICULTY: 8
+DIFFICULTY: 5
 
 WORLD_SELECT: "siege"
 
