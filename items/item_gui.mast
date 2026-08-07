@@ -19,7 +19,10 @@ gui_tab_add_top("upgrade")
     ship_id = sbs.get_ship_of_client(client_id)
     ctype = get_inventory_value(client_id, "CONSOLE_TYPE", "")
 
-    _items = items_upgrade_tab_list(ship_id)
+    # include_unowned: the tab doubles as a CATALOG, so the crew can read what an
+    # upgrade does before finding one - which the old upgrades screen did and this one
+    # had lost. Held items sort first; the rest are dimmed and cannot be activated.
+    _items = items_upgrade_tab_list(ship_id, include_unowned=True)
     # True while any shown item is still counting down - drives a live 1s repaint
     # so the timer visibly ticks (idle tabs only repaint on item signals).
     any_active = False
@@ -52,6 +55,7 @@ gui_tab_add_top("upgrade")
     _cd = _sel["cd"] if _sel is not None else ""
     _consoles = _sel["consoles"] if _sel is not None else ""
     _ready = _sel["ready"] if _sel is not None else True
+    _have = _sel["have"] if _sel is not None else 0
 
     # The selection survives a repaint by key (above); the VIEW needs carrying too.
     # This tab repaints harder than most: on selection, on either item signal, and
@@ -89,6 +93,10 @@ gui_tab_add_top("upgrade")
     gui_section(style="area: 47, 84, 95, 94;")
     if _sel is not None and not _ready:
         """color:#ff0; justify:center; $text: active - {_cd}"""
+    elif _sel is not None and _have <= 0:
+        # A catalog row: readable, not usable. Say why rather than showing a button
+        # that would be refused server-side anyway (item_activate checks `have`).
+        """color:#888; justify:center; $text: Not carried - find or buy one"""
     elif _sel is not None and (_consoles == "" or ctype in _consoles):
         act = gui_button("$text:Activate;justify:center;", data={"akey": upgrade_sel_key})
         on gui_message(act):

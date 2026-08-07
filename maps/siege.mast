@@ -279,6 +279,16 @@ GameCode:
     # the quest system (and shows on the results log), not a bespoke poll.
     # (task_end_game is left for the other maps that still use it.)
     quest_grant_amd(SHARED, document_get_amd_file(get_mission_dir_filename("maps/siege_quests.amd"), data_parser=amd_quest_data))
+    # Say what the clock MEANS this game, instead of naming the option that decides it.
+    # The authored line read "...(when Survive Clock is set to Loss)" - a server setting
+    # most players, and every convention player, will never see. Worse, on "Win" the
+    # clock quest can never fail (siege_watch fires siege_won on timeout), so telling
+    # the crew to beat a clock was actively misleading. Resolve it once, here, where the
+    # option is known.
+    if SIEGE_TIMEOUT == "Loss":
+        quest_set_key(SHARED, "beat_clock", "description", "Break the siege before the clock runs out. If time expires, the siege is lost.")
+    else:
+        quest_set_key(SHARED, "beat_clock", "description", "Hold the line. If the clock runs out with the siege unbroken, you have still held - and the siege ends in your favor.")
     task_schedule(siege_watch)
     task_schedule(siege_bonus_objectives)
     # A "continuous" boss (Trigger: continuous) keeps respawning waves from the start
@@ -413,4 +423,5 @@ brain:
 # Per-boss logic/comms lives in bosses/<key>.mast (co-located with bosses/<key>.amd),
 # imported by maps/__init__.mast: Ragnarok's Xorn defection -> bosses/ragnarok.mast;
 # the Continuous wave loop (siege_continuous) -> bosses/continuous.mast.
+
 

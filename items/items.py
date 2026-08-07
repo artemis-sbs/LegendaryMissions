@@ -15,6 +15,7 @@ from sbs_utils.procedural.sides import to_side_id
 from sbs_utils.procedural.signal import signal_emit
 from sbs_utils.procedural.timers import is_timer_finished, format_time_remaining
 from sbs_utils.procedural.gui import gui_row, gui_text
+from sbs_utils.helpers import gui_text_escape
 
 # Registry + spawning now live in core sbs_utils; re-export for backward compat.
 from sbs_utils.procedural.items import (  # noqa: F401
@@ -45,19 +46,29 @@ def item_describe(lbl):
     return desc
 
 
-def items_upgrade_tab_list(ship_id):
+def items_upgrade_tab_list(ship_id, include_unowned=False):
     """Rows for the Upgrades console tab (item_gui.mast): the ship's owned
     activatable items, plus any consumable still counting down (its `have` may be
     0 after activation) so the timer stays visible. Two categories are excluded
     because they are not activatable: `trade` goods are cargo (sold at markets),
     and `quest` items are carried and delivered (an escape pod). Each row is a
-    dict carrying live cooldown state; the tab rebuilds the list each repaint."""
+    dict carrying live cooldown state; the tab rebuilds the list each repaint.
+
+    ``include_unowned`` also lists every activatable item the mission defines, at
+    ``have`` 0, so the tab doubles as a CATALOG: a player can read what a Carapaction
+    Coil does before ever finding one. The pre-registry upgrades screen did that and
+    this one lost it - the descriptions were always here (`desc` on every item label),
+    they were just filtered out with the items.
+
+    Owned items sort first, so the tab still opens on what the ship can actually use;
+    the rest follow alphabetically as reference.
+    """
     rows = []
     for lbl in items_get_list():
         k = lbl.get_inventory_value("key")
         have = get_inventory_value(ship_id, k, 0)
         ready = is_timer_finished(ship_id, "item_cd_" + k)
-        if have <= 0 and ready:
+        if have <= 0 and ready and not include_unowned:
             continue
         cats = (lbl.get_inventory_value("type", "") or "").split("/")
         if "trade" in cats or "quest" in cats:
@@ -71,15 +82,27 @@ def items_upgrade_tab_list(ship_id):
             "ready": ready,
             "cd": "" if ready else format_time_remaining(ship_id, "item_cd_" + k),
         })
+    # Held (or still counting down) first, then the catalog, each alphabetical.
+    rows.sort(key=lambda r: (0 if (r["have"] > 0 or not r["ready"]) else 1, r["name"]))
     return rows
 
 
 def item_upgrade_row(item):
     """List-box row template for the Upgrades tab: name x count, marked active
-    while it is counting down."""
+    while it is counting down.
+
+    An item the ship does not hold is dimmed and shows no count - it is in the list to
+    be READ, not used. The name is escaped because it is authored text that reaches a
+    style string, where a `;` would end the property early.
+    """
     gui_row("row-height: 1.1em; padding:10px;")
+    have = item.get("have", 0)
+    name = gui_text_escape(item.get("name", "?"))
     tag = "" if item.get("ready", True) else "  (active)"
-    gui_text(f"$text:{item.get('name', '?')}  x{item.get('have', 0)}{tag};justify:left;")
+    if have > 0 or tag != "":
+        gui_text(f"$text:{name}  x{have}{tag};justify:left;")
+    else:
+        gui_text(f"$text:{name};justify:left;color:#888;")
 
 
 def item_upgrade_title():

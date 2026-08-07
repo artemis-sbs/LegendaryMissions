@@ -43,4 +43,8 @@ Critical: true
 Fail on signal: siege_time_lost
 Lose: Time ran out - the siege was not broken.
 ---
-Break the siege before the clock runs out (when Survive Clock is set to Loss).
+Break the siege before the clock runs out.
+
+// The live description is REPLACED at grant time by maps/siege.mast, which knows how the
+// Survive Clock option was set and says what the clock actually means this game. This
+// line is the fallback for anyone reading the file or granting the doc on its own.
