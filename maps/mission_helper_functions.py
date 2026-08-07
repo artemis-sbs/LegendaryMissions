@@ -424,3 +424,43 @@ def pr_landmark_by_key(records, key):
         if r.get("key") == key:
             return r
     return None
+
+
+def pr_job_holder(key):
+    """The first player ship holding the named job quest ACTIVE, or None.
+
+    `pr_job_active` answers "has anyone taken this?"; spawn-on-accept also needs to know
+    WHO, so a job's targets can arrive near the crew that accepted it instead of at fixed
+    coordinates. The playtest never found the gunnery range because it sat halfway across
+    the map from whoever took the job.
+    """
+    from sbs_utils.procedural.quest import quest_get_state, QuestState
+    from sbs_utils.procedural.roles import role
+    from sbs_utils.procedural.query import to_object_list
+    for p in to_object_list(role("__player__")):
+        if quest_get_state(p.id, key) == QuestState.ACTIVE:
+            return p
+    return None
+
+
+def pr_job_spawn_center(key, ahead, fx, fy, fz):
+    """Where to put a job's targets: `ahead` units in front of the crew that accepted it.
+
+    Falls back to the authored fixed point (fx, fy, fz) when nobody holds the job or the
+    ship has no usable heading, so a job always has somewhere to put its objects.
+
+    Relative placement also matters in multiplayer: each crew's work arrives near THEM
+    rather than every job piling into one corner of the map.
+    """
+    from sbs_utils.vec import Vec3
+    from sbs_utils.procedural.query import to_engine_object
+    holder = pr_job_holder(key)
+    if holder is None:
+        return Vec3(fx, fy, fz)
+    eo = to_engine_object(holder.id)
+    if eo is None:
+        return Vec3(fx, fy, fz)
+    try:
+        return eo.pos + (eo.forward_vector() * ahead)
+    except Exception:
+        return Vec3(fx, fy, fz)

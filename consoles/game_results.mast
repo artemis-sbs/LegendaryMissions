@@ -222,6 +222,13 @@ shared game_stats = ~~{
                 if qsel is not None and not gui_list_box_is_header(qsel):
                     q_sel_desc = qsel.get("desc")
                     q_desc.value = q_sel_desc
+                elif qsel is not None:
+                    # Selecting an ARC shows its description + step checklist here too -
+                    # same renderer as the in-game tab, so both logs read alike.
+                    q_sel_desc = quest_log_parent_summary(qsel)
+                    if q_sel_desc == "":
+                        q_sel_desc = "Select a quest to see its details."
+                    q_desc.value = q_sel_desc
 
     if RESULTS_TAB == "enemies":
         gui_row()

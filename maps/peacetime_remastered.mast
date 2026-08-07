@@ -262,10 +262,20 @@ Defaults:
 ===== pr_job_spawn =====
     match PR_SPAWN_KEY:
         case "job_gunnery":
-            # Inert drones squawking hostile IFF for a live-fire drill: no brain (they neither
-            # maneuver nor shoot back), raider side so Weapons can lock and fire.
-            for v in scatter.box(PR_JOB_COUNTS.get("drone", 5), 9000, 0, 9000, 2500, 400, 2500, centered=True):
-                npc_spawn(v.x, v.y, v.z, "Target Drone", "raider, target_drone", "cargo_ship", "behav_npcship")
+            # Condemned hulks squawking hostile IFF for a live-fire drill: no brain (they
+            # neither maneuver nor shoot back), raider side so Weapons can lock and fire.
+            # NAMED for what actually spawns - an outdated freighter hull being shot up.
+            # They were "Target Drone", which collides with the engine's DRONE weapon:
+            # the playtest expected torpedoes and took a long time to notice the ships.
+            # (Not "derelict" - this map already has one, the Ghost Freighter.)
+            #
+            # Placed in FRONT OF THE CREW that accepted the job rather than at fixed
+            # coordinates halfway across the map. Also the right shape for multiplayer:
+            # each crew's range arrives near them instead of every job stacking up in one
+            # corner. Falls back to the old fixed point if the holder cannot be resolved.
+            gun_at = pr_job_spawn_center("job_gunnery", 10000, 9000, 0, 9000)
+            for v in scatter.box(PR_JOB_COUNTS.get("drone", 5), gun_at.x, gun_at.y, gun_at.z, 2500, 400, 2500, centered=True):
+                npc_spawn(v.x, v.y, v.z, "Condemned Hulk", "raider, target_drone", "cargo_ship", "behav_npcship")
         case "job_rocks":
             rock_types = ship_data_plain_asteroid_keys()
             for v in scatter.box(PR_JOB_COUNTS.get("rock", 4), -11000, 0, 12000, 3500, 400, 3500, centered=True):

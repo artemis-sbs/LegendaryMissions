@@ -64,6 +64,14 @@ if QUEST_TAB_ENABLED:
     sel = qbox.get_value()
     if sel is not None and not gui_list_box_is_header(sel):
         sel_desc = sel.get("desc")
+    elif sel is not None:
+        # A selected ARC is a quest too - it has its own description - but it renders as
+        # a header, so the pane used to keep saying "Select a quest from the list".
+        # quest_log_parent_summary returns its description plus a step checklist, and ""
+        # for a bare Game/You/Ship group header, which really has nothing to show.
+        sel_desc = quest_log_parent_summary(sel)
+        if sel_desc == "":
+            sel_desc = "Select a quest from the list."
 
     gui_section(style="area: 38,45px, 100,90; background:#1572;")
     qdesc = gui_text_area("{sel_desc}", style="tag:q-desc;padding:10px,15px,10px,15px;")
@@ -79,6 +87,11 @@ if QUEST_TAB_ENABLED:
         quest_sel_index = qbox.get_selected_index()
         if sel is not None and not gui_list_box_is_header(sel):
             sel_desc = sel.get("desc")
+            qdesc.value = sel_desc
+        elif sel is not None:
+            sel_desc = quest_log_parent_summary(sel)
+            if sel_desc == "":
+                sel_desc = "Select a quest from the list."
             qdesc.value = sel_desc
         if quest_tab_controls_gate(CONSOLE_SELECT, sel, QUEST_ACCEPT_CONSOLES, QUEST_ENGAGE_ENABLED, QUEST_ENGAGE_CONSOLES).get("sig") != gate_sig:
             # Taken from THIS widget, before the jump. It holds the view and will

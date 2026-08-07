@@ -133,10 +133,21 @@ hangar_get_craft_data("terran")
         crafts = hangar_get_crafts_at(dock_choice)
 
     if len(crafts)>0:
+        # NOTE the `else: ride_choice = None` that used to live here cleared the
+        # selection whenever it was VALID - inverted, and a large part of why craft
+        # selection had "no consistent pattern" on re-entry: every rebuild dropped a
+        # good selection and the next one re-derived a different default.
         if ride_choice not in crafts:
-            ride_choice = crafts[0]
-        else:
-            ride_choice = None
+            # Nothing valid selected. Prefer the craft this client last FLEW (the rule
+            # chosen for PRM-28), so coming back from a sortie re-selects what you were
+            # in; fall back to the first in the list when it is gone - destroyed, or now
+            # at another dock. Picking a craft by hand still wins, because that sets
+            # ride_choice and this branch only runs when there is nothing valid.
+            last_flown = to_space_object(get_inventory_value(client_id, "hangar_last_flown", None))
+            if last_flown is not None and last_flown in crafts:
+                ride_choice = last_flown
+            else:
+                ride_choice = crafts[0]
     
 
     # Persist the (possibly reset) selection back as ids for the next rebuild.
@@ -390,6 +401,9 @@ hangar_get_craft_data("terran")
     jump show_hangar if not hangar_launch_craft(to_id(ride_select), client_id)
 
     sbs.assign_client_to_ship(client_id,to_id(ride_select))
+    # Remember what we flew, so the hangar re-selects it when this client comes back
+    # (PRM-28). Stored per CLIENT, not per ship: it is that player's seat that returns.
+    set_inventory_value(client_id, "hangar_last_flown", to_id(ride_select))
     set_inventory_value(ride_select, "client_id", client_id)
     set_dedicated_link(client_id, "craft_id", ride_select)
     sbs.send_grid_selection_info(ride_select.id, "", "white", "")
