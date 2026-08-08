@@ -63,6 +63,9 @@ if CAN_CHANGE_CONSOLE:
         ship_type = PLAYER_LIST[0].art_id
 
     client_select_ship = ship_name.lower()
+    # WHICH ship, by identity. The name is kept for display and for the launch-argument
+    # form (which carries only a name), but the assignment reads this - see #443.
+    client_select_ship_id = PLAYER_LIST[0].id if len(PLAYER_LIST)>0 else None
     ship_type_def = ship_type
 
     shared ship_list = ""
@@ -102,6 +105,10 @@ if CAN_CHANGE_CONSOLE:
             console_ready = True
             console_read_only = True
             client_select_ship = _ship
+            # A launch argument names a ship and knows nothing about ids, so the id
+            # captured from the picker must be dropped - otherwise it would win and the
+            # argument would be silently ignored.
+            client_select_ship_id = None
             jump console_force_mode
             break
                 
@@ -180,6 +187,7 @@ if CAN_CHANGE_CONSOLE:
         ship_type = ship_type_def
         ship_name = PLAYER_LIST[client_selected_index].name
         client_select_ship = ship_name.lower()
+        client_select_ship_id = PLAYER_LIST[client_selected_index].id
 
     #gui_activate_console("select_console")
 
@@ -364,10 +372,19 @@ if CAN_CHANGE_CONSOLE:
             client_selected_index = ship_select_lb.get_selected_index()
             if client_select_ship_item is not None:
                 client_select_ship = client_select_ship_item.name
+                # The list hands back the SHIP, so take its identity here - the one place
+                # that certainly knows which of two same-named ships was clicked (#443).
+                client_select_ship_id = client_select_ship_item.id
                 ship_name = client_select_ship
                 ship_type = client_select_ship_item.art_id
                 gui_update("sh_ship_picker", ship_type)
                 _display.value = ship_name
+                # #545: the editable box has to be told too. It is bound with var=
+                # "ship_name", and setting the MAST variable stopped being enough in
+                # Cosmos 1.2.7 - so switching ships left the OLD name in the box, and
+                # typing one character renamed the NEW ship to it. `_display` beside it
+                # was already being pushed this way; the input was simply missed.
+                _input.value = ship_name
                 # Same absolute-region ghost as the rename path: re-present the
                 # whole ship_sec_not region so its clear runs before the redraw.
                 gui_represent(ship_sec_not)
@@ -457,27 +474,38 @@ if CAN_CHANGE_CONSOLE:
     if CONSOLE_SELECT is None or client_select_ship is None:
         jump select_console
 
-    _ship_id= None
-    for player_ship in to_object_list(role("__PLAYER__")):
-        if player_ship.name.lower() == client_select_ship.lower():
-            _ship_id = player_ship.id
-
-## unlink previous ship
-            old_ship_id = sbs.get_ship_of_client(client_id)
-            unlink(old_ship_id, "consoles", client_id)
-
-            sbs.assign_client_to_ship(client_id, _ship_id)
-            assign_client_to_alt_ship(client_id, 0)
-            #set_inventory_value(client_id, "assigned_ship", _ship_id)
-            #
-            # Clear any alt ship e.g. comms give orders
-            #
-            set_inventory_value(client_id, "2dview_alt_ship", 0)
-            link(_ship_id, "consoles", client_id)
-            
-
+    # WHICH ship this console joins. By ID where we have one (#443).
+    #
+    # This used to match on NAME, and the loop never broke - so with two ships called
+    # "Artemis" it ran the whole assignment once per match and the LAST one won. You
+    # selected ship 1 and woke up on ship 2. It cost a live event: clients joined ships
+    # they had not chosen, and engineering showed one hull's shadows over another's nodes.
+    default client_select_ship_id = None
+    _ship_id = None
+    if client_select_ship_id is not None and object_exists(client_select_ship_id):
+        _ship_id = client_select_ship_id
+    else:
+        # No id: a console launched by argument (`helm;Artemis`) carries only a name, and
+        # a renamed or destroyed ship can outlive its id. Still by name, but the FIRST
+        # match wins and the loop stops - deterministic, and one assignment rather than N.
+        for player_ship in to_object_list(role("__PLAYER__")):
+            if player_ship.name.lower() == client_select_ship.lower():
+                _ship_id = player_ship.id
+                break
 
     jump select_console if _ship_id is None
+
+    ## unlink previous ship
+    old_ship_id = sbs.get_ship_of_client(client_id)
+    unlink(old_ship_id, "consoles", client_id)
+
+    sbs.assign_client_to_ship(client_id, _ship_id)
+    assign_client_to_alt_ship(client_id, 0)
+    #
+    # Clear any alt ship e.g. comms give orders
+    #
+    set_inventory_value(client_id, "2dview_alt_ship", 0)
+    link(_ship_id, "consoles", client_id)
 
 
     #
