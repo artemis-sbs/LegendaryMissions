@@ -117,6 +117,8 @@ On accept: toast Job accepted: Mercy Run
 On complete: toast Job complete: Mercy Run
 Done when: signal mercy_reached
 Fails when: 6 minutes
+Speaker: mercy_lm
+Signal says: MAYDAY - AUTOMATED BEACON. LIFE SUPPORT {time} FROM FAILURE.
 Reward: 250 credits
 Penalty: 100 credits
 ---

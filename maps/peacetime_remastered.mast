@@ -107,6 +107,13 @@ Defaults:
     # pr_jobs_setup, which reads this shared doc).
     shared PR_DOC = document_get_amd_file(get_mission_dir_filename("maps/peacetime_remastered.amd"), data_parser=amd_mission_data)
 
+    # Who speaks when a timed job has no Speaker: of its own. Harkin is the task-force
+    # commander and already has a face in the Cast, so a deadline reminder arrives from
+    # someone the crew has met rather than from nobody. The library never names a voice
+    # itself - it has no business knowing which faction is in charge - so a mission that
+    # skips this simply gets no reminders.
+    quest_dispatch_voice("admiral")
+
     # The peacekeeping side-jobs (the quest board) and the all-ships-lost loss watch.
     task_schedule(pr_jobs_setup)
     task_schedule(pr_lose_watch)

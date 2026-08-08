@@ -101,6 +101,9 @@
 --- watch
     await delay_sim(2)
     quest_tick_fail_after()
+    # Reminders ride the deadline fail_after just anchored, so this must follow it -
+    # otherwise the first reminder is a tick late, which on a 30-second job matters.
+    quest_tick_countdown_reminders()
     quest_tick_complete_after()
     quest_tick_reach()
     jump watch
