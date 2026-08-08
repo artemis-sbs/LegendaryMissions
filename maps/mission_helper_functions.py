@@ -464,3 +464,17 @@ def pr_job_spawn_center(key, ahead, fx, fy, fz):
         return eo.pos + (eo.forward_vector() * ahead)
     except Exception:
         return Vec3(fx, fy, fz)
+
+
+def pr_salvage_award(ship, units):
+    """Add fabrication salvage to a ship's hold.
+
+    Salvage is stored per-ship under the plain inventory key "salvage" - the same key an
+    item pickup credits and the Fabricator spends (LegendaryMissions/fabrication). So a
+    mission granting it directly, a wreck cache and a station purchase all land in one
+    place and need no reconciliation.
+    """
+    from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+    from sbs_utils.procedural.query import to_id
+    sid = to_id(ship)
+    set_inventory_value(sid, "salvage", get_inventory_value(sid, "salvage", 0) + int(units))

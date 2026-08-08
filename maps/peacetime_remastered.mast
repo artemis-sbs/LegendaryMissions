@@ -609,6 +609,11 @@ Defaults:
             if salvage_owner != 0:
                 quest_credit_signal(salvage_owner, "salvage_delivered")
                 pr_award(salvage_owner, 80)
+                # The refinery PROCESSES the hulk - so it pays in material as well as
+                # credits. This is the mission's main salvage source, and it is the one
+                # the job names in its description: three hulks fund a full sensor picket
+                # (8 per beacon, 24 for the job) with a little over.
+                pr_salvage_award(salvage_owner, 10)
             else:
                 signal_emit("quest_signal", {"SIGNAL_NAME": "salvage_delivered"})
             remove_role(h, "salvage_hulk")

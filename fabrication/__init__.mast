@@ -1,4 +1,5 @@
 import recipes.py
+import salvage.mast
 import fabrication.mast
 import beacon.mast
 import beacon_workflow.mast

@@ -1,0 +1,79 @@
+#
+# Salvage: the Fabricator's raw material, defined as a normal ITEM.
+#
+# It used to be a currency with no mint. The fabricator SPENT it
+# (fabrication.mast) and this addon's header said "the mission grants it" - but no
+# mission ever did, so every recipe was unbuildable and the jobs that ask for a beacon
+# could not be completed at all. See PRM-13.
+#
+# Defining it as an item/resource rather than a bare inventory counter is what makes all
+# three sources work with no glue: item pickups credit `set_inventory_value(ship, key, ...)`
+# under the item's own key, which IS the key the fabricator reads, and any item with a
+# positive `price` is automatically stocked by every station market. So:
+#
+#   scavenged  - a wreck yields a cache when opened (damage/damage.mast)
+#   processed  - a refinery pays it for a towed hulk (the mission's own job)
+#   bought     - station market, at a price that makes it the impatient route
+#
+# WHERE it comes from is deliberately left to the mission: an author decides whether
+# their setting scavenges, mines or buys. This addon only guarantees the material exists
+# and can be carried.
+#
+# Priced above what a beacon returns on purpose. A Sensor Beacon costs 8, so buying a
+# 3-beacon picket runs to ~480cr against a 220cr job reward - affordable in a hurry, a
+# loss if it is your only route. Scavenging is meant to be the way; the market is the
+# floor that stops a crew being hard-blocked.
+
+=== prefab_item_salvage
+metadata:``` yaml
+type: item/resource/salvage
+key: salvage
+display_text: Salvage
+art: container_4a
+mode: resource
+targets: ship, cockpit
+price: 20
+tier: 1
+desc: Reclaimed hull plate, wiring and parts. The Fabricator's raw material.
+```
+    ->END
+
+
+#
+# Bio sample: the Bio Beacon's other input, and it had exactly the same problem as
+# salvage - named by a recipe, produced by nothing, so every Bio Beacon was unbuildable
+# and the wildlife jobs that need one could not be finished (PRM-13).
+#
+# Harvested from a dead creature. That is the one source that reads as obvious from the
+# item's name, and it puts the material behind an activity the mission already has
+# (monsters) rather than inventing an errand for it.
+
+=== prefab_item_bio_sample
+metadata:``` yaml
+type: item/resource/bio
+key: bio_sample
+display_text: Bio Sample
+art: container_small_6a
+mode: resource
+targets: ship, cockpit
+price: 60
+tier: 1
+desc: Tissue and fluid recovered from a space creature. Programs a Bio Beacon's ultrawave carrier.
+```
+    ->END
+
+
+#
+# A killed creature leaves a sample. //damage/killed, not //damage/destroy: killed is the
+# COMBAT event, so a creature removed for any other reason (culled at map end, deleted by
+# the director) does not quietly mint materials.
+#
+# Guarded on the item existing so the route is inert in a mission that loads a bestiary
+# without this addon.
+//damage/killed if has_role(DAMAGE_SELECTED_ID, "monster")
+    ->END if item_get("bio_sample") is None
+    bio_obj = to_object(DAMAGE_SELECTED_ID)
+    ->END if bio_obj is None
+    bio_pos = bio_obj.pos
+    item_spawn("bio_sample", bio_pos.x, bio_pos.y, bio_pos.z)
+    ->END

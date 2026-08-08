@@ -48,11 +48,20 @@ default shared ITEM_PICKUP_TRIGGER = {}
         ->END if not store
 
     # Credit inventory + announce + remove the pickup.
+    #
+    # One pickup can be worth SEVERAL units (item_spawn(..., qty=n)) - a salvage cache, an
+    # ore seam. Without that, a bulk resource needs one object per unit: a job wanting 24
+    # salvage would scatter 24 collectibles across the map. Absent means 1, so every
+    # pickup that predates this behaves exactly as before.
+    item_qty = get_inventory_value(COLLISION_ORIGIN_ID, "item_qty", 1)
     have = get_inventory_value(COLLISION_SELECTED_ID, item_key, 0)
-    set_inventory_value(COLLISION_SELECTED_ID, item_key, have + 1)
-    signal_emit("item_collected", {"holder_id": COLLISION_SELECTED_ID, "key": item_key})
+    set_inventory_value(COLLISION_SELECTED_ID, item_key, have + item_qty)
+    signal_emit("item_collected", {"holder_id": COLLISION_SELECTED_ID, "key": item_key, "qty": item_qty})
     item_name = item_meta(item_key, "display_text", item_key)
-    overlay_toast(f"Pickup: {item_name}", to=COLLISION_SELECTED_ID)
+    if item_qty > 1:
+        overlay_toast(f"Pickup: {item_name} x{item_qty}", to=COLLISION_SELECTED_ID)
+    else:
+        overlay_toast(f"Pickup: {item_name}", to=COLLISION_SELECTED_ID)
     delete_object(COLLISION_ORIGIN_ID)
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
 

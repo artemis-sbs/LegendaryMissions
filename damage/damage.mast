@@ -62,6 +62,19 @@
         prefab_spawn("prefab_piranha_swarm", None, wr_posx, wr_posy, wr_posz)
         ->END
 
+    # SALVAGE. Opening a wreck always yields raw material, independent of the upgrade roll
+    # below - that roll can be a flat zero (UPGRADE_SELECT "none"), which left shooting a
+    # wreck worth nothing at all on most settings, and left the Fabricator with no source
+    # of the one material it spends (PRM-13).
+    #
+    # One cache carrying several units, not several pickups: a beacon costs 8, so
+    # per-unit collectibles would turn one wreck into a litter of objects to fly through.
+    #
+    # Guarded on the item existing, so this stays correct for a mission that loads the
+    # damage addon WITHOUT fabrication - no dependency, it simply drops nothing.
+    if item_get("salvage") is not None:
+        item_spawn("salvage", wr_posx, wr_posy, wr_posz, qty=random.randint(3, 6))
+
     # From the Start Mission screen, UPGRADE_SELECT determines how frequently upgrades are dropped.
 
     upg_dropchance = 0

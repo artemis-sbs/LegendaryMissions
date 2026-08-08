@@ -60,7 +60,7 @@ The further away an object is the longer it takes to scan.
 
 ## [Communications](comms?icon_index=34)
 
-The Communications console has a text scroll of incoming and outgoing messages, and is the voice of the ship.
+The Communications console is the voice of the ship. Incoming and outgoing traffic appears in the ship's log: the newest line always sits in the strip under the ship data panel, and the full history is on the Log tab of that panel, filtered into Ship and Mission.
 <br>
 Comms can taunt enemies, choosing from many biting insults, but each enemy will respond to only one taunt. The wrong taunt will get the enemy to laugh at you and cut off communications, so ask Science for advice on which taunt to use.
 <br>
@@ -76,3 +76,38 @@ The Flight Hangar allows player the wish to fly single craft (fighter, shuttle, 
 <br>
 Select from several station, and ship hangar. Grab a craft. Select a mission and Fly.
 
+
+
+# [Fabrication](fabrication?icon_index=28)
+
+Engineering can BUILD things. The Fabricate tab lists recipes; a build spends materials, takes time, and delivers the finished item to the ship.
+
+## [How a build works](fabrication_loop?icon_index=28)
+
+Four steps, and each one happens at a different console - fabrication is a crew activity, not an Engineering solo.
+<br>
+1. GATHER the materials. They are carried by the ship, so any console's pickup counts.
+<br>
+2. FABRICATE on Engineering's Fabricate tab. This spends the materials and starts a build timer - the item is not ready immediately.
+<br>
+3. DELIVER the finished item. A beacon goes to Weapons, which is what loads it into a tube.
+<br>
+4. DEPLOY it. Weapons fires the beacon where it is wanted.
+
+> [!WARNING] A beacon deployed with nothing delivered
+> Firing a beacon tube with no delivered program launches a default bio beacon, not the one you meant. If a job wants a SENSOR beacon, it has to be fabricated and delivered first - a recovered probe puts a round in the tube but carries no program.
+
+## [Where materials come from](fabrication_materials?icon_index=107)
+
+SALVAGE is the common raw material - reclaimed plate, wiring and parts.
+<br>
+Shoot open a wreck and collect the cache it leaves. Wrecks are left behind by destroyed ships, and opening one is worth doing even when it holds no upgrade.
+<br>
+Tow a salvage hulk to a refinery, where a mission provides one. The refinery pays in processed material as well as credits.
+<br>
+Buy it at a station market. This always works and is never a hunt, but it is the expensive route - scavenging is meant to be the cheap one.
+<br>
+A BIO SAMPLE is recovered from a dead space creature, and stations sell those too.
+
+> [!TIP] Check the cost before you fly
+> The Fabricate tab shows each recipe's cost next to how much you are carrying, so you can see what you are short of without guessing.

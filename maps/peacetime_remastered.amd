@@ -155,7 +155,7 @@ On complete: toast Job complete: Sensor Net
 Done when: signal 3 sensor_deployed
 Reward: 220 credits
 ---
-Establish a sensor picket. Have Engineering fabricate Sensor Beacons on the Fabricate tab and deliver them to Weapons, then deploy three across the patrol lanes.
+Establish a sensor picket. Each Sensor Beacon costs 8 salvage: tow a hulk to the Refinery Platform and it pays out in processed material, or shoot open a wreck and collect the cache. A station market will sell you salvage too, at a price. Engineering fabricates the beacons on the Fabricate tab and delivers them to Weapons, who deploys three across the patrol lanes.
 
 ### [Recover Lost Probes](job_probes)
 ---
@@ -175,7 +175,7 @@ On complete: toast Job complete: Clear the Grazing Herd
 Done when: signal herd_cleared
 Reward: 180 credits
 ---
-A pod of grazers has drifted into a shipping lane. Do NOT fire on them - they turn hostile if provoked. Fabricate a Bio Beacon set to REPEL grazers, deploy it among the pod, and drive them clear.
+A pod of grazers has drifted into a shipping lane. Do NOT fire on them - they turn hostile if provoked. A Bio Beacon costs 5 salvage and 1 bio sample. Salvage comes from the Refinery Platform, from wrecks, or from a station market; a bio sample is recovered from a dead space creature - a station will sell you one if the lane is quiet. Set the beacon to REPEL grazers, deploy it among the pod, and drive them clear.
 
 ### [Bait the Ravener](job_ravener)
 ---
@@ -185,7 +185,7 @@ On complete: toast Job complete: Bait the Ravener
 Done when: signal predator_baited
 Reward: 350 credits
 ---
-A Ravener is loose in the lanes. It FEEDS on weapon fire - shooting only heals it - so do not engage. Fabricate a Bio Beacon set to ATTRACT the ravener, deploy it beside the black hole, and let the hole do the rest.
+A Ravener is loose in the lanes. It FEEDS on weapon fire - shooting only heals it - so do not engage. A Bio Beacon costs 5 salvage and 1 bio sample (see Salvage Sweep, or open a wreck). Set it to ATTRACT the ravener, deploy it beside the black hole, and let the hole do the rest.
 
 // ---- Grav-tether haul jobs. Non-combat "collect & deliver" work for the tractor beam: tow a
 // dead-in-space barge home, and haul salvage hulks to the refinery. Weapons hold-clicks the
@@ -210,7 +210,7 @@ On complete: toast Job complete: Salvage Sweep
 Done when: signal 3 salvage_delivered
 Reward: 240 credits
 ---
-Wrecked hulls are cluttering the lane. Grav-tether each salvage hulk and tow it to the Refinery Platform for processing.
+Wrecked hulls are cluttering the lane. Grav-tether each salvage hulk and tow it to the Refinery Platform for processing - the refinery pays in credits AND in salvage, which is what Engineering's Fabricator runs on.
 
 ### [Rescue the Lifepod](job_lifepod)
 ---
