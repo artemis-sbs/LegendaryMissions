@@ -34,10 +34,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
         gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
 
-        # The space the text waterfall used to occupy: one line, the latest message, in a
-        # text area this console owns. The waterfall was declared by gui_console and could
-        # not be styled from script. The history is the log tab above. LOG_PANEL_PLAN.md
-        gui_row("row-height: 40px;")
+        # The space the text waterfall used to occupy, directly under ship data on every
+        # console so the crew always looks in ONE place for the latest line. The waterfall
+        # was declared by gui_console and could not be styled from script; this is the same
+        # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+        gui_row("row-height: 4em;")
         gui_log_tail()
         # if is_dev_build():
         #     gui_info_panel_add("upgrades", 105, gui_panel_upgrade_list,None)
@@ -128,6 +129,13 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
     gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
 
+    # The space the text waterfall used to occupy, directly under ship data on every
+    # console so the crew always looks in ONE place for the latest line. The waterfall
+    # was declared by gui_console and could not be styled from script; this is the same
+    # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+    gui_row("row-height: 4em;col-width:280px;")
+    gui_log_tail()
+
     gui_section(style="area:0,45px,100,100;")
     with gui_sub_section():
         gui_row()
@@ -157,16 +165,6 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_blank()
         gui_row()
         gui_layout_widget("science_sorted_list")
-        gui_row("row-height: 10;")
-        # The waterfall's slot, drawn by US. The engine widget cannot be styled from
-        # script and its background is too dark; this is the same traffic in a text area
-        # the console owns. Ambient half of the log - the last couple of lines, always
-        # visible while you are reading ship data. The history is the info-panel tab.
-        #
-        # The text waterfall is gone (LOG_PANEL_PLAN.md) - it could not be styled from
-        # script. gui_log_tail() is the same traffic in a text area this console owns.
-        # No off-screen push needed: gui_console no longer declares the widget at all.
-        gui_log_tail()
 
     on change follow_tag:
         ship = sbs.get_ship_of_client(client_id)
@@ -202,6 +200,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_info_panel_add("log", 112, gui_panel_log, None, gui_panel_log_tick)
         gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
         gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
+        # The space the text waterfall used to occupy, directly under ship data on every
+        # console so the crew always looks in ONE place for the latest line. The waterfall
+        # was declared by gui_console and could not be styled from script; this is the same
+        # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+        gui_row("row-height: 4em;")
+        gui_log_tail()
     with gui_sub_section():
         gui_row()
         # gui_section(style="area:285px,90px,800px,390px;")
@@ -227,10 +231,6 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_layout_widget("grid_control")
         gui_row()
         gui_layout_widget("grid_object_list")
-        gui_row("row-height: 5;")
-        # The text waterfall is gone (LOG_PANEL_PLAN.md) - it could not be styled from script.
-        # gui_log_tail() is the same traffic in a text area this console owns.
-        gui_log_tail()
 
 
     yield idle
@@ -253,10 +253,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
         gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
 
-        # The space the text waterfall used to occupy: one line, the latest message, in a
-        # text area this console owns. The waterfall was declared by gui_console and could
-        # not be styled from script. The history is the log tab above. LOG_PANEL_PLAN.md
-        gui_row("row-height: 40px;")
+        # The space the text waterfall used to occupy, directly under ship data on every
+        # console so the crew always looks in ONE place for the latest line. The waterfall
+        # was declared by gui_console and could not be styled from script; this is the same
+        # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+        gui_row("row-height: 4em;")
         gui_log_tail()
 
 //gui/normal_weap
@@ -276,10 +277,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
         gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
 
-        # The space the text waterfall used to occupy: one line, the latest message, in a
-        # text area this console owns. The waterfall was declared by gui_console and could
-        # not be styled from script. The history is the log tab above. LOG_PANEL_PLAN.md
-        gui_row("row-height: 40px;")
+        # The space the text waterfall used to occupy, directly under ship data on every
+        # console so the crew always looks in ONE place for the latest line. The waterfall
+        # was declared by gui_console and could not be styled from script; this is the same
+        # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+        gui_row("row-height: 4em;")
         gui_log_tail()
 
 //gui/normal_main
@@ -299,10 +301,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
         gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
 
-        # The space the text waterfall used to occupy: one line, the latest message, in a
-        # text area this console owns. The waterfall was declared by gui_console and could
-        # not be styled from script. The history is the log tab above. LOG_PANEL_PLAN.md
-        gui_row("row-height: 40px;")
+        # The space the text waterfall used to occupy, directly under ship data on every
+        # console so the crew always looks in ONE place for the latest line. The waterfall
+        # was declared by gui_console and could not be styled from script; this is the same
+        # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+        gui_row("row-height: 4em;")
         gui_log_tail()
 
 
