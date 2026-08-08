@@ -422,7 +422,11 @@ hangar_get_craft_data("terran")
     gui_activate_console("cockpit")
 
     gui_section(style="area:0,0,100,100;")
-    gui_image_stretch(get_mission_dir_filename("media/LegendaryMissions/hangar/cockpit_overlay"))
+    # media_shared, not get_mission_dir_filename: it resolves the mission's own media/ OR
+    # the unpacked shared pack, whichever has the art. The hardcoded path here said
+    # "media/LegendaryMissions/hangar/..." and broke when 257a00b flattened the source
+    # ("art lives once"), leaving IMAGE NOT FOUND with the mission name doubled in it.
+    gui_image_stretch(media_shared("hangar/cockpit_overlay"))
 
     gui_section(style="area: 0,11,100,105;")
     gui_layout_widget("3dview")
