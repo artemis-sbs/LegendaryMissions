@@ -27,7 +27,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # first on comms because it carries the most traffic. The waterfall is deliberately
         # still shown in the middle column: comms_broadcast writes BOTH surfaces during the
         # changeover, so the two can be read side by side before anything is retired.
-        gui_info_panel_add("log", 112, gui_panel_log, None)
+        gui_info_panel_add("log", 112, gui_panel_log, None, gui_panel_log_tick)
+        # Same store, filtered: Ship is the crew's own news (damage, systems,
+        # docking), Mission is objective and quest beats. Anything untagged still
+        # shows in Log, which is everything - so a subset tab can never hide a message.
+        gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
+        gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
         # if is_dev_build():
         #     gui_info_panel_add("upgrades", 105, gui_panel_upgrade_list,None)
         #     gui_info_panel_add("objective", 85, gui_panel_console_message,None)
