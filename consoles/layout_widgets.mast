@@ -23,6 +23,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # The log/replay tab: every card ever filed, re-readable. Cards only take
         # over the "message" tab when they interrupt (a button, or notify=True).
         gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
+        # The ship's LOG - the text waterfall's replacement (LOG_PANEL_PLAN.md), mounted
+        # first on comms because it carries the most traffic. The waterfall is deliberately
+        # still shown in the middle column: comms_broadcast writes BOTH surfaces during the
+        # changeover, so the two can be read side by side before anything is retired.
+        gui_info_panel_add("log", 112, gui_panel_log, None)
         # if is_dev_build():
         #     gui_info_panel_add("upgrades", 105, gui_panel_upgrade_list,None)
         #     gui_info_panel_add("objective", 85, gui_panel_console_message,None)
