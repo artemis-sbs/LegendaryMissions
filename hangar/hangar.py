@@ -591,7 +591,7 @@ def hangar_pilot_template(item):
     # Escape the user-entered call sign so ':' / ';' in it can't inject style (#569).
     gui_text(f"$text:{gui_text_escape(item.get('call_sign'))};justify: left;")
     gui_row("row-height: 1.0em;padding:6px;")
-    gui_text(f"$text:Sorties {item.get('sorties')}   Kills {item.get('kills')}   Tonnage {item.get('tonnage')}   Damage {item.get('damage')}   Objectives {item.get('objectives')};justify: left;font:gui-1")
+    gui_text(f"$text:Sorties {item.get('sorties')}   Kills {item.get('kills')}   Tonnage Destroyed {item.get('tonnage')}   Damage Dealt {item.get('damage')}   Objectives {item.get('objectives')};justify: left;font:gui-1")
 
 
 def hangar_pilot_title_template():
@@ -680,12 +680,36 @@ def hangar_get_crafts_at(dock_id):
     return crafts
 
 
+# Refit state on a craft ROW, so a whole hangar can be read at a glance instead of
+# selecting each craft to find out (PRM-29). Deliberately COARSE - "Refitting" or "Ready",
+# not a live countdown. The exact time is one selection away in the detail pane, and a
+# per-craft clock ticking in every row of a list is per-repaint work over the network for
+# a number nobody is watching to the second. State changes rarely; a countdown changes
+# every tick.
+_REFIT_READY = "Ready"
+_REFIT_BUSY = "Refitting"
+
+
+def hangar_craft_refit_state(craft):
+    """`Ready` / `Refitting`, or "" for a craft with no refit clock at all."""
+    from sbs_utils.procedural.timers import is_timer_set, is_timer_finished
+    cid = to_id(craft)
+    if cid is None or not is_timer_set(cid, "refit"):
+        return ""
+    return _REFIT_READY if is_timer_finished(cid, "refit") else _REFIT_BUSY
+
+
 def hangar_console_ship_template(item):
     gui_row("row-height: 1.0em;padding:13px;")
     gui_text(f"$text:{gui_text_escape(item.name)};justify: left;")
     t = item.get_inventory_value("CRAFT_TYPE", "Fighter")
+    state = hangar_craft_refit_state(item)
     gui_row("row-height: 1.0em;padding:13px;")
-    gui_text(f"$text:{t};justify: left;font:gui-1")
+    if state:
+        color = "#6c6" if state == _REFIT_READY else "#ca6"
+        gui_text(f"$text:{t}   {state};justify: left;font:gui-1;color:{color}")
+    else:
+        gui_text(f"$text:{t};justify: left;font:gui-1")
 
     
 

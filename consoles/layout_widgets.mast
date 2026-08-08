@@ -6,9 +6,6 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     jump mike_comms if COMMS_PROTOTYPE
 
     
-    gui_section(style="area:300px,30+50px, 700px,30+100px;")    
-    gui_layout_widget("radar_zoom_ctrl")
-            
     # Left
     gui_section(style="area:0,45px,100,100;")
     
@@ -69,6 +66,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     with gui_sub_section():
         gui_row("row-height:30;")
         gui_layout_widget("comms_waterfall")
+        # The zoom control belongs to the view it zooms: a 45px band directly above it,
+        # spanning the same width, which is what the cockpit does (hangar.mast). It used
+        # to sit in an absolute box of its own with no relationship to the view at all.
+        # 45px because the control is small and fixed - it does not want stretching.
+        gui_row("row-height:45px;")
+        gui_layout_widget("radar_zoom_ctrl")
         gui_row()
         gui_layout_widget("comms_2d_view")
         
@@ -138,6 +141,9 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 
     gui_section(style="area:0,45px,100,100;")
     with gui_sub_section():
+        # Same band above the view as comms and the cockpit.
+        gui_row("row-height:45px;")
+        gui_layout_widget("radar_zoom_ctrl")
         gui_row()
         gui_layout_widget("science_2d_view")
 
@@ -374,6 +380,8 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
             history_text = gui_text_area("", "click_text:"";click_background:#0000:")
             gui_hide(history_text)
 
+        gui_row("row-height:45px;")
+        gui_layout_widget("radar_zoom_ctrl")
         gui_row()
         gui_layout_widget("comms_2d_view")
 

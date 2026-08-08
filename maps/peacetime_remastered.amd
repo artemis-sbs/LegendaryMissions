@@ -97,7 +97,7 @@ On complete: toast Job complete: Rock Breakers
 Done when: signal 4 rock_cleared
 Reward: 150 credits
 ---
-Clear the hazard asteroids from the shipping lane.
+Clear the hazard asteroids from the shipping lane. The field is marked on the map as Hazard Rock Field - Science can select the marker at its centre to put the crew on it.
 
 ### [Board the Poacher](job_poacher)
 ---
@@ -132,7 +132,7 @@ On complete: toast Job complete: Customs Patrol
 Done when: signal 4 customs_cleared
 Reward: 120 credits
 ---
-Hail and clear the civilian traders for transit.
+Hail and clear the civilian traders for transit. They keep to the Shipping Lane, marked on the map.
 
 ### [Anomaly Survey](job_survey)
 ---
@@ -438,6 +438,25 @@ Tab: bio
 
 // ---- Fixed-position job objects (the poacher trawler + the stranded shuttle). Explicit Loc
 // (single system). The scattered drones/rocks/traders/anomalies stay in pr_jobs_setup.
+// ---- What a kill leaves behind, keyed by role. Without a table the library default
+// applies (a random trade good), which is how condemned hulks came to drop contraband on
+// a live-fire range - they are spawned hostile so Weapons can lock them (PRM-14).
+## [Drops](drops)
+
+### [Condemned Hulk](target_drone)
+---
+Drops: none
+---
+Practice targets on a gunnery range. Already stripped - they carry nothing worth taking.
+
+### [Raider](raider)
+---
+Drops: salvage x1-3, contraband 15%
+---
+A working raider: parts worth reclaiming, and now and then something it should not have
+been carrying.
+
+
 ## [Landmarks](landmarks)
 
 ### [Unregistered Trawler](poacher_lm)

@@ -2,12 +2,25 @@
 # Salvage: a destroyed raider drops a trade good, giving the player something to
 # sell at a station. Server-side route. Closes the credit loop with combat.
 #
+# An authored `Drops:` table WINS where one exists (procedural/amd_drops). The random
+# trade good stays the default for everything else, so a mission that authors nothing
+# behaves exactly as it always has - and a practice target can stop dropping contraband
+# by saying so, rather than by special-casing a role in here (PRM-14).
+#
+# Note `drops_table_for` distinguishes None from []: no table at all means "do what you
+# did before", an EMPTY table means "this one drops nothing". Collapsing the two would
+# make `Drops: none` a no-op.
+#
 //damage/destroy if is_hostile_to_players(DESTROYED_ID)
     salvage_obj = to_object(DESTROYED_ID)
     ->END if salvage_obj is None
+    salvage_pos = salvage_obj.pos
+    salvage_table = drops_table_for(DESTROYED_ID)
+    if salvage_table is not None:
+        drops_spawn(DESTROYED_ID, salvage_pos.x, salvage_pos.y, salvage_pos.z)
+        ->END
     salvage_goods = items_of_category("trade")
     ->END if len(salvage_goods) == 0
-    salvage_pos = salvage_obj.pos
     salvage_key = random.choice(salvage_goods).get_inventory_value("key")
     item_spawn(salvage_key, salvage_pos.x, salvage_pos.y, salvage_pos.z)
     ->END

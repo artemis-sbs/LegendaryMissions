@@ -114,6 +114,11 @@ Defaults:
     # skips this simply gets no reminders.
     quest_dispatch_voice("admiral")
 
+    # What a kill leaves behind, keyed by role (the drops section of PR_DOC). Registered
+    # before anything can be destroyed. Without a table the library default applies - a
+    # random trade good - which is how condemned hulks came to drop contraband.
+    amd_drops(amd_section(PR_DOC, "drops"))
+
     # The peacekeeping side-jobs (the quest board) and the all-ships-lost loss watch.
     task_schedule(pr_jobs_setup)
     task_schedule(pr_lose_watch)
@@ -285,11 +290,19 @@ Defaults:
                 npc_spawn(v.x, v.y, v.z, "Condemned Hulk", "raider, target_drone", "cargo_ship", "behav_npcship")
         case "job_rocks":
             rock_types = ship_data_plain_asteroid_keys()
+            # WHERE. "I have no idea what asteroids this refers to" (PRM-10) - the rocks
+            # are scattered at runtime, so no description written at authoring time can
+            # say. A navarea over the same box they scatter into names the field on the
+            # map, and a selectable marker at its centre gives Science something to click.
+            marker_area(-11000, 0, 12000, 3500, 3500, "Hazard Rock Field", "#fa04")
+            marker_object(-11000, 0, 12000, "Hazard Rock Field", roles="pr_job_marker")
             for v in scatter.box(PR_JOB_COUNTS.get("rock", 4), -11000, 0, 12000, 3500, 400, 3500, centered=True):
                 rock = terrain_spawn(v.x, v.y, v.z, "Hazard Rock", "#, hazard_rock", random.choice(rock_types), "behav_asteroid")
                 # Raw terrain spawns default to unselectable; clear it so Weapons can lock and fire.
                 rock.data_set.set("unselectable", 0)
         case "job_customs":
+            # "...or where the shipping lane is" - same fix, the region rather than a spot.
+            marker_area(-6000, 0, -6000, 3000, 3000, "Shipping Lane", "#0cf4")
             for v in scatter.box(PR_JOB_COUNTS.get("traffic", 4), -6000, 0, -6000, 3000, 400, 3000, centered=True):
                 npc_spawn(v.x, v.y, v.z, "Civilian Trader", "civ, civilian, traffic", "cargo_ship", "behav_npcship")
         case "job_survey":

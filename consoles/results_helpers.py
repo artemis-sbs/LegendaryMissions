@@ -234,7 +234,7 @@ def results_ship_template(item):
     gui_row("row-height: 1.2em;padding:6px;")
     gui_text(f"$text:{gui_text_escape(item.get('name'))};justify: left;")
     gui_row("row-height: 1.0em;padding:6px;")
-    gui_text(f"$text:Kills {item.get('kills')}   Tonnage {item.get('tonnage')}   Damage {item.get('damage')}   Hull {item.get('hull_pct')}%;justify: left;font:gui-1")
+    gui_text(f"$text:Kills {item.get('kills')}   Tonnage Destroyed {item.get('tonnage')}   Damage Dealt {item.get('damage')}   Hull {item.get('hull_pct')}%;justify: left;font:gui-1")
 
 
 def results_ship_title_template():
@@ -246,7 +246,7 @@ def results_pilot_template(item):
     gui_row("row-height: 1.2em;padding:6px;")
     gui_text(f"$text:{gui_text_escape(item.get('call_sign'))};justify: left;")
     gui_row("row-height: 1.0em;padding:6px;")
-    gui_text(f"$text:Sorties {item.get('sorties')}   Kills {item.get('kills')}   Tonnage {item.get('tonnage')}   Damage {item.get('damage')}   Objectives {item.get('objectives')};justify: left;font:gui-1")
+    gui_text(f"$text:Sorties {item.get('sorties')}   Kills {item.get('kills')}   Tonnage Destroyed {item.get('tonnage')}   Damage Dealt {item.get('damage')}   Objectives {item.get('objectives')};justify: left;font:gui-1")
 
 
 def results_pilot_title_template():
