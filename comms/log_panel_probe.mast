@@ -1,0 +1,38 @@
+# TEMPORARY - a bench for the Log Panel (LOG_PANEL_PLAN.md).
+#
+# Fills a ship's log with a realistic spread so the panel can be watched over time: every
+# category, every severity, coloured and not, short lines and long ones. The point is what
+# it LOOKS like once there is history in it - density, scrolling, and whether the callouts
+# read as emphasis or as clutter.
+#
+# Dev builds only. This is a bench, not a feature: it must never reach a real console.
+# DELETE THIS FILE (and log_probe_data.py, and the import) once the panel is judged.
+
+//comms if is_dev_build() and side_are_allies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "Station")
+    + "[dev] Fill the log" log_probe_fill
+    + "[dev] Fill the log slowly" log_probe_drip
+
+
+===== log_probe_fill =====
+    # One burst: enough history to fill the panel and force a scrollback.
+    task_schedule(log_probe_burst, {"probe_ship": COMMS_ORIGIN_ID, "probe_client": client_id, "probe_gap": 0})
+    ->END
+
+
+===== log_probe_drip =====
+    # The same spread, paced. This is the one that shows how it READS while playing,
+    # because entries arriving one at a time is the real case.
+    task_schedule(log_probe_burst, {"probe_ship": COMMS_ORIGIN_ID, "probe_client": client_id, "probe_gap": 2})
+    ->END
+
+
+===== log_probe_burst =====
+    default probe_gap = 0
+    for probe_msg in log_probe_messages():
+        comms_broadcast(probe_ship, probe_msg["text"], probe_msg["color"], category=probe_msg["cat"], severity=probe_msg["sev"])
+        if probe_gap > 0:
+            await delay_sim(probe_gap)
+    # A console-only note: addressed to this CLIENT, not the ship. It has to appear too -
+    # the panel renders the union of the ship's log and this console's own.
+    comms_broadcast(probe_client, "This note went to THIS console only")
+    ->END
