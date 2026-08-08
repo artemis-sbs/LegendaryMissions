@@ -116,6 +116,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     # The log/replay tab: every card ever filed, re-readable. Cards only take
     # over the "message" tab when they interrupt (a button, or notify=True).
     gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
+    # The ship's log (LOG_PANEL_PLAN.md). Same store on every console - it is the CREW's
+    # log - so what one console sees, all of them see.
+    gui_info_panel_add("log", 112, gui_panel_log, None, gui_panel_log_tick)
+    gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
+    gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
 
     gui_section(style="area:0,45px,100,100;")
     with gui_sub_section():
@@ -147,7 +152,13 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row()
         gui_layout_widget("science_sorted_list")
         gui_row("row-height: 10;")
-        gui_layout_widget("text_waterfall")
+        # The waterfall's slot, drawn by US. The engine widget cannot be styled from
+        # script and its background is too dark; this is the same traffic in a text area
+        # the console owns. Ambient half of the log - the last couple of lines, always
+        # visible while you are reading ship data. The history is the info-panel tab.
+        sci_water = gui_layout_widget("text_waterfall")
+        gui_hide(sci_water)
+        gui_log_tail()
 
     on change follow_tag:
         ship = sbs.get_ship_of_client(client_id)
@@ -178,6 +189,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # The log/replay tab: every card ever filed, re-readable. Cards only take
         # over the "message" tab when they interrupt (a button, or notify=True).
         gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
+        # The ship's log (LOG_PANEL_PLAN.md). Same store on every console - it is the
+        # CREW's log - so what one console sees, all of them see.
+        gui_info_panel_add("log", 112, gui_panel_log, None, gui_panel_log_tick)
+        gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
+        gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
     with gui_sub_section():
         gui_row()
         # gui_section(style="area:285px,90px,800px,390px;")
@@ -221,6 +237,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # The log/replay tab: every card ever filed, re-readable. Cards only take
         # over the "message" tab when they interrupt (a button, or notify=True).
         gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
+        # The ship's log (LOG_PANEL_PLAN.md). Same store on every console - it is the
+        # CREW's log - so what one console sees, all of them see.
+        gui_info_panel_add("log", 112, gui_panel_log, None, gui_panel_log_tick)
+        gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
+        gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
 
 //gui/normal_weap
     default tab = 1
@@ -233,6 +254,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # The log/replay tab: every card ever filed, re-readable. Cards only take
         # over the "message" tab when they interrupt (a button, or notify=True).
         gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
+        # The ship's log (LOG_PANEL_PLAN.md). Same store on every console - it is the
+        # CREW's log - so what one console sees, all of them see.
+        gui_info_panel_add("log", 112, gui_panel_log, None, gui_panel_log_tick)
+        gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
+        gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
 
 //gui/normal_main
     default tab = 1
@@ -245,6 +271,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # The log/replay tab: every card ever filed, re-readable. Cards only take
         # over the "message" tab when they interrupt (a button, or notify=True).
         gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
+        # The ship's log (LOG_PANEL_PLAN.md). Same store on every console - it is the
+        # CREW's log - so what one console sees, all of them see.
+        gui_info_panel_add("log", 112, gui_panel_log, None, gui_panel_log_tick)
+        gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
+        gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
 
 
 
@@ -266,6 +297,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # The log/replay tab: every card ever filed, re-readable. Cards only take
         # over the "message" tab when they interrupt (a button, or notify=True).
         gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
+        # The ship's log (LOG_PANEL_PLAN.md). Same store on every console - it is the
+        # CREW's log - so what one console sees, all of them see.
+        gui_info_panel_add("log", 112, gui_panel_log, None, gui_panel_log_tick)
+        gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
+        gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
 
         gui_row()
         gui_blank()
