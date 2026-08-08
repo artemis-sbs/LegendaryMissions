@@ -108,7 +108,7 @@ Done when: signal poacher_boarded
 Fail on signal: poacher_killed
 Reward: 300 credits
 ---
-Disable the unregistered trawler (drop its shields below 50%) and demand its surrender. Do NOT destroy it.
+The trawler J19 Jenny is working the belt unregistered. Disable her (drop her shields below 50%) and demand her surrender. Do NOT destroy her.
 
 ### [Mercy Run](job_mercy)
 ---
@@ -459,7 +459,7 @@ been carrying.
 
 ## [Landmarks](landmarks)
 
-### [Unregistered Trawler](poacher_lm)
+### [J19 Jenny](poacher_lm)
 ---
 Kind: npc
 Side: civ
