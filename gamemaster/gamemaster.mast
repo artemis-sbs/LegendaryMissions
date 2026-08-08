@@ -301,7 +301,9 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     with gui_sub_section(f"col-width: {info_panel_width}"):
         gui_blank()
     gui_property_list_box("GM Inputs")
-    gui_layout_widget("text_waterfall")
+    # The text waterfall is gone (LOG_PANEL_PLAN.md) - it could not be styled from script.
+    # gui_log_tail() is the same traffic in a text area this console owns.
+    gui_log_tail()
     with gui_sub_section(f"col-width: {info_panel_width}"):
         gui_blank()
 

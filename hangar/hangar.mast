@@ -301,7 +301,9 @@ hangar_get_craft_data("terran")
         jump show_hangar
 
     gui_section(style="area: 0,100-90px, 35,100;")
-    gui_layout_widget("text_waterfall")
+    # The text waterfall is gone (LOG_PANEL_PLAN.md) - it could not be styled from script.
+    # gui_log_tail() is the same traffic in a text area this console owns.
+    gui_log_tail()
     #
     # Fighter stats
     #
@@ -441,7 +443,9 @@ hangar_get_craft_data("terran")
     gui_layout_widget("helm_free_3d")
 
     gui_section(style="area: 41,90,59.7,99;")
-    gui_layout_widget("text_waterfall")
+    # The text waterfall is gone (LOG_PANEL_PLAN.md) - it could not be styled from script.
+    # gui_log_tail() is the same traffic in a text area this console owns.
+    gui_log_tail()
 
     # Register ship_data in the console widget list (no visible HUD slot). The
     # engine only renders a widget that's in the list send_client_widget_list

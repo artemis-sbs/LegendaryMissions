@@ -300,7 +300,10 @@ if CAN_CHANGE_CONSOLE:
             jump console_selected
 
     gui_section(style="area: 0,100-50px, 35,100;")
-    gui_layout_widget("text_waterfall")
+    # The space the text waterfall used to occupy. Before a ship is picked there is
+    # nothing to show and it renders empty, which is honest - the alternative was a
+    # widget that could not be styled. See LOG_PANEL_PLAN.md.
+    gui_log_tail()
 
 
     on change PLAYER_COUNT:

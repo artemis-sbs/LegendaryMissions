@@ -99,7 +99,9 @@ default ADMIRAL_CONSOLE_ENABLED = False
         gui_row()
         gui_layout_widget("science_sorted_list")
         gui_row("row-height: 10;")
-        gui_layout_widget("text_waterfall")
+        # The text waterfall is gone (LOG_PANEL_PLAN.md) - it could not be styled from script.
+        # gui_log_tail() is the same traffic in a text area this console owns.
+        gui_log_tail()
 
     
         
