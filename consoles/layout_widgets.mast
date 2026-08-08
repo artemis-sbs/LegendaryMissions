@@ -334,8 +334,13 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     with gui_sub_section():
         gui_row("row-height:30;")
         with gui_sub_section():
-            water = gui_layout_widget("comms_waterfall")
-            gui_hide(water)
+            # NOT gui_layout_widget + gui_hide. That reads as "place it, then hide it"
+            # and does neither: gui_layout_widget ADDS the widget to the console's widget
+            # list, which is what makes the engine draw it, and gui_hide only clears
+            # `_show` on the layout placeholder - so the waterfall stayed on screen. This
+            # prototype is where that pattern was copied FROM, and it cost real time
+            # twice; gui_hide now warns when handed an engine widget. Simply not asking
+            # for it is what keeps it off.
             recent_listbox = gui_list_box(recent_list,"row-height: 0.1em; background:#1572;", item_template=comms_recent_item, select=True)
             history_listbox = gui_list_box(message_list,"row-height: 0.1em; background:#1572;", item_template=comms_message_item, select=True)
             ### Need library help to make better click area
