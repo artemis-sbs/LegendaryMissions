@@ -11,9 +11,6 @@ import a2x_captain.mast
 import priority_docking.mast
 import enemy_stations.mast
 import player_comms.mast
-# TEMPORARY bench for the Log Panel - dev builds only, delete with these two files.
-import log_probe_data.py
-import log_panel_probe.mast
 
 
 # Reusable hosted-lifeform comms-badge dialogue (a lifeform with Host+Scene+Path //comms/lm_cast
