@@ -156,8 +156,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # script and its background is too dark; this is the same traffic in a text area
         # the console owns. Ambient half of the log - the last couple of lines, always
         # visible while you are reading ship data. The history is the info-panel tab.
-        sci_water = gui_layout_widget("text_waterfall")
-        gui_hide(sci_water)
+        #
+        # NOTE there is deliberately no gui_layout_widget("text_waterfall") here.
+        # gui_layout_widget ADDS the widget to the console's widget list (page.
+        # add_console_widget) - that list is what makes the engine draw it - while
+        # gui_hide only clears `_show` on the layout PLACEHOLDER. Asking for it and then
+        # hiding it leaves the engine still rendering it. Not asking is what removes it.
         gui_log_tail()
 
     on change follow_tag:
