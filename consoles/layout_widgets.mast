@@ -157,11 +157,13 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # the console owns. Ambient half of the log - the last couple of lines, always
         # visible while you are reading ship data. The history is the info-panel tab.
         #
-        # NOTE there is deliberately no gui_layout_widget("text_waterfall") here.
-        # gui_layout_widget ADDS the widget to the console's widget list (page.
-        # add_console_widget) - that list is what makes the engine draw it - while
-        # gui_hide only clears `_show` on the layout PLACEHOLDER. Asking for it and then
-        # hiding it leaves the engine still rendering it. Not asking is what removes it.
+        # NOTE there is deliberately no gui_layout_widget("text_waterfall") here -
+        # gui_layout_widget ADDS it to the console's widget list, which is what the engine
+        # draws from. But not asking is not always enough: the engine KEEPS widgets it has
+        # already been given, so a console that has shown the waterfall once goes on
+        # drawing it. gui_widget_offscreen pushes it out of view, which is the only thing
+        # that reliably works (and is what gui_panel_widget_hide has always done).
+        gui_widget_offscreen("text_waterfall")
         gui_log_tail()
 
     on change follow_tag:
