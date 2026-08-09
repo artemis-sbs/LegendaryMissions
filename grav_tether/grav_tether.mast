@@ -98,3 +98,11 @@
     default SOURCE_ID = 0
     ->END if SOURCE_ID == 0
     comms_broadcast(SOURCE_ID, "Target is under power - cripple its engines before you can get a lock.")
+
+
+# A hulk cashed in at a friendly station. The tick does the work; this is the telling.
+//shared/signal/lm_tether_salvage_delivered
+    default SHIP_ID = 0
+    default UNITS = 0
+    ->END if SHIP_ID == 0
+    comms_broadcast(SHIP_ID, f"Hulk delivered - {UNITS} units of salvage aboard.")
