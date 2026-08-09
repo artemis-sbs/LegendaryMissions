@@ -35,3 +35,39 @@
     if not gt_has and not has_any_role(WEAPONS_SELECTED_ID, "item,upgrade,station,asteroid,__npc__"):
         + "Grav Lock":
             grav_tether_lock(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)
+
+
+# ---------------------------------------------------------------------------------------
+# FIGHTER: the nose is the cursor.
+#
+# A pilot gets one button (the cockpit console owns it; see hangar/hangar.mast). It
+# nose-aims, and when the target says what to do it just does it - a rock is an anchor, a
+# pod is a pickup, and making a pilot confirm that is a menu for the sake of a menu. When
+# the target is genuinely a CHOICE the button synthesizes this popup on it instead.
+#
+# Path B: the event is fabricated, not clicked, so this consumes NO select channel -
+# comms, weapons and science selects all stay free. Capital ships reach the same actions
+# through //popup/weapons above; this is the same verbs, a different way in.
+
+//popup/tether if has_any_role(TETHER_ORIGIN_ID, "__player__,cockpit")
+    lmtf_towed = grav_tether_involves(TETHER_ORIGIN_ID)
+    << "Grav-tether: {lm_tether_target_name(TETHER_SELECTED_ID)}"
+
+    if lmtf_towed:
+        + "Release":
+            grav_tether_release_any(TETHER_ORIGIN_ID)
+            lm_tether_cycle_reset(TETHER_ORIGIN_ID)
+
+    if not lmtf_towed:
+        + "Tow":
+            lm_tether_apply(TETHER_ORIGIN_ID, TETHER_SELECTED_ID, "tow")
+        + "Lock":
+            lm_tether_apply(TETHER_ORIGIN_ID, TETHER_SELECTED_ID, "lock")
+        + "Swing":
+            lm_tether_apply(TETHER_ORIGIN_ID, TETHER_SELECTED_ID, "swing")
+        # Target correction from INSIDE the popup - still no select channel. Walks
+        # outward through the cone and wraps, so it can never dead-end.
+        + "Cycle target":
+            lmtf_next = lm_tether_cycle_next(TETHER_ORIGIN_ID)
+            if lmtf_next is not None:
+                lm_tether_open_popup(TETHER_ORIGIN_ID, lmtf_next.id)

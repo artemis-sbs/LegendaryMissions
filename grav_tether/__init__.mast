@@ -1,1 +1,6 @@
+provides grav_tether
+
+# The fighter one-button interaction (lm_tether_press) lives here, and the hangar's
+# cockpit console calls it - so this addon has to announce itself.
+import tether_fighter.py
 import grav_tether.mast

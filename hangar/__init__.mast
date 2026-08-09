@@ -1,4 +1,8 @@
 provides hangar
+# HARD: the cockpit console has a grav-tether button, and lm_tether_press is that
+# addon's. Without it the button raises at the press rather than failing to build,
+# so this is a compile-time requirement rather than a runtime surprise.
+requires grav_tether
 
 import hangar.py
 import hangar_loadout.mast
