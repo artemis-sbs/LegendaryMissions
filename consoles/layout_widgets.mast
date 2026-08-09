@@ -158,6 +158,16 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row("row-height: 35px;")
         default follow_tag = False
         gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+        # "On screen" - science hands the MAIN SCREEN a shot of whatever it has
+        # selected, which is the console that already has the thing selected. Same
+        # grammar as Follow, one row over. The item list comes from the library so the
+        # labels here and the mode names there cannot drift. VIEWSCREEN_PLAN.md
+        _sci_ship = viewscreen_home_ship(client_id)
+        default on_screen = viewscreen_label_for(viewscreen_mode(_sci_ship))
+        on_screen_dd = gui_drop_down(viewscreen_shot_props(on_screen), var="on_screen")
+        on gui_message(on_screen_dd):
+            _ship = viewscreen_home_ship(client_id)
+            viewscreen_set(_ship, viewscreen_mode_for(on_screen), get_science_selection(_ship))
         # gui_screen_size returns a 1024x768 PLACEHOLDER (z==99) until the client
         # reports its size, which read as a small screen and cramped wide displays.
         # When unknown, assume the LARGER layout - it degrades better.
@@ -188,6 +198,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     #
     nav_focus_id = EVENT.client_id
     science_set_2dview_focus(EVENT.client_id, EVENT.selected_id)
+    # If this console is driving the main screen, the shot follows the selection - the
+    # crew picked a new contact, they did not ask to go back to a black screen.
+    _vs_ship = viewscreen_home_ship(EVENT.client_id)
+    if viewscreen_is_live(_vs_ship):
+        viewscreen_set(_vs_ship, viewscreen_mode(_vs_ship), EVENT.selected_id)
 
 
 //gui/normal_engi

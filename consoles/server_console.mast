@@ -377,8 +377,13 @@ Main:
     # and avoid seeing some stuff be created 
     # at 0,0,0
     await delay_sim(0)
-    # Find a valid ship
-    ship_id = sbs.get_ship_of_client(client_id)
+    # Find a valid ship. NOT sbs.get_ship_of_client: while science has this screen
+    # showing something ("on screen"), the console is ASSIGNED to the subject - the
+    # engine only honors a camera change when the console and the lens ride the same
+    # object - so get_ship_of_client would answer with the ENEMY here, and this label
+    # would then read the enemy's main-screen state and link it as a console owner.
+    # viewscreen_home_ship answers with our own ship either way. VIEWSCREEN_PLAN.md
+    ship_id = viewscreen_home_ship(client_id)
 
     gui_console("mainscreen")
     set_inventory_value(client_id, "CONSOLE_TYPE", "mainscreen")
@@ -467,6 +472,21 @@ Main:
         my_mode = mode
 
     sbs.set_main_view_modes(client_id, view, facing, mode)
+
+    # A 2D shot reflows the radar to leave the data column's gutter free. Only the 2D
+    # view can do this - the engine draws 3dview full-bleed, so there the column is an
+    # overlay on top of it. Same rect either way, so the crew's eye does not move when
+    # the mode changes.
+    if viewscreen_mode(ship_id) == "tactical":
+        gui_section(style="area:0,0,71,100;")
+        gui_row()
+        gui_layout_widget("2dview")
+
+    # Science changed what is on screen: repaint, because the widget list itself differs
+    # between a 3D shot and a 2D one. Scoped to THIS ship - one bridge's viewer must not
+    # repaint another's.
+    on signal viewscreen:
+        jump show_main_game_screen if VIEWSCREEN_SHIP == ship_id
 
     await gui()
 
