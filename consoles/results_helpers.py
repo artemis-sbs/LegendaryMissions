@@ -25,7 +25,7 @@ _STAT_DAMAGE = "damage_dealt"
 
 
 # --- Kill / damage attribution (called from the damage routes) ---------------
-def _attacker_id(parent_id, source_id):
+def _results_attacker_id(parent_id, source_id):
     """The agent that gets the credit: the firing ship (parent) when set, else the
     source. Beams report the ship as the source; projectiles report the ship as the
     parent and the projectile as the source - so prefer parent, fall back to source.
@@ -38,7 +38,7 @@ def _attacker_id(parent_id, source_id):
     return aid
 
 
-def _is_creditable(attacker_id):
+def _results_is_creditable(attacker_id):
     """Only player BRIDGE ships earn credit here. Fighter/shuttle (cockpit) kills are
     credited by the hangar addon instead, so the two never double-count and the
     hangar's Air Wing works in missions that don't load this (consoles) addon."""
@@ -47,7 +47,7 @@ def _is_creditable(attacker_id):
     return has_role(attacker_id, "__player__")
 
 
-def _victim_tonnage(victim):
+def _results_victim_tonnage(victim):
     """Flavor 'tonnage' for a destroyed object, from its shipData hullpoints."""
     so = to_object(victim)
     if so is None:
@@ -57,26 +57,26 @@ def _victim_tonnage(victim):
     return int(hp) * TONNAGE_PER_HULLPOINT
 
 
-def _bump(agent_id, key, amount):
+def _results_bump(agent_id, key, amount):
     set_inventory_value(agent_id, key, get_inventory_value(agent_id, key, 0) + amount)
 
 
 def results_credit_kill(parent_id, source_id, victim_id):
     """Credit one kill + the victim's tonnage to the player bridge ship that landed
     the final blow. (Fighter/shuttle kills are credited by the hangar addon.)"""
-    attacker = _attacker_id(parent_id, source_id)
-    if not _is_creditable(attacker):
+    attacker = _results_attacker_id(parent_id, source_id)
+    if not _results_is_creditable(attacker):
         return
-    tons = _victim_tonnage(victim_id)
-    _bump(attacker, _STAT_KILLS, 1)
-    _bump(attacker, _STAT_TONNAGE, tons)
+    tons = _results_victim_tonnage(victim_id)
+    _results_bump(attacker, _STAT_KILLS, 1)
+    _results_bump(attacker, _STAT_TONNAGE, tons)
 
 
 def results_credit_damage(parent_id, source_id, amount):
     """Accumulate raw damage dealt by a player bridge ship (the option-B 'impact'
     stat). (Cockpit damage is credited by the hangar addon.)"""
-    attacker = _attacker_id(parent_id, source_id)
-    if not _is_creditable(attacker):
+    attacker = _results_attacker_id(parent_id, source_id)
+    if not _results_is_creditable(attacker):
         return
     try:
         amount = float(amount or 0)
@@ -84,27 +84,23 @@ def results_credit_damage(parent_id, source_id, amount):
         return
     if amount <= 0:
         return
-    _bump(attacker, _STAT_DAMAGE, amount)
+    _results_bump(attacker, _STAT_DAMAGE, amount)
 
 
 # --- End-screen / save read-outs ---------------------------------------------
-def _hull_pct(ship_id):
-    """Remaining hull % (0-100) from summed SHPSYS damage vs max; 100 if unknown."""
-    so = to_space_object(ship_id)
-    if so is None:
+def _results_hull_pct(ship_id):
+    """Remaining hull % (0-100) from summed SHPSYS damage vs max; 100 if unknown.
+
+    The formula moved to sbs_utils (`viewscreen_hull_percent`) when the viewscreen's
+    data column needed the same number: two copies of "what does damaged mean" is one
+    too many. This stays as the end-screen's name for it, and keeps the end screen's
+    own convention that a ship we cannot read at all counts as 0 rather than unknown.
+    """
+    from sbs_utils.procedural.gui.viewscreen_pages import viewscreen_hull_percent
+    if to_space_object(ship_id) is None:
         return 0
-    blob = so.data_set
-    if blob is None:
-        return 100
-    cur = 0
-    mx = 0
-    for i in range(4):  # four ship systems; death = all four maxed
-        mx += blob.get("system_max_damage", i) or 0
-        cur += blob.get("system_damage", i) or 0
-    if mx <= 0:
-        return 100
-    pct = int(round(100 * (1.0 - (float(cur) / float(mx)))))
-    return max(0, min(100, pct))
+    pct = viewscreen_hull_percent(ship_id)
+    return 100 if pct is None else pct
 
 
 def results_player_ships():
@@ -118,7 +114,7 @@ def results_player_ships():
             "kills": get_inventory_value(sid, _STAT_KILLS, 0),
             "tonnage": get_inventory_value(sid, _STAT_TONNAGE, 0),
             "damage": int(get_inventory_value(sid, _STAT_DAMAGE, 0)),
-            "hull_pct": _hull_pct(sid),
+            "hull_pct": _results_hull_pct(sid),
         })
     return ships
 
