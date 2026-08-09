@@ -115,7 +115,8 @@ def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, range=2500, targets=N
         int | None: The turret's id, or None if the spawn failed.
     """
     behave = behave or LM_TURRET_BEHAVE
-    obj = npc_spawn(x, y, z, prefab_autoname(name), (side or "tsn") + ",turret",
+    side = side or "tsn"
+    obj = npc_spawn(x, y, z, prefab_autoname(name), side + ",turret",
                     hull or LM_TURRET_DEFAULT_HULL, behave)
     tid = to_id(obj)
     if tid is None:
@@ -129,8 +130,11 @@ def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, range=2500, targets=N
     remove_role(tid, "station")
 
     turret_make(tid, range=range, targets=targets)
-    if owner:
-        set_inventory_value(tid, "turret:owner", to_id(owner) or 0)
+    # ALWAYS written, even when 0. A reader asking "who owns this?" must get an answer
+    # rather than a missing key it has to guess the meaning of, and 0 is a real answer:
+    # mission hardware, owned by nobody.
+    owner_id = to_id(owner) or 0
+    set_inventory_value(tid, "turret:owner", owner_id)
 
     # The two balance levers every deployed tower carries. A tower with neither is a
     # permanent free gun, and the map fills up with them.
@@ -155,7 +159,12 @@ def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, range=2500, targets=N
             so.data_set.set("target_pos_y", y, 0)
             so.data_set.set("target_pos_z", z, 0)
     brain_add(tid, LM_TURRET_BRAIN)
-    signal_emit("lm_turret_deployed", tid)
+    # A DICT, and this is not style. Signal data keys become task variables in the
+    # handling route, and MastAsyncTask.start_task merges them with `dict | inputs` - so a
+    # bare int raises TypeError inside THIS function the moment anyone writes
+    # //signal/lm_turret_deployed. It was silent only while nothing listened.
+    signal_emit("lm_turret_deployed", {"TURRET_ID": tid, "TURRET_SIDE": side,
+                                       "TURRET_OWNER_ID": owner_id})
     return tid
 
 
@@ -196,7 +205,8 @@ def lm_turret_bolt_ring(host, count=4, hull=None, range=1200, targets=None,
         clear_target(tid)
         brain_add(tid, LM_TURRET_BRAIN)
     if ids:
-        signal_emit("lm_turret_bolted", hid)
+        signal_emit("lm_turret_bolted", {"TURRET_HOST_ID": hid, "TURRET_IDS": ids,
+                                         "TURRET_SIDE": side})
     return ids
 
 
@@ -233,13 +243,44 @@ def lm_turret_at_cap(side):
     return lm_turret_side_count(side) >= lm_turret_cap()
 
 
-def lm_turret_eject_crate(ship, prefab, name=None):
-    """Eject an undeployed turret kit ahead of a ship.
+def lm_turret_spawn_crate(x, y, z, side, prefab, name=None, owner=0):
+    """Place an undeployed turret kit at a POINT.
 
-    The kit becomes a real OBJECT rather than an inventory row on purpose: deploying is
-    then a crew job - tow it where you want it with the grav tether and unfold it - not a
-    button press. The crate remembers which prefab it becomes, so adding a tower kind
-    needs a new prefab and a new item and no code here.
+    The kit is a real OBJECT rather than an inventory row on purpose: deploying is then a
+    crew job - tow it where you want it with the grav tether and unfold it - not a button
+    press. The crate remembers which prefab it becomes, so adding a tower kind needs a new
+    prefab and a new item and no code here.
+
+    The positional half of the pair. :func:`lm_turret_eject_crate` knows only "400u off
+    the bow", which is the ITEM's gesture; a mission handing out kits wants them where it
+    says. Both produce the same crate - same roles, same prefab key, same owner - so the
+    tow popup and the deploy route cannot tell them apart.
+
+    Args:
+        owner (int): Who the kit belongs to, for scoring. 0 = mission hardware.
+
+    Returns:
+        int | None: The crate's id.
+    """
+    crate = npc_spawn(x, y, z, name or "Turret Kit", (side or "tsn") + ",turret_crate",
+                      LM_TURRET_CRATE_HULL, "behav_station")
+    cid = to_id(crate)
+    if cid is None:
+        return None
+    remove_role(cid, "station")
+    set_inventory_value(cid, "turret_prefab", str(prefab))
+    # `turret:owner` - the SAME key the deployed tower uses, and the namespace
+    # turret_config already owns. The crate used to write `turret_owner`, so the owner a
+    # player earned by ejecting a kit was never the owner the resulting tower carried.
+    set_inventory_value(cid, "turret:owner", to_id(owner) or 0)
+    clear_target(cid)
+    signal_emit("lm_turret_kit_ejected", {"CRATE_ID": cid, "TURRET_SIDE": side or "tsn",
+                                          "TURRET_OWNER_ID": to_id(owner) or 0})
+    return cid
+
+
+def lm_turret_eject_crate(ship, prefab, name=None):
+    """Eject an undeployed turret kit ahead of a ship - the item's gesture.
 
     Returns:
         int | None: The crate's id.
@@ -255,23 +296,24 @@ def lm_turret_eject_crate(ship, prefab, name=None):
     except Exception:
         return None
     side = getattr(so, "side", None) or "tsn"
-    crate = npc_spawn(x, y, z, name or "Turret Kit", side + ",turret_crate",
-                      LM_TURRET_CRATE_HULL, "behav_station")
-    cid = to_id(crate)
-    if cid is None:
-        return None
-    remove_role(cid, "station")
-    set_inventory_value(cid, "turret_prefab", str(prefab))
-    set_inventory_value(cid, "turret_owner", sid)
-    clear_target(cid)
-    signal_emit("lm_turret_kit_ejected", cid)
-    return cid
+    return lm_turret_spawn_crate(x, y, z, side, prefab, name, sid)
 
 
 def lm_turret_crate_prefab(crate):
     """Which tower prefab a crate unfolds into."""
     cid = to_id(crate)
     return None if cid is None else get_inventory_value(cid, "turret_prefab", None)
+
+
+def lm_turret_owner(id_or_obj):
+    """Who owns this crate or tower. 0 = nobody / mission hardware.
+
+    ONE key for one concept. The crate wrote `turret_owner` and the tower wrote
+    `turret:owner`, and nothing carried the value from one to the other - so a
+    player-deployed turret was owned by no one and could not be scored.
+    """
+    tid = to_id(id_or_obj)
+    return 0 if tid is None else (get_inventory_value(tid, "turret:owner", 0) or 0)
 
 
 def lm_turret_spend_charge(id_or_obj, n=1):
@@ -290,7 +332,8 @@ def lm_turret_spend_charge(id_or_obj, n=1):
     turret_set(tid, "charge", left)
     if left <= 0:
         turret_disengage(tid)
-        signal_emit("lm_turret_dormant", tid)
+        signal_emit("lm_turret_dormant", {"TURRET_ID": tid,
+                                          "TURRET_OWNER_ID": lm_turret_owner(tid)})
     return left
 
 
@@ -302,7 +345,8 @@ def lm_turret_recharge(id_or_obj, amount=None):
         return None
     amount = LM_TURRET_CHARGE if amount is None else int(amount)
     turret_set(tid, "charge", amount)
-    signal_emit("lm_turret_recharged", tid)
+    signal_emit("lm_turret_recharged", {"TURRET_ID": tid, "TURRET_CHARGE": amount,
+                                        "TURRET_OWNER_ID": lm_turret_owner(tid)})
     return amount
 
 

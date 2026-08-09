@@ -105,15 +105,19 @@ desc: Ejects a drone tower kit. Launches attack drones on its own.
     lmtd_prefab = lm_turret_crate_prefab(lmtd_crate)
     ->END if lmtd_prefab is None
     lmtd_side = to_object(lmtd_crate).side
+    # The crate knows who was issued it; the TOWER is what everything scores. Read the
+    # owner BEFORE the crate is deleted and carry it through, or a player-deployed turret
+    # belongs to nobody and no per-ship objective can credit it.
+    lmtd_owner = lm_turret_owner(lmtd_crate)
 
     # The cap is checked HERE, on the server, not in the popup: the popup is per console
     # and two consoles could pass the same check at the same moment.
     if lm_turret_at_cap(lmtd_side):
-        comms_broadcast(role(lmtd_side), f"Turret grid at capacity ({lm_turret_cap()}). Recover one before deploying another.")
+        comms_broadcast(role(lmtd_side), f"Turret grid at capacity ({lm_turret_cap()}). Wait for one to power down, or have a Game Master clear one.")
         ->END
 
     lmtd_pos = get_pos(lmtd_crate)
-    lmtd_data = ~~{"START_X": lmtd_pos.x, "START_Y": lmtd_pos.y, "START_Z": lmtd_pos.z, "side_value": lmtd_side}~~
+    lmtd_data = ~~{"START_X": lmtd_pos.x, "START_Y": lmtd_pos.y, "START_Z": lmtd_pos.z, "side_value": lmtd_side, "owner": lmtd_owner}~~
     lmtd_id = await prefab_spawn(lmtd_prefab, lmtd_data)
     ->END if lmtd_id is None
     delete_object(lmtd_crate)

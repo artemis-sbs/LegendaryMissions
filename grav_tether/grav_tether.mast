@@ -17,7 +17,12 @@
 # impulse by default (grav_tether_set_overspeed_default to change to snap/off).
 
 //popup/weapons if has_any_role(WEAPONS_ORIGIN_ID, "__player__")
-    gt_has = grav_tether_get(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID) is not None
+    # grav_tether_HAS (the registry), not grav_tether_get (the live engine connection).
+    # A Tow is a rope-TOGGLE: it deletes the connection whenever the load is inside the
+    # rope length and re-adds it when the load drifts out - so `get` reads None for most
+    # of a perfectly normal tow. Gated on that, this menu offered "Grav Tow" to something
+    # already under tow and never offered "Release", so a crew could not let go.
+    gt_has = grav_tether_has(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)
     if gt_has:
         + "Release":
             grav_tether_release(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)

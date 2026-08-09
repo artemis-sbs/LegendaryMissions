@@ -22,7 +22,10 @@ type: brain/turret
     # their own - a tower is allowed to finish the volley it is in.
     if lm_turret_is_tower(BRAIN_AGENT_ID) and is_timer_finished(BRAIN_AGENT_ID, "turret_life"):
         turret_disengage(BRAIN_AGENT_ID)
-        signal_emit("lm_turret_expired", BRAIN_AGENT_ID)
+        # A dict, like every other turret signal: keys become task variables in the
+        # handling route, and a bare payload raises TypeError as soon as one exists.
+        _lm_turret_gone = ~~{"TURRET_ID": BRAIN_AGENT_ID, "TURRET_OWNER_ID": lm_turret_owner(BRAIN_AGENT_ID)}~~
+        signal_emit("lm_turret_expired", _lm_turret_gone)
         delete_object(BRAIN_AGENT_ID)
         yield fail
     if lm_turret_is_dormant(BRAIN_AGENT_ID):

@@ -15,11 +15,12 @@ hull: lm_turret_beam
 range: 2500
 targets: null
 name: Turret #
+owner: 0
 ```
     # `type: prefab/turret` makes this discoverable via labels_get_type("prefab/turret"),
     # so a GM menu can enumerate turret kinds with no hardcoded list: add a hull to
     # shipData_turrets.yaml plus a prefab like this one, and it appears on its own.
-    yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, range, targets, name)
+    yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, range, targets, name, owner)
 
 
 === prefab_lm_turret_tower_heavy
@@ -32,11 +33,12 @@ hull: lm_turret_heavy
 range: 3500
 targets: null
 name: Heavy Turret #
+owner: 0
 ```
     # A separate HULL, not a runtime tweak: beam stats live in the engine's ship table and
     # cannot be read or written on a live object, so "a bigger gun" means a new shipData
     # entry. Keep `range` here in step with that entry's beam range.
-    yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, range, targets, name)
+    yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, range, targets, name, owner)
 
 
 === prefab_lm_turret_tower_drone
@@ -49,6 +51,7 @@ hull: starbase_torgoth
 range: 1500
 targets: null
 name: Drone Tower #
+owner: 0
 behave: behav_npcship
 ```
     # ENGINE-MEASURED, and it is the whole reason this prefab differs from the others:
@@ -60,7 +63,7 @@ behave: behav_npcship
     # Stock `starbase_torgoth` already carries drone_launch_timer: 30, so a drone tower
     # needs no new shipData and no new art. Deploy pins throttle 0 and target_pos to the
     # spawn point so the npcship helm cannot take it anywhere.
-    yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, range, targets, name, 0, behave)
+    yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, range, targets, name, owner, behave)
 
 
 # Science scan - a turret reads as a fixed emplacement, not a ship and not a station.
