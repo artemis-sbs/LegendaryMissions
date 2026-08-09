@@ -53,7 +53,14 @@ enemies_only: false
     # Candidate targets: any non-player, non-ally, non-invisible ship.
     # enemies_only restricts to genuinely hostile sides so defenders don't
     # chase/harass neutrals; monsters/bosses leave it false to attack anything.
-    base = any_role('ship,shuttle,fighter,bomber,station')-role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#")
+    # `turret` is in the list because a deployed emplacement is a legitimate target: it
+    # is not a `ship` (its hull declares roles: turret and nothing else), so without it
+    # here an NPC hunter flies straight past a turret shooting at it. Turrets are
+    # deliberately NOT `station` - that role drags in docking, market and every
+    # "protect the station" objective - so this is the only place they become visible
+    # to the general-purpose hunter. Monsters keep hunting players only (they target
+    # role("__player__") directly), and ai_chase_station still means stations.
+    base = any_role('ship,shuttle,fighter,bomber,station,turret')-role("__player__")-side_ally_members_set(BRAIN_AGENT_ID)-role("#")
     if enemies_only:
         base = base & side_enemy_members_set(BRAIN_AGENT_ID)
     if SIZE_X is None:

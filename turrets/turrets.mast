@@ -1,0 +1,72 @@
+# Deployable defense turrets - the MAST surface.
+#
+# Placement itself is lm_turret_deploy_tower in turrets.py, so a mission prefab, a comms
+# button and the GM console all create turrets the same way and all get the new id back
+# synchronously. This file is the author-facing wrapping: discoverable prefabs, and the
+# scan text a science officer sees.
+
+=== prefab_lm_turret_tower
+" A deployable autonomous defense turret
+metadata: ``` yaml
+display_text: Defense Turret
+type: prefab/turret
+side_value: tsn
+hull: lm_turret_beam
+range: 2500
+targets: null
+name: Turret #
+```
+    # `type: prefab/turret` makes this discoverable via labels_get_type("prefab/turret"),
+    # so a GM menu can enumerate turret kinds with no hardcoded list: add a hull to
+    # shipData_turrets.yaml plus a prefab like this one, and it appears on its own.
+    yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, range, targets, name)
+
+
+=== prefab_lm_turret_tower_heavy
+" A heavy autonomous defense turret - longer reach, harder hitting, slower
+metadata: ``` yaml
+display_text: Heavy Defense Turret
+type: prefab/turret
+side_value: tsn
+hull: lm_turret_heavy
+range: 3500
+targets: null
+name: Heavy Turret #
+```
+    # A separate HULL, not a runtime tweak: beam stats live in the engine's ship table and
+    # cannot be read or written on a live object, so "a bigger gun" means a new shipData
+    # entry. Keep `range` here in step with that entry's beam range.
+    yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, range, targets, name)
+
+
+=== prefab_lm_turret_tower_drone
+" A drone-launching defense tower - the engine flies the drones
+metadata: ``` yaml
+display_text: Drone Tower
+type: prefab/turret
+side_value: tsn
+hull: starbase_torgoth
+range: 1500
+targets: null
+name: Drone Tower #
+behave: behav_npcship
+```
+    # ENGINE-MEASURED, and it is the whole reason this prefab differs from the others:
+    # a hull carrying `drone_launch_timer` DOES make the engine launch drones at a
+    # script-set target - but ONLY under behav_npcship. On behav_station it launches
+    # nothing, whatever the hull says. (LM_TestRange/maps/test_drone_probe.mast: 5 and 3
+    # launches on npcship, 0 on station, against hulls matched but for the timer.)
+    #
+    # Stock `starbase_torgoth` already carries drone_launch_timer: 30, so a drone tower
+    # needs no new shipData and no new art. Deploy pins throttle 0 and target_pos to the
+    # spawn point so the npcship helm cannot take it anywhere.
+    yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, range, targets, name, 0, behave)
+
+
+# Science scan - a turret reads as a fixed emplacement, not a ship and not a station.
+//enable/science if has_role(SCIENCE_SELECTED_ID, "turret")
+//science if has_role(SCIENCE_SELECTED_ID, "turret")
+    + "scan":
+        <scan>
+            % AUTOMATED EMPLACEMENT: fixed defense turret. No drive, no crew. It engages whatever its owners are at war with.
+            % AUTOMATED EMPLACEMENT: defense turret. Immobile and unmanned - it cannot pursue, but it never stops watching.

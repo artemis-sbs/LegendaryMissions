@@ -7,6 +7,8 @@
 #             - labeL: ai_fleet_chase_roles
 #               data: 
 #                 test_roles: station
+#                 (a fleet ordered against emplacements uses `test_roles: station,turret`
+#                  - turrets are not `station`, so they must be named explicitly)
 #             - labeL: ai_fleet_chase_roles
 #               data: 
 #                 test_roles: __player__

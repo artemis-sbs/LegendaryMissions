@@ -1,0 +1,58 @@
+# Game Master / Admiral turret placement.
+#
+# Deliberately NO new mechanism. The GM's `//focus/science` route already pans the camera
+# to a clicked map point, and every existing GM spawn entry places its object at
+# get_pos(COMMS_ORIGIN_ID) - the camera. So placing a turret is the same gesture the GM
+# already uses for ships, stations and fleets: click the map, open comms, Spawn > Turret.
+# A one-shot "arm then click" latch would have been a second, inconsistent way to do it.
+#
+# The kind list is DISCOVERED, not hardcoded: every `type: prefab/turret` label shows up
+# on its own, so adding a tower kind is a prefab and nothing else.
+
+//comms/gamemaster/spawn if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and not has_any_role(COMMS_SELECTED_ID, "ship, station")
+    +[$gamemaster]"Turret" //comms/gamemaster/spawn/turret
+
+
+//comms/gamemaster/spawn/turret if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
+    +^1[$gamemaster]"Back" //comms/gamemaster/spawn
+    lmtg_pos = get_pos(COMMS_ORIGIN_ID)
+    lmtg_side = lm_turret_gm_side(COMMS_ORIGIN_ID)
+    << "Deploy Turret"
+        % Placing at the current view position for side {lmtg_side}. {lm_turret_side_count(lmtg_side)} of {lm_turret_cap()} deployed.
+
+    # labels_get_type discovers the kinds, so this menu never needs editing.
+    for lmtg_lbl in labels_get_type("prefab/turret"):
+        lmtg_name = lmtg_lbl.get_inventory_value("display_text", "Turret")
+        # Gate with an `if`, evaluated HERE in this task - not a `+ "..." if <cond>:`
+        # button condition, which the engine re-evaluates outside this route's task
+        # where the loop variables do not exist.
+        if not lm_turret_at_cap(lmtg_side):
+            + "{lmtg_name}":
+                lmtg_data = ~~{"START_X": lmtg_pos.x, "START_Y": lmtg_pos.y, "START_Z": lmtg_pos.z, "side_value": lmtg_side}~~
+                prefab_spawn(lmtg_lbl, lmtg_data)
+                comms_navigate("//comms/gamemaster/spawn/turret")
+    if lm_turret_at_cap(lmtg_side):
+        << "At capacity"
+            % Side {lmtg_side} already has {lm_turret_cap()} turrets deployed. Remove one first.
+
+
+# Managing an existing turret. Reached by SELECTING one on the GM map, so it needs no
+# placement mode of its own.
+//comms/gamemaster/selected if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and has_role(COMMS_SELECTED_ID, "turret")
+    +[$gamemaster]"Turret" //comms/gamemaster/selected/turret
+
+
+//comms/gamemaster/selected/turret if has_roles(COMMS_ORIGIN_ID, 'gamemaster') and has_role(COMMS_SELECTED_ID, "turret")
+    +^1[$gamemaster]"Back" //comms
+    lmtg_t = COMMS_SELECTED_ID
+    << "Turret"
+        % Charge {turret_config(lmtg_t, "charge", 0)}. Time left {format_time_remaining(lmtg_t, "turret_life")}.
+    + "Recharge":
+        lm_turret_recharge(lmtg_t)
+        comms_navigate("//comms/gamemaster/selected/turret")
+    + "Extend life":
+        set_timer(lmtg_t, "turret_life", seconds=lm_turret_lifetime())
+        comms_navigate("//comms/gamemaster/selected/turret")
+    + "Remove":
+        delete_object(lmtg_t)
+        comms_navigate("//comms")

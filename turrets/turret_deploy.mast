@@ -1,0 +1,130 @@
+# Turret kits: buy or earn one, tow it into position, unfold it.
+#
+# The kit is a physical CRATE, not an inventory row, on purpose. Deploying a turret is
+# then a crew job - eject it, grab it with the grav tether, fly it to the chokepoint,
+# release, unfold - rather than a button press. It also gives the tether a use it is
+# genuinely good at: engine-measured, a tractor holds a load at a rope length just fine.
+#
+# EVERYTHING THAT SPAWNS IS //shared/signal. A plain //signal route registers on the
+# server AND on every connected console, so a six-bridge crew would deploy six turrets
+# from one click.
+#
+# Adding a tower kind needs NO code here: write a `type: prefab/turret` prefab and an
+# item whose `turret_prefab` names it. The crate carries the prefab name and the deploy
+# route spawns whatever it says.
+
+
+# --- the kits -----------------------------------------------------------------------
+# `price` is all it takes to appear in the station Market comms - market_purchasable()
+# collects every item label that has one. The same keys are grantable as quest rewards.
+
+=== prefab_item_turret_kit_beam
+metadata:``` yaml
+type: item/deployable/turret
+key: turret_kit_beam
+display_text: Beam Turret Kit
+art: container_4a
+mode: consumable
+targets: ship, cockpit
+consoles: weapons, engineering
+tier: 2
+price: 450
+turret_prefab: prefab_lm_turret_tower
+desc: Ejects a turret kit. Tow it into position and deploy it.
+```
+    lm_turret_eject_crate(UPGRADE_AGENT_ID, "prefab_lm_turret_tower", "Beam Turret Kit")
+    ->END
+
+=== prefab_item_turret_kit_heavy
+metadata:``` yaml
+type: item/deployable/turret
+key: turret_kit_heavy
+display_text: Heavy Turret Kit
+art: container_4a
+mode: consumable
+targets: ship, cockpit
+consoles: weapons, engineering
+tier: 3
+price: 900
+turret_prefab: prefab_lm_turret_tower_heavy
+desc: Ejects a heavy turret kit. Longer reach, harder hitting, slower.
+```
+    lm_turret_eject_crate(UPGRADE_AGENT_ID, "prefab_lm_turret_tower_heavy", "Heavy Turret Kit")
+    ->END
+
+=== prefab_item_turret_kit_drone
+metadata:``` yaml
+type: item/deployable/turret
+key: turret_kit_drone
+display_text: Drone Turret Kit
+art: container_4a
+mode: consumable
+targets: ship, cockpit
+consoles: weapons, engineering
+tier: 3
+price: 900
+turret_prefab: prefab_lm_turret_tower_drone
+desc: Ejects a drone tower kit. Launches attack drones on its own.
+```
+    lm_turret_eject_crate(UPGRADE_AGENT_ID, "prefab_lm_turret_tower_drone", "Drone Turret Kit")
+    ->END
+
+
+# --- tow and deploy -----------------------------------------------------------------
+# The grav_tether addon already raises a Weapons hold-click menu keyed on the TARGET'S
+# ROLE, so a kit only has to add its own entries. Tow rather than Lock: a rigid lock
+# reels the load right in, while the rope-toggle Tow holds it at a distance (measured
+# 798/801/801 at rope_len 800).
+
+//popup/weapons if has_any_role(WEAPONS_ORIGIN_ID, "__player__") and has_role(WEAPONS_SELECTED_ID, "turret_crate")
+    # grav_tether_involves, NOT grav_tether_get. A Tow is a rope-TOGGLE: it deletes the
+    # engine connection whenever the load is inside the rope length and re-engages when it
+    # drifts out, so grav_tether_get reads None for most of a normal tow. Gating on it
+    # would offer "Deploy Turret" mid-tow and unfold the turret wherever the ship was.
+    lmtk_towed = grav_tether_involves(WEAPONS_SELECTED_ID)
+    if not lmtk_towed:
+        + "Grav Tow Kit":
+            grav_tether_tow(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID, 500)
+    if lmtk_towed:
+        + "Release Kit":
+            grav_tether_release(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)
+    # Deploy only once it is NOT under tow - otherwise a turret unfolds while still
+    # being dragged and ends up wherever the ship happened to be.
+    if not lmtk_towed:
+        + "Deploy Turret":
+            lmtk_data = ~~{"lmtd_crate": WEAPONS_SELECTED_ID}~~
+            signal_emit("lm_turret_deploy_kit", lmtk_data)
+
+
+//shared/signal/lm_turret_deploy_kit
+    # `lmtd_crate` arrives as a task variable: signal data is a dict and its keys become
+    # variables in every route that handles the signal.
+    default lmtd_crate = None
+    ->END if lmtd_crate is None
+    ->END if not object_exists(lmtd_crate)
+    lmtd_prefab = lm_turret_crate_prefab(lmtd_crate)
+    ->END if lmtd_prefab is None
+    lmtd_side = to_object(lmtd_crate).side
+
+    # The cap is checked HERE, on the server, not in the popup: the popup is per console
+    # and two consoles could pass the same check at the same moment.
+    if lm_turret_at_cap(lmtd_side):
+        comms_broadcast(role(lmtd_side), f"Turret grid at capacity ({lm_turret_cap()}). Recover one before deploying another.")
+        ->END
+
+    lmtd_pos = get_pos(lmtd_crate)
+    lmtd_data = ~~{"START_X": lmtd_pos.x, "START_Y": lmtd_pos.y, "START_Z": lmtd_pos.z, "side_value": lmtd_side}~~
+    lmtd_id = await prefab_spawn(lmtd_prefab, lmtd_data)
+    ->END if lmtd_id is None
+    delete_object(lmtd_crate)
+    comms_broadcast(role(lmtd_side), "Defense turret deployed and active.")
+    ->END
+
+
+# --- upkeep and decay ---------------------------------------------------------------
+# Per-SHOT upkeep, which is only possible because //damage/object carries the shooter in
+# DAMAGE_ORIGIN_ID for beam damage (engine-measured). A timer-based drain would punish a
+# turret nothing ever flew past; a magazine only empties when the turret is doing its job.
+
+//damage/object if has_role(DAMAGE_ORIGIN_ID, "turret")
+    lm_turret_spend_charge(DAMAGE_ORIGIN_ID, 1)

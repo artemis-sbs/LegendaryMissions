@@ -48,6 +48,7 @@ basic_random_skybox/  export-ignore
 collisions/           export-ignore
 fabrication/          export-ignore
 grav_tether/          export-ignore
+turrets/              export-ignore
 data_panels/          export-ignore
 documents/            export-ignore
 lm_lore/              export-ignore

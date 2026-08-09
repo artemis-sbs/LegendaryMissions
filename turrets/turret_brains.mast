@@ -1,0 +1,37 @@
+# Turret AI: one brain node, because a turret only ever does one thing.
+#
+# ONE node rather than the usual chase/hold/idle stack. The whole policy - a designated
+# order beating acquisition, the anti-thrash hysteresis, diplomacy, the role filter - is
+# turret_acquire() in sbs_utils.procedural.turret, so splitting it across brain labels
+# would mean the SAME decision lived in two places and could disagree. A GM order does
+# not need its own node either: turret_designate() already outranks acquisition.
+#
+# Brain, not a tick: brains get the rolling slicer (no frame spike when 20 towers scan),
+# __BRAIN_PAUSED__ while an object is parked on the standby list, and automatic
+# unscheduling when the agent dies - none of which a raw TickDispatcher entry gets. A
+# re-scan every brain pass is also the RIGHT cadence for acquisition; scanning every
+# frame would just burn CPU to reach the same answer.
+
+=== lm_turret_engage
+" Turret scanning for targets
+metadata: ``` yaml
+type: brain/turret
+```
+    # DECAY and UPKEEP first, so a spent or expired tower stops shooting before it picks
+    # a new target. Both are checked on the brain's own cadence rather than a ticker of
+    # their own - a tower is allowed to finish the volley it is in.
+    if lm_turret_is_tower(BRAIN_AGENT_ID) and is_timer_finished(BRAIN_AGENT_ID, "turret_life"):
+        turret_disengage(BRAIN_AGENT_ID)
+        signal_emit("lm_turret_expired", BRAIN_AGENT_ID)
+        delete_object(BRAIN_AGENT_ID)
+        yield fail
+    if lm_turret_is_dormant(BRAIN_AGENT_ID):
+        turret_disengage(BRAIN_AGENT_ID)
+        yield fail
+
+    # turret_tick() acquires and engages, and stands the turret down when there is
+    # nothing to shoot. It writes target_id and NOTHING else - no throttle, no
+    # destination - which is the entire reason a turret stays put.
+    _lm_turret_target = turret_tick(BRAIN_AGENT_ID)
+    yield fail if _lm_turret_target is None
+    yield success
