@@ -99,6 +99,15 @@ def lm_tether_salvage_deliver(hulk, station, ship=0):
     # Deferred delete: freeing the hull synchronously while a tether tick may still be
     # holding its id is the use-after-free this codebase has been bitten by before.
     delete_object(hid)
+    # Credit any `Done when: tow <role>` quest the hauler is running. Declarative, so a
+    # rescue or an escort is authored in AMD rather than each mission inventing its own
+    # signal name for "I got it home".
+    if sid:
+        try:
+            from sbs_utils.procedural.quest_driver import quest_on_tow
+            quest_on_tow(sid, hid)
+        except Exception:
+            pass
     signal_emit("lm_tether_salvage_delivered",
                 {"HULK_ID": hid, "STATION_ID": stid, "SHIP_ID": sid, "UNITS": units})
     log(f"salvage delivered: {units} units", "grav_tether")

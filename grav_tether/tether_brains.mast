@@ -1,0 +1,39 @@
+# Enemy grav-tether: an NPC that pins you instead of just shooting at you.
+#
+# Lives in the TETHER addon, not ai/. A brain is only a label - brain_add resolves it
+# against the story's label table - so nothing makes it belong with the generic AI, and
+# putting it there forced `requires grav_tether` onto an addon every mission uses. The
+# addon that owns the mechanic owns the behavior that uses it.
+#
+# Deliberately routed through the ordinary tow, so every rule a player lives under
+# applies here too - it cannot grab a ship above the speed limit, mass decides who
+# actually gets dragged, and a hard hit shakes the beam loose. An enemy ability that
+# ignored the constraints layer would be the win button the layer exists to prevent.
+
+=== ai_tether_pin
+" Pinning a target with a grav-tether
+metadata: ``` yaml
+type: brain/npc
+pin_range: 2500
+pin_rope: 600
+```
+    yield fail if BRAIN_AGENT.data_set.get("surrender_flag", 0) == 1
+    # Already holding someone: keep the beam, do not go shopping for a second victim.
+    yield success if grav_tether_involves(BRAIN_AGENT_ID)
+
+    _pin = closest(BRAIN_AGENT_ID, side_hostile_ships(BRAIN_AGENT_ID) & role("__player__"), pin_range * 2)
+    yield fail if _pin is None
+    yield fail if _pin.distance > pin_range
+    yield fail if lm_tether_enemy_grab(BRAIN_AGENT_ID, _pin.id, pin_rope) is None
+    yield success
+
+
+# The counter-play, ticked for every pinned player: burn hard away and you tear loose.
+# BOTH the burn and the clock are required, so breaking free is something the crew DOES.
+=== lm_tether_break_watch
+--- ltbw_loop
+    await delay_sim(1)
+    for _pinned in to_object_list(role("__player__")):
+        if grav_tether_involves(_pinned.id):
+            lm_tether_break_free(_pinned.id)
+    jump ltbw_loop

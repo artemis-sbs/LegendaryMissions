@@ -106,3 +106,25 @@
     default UNITS = 0
     ->END if SHIP_ID == 0
     comms_broadcast(SHIP_ID, f"Hulk delivered - {UNITS} units of salvage aboard.")
+
+
+# --- phase 5 -------------------------------------------------------------------------
+# A black hole is the anchor the swing was invented for. Offered only when one is
+# actually in reach, and the rope is clamped clear of the gravity well by
+# lm_tether_swing_hole - the tether must never be the thing that drops someone in.
+//popup/tether if has_any_role(TETHER_ORIGIN_ID, "__player__,cockpit") and lm_tether_nearest_hole(TETHER_ORIGIN_ID) is not None
+    + "Slingshot the black hole":
+        lm_tether_swing_hole(TETHER_ORIGIN_ID, lm_tether_nearest_hole(TETHER_ORIGIN_ID))
+
+
+# Pinned by a hostile beam. Says what to do about it, because a ship that is suddenly
+# not going anywhere with no explanation reads as a bug.
+//shared/signal/lm_tether_pinned
+    default SHIP_ID = 0
+    ->END if SHIP_ID == 0
+    comms_broadcast(SHIP_ID, "Caught in a hostile grav-tether - burn hard away to tear loose.")
+
+//shared/signal/lm_tether_broke_free
+    default SHIP_ID = 0
+    ->END if SHIP_ID == 0
+    comms_broadcast(SHIP_ID, "Tether snapped - you are free.")

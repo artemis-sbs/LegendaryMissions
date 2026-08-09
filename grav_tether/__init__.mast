@@ -5,6 +5,8 @@ provides grav_tether
 import tether_mass.py
 import tether_fighter.py
 import tether_salvage.py
+import tether_growth.py
+import tether_brains.mast
 import grav_tether.mast
 
 # TOP LEVEL: installs LM's mass table and switches the constraints layer on. Without it
