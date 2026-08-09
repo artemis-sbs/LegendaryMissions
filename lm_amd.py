@@ -30,6 +30,14 @@ def _declare_lm_vocabulary():
         "hook": text(hint="the label/signal that stages the encounter"),
     }, domain="LegendaryMissions")
 
+    # How close counts as "at" a landmark. A landmark that names a ZONE rather than a
+    # spot - a picket, a patrol box, a no-fly area - needs its size where its position
+    # is. A radius kept in the mast instead would be a second place to edit one fact,
+    # and the two would drift the first time somebody moved the zone.
+    amd_register_fields("landmark", {
+        "radius": integer(hint="2500 - how close to Loc counts as inside the zone"),
+    }, domain="LegendaryMissions")
+
     # A character's radio handle - what the crew hears, distinct from `Display`.
     amd_register_fields("lifeform", {
         "call sign": text(hint="Ghost, Bitters, NightSky"),

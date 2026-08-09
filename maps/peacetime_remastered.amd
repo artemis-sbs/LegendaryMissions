@@ -236,6 +236,21 @@ Reward: 200 credits
 ---
 A comms relay has drifted off station. Grav-tether it and tow it to its marked position in the lane, then let it settle.
 
+// The goal COUNT lives here, not in the mast: pr_jobs_setup reads it back out (job_counts)
+// to decide how many kit crates to drop, so the crates and the target are the same number
+// by construction and cannot drift when density scaling changes one of them.
+// No Objective: - the quest log already renders "2 of 3" from progress/need, and prose
+// naming "3" would go stale at every other density.
+### [Picket Line](job_picket)
+---
+Job
+On accept: toast Job accepted: Picket Line
+On complete: toast Job complete: Picket Line
+Done when: signal 3 picket_placed
+Reward: 320 credits
+---
+DS 1 wants the lane junction covered by automated guns. Fleet drops turret kits alongside you - grav-tether each crate, tow it into the marked Picket Line zone, release it, and unfold it there. Any turret kind counts; a kit deployed outside the zone does not. The picket is only finished while the guns are still standing.
+
 // ---- Multi-step jobs: one board entry that runs a guided sequence across several consoles
 // (dispatch info-cards prompt each step). Completion is the final signal; getting there needs
 // every step done in order. pr_ghost_seq / pr_sweep_seq drive them; //comms + //science routes
@@ -475,6 +490,19 @@ Side: civ
 Roles: civilian, mercy_target
 Art: cargo_ship
 Loc: 16000, 0, -12000
+---
+
+// A ZONE, not an object: no Art:, so landmark_spawn places nothing and this record is a
+// pure position the mission reads with landmark_pos. A physical buoy at a chokepoint
+// would get shot, tethered, or mistaken for the thing you were sent to guard.
+// Radius 2500 is prefab_lm_turret_tower's own acquisition range, so a turret anywhere
+// inside the ring actually covers the junction it is standing in.
+### [Picket Line](picket_lm)
+---
+Kind: point
+Roles: picket_zone
+Radius: 2500
+Loc: -2000, 0, 18000
 ---
 
 // ---- The Florbin cargo ships' flavor scans (suspect/discovered), rendered by the generic

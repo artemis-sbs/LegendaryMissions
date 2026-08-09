@@ -219,6 +219,10 @@ Defaults:
     probe_n = max(1, int(job_counts.get("probe_recovered", 3) * job_scale + 0.5))
     herd_n = max(2, int(4 * job_scale + 0.5))
     salvage_n = max(1, int(job_counts.get("salvage_delivered", 3) * job_scale + 0.5))
+    # Picket Line: one turret kit per turret the picket needs. Read out of the AMD goal
+    # like every other counted job, so the crates dropped and the completion target are
+    # the same number by construction and cannot drift apart at another density.
+    picket_n = max(1, int(job_counts.get("picket_placed", 3) * job_scale + 0.5))
 
     # Declarative object scans (the scans section of PR_DOC), rendered by the generic science
     # route - no //science route here. (target_drone is raider-side, so the standard enemy scan
@@ -229,10 +233,10 @@ Defaults:
     # counts + the landmark records so the spawner reads them when a job is taken on. This keeps
     # counted jobs from being spoiled by pre-accept kills, and makes the stranded shuttle arrive on
     # the mayday (when the Mercy Run is accepted) instead of sitting adrift from the first second.
-    shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n, "probe": probe_n, "herd": herd_n, "salvage": salvage_n}
+    shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n, "probe": probe_n, "herd": herd_n, "salvage": salvage_n, "picket": picket_n}
     shared PR_LANDMARKS = landmarks_from_section(amd_section(PR_DOC, "landmarks"))
     # The jobs that spawn targets on accept, checked each dispatch tick.
-    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage", "job_lifepod", "job_relay", "job_ghost", "job_sweep", "job_cache", "job_herd_arc"]
+    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage", "job_lifepod", "job_relay", "job_picket", "job_ghost", "job_sweep", "job_cache", "job_herd_arc"]
 
     # The job board is the jobs section of PR_DOC (parsed above). Grant it PER PLAYER SHIP so
     # credit rewards pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses
@@ -243,6 +247,15 @@ Defaults:
     # or clutters space) before a job is taken on.
     for p in to_object_list(role("__player__")):
         quest_grant_amd(p.id, jobs_section, count_scale=job_scale)
+
+    # Headless / attract hook. A job only goes ACTIVE when a human presses Accept on the
+    # quest tab, so a --test run can never reach any job's spawn case or its watcher -
+    # the whole board is untestable without a person. Naming keys here accepts them at
+    # setup instead. Off unless settings.yaml says otherwise, and it works for EVERY job,
+    # not just the one it was added for.
+    for auto_key in SETTINGS.get("AUTO_ACCEPT_JOBS", []):
+        for ap in to_object_list(role("__player__")):
+            quest_mark_active(ap.id, auto_key)
 
     # Server watcher that credits the Sensor Net job as Sensor Beacons are deployed.
     task_schedule(pr_beacon_watch)
@@ -377,6 +390,44 @@ Defaults:
             npc_spawn(6000, 0, 9000, "Comms Relay", "tsn, relay, tow_relay, claimable", "cargo_ship", "behav_npcship")
             sim.add_navpoint(4000, 0, -10000, "Relay Position", "#0cf")
             task_schedule(pr_relay_watch)
+        case "job_picket":
+            # Automated guns on a lane junction. The zone is an AUTHORED POINT (the
+            # picket_lm landmark), not coordinates typed in here: the ring the crew is
+            # shown, the ring the watcher counts, and the ring a future edit moves are all
+            # the one AMD record.
+            picket_rec = pr_landmark_by_key(PR_LANDMARKS, "picket_lm")
+            ->END if picket_rec is None
+            # landmark_pos returns a plain [x, y, z] list, not a Vec3.
+            picket_at = landmark_pos(picket_rec)
+            shared PR_PICKET_X = picket_at[0]
+            shared PR_PICKET_Y = picket_at[1]
+            shared PR_PICKET_Z = picket_at[2]
+            shared PR_PICKET_R = pr_landmark_field(PR_LANDMARKS, "picket_lm", "radius", 2500)
+
+            # Show the ZONE, not just a dot - the job is "inside this ring", and a bare
+            # navpoint would tell the crew a position while the goal tests an area.
+            marker_area(PR_PICKET_X, PR_PICKET_Y, PR_PICKET_Z, PR_PICKET_R * 2, PR_PICKET_R * 2, "Picket Line", "#f804")
+            sim.add_navpoint(PR_PICKET_X, PR_PICKET_Y, PR_PICKET_Z, "Picket Line", "#f80")
+
+            # RESERVE the turret slots this job needs. The per-side ceiling is 8 live
+            # towers; a crew at max density needs 6 for the picket alone, and two crews on
+            # one side would hit the cap mid-job - failing on a balance rule the job never
+            # mentioned. Raising the shared the addon already reads is the whole fix, and
+            # pr_job_spawn runs once per key so it cannot compound.
+            shared LM_TURRET_CAP = lm_turret_cap() + PR_JOB_COUNTS.get("picket", 3)
+
+            comms_info_card(all_roles("console, comms"), "Fleet has dropped turret kits alongside you. Weapons: grav-tether each crate, tow it into the marked Picket Line zone, release it, then deploy it. Kits unfolded outside the ring do not count.", title="Emplacement Order", color="#0cf", notify=True)
+
+            # The kits arrive next to WHOEVER TOOK THE JOB, so the first act is a tow
+            # rather than a cross-map flight to fetch the crates.
+            pk_at = pr_job_spawn_center("job_picket", 1200, 2000, 0, 14000)
+            for pk_v in scatter.box(PR_JOB_COUNTS.get("picket", 3), pk_at.x, pk_at.y, pk_at.z, 1400, 200, 1400, centered=True):
+                pk_crate = lm_turret_spawn_crate(pk_v.x, pk_v.y, pk_v.z, "tsn", "prefab_lm_turret_tower", "Turret Kit")
+                # `claimable` puts the kits on the same claim machinery as every other tow
+                # target: unclaimed until somebody tethers one. Deliberately NOT
+                # pre-assigned - with one pool of crates, who gets them is the contest.
+                add_role(pk_crate, "claimable")
+            task_schedule(pr_picket_watch)
         case "job_ghost":
             # Multi-step: a silent derelict drifting toward a black hole. pr_ghost_seq guides the
             # crew hail -> scan -> tow-clear -> tow-home.
@@ -688,6 +739,62 @@ Defaults:
         remove_role(r.id, "tow_relay")
         ->END
     jump prw_loop
+
+
+# Picket Line (grav-tether + deploy): turret kits towed into the picket zone and unfolded.
+#
+# A POLLING RECOUNT, not a credit at the moment of deploy, and that is the design. Towers
+# here are ephemeral by construction - a 20 minute lifetime, and they are destructible
+# objects standing in a traffic lane - so a one-shot credit would leave the job reading
+# "3 of 3" over an empty junction, and would pay the moment three crates were unfolded
+# side by side and abandoned. The goal is N guns STANDING AT ONCE, which only a recount
+# can ask.
+#
+# Progress moves BOTH ways from the live count: up through quest_credit_signal (so the
+# library's own advance path runs - reward, On complete: toast, announcement - exactly as
+# if a signal had fired), and DOWN with a direct write when a tower is lost, which is what
+# makes the quest log read "2 of 3" again instead of lying.
+===== pr_picket_watch =====
+    default GAME_ENDED = False
+    default QUEST_MODE = "Protected"
+    pk_coop = QUEST_MODE == "Co-op"
+    pk_need = PR_JOB_COUNTS.get("picket", 3)
+    pk_seen = False
+--- ppw_loop
+    await delay_sim(2)
+    ->END if GAME_ENDED
+    # ACTIVE holders only: a ship that finished or abandoned drops out of the list, so the
+    # credit below cannot fire twice for one ship.
+    pk_holders = pr_job_holders("job_picket")
+    if len(pk_holders) > 0:
+        pk_seen = True
+    ->END if pk_seen and len(pk_holders) < 1
+    for pk_p in pk_holders:
+        pk_live = pr_picket_count(PR_PICKET_X, PR_PICKET_Y, PR_PICKET_Z, PR_PICKET_R, pk_p, pk_coop)
+        pk_prog = quest_get_key(pk_p, "job_picket", "progress", 0)
+        if pk_live < pk_prog:
+            quest_set_key(pk_p, "job_picket", "progress", pk_live)
+            comms_info_card(pk_p, f"Picket down to {pk_live} of {pk_need} - a turret is off the board. Deploy another inside the ring.", title="Picket Line", color="orange", notify=True)
+        for pk_i in range(pk_live - pk_prog):
+            quest_credit_signal(pk_p, "picket_placed")
+        if pk_live >= pk_need:
+            pr_award(pk_p, 320)
+    jump ppw_loop
+
+
+# Placed short. The watcher can say "you have 2 of 3"; only the deploy event knows a crew
+# just unfolded a kit well outside the ring and is about to wonder why nothing happened.
+# FEEDBACK ONLY - it never credits anything, because a deploy-time credit cannot be taken
+# back when the turret dies. //shared so it runs once on the server, not once per console.
+//shared/signal/lm_turret_deployed
+    default PR_PICKET_R = 0
+    default TURRET_ID = 0
+    default TURRET_OWNER_ID = 0
+    ->END if PR_PICKET_R <= 0
+    ->END if not has_role(TURRET_OWNER_ID, "__player__")
+    pk_d = (Vec3(get_pos(TURRET_ID)) - Vec3(PR_PICKET_X, PR_PICKET_Y, PR_PICKET_Z)).length()
+    ->END if pk_d <= PR_PICKET_R
+    comms_info_card(TURRET_OWNER_ID, f"Turret deployed {int(pk_d)}u from the Picket Line - outside the {int(PR_PICKET_R)}u ring, so it does not count. Tow the next kit inside the marker.", title="Picket Line", color="orange", notify=True)
 
 
 # The Ghost Freighter (multi-console guided sequence): hail (Comms) -> scan (Science) -> tow clear

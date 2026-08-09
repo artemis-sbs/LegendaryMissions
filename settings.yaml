@@ -121,4 +121,8 @@ PLAYER_LIST:
         ship: "tsn_battle_cruiser"
         face: "terran"
 
-
+# Dev/attract only: job-board keys to ACCEPT automatically at map setup.
+# A job normally goes active only when a human presses Accept on the quest tab, so a
+# headless --test run can never reach a job's spawn case or its watcher. Listing keys
+# here (e.g. [job_picket]) makes the board testable without a crew. Leave empty to ship.
+AUTO_ACCEPT_JOBS: []
