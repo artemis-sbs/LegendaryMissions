@@ -13,13 +13,13 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
 
 # Server-side, ONCE: ask friendly stations to start building Nukes - the autoplayer's
 # scarce alpha-strike munition (Homing already auto-builds on enable/comms). //shared so
-# it runs a single time on the server, not once per console. build_munition_queue_task
+# it runs a single time on the server, not once per console. docking_build_munition_queue_task
 # no-ops if the station is already on that type, so repeat calls across players are safe.
 //shared/signal/game_started if SETTINGS.get("AUTO_PLAY", {}).get("enable")
     await delay_sim(3)
     for player in role("__player__"):
         for station in side_allied_members(player, "station"):
-            build_munition_queue_task(station, "Nuke")
+            docking_build_munition_queue_task(station, "Nuke")
     ->END
 
 

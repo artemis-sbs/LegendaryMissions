@@ -37,7 +37,7 @@ CASINO_MARKET = [
 SECTION_NAMES = {"upgrade": "Craft Upgrades", "consumable": "Consumables",
                  "cosmetic": "Flair", "blackmarket": "Grey Market"}
 
-def market_goods(max_rep=0.0):
+def casino_market_goods(max_rep=0.0):
     """Goods on offer at the player's current standing. Grey-market items only
     appear once the player's best patron reputation meets their min_rep."""
     out = []
@@ -47,16 +47,16 @@ def market_goods(max_rep=0.0):
         out.append(g)
     return out
 
-def market_item(key):
+def casino_market_item(key):
     for g in CASINO_MARKET:
         if g["key"] == key:
             return g
     return None
 
-def market_sell_price(g):
+def casino_market_sell_price(g):
     """Buy-back value - ~40% of list."""
     return int(g.get("price", 0) * 0.4)
 
-def market_owned_flag(key):
+def casino_market_owned_flag(key):
     """Client-inventory key recording ownership."""
     return "casino_owns_" + key

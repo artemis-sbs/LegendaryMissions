@@ -33,7 +33,7 @@ def chips_after_delta(have, delta):
 
 
 # ---- sbs wrappers ---------------------------------------------------------
-def _side_of_ship(ship_id):
+def _casino_side_of_ship(ship_id):
     ship = to_object(ship_id)
     if ship is None or not getattr(ship, "side", None):
         return None
@@ -46,7 +46,7 @@ def casino_side_of_client(client_id):
     if ctx is not None and ctx.sbs is not None:
         ship = ctx.sbs.get_ship_of_client(client_id)
         if ship:
-            sid = _side_of_ship(ship)
+            sid = _casino_side_of_ship(ship)
             if sid is not None:
                 return sid
     key = get_inventory_value(client_id, "side", None)

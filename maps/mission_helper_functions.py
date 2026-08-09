@@ -163,7 +163,7 @@ def fb_make_name(pools, kind, rng):
             + " " + _pop_rand(pools[kind], rng, "Freighter"))
 
 
-def _make_hold(pools, rng):
+def _fb_make_hold(pools, rng):
     """One Hold: a random 3-letter container code + a good popped from the trade-goods pool."""
     letters = ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "M", "N",
                "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
@@ -174,8 +174,8 @@ def _make_hold(pools, rng):
 def fb_make_cargo(name, captain, stops, pools, rng, dep_time=""):
     """Build a fresh FbCargo: four active holds + four reserve holds (spares a stop-transfer swaps
     in). Draw order (4 holds, then 4 reserve) matches the old flat build, so seeds are unchanged."""
-    holds = [_make_hold(pools, rng) for _ in range(4)]
-    reserve = [_make_hold(pools, rng) for _ in range(4)]
+    holds = [_fb_make_hold(pools, rng) for _ in range(4)]
+    reserve = [_fb_make_hold(pools, rng) for _ in range(4)]
     return FbCargo(name, captain, stops, holds, reserve, dep_time)
 
 

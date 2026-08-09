@@ -103,7 +103,7 @@ def patron_has_rumors(key):
     return len(_rumor_nodes(key)) > 0
 
 
-def pick_rumor(key, rng=None):
+def bar_pick_rumor(key, rng=None):
     pool = patron_rumor_pool(key)
     if not pool:
         return None

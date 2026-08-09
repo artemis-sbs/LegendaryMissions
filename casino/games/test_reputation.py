@@ -46,14 +46,14 @@ class TestReputation(unittest.TestCase):
     def test_market_gating(self):
         import casino_market as mkt
         # below any grey-market min_rep -> only the open goods
-        open_keys = {g["key"] for g in mkt.market_goods(0.0)}
+        open_keys = {g["key"] for g in mkt.casino_market_goods(0.0)}
         self.assertNotIn("phase_cloak", open_keys)
         self.assertIn("cockpit_shields", open_keys)
         # high standing unlocks grey market
-        high_keys = {g["key"] for g in mkt.market_goods(0.9)}
+        high_keys = {g["key"] for g in mkt.casino_market_goods(0.9)}
         self.assertIn("phase_cloak", high_keys)
         self.assertIn("overcharge_core", high_keys)
-        self.assertEqual(mkt.market_sell_price({"price": 1000}), 400)
+        self.assertEqual(mkt.casino_market_sell_price({"price": 1000}), 400)
 
 
 if __name__ == "__main__":

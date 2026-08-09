@@ -72,8 +72,8 @@ class TestBarContentSynthetic(unittest.TestCase):
         self.assertFalse(bc.patron_has_rumors("ghost"))
 
     def test_pick_rumor(self):
-        self.assertIsNone(bc.pick_rumor("ghost"))
-        r = bc.pick_rumor("barkeep", rng=random.Random(0))
+        self.assertIsNone(bc.bar_pick_rumor("ghost"))
+        r = bc.bar_pick_rumor("barkeep", rng=random.Random(0))
         self.assertEqual(r["tip"], "A tip.")
 
     def test_chatter(self):

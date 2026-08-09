@@ -39,8 +39,6 @@ science_scans/        export-ignore
 side_missions/        export-ignore
 upgrades/             export-ignore
 quests/               export-ignore
-admiral/              export-ignore
-admiral_comms/        export-ignore
 gamemaster/           export-ignore
 gamemaster_comms/     export-ignore
 prefabs/              export-ignore
@@ -55,3 +53,4 @@ documents/            export-ignore
 lm_lore/              export-ignore
 director/             export-ignore
 avatar_editor/        export-ignore
+races/                export-ignore

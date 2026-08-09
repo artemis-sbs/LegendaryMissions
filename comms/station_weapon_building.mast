@@ -21,7 +21,7 @@ shared surrender_color = "yellow"
     COMMS_SELECTED.data_set.set("Tag_NUM", random.randint(2,5), 0)
 
 
-    build_munition_queue_task(COMMS_SELECTED_ID, "Homing")
+    docking_build_munition_queue_task(COMMS_SELECTED_ID, "Homing")
     # scanned = COMMS_SELECTED["SCANNED"]
 
 
@@ -79,7 +79,7 @@ shared surrender_color = "yellow"
         count = get_data_set_value(COMMS_SELECTED_ID, f"{t}_NUM", 0)
         if count is None:
             count = 0
-        time = get_build_time_for(COMMS_SELECTED_ID, t)
+        time = docking_get_build_time_for(COMMS_SELECTED_ID, t)
         stats += """ ^{t: <10}{count: >5}{"": >16}{time}:00"""
 
     <<[green] "Hail"
@@ -105,7 +105,7 @@ shared surrender_color = "yellow"
     ->END if station_obj is None
 
 
-    if build_munition_queue_task(station_id, build_type):
+    if docking_build_munition_queue_task(station_id, build_type):
         comms_receive(f"""We read you, {comms_id}.  We will focus on {weapon_text} production.^""", title=f"build {weapon_text}", title_color=station_color)
     else:
         comms_receive(f"""{comms_id}, we are already producing {weapon_text}.^""", title=f"build {weapon_text}", title_color=station_color)
@@ -115,7 +115,7 @@ shared surrender_color = "yellow"
 
 === task_station_building ===
     #
-    # torpedo_build_type, build_time is passed in from build_munition_queue_task
+    # torpedo_build_type, build_time is passed in from docking_build_munition_queue_task
     #
 
     # Player ships can die now

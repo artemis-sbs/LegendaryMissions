@@ -203,7 +203,7 @@ help: |
         bar_message_id += 1
         jump bar_show
     if bar_act == "ask":
-        _r = pick_rumor(_pkey)
+        _r = bar_pick_rumor(_pkey)
         _true = patron_rumor_is_true(_sel_patron, patron_ou_standing(_sel_patron))
         bar_active_tip = {"key": _pkey, "tip": _r.get("tip", ""), "intel": _r.get("intel", ""), "true": _true}
         jump bar_show

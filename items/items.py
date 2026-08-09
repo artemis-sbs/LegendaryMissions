@@ -25,7 +25,7 @@ from sbs_utils.procedural.items import (  # noqa: F401
 
 
 # --- Upgrades console tab ----------------------------------------------------
-def _fmt_duration(secs):
+def _items_fmt_duration(secs):
     """Human duration for an item's effect length: whole minutes as 'N min',
     otherwise 'N sec'."""
     secs = int(secs)
@@ -42,7 +42,7 @@ def item_describe(lbl):
     desc = lbl.get_inventory_value("desc", "") or ""
     dur = lbl.get_inventory_value("duration", 0) or 0
     if dur and dur > 0 and "for a time" in desc:
-        desc = desc.replace("for a time", "for " + _fmt_duration(dur))
+        desc = desc.replace("for a time", "for " + _items_fmt_duration(dur))
     return desc
 
 

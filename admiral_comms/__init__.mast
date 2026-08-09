@@ -1,5 +1,0 @@
-requires admiral            # comms routes gate on the 'admiral' cambot (admiral addon)
-
-import admiral_comms.mast
-# import admiral_comms_maps.mast
-# import admiral_comms_messages.mast

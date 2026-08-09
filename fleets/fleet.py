@@ -24,7 +24,7 @@ from sbs_utils.procedural.roles import role
 TRUCE_THRESHOLD = 60
 
 
-def reputation_standing(ship_id, clan):
+def fleet_reputation_standing(ship_id, clan):
     """Overall favorability of a captain (ship) with a clan (sum of axes)."""
     reps = get_inventory_value(ship_id, "reputation", None) or {}
     cm = reps.get(clan)
@@ -38,7 +38,7 @@ def truced_ships(clan):
     if not clan:
         return out
     for s in to_object_list(role("__player__")):
-        if reputation_standing(s.id, clan) >= TRUCE_THRESHOLD:
+        if fleet_reputation_standing(s.id, clan) >= TRUCE_THRESHOLD:
             out.add(s.id)
     return out
 
