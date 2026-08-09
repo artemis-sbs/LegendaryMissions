@@ -71,3 +71,30 @@
             lmtf_next = lm_tether_cycle_next(TETHER_ORIGIN_ID)
             if lmtf_next is not None:
                 lm_tether_open_popup(TETHER_ORIGIN_ID, lmtf_next.id)
+
+
+# The beam breaks under hard fire, so towing under attack is a real risk rather than a
+# free ride. //damage/object fires per hit and carries the amount in EVENT.sub_float;
+# only a heavy hit shakes a tether loose, or every skirmish would drop every load.
+//damage/object if grav_tether_involves(DAMAGE_TARGET_ID) or grav_tether_involves(DAMAGE_ORIGIN_ID)
+    default sub_float = 0
+    lmgt_hit = EVENT.sub_float or 0
+    ->END if lmgt_hit < LM_TETHER_BREAK_DAMAGE
+    if grav_tether_involves(DAMAGE_TARGET_ID):
+        grav_tether_release_any(DAMAGE_TARGET_ID)
+        comms_broadcast(DAMAGE_TARGET_ID, "Grav-tether shaken loose by the hit.")
+
+
+# Ran the reserves dry mid-haul. The library drops the load rather than pinning the ship
+# at zero energy - being slow is a mechanic, being stranded is not.
+//shared/signal/grav_tether_dry
+    default SOURCE_ID = 0
+    ->END if SOURCE_ID == 0
+    comms_broadcast(SOURCE_ID, "Grav-tether offline - not enough power to hold the load.")
+
+
+# Too fast to get hold of. Says WHY, or the button just looks broken.
+//shared/signal/grav_tether_too_fast
+    default SOURCE_ID = 0
+    ->END if SOURCE_ID == 0
+    comms_broadcast(SOURCE_ID, "Target is under power - cripple its engines before you can get a lock.")

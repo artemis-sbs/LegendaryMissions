@@ -2,5 +2,11 @@ provides grav_tether
 
 # The fighter one-button interaction (lm_tether_press) lives here, and the hangar's
 # cockpit console calls it - so this addon has to announce itself.
+import tether_mass.py
 import tether_fighter.py
 import grav_tether.mast
+
+# TOP LEVEL: installs LM's mass table and switches the constraints layer on. Without it
+# the library's rules are inert (everything weighs the same), which is the right default
+# for a library and the wrong one for a game.
+lm_tether_load_masses()

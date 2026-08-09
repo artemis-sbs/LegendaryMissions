@@ -1,0 +1,80 @@
+# Ship mass, for the grav-tether constraints layer.
+#
+# WHY A TABLE AND NOT A DERIVATION. shipData has no mass field, and the obvious proxies
+# do not order ships correctly: `exclusionradius` puts a fighter and a shuttle both at 25
+# and a light cruiser, a battleship and a juggernaut all at 50. `hullpoints` DOES order
+# them (1 / 1 / 3 / 5 / 9, stations 100-200), so it seeds this file - but mass is not
+# toughness, and the entries marked "hauler" are where that shows: a freighter is a barn
+# door with a cargo hold, heavy to drag and trivial to shoot.
+#
+# UNITS ARE RELATIVE. A fighter is 1. Only RATIOS matter: the tether compares the two
+# ends, so doubling every number here changes nothing.
+#
+# A hull not listed falls back to LM_TETHER_MASS_DEFAULT and is LOGGED once - a silent
+# fallback is how "everything weighs the same" hides. Add the hull here rather than
+# letting the warning repeat.
+
+masses:
+  arvonian_carrier: 5
+  arvonian_destroyer: 2
+  arvonian_fighter: 1
+  arvonian_light_carrier: 4
+  biomech_a: 2
+  biomech_b: 2
+  biomech_c: 2
+  biomech_d: 2
+  cargo_ship: 12          # hauler - bulk, not toughness
+  kralien_battleship: 3
+  kralien_cruiser: 2
+  kralien_dreadnought: 4
+  luxury_liner: 16          # hauler - bulk, not toughness
+  pirate_brigantine: 5
+  pirate_fighter: 1
+  pirate_longbow: 2
+  pirate_strongbow: 4
+  science_ship: 2
+  skaraan_defiler: 4
+  skaraan_enforcer: 6
+  skaraan_executor: 8
+  starbase_arvonian: 100
+  starbase_civil: 100
+  starbase_command: 200
+  starbase_industry: 200
+  starbase_kralien: 100
+  starbase_science: 100
+  starbase_skaraan: 100
+  starbase_torgoth: 200
+  torgoth_behemoth: 6
+  torgoth_destroyer: 3
+  torgoth_goliath: 4
+  torgoth_leviathan: 5
+  transport_ship: 6
+  tsn_battle_cruiser: 4
+  tsn_battleship: 5
+  tsn_bomber: 1
+  tsn_carrier: 4
+  tsn_destroyer: 3
+  tsn_dreadnought: 8
+  tsn_escort: 2
+  tsn_fighter: 1
+  tsn_heavy_cruiser: 5
+  tsn_juggernaut: 9
+  tsn_light_carrier: 3
+  tsn_light_cruiser: 3
+  tsn_mine_layer: 4
+  tsn_missile_cruiser: 4
+  tsn_scout: 2
+  tsn_shuttle: 1
+  tsn_warpster: 2
+  xim_avenger: 1
+  xim_battleship: 6
+  xim_carrier: 5
+  xim_corsair: 3
+  xim_corvette: 2
+  xim_destroyer: 2
+  xim_dreadnought: 9
+  xim_escort: 2
+  xim_light_carrier: 3
+  xim_light_cruiser: 3
+  xim_missile_cruiser: 4
+  xim_scout: 2
