@@ -465,17 +465,23 @@ hangar_get_craft_data("terran")
 
     # Grav-tether: one press nose-aim acquires a tetherable object and tethers it
     # (release on a second press); button goes cyan while tethered.
-    gui_row(style="row-height:50px;")
-    grav_tether = gui_button("icon_index:54;color:#fff", on_press="hangar_grav_tether", is_sub_task=True)
+    #
+    # Built only when the grav_tether addon is loaded - the press calls ITS
+    # `lm_tether_press`, so a cockpit without it must not offer the button at all. A
+    # mission that never heard of the tether gets a cockpit with one fewer control and
+    # no warning, which is what a SUGGESTED dependency should feel like.
+    if LM_HAS_TETHER:
+        gui_row(style="row-height:50px;")
+        grav_tether = gui_button("icon_index:54;color:#fff", on_press="hangar_grav_tether", is_sub_task=True)
 
-    # Reflect the ACTUAL tether state on the button (fires for a press, a warp-snap, or an
-    # auto-release): cyan while this fighter is tethered, white when free. .update replaces
-    # the whole style, so both props are carried.
-    on change grav_tether_involves(sbs.get_ship_of_client(client_id)):
-        if grav_tether_involves(sbs.get_ship_of_client(client_id)):
-            grav_tether.update("icon_index:54;color:#0ff")
-        else:
-            grav_tether.update("icon_index:54;color:#fff")
+        # Reflect the ACTUAL tether state on the button (fires for a press, a warp-snap,
+        # or an auto-release): cyan while this fighter is tethered, white when free.
+        # .update replaces the whole style, so both props are carried.
+        on change grav_tether_involves(sbs.get_ship_of_client(client_id)):
+            if grav_tether_involves(sbs.get_ship_of_client(client_id)):
+                grav_tether.update("icon_index:54;color:#0ff")
+            else:
+                grav_tether.update("icon_index:54;color:#fff")
 
     await gui()
 
@@ -498,6 +504,9 @@ hangar_get_craft_data("terran")
 
 
 --- hangar_grav_tether
+    # Belt and braces: the button is not built without the addon, but a label is a jump
+    # target and `lm_tether_press` does not exist to jump to.
+    ->END if not LM_HAS_TETHER
     _ship_id = sbs.get_ship_of_client(client_id)
     ->END if _ship_id is None or _ship_id==0
     # The whole interaction lives in the grav_tether addon (lm_tether_press): toggle to

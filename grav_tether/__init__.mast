@@ -1,5 +1,11 @@
 provides grav_tether
 
+# ...and again at RUNTIME, for an addon that only WANTS the tether. `provides` is
+# compile-time only, so a soft dependant has nothing to test; this shared flag is
+# what it tests. Order-safe: whichever of the two top levels runs first, the other
+# is a `default shared` and leaves this True.
+shared LM_HAS_TETHER = True
+
 # The fighter one-button interaction (lm_tether_press) lives here, and the hangar's
 # cockpit console calls it - so this addon has to announce itself.
 import tether_mass.py

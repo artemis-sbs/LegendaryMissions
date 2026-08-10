@@ -1,8 +1,12 @@
 provides hangar
-# HARD: the cockpit console has a grav-tether button, and lm_tether_press is that
-# addon's. Without it the button raises at the press rather than failing to build,
-# so this is a compile-time requirement rather than a runtime surprise.
-requires grav_tether
+# SOFT. The cockpit's grav-tether button calls `lm_tether_press`, which is that addon's,
+# so without it the button would raise at the press - but making that a HARD requirement
+# broke every mission that loads the hangar and had never heard of the tether, which is
+# most of them (the `sbs create` template included). The button is guarded on
+# LM_HAS_TETHER instead: with the addon it is there, without it the cockpit simply has
+# one fewer control and nothing says a word.
+suggests grav_tether
+default shared LM_HAS_TETHER = False
 
 import hangar.py
 import hangar_loadout.mast
