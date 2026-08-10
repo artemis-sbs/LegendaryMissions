@@ -545,3 +545,30 @@ def pr_salvage_award(ship, units):
     from sbs_utils.procedural.query import to_id
     sid = to_id(ship)
     set_inventory_value(sid, "salvage", get_inventory_value(sid, "salvage", 0) + int(units))
+
+
+def fb_briefing_text(text_map, suspects):
+    """The DS 1 briefing with its one slot already filled.
+
+    The `## Florbin Text` templates carry `{slots}` that `comms_receive` interpolates
+    from task variables at send time. An incoming hail has no such moment - its text is
+    stored on the record when the hail is OFFERED and handed straight to a widget - so
+    the slot has to be closed here.
+
+    It must also be closed BEFORE the value reaches MAST: assigning a string containing
+    `{` to a MAST variable runs it through f-string formatting, and the failure is
+    reported against the assignment rather than against the text.
+    """
+    return str(text_map.get("briefing") or "").replace("{suspects}", str(suspects or ""))
+
+
+def fb_is_briefed(ship):
+    """Whether this ship has answered DS 1's briefing hail.
+
+    The gate on the cargo-manifest menu. It used to be an inline
+    `get_inventory_value(..., "fb_briefed", 0) == 1` in a comms condition; as a named
+    function the condition reads as what it means, and the flag has one writer.
+    """
+    from sbs_utils.procedural.inventory import get_inventory_value
+    from sbs_utils.procedural.query import to_id
+    return get_inventory_value(to_id(ship), "fb_briefed", 0) == 1

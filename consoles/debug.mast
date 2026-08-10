@@ -97,6 +97,14 @@ if is_dev_build():
     gui_row()
     on gui_message(gui_button("Dump Nebula")):
         debug_dump_nebula()
+
+    gui_row()
+    on gui_message(gui_button("Test Hail")):
+        # viewscreen_home_ship, not get_ship_of_client: an orbit shot assigns this
+        # console to what it is filming. Resolved HERE and passed as data, the way
+        # every other button in this tab does it.
+        _hs = viewscreen_home_ship(client_id)
+        task_schedule(debug_test_hail, data={"_hail_ship": _hs})
         
 
     default elite_get_all_abilities = None
@@ -340,3 +348,15 @@ if is_dev_build():
     _ship.pos = _pos 
 
     yield success
+
+=== debug_test_hail
+    # An incoming hail with no AMD document behind it - the lines and the answers
+    # are passed straight in - so it works on any map. What it exercises:
+    #   * an `Answer: TSN Command` entry in the strip above Follow, on comms
+    #   * the placement dropdown beside Follow, which decides where it is drawn
+    #   * Continue, then three answers, then the `hails` info-panel tab replays it
+    ->END if _hail_ship is None or _hail_ship == 0
+    _hail_lines = ["Artemis, this is TSN Command. Respond.", "We have lost contact with the outer platforms."]
+    _hail_choices = ["Acknowledge", "Request orders", "Report a problem"]
+    hail_offer(_hail_ship, speaker="tsn_command", name="TSN Command", title="PRIORITY", face="terran", presentation="portrait", lines=_hail_lines, choices=_hail_choices, key="debug_test_hail")
+    ->END

@@ -27,14 +27,14 @@ Starts when: at once
 Ambassador Florbin has been kidnapped and smuggled out in a cargo container. Follow the cargo trail, find him, and bring him home to DS 1 - alive.
 
 #### [Take the Case](brief)
-= Opening. Comms hails DS 1; nothing else is revealed until this lands.
+= Opening. DS 1 hails the CREW; nothing else is revealed until this lands.
 ---
 Scope: shared
 Starts when: at once
 Done when: signal case_opened
 Then: reveal florbin/trail
 ---
-Contact DS 1 to open the investigation.
+DS 1 is calling. Answer the incoming hail on comms to open the investigation.
 
 #### [Identify the Kidnapper](trail)
 = Midpoint. Science work - the crew learns Florbin is alive and aboard.

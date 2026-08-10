@@ -136,36 +136,46 @@ shared FB_TEXT = {}
     task_schedule(fb_kidnap_message)
     task_schedule(task_peacetime_end_game)
 
+    # DS 1 CALLS the crew rather than waiting to be hailed. The briefing arrives as
+    # an incoming hail on comms, and answering it is what opens the case - which is
+    # what the quest step promises. ONE answer: nothing re-offers a declined briefing
+    # and the case cannot proceed without it. Keyed, so a re-entered setup cannot queue it
+    # twice, and offered per player ship because a hail belongs to one bridge.
+    fb_ds1_list = to_object_list(role('ds1'))
+    if len(fb_ds1_list) > 0:
+        for fb_p in to_object_list(role('__player__')):
+            hail_offer(fb_p, speaker='ds1', name='DS 1', title='Ambassador Kidnapped', color='orange', presentation='portrait', face=get_face(fb_ds1_list[0].id), lines=fb_briefing_text(FB_TEXT, fb_case['investigate_message']), choices=['Take the case'], key='fb_briefing')
+
+
     #-----------------------------------------------------------------------------------------------------------------------------
     # Comms Section - Adds comms buttons for talking to stations. Some buttons only work if the player is docked with the station.
 
-//comms if has_roles(COMMS_SELECTED_ID, "tsn, station, ds1") and FB_STATUS >= 1 
-    + "Investigate Kidnapping" //comms/fb_investigate_kidnapping 
+//shared/signal/hail
+    # SERVER ONLY. Opening the case is shared state - it reveals the next step for the
+    # whole crew - so it must happen once however many consoles are connected. The
+    # payload says which hail and which answer, so this cannot fire on somebody else's.
+    ->END if HAIL_STATE != "answered"
+    ->END if HAIL_KEY != "fb_briefing"
+    ->END if HAIL_CHOICE != "Take the case"
+    # Answering IS "Take the Case": the crew has been briefed, so the manifest menu
+    # unlocks on DS 1 and the quest step completes. Idempotent either way - the hail is
+    # gone by the time this runs, so it cannot be answered twice.
+    set_inventory_value(HAIL_SHIP, "fb_briefed", 1)
+    signal_emit("quest_signal", {"SIGNAL_NAME": "case_opened"})
+
+
+//comms if has_roles(COMMS_SELECTED_ID, "tsn, station, ds1") and FB_STATUS >= 1 and fb_is_briefed(COMMS_ORIGIN_ID)
+    + "Cargo Manifests" //comms/fb_investigate_kidnapping
 
 //comms/fb_investigate_kidnapping
     investigate_msg = get_inventory_value(COMMS_SELECTED_ID, "investigate_message")
     ship1_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship1_cargo1")
     ship2_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship2_cargo1")
     ship3_cargo1 = get_inventory_value(COMMS_SELECTED_ID, "ship3_cargo1")
-    # Prose is the `briefing` template (## Florbin Text); {suspects} fills from the task var.
-    suspects = investigate_msg
-    # Send the briefing ONCE per ship. A comms route body re-runs every time the menu is
-    # rebuilt - and pressing one of the manifest buttons below rebuilds it - so an
-    # unguarded comms_receive here re-sent "Ambassador Kidnapped" on every manifest
-    # press. That is issue #687: the duplicate is the BRIEFING, triggered by an
-    # unrelated button. Only menu construction belongs in a route body; a one-time
-    # narrative beat needs a guard.
-    fb_briefed = get_inventory_value(COMMS_ORIGIN_ID, "fb_briefed", 0)
-    if fb_briefed == 0:
-        set_inventory_value(COMMS_ORIGIN_ID, "fb_briefed", 1)
-        comms_receive(FB_TEXT.get("briefing"), title="Ambassador Kidnapped", title_color="orange")
-        # THIS is "Take the Case" - the crew hailing DS 1 and being briefed, which is what
-        # the step's text promises. It used to be bridged off FB_STATUS >= 1, but that is
-        # set during map setup (fb_investigation's first line), so the step completed
-        # itself about a second into the shift. The quest is shared, so whoever hails
-        # first opens it for everyone; quest_mark_complete is idempotent, so a second
-        # ship hailing later is harmless.
-        signal_emit("quest_signal", {"SIGNAL_NAME": "case_opened"})
+    # The briefing itself is no longer sent here - DS 1 HAILS the crew with it during
+    # setup above. This menu is now only the cargo manifests, and it is
+    # reachable only after that hail has been answered, so the case still opens in
+    # one place and cannot open twice.
     + !0 "Back" //comms
     + "Cargo Manifest {ship1_cargo1.ship}" fb_cargo_manifest {"ckey":"ship1_cargo1"}
     + "Cargo Manifest {ship2_cargo1.ship}" fb_cargo_manifest {"ckey":"ship2_cargo1"}
