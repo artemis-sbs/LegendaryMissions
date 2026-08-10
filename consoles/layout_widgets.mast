@@ -419,8 +419,8 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
             # prototype is where that pattern was copied FROM, and it cost real time
             # twice; gui_hide now warns when handed an engine widget. Simply not asking
             # for it is what keeps it off.
-            recent_listbox = gui_list_box(recent_list,"row-height: 0.1em; background:#1572;", item_template=comms_recent_item, select=True)
-            history_listbox = gui_list_box(message_list,"row-height: 0.1em; background:#1572;", item_template=comms_message_item, select=True)
+            recent_listbox = gui_list_box(recent_list,"item-gap: 0.1em; background:#1572;", item_template=comms_recent_item, select=True)
+            history_listbox = gui_list_box(message_list,"item-gap: 0.1em; background:#1572;", item_template=comms_message_item, select=True)
             ### Need library help to make better click area
             history_text = gui_text_area("", "click_text:"";click_background:#0000:")
             gui_hide(history_text)

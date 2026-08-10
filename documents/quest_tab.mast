@@ -52,7 +52,7 @@ if QUEST_TAB_ENABLED:
 
     # Quest list (left) + narrative (right) + accept/abandon controls.
     gui_section(style="area: 0,45px, 38,100; background:#1572;")
-    qbox = gui_list_box(items, "row-height:0.1em;", item_template=quest_log_template, title_template=quest_log_title, select=True, collapsible=True, reveal=True, hint=quest_sel_hint)
+    qbox = gui_list_box(items, "item-gap:0.1em;", item_template=quest_log_template, title_template=quest_log_title, select=True, collapsible=True, reveal=True, hint=quest_sel_hint)
     # An explicit selection beats the hint's, which is what makes this order safe:
     # the hint restores the VIEW, this line restores the SELECTION.
     #

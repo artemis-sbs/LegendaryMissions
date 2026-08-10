@@ -292,7 +292,7 @@ if CAN_CHANGE_CONSOLE:
     # so the selected console is easily below the fold. `reveal` is the fix here;
     # the hint is what stops it moving on the rebuilds we can capture.
     default console_sel_hint = None
-    console_select_lb = gui_list_box(consoles,"row-height: 0.5em; background:#1572;", item_template=console_select_template, title_template=console_select_title_template, select=True, read_only=console_read_only, reveal=True, hint=console_sel_hint)
+    console_select_lb = gui_list_box(consoles,"item-gap: 0.5em; background:#1572;", item_template=console_select_template, title_template=console_select_title_template, select=True, read_only=console_read_only, reveal=True, hint=console_sel_hint)
     console_select_lb.set_value(console_select_item)
 
     #

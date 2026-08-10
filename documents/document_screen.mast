@@ -45,7 +45,7 @@ shared ALLOW_DOC_REFRESH  = SETTINGS.get("ALLOW_DOC_REFRESH", is_dev_build())
     # Left
     with gui_sub_section("col-width:35;"):
         gui_row()
-        obj_list = gui_list_box(document,"row-height: 0.1em; background:#1572;", item_template=document_item, title_template=document_type, select=True)
+        obj_list = gui_list_box(document,"item-gap: 0.1em; background:#1572;", item_template=document_item, title_template=document_type, select=True)
         if topic is not None:
             obj_list.value = topic
 

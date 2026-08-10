@@ -64,7 +64,7 @@ default CONSOLE_SELECT = ""
     # second -- with a long recipe book that is the whole list moving under you.
     default fab_sel_hint = None
     gui_section(style="area: 5, 12, 45, 100; background:#1572;")
-    fab_box = gui_list_box(fab_items, "row-height: 0.1em;", item_template=recipe_row, title_template=recipe_title, select=True, reveal=True, hint=fab_sel_hint)
+    fab_box = gui_list_box(fab_items, "item-gap: 0.1em;", item_template=recipe_row, title_template=recipe_title, select=True, reveal=True, hint=fab_sel_hint)
     if fab_idx >= 0:
         fab_box.set_selected_index(fab_idx, False)
     on change fab_box.get_value():
@@ -174,7 +174,7 @@ default CONSOLE_SELECT = ""
     if len(car_items) == 0:
         """color:#888; $text: Cargo hold empty."""
     default cargo_sel_hint = None
-    car_box = gui_list_box(car_items, "row-height: 0.1em;", item_template=cargo_row, title_template=cargo_title, select=True, reveal=True, hint=cargo_sel_hint)
+    car_box = gui_list_box(car_items, "item-gap: 0.1em;", item_template=cargo_row, title_template=cargo_title, select=True, reveal=True, hint=cargo_sel_hint)
     if car_idx >= 0:
         car_box.set_selected_index(car_idx, False)
     on change car_box.get_value():

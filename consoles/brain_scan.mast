@@ -43,7 +43,7 @@ brain_to_watch = None
     # Left
     with gui_sub_section("col-width:25;"):
         gui_row()
-        obj_list = gui_list_box(has_brain,"row-height: 0.1em; background:#1572;", item_template=brain_scan_selection_item, title_template=brain_scan_selection_title, select=True)
+        obj_list = gui_list_box(has_brain,"item-gap: 0.1em; background:#1572;", item_template=brain_scan_selection_item, title_template=brain_scan_selection_title, select=True)
     
     obj_list.title_section_style += "background:#1578;"
     on change obj_list.get_value():

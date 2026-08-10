@@ -121,7 +121,7 @@ if is_dev_build():
 
         gui_section(style="area:50,25,80,75;")
         abilities = elite_get_all_abilities()
-        lb_abilities = ~~gui_list_box(list(abilities), "row-height: 0.1em; background:#1572;",
+        lb_abilities = ~~gui_list_box(list(abilities), "item-gap: 0.1em; background:#1572;",
                                     item_template=lambda item: None if gui_row("row-height: 1.1em;") and gui_text(f'$text:{item};justify: left;') else None,
                                     title_template = lambda: None if gui_row("row-height: 1.1em;background:#1578;") and gui_text("$text:Elite Abilities;justify:center;") else None,
                                     multi=True)~~
