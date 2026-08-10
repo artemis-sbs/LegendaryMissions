@@ -11,9 +11,19 @@ default shared DOCKING_INTERIOR_DELAY = DOCKING.get("interior_delay", 2)
 default shared DOCKING_INTERIOR_COUNT = DOCKING.get("interior_count", 2)
 default shared DOCKING_SHIELD_COEFF = DOCKING.get("shield_coeff", 2)
 
+# Orbiting a gas giant is not a refit - there is nobody down there. The only thing on
+# offer is that shields recharge in the shelter of the upper atmosphere, slowly.
+default shared DOCKING_GIANT_SHIELD_DELAY = DOCKING.get("giant_shield_delay", 6)
+default shared DOCKING_GIANT_SHIELD_COEFF = DOCKING.get("giant_shield_coeff", 0.5)
+default shared DOCKING_GIANT_ORBIT_SPEED = DOCKING.get("giant_orbit_speed", 120)
+
 
 === docking_standard_player_station
     docking_set_docking_logic(role("__player__"), role("station"), docking_dock_with_friendly_station)
+    ->END
+
+=== docking_standard_player_gas_giant
+    docking_set_docking_logic(role("__player__"), role("dockable_orbit"), docking_dock_with_gas_giant)
     ->END
 
 #
@@ -257,3 +267,73 @@ match_side: True
                     player_blob.set(f"{torps}_NUM", torp_now,0)
                     npc_blob.set(f"{torps}_NUM", tLeft-1, 0)
 
+
+#
+# Docking with a gas giant. The interaction is the ordinary one - INITIATE DOCK, the
+# dock_state walk - but "docked" means captured into an orbit rather than moored to a
+# hull. The ship is welded to an invisible carrier flying the circle (procedural.orbit),
+# so it is genuinely not drivable while it is there, and the main screen frames the giant.
+#
+=== docking_dock_with_gas_giant
+metadata: ``` yaml
+surface_distance: 1000
+```
+# surface_distance, not distance: it is measured from the exclusion radius, so this one
+# brain serves a 4000u giant and a 20000u one without re-tuning. A center-distance gate
+# could not be satisfied at all - the hull is bigger than the old 600.
+
++++ enable
+    yield fail if DOCKING_NPC_ID == 0
+    # No side test. A gas giant belongs to nobody, so there is no ally check to make.
+
++++ undocking
+    orbit_release(DOCKING_PLAYER_ID)
+    viewscreen_clear(DOCKING_PLAYER_ID)
+    set_inventory_value(DOCKING_PLAYER_ID, "_giant_orbit_fired", False)
+
++++ docking
+    set_weapons_selection(DOCKING_PLAYER_ID, 0)
+    # Same rule as a station: committing to a docking approach with hostiles on you is a
+    # decision the ship should not be allowed to make.
+    _too_close = 300+(DIFFICULTY+1)*200
+    raider = closest(DOCKING_PLAYER_ID, side_hostile_ships(DOCKING_PLAYER_ID), _too_close)
+    if raider is not None:
+        with comms_override(DOCKING_PLAYER_ID, DOCKING_PLAYER_ID, from_name="Helm"):
+            <<[red,white] "Enemies Near"
+                % Entering orbit with enemies near is ill advised.
+        overlay_toast("Orbital capture disabled - enemy near", to=DOCKING_PLAYER_ID)
+        yield fail
+
++++ docked
+    set_weapons_selection(DOCKING_PLAYER_ID, 0)
+    start_counter(DOCKING_PLAYER_ID, "giant_shields")
+    orbit_capture(DOCKING_PLAYER_ID, DOCKING_NPC_ID, speed=DOCKING_GIANT_ORBIT_SPEED)
+    viewscreen_set(DOCKING_PLAYER_ID, "orbit", DOCKING_NPC_ID)
+    # One-shot, like the station brain's ship_docked: the mission decides what orbiting
+    # this giant MEANS, since the library deliberately hands out nothing but the orbit.
+    if not get_inventory_value(DOCKING_PLAYER_ID, "_giant_orbit_fired", False):
+        set_inventory_value(DOCKING_PLAYER_ID, "_giant_orbit_fired", True)
+        signal_emit("ship_orbiting", {"ORBIT_SHIP_ID": DOCKING_PLAYER_ID, "ORBIT_BODY_ID": DOCKING_NPC_ID})
+
++++ refit
+    set_weapons_selection(DOCKING_PLAYER_ID, 0)
+    # Shields only. No fuel, no torpedoes, no interior repair - there is no dockyard here.
+    player_blob = DOCKING_PLAYER.data_set
+    if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"giant_shields") >= DOCKING_GIANT_SHIELD_DELAY:
+        start_counter(DOCKING_PLAYER_ID,"giant_shields")
+        shield_rate = player_blob.get("repair_rate_shields",0)
+        shield_rate *= DOCKING_GIANT_SHIELD_COEFF
+        sCount = player_blob.get("shield_count",0)
+        for shield in range(sCount):
+            sVal = player_blob.get("shield_val", shield)
+            sValMax = player_blob.get("shield_max_val", shield)
+            changed = (sVal < sValMax)
+            sVal = max(0.0, min(sVal + shield_rate, sValMax)) # clamp the value
+            if changed:
+                player_blob.set("shield_val", sVal, shield)
+
++++ throttle
+    # The station brain nags here and the 2.8 rule undocks on success. Neither applies:
+    # the helm cannot move this ship at all, so a throttle reading is the player pushing
+    # against a lock, not a mistake to be told off for. fail = stay in orbit, say nothing.
+    yield fail

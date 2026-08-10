@@ -59,6 +59,10 @@ DOCKING:
     torps_delay: 6
     interior_delay: 2
     interior_count: 2
+    # Gas giant orbit. Not a refit - shields only, and slowly.
+    giant_shield_delay: 6
+    giant_shield_coeff: 0.5
+    giant_orbit_speed: 120
 
 # Color theme for engineering
 # see grid_theme.json
