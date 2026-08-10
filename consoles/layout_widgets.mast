@@ -125,17 +125,16 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         follow_tag = get_inventory_value(client_id, "2d_follow", True)
         # Set back in case of default
         set_inventory_value(client_id, "2d_follow", follow_tag)
-        gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+        gui_layout_widget("red_alert")
+        gui_checkbox("Follow", var="follow_tag")
+        
         on change follow_tag:
             ship = viewscreen_home_ship(client_id)
             _sel = get_comms_selection(ship)
             set_inventory_value(client_id, "2d_follow", follow_tag)
             comms_set_2dview_focus(client_id, _sel)
-        # RED ALERT gets its OWN row. An engine widget is drawn by the engine from the
-        # rect the placeholder computes, and sharing a row with a control left it both
-        # overlapped and stretched - a column width is not enough to make the engine
-        # lay it out beside something else. Its own row is what worked before.
-        gui_layout_widget("red_alert")
+        
+        
     
 
 
