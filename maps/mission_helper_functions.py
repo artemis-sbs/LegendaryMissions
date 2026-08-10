@@ -547,28 +547,39 @@ def pr_salvage_award(ship, units):
     set_inventory_value(sid, "salvage", get_inventory_value(sid, "salvage", 0) + int(units))
 
 
-def fb_briefing_text(text_map, suspects):
-    """The DS 1 briefing with its one slot already filled.
+def fb_suspects_text(agent_id=None, speaker=None):
+    """The manifest DS 1 read off the last three haulers - the `{suspects}` slot.
 
-    The `## Florbin Text` templates carry `{slots}` that `comms_receive` interpolates
-    from task variables at send time. An incoming hail has no such moment - its text is
-    stored on the record when the hail is OFFERED and handed straight to a widget - so
-    the slot has to be closed here.
+    Registered with `dialogue_register_slot`, so the briefing stays one authored
+    paragraph in peacetime_remastered.amd with one runtime word in it, rather than a
+    paragraph assembled in Python because a hail had nowhere to interpolate.
 
-    It must also be closed BEFORE the value reaches MAST: assigning a string containing
-    `{` to a MAST variable runs it through f-string formatting, and the failure is
-    reported against the assignment rather than against the text.
+    Read back off the station rather than carried from setup, because that is where
+    `fb_investigation` already stored it.
     """
-    return str(text_map.get("briefing") or "").replace("{suspects}", str(suspects or ""))
+    from sbs_utils.procedural.inventory import get_inventory_value
+    from sbs_utils.procedural.roles import role
+    from sbs_utils.procedural.query import to_id_list
+    for ds1_id in to_id_list(role("ds1")):
+        message = get_inventory_value(ds1_id, "investigate_message", None)
+        if message:
+            return str(message)
+    return ""
 
 
 def fb_is_briefed(ship):
-    """Whether this ship has answered DS 1's briefing hail.
+    """Whether the crew has answered DS 1's briefing hail.
 
-    The gate on the cargo-manifest menu. It used to be an inline
-    `get_inventory_value(..., "fb_briefed", 0) == 1` in a comms condition; as a named
-    function the condition reads as what it means, and the flag has one writer.
+    The gate on the cargo-manifest menu. Answered by the QUEST rather than by a
+    per-ship flag: `florbin/brief` is `Scope: shared`, and completing it is what
+    "the crew has been briefed" means now that answering the hail completes it
+    directly (`- [Take the case]() ; completes florbin/brief`).
+
+    That makes the unlock crew-wide: with two bridges, one answering opens the
+    manifests for both. On a shared case that is the reading that matches the quest -
+    the previous per-ship flag could leave a bridge that never answered locked out of
+    a case its own quest log says is open.
     """
-    from sbs_utils.procedural.inventory import get_inventory_value
-    from sbs_utils.procedural.query import to_id
-    return get_inventory_value(to_id(ship), "fb_briefed", 0) == 1
+    from sbs_utils.agent import Agent
+    from sbs_utils.procedural.quest import quest_get_state, QuestState
+    return quest_get_state(Agent.SHARED_ID, "florbin/brief") == QuestState.COMPLETE

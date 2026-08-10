@@ -66,6 +66,12 @@ shared FB_TEXT = {}
     # at load time. (Docking times now ride on each FbCargo as cargo.dep_time.)
     FB_TEXT = amd_text_map(amd_section(PR_DOC, "florbin_text"))
 
+    # The conversations the script starts (## Voices). Registering them is what lets a
+    # beat name one - `Action: ds1 hails ds1_brief` has a key and nothing else - and the
+    # `{suspects}` slot is the one word in the briefing the mission builds at runtime.
+    dialogue_register_scenes(amd_section(PR_DOC, "pr_voices"))
+    dialogue_register_slot("suspects", fb_suspects_text)
+
     # ---- The suspect trail is generated as pure DATA by fb_generate_case (mission_helper_functions.py),
     # replacing ~400 lines of per-scenario / per-ship brute force. Pick the ambassador container
     # (clue0) + its paired clue (clue1) from clue_list[0:20] - a REAL container, guaranteed - then two
@@ -139,20 +145,6 @@ shared FB_TEXT = {}
 
     #-----------------------------------------------------------------------------------------------------------------------------
     # Comms Section - Adds comms buttons for talking to stations. Some buttons only work if the player is docked with the station.
-
-//shared/signal/hail
-    # SERVER ONLY. Opening the case is shared state - it reveals the next step for the
-    # whole crew - so it must happen once however many consoles are connected. The
-    # payload says which hail and which answer, so this cannot fire on somebody else's.
-    ->END if HAIL_STATE != "answered"
-    ->END if HAIL_KEY != "fb_briefing"
-    ->END if HAIL_CHOICE != "Take the case"
-    # Answering IS "Take the Case": the crew has been briefed, so the manifest menu
-    # unlocks on DS 1 and the quest step completes. Idempotent either way - the hail is
-    # gone by the time this runs, so it cannot be answered twice.
-    set_inventory_value(HAIL_SHIP, "fb_briefed", 1)
-    signal_emit("quest_signal", {"SIGNAL_NAME": "case_opened"})
-
 
 //comms if has_roles(COMMS_SELECTED_ID, "tsn, station, ds1") and FB_STATUS >= 1 and fb_is_briefed(COMMS_ORIGIN_ID)
     + "Cargo Manifests" //comms/fb_investigate_kidnapping
@@ -324,17 +316,13 @@ shared FB_TEXT = {}
     ds1_id = ds1_list[0]
     send_general_message(fb_admiral.name, FB_TEXT.get("admiral_kidnap"), get_face(fb_admiral.id), ds1_id)
 
-    # THEN DS 1 calls, with the briefing. Offered HERE and not during setup: the
-    # Admiral's message is what tells the crew why anyone is calling, and an Answer
-    # button that appears before it has nothing behind it yet. The suspect list is read
-    # back off the station rather than carried from setup, because that is where
-    # fb_investigation already stored it.
-    # ONE answer: nothing re-offers a declined briefing and the case cannot proceed
-    # without it. Keyed, so this cannot queue twice; per player ship, because a hail
-    # belongs to one bridge.
+    # THEN DS 1 calls. Revealing the step is the whole of it: `florbin/brief` declares
+    # `Action: ds1 hails ds1_brief`, so the call, its title, its portrait, its words and
+    # what answering MEANS all live in peacetime_remastered.amd. Revealed HERE and not at
+    # grant because the Admiral's message is what tells the crew why anyone is calling,
+    # and `Action:` fires the moment a beat goes active.
     await delay_sim(3)
-    for fb_p in to_object_list(role("__player__")):
-        hail_offer(fb_p, speaker="ds1", name="DS 1", title="Ambassador Kidnapped", color="orange", presentation="portrait", face=get_face(ds1_id), lines=fb_briefing_text(FB_TEXT, get_inventory_value(ds1_id, "investigate_message")), choices=["Take the case"], key="fb_briefing")
+    quest_reveal(SHARED, "florbin/brief")
     ->END
 
 ===== fb_scanning_cargo_containers ======

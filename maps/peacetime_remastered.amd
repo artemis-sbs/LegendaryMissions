@@ -28,10 +28,15 @@ Ambassador Florbin has been kidnapped and smuggled out in a cargo container. Fol
 
 #### [Take the Case](brief)
 = Opening. DS 1 hails the CREW; nothing else is revealed until this lands.
+=
+= `Starts when: revealed` rather than `at once` because `Action:` fires the moment a
+= beat goes active, and the call has to land AFTER the Admiral explains why anyone
+= would be calling. florbin_case.mast reveals this step when that message has been read.
 ---
 Scope: shared
-Starts when: at once
-Done when: signal case_opened
+Starts when: revealed
+Action:
+  - ds1 hails ds1_brief
 Then: reveal florbin/trail
 ---
 DS 1 is calling. Answer the incoming hail on comms to open the investigation.
@@ -492,6 +497,17 @@ Art: cargo_ship
 Loc: 16000, 0, -12000
 ---
 
+// DS 1 is spawned by the map's own station code, not from here - this record exists so
+// the DOCUMENT knows the name. `Speaker: ds1` on the briefing scene and `ds1 hails ...`
+// on the beat both point at it, and without a record to point at the linter can only
+// report a dangling speaker on a line that is perfectly correct. No `Art:`, so
+// landmark_spawn places nothing.
+### [DS 1](ds1)
+---
+Kind: point
+---
+The deep-space station the Florbin case runs out of.
+
 // A ZONE, not an object: no Art:, so landmark_spawn places nothing and this record is a
 // pure position the mission reads with landmark_pos. A physical buoy at a chokepoint
 // would get shot, tethered, or mistaken for the thing you were sent to guard.
@@ -662,10 +678,25 @@ Until: has role fb_delivered
 // ---- The investigation's authored prose, as declarative templates. florbin_case.mast loads this
 // section into FB_TEXT and fills the {slots} at send time (comms_receive interpolates from task
 // vars): {ship} {dtime} {dest} (next DS#) {holds} (fb_holds manifest block) {crew} {suspects}.
-## [Florbin Text](florbin_text)
+## [Voices](pr_voices)
+= Conversations the SCRIPT starts. A beat opens one with `Action: <who> hails <scene>`,
+= and what an answer means is written on the answer.
 
-### [Briefing](briefing)
+### [DS 1 Briefing](ds1_brief)
+= The call that opens the Florbin case. `{suspects}` is the manifest DS 1 read off the
+= last three haulers, filled in when the call goes out (`fb_suspects_text`).
+---
+Speaker: ds1
+When: hail
+Title: Ambassador Kidnapped
+Presentation: portrait
+Color: orange
+---
 Ambassador Florbin has been kidnapped - we believe he was smuggled off the station inside a cargo container. The last three haulers to leave were:^^{suspects}^^If you hurry you may still catch them. These ships run station to station, shuffling containers at every stop, so follow their flight plans, dock at the stations along the way, and interview the crews. Someone always notices something. When you find the Ambassador, bring him home to DS 1.
+
+- [Take the case]() ; completes florbin/brief
+
+## [Florbin Text](florbin_text)
 
 ### [Manifest](manifest)
 Our records show {ship} docked here at {dtime}. It loaded:^^{holds}^^Its flight plan listed DS {dest} as the next stop.
