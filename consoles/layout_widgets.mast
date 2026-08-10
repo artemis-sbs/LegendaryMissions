@@ -131,9 +131,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
             _sel = get_comms_selection(ship)
             set_inventory_value(client_id, "2d_follow", follow_tag)
             comms_set_2dview_focus(client_id, _sel)
-        # The placeholder needs its OWN column or it takes the whole row and draws
-        # over the checkbox - an engine widget has no width of its own to negotiate.
-        gui_layout_widget("red_alert", "col-width:1fr;")
+        # RED ALERT gets its OWN row. An engine widget is drawn by the engine from the
+        # rect the placeholder computes, and sharing a row with a control left it both
+        # overlapped and stretched - a column width is not enough to make the engine
+        # lay it out beside something else. Its own row is what worked before.
+        gui_layout_widget("red_alert")
     
 
 

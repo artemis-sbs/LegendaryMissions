@@ -136,16 +136,6 @@ shared FB_TEXT = {}
     task_schedule(fb_kidnap_message)
     task_schedule(task_peacetime_end_game)
 
-    # DS 1 CALLS the crew rather than waiting to be hailed. The briefing arrives as
-    # an incoming hail on comms, and answering it is what opens the case - which is
-    # what the quest step promises. ONE answer: nothing re-offers a declined briefing
-    # and the case cannot proceed without it. Keyed, so a re-entered setup cannot queue it
-    # twice, and offered per player ship because a hail belongs to one bridge.
-    fb_ds1_list = to_object_list(role('ds1'))
-    if len(fb_ds1_list) > 0:
-        for fb_p in to_object_list(role('__player__')):
-            hail_offer(fb_p, speaker='ds1', name='DS 1', title='Ambassador Kidnapped', color='orange', presentation='portrait', face=get_face(fb_ds1_list[0].id), lines=fb_briefing_text(FB_TEXT, fb_case['investigate_message']), choices=['Take the case'], key='fb_briefing')
-
 
     #-----------------------------------------------------------------------------------------------------------------------------
     # Comms Section - Adds comms buttons for talking to stations. Some buttons only work if the player is docked with the station.
@@ -333,6 +323,18 @@ shared FB_TEXT = {}
     ->END if len(ds1_list) < 1
     ds1_id = ds1_list[0]
     send_general_message(fb_admiral.name, FB_TEXT.get("admiral_kidnap"), get_face(fb_admiral.id), ds1_id)
+
+    # THEN DS 1 calls, with the briefing. Offered HERE and not during setup: the
+    # Admiral's message is what tells the crew why anyone is calling, and an Answer
+    # button that appears before it has nothing behind it yet. The suspect list is read
+    # back off the station rather than carried from setup, because that is where
+    # fb_investigation already stored it.
+    # ONE answer: nothing re-offers a declined briefing and the case cannot proceed
+    # without it. Keyed, so this cannot queue twice; per player ship, because a hail
+    # belongs to one bridge.
+    await delay_sim(3)
+    for fb_p in to_object_list(role("__player__")):
+        hail_offer(fb_p, speaker="ds1", name="DS 1", title="Ambassador Kidnapped", color="orange", presentation="portrait", face=get_face(ds1_id), lines=fb_briefing_text(FB_TEXT, get_inventory_value(ds1_id, "investigate_message")), choices=["Take the case"], key="fb_briefing")
     ->END
 
 ===== fb_scanning_cargo_containers ======
