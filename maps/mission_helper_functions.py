@@ -570,15 +570,14 @@ def fb_suspects_text(agent_id=None, speaker=None):
 def fb_is_briefed(ship):
     """Whether the crew has answered DS 1's briefing hail.
 
-    The gate on the cargo-manifest menu. Answered by the QUEST rather than by a
-    per-ship flag: `florbin/brief` is `Scope: shared`, and completing it is what
-    "the crew has been briefed" means now that answering the hail completes it
-    directly (`- [Take the case]() ; completes florbin/brief`).
+    The gate on the cargo-manifest menu. Answered by the shared QUEST rather than by a
+    per-ship flag, so ONE bridge answering opens the manifests for every bridge.
 
-    That makes the unlock crew-wide: with two bridges, one answering opens the
-    manifests for both. On a shared case that is the reading that matches the quest -
-    the previous per-ship flag could leave a bridge that never answered locked out of
-    a case its own quest log says is open.
+    That is a decision about THIS case, not a rule to copy. The Florbin investigation
+    is a single case the whole game shares, and a bridge locked out of a case its own
+    quest log says is underway reads as a bug. A mission where answering the call is
+    meant to be each crew's OWN act should keep a per-ship flag - `Scope: shared` on
+    the quest does not settle it, and both readings are legitimate.
     """
     from sbs_utils.agent import Agent
     from sbs_utils.procedural.quest import quest_get_state, QuestState
