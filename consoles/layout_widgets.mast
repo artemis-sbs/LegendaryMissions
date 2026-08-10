@@ -30,6 +30,10 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # shows in Log, which is everything - so a subset tab can never hide a message.
         gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
         gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
+        # Every incoming hail this ship has had, re-readable. Selecting one replays
+        # it - strictly READ-ONLY: a replay cannot change or undo a choice already
+        # made, which hail_answer enforces rather than the layout.
+        gui_info_panel_add("hails", hail_panel_icon(), hail_panel_history, None)
 
         # The space the text waterfall used to occupy, directly under ship data on every
         # console so the crew always looks in ONE place for the latest line. The waterfall
