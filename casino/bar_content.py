@@ -37,22 +37,11 @@ def _patron_node(key):
 
 
 def bar_declare_vocabulary():
-    """Teach the format the casino's words, so the editor types them and the linter
-    checks them (the same move the universe makes for its sides).
-
-    A patron is a CHARACTER - a person in the bar, which is what it will have to be
-    the day one of them gets a brain - and a rumor is DIALOGUE: a line someone says,
-    with the payoff shown if the tip pans out."""
-    from sbs_utils.procedural.amd_schema import (
-        amd_register_fields, amd_register_section_names, text, multiline)
-    amd_register_fields("lifeform", {
-        "call sign": text(hint="what the room calls them"),
-        # `Reliability:` is the shared `reputation` trait's - every person has one.
-    }, domain="casino")
-    amd_register_fields("dialogue", {
-        "intel": multiline(hint="the payoff line, shown when the tip turns out true"),
-    }, domain="casino")
-    amd_register_section_names(("patrons", "bar"), "lifeform", domain="casino")
+    """Declare the casino's words. Delegates to casino_amd.py, which is the single
+    owner - see the note there for why two copies of these two fields was a live
+    startup error rather than harmless duplication."""
+    import casino_amd
+    casino_amd._declare_casino_vocabulary()
 
 
 def bar_patrons():

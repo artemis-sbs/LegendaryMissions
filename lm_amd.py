@@ -38,14 +38,13 @@ def _declare_lm_vocabulary():
         "radius": integer(hint="2500 - how close to Loc counts as inside the zone"),
     }, domain="LegendaryMissions")
 
-    # A character's radio handle - what the crew hears, distinct from `Display`.
-    amd_register_fields("lifeform", {
-        "call sign": text(hint="Ghost, Bitters, NightSky"),
-    }, domain="LegendaryMissions")
-
-    # What a tip-off PAYS OUT in words: the line shown once the intel proves true.
+    # `Call sign:` and `Intel:` are NOT here. They belong to the casino, which is the
+    # only place either word appears (casino/bar.amd), and which ships as an addon a
+    # mission can take WITHOUT this file. Declaring them in both places is what made
+    # `AMD field 'call sign' is already declared ... with a different meaning` a live
+    # startup error the day anything loaded both - the hints had drifted apart.
+    # ONE OWNER PER CONCEPT: see casino/casino_amd.py.
     amd_register_fields("dialogue", {
-        "intel": multiline(hint="the payoff line when the tip checks out"),
         "lines": text(hint="a named set of barks this scene draws from"),
     }, domain="LegendaryMissions")
 
