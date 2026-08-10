@@ -131,7 +131,9 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
             _sel = get_comms_selection(ship)
             set_inventory_value(client_id, "2d_follow", follow_tag)
             comms_set_2dview_focus(client_id, _sel)
-        gui_layout_widget("red_alert")
+        # The placeholder needs its OWN column or it takes the whole row and draws
+        # over the checkbox - an engine widget has no width of its own to negotiate.
+        gui_layout_widget("red_alert", "col-width:1fr;")
     
 
 
