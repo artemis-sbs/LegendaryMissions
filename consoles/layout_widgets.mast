@@ -56,24 +56,11 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # or the open conversation's choices. The library owns which.
         hail_choice_strip(_hail_ship, client_id)
         
-        gui_row("row-height: 45px;margin:0,0,0,10px;")
-
-        follow_tag = get_inventory_value(client_id, "2d_follow", True)
-        # Set back in case of default
-        set_inventory_value(client_id, "2d_follow", follow_tag)
-        gui_checkbox("Follow","col-width:90px;", var="follow_tag")
         # Where an incoming hail shows for THIS console: Off / This Console /
         # Main Screen / Both. The dial owns its own change handler, so a console
         # cannot drift from the library about what the labels mean.
+        gui_row("row-height: 40px;margin:0,0,0,10px;")
         hail_where_dropdown(client_id, "col-width:150px;")
-        on change follow_tag:
-            ship = viewscreen_home_ship(client_id)
-            _sel = get_comms_selection(ship)
-            set_inventory_value(client_id, "2d_follow", follow_tag)
-            comms_set_2dview_focus(client_id, _sel)
-
-        gui_row("row-height: 40px;")
-        gui_layout_widget("red_alert")
 
 
 
@@ -129,6 +116,22 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_blank()
         gui_row() #"padding:0,25px,10px,0")
         gui_layout_widget("comms_sorted_list")
+
+        # Follow and RED ALERT ride here, under the contact list, rather than in the
+        # left column: that column already carries a 400px info panel and a log tail,
+        # and the incoming-hail answer strip needs the room. One row, one height, so
+        # they read as a single control bar.
+        gui_row("row-height: 40px;")
+        follow_tag = get_inventory_value(client_id, "2d_follow", True)
+        # Set back in case of default
+        set_inventory_value(client_id, "2d_follow", follow_tag)
+        gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+        on change follow_tag:
+            ship = viewscreen_home_ship(client_id)
+            _sel = get_comms_selection(ship)
+            set_inventory_value(client_id, "2d_follow", follow_tag)
+            comms_set_2dview_focus(client_id, _sel)
+        gui_layout_widget("red_alert")
     
 
 
