@@ -58,6 +58,9 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # list underneath it is what changes.
         gui_row("row-height: 40px;margin:0,0,0,10px;")
         hail_where_dropdown(client_id, "col-width:150px;")
+        # Ticked means SOUND. It is the ship's setting, not this console's, because the
+        # audio plays once for the whole bridge.
+        hail_audio_checkbox(client_id, "col-width:90px;")
 
         # "Incoming Hails" - the waiting hails, or the open conversation's replies. One
         # call, and the library owns which of its three states applies. A listbox, so a
