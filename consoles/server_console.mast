@@ -503,8 +503,9 @@ Main:
 
     # A hail arriving, advancing or ending changes this screen the same way, and the
     # widget list differs too, so it is a full repaint rather than a value update.
-    on signal hail:
-        jump show_main_game_screen if hail_repaint_needed(client_id)
+    # Polled for the same reason the comms console polls it - see standard_consoles.mast.
+    on change hail_console_revision(client_id):
+        jump show_main_game_screen
 
     await gui()
 

@@ -90,11 +90,15 @@ default CINEMATIC_CONSOLE_ENABLED = True
     gui_console(CONSOLE_SELECT)
 
     # An incoming hail arriving, being answered, or a placement dial moving all change
-    # this page: the answer strip and the centre panel are both part of it. The guard
-    # reads the signal's own payload, so one officer moving their dial does not rebuild
-    # every console on the bridge.
-    on signal hail:
-        jump common_console_show if hail_repaint_needed(client_id)
+    # this page: the answer strip and the centre panel are both part of it.
+    #
+    # `on change`, not `on signal`. A GUI task sitting in `await gui()` did not repaint
+    # from the hail signal, and the symptom was nasty - the hail was queued, the strip
+    # would have drawn it, and the button only appeared if something else happened to
+    # rebuild the page (switching console and back). Polling a revision number cannot
+    # miss a transition, and it is a few inventory reads per tick.
+    on change hail_console_revision(client_id):
+        jump common_console_show
 
     await gui()
 

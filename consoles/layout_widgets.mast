@@ -52,15 +52,17 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # NOT sbs.get_ship_of_client: while an orbit hail runs, this console is
         # ASSIGNED to the hailer, so the engine would answer with the raider.
         _hail_ship = viewscreen_home_ship(client_id)
-        # One call, three states: nothing at all, an Answer entry per waiting hail,
-        # or the open conversation's choices. The library owns which.
-        hail_choice_strip(_hail_ship, client_id)
-        
+
         # Where an incoming hail shows for THIS console: Off / This Console /
-        # Main Screen / Both. The dial owns its own change handler, so a console
-        # cannot drift from the library about what the labels mean.
+        # Main Screen / Both. Above the list, because it is a standing setting and the
+        # list underneath it is what changes.
         gui_row("row-height: 40px;margin:0,0,0,10px;")
         hail_where_dropdown(client_id, "col-width:150px;")
+
+        # "Incoming Hails" - the waiting hails, or the open conversation's replies. One
+        # call, and the library owns which of its three states applies. A listbox, so a
+        # queue longer than the space still scrolls rather than being dropped.
+        hail_choice_strip(_hail_ship, client_id)
 
 
 
