@@ -44,6 +44,13 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
 
         gui_row()
         gui_blank()
+
+        # NOT sbs.get_ship_of_client: while an orbit hail runs, this console is
+        # ASSIGNED to the hailer, so the engine would answer with the raider.
+        _hail_ship = viewscreen_home_ship(client_id)
+        # One call, three states: nothing at all, an Answer entry per waiting hail,
+        # or the open conversation's choices. The library owns which.
+        hail_choice_strip(_hail_ship, client_id)
         
         gui_row("row-height: 45px;margin:0,0,0,10px;")
 
@@ -51,8 +58,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # Set back in case of default
         set_inventory_value(client_id, "2d_follow", follow_tag)
         gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+        # Where an incoming hail shows for THIS console: Off / This Console /
+        # Main Screen / Both. The dial owns its own change handler, so a console
+        # cannot drift from the library about what the labels mean.
+        hail_where_dropdown(client_id, "col-width:150px;")
         on change follow_tag:
-            ship = sbs.get_ship_of_client(client_id)
+            ship = viewscreen_home_ship(client_id)
             _sel = get_comms_selection(ship)
             set_inventory_value(client_id, "2d_follow", follow_tag)
             comms_set_2dview_focus(client_id, _sel)
@@ -73,7 +84,14 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row("row-height:45px;")
         gui_layout_widget("radar_zoom_ctrl")
         gui_row()
-        gui_layout_widget("comms_2d_view")
+        # A hail placed on THIS console takes the radar's space. gui_widget_offscreen
+        # is the only reliable way to be rid of an engine widget - gui_hide does not
+        # work on them.
+        if hail_shows_here(client_id):
+            gui_widget_offscreen("comms_2d_view", client_id)
+            hail_view(_hail_ship, client_id)
+        else:
+            gui_layout_widget("comms_2d_view")
         
     # Right
     ss = gui_screen_size(client_id)
@@ -183,7 +201,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_layout_widget("science_sorted_list")
 
     on change follow_tag:
-        ship = sbs.get_ship_of_client(client_id)
+        ship = viewscreen_home_ship(client_id)
         _sel = get_science_selection(ship)
         set_inventory_value(client_id, "2d_follow", follow_tag)
         science_set_2dview_focus(client_id, _sel)
@@ -365,7 +383,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         set_inventory_value(client_id, "2d_follow", follow_tag)
         gui_checkbox("Follow","col-width:90px;", var="follow_tag")
         on change follow_tag:
-            ship = sbs.get_ship_of_client(client_id)
+            ship = viewscreen_home_ship(client_id)
             _sel = get_comms_selection(ship)
             set_inventory_value(client_id, "2d_follow", follow_tag)
             comms_set_2dview_focus(client_id, _sel)

@@ -89,6 +89,13 @@ default CINEMATIC_CONSOLE_ENABLED = True
     gui_tab_back(CONSOLE_SELECT)
     gui_console(CONSOLE_SELECT)
 
+    # An incoming hail arriving, being answered, or a placement dial moving all change
+    # this page: the answer strip and the centre panel are both part of it. The guard
+    # reads the signal's own payload, so one officer moving their dial does not rebuild
+    # every console on the bridge.
+    on signal hail:
+        jump common_console_show if hail_repaint_needed(client_id)
+
     await gui()
 
 @console/mainscreen !0 ^30 "Mainscreen" if MAINSCREEN_CONSOLE_ENABLED
