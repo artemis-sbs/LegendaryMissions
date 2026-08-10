@@ -482,11 +482,29 @@ Main:
         gui_row()
         gui_layout_widget("2dview")
 
+    # An incoming hail put on the main screen. A portrait or a still owns the whole
+    # screen, so the engine's view is pushed offscreen and this draws in its place -
+    # gui_widget_offscreen, because gui_hide does not work on engine widgets. An ORBIT
+    # hail deliberately builds NOTHING here: the engine renders the shot full-bleed and
+    # the name plate rides an overlay, because a live 3D view cannot be layered over at
+    # any draw layer (mkdocs/docs/cosmos/gui_layer.md).
+    if hail_is_active(ship_id) and hail_shows_here(client_id):
+        if hail_form(ship_id) != "orbit":
+            gui_widget_offscreen("3dview", client_id)
+            gui_widget_offscreen("2dview", client_id)
+            gui_section(style="area:0,0,100,100;")
+            hail_view(ship_id, client_id)
+
     # Science changed what is on screen: repaint, because the widget list itself differs
     # between a 3D shot and a 2D one. Scoped to THIS ship - one bridge's viewer must not
     # repaint another's.
     on signal viewscreen:
         jump show_main_game_screen if VIEWSCREEN_SHIP == ship_id
+
+    # A hail arriving, advancing or ending changes this screen the same way, and the
+    # widget list differs too, so it is a full repaint rather than a value update.
+    on signal hail:
+        jump show_main_game_screen if hail_repaint_needed(client_id)
 
     await gui()
 
