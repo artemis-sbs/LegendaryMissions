@@ -88,7 +88,8 @@ Beacon recipes (`Output: Beacon`) also carry a **Program** (the beacon `kind`) a
 chosen at build time. A non-beacon recipe just grants its Output into the ship
 inventory.
 
-```
+<!-- amd:begin excerpt fabrication/recipes.amd#recipe_beacon_bio -->
+```amd
 ## [Bio Beacon](recipe_beacon_bio)
 ---
 Output: Beacon
@@ -103,9 +104,13 @@ Defaults:
   monster: shark
   mode: attract
 ---
-A distress-beacon hull rewired to broadcast an ultrawave carrier that attracts or
-repels a chosen space monster across the sector.
+A distress-beacon hull rewired to broadcast an ultrawave carrier that attracts or repels a
+chosen space monster across the sector.
+```
+<!-- amd:end -->
 
+<!-- amd:begin excerpt fabrication/recipes.amd#recipe_beacon_sensor -->
+```amd
 ## [Sensor Beacon](recipe_beacon_sensor)
 ---
 Output: Beacon
@@ -114,8 +119,10 @@ Time: 20
 Build at: engineering
 Program: kind=sensor, range=medium
 ---
-A passive relay that brightens sensor returns around its position. Replaces the 2.8 Probe.
+A passive relay that brightens sensor returns around its position - a future kind; drops and
+scans like any beacon. The standard (medium-range) build. Replaces the 2.8 Probe.
 ```
+<!-- amd:end -->
 
 The addon ships with **Bio Beacon**, **Sensor Beacon**, **Sensor Beacon (Long Range)**,
 and a non-beacon **Coolant Cell** (proving the Fabricator builds more than beacons). A

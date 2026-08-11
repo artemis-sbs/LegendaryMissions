@@ -23,9 +23,11 @@ authoring a full universe.
 One heading defines the boss; its fenced block is the spawn config. `##` sub-headings
 below it are the boss's objectives (see [Objectives](#objectives)).
 
+<!-- amd:begin excerpt maps/bosses/warlord.amd#warlord -->
 ```amd
 # [Warlord](warlord)
 ---
+Boss
 Trigger: enemies_low
 Low: 25%
 Flies: 50% Kralien, 50% Torgoth
@@ -35,6 +37,7 @@ Named: Warlord kralien_dreadnought
 ---
 A raider warlord and their honor guard warp in to break the defenders.
 ```
+<!-- amd:end -->
 
 The heading text (`Warlord`) is what shows in the **Boss** dropdown; the key
 (`warlord`) matches the filename.
@@ -60,30 +63,36 @@ needs no `.mast` file at all — the generic engine spawns everything from the c
 Each `##` sub-heading is a quest attached to the siege. Author it in the shared quest
 vocabulary and parent it to `siege_mission` so it joins the siege's mission tree:
 
+<!-- amd:begin excerpt maps/bosses/warlord.amd#defeat_warlord -->
 ```amd
 ## [Defeat the Warlord](defeat_warlord)
 ---
+Quest
 Scope: shared
 State: active
 Parent: siege_mission
 Required: true
-Goal: destroy 1 warlord
-Pays: 500 credits
+Done when: signal siege_won
+Reward: 500 credits
 ---
 Destroy the raider Warlord to break the siege for good.
 ```
+<!-- amd:end -->
 
-| Key | Meaning |
-|---|---|
-| `Parent: siege_mission` | Joins the siege's mission tree (so it counts toward the end-game). |
-| `Required: true` | The siege isn't won until this objective completes. |
-| `Critical: true` | Failing this objective **loses** the game. |
-| `Goal:` | The completion trigger — `destroy N <role>`, `scan`, `dock`, `reach`, `collect`, … |
-| `When: signal <name>` | Complete when a signal fires (e.g. `When: signal xorn_defected`). |
-| `Pays:` | Reward on completion (credits / items). |
+<!-- amd:begin fields quest --only part of,required,fatal,done when,starts when,reward -->
+| Field | Meaning | Also |
+|---|---|---|
+| `Done when:` | The COMPLETION trigger - what has to happen for this quest to be done. | `Goal:` |
+| `Starts when:` | When it ARMS - `at once`, `accepted` (the player takes it off the board), `revealed` (another quest reveals it). Not what completes it; that is `Done when:`. | `When:` |
+| `Part of:` | The quest this one belongs under, by key. | `Parent:` |
+| `Reward:` | What COMPLETING it gives - credits, an item key, or a reputation clause. | `Pays:` |
+| `Required:` | Whether the mission needs this one completed to succeed. |  |
+| `Fatal:` | Failing this ENDS the mission. | `Critical:` |
+<!-- amd:end -->
 
-`Goal: destroy 1 warlord` counts kills of anything with the `warlord` role — which
-the `Named:` flagship carries automatically.
+Parenting to `siege_mission` is what joins the objective to the siege's mission tree,
+so it counts toward the end-game. `Done when: destroy 1 warlord` counts kills of
+anything with the `warlord` role — which the `Named:` flagship carries automatically.
 
 ---
 
@@ -154,11 +163,16 @@ objective — this is how boss logic and boss objectives talk to each other.
 
 ## The shipped bosses
 
-| Boss | Trigger | Highlight |
+<!-- amd:begin index maps/bosses/*.amd --fields trigger -->
+| Name | Trigger | Summary |
 |---|---|---|
-| **Warlord** | enemies_low | Named enemy flagship + reinforcement fleets. Config-only, no `.mast`. |
-| **Continuous** | continuous | Endless waves until the clock nears its end, then the attackers break off (defender win). Logic in `continuous.mast`. |
-| **Ragnarok** | enemies_low | The renegade "42 Fleet" — a juggernaut you beat, or hail **XORN** to defect. Logic in `ragnarok.mast`. |
-| **Infestation** | enemies_low | A **BioMech** swarm that evolves and breeds, via the biomech addon `Hook`. |
+| Continuous | `continuous` | Endless waves press the starbases. Hold the line until they break and withdraw. |
+| Infestation | `enemies_low` | A BioMech swarm erupts across the sector - they breed faster than they can be culled. |
+| Ragnarok | `enemies_low` | The 42 Fleet warps in under the renegade Admiral Ragnarok - a Terran juggernaut and its honor guard. |
+| Warlord | `enemies_low` | A raider warlord and their honor guard warp in to break the defenders. |
+<!-- amd:end -->
 
-Read those four in `maps/bosses/` as working templates.
+**Warlord** and **Infestation** are config-only — the generic engine spawns everything
+from the fence, and Infestation reaches the biomech addon through its `Hook:`.
+**Continuous** and **Ragnarok** carry bespoke logic in a matching `.mast`. Read all four
+in `maps/bosses/` as working templates.
