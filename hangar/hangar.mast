@@ -98,6 +98,14 @@ hangar_get_craft_data("terran")
             side = _obj.side
 
     sbs.assign_client_to_ship(client_id, 0)
+
+    # Hand back the comms role the cockpit borrowed (launch_to_cockpit). Only if THIS
+    # is what granted it: a client that was already a comms console before it walked
+    # into the hangar keeps what it came with.
+    if get_inventory_value(client_id, "hangar_gave_comms", False):
+        remove_role(client_id, "comms")
+        set_inventory_value(client_id, "hangar_gave_comms", False)
+
     call_sign = get_inventory_value(client_id, "call_sign", None)
     if call_sign is None:
         call_sign = call_signs[next_call_sign]
@@ -415,6 +423,32 @@ hangar_get_craft_data("terran")
         home_id = get_dedicated_link(ride_select, "home_dock")
         hangar_objective_started(ride_select, home_id, mission_objective)
 
+    # A fighter pilot is their own comms officer. `hail_answer` refuses a press from any
+    # console without the `comms` role - deliberately, on the server, where hiding a
+    # button cannot be relied on - so a cockpit that shows incoming calls has to hold it
+    # or the answers would be drawn and then refused. Remembered rather than assumed:
+    # the client may already have been a comms console before it walked into the hangar,
+    # and returning must not take a role this never granted.
+    set_inventory_value(client_id, "hangar_gave_comms", not has_role(client_id, "comms"))
+    add_role(client_id, "comms")
+
+    # Calls are ON for a fresh sortie. The library defaults a console to `off` because
+    # on a bridge that is an opt-in: comms turns hails on when the captain wants them,
+    # and a call the crew misses is still visible on someone else's screen. A fighter
+    # has no someone else - an unticked box there means a pilot who can be called and
+    # cannot hear it, and no reason to suspect a checkbox exists. Set at LAUNCH, not in
+    # the page, so turning it off mid-flight sticks; the next sortie starts fresh.
+    hail_where_set(client_id, "console")
+
+    # Everything above happens ONCE per launch. Everything below is the page, and the
+    # page is rebuilt whenever a call arrives - so it is its own label, and re-entering
+    # it must never re-fly the craft.
+=== show_cockpit ==
+    # The craft this seat is flying. NOT sbs.get_ship_of_client: while a hail is placed
+    # here the client can be assigned elsewhere, and the indicators would then read some
+    # other ship's damage.
+    _craft_id = to_id(get_dedicated_link(client_id, "craft_id"))
+
     # Cockpit layout: a full-screen overlay image with the engine widgets placed
     # explicitly on top (instead of gui_console("cockpit")'s default auto-layout),
     # the same approach the Mining Days mission uses. gui_activate_console marks
@@ -440,16 +474,29 @@ hangar_get_craft_data("terran")
     gui_section(style="area: 88,50,100,100;")
     gui_layout_widget("fighter_control")
 
-    gui_section(style="area: 4,60,17,99;")
+    # The damage grid rides the forward pane, not the lower left. It is what the pilot
+    # LOOKS at while flying - the internal fires, the damcons walking to them - so it
+    # belongs in the eye line between the canopy struts, and the seat-level corner it
+    # used to occupy is worth more as a place calls arrive (below).
+    gui_section(style="area: 54,12,75,48;")
     gui_layout_widget("grid_control")
 
     gui_section(style="area: 41,69,59.7,90;")
     gui_layout_widget("helm_free_3d")
 
-    gui_section(style="area: 41,90,59.7,99;")
-    # The text waterfall is gone (LOG_PANEL_PLAN.md) - it could not be styled from script.
-    # gui_log_tail() is the same traffic in a text area this console owns.
-    gui_log_tail()
+    # The ship's log, in the upper right where the objective overlay used to hang. An
+    # overlay is the ATTENTION layer and must never carry information on its own - it
+    # auto-dismisses, keeps no history, and a pilot who joins late never sees it - so a
+    # standing read-out like the objective belongs on a durable surface. This is that
+    # surface, and the history behind it is the info panel's Log/Ship/Mission tabs.
+    #
+    # Unfiltered (the default tab), not the Ship stream: the objective is a MISSION line,
+    # and a strip that filtered to Ship would hide the very thing this replaced.
+    #
+    # It updates itself - gui_log_tail registers the widget so new traffic patches it in
+    # place - so a line arriving does not need the page rebuilt.
+    gui_section(style="area: 65,2,99,16;")
+    gui_log_tail(count=5)
 
     # Register ship_data in the console widget list (no visible HUD slot). The
     # engine only renders a widget that's in the list send_client_widget_list
@@ -458,10 +505,16 @@ hangar_get_craft_data("terran")
     # register. Without this the tab has nothing to position and never appears.
     gui_update_widgets("ship_data", "")
 
-    # Buttons
-    gui_section(style="area:0,0,50px,100;orientation:BT;")
+    # The overhead band, and nothing but the controls. It sits over the canopy's centre
+    # panel - the only part of the cockpit art still visible, since the 3D view starts
+    # at 11% - and the buttons are CENTRED in it rather than packed to one edge: the
+    # blanks either side are flexible columns, so the row stays centred whatever the
+    # tether adds or takes away. The system lights used to share this strip and ran
+    # into the objective banner; they now live over the right-hand dash.
+    gui_section(style="area: 39,1,64,9;")
     gui_row(style="row-height:50px;")
-    brain = gui_button("icon_index:134;color:#fff", on_press="hangar_grid_select", data={"sel_role":"computer"}, is_sub_task=True)
+    gui_blank()
+    brain = gui_button("icon_index:134;color:#fff", style="col-width:50px;", on_press="hangar_grid_select", data={"sel_role":"computer"}, is_sub_task=True)
 
     # Grav-tether: one press nose-aim acquires a tetherable object and tethers it
     # (release on a second press); button goes cyan while tethered.
@@ -471,8 +524,7 @@ hangar_get_craft_data("terran")
     # mission that never heard of the tether gets a cockpit with one fewer control and
     # no warning, which is what a SUGGESTED dependency should feel like.
     if LM_HAS_TETHER:
-        gui_row(style="row-height:50px;")
-        grav_tether = gui_button("icon_index:54;color:#fff", on_press="hangar_grav_tether", is_sub_task=True)
+        grav_tether = gui_button("icon_index:54;color:#fff", style="col-width:50px;", on_press="hangar_grav_tether", is_sub_task=True)
 
         # Reflect the ACTUAL tether state on the button (fires for a press, a warp-snap,
         # or an auto-release): cyan while this fighter is tethered, white when free.
@@ -482,6 +534,79 @@ hangar_get_craft_data("terran")
                 grav_tether.update("icon_index:54;color:#0ff")
             else:
                 grav_tether.update("icon_index:54;color:#fff")
+
+    gui_blank()
+
+    # System state, as lights, on the right-hand dash under the flight controls. Same
+    # truth the damage grid shows - a node is `__damaged__` or it is not, drawn in the
+    # same theme colors - so the pilot can read the ship without reading the grid, and
+    # the two can never say different things.
+    #
+    # Stops at 87, not 88 where fighter_control begins: an engine widget paints over
+    # what sits beside it, and the lights are centred in the box anyway, so the point of
+    # gutter is free and removes a known way for the rightmost light to be eaten.
+    gui_section(style="area: 61,87,87,99;")
+    gui_row(style="row-height:50px;")
+    gui_blank()
+    system_icons = hangar_system_row(_craft_id, "col-width:50px;")
+    gui_blank()
+    on change hangar_system_signature(_craft_id):
+        # Recolor in place. A pool that appeared or vanished (which cannot happen
+        # without changing craft) returns False, and then the page is rebuilt.
+        if not hangar_system_row_update(system_icons, _craft_id):
+            jump show_cockpit
+
+    # Incoming calls, in the corner the damage grid vacated. This IS the fighter's comms
+    # console - there is no second seat and no main screen to send a hail to - so the
+    # placement dial is the two states that exist here, Off and On, rather than the
+    # bridge's four.
+    gui_section(style="area: 0,45,17,95;")
+    _hail_ship = viewscreen_home_ship(client_id)
+    # Off means OFF here, which it does not on a bridge. `hail_answer` is gated on the
+    # console, never on placement, so an unticked cockpit that still drew the queue
+    # would let the pilot take a call they cannot read - a state that makes sense with
+    # five consoles and none at all with one. Unticked, calls simply queue.
+    #
+    # The guard is hail_PLACED_here, not hail_SHOWS_here: the latter also asks whether
+    # a conversation is open, so it would hide the queue and a call could never be seen
+    # arriving.
+    if hail_placed_here(client_id):
+        # The conversation itself: who is calling and what they said.
+        #
+        # The portrait is sized HERE. hail_view's default row is 30, and every length
+        # in the layout is a percentage of the SCREEN - so on a bridge console's tall
+        # centre column that is a portrait, and in this 29-point panel it is taller than
+        # the panel itself, which pushed the name, the line and the answers out of the
+        # bottom and left the cockpit showing a face and nothing else. 9 leaves room for
+        # the rest: ~3 points of heading, then the line and the answer list splitting
+        # what is left. 14 of a 50-point panel reads as a portrait at both the
+        # resolutions this was checked at; 9 was sized for the 29-point panel it had
+        # before the top came up, and left the face a stamp.
+        if hail_shows_here(client_id):
+            hail_view(_hail_ship, client_id, face_style="row-height: 14;")
+        # The queue when nothing is open, the answers when a scene has finished
+        # talking. One call; the library owns which of those states applies.
+        hail_choice_strip(_hail_ship, client_id, row_style="row-height:1fr;")
+
+    # The dial, in the bottom corner UNDER the calls it governs. Its own section rather
+    # than the last row of the one above: the calls are drawn conditionally, so a row
+    # after them would ride up to the top of the panel on the (usual) quiet frame where
+    # nothing else drew. A section pins it.
+    #
+    # orientation:BT stacks rows from the BOTTOM edge up, so the dial sits on the floor
+    # of the frame rather than at the top of its own band - which is what buys the panel
+    # above it the extra height. The band is deliberately taller than the one 30px row
+    # in it: the row pins to the bottom whatever the screen size, where a band sized to
+    # exactly 30px would only be right on one screen.
+    gui_section(style="area: 0,90,17,99;orientation:BT;")
+    gui_row(style="row-height:30px;")
+    hail_where_checkbox(client_id, "col-width:90px;")
+
+    # A hail arriving is not a press, so nothing would rebuild this page and the call
+    # would sit unanswered until the pilot happened to change something else. The
+    # revision folds in what waits, what is open and how far through it is.
+    on change hail_console_revision(client_id):
+        jump show_cockpit
 
     await gui()
 
@@ -530,6 +655,15 @@ hangar_get_craft_data("terran")
         # Live Air Wing roster as a cockpit info-panel page (same roster as the
         # end screen and the hangar Air Wing tab - kills/sorties update live).
         gui_info_panel_add("airwing", 155, hangar_airwing_panel, None)
+        # The log's HISTORY, the same three tabs every bridge console carries. The strip
+        # in the upper right is the ambient half - the last few lines, at a glance, no
+        # interaction; these are the half it cannot be: filtered, scrollable, and still
+        # there after the traffic has scrolled past. Ship is the craft's own news
+        # (damage, systems, docking), Mission is objectives and quest beats, and Log is
+        # everything - so a filter can never hide a line from the pilot.
+        gui_info_panel_add("log", 112, gui_panel_log, None, gui_panel_log_tick)
+        gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
+        gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
         # gui_row("row-height: 100px;")
         # gui_layout_widget("text_waterfall")
 

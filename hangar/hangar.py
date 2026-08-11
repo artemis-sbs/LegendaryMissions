@@ -18,11 +18,11 @@ from sbs_utils.agent import Agent
 from sbs_utils.procedural.query import get_science_selection
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.comms import comms_broadcast
-from sbs_utils.procedural.gui.overlay import overlay_hud, overlay_toast, overlay_clear
+from sbs_utils.procedural.log_panel import TAB_MISSION
 import random
 
 from sbs_utils.procedural.internal_damage import grid_rebuild_grid_objects
-from sbs_utils.procedural.grid import grid_delete_objects
+from sbs_utils.procedural.grid import grid_delete_objects, grid_objects, grid_get_grid_current_theme
 from sbs_utils.fs import load_yaml_string
 import sbs
 
@@ -249,11 +249,20 @@ def hangar_craft_spawn(docked_id, craft_data):
     return craft
 
 def hangar_objective_started(CRAFT_ID, OBJECTIVE_ID, objective):
-    """The pilot's current objective is persistent state, so it goes in the sticky
-    objective slot over the cockpit view - not two lines in a text waterfall strip
-    that scrolls them away."""
-    client_id = get_inventory_value(CRAFT_ID, "client_id", 0)
-    overlay_hud(rows=[("Objective", objective)], to=client_id, slot="objective")
+    """The pilot's current objective, filed in the craft's LOG.
+
+    It used to hang in a sticky overlay slot over the cockpit view, on the reasoning
+    that persistent state should not scroll away in a strip. The strip was the wrong
+    half of the log to compare against: the overlay keeps no history, so a pilot who
+    looked away, or who took the seat after the sortie began, had no way to get the
+    objective back - and an overlay is the attention layer, which must never be the
+    only place a fact lives. Filed here it is in the log strip at a glance AND in the
+    Mission tab for as long as the sortie lasts.
+
+    Logged against the CRAFT, not the client: the log's scope is the ship, so the line
+    survives the pilot leaving the seat and reads the same to whoever takes it.
+    """
+    comms_broadcast(CRAFT_ID, f"Objective: {objective}", category=TAB_MISSION)
 
 def hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, objective):
     # Get the current load
@@ -268,10 +277,12 @@ def hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, objective):
         c += 1
         set_inventory_value(client_id, "completed_objectives", c)
 
-    # Retire the tracker, tell the pilot it landed, and keep the carrier's log line
-    # (that broadcast is the record the rest of the crew reads).
-    overlay_clear("objective", to=client_id)
-    overlay_toast(f"Objective complete: {objective}", to=client_id, seconds=5)
+    # Close it out in the same log the objective was filed in, and keep the carrier's
+    # broadcast (that is the record the rest of the crew reads). No overlay to retire
+    # any more - and no overlay_toast either, which since the Log Panel shipped has been
+    # a log write that draws nothing, so routing it through log_notify says what it
+    # actually does instead of naming a surface that no longer exists.
+    comms_broadcast(CRAFT_ID, f"Objective complete: {objective}", category=TAB_MISSION)
     comms_broadcast(OBJECTIVE_ID, f"{pilot} {objective}",  "#090")
 
 
@@ -605,6 +616,110 @@ def hangar_airwing_panel(cid, left, top, width, height):
     gui_list_box(hangar_pilot_items(), "", item_template=hangar_pilot_template, title_template=hangar_pilot_title_template, select=False)
     # keep the list off the panel's right edge
     gui_blank(style="col-width:0.5em")
+
+
+
+# --- cockpit system indicators ----------------------------------------------
+# The cockpit HUD's read-out of the four system pools, as glyphs. It is the SAME
+# state the grid item list shows - a node carries `__damaged__` or `__undamaged__`
+# and the grid draws it in the theme's damage color - so this reads those roles
+# and those colors rather than inventing a second notion of "hurt". Nothing here
+# writes: an indicator that could disagree with the grid would be worse than none.
+#
+# Icons are asked for BY NAME (icon_sheet), so a mission that re-skins the sheet
+# moves these with it and the cockpit never carries a bare sheet index.
+HANGAR_SYSTEM_ICONS = (
+    ("weapon", "turret"),
+    ("engine", "turbine"),
+    ("sensor", "radar"),
+    ("shield", "shield"),
+)
+
+
+def hangar_system_states(craft_id):
+    """What each of the craft's system pools is worth right now.
+
+    Only pools the craft actually HAS are returned - a fighter with no shield rooms
+    gets no shield light, rather than a permanently-green one for a system it cannot
+    lose. Order is fixed by HANGAR_SYSTEM_ICONS so the row never reshuffles under the
+    pilot between repaints.
+
+    Returns:
+        list[dict]: one per pool, with ``role``, ``icon``, ``hurt``, ``total`` and the
+        theme ``color`` to draw it in.
+    """
+    out = []
+    ship_id = to_id(craft_id)
+    if not ship_id:
+        return out
+    nodes = grid_objects(ship_id)
+    if not nodes:
+        return out
+    theme = grid_get_grid_current_theme()
+    ok_color = (theme.get("colors") or {}).get("system", "springgreen")
+    hurt_color = (theme.get("damage_colors") or {}).get("default", "Crimson")
+    damaged = nodes & role("__damaged__")
+    for role_name, icon_name in HANGAR_SYSTEM_ICONS:
+        pool = nodes & role(role_name)
+        total = len(pool)
+        if total == 0:
+            continue
+        hurt = len(pool & damaged)
+        out.append({"role": role_name, "icon": icon_name, "hurt": hurt, "total": total,
+                    "color": ok_color if hurt == 0 else hurt_color})
+    return out
+
+
+def hangar_system_signature(craft_id):
+    """A value that CHANGES whenever the indicator row should be redrawn.
+
+    For `on change hangar_system_signature(ship_id):` - the polling form, which is what
+    a console layout can actually use. A `//damage/internal` route fires on the SERVER
+    and would not repaint a client's cockpit; `on change` re-evaluates each tick on the
+    console itself and so cannot miss a hit.
+
+    Cheap by construction (four set intersections, no allocation beyond the string)
+    because it runs per cockpit per tick.
+    """
+    return ",".join(f"{s['role']}{s['hurt']}/{s['total']}" for s in hangar_system_states(craft_id))
+
+
+def hangar_system_row(craft_id, style=None):
+    """Draw the indicator glyphs into the CURRENT layout position.
+
+    Built in Python rather than a MAST `for` loop on purpose: the loop would need to
+    hold each widget to recolor it later, and a per-iteration handler in MAST closes
+    over the last iteration's values. Here the widgets come back as a plain list that
+    `hangar_system_row_update` walks.
+
+    Returns:
+        list: the icon widgets, in the same order as `hangar_system_states`.
+    """
+    from sbs_utils.procedural.gui.icon import gui_icon_name
+    widgets = []
+    for state in hangar_system_states(craft_id):
+        item = gui_icon_name(state["icon"], color=state["color"], style=style)
+        if item is not None:
+            widgets.append(item)
+    return widgets
+
+
+def hangar_system_row_update(widgets, craft_id):
+    """Recolor an already-drawn indicator row in place.
+
+    Recolor, never rebuild: the glyphs stay the same widgets, so the row cannot flicker
+    or reorder, and `Icon.update` marks itself dirty so the engine re-sends just those.
+
+    A pool that has appeared or vanished since the row was built (a craft swap) changes
+    the LENGTH, and there is nothing to recolor then - the caller repaints the page.
+    """
+    states = hangar_system_states(craft_id)
+    if widgets is None or len(widgets) != len(states):
+        return False
+    from sbs_utils.procedural.gui.icon import gui_icon_recolor
+    for item, state in zip(widgets, states):
+        gui_icon_recolor(item, state["color"])
+    return True
 
 
 def get_dock_name(so):
