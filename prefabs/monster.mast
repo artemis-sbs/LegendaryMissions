@@ -1,12 +1,19 @@
 
 import prefab_helpers.py
 
-# Load this addon's monster ship-art data ONCE, merging it into the ship data so the monster
-# arts used by the prefabs below are spawnable. media_read_relative_file reads the file from
-# THIS addon (loose folder in dev, or the packaged .mastlib zip); ship_data_merge_mod_ship_yaml
-# parses + prepends it (the ship_data_ prefix is how the MAST prelude exposes ship_data funcs).
-# `shared` guarantees a single merge across all clients (no duplicate #ship-list entries).
-shared _monster_ship_data = ship_data_merge_mod_ship_yaml(media_read_relative_file("shipData_monsters.yaml"), "LegendaryMissions")
+# Point both readers at the monster hulls: sbs_utils, so the arts the prefabs below
+# spawn are known to the library, and the ENGINE, which is what actually resolves an
+# artfileroot - the one thing that does NOT travel through the library.
+#
+# The file EXISTS rather than being written. It rides the LM media pack because a
+# mastlib is a ZIP and the engine cannot read inside one, while a media pack is
+# unpacked to disk once - a real folder the engine can be handed. Before this the
+# library accumulated these entries and flushed them into the mission's shared
+# extraShipData.json just before create_new_sim(), leaving a generated file the
+# library then read BACK, so the same hulls arrived twice.
+#
+# `shared` guarantees a single registration across all clients.
+shared _monster_ship_data = ship_data_add_extra("prefabs/extraShipData_monsters", mod="LegendaryMissions")
 
 === prefab_typhon_classic
 metadata: ```

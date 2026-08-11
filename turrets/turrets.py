@@ -12,15 +12,13 @@ mission-wide MAST namespace where the last loaded wins silently, so an unprefixe
 
 import os
 
-from sbs_utils.fs import get_mission_dir
 from sbs_utils.procedural.brain import brain_add
 from sbs_utils.procedural.execution import log
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.prefab import prefab_autoname
 from sbs_utils.procedural.query import to_id, to_object
 from sbs_utils.procedural.roles import remove_role
-from sbs_utils.procedural.media_paths import media_shared
-from sbs_utils.procedural.ship_data import ship_data_add_extra
+from sbs_utils.procedural.ship_data import add_extra
 from sbs_utils.procedural.signal import signal_emit
 from sbs_utils.procedural.timers import set_timer
 from sbs_utils.procedural.space_objects import clear_target
@@ -82,7 +80,7 @@ def lm_turret_declare_ships():
     the same hulls arriving twice, 51 becoming 102 from the second run on.
 
     Now the file simply EXISTS, in the media pack, named for the addon that owns it,
-    and both readers are pointed at it: `ship_data_add_extra` merges it into
+    and both readers are pointed at it: `add_extra` merges it into
     sbs_utils (so headless, the mock and `get_ship_data_for` all still see the hulls)
     and registers it with the engine (which is what makes a `behav_station` actually
     fire - engine-measured, LM_TestRange test_turret_probe).
@@ -92,14 +90,11 @@ def lm_turret_declare_ships():
         also what a missing file degrades to. Never raises: no turrets is a worse
         mission, a dead mission is a worse outcome.
     """
-    resolved = media_shared(LM_TURRET_SHIP_FILE)
-    full = os.path.join(get_mission_dir(), *resolved.split("/"))
-    folder, name = os.path.split(full)
-    if not (os.path.isfile(full + ".yaml") or os.path.isfile(full + ".json")):
-        log("turret hulls not declared: no " + LM_TURRET_SHIP_FILE
-            + " under the media pack - turrets will not fire", "turrets", "warning")
-        return False
-    return ship_data_add_extra(name, folder, LM_TURRET_MOD)
+    reached = add_extra(LM_TURRET_SHIP_FILE, mod=LM_TURRET_MOD)
+    if not reached:
+        log("turret hulls not registered with the engine - if the file is missing "
+            "from the media pack, turrets will not fire", "turrets", "warning")
+    return reached
 
 
 def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, range=2500, targets=None,
