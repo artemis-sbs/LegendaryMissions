@@ -19,7 +19,7 @@ owner: 0
 ```
     # `type: prefab/turret` makes this discoverable via labels_get_type("prefab/turret"),
     # so a GM menu can enumerate turret kinds with no hardcoded list: add a hull to
-    # shipData_turrets.yaml plus a prefab like this one, and it appears on its own.
+    # extraShipData_turrets.yaml plus a prefab like this one, and it appears on its own.
     yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, range, targets, name, owner)
 
 

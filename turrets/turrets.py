@@ -10,14 +10,17 @@ mission-wide MAST namespace where the last loaded wins silently, so an unprefixe
 `declare_ships` would be a collision waiting to happen (`sbs lint` ns-duplicate-function).
 """
 
+import os
+
+from sbs_utils.fs import get_mission_dir
 from sbs_utils.procedural.brain import brain_add
 from sbs_utils.procedural.execution import log
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
-from sbs_utils.procedural.media import media_read_relative_file
 from sbs_utils.procedural.prefab import prefab_autoname
 from sbs_utils.procedural.query import to_id, to_object
 from sbs_utils.procedural.roles import remove_role
-from sbs_utils.procedural.ship_data_mod import ship_data_merge_mod
+from sbs_utils.procedural.media_paths import media_shared
+from sbs_utils.procedural.ship_data import ship_data_add_extra
 from sbs_utils.procedural.signal import signal_emit
 from sbs_utils.procedural.timers import set_timer
 from sbs_utils.procedural.space_objects import clear_target
@@ -26,7 +29,7 @@ from sbs_utils.procedural.mount import mount_ring
 from sbs_utils.procedural.turret import turret_make
 
 #: Hull every tower uses unless told otherwise. MUST be one of ours - engine-measured, a
-#: behav_station on a STOCK hull never fires (see shipData_turrets.yaml).
+#: behav_station on a STOCK hull never fires (see extraShipData_turrets.yaml).
 LM_TURRET_DEFAULT_HULL = "lm_turret_beam"
 
 #: Brain label a deployed tower runs.
@@ -57,31 +60,46 @@ LM_TURRET_LIFETIME = 1200
 LM_TURRET_CHARGE = 60
 
 
-#: Mod tag the generated extraShipData entries carry, so a re-flush replaces rather than
-#: accumulates and a hand-authored mission entry always wins a key collision.
+#: Mod tag the turret entries carry, so a hand-authored mission entry always wins
+#: a key collision.
 LM_TURRET_MOD = "LegendaryMissions"
 
-LM_TURRET_SHIP_FILE = "shipData_turrets.yaml"
+#: Logical media path of the turret hulls, WITHOUT its extension - the engine tries
+#: `.yaml` then `.json` itself. It rides the LM media pack rather than the turrets
+#: mastlib because a mastlib is a ZIP and the engine cannot read inside one; a media
+#: pack is unpacked to disk once, under `__lib__/media/<pack>/`, which is a real
+#: folder the engine can be pointed at.
+LM_TURRET_SHIP_FILE = "turrets/extraShipData_turrets"
 
 
 def lm_turret_declare_ships():
     """Declare the turret hulls so the engine knows them. Call at story TOP LEVEL.
 
+    The addon used to read this file out of its own mastlib and hand the TEXT to the
+    library, which then wrote every merged entry into the mission's shared
+    `extraShipData.json` just before `create_new_sim()`. That worked, and cost a
+    generated file in everyone's mission folder that the library also read back -
+    the same hulls arriving twice, 51 becoming 102 from the second run on.
+
+    Now the file simply EXISTS, in the media pack, named for the addon that owns it,
+    and both readers are pointed at it: `ship_data_add_extra` merges it into
+    sbs_utils (so headless, the mock and `get_ship_data_for` all still see the hulls)
+    and registers it with the engine (which is what makes a `behav_station` actually
+    fire - engine-measured, LM_TestRange test_turret_probe).
+
     Returns:
-        The merge result, or None if the file could not be read (logged, never raised -
-        a missing hull file should degrade to "no turrets", not take the mission down).
+        True when the engine was told, False when only the library was - which is
+        also what a missing file degrades to. Never raises: no turrets is a worse
+        mission, a dead mission is a worse outcome.
     """
-    try:
-        text = media_read_relative_file(LM_TURRET_SHIP_FILE)
-    except Exception as e:
-        log("turret hulls not declared, could not read " + LM_TURRET_SHIP_FILE
-            + ": " + str(e), "turrets", "warning")
-        return None
-    if not text:
-        log("turret hulls not declared: " + LM_TURRET_SHIP_FILE + " is empty",
-            "turrets", "warning")
-        return None
-    return ship_data_merge_mod(text, LM_TURRET_MOD)
+    resolved = media_shared(LM_TURRET_SHIP_FILE)
+    full = os.path.join(get_mission_dir(), *resolved.split("/"))
+    folder, name = os.path.split(full)
+    if not (os.path.isfile(full + ".yaml") or os.path.isfile(full + ".json")):
+        log("turret hulls not declared: no " + LM_TURRET_SHIP_FILE
+            + " under the media pack - turrets will not fire", "turrets", "warning")
+        return False
+    return ship_data_add_extra(name, folder, LM_TURRET_MOD)
 
 
 def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, range=2500, targets=None,
@@ -98,7 +116,7 @@ def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, range=2500, targets=N
         side (str): Side key. Also decides who it shoots, via diplomacy.
         hull (str, optional): shipData key. Defaults to
             :data:`LM_TURRET_DEFAULT_HULL`. Must be an entry from
-            shipData_turrets.yaml or the turret will never fire.
+            extraShipData_turrets.yaml or the turret will never fire.
         range (float): Acquisition range. Keep in step with the hull's beam range -
             beam stats are not readable from a live object, so nothing can check this
             for you.
