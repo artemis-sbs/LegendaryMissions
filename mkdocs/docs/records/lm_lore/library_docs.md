@@ -1,0 +1,79 @@
+# A Zunok's Galactic Helpfile {#zunok}
+
+## Races {#zunok-races}
+
+### Arvonians {#zunok-races-arvonians}
+
+![face](../media/faces/c97ebecec506.png)
+
+If you've ever met a snob who literally believes his feces doesn't stink, he was probably an Arvonian. Also, he may have been a she. Adult Arvonians are the size and shape of pre-pubescent humans, so we outsiders struggle to tell Arvonian males and females apart. This has given the galaxy many hilarious "an Arvonian walks into a bar. . ." jokes.
+
+If an Arvonian actually walks into your bar it's not the start of a joke, it's your bartender's worst nightmare. Arvonians are notoriously picky about their complex cocktails, yet they often prefer Torgoth bartenders who stir with their long noses, thickening each drink with just the right amount of snot.
+
+Arvonians are most easily recognized by being impossible to recognize because of their chameleon-like skin pigmentation. They can change their complexion at will, giving us the old adage "cerulean today, vermillion tomorrow."
+
+Arvonian government decisions are made by a meglo-manical supercomputer named "Lyna The Supreme Understander." Every few months Lyna announces a new scheme to take over the galaxy, and every few months her latest scheme fails disastrously. The Arvonian people believe Lyna is actually playing the long game, only pretending to be an incompetent bungler with no grasp of strategy.
+
+Arvonian culture is dominated by the scandalous dramas of their Royal family, who give their people seasonal trends in food, fashion, and flirting. This explains Arvonian passion for space whales, ballroom dancing, and enormous anti-gravity hats which occasionally malfunction and decapitate their wearers.
+
+### Kralians {#zunok-races-kralians}
+
+![face](../media/faces/d31e39136313.png)
+
+If you see a Kralien who looks like a man-sized cockroach with a face of a Sirian swamp-snake, get his autograph because he is probably a movie star. Repulsive as he is, you will undoubtedly be pleased with his soothing body aroma. You see, hygiene is to the Kralien religion what salt is to human cooking, so brushing his mandibles is literally a sacrament, and if you sneeze on his thorax sanitizer it will be his sacred duty to sacrifice your reproductive organs to The Gods.
+
+With Kraliens there is no pussyfooting around The Gods. This long-vanished benefactor race wielded technology to turn water into whiskey, make asteroids sing passionate love songs, or even make Mondays feel like Saturdays. Kraliens believe The Gods gave them ownership of the whole galaxy, and the mission of their warfleets is to make sure the rest of us pay rent for living on their property.
+
+Any random Kralien you meet probably will identify as 'he' because for every Kralien female hatched, twelve males are hatched. If a Kralien calls you "a blessing from The Gods" he has just equated you with his mother-in-law, which might be a compliment. Or not.
+
+### Skaraans {#zunok-races-skaraans}
+
+![face](../media/faces/07d355b75226.png)
+
+The next time you're on a golf course, look for a group of horse-faced duffers in expensive suits who move their balls while no one is looking. Those smooth-talking rascals are Skaraans. For every minute they spend concentrating on the next drive or putt, they spend ten minutes scheming to acquire your golf clubs, your lunch money, and the title to your starship.
+
+If you've ever wondered why the warranty on your toothbrush has eleven pages of fine print disclaimers, you can thank the Skaraans. Their society is divided into enormous corporations with the sole purpose of making money.
+
+Everyone should visit a Skaraan world at least once because they are renowned for their mass-produced vacations, corporate banquet service, and convenient banking with very reasonable fees. You will see massive monuments akin to The Great Pyramids or Taj Mahal, but these do not honor beloved leaders or military heroes. Instead, the Skaraans venerate their greatest profit centers and tax dodges.
+
+Instead of treaties or trade agreements, each Skaraan corporation handles their affairs through contracts negotiated on golf courses or at cocktail parties. Instead of a naval fleet, Skaraans handle their messiest business ventures by hiring War Corporations. If you see Skaraan warships fighting on both sides of a war, it can mean two War Corporations negotiated separate deals, or somebody's brother-in-law lost a bet. Skaraan ships are the most fearsome in the galaxy, loaded with proprietary technologies guaranteed to piss off your weapons officer.
+
+### Terrans {#zunok-races-terrans}
+
+![face](../media/faces/5e8fc8858309.png)
+
+Galactic consensus is that Terrans, also called humans, resemble oversized, clumsy sea otters. Sea otters, on the other hand, regard humans as tail-less monkeys who are prone to drowning.
+
+Humans are renowned for their chronic lack of common sense. For example, the human activity called camping involves voluntarily banishing themselves to a wilderness where they easily become lost and are gradually eaten by insects. Humans are also known to obsess over computer games, which strains their eyes, necks, and marriages.
+
+Despite their profuse failures, whenever you throw a party you should always invite a human because humans are notoriously fun. One human can dance like an Arvonian, drink like a Torgoth, and brawl like a Ximni. Their natural lack of common sense leads humans to become intoxicated, and intoxicated humans believe they can argue outside their expertise, sing outside their range, and mate outside their species. Expect your neighbors to call the police.
+
+### Torgoth {#zunok-races-torgoth}
+
+![face](../media/faces/8b32d2941e69.png)
+
+Torgoth are proud to have the biggest booties in this side of Bootes. You can call a Torgoth huge, enormous, or gargantuan but don't call him mammoth because that's too close to home. Their twin proboscides are great at smelling, mixing cocktails, and even intimate touching, but they have an unfortunate resemblance to the trunks of elephants. Under no circumstances should you ever offer a Torgoth a peanut.
+
+Torgoth children play with toys that could smash a human head like a jar of mayonnaise. Torgoth dinner tables have knives and forks the size of farm implements. Torgoth tourists sometimes purchase human lawnmowers to trim their toenails.
+
+If a Torgoth crew visits your space station, the best advice is to institute a strict "no dancing" rule. This lesson comes from Ximni Outpost Gallantry, which once prepared for Torgoth shore leave by reinforcing their decks with robustium alloy. The dancing Torgoth did not crash through to the lower levels, but their lumbering footwork shook the station so violently that a spread of torpedoes was accidentally launched into deep space. In case those torpedoes ever find a target, historians have already named the resulting conflict the "Boogie-Woogie Whoopsie War."
+
+Torgoth have a reputation as warmongers, but this is mostly due to clerical shenanigans of a political party desperate to hang onto power. Given the chance, most Torgoth would rather shoot at asteroids and space whales and other targets that don't shoot back.
+
+### Ximni {#zunok-races-ximni}
+
+Ximni society follows a strange honor code called "xim." This makes them terrible at keeping secrets, so if you want to know the best way to defeat a Ximni just ask. But be careful what you ask, a Ximni may overshare his childhood fear that insects would nest in his ears, his fondness for sniffing women's horns after a shower, and that funny story about his urinary tract infection.
+
+Striving for xim makes Ximni insufferably competitive, and they will happily tell you that they are better than you at everything.
+
+![face](../media/faces/43f9a3d322da.png)
+
+You may be fearless, but you'll never be "Tungsten" Tuginar test piloting the first jump drive starship while holding his breath fearless.
+
+![face](../media/faces/284f88a6204f.png)
+
+You may be cool, but you'll never be "Muscles" Gahnic wrangling a herd of Sirian hoofsters with her bare hands cool.
+
+![face](../media/faces/dfb3e050409e.png)
+
+You may be smart, but you'll never be "Isomorphius" Kabrid solving ten-dimensional topological invariants in a swarm of Draconian blood flies smart.

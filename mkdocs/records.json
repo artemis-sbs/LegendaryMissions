@@ -1,0 +1,12 @@
+{
+  "nav_title": "The mission data",
+  "index_intro": "Every record Legendary Missions ships, generated from its `.amd` files by `sbs site --emit records`. Edit the `.amd`, not these pages - a regeneration overwrites them, and CI fails the build when they fall behind.",
+  "titles": {
+    "documents/help_docs.amd": "Console help",
+    "maps/sides.amd": "The three sides",
+    "casino/bar.amd": "The casino bar",
+    "comms/raider_hails.amd": "Raider hails"
+  },
+  "split": ["maps/peacetime_remastered.amd"],
+  "exclude": ["documents/quest.amd"]
+}

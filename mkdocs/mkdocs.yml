@@ -70,6 +70,45 @@ nav:
     - Maps & terrain: script/maps/index.md
     - Writing a Siege boss: script/bosses.md
 
+  # BEGIN generated records nav
+  - The mission data:
+    - records/index.md
+    - Casino:
+      - "The casino bar": records/casino/bar.md
+    - Comms:
+      - "Raider hails": records/comms/raider_hails.md
+    - Documents:
+      - "Console help": records/documents/help_docs.md
+    - Fabrication:
+      - "Fabricator Recipes": records/fabrication/recipes.md
+    - Hangar Sorties:
+      - "Hangar Quests": records/hangar_sorties/hangar_quests.md
+    - Lm Lore:
+      - "A Zunok's Galactic Helpfile": records/lm_lore/library_docs.md
+    - Maps:
+      - "The three sides": records/maps/sides.md
+      - "Siege Quests": records/maps/siege_quests.md
+    - Bosses:
+      - "Continuous": records/maps/bosses/continuous.md
+      - "Infestation": records/maps/bosses/infestation.md
+      - "Ragnarok": records/maps/bosses/ragnarok.md
+      - "Warlord": records/maps/bosses/warlord.md
+    - Peacetime Remastered:
+      - "Peacetime Remastered": records/maps/peacetime_remastered/index.md
+      - "Florbin Case": records/maps/peacetime_remastered/florbin-case.md
+      - "Jobs": records/maps/peacetime_remastered/jobs.md
+      - "Scans": records/maps/peacetime_remastered/scans.md
+      - "Drops": records/maps/peacetime_remastered/drops.md
+      - "Landmarks": records/maps/peacetime_remastered/landmarks.md
+      - "Cargo Scans": records/maps/peacetime_remastered/cargo-scans.md
+      - "Cast": records/maps/peacetime_remastered/cast.md
+      - "Voices": records/maps/peacetime_remastered/pr-voices.md
+      - "Florbin Text": records/maps/peacetime_remastered/florbin-text.md
+      - "Florbin Clues": records/maps/peacetime_remastered/florbin-clues.md
+    - Quests:
+      - "Bridge Stories": records/quests/bridge_stories.md
+  # END generated records nav
+
   - About:
     - about/index.md
 
