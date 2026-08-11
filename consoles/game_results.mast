@@ -98,14 +98,29 @@ shared game_stats = ~~{
     end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)
     totals = results_summary()
 
-    # Tab strip (key, label) for this screen, drawn by the reusable gui_screen_tabs
-    # helper which styles plain buttons like the console top tabs.
+    # Tab strip (key, label) for this screen.
     results_tabs = [["summary","Summary"], ["fleet","Fleet"], ["airwing","Air Wing"], ["quests","Quests"], ["enemies","Enemies"]]
 
-    # Top tab strip (styled like the console top tabs)
+    # Top tab strip (styled like the console top tabs).
+    #
+    # These are IN-PAGE tabs - each one re-jumps this same label with a different
+    # RESULTS_TAB - so they are NOT //gui/tab routes, which would add them to every
+    # console's top bar instead.
+    #
+    # Built with data={} + on_press= rather than a loop-registered `on gui_message`:
+    # a handler registered inside a `for` loop is flaky and an inline block captures
+    # the loop variable at its LAST value. This replaces a call to `gui_screen_tabs`,
+    # a helper that does not exist anywhere in sbs_utils or LegendaryMissions - it
+    # raised NameError on TAB_KEY (see results_set_tab), which killed the results
+    # page's GUI task and left the replay button with no main GUI task to return to.
     gui_section(style="area: 40, 0, 100, 5;")
     gui_row("row-height:35px;")
-    gui_screen_tabs(results_tabs, RESULTS_TAB, "results_set_tab")
+    for _tab_key, _tab_label in results_tabs:
+        if _tab_key == RESULTS_TAB:
+            _tab_style = f"$text:{_tab_label};justify:center;color:white;"
+        else:
+            _tab_style = f"$text:{_tab_label};justify:center;color:#8aa;"
+        gui_button(_tab_style, data={"results_tab_key": _tab_key}, on_press="results_set_tab")
 
     # Title band
     gui_section(style="area: 10, 6, 90, 16;")
@@ -284,8 +299,18 @@ shared game_stats = ~~{
 
 
 === results_set_tab
-    # A results tab was clicked: gui_screen_tabs set TAB_KEY; record it and rebuild.
-    RESULTS_TAB = TAB_KEY
+    # A results tab was clicked. The key arrives as task data from the button's
+    # data={} dict (see the strip in show_game_results_gui) - it used to come from
+    # a TAB_KEY global that nothing ever defined.
+    #
+    # The `default` is load-bearing, and copying the button call without it is what
+    # kept this label raising NameError: this runs as its own task, so if the data
+    # dict does not seed the scope the bare name is simply undefined. `default` sets
+    # it only when it is missing, so passed-in data still wins. Same guard the casino
+    # market handler uses (`default mkey = ""`). A literal fallback, not RESULTS_TAB -
+    # that is task-scoped to show_game_results_gui and is not defined here either.
+    default results_tab_key = "summary"
+    RESULTS_TAB = results_tab_key
     jump show_game_results_gui
 
 
