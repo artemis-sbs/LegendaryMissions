@@ -8,7 +8,7 @@
 |---|---|
 | Face | terran_male |
 | Roles | fb_informant |
-| Path | //comms/fb_interview |
+| Path | `//comms/fb_interview` |
 
 Keeps the arrival logs. Remembers every hull that ever cleared his dock.
 
@@ -18,7 +18,7 @@ Keeps the arrival logs. Remembers every hull that ever cleared his dock.
 |---|---|
 | Face | terran |
 | Roles | fb_informant |
-| Path | //comms/fb_interview |
+| Path | `//comms/fb_interview` |
 
 Runs the maintenance bay. Reads a ship by what it leaves behind on the deck.
 
@@ -28,7 +28,7 @@ Runs the maintenance bay. Reads a ship by what it leaves behind on the deck.
 |---|---|
 | Face | terran_female |
 | Roles | fb_informant |
-| Path | //comms/fb_interview |
+| Path | `//comms/fb_interview` |
 
 Signs off every manifest at the dock. Little gets loaded here without her seeing it.
 

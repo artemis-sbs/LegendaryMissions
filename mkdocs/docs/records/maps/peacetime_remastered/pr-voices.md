@@ -10,7 +10,7 @@
 
 | Fact | Value |
 |---|---|
-| Speaker | ds1 |
+| Speaker | [DS 1](landmarks.md#peacetime-remastered-landmarks-ds1) |
 | When | hail |
 | Title | Ambassador Kidnapped |
 | Presentation | portrait |

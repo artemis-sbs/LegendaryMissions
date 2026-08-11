@@ -19,10 +19,10 @@ Ambassador Florbin has been kidnapped and smuggled out in a cargo container. Fol
 
 | Fact | Value |
 |---|---|
-| Scope | shared |
 | Starts when | revealed |
+| Then | `reveal` [Identify the Kidnapper](#peacetime-remastered-florbin-case-florbin-trail) |
 | Action | \- ds1 hails ds1_brief |
-| Then | reveal florbin/trail |
+| Scope | shared |
 
 !!! abstract "Author note"
 
@@ -34,10 +34,10 @@ DS 1 is calling. Answer the incoming hail on comms to open the investigation.
 
 | Fact | Value |
 |---|---|
-| Scope | shared |
-| Starts when | revealed |
 | Done when | signal suspect_identified |
-| Then | reveal florbin/subdue |
+| Starts when | revealed |
+| Then | `reveal` [Subdue the Kidnapper](#peacetime-remastered-florbin-case-florbin-subdue) |
+| Scope | shared |
 
 !!! abstract "Author note"
 
@@ -49,10 +49,10 @@ Follow the cargo trail: interview stations and bio-scan suspect holds to find wh
 
 | Fact | Value |
 |---|---|
-| Scope | shared |
-| Starts when | revealed |
 | Done when | signal kidnapper_subdued |
-| Then | reveal florbin/recover |
+| Starts when | revealed |
+| Then | `reveal` [Recover and Return Florbin](#peacetime-remastered-florbin-case-florbin-recover) |
+| Scope | shared |
 
 !!! abstract "Author note"
 
@@ -64,9 +64,9 @@ Do NOT destroy the ship - the ambassador is aboard. Drop its shields below 50% (
 
 | Fact | Value |
 |---|---|
-| Scope | shared |
-| Starts when | revealed |
 | Done when | signal florbin_delivered |
+| Starts when | revealed |
+| Scope | shared |
 
 !!! abstract "Author note"
 
@@ -78,9 +78,9 @@ Collect the escape pod and dock it at DS 1.
 
 | Fact | Value |
 |---|---|
-| Scope | shared |
 | Starts when | at once |
-| Fail on signal | florbin_killed |
+| Scope | shared |
+| Fail on signal | `florbin_killed` |
 
 !!! abstract "Author note"
 

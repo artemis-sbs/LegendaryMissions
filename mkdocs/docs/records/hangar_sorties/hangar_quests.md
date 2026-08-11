@@ -4,10 +4,10 @@
 
 | Fact | Value |
 |---|---|
-| Cockpit | fighter |
 | Objective | Destroy 5 raiders |
-| On kill | { role: raider, count: 5 } |
 | Reward | { credits: 300 } |
+| Cockpit | fighter |
+| On kill | { role: raider, count: 5 } |
 
 Command needs the approaches swept. Hunt down the raider probes harassing our shipping lanes, then return to dock.
 
@@ -15,10 +15,10 @@ Command needs the approaches swept. Hunt down the raider probes harassing our sh
 
 | Fact | Value |
 |---|---|
-| Cockpit | fighter |
 | Objective | Destroy 10 raiders |
-| On kill | { role: raider, count: 10 } |
 | Reward | { credits: 600, items: { tech: 1 } } |
+| Cockpit | fighter |
+| On kill | { role: raider, count: 10 } |
 
 A raider wolfpack is massing on our flank. Thin their numbers before they can strike the station.
 
@@ -26,10 +26,10 @@ A raider wolfpack is massing on our flank. Thin their numbers before they can st
 
 | Fact | Value |
 |---|---|
-| Cockpit | shuttle |
 | Objective | Recover 3 crates of provisions |
-| On collect | { key: provisions, count: 3 } |
 | Reward | { credits: 250 } |
+| Cockpit | shuttle |
+| On collect | { key: provisions, count: 3 } |
 
 The forward bases are low. Gather provision crates adrift in the sector and bring them home.
 
@@ -37,9 +37,9 @@ The forward bases are low. Gather provision crates adrift in the sector and brin
 
 | Fact | Value |
 |---|---|
-| Cockpit | shuttle |
 | Objective | Recover 2 tech components |
-| On collect | { key: tech, count: 2 } |
 | Reward | { credits: 500 } |
+| Cockpit | shuttle |
+| On collect | { key: tech, count: 2 } |
 
 Recover advanced components from the debris fields - the quartermaster pays well for working tech.

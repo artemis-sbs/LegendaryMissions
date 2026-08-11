@@ -36,5 +36,5 @@ The deep-space station the Florbin case runs out of.
 |---|---|
 | Kind | point |
 | Roles | picket_zone |
-| Radius | 2500 |
 | Loc | -2000, 0, 18000 |
+| Radius | 2500 |

@@ -4,8 +4,8 @@
 
 | Fact | Value |
 |---|---|
+| At start | active |
 | Scope | shared |
-| State | active |
 | Win | Victory! The starbases held. |
 
 Break the siege on the starbases.
@@ -14,11 +14,11 @@ Break the siege on the starbases.
 
 | Fact | Value |
 |---|---|
-| Scope | shared |
-| State | active |
-| Parent | siege_mission |
-| Required | true |
+| At start | active |
 | Done when | signal siege_won |
+| Part of | [Repel the Siege](#siege-mission) |
+| Scope | shared |
+| Required | true |
 
 Destroy the attacking fleets before they overwhelm the starbases.
 
@@ -26,12 +26,12 @@ Destroy the attacking fleets before they overwhelm the starbases.
 
 | Fact | Value |
 |---|---|
+| At start | active |
+| Part of | [Repel the Siege](#siege-mission) |
 | Scope | shared |
-| State | active |
-| Parent | siege_mission |
-| Critical | true |
-| Fail on signal | siege_bases_lost |
+| Fatal | true |
 | Lose | The starbases have fallen. |
+| Fail on signal | `siege_bases_lost` |
 
 Do not let every starbase fall - losing the last one loses the siege.
 
@@ -39,11 +39,11 @@ Do not let every starbase fall - losing the last one loses the siege.
 
 | Fact | Value |
 |---|---|
+| At start | active |
+| Part of | [Repel the Siege](#siege-mission) |
 | Scope | shared |
-| State | active |
-| Parent | siege_mission |
-| Critical | true |
-| Fail on signal | siege_time_lost |
+| Fatal | true |
 | Lose | Time ran out - the siege was not broken. |
+| Fail on signal | `siege_time_lost` |
 
 Break the siege before the clock runs out.

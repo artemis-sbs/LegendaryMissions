@@ -4,10 +4,10 @@
 
 | Fact | Value |
 |---|---|
-| State | active |
-| On scan | { role: station } |
-| Reveal | story_patrol_b |
+| At start | active |
 | Reward | { credits: 100 } |
+| On scan | { role: station } |
+| Reveal | [Patrol Sweep](#story-patrol-b) |
 
 !!! abstract "Author note"
 
@@ -19,9 +19,9 @@ Have Science scan this starbase to download the patrol briefing, then proceed to
 
 | Fact | Value |
 |---|---|
-| State | secret |
+| At start | secret |
 | On kill | { role: raider, count: 3 } |
-| Reveal | story_patrol_c |
+| Reveal | [Report In](#story-patrol-c) |
 
 !!! abstract "Author note"
 
@@ -33,9 +33,9 @@ Raiders are working the shipping lanes. Destroy three of them.
 
 | Fact | Value |
 |---|---|
-| State | secret |
-| On dock | {} |
+| At start | secret |
 | Reward | { credits: 500 } |
+| On dock | {} |
 
 !!! abstract "Author note"
 
