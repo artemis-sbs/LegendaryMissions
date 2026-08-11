@@ -31,10 +31,11 @@ jobs:
           ref: v1.4.0_dev
           path: missions/sbs_utils
 
+      # sbs_cli releases from `main` - it has no v1.4.0_dev branch, and naming one
+      # here makes the checkout 404 rather than fail with anything readable.
       - uses: actions/checkout@v4
         with:
           repository: artemis-sbs/sbs_cli
-          ref: v1.4.0_dev
           path: missions/sbs_cli
 
       - uses: actions/setup-python@v5
