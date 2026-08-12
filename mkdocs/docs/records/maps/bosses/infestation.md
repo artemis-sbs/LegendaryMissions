@@ -1,4 +1,4 @@
-# Infestation {#infestation}
+# Infestation {: #infestation}
 
 | Fact | Value |
 |---|---|
@@ -8,7 +8,7 @@
 
 A BioMech swarm erupts across the sector - they breed faster than they can be culled.
 
-## Purge the Infestation {#infestation-purge-infestation}
+## Purge the Infestation {: #infestation-purge-infestation}
 
 | Fact | Value |
 |---|---|

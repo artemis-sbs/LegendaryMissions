@@ -1,6 +1,6 @@
 # Raider hails
 
-## Kralien {#kralien}
+## Kralien {: #kralien}
 
 > *One of:*
 >
@@ -15,7 +15,7 @@
 > - Kraliens not talking today. Vow of silence. Also, vow of vengeance. Hold position while Kraliens charge up weapons.
 > - Kralien High Priests have decided you must be destroyed, {COMMS_ORIGIN.name}. No further discussion is needed.
 
-## Torgoth {#torgoth}
+## Torgoth {: #torgoth}
 
 > *One of:*
 >
@@ -30,7 +30,7 @@
 > - Your mere existence annoys us, {COMMS_ORIGIN.name}. We shall rectify this with your destruction.
 > - We are here to clean out the garbage in this sector, {COMMS_ORIGIN.name}, and you smell like trash.
 
-## Arvonian {#arvonian}
+## Arvonian {: #arvonian}
 
 > *One of:*
 >
@@ -45,7 +45,7 @@
 > - This sector belongs to the Royal House of Queen Sasha, {COMMS_ORIGIN.name}. Leave or be destroyed!
 > - Your ugly ship makes us vomit, {COMMS_ORIGIN.name}. We are compelled to remove it from the universe!
 
-## Skaraan {#skaraan}
+## Skaraan {: #skaraan}
 
 > *One of:*
 >
@@ -60,7 +60,7 @@
 > - By all means, close to weapons range, {COMMS_ORIGIN.name}. We look forward to destroying you.
 > - Your continued existence did not score well with our focus groups, {COMMS_ORIGIN.name}, so we will destroy you.
 
-## Ximni {#ximni}
+## Ximni {: #ximni}
 
 > *One of:*
 >
@@ -75,7 +75,7 @@
 > - We talk. We live. We fight. We die. Shall we roll the dice, {COMMS_ORIGIN.name}?
 > - We play the hand we are dealt, {COMMS_ORIGIN.name}. Prepare for battle!
 
-## Pirate {#pirate}
+## Pirate {: #pirate}
 
 > *One of:*
 >
@@ -90,6 +90,6 @@
 > - Well, it's not exactly our fault if some things over HERE are worth a lot more if we grab them and sell them over THERE.
 > - We were, uh... just borrowing it. We'll put it all back when we're done.
 
-## Default {#default}
+## Default {: #default}
 
 > Go away, {COMMS_ORIGIN.name}! You talk too much!

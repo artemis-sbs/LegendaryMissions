@@ -1,8 +1,8 @@
 # Jobs
 
-### Jobs {#peacetime-remastered-jobs}
+### Jobs {: #peacetime-remastered-jobs}
 
-#### Gunnery Qualification {#peacetime-remastered-jobs-job-gunnery}
+#### Gunnery Qualification {: #peacetime-remastered-jobs-job-gunnery}
 
 | Fact | Value |
 |---|---|
@@ -13,7 +13,7 @@
 
 Weapons drill: destroy all the condemned hulks on the gunnery range.
 
-#### Rock Breakers {#peacetime-remastered-jobs-job-rocks}
+#### Rock Breakers {: #peacetime-remastered-jobs-job-rocks}
 
 | Fact | Value |
 |---|---|
@@ -24,7 +24,7 @@ Weapons drill: destroy all the condemned hulks on the gunnery range.
 
 Clear the hazard asteroids from the shipping lane. The field is marked on the map as Hazard Rock Field - Science can select the marker at its centre to put the crew on it.
 
-#### Board the Poacher {#peacetime-remastered-jobs-job-poacher}
+#### Board the Poacher {: #peacetime-remastered-jobs-job-poacher}
 
 | Fact | Value |
 |---|---|
@@ -36,7 +36,7 @@ Clear the hazard asteroids from the shipping lane. The field is marked on the ma
 
 The trawler J19 Jenny is working the belt unregistered. Disable her (drop her shields below 50%) and demand her surrender. Do NOT destroy her.
 
-#### Mercy Run {#peacetime-remastered-jobs-job-mercy}
+#### Mercy Run {: #peacetime-remastered-jobs-job-mercy}
 
 | Fact | Value |
 |---|---|
@@ -51,7 +51,7 @@ The trawler J19 Jenny is working the belt unregistered. Disable her (drop her sh
 
 A shuttle is adrift and losing life support. Reach it before the clock runs out.
 
-#### Customs Patrol {#peacetime-remastered-jobs-job-customs}
+#### Customs Patrol {: #peacetime-remastered-jobs-job-customs}
 
 | Fact | Value |
 |---|---|
@@ -62,7 +62,7 @@ A shuttle is adrift and losing life support. Reach it before the clock runs out.
 
 Hail and clear the civilian traders for transit. They keep to the Shipping Lane, marked on the map.
 
-#### Anomaly Survey {#peacetime-remastered-jobs-job-survey}
+#### Anomaly Survey {: #peacetime-remastered-jobs-job-survey}
 
 | Fact | Value |
 |---|---|
@@ -74,7 +74,7 @@ Hail and clear the civilian traders for transit. They keep to the Shipping Lane,
 
 Have Science scan the sensor anomalies and log them.
 
-#### Sensor Net {#peacetime-remastered-jobs-job-sensor-net}
+#### Sensor Net {: #peacetime-remastered-jobs-job-sensor-net}
 
 | Fact | Value |
 |---|---|
@@ -85,7 +85,7 @@ Have Science scan the sensor anomalies and log them.
 
 Establish a sensor picket. Each Sensor Beacon costs 8 salvage: tow a hulk to the Refinery Platform and it pays out in processed material, or shoot open a wreck and collect the cache. A station market will sell you salvage too, at a price. Engineering fabricates the beacons on the Fabricate tab and delivers them to Weapons, who deploys three across the patrol lanes.
 
-#### Recover Lost Probes {#peacetime-remastered-jobs-job-probes}
+#### Recover Lost Probes {: #peacetime-remastered-jobs-job-probes}
 
 | Fact | Value |
 |---|---|
@@ -96,7 +96,7 @@ Establish a sensor picket. Each Sensor Beacon costs 8 salvage: tow a hulk to the
 
 Three old survey probes have gone adrift in the sector. Fly your ship over each one to bring it aboard - a recovered probe also tops up your beacon tube.
 
-#### Clear the Grazing Herd {#peacetime-remastered-jobs-job-herd}
+#### Clear the Grazing Herd {: #peacetime-remastered-jobs-job-herd}
 
 | Fact | Value |
 |---|---|
@@ -107,7 +107,7 @@ Three old survey probes have gone adrift in the sector. Fly your ship over each 
 
 A pod of grazers has drifted into a shipping lane. Do NOT fire on them - they turn hostile if provoked. A Bio Beacon costs 5 salvage and 1 bio sample. Salvage comes from the Refinery Platform, from wrecks, or from a station market; a bio sample is recovered from a dead space creature - a station will sell you one if the lane is quiet. Set the beacon to REPEL grazers, deploy it among the pod, and drive them clear.
 
-#### Bait the Ravener {#peacetime-remastered-jobs-job-ravener}
+#### Bait the Ravener {: #peacetime-remastered-jobs-job-ravener}
 
 | Fact | Value |
 |---|---|
@@ -118,7 +118,7 @@ A pod of grazers has drifted into a shipping lane. Do NOT fire on them - they tu
 
 A Ravener is loose in the lanes. It FEEDS on weapon fire - shooting only heals it - so do not engage. A Bio Beacon costs 5 salvage and 1 bio sample (see Salvage Sweep, or open a wreck). Set it to ATTRACT the ravener, deploy it beside the black hole, and let the hole do the rest.
 
-#### Tow the Barge {#peacetime-remastered-jobs-job-barge}
+#### Tow the Barge {: #peacetime-remastered-jobs-job-barge}
 
 | Fact | Value |
 |---|---|
@@ -129,7 +129,7 @@ A Ravener is loose in the lanes. It FEEDS on weapon fire - shooting only heals i
 
 A power-dead ore barge is adrift in the shipping lane with no drive of its own. Grav-tether it and tow it back to DS 1.
 
-#### Salvage Sweep {#peacetime-remastered-jobs-job-salvage}
+#### Salvage Sweep {: #peacetime-remastered-jobs-job-salvage}
 
 | Fact | Value |
 |---|---|
@@ -140,7 +140,7 @@ A power-dead ore barge is adrift in the shipping lane with no drive of its own. 
 
 Wrecked hulls are cluttering the lane. Grav-tether each salvage hulk and tow it to the Refinery Platform for processing - the refinery pays in credits AND in salvage, which is what Engineering's Fabricator runs on.
 
-#### Rescue the Lifepod {#peacetime-remastered-jobs-job-lifepod}
+#### Rescue the Lifepod {: #peacetime-remastered-jobs-job-lifepod}
 
 | Fact | Value |
 |---|---|
@@ -153,7 +153,7 @@ Wrecked hulls are cluttering the lane. Grav-tether each salvage hulk and tow it 
 
 A lifepod is tumbling out of a wreck field with its beacon failing. Grav-tether it and tow it to DS 1 before life support runs out.
 
-#### Reposition the Relay {#peacetime-remastered-jobs-job-relay}
+#### Reposition the Relay {: #peacetime-remastered-jobs-job-relay}
 
 | Fact | Value |
 |---|---|
@@ -164,7 +164,7 @@ A lifepod is tumbling out of a wreck field with its beacon failing. Grav-tether 
 
 A comms relay has drifted off station. Grav-tether it and tow it to its marked position in the lane, then let it settle.
 
-#### Picket Line {#peacetime-remastered-jobs-job-picket}
+#### Picket Line {: #peacetime-remastered-jobs-job-picket}
 
 | Fact | Value |
 |---|---|
@@ -175,7 +175,7 @@ A comms relay has drifted off station. Grav-tether it and tow it to its marked p
 
 DS 1 wants the lane junction covered by automated guns. Fleet drops turret kits alongside you - grav-tether each crate, tow it into the marked Picket Line zone, release it, and unfold it there. Any turret kind counts; a kit deployed outside the zone does not. The picket is only finished while the guns are still standing.
 
-#### The Ghost Freighter {#peacetime-remastered-jobs-job-ghost}
+#### The Ghost Freighter {: #peacetime-remastered-jobs-job-ghost}
 
 | Fact | Value |
 |---|---|
@@ -185,7 +185,7 @@ DS 1 wants the lane junction covered by automated guns. Fleet drops turret kits 
 
 The freighter SS Meridian has gone silent and is drifting toward a black hole. Work the steps in order - the case pays on completion.
 
-##### Hail the Meridian {#peacetime-remastered-jobs-job-ghost-hail}
+##### Hail the Meridian {: #peacetime-remastered-jobs-job-ghost-hail}
 
 | Fact | Value |
 |---|---|
@@ -193,7 +193,7 @@ The freighter SS Meridian has gone silent and is drifting toward a black hole. W
 
 COMMS: hail the silent freighter.
 
-##### Scan the Derelict {#peacetime-remastered-jobs-job-ghost-scan}
+##### Scan the Derelict {: #peacetime-remastered-jobs-job-ghost-scan}
 
 | Fact | Value |
 |---|---|
@@ -201,7 +201,7 @@ COMMS: hail the silent freighter.
 
 SCIENCE: scan her to assess the situation.
 
-##### Tow Clear of the Hole {#peacetime-remastered-jobs-job-ghost-clear}
+##### Tow Clear of the Hole {: #peacetime-remastered-jobs-job-ghost-clear}
 
 | Fact | Value |
 |---|---|
@@ -209,7 +209,7 @@ SCIENCE: scan her to assess the situation.
 
 WEAPONS / HELM: grav-tether her and tow her clear of the black hole.
 
-##### Tow Her Home {#peacetime-remastered-jobs-job-ghost-home}
+##### Tow Her Home {: #peacetime-remastered-jobs-job-ghost-home}
 
 | Fact | Value |
 |---|---|
@@ -217,7 +217,7 @@ WEAPONS / HELM: grav-tether her and tow her clear of the black hole.
 
 WEAPONS / HELM: tow her back to DS 1.
 
-#### Sweep and Recover {#peacetime-remastered-jobs-job-sweep}
+#### Sweep and Recover {: #peacetime-remastered-jobs-job-sweep}
 
 | Fact | Value |
 |---|---|
@@ -227,7 +227,7 @@ WEAPONS / HELM: tow her back to DS 1.
 
 Run a sensor sweep and recover what it finds. Work the steps in order.
 
-##### Deploy the Picket {#peacetime-remastered-jobs-job-sweep-deploy}
+##### Deploy the Picket {: #peacetime-remastered-jobs-job-sweep-deploy}
 
 | Fact | Value |
 |---|---|
@@ -235,7 +235,7 @@ Run a sensor sweep and recover what it finds. Work the steps in order.
 
 ENGINEERING / WEAPONS: fabricate a Sensor Beacon on the Fabricate tab and deploy it.
 
-##### Scan the Contact {#peacetime-remastered-jobs-job-sweep-scan}
+##### Scan the Contact {: #peacetime-remastered-jobs-job-sweep-scan}
 
 | Fact | Value |
 |---|---|
@@ -243,7 +243,7 @@ ENGINEERING / WEAPONS: fabricate a Sensor Beacon on the Fabricate tab and deploy
 
 SCIENCE: scan the contact the picket flags.
 
-##### Recover the Find {#peacetime-remastered-jobs-job-sweep-recover}
+##### Recover the Find {: #peacetime-remastered-jobs-job-sweep-recover}
 
 | Fact | Value |
 |---|---|
@@ -251,7 +251,7 @@ SCIENCE: scan the contact the picket flags.
 
 WEAPONS / HELM: grav-tether the find and tow it to DS 1.
 
-#### Cache in the Rocks {#peacetime-remastered-jobs-job-cache}
+#### Cache in the Rocks {: #peacetime-remastered-jobs-job-cache}
 
 | Fact | Value |
 |---|---|
@@ -261,7 +261,7 @@ WEAPONS / HELM: grav-tether the find and tow it to DS 1.
 
 A tipster says contraband is stashed in an asteroid cluster. Work the steps in order.
 
-##### Get the Tip {#peacetime-remastered-jobs-job-cache-tip}
+##### Get the Tip {: #peacetime-remastered-jobs-job-cache-tip}
 
 | Fact | Value |
 |---|---|
@@ -269,7 +269,7 @@ A tipster says contraband is stashed in an asteroid cluster. Work the steps in o
 
 COMMS: hail the loitering tipster for the drop location.
 
-##### Find the Cache {#peacetime-remastered-jobs-job-cache-find}
+##### Find the Cache {: #peacetime-remastered-jobs-job-cache-find}
 
 | Fact | Value |
 |---|---|
@@ -277,7 +277,7 @@ COMMS: hail the loitering tipster for the drop location.
 
 SCIENCE: scan the rock cluster to find the loaded one.
 
-##### Recover the Pod {#peacetime-remastered-jobs-job-cache-recover}
+##### Recover the Pod {: #peacetime-remastered-jobs-job-cache-recover}
 
 | Fact | Value |
 |---|---|
@@ -285,7 +285,7 @@ SCIENCE: scan the rock cluster to find the loaded one.
 
 WEAPONS / HELM: grav-tether the shielded pod out and tow it to DS 1.
 
-#### Herd on the Lane {#peacetime-remastered-jobs-job-herd-arc}
+#### Herd on the Lane {: #peacetime-remastered-jobs-job-herd-arc}
 
 | Fact | Value |
 |---|---|
@@ -295,7 +295,7 @@ WEAPONS / HELM: grav-tether the shielded pod out and tow it to DS 1.
 
 A grazer pod has drifted into a shipping lane. Work the steps in order. Do NOT fire on the grazers - they retaliate if provoked.
 
-##### Scan the Pod {#peacetime-remastered-jobs-job-herd-arc-scan}
+##### Scan the Pod {: #peacetime-remastered-jobs-job-herd-arc-scan}
 
 | Fact | Value |
 |---|---|
@@ -303,7 +303,7 @@ A grazer pod has drifted into a shipping lane. Work the steps in order. Do NOT f
 
 SCIENCE: scan the grazer pod.
 
-##### Warn the Convoy {#peacetime-remastered-jobs-job-herd-arc-warn}
+##### Warn the Convoy {: #peacetime-remastered-jobs-job-herd-arc-warn}
 
 | Fact | Value |
 |---|---|
@@ -311,7 +311,7 @@ SCIENCE: scan the grazer pod.
 
 COMMS: warn the civilian convoy to hold.
 
-##### Deploy a Repel Beacon {#peacetime-remastered-jobs-job-herd-arc-repel}
+##### Deploy a Repel Beacon {: #peacetime-remastered-jobs-job-herd-arc-repel}
 
 | Fact | Value |
 |---|---|
@@ -319,7 +319,7 @@ COMMS: warn the civilian convoy to hold.
 
 ENGINEERING / WEAPONS: fabricate a Bio Beacon set to REPEL and deploy it to drive the pod clear.
 
-##### Free the Snared Grazer {#peacetime-remastered-jobs-job-herd-arc-free}
+##### Free the Snared Grazer {: #peacetime-remastered-jobs-job-herd-arc-free}
 
 | Fact | Value |
 |---|---|

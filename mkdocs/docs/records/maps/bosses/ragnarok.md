@@ -1,4 +1,4 @@
-# Ragnarok {#ragnarok}
+# Ragnarok {: #ragnarok}
 
 | Fact | Value |
 |---|---|
@@ -11,7 +11,7 @@
 
 The 42 Fleet warps in under the renegade Admiral Ragnarok - a Terran juggernaut and its honor guard.
 
-## Defeat Ragnarok {#ragnarok-defeat-ragnarok}
+## Defeat Ragnarok {: #ragnarok-defeat-ragnarok}
 
 | Fact | Value |
 |---|---|
@@ -24,7 +24,7 @@ The 42 Fleet warps in under the renegade Admiral Ragnarok - a Terran juggernaut 
 
 Destroy the juggernaut Ragnarok to break the 42 Fleet.
 
-## Turn Xorn {#ragnarok-turn-xorn}
+## Turn Xorn {: #ragnarok-turn-xorn}
 
 | Fact | Value |
 |---|---|

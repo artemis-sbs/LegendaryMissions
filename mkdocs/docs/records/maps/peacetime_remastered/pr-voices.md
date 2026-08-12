@@ -1,12 +1,12 @@
 # Voices
 
-### Voices {#peacetime-remastered-pr-voices}
+### Voices {: #peacetime-remastered-pr-voices}
 
 !!! abstract "Author note"
 
     Conversations the SCRIPT starts. A beat opens one with \`Action: \<who\> hails \<scene\>\`, and what an answer means is written on the answer.
 
-#### DS 1 Briefing {#peacetime-remastered-pr-voices-ds1-brief}
+#### DS 1 Briefing {: #peacetime-remastered-pr-voices-ds1-brief}
 
 | Fact | Value |
 |---|---|

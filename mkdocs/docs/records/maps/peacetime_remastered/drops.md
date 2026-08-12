@@ -1,8 +1,8 @@
 # Drops
 
-### Drops {#peacetime-remastered-drops}
+### Drops {: #peacetime-remastered-drops}
 
-#### Condemned Hulk {#peacetime-remastered-drops-target-drone}
+#### Condemned Hulk {: #peacetime-remastered-drops-target-drone}
 
 | Fact | Value |
 |---|---|
@@ -10,7 +10,7 @@
 
 Practice targets on a gunnery range. Already stripped - they carry nothing worth taking.
 
-#### Raider {#peacetime-remastered-drops-raider}
+#### Raider {: #peacetime-remastered-drops-raider}
 
 | Fact | Value |
 |---|---|

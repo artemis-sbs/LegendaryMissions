@@ -1,8 +1,8 @@
 # Landmarks
 
-### Landmarks {#peacetime-remastered-landmarks}
+### Landmarks {: #peacetime-remastered-landmarks}
 
-#### J19 Jenny {#peacetime-remastered-landmarks-poacher-lm}
+#### J19 Jenny {: #peacetime-remastered-landmarks-poacher-lm}
 
 | Fact | Value |
 |---|---|
@@ -12,7 +12,7 @@
 | Art | cargo_ship |
 | Loc | 0, 0, -16000 |
 
-#### Stranded Shuttle {#peacetime-remastered-landmarks-mercy-lm}
+#### Stranded Shuttle {: #peacetime-remastered-landmarks-mercy-lm}
 
 | Fact | Value |
 |---|---|
@@ -22,7 +22,7 @@
 | Art | cargo_ship |
 | Loc | 16000, 0, -12000 |
 
-#### DS 1 {#peacetime-remastered-landmarks-ds1}
+#### DS 1 {: #peacetime-remastered-landmarks-ds1}
 
 | Fact | Value |
 |---|---|
@@ -30,7 +30,7 @@
 
 The deep-space station the Florbin case runs out of.
 
-#### Picket Line {#peacetime-remastered-landmarks-picket-lm}
+#### Picket Line {: #peacetime-remastered-landmarks-picket-lm}
 
 | Fact | Value |
 |---|---|

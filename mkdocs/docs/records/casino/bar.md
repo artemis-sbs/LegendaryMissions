@@ -1,6 +1,6 @@
 # The casino bar
 
-## Bitters {#barkeep}
+## Bitters {: #barkeep}
 
 | Fact | Value |
 |---|---|
@@ -10,7 +10,7 @@
 
 The Torgoth barkeep. Pours straight, talks sideways - heard everything twice and believes about half of it.
 
-### rumor: restock {#barkeep-barkeep-r1}
+### rumor: restock {: #barkeep-barkeep-r1}
 
 | Fact | Value |
 |---|---|
@@ -18,7 +18,7 @@ The Torgoth barkeep. Pours straight, talks sideways - heard everything twice and
 
 DS1's holding a shipment of the good stuff next rotation.
 
-### rumor: derelict {#barkeep-barkeep-r2}
+### rumor: derelict {: #barkeep-barkeep-r2}
 
 | Fact | Value |
 |---|---|
@@ -26,7 +26,7 @@ DS1's holding a shipment of the good stuff next rotation.
 
 Fella swore he saw a derelict cruiser, lights on, nobody aboard.
 
-## Cogs {#cogs}
+## Cogs {: #cogs}
 
 | Fact | Value |
 |---|---|
@@ -36,7 +36,7 @@ Fella swore he saw a derelict cruiser, lights on, nobody aboard.
 
 Wrench-hand who knows every hull in the bay. Deals in facts, not fumes - reliable.
 
-### rumor: salvage {#cogs-cogs-r1}
+### rumor: salvage {: #cogs-cogs-r1}
 
 | Fact | Value |
 |---|---|
@@ -44,7 +44,7 @@ Wrench-hand who knows every hull in the bay. Deals in facts, not fumes - reliabl
 
 There's working tech in the debris field nobody's swept.
 
-### rumor: bad coil {#cogs-cogs-r2}
+### rumor: bad coil {: #cogs-cogs-r2}
 
 | Fact | Value |
 |---|---|
@@ -52,7 +52,7 @@ There's working tech in the debris field nobody's swept.
 
 That coil batch is bad. Check yours before you launch.
 
-## Ghost {#ghost}
+## Ghost {: #ghost}
 
 | Fact | Value |
 |---|---|
@@ -62,7 +62,7 @@ That coil batch is bad. Check yours before you launch.
 
 A pilot who flies the quiet routes and comes back knowing things. Says little, means all of it.
 
-### rumor: wolfpack {#ghost-ghost-r1}
+### rumor: wolfpack {: #ghost-ghost-r1}
 
 | Fact | Value |
 |---|---|
@@ -70,7 +70,7 @@ A pilot who flies the quiet routes and comes back knowing things. Says little, m
 
 A raider wolfpack is massing past the belt.
 
-### rumor: soft escort {#ghost-ghost-r2}
+### rumor: soft escort {: #ghost-ghost-r2}
 
 | Fact | Value |
 |---|---|
@@ -78,7 +78,7 @@ A raider wolfpack is massing past the belt.
 
 A convoy's coming through the approaches light on escort.
 
-### rumor: upgrade cache {#ghost-ghost-r3}
+### rumor: upgrade cache {: #ghost-ghost-r3}
 
 | Fact | Value |
 |---|---|
@@ -86,7 +86,7 @@ A convoy's coming through the approaches light on escort.
 
 Someone's running upgrades through the far station, quiet-like.
 
-## Chatter {#chatter}
+## Chatter {: #chatter}
 
 | Fact | Value |
 |---|---|

@@ -1,4 +1,4 @@
-# Continuous {#continuous}
+# Continuous {: #continuous}
 
 | Fact | Value |
 |---|---|

@@ -1,10 +1,10 @@
 # Console help
 
-## Console Stations {#consoles}
+## Console Stations {: #consoles}
 
 Describe what stations are
 
-### Helm {#consoles-helm}
+### Helm {: #consoles-helm}
 
 The Helm console steers the ship using the maneuvering system and moves the ship using impulse and warp drive (for Terrans) or jump drive (for Ximni).
 
@@ -17,7 +17,7 @@ Your warp drive (or jump drive) can go faster and farther than your enemies, but
     To make the ship turn faster, ask Engineering for more power to maneuvering.
     To make the ship move faster, ask Engineering for more power to the impulse or warp drive.
 
-### Weapons {#consoles-weapons}
+### Weapons {: #consoles-weapons}
 
 The Weapons console controls your beam weapons and your torpedoes.
 
@@ -32,7 +32,7 @@ In an emergency, Weapons can provide energy to your ship by draining a torpedo w
     To make your beam weapons hit harder, ask Engineering to increase power to beams.
     To make your torpedo tubes load faster, ask Engineering to increase power to torpedo tubes.
 
-### Engineering {#consoles-engineering}
+### Engineering {: #consoles-engineering}
 
 The Engineering console has two main functions: to distribute power to the ship's systems and to direct damage control teams to repair damage to the ship.
 
@@ -46,7 +46,7 @@ Every system can dissipate some heat naturally, so systems you set to 100% (norm
 
 Engineering has a pool of coolant available to cool down overheated systems. You don't have enough coolant to cool everything all at once, so distribute it carefully.
 
-### Science {#consoles-science}
+### Science {: #consoles-science}
 
 The Science console is the eyes of the ship, locating and scanning virtually anything in the sector. The crew is counting on you to tell them what is going on out there, so don't play Science if you can't speak up!
 
@@ -60,7 +60,7 @@ The further away an object is the longer it takes to scan.
 
     To make your sensors scan faster, ask Engineering to increase power to sensors.
 
-### Communications {#consoles-comms}
+### Communications {: #consoles-comms}
 
 The Communications console is the voice of the ship. Incoming and outgoing traffic appears in the ship's log: the newest line always sits in the strip under the ship data panel, and the full history is on the Log tab of that panel, filtered into Ship and Mission.
 
@@ -72,17 +72,17 @@ Comms can request that friendly bases construct torpedo weapons and expedite ref
 
 The comms station has a 'RED ALERT' button which will keep your crew on their toes.
 
-### Flight Hangar {#consoles-hangar}
+### Flight Hangar {: #consoles-hangar}
 
 The Flight Hangar allows player the wish to fly single craft (fighter, shuttle, bomber) missions. They can join the lgh hangar.
 
 Select from several station, and ship hangar. Grab a craft. Select a mission and Fly.
 
-## Fabrication {#fabrication}
+## Fabrication {: #fabrication}
 
 Engineering can BUILD things. The Fabricate tab lists recipes; a build spends materials, takes time, and delivers the finished item to the ship.
 
-### How a build works {#fabrication-fabrication-loop}
+### How a build works {: #fabrication-fabrication-loop}
 
 Four steps, and each one happens at a different console - fabrication is a crew activity, not an Engineering solo.
 
@@ -98,7 +98,7 @@ Four steps, and each one happens at a different console - fabrication is a crew 
 
     Firing a beacon tube with no delivered program launches a default bio beacon, not the one you meant. If a job wants a SENSOR beacon, it has to be fabricated and delivered first - a recovered probe puts a round in the tube but carries no program.
 
-### Where materials come from {#fabrication-fabrication-materials}
+### Where materials come from {: #fabrication-fabrication-materials}
 
 SALVAGE is the common raw material - reclaimed plate, wiring and parts.
 

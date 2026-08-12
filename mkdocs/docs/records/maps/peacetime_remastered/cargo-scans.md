@@ -1,8 +1,8 @@
 # Cargo Scans
 
-### Cargo Scans {#peacetime-remastered-cargo-scans}
+### Cargo Scans {: #peacetime-remastered-cargo-scans}
 
-#### Merchant Cargo Ship {#peacetime-remastered-cargo-scans-suspect-scan}
+#### Merchant Cargo Ship {: #peacetime-remastered-cargo-scans-suspect-scan}
 
 | Fact | Value |
 |---|---|
@@ -15,7 +15,7 @@
 > - A civilian freighter, manifest logged, running lawful.
 > - Standard merchant hauler - transponder clean, nothing flagged.
 
-#### Merchant Cargo Ship - Status {#peacetime-remastered-cargo-scans-suspect-status}
+#### Merchant Cargo Ship - Status {: #peacetime-remastered-cargo-scans-suspect-status}
 
 | Fact | Value |
 |---|---|
@@ -27,7 +27,7 @@
 > - No additional data available.
 > - Sensors read nothing further at this range.
 
-#### Merchant Cargo Ship - Intel {#peacetime-remastered-cargo-scans-suspect-intel}
+#### Merchant Cargo Ship - Intel {: #peacetime-remastered-cargo-scans-suspect-intel}
 
 | Fact | Value |
 |---|---|
@@ -39,7 +39,7 @@
 > - The ship is registered to Captain {captain}.
 > - Registry lists the master as Captain {captain}.
 
-#### Merchant Cargo Ship - Bio {#peacetime-remastered-cargo-scans-suspect-bio}
+#### Merchant Cargo Ship - Bio {: #peacetime-remastered-cargo-scans-suspect-bio}
 
 | Fact | Value |
 |---|---|
@@ -51,7 +51,7 @@
 > - The cargo bays on this ship are shielded. You will have to get closer to get a deeper scan.
 > - Shielded holds - close the range for a deeper bio-scan.
 
-#### Suspicious Cargo Ship {#peacetime-remastered-cargo-scans-discovered-scan}
+#### Suspicious Cargo Ship {: #peacetime-remastered-cargo-scans-discovered-scan}
 
 | Fact | Value |
 |---|---|
@@ -64,7 +64,7 @@
 > - A freighter with a falsified transponder - this is our ship.
 > - Hostile cargo hauler, running dark. This is the one.
 
-#### Suspicious Cargo Ship - Status {#peacetime-remastered-cargo-scans-discovered-status}
+#### Suspicious Cargo Ship - Status {: #peacetime-remastered-cargo-scans-discovered-status}
 
 | Fact | Value |
 |---|---|
@@ -76,7 +76,7 @@
 > - No additional data available.
 > - Sensors read nothing further at this range.
 
-#### Suspicious Cargo Ship - Intel {#peacetime-remastered-cargo-scans-discovered-intel}
+#### Suspicious Cargo Ship - Intel {: #peacetime-remastered-cargo-scans-discovered-intel}
 
 | Fact | Value |
 |---|---|
@@ -88,7 +88,7 @@
 > - The ship is registered to Captain {captain}.
 > - Registry lists the master as Captain {captain} - the record is forged.
 
-#### Suspicious Cargo Ship - Bio {#peacetime-remastered-cargo-scans-discovered-bio}
+#### Suspicious Cargo Ship - Bio {: #peacetime-remastered-cargo-scans-discovered-bio}
 
 | Fact | Value |
 |---|---|

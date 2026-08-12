@@ -1,8 +1,8 @@
 # Cast
 
-### Cast {#peacetime-remastered-cast}
+### Cast {: #peacetime-remastered-cast}
 
-#### Deck Chief Renner {#peacetime-remastered-cast-deck-chief}
+#### Deck Chief Renner {: #peacetime-remastered-cast-deck-chief}
 
 | Fact | Value |
 |---|---|
@@ -12,7 +12,7 @@
 
 Keeps the arrival logs. Remembers every hull that ever cleared his dock.
 
-#### Chief Engineer Vok {#peacetime-remastered-cast-maint-chief}
+#### Chief Engineer Vok {: #peacetime-remastered-cast-maint-chief}
 
 | Fact | Value |
 |---|---|
@@ -22,7 +22,7 @@ Keeps the arrival logs. Remembers every hull that ever cleared his dock.
 
 Runs the maintenance bay. Reads a ship by what it leaves behind on the deck.
 
-#### Cargo Master Pell {#peacetime-remastered-cast-cargo-master}
+#### Cargo Master Pell {: #peacetime-remastered-cast-cargo-master}
 
 | Fact | Value |
 |---|---|
@@ -32,7 +32,7 @@ Runs the maintenance bay. Reads a ship by what it leaves behind on the deck.
 
 Signs off every manifest at the dock. Little gets loaded here without her seeing it.
 
-#### Admiral Harkin {#peacetime-remastered-cast-admiral}
+#### Admiral Harkin {: #peacetime-remastered-cast-admiral}
 
 | Fact | Value |
 |---|---|
@@ -41,7 +41,7 @@ Signs off every manifest at the dock. Little gets loaded here without her seeing
 
 The task-force commander. Briefs the crew on the kidnapping and welcomes the ambassador home.
 
-#### Ambassador Florbin {#peacetime-remastered-cast-florbin}
+#### Ambassador Florbin {: #peacetime-remastered-cast-florbin}
 
 | Fact | Value |
 |---|---|
@@ -50,7 +50,7 @@ The task-force commander. Briefs the crew on the kidnapping and welcomes the amb
 
 The kidnapped ambassador - more concerned about missing his shows than the danger.
 
-##### Passenger requests {#peacetime-remastered-cast-florbin-florbin-pest}
+##### Passenger requests {: #peacetime-remastered-cast-florbin-florbin-pest}
 
 | Fact | Value |
 |---|---|

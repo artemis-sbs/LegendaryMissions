@@ -1,1 +1,1 @@
-# Peacetime Remastered {#peacetime-remastered}
+# Peacetime Remastered {: #peacetime-remastered}

@@ -1,6 +1,6 @@
 # Hangar Quests
 
-## Patrol the Approaches {#hq-patrol}
+## Patrol the Approaches {: #hq-patrol}
 
 | Fact | Value |
 |---|---|
@@ -11,7 +11,7 @@
 
 Command needs the approaches swept. Hunt down the raider probes harassing our shipping lanes, then return to dock.
 
-## Hunt the Pack {#hq-hunt}
+## Hunt the Pack {: #hq-hunt}
 
 | Fact | Value |
 |---|---|
@@ -22,7 +22,7 @@ Command needs the approaches swept. Hunt down the raider probes harassing our sh
 
 A raider wolfpack is massing on our flank. Thin their numbers before they can strike the station.
 
-## Supply Run {#hq-supply}
+## Supply Run {: #hq-supply}
 
 | Fact | Value |
 |---|---|
@@ -33,7 +33,7 @@ A raider wolfpack is massing on our flank. Thin their numbers before they can st
 
 The forward bases are low. Gather provision crates adrift in the sector and bring them home.
 
-## Salvage Sweep {#hq-salvage}
+## Salvage Sweep {: #hq-salvage}
 
 | Fact | Value |
 |---|---|

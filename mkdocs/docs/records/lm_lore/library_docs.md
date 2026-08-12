@@ -1,8 +1,8 @@
-# A Zunok's Galactic Helpfile {#zunok}
+# A Zunok's Galactic Helpfile {: #zunok}
 
-## Races {#zunok-races}
+## Races {: #zunok-races}
 
-### Arvonians {#zunok-races-arvonians}
+### Arvonians {: #zunok-races-arvonians}
 
 ![face](../media/faces/c97ebecec506.png)
 
@@ -16,7 +16,7 @@ Arvonian government decisions are made by a meglo-manical supercomputer named "L
 
 Arvonian culture is dominated by the scandalous dramas of their Royal family, who give their people seasonal trends in food, fashion, and flirting. This explains Arvonian passion for space whales, ballroom dancing, and enormous anti-gravity hats which occasionally malfunction and decapitate their wearers.
 
-### Kralians {#zunok-races-kralians}
+### Kralians {: #zunok-races-kralians}
 
 ![face](../media/faces/d31e39136313.png)
 
@@ -26,7 +26,7 @@ With Kraliens there is no pussyfooting around The Gods. This long-vanished benef
 
 Any random Kralien you meet probably will identify as 'he' because for every Kralien female hatched, twelve males are hatched. If a Kralien calls you "a blessing from The Gods" he has just equated you with his mother-in-law, which might be a compliment. Or not.
 
-### Skaraans {#zunok-races-skaraans}
+### Skaraans {: #zunok-races-skaraans}
 
 ![face](../media/faces/07d355b75226.png)
 
@@ -38,7 +38,7 @@ Everyone should visit a Skaraan world at least once because they are renowned fo
 
 Instead of treaties or trade agreements, each Skaraan corporation handles their affairs through contracts negotiated on golf courses or at cocktail parties. Instead of a naval fleet, Skaraans handle their messiest business ventures by hiring War Corporations. If you see Skaraan warships fighting on both sides of a war, it can mean two War Corporations negotiated separate deals, or somebody's brother-in-law lost a bet. Skaraan ships are the most fearsome in the galaxy, loaded with proprietary technologies guaranteed to piss off your weapons officer.
 
-### Terrans {#zunok-races-terrans}
+### Terrans {: #zunok-races-terrans}
 
 ![face](../media/faces/5e8fc8858309.png)
 
@@ -48,7 +48,7 @@ Humans are renowned for their chronic lack of common sense. For example, the hum
 
 Despite their profuse failures, whenever you throw a party you should always invite a human because humans are notoriously fun. One human can dance like an Arvonian, drink like a Torgoth, and brawl like a Ximni. Their natural lack of common sense leads humans to become intoxicated, and intoxicated humans believe they can argue outside their expertise, sing outside their range, and mate outside their species. Expect your neighbors to call the police.
 
-### Torgoth {#zunok-races-torgoth}
+### Torgoth {: #zunok-races-torgoth}
 
 ![face](../media/faces/8b32d2941e69.png)
 
@@ -60,7 +60,7 @@ If a Torgoth crew visits your space station, the best advice is to institute a s
 
 Torgoth have a reputation as warmongers, but this is mostly due to clerical shenanigans of a political party desperate to hang onto power. Given the chance, most Torgoth would rather shoot at asteroids and space whales and other targets that don't shoot back.
 
-### Ximni {#zunok-races-ximni}
+### Ximni {: #zunok-races-ximni}
 
 Ximni society follows a strange honor code called "xim." This makes them terrible at keeping secrets, so if you want to know the best way to defeat a Ximni just ask. But be careful what you ask, a Ximni may overshare his childhood fear that insects would nest in his ears, his fondness for sniffing women's horns after a shower, and that funny story about his urinary tract infection.
 

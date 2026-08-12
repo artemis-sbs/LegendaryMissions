@@ -1,6 +1,6 @@
 # Bridge Stories
 
-## Patrol Briefing {#story-patrol}
+## Patrol Briefing {: #story-patrol}
 
 | Fact | Value |
 |---|---|
@@ -15,7 +15,7 @@
 
 Have Science scan this starbase to download the patrol briefing, then proceed to your sweep.
 
-## Patrol Sweep {#story-patrol-b}
+## Patrol Sweep {: #story-patrol-b}
 
 | Fact | Value |
 |---|---|
@@ -29,7 +29,7 @@ Have Science scan this starbase to download the patrol briefing, then proceed to
 
 Raiders are working the shipping lanes. Destroy three of them.
 
-## Report In {#story-patrol-c}
+## Report In {: #story-patrol-c}
 
 | Fact | Value |
 |---|---|

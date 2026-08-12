@@ -1,8 +1,8 @@
 # Florbin Case
 
-### Florbin Case {#peacetime-remastered-florbin-case}
+### Florbin Case {: #peacetime-remastered-florbin-case}
 
-#### The Florbin Affair {#peacetime-remastered-florbin-case-florbin}
+#### The Florbin Affair {: #peacetime-remastered-florbin-case-florbin}
 
 | Fact | Value |
 |---|---|
@@ -15,7 +15,7 @@
 
 Ambassador Florbin has been kidnapped and smuggled out in a cargo container. Follow the cargo trail, find him, and bring him home to DS 1 - alive.
 
-##### Take the Case {#peacetime-remastered-florbin-case-florbin-brief}
+##### Take the Case {: #peacetime-remastered-florbin-case-florbin-brief}
 
 | Fact | Value |
 |---|---|
@@ -30,7 +30,7 @@ Ambassador Florbin has been kidnapped and smuggled out in a cargo container. Fol
 
 DS 1 is calling. Answer the incoming hail on comms to open the investigation.
 
-##### Identify the Kidnapper {#peacetime-remastered-florbin-case-florbin-trail}
+##### Identify the Kidnapper {: #peacetime-remastered-florbin-case-florbin-trail}
 
 | Fact | Value |
 |---|---|
@@ -45,7 +45,7 @@ DS 1 is calling. Answer the incoming hail on comms to open the investigation.
 
 Follow the cargo trail: interview stations and bio-scan suspect holds to find which ship is hiding the ambassador.
 
-##### Subdue the Kidnapper {#peacetime-remastered-florbin-case-florbin-subdue}
+##### Subdue the Kidnapper {: #peacetime-remastered-florbin-case-florbin-subdue}
 
 | Fact | Value |
 |---|---|
@@ -60,7 +60,7 @@ Follow the cargo trail: interview stations and bio-scan suspect holds to find wh
 
 Do NOT destroy the ship - the ambassador is aboard. Drop its shields below 50% (or use a secret codecase) to force its surrender.
 
-##### Recover and Return Florbin {#peacetime-remastered-florbin-case-florbin-recover}
+##### Recover and Return Florbin {: #peacetime-remastered-florbin-case-florbin-recover}
 
 | Fact | Value |
 |---|---|
@@ -74,7 +74,7 @@ Do NOT destroy the ship - the ambassador is aboard. Drop its shields below 50% (
 
 Collect the escape pod and dock it at DS 1.
 
-##### Keep Florbin Alive {#peacetime-remastered-florbin-case-florbin-alive}
+##### Keep Florbin Alive {: #peacetime-remastered-florbin-case-florbin-alive}
 
 | Fact | Value |
 |---|---|

@@ -1,6 +1,6 @@
 # Siege Quests
 
-## Repel the Siege {#siege-mission}
+## Repel the Siege {: #siege-mission}
 
 | Fact | Value |
 |---|---|
@@ -10,7 +10,7 @@
 
 Break the siege on the starbases.
 
-## Break the Siege {#break-siege}
+## Break the Siege {: #break-siege}
 
 | Fact | Value |
 |---|---|
@@ -22,7 +22,7 @@ Break the siege on the starbases.
 
 Destroy the attacking fleets before they overwhelm the starbases.
 
-## Hold the Starbases {#hold-stations}
+## Hold the Starbases {: #hold-stations}
 
 | Fact | Value |
 |---|---|
@@ -35,7 +35,7 @@ Destroy the attacking fleets before they overwhelm the starbases.
 
 Do not let every starbase fall - losing the last one loses the siege.
 
-## Break It in Time {#beat-clock}
+## Break It in Time {: #beat-clock}
 
 | Fact | Value |
 |---|---|

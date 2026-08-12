@@ -1,6 +1,6 @@
 # The three sides
 
-## TSN {#tsn}
+## TSN {: #tsn}
 
 | Fact | Value |
 |---|---|
@@ -9,7 +9,7 @@
 
 The Terran Stellar Navy.
 
-## Raider {#raider}
+## Raider {: #raider}
 
 | Fact | Value |
 |---|---|
@@ -18,7 +18,7 @@ The Terran Stellar Navy.
 
 Hostile Aliens.
 
-## Civ {#civ}
+## Civ {: #civ}
 
 | Fact | Value |
 |---|---|

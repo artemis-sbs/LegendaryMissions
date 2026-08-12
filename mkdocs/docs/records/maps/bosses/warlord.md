@@ -1,4 +1,4 @@
-# Warlord {#warlord}
+# Warlord {: #warlord}
 
 | Fact | Value |
 |---|---|
@@ -11,7 +11,7 @@
 
 A raider warlord and their honor guard warp in to break the defenders.
 
-## Defeat the Warlord {#warlord-defeat-warlord}
+## Defeat the Warlord {: #warlord-defeat-warlord}
 
 | Fact | Value |
 |---|---|

@@ -1,8 +1,8 @@
 # Scans
 
-### Scans {#peacetime-remastered-scans}
+### Scans {: #peacetime-remastered-scans}
 
-#### Hazard Rock {#peacetime-remastered-scans-rock-scan}
+#### Hazard Rock {: #peacetime-remastered-scans-rock-scan}
 
 | Fact | Value |
 |---|---|
@@ -15,7 +15,7 @@
 > - A slow-tumbling nickel-iron boulder, squarely in the lane.
 > - Rocky debris on a collision line with the shipping route.
 
-#### Hazard Rock - Materials {#peacetime-remastered-scans-rock-mat}
+#### Hazard Rock - Materials {: #peacetime-remastered-scans-rock-mat}
 
 | Fact | Value |
 |---|---|
@@ -24,7 +24,7 @@
 
 > High nickel-iron content. Flagged for demolition - clear to destroy.
 
-#### Poacher {#peacetime-remastered-scans-poacher-scan}
+#### Poacher {: #peacetime-remastered-scans-poacher-scan}
 
 | Fact | Value |
 |---|---|
@@ -36,7 +36,7 @@
 > - Unregistered civilian trawler running dark.
 > - Civilian hull, transponder silent, running without lights.
 
-#### Poacher - Bio {#peacetime-remastered-scans-poacher-bio}
+#### Poacher - Bio {: #peacetime-remastered-scans-poacher-bio}
 
 | Fact | Value |
 |---|---|
@@ -45,7 +45,7 @@
 
 > Holds contain protected space-life specimens. This is a poaching vessel.
 
-#### Poacher - Intel {#peacetime-remastered-scans-poacher-intel}
+#### Poacher - Intel {: #peacetime-remastered-scans-poacher-intel}
 
 | Fact | Value |
 |---|---|
@@ -54,7 +54,7 @@
 
 > Falsified transponder. Disable and board - do NOT destroy.
 
-#### Civilian Trader {#peacetime-remastered-scans-traffic-scan}
+#### Civilian Trader {: #peacetime-remastered-scans-traffic-scan}
 
 | Fact | Value |
 |---|---|
@@ -63,7 +63,7 @@
 
 > Licensed civilian trader on a filed transit route.
 
-#### Civilian Trader - Intel {#peacetime-remastered-scans-traffic-intel}
+#### Civilian Trader - Intel {: #peacetime-remastered-scans-traffic-intel}
 
 | Fact | Value |
 |---|---|
@@ -72,7 +72,7 @@
 
 > Manifest checks out. Safe to clear for transit.
 
-#### Stranded Shuttle {#peacetime-remastered-scans-mercy-scan}
+#### Stranded Shuttle {: #peacetime-remastered-scans-mercy-scan}
 
 | Fact | Value |
 |---|---|
@@ -81,7 +81,7 @@
 
 > Civilian shuttle, adrift and unpowered.
 
-#### Stranded Shuttle - Bio {#peacetime-remastered-scans-mercy-bio}
+#### Stranded Shuttle - Bio {: #peacetime-remastered-scans-mercy-bio}
 
 | Fact | Value |
 |---|---|
