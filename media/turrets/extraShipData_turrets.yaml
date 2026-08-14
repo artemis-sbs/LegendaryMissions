@@ -22,126 +22,184 @@
 # and inheriting `station` would drag in LM docking, market, repair, nav proxies and every
 # "protect the station" objective in the game.
 
-"#ship-list":
-  # The deployable defense tower. Beams copied from starbase_command (the entry whose
-  # add-on twin was measured firing), at 360 arc like every stock station beam - which is
-  # what lets a turret skip aiming entirely.
-  - key: lm_turret_beam
-    name: Defense Turret
-    origin: Terran
-    side: USFP
-    artfileroot: tsn-big-base
-    meshscale: 6.0
-    radarscale: 0.6
-    internalmapscale: 1.0
-    internalmapw: 10
-    internalmaph: 10
-    internalsymmetry: 1
-    exclusionradius: 60.0
-    shields: [220]
-    hullpoints: 60
-    roles: turret
-    hull_port_sets:
-      "beam Primary Beams":
-        - position: [0, 4.277, 0.033]
-          color: red
-          arccolor: "#090"
-          cycle_time: 5
-          damage_coeff: 1
-          range: 2500
-          arcwidth: 360
-          barrel_angle: 0
-    torpedostart: []
+# The engine parses this as HJSON, NOT YAML: keys cannot contain whitespace and there
+# are no block sequences, so a `- key:` list or a `"beam Primary Beams":` block mapping
+# is a parse error - and one the engine reports to NOBODY. add_extra_ship_data raises,
+# the library still merges the file with PyYAML, and the hulls then exist everywhere
+# except the engine: turrets spawn and never fire. Keep this file JSON-shaped.
 
-  # A heavier emplacement: longer reach, harder hitting, slower cycle, tougher. Exists as
-  # a separate ENTRY rather than a runtime tweak because beam stats cannot be tuned per
-  # object (see the header).
-  - key: lm_turret_heavy
-    name: Heavy Defense Turret
-    origin: Terran
-    side: USFP
-    artfileroot: tsn-big-base
-    meshscale: 9.0
-    radarscale: 0.8
-    internalmapscale: 1.0
-    internalmapw: 10
-    internalmaph: 10
-    internalsymmetry: 1
-    exclusionradius: 90.0
-    shields: [400]
-    hullpoints: 120
-    roles: turret
-    hull_port_sets:
-      "beam Primary Beams":
-        - position: [0, 4.277, 0.033]
-          color: orange
-          arccolor: "#090"
-          cycle_time: 8
-          damage_coeff: 2.2
-          range: 3500
-          arcwidth: 360
-          barrel_angle: 0
-    torpedostart: []
+{
+  "#ship-list": [
 
-  # The ship/station MOUNT: small, short-ranged, and welded into a host's body frame by
-  # procedural.mount. exclusionradius 0 on purpose - a mount rides INSIDE the host's own
-  # exclusion sphere, and a non-zero radius there is asking the collision system to
-  # fight the weld. (Engine-measured: repositioning inside a host's exclusion radius
-  # produced 0 collision events over 1093 ticks, but the tractor weld is what holds it.)
-  - key: lm_turret_mount
-    name: Turret Mount
-    origin: Terran
-    side: USFP
-    artfileroot: tsn-fighter
-    meshscale: 1.2
-    radarscale: 0.2
-    internalmapscale: 1.0
-    internalmapw: 4
-    internalmaph: 4
-    internalsymmetry: 1
-    exclusionradius: 0.0
-    shields: [40]
-    hullpoints: 12
-    roles: turret
-    hull_port_sets:
-      "beam Primary Beams":
-        - position: [0, 0.5, 0]
-          color: "#0cf"
-          arccolor: "#090"
-          cycle_time: 3
-          damage_coeff: 0.4
-          range: 1200
-          arcwidth: 360
-          barrel_angle: 0
-    torpedostart: []
+    # The deployable defense tower. Beams copied from starbase_command (the entry whose
+    # add-on twin was measured firing), at 360 arc like every stock station beam - which is
+    # what lets a turret skip aiming entirely.
+    {
+      "key": "lm_turret_beam",
+      "name": "Defense Turret",
+      "origin": "Terran",
+      "side": "USFP",
+      "artfileroot": "tsn-big-base",
+      "meshscale": 6.0,
+      "radarscale": 0.6,
+      "internalmapscale": 1.0,
+      "internalmapw": 10,
+      "internalmaph": 10,
+      "internalsymmetry": 1,
+      "exclusionradius": 60.0,
+      "shields": [
+        220
+      ],
+      "hullpoints": 60,
+      "roles": "turret",
+      "hull_port_sets": {
+        "beam Primary Beams": [
+          {
+            "position": [
+              0,
+              4.277,
+              0.033
+            ],
+            "color": "red",
+            "arccolor": "#090",
+            "cycle_time": 5,
+            "damage_coeff": 1,
+            "range": 2500,
+            "arcwidth": 360,
+            "barrel_angle": 0
+          }
+        ]
+      },
+      "torpedostart": []
+    },
 
-  # The undeployed KIT: an inert crate a ship ejects, tows into position with the grav
-  # tether, and unfolds into a turret. Not a turret itself - no brain, no turret_make -
-  # and its beam entry is deliberately zeroed rather than omitted, because a hull missing
-  # hull_port_sets has crashed the engine at load.
-  - key: lm_turret_crate
-    name: Turret Kit
-    origin: Terran
-    side: USFP
-    artfileroot: tsn-fighter
-    meshscale: 1.6
-    radarscale: 0.4
-    internalmapscale: 1.0
-    internalmapw: 4
-    internalmaph: 4
-    internalsymmetry: 1
-    exclusionradius: 20.0
-    shields: [30]
-    hullpoints: 20
-    roles: turret_crate
-    hull_port_sets:
-      "beam Primary Beams":
-        - position: [0, 0, 0]
-          color: white
-          arccolor: "#090"
-          cycle_time: 60
-          damage_coeff: 0
-          range: 0
-          arcwidth: 360
-          barrel_angle: 0
-    torpedostart: []
+    # A heavier emplacement: longer reach, harder hitting, slower cycle, tougher. Exists as
+    # a separate ENTRY rather than a runtime tweak because beam stats cannot be tuned per
+    # object (see the header).
+    {
+      "key": "lm_turret_heavy",
+      "name": "Heavy Defense Turret",
+      "origin": "Terran",
+      "side": "USFP",
+      "artfileroot": "tsn-big-base",
+      "meshscale": 9.0,
+      "radarscale": 0.8,
+      "internalmapscale": 1.0,
+      "internalmapw": 10,
+      "internalmaph": 10,
+      "internalsymmetry": 1,
+      "exclusionradius": 90.0,
+      "shields": [
+        400
+      ],
+      "hullpoints": 120,
+      "roles": "turret",
+      "hull_port_sets": {
+        "beam Primary Beams": [
+          {
+            "position": [
+              0,
+              4.277,
+              0.033
+            ],
+            "color": "orange",
+            "arccolor": "#090",
+            "cycle_time": 8,
+            "damage_coeff": 2.2,
+            "range": 3500,
+            "arcwidth": 360,
+            "barrel_angle": 0
+          }
+        ]
+      },
+      "torpedostart": []
+    },
+
+    # The ship/station MOUNT: small, short-ranged, and welded into a host's body frame by
+    # procedural.mount. exclusionradius 0 on purpose - a mount rides INSIDE the host's own
+    # exclusion sphere, and a non-zero radius there is asking the collision system to
+    # fight the weld. (Engine-measured: repositioning inside a host's exclusion radius
+    # produced 0 collision events over 1093 ticks, but the tractor weld is what holds it.)
+    {
+      "key": "lm_turret_mount",
+      "name": "Turret Mount",
+      "origin": "Terran",
+      "side": "USFP",
+      "artfileroot": "tsn-fighter",
+      "meshscale": 1.2,
+      "radarscale": 0.2,
+      "internalmapscale": 1.0,
+      "internalmapw": 4,
+      "internalmaph": 4,
+      "internalsymmetry": 1,
+      "exclusionradius": 0.0,
+      "shields": [
+        40
+      ],
+      "hullpoints": 12,
+      "roles": "turret",
+      "hull_port_sets": {
+        "beam Primary Beams": [
+          {
+            "position": [
+              0,
+              0.5,
+              0
+            ],
+            "color": "#0cf",
+            "arccolor": "#090",
+            "cycle_time": 3,
+            "damage_coeff": 0.4,
+            "range": 1200,
+            "arcwidth": 360,
+            "barrel_angle": 0
+          }
+        ]
+      },
+      "torpedostart": []
+    },
+
+    # The undeployed KIT: an inert crate a ship ejects, tows into position with the grav
+    # tether, and unfolds into a turret. Not a turret itself - no brain, no turret_make -
+    # and its beam entry is deliberately zeroed rather than omitted, because a hull missing
+    # hull_port_sets has crashed the engine at load.
+    {
+      "key": "lm_turret_crate",
+      "name": "Turret Kit",
+      "origin": "Terran",
+      "side": "USFP",
+      "artfileroot": "tsn-fighter",
+      "meshscale": 1.6,
+      "radarscale": 0.4,
+      "internalmapscale": 1.0,
+      "internalmapw": 4,
+      "internalmaph": 4,
+      "internalsymmetry": 1,
+      "exclusionradius": 20.0,
+      "shields": [
+        30
+      ],
+      "hullpoints": 20,
+      "roles": "turret_crate",
+      "hull_port_sets": {
+        "beam Primary Beams": [
+          {
+            "position": [
+              0,
+              0,
+              0
+            ],
+            "color": "white",
+            "arccolor": "#090",
+            "cycle_time": 60,
+            "damage_coeff": 0,
+            "range": 0,
+            "arcwidth": 360,
+            "barrel_angle": 0
+          }
+        ]
+      },
+      "torpedostart": []
+    }
+  ]
+}
