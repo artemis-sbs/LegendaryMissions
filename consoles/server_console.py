@@ -16,7 +16,7 @@ def main_mission_select_template(item):
     # NB not `row-height: content`: this is a listbox item template, and content
     # sizing inside a listbox still falls back to flex.
     gui_row("row-height: 1em+10px;padding:10px,10px,10px,0;font:gui-3;")
-    gui_text(f"$text:`{item.display_name}`;justify: left;font:gui-3;")
+    gui_text(f"$text:{gui_text_escape(item.display_name)};justify: left;font:gui-3;")
     # The description fills WHAT IS LEFT of the item (1fr, the default). It was
     # a fixed `15em`, which is 360px at every resolution: correct in a 768-tall
     # window, but at 1024x600 it put the text's box at 108% -- off the bottom of
