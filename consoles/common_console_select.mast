@@ -152,6 +152,43 @@ if CAN_CHANGE_CONSOLE:
         log(f"console='{cli_console}' matched no console - showing the picker", "console_select", "warning")
 
     if AUTO_START and console_select_item:
+        # READY. console_ready is the ONLY thing game_started_console tests, and every
+        # client is rerouted into it when the server starts (server_console.mast, in
+        # `start`). Entering a console here without it means that reroute finds
+        # console_ready False and sends the client to select_console - the picker,
+        # ready unticked - throwing away the console it was already on.
+        #
+        # It only shows on an in-game RESTART. On a first launch the clients are still
+        # connecting while the server starts, so the reroute never reaches them and
+        # nothing tests the flag. On a restart they are already connected, the server
+        # is a delay_app(1) away from starting, and the reroute lands squarely on a
+        # console that has not recorded its choice.
+        #
+        # AUTO_START is exactly as deliberate a choice as the picker's Ready checkbox -
+        # it just has nobody to tick it - so record it the same way. The console_mode
+        # branch above has always done this (line 105); this arm was missed.
+        console_ready = True
+        #
+        # ...and then WAIT for the server, rather than walking into the console on our
+        # own. On an in-game RESTART this task runs while start_server is still building
+        # the roster (delay_app(0.1), create_sides, the torpedo prefabs, then
+        # create_default_player_ships), and the three client-string round trips above
+        # resolve on their own events, so they finish first. PLAYER_LIST captured at the
+        # top of this label is therefore EMPTY - and console_selected takes its
+        # len(PLAYER_LIST)==0 branch, skips assign_client_to_ship entirely, and the
+        # console label bounces straight back through select_console_clear_ready, which
+        # clears the ready flag set one line above. The console shows as selected and
+        # never starts.
+        #
+        # console_auto_start_wait is that wait - chosen console, no game yet, holding for
+        # the server's start reroute. It is the same place a human with Ready ticked is
+        # sitting.
+        if len(PLAYER_LIST) == 0:
+            # The placeholder from the top of this label ("No Player Ships") would be
+            # matched by name in console_selected and resolve to nothing. Clear it so the
+            # roster-was-empty fallback there picks the ship once the ships exist.
+            client_select_ship = ""
+        jump console_auto_start_wait if not GAME_STARTED
         jump(console_selected)
         
 
@@ -421,6 +458,40 @@ if CAN_CHANGE_CONSOLE:
     jump  select_console
 
 
+#
+# AUTO_START chose this console, but the server has not started the game yet - the
+# in-game RESTART case, where this client was already connected and its client_main ran
+# alongside start_server instead of long after it. There is no roster to join yet, so
+# walking into the console now attaches to no ship and bounces straight back to the
+# picker (see the note in client_main). Wait here for the server's start, which is the
+# same position a human sitting at the picker with Ready ticked is in.
+#
+# NOT console_force_mode: that screen serves `console=<name>;<ship>` on the command line
+# and waits indefinitely by design. This one is bounded, because a console that ends up
+# here with a server that never starts still has to be recoverable by hand.
+#
+========== console_auto_start_wait
+    _wait_ticks = 0
+
+--- wait
+    gui_section(style="area: 0, 40, 100, 60;")
+    """
+$t {CONSOLE_SELECT} ready
+
+$t Waiting for the server to start the mission
+"""
+    # delay_app, not delay_sim: the sim is paused until the server starts.
+    await gui(timeout = delay_app(1))
+    jump game_started_console if GAME_STARTED
+    _wait_ticks += 1
+    # ~30s. With AUTO_START the server is about a second and a half away, so this is
+    # never reached in a healthy launch - it exists so a server that never starts leaves
+    # a screen someone can act on rather than a permanent placeholder.
+    jump wait if _wait_ticks < 30
+    log("auto-start: server never started the mission - showing the picker", "console_select", "warning")
+    jump select_console_clear_ready
+
+
 ====== game_started_console ====
     #
     # Every client lands here the moment the server presses Start, and goes straight
@@ -469,6 +540,12 @@ if CAN_CHANGE_CONSOLE:
         jump select_console
 
 ====== console_selected ====
+    # Read the roster LIVE. PLAYER_LIST is a task variable, and every route into this
+    # label - the picker, game_started_console, the //gui/tab routes, console_force_mode -
+    # arrives carrying whatever client_main captured at CONNECT time. On an in-game
+    # restart with AUTO_START that snapshot predates the ships, and a stale empty list
+    # here silently skips the whole assignment below.
+    PLAYER_LIST = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
     jump show_console_selected if len(PLAYER_LIST) ==0
 
     if CONSOLE_SELECT is None or client_select_ship is None:
@@ -492,6 +569,17 @@ if CAN_CHANGE_CONSOLE:
             if player_ship.name.lower() == client_select_ship.lower():
                 _ship_id = player_ship.id
                 break
+
+    # Nothing resolved AND nothing was ever picked: this console never saw the picker,
+    # so there is no choice to go back to. That is the AUTO_START restart case - the
+    # name was captured before the roster existed - and bouncing to select_console
+    # there is what left an auto-started console sitting on the picker. A ship the
+    # crew DID pick and that has since gone still falls through to the picker below,
+    # which is the right answer for a live player.
+    default client_selected_index = 0
+    if _ship_id is None and client_select_ship_id is None:
+        _ship_id = PLAYER_LIST[min(client_selected_index, len(PLAYER_LIST)-1)].id
+        client_select_ship = to_object(_ship_id).name.lower()
 
     jump select_console if _ship_id is None
 
@@ -613,12 +701,20 @@ $t on ship {client_select_ship}
     # may not be running
     await gui(timeout = delay_app(10))
 
-
+    # Leave under our OWN power once the game is up. The server's
+    # gui_reroute_clients(game_started_console) is the normal exit and still is, but a
+    # holding screen whose only door is opened from outside strands the console for the
+    # whole mission if that reroute is ever missed - and with AUTO_START there is no
+    # picker behind it to fall back to.
+    jump game_started_console if GAME_STARTED
     jump loop
 
 --- no_images
-
-    await gui()
+    # Same door, on a shorter clock: this branch has no image cycle to wake it, so it
+    # polls rather than sitting in a bare await gui() that only an event can end.
+    await gui(timeout = delay_app(1))
+    jump game_started_console if GAME_STARTED
+    jump no_images
 
 #
 # Allow the tabs to be available
