@@ -122,7 +122,21 @@ tier: 2
 price: 250
 desc: Restores damage-control team strength.
 ```
-    signal_emit("item_restore_damcon", {"holder_id": UPGRADE_AGENT_ID})
+    # Applied inline, like every other item effect. item_activate.mast is already
+    # //shared/signal (server-only, once) and runs this label inside that route, so a
+    # second signal would only add a hop where a //signal handler could later race one
+    # damcon SPAWN per connected console. The signal this used to emit had no handler
+    # anywhere, which made the nodule a silent no-op.
+    #
+    # Deliberately NOT reproducing LM13's "refuse at full strength, do not consume":
+    # item_activate decrements the count before this label runs, so by now the nodule is
+    # already spent. Wasting one at full strength matches every other consumable.
+    # Guard the holder: comms_broadcast to a non-live ship raises "invalid space object"
+    # (SendMessageToPlayerShip) in the engine, and a py-side role can outlive the ship by a
+    # tick - see items/item_collect.mast for the same guard.
+    ->END if sim.get_space_object(UPGRADE_AGENT_ID) is None
+    grid_restore_damcons(UPGRADE_AGENT_ID)
+    comms_broadcast(UPGRADE_AGENT_ID, "Vigoranium Nodule spent - damage control teams restored", "#ff0", category="ship")
     ->END
 
 === prefab_item_cetrocite_crystal
