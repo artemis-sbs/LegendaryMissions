@@ -29,7 +29,7 @@ shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
         START_TEXT = "Mission is lost!  All the player ships have been destroyed."
         GAME_STARTED = False
         GAME_ENDED = True
-        sbs.play_music_file(0, "music/default/failure")
+        music_play_sting("failure")
         signal_emit("show_game_results", None)
         ->END
     else:

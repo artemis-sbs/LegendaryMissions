@@ -19,7 +19,7 @@
         START_TEXT = "Mission time has run out! {c} enemies left."
         GAME_STARTED = False
         GAME_ENDED = True
-        sbs.play_music_file(0, "music/default/victory")
+        music_play_sting("victory")
         #gui_reroute_clients(show_game_results)
         #gui_reroute_server(show_game_results)
         signal_emit("show_game_results", None)
@@ -35,7 +35,7 @@
         GAME_STARTED = False
         GAME_ENDED = True
 
-        sbs.play_music_file(0, "music/default/failure")
+        music_play_sting("failure")
         signal_emit("show_game_results", None)
 
         ->END
@@ -45,7 +45,7 @@
         START_TEXT = "Mission is won!  All the enemies have been destroyed."
         GAME_STARTED = False
         GAME_ENDED = True
-        sbs.play_music_file(0, "music/default/victory")
+        music_play_sting("victory")
         signal_emit("show_game_results", None)
         ->END
 

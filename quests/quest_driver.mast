@@ -81,9 +81,9 @@
     GAME_STARTED = False
     GAME_ENDED = True
     if WIN:
-        sbs.play_music_file(0, "music/default/victory")
+        music_play_sting("victory")
     else:
-        sbs.play_music_file(0, "music/default/failure")
+        music_play_sting("failure")
     signal_emit("show_game_results", None)
     ->END
 
