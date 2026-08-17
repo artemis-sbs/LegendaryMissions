@@ -1,0 +1,19 @@
+# Add the Artemis 2.8 skies to the stock ones - 8 + 30 = 38 in the random pick.
+#
+# The additive half of the pair. `a28_skies.yaml` is the same thing with an `exclude:`,
+# which REPLACES the stock skies instead. Nothing else about the mission changes.
+#
+#   python -m cosmos_dev.mission_runner . --test 20 --map 0 --profile a28_add
+#   Artemis3-x64-release.exe autostartserver defaultmission=LegendaryMissions profile=a28_add
+#
+# `include:` names the addon FOLDER, never a version - versions live in story.json, so a
+# profile does not rot on the next release of the pack. The media line is not optional:
+# without the art every one of the thirty labels fails its file test and is dropped from
+# the pick, silently, leaving you with the stock eight and no error.
+addons:
+    include:
+        - a28_skyboxes
+
+media:
+    include:
+        - A28-Skybox-Mod.media
