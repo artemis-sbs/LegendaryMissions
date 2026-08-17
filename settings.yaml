@@ -77,6 +77,13 @@ LETHAL_SELECT: "none"
 FRIENDLY_SELECT: "few"
 MONSTER_SELECT: "few"
 UPGRADE_SELECT: "lots"
+
+# Music bank. Deliberately COMMENTED OUT, and that is the setting: a key present here is
+# explicit, so it outranks any mod's `settings_set_mod_default` - uncommenting this stops
+# every mod built on LegendaryMissions from ever supplying its own soundtrack. The library
+# default is "random", which picks from whatever @media/music labels are loaded. Uncomment
+# only to pin one deliberately; the operator can still change it on the server console.
+#MUSIC_SELECT: "random"
 GAME_TIME_LIMIT: 0
 WAR_TIME_DELAY: 10
 

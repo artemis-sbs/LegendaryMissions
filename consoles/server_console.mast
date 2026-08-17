@@ -63,6 +63,16 @@ gui_reroute_clients("client_main")
     #start_npc_cag()
 
     shared skybox = skybox_schedule_random()
+    #
+    # Music no longer rides the skybox label's body - a skybox sets the sky and nothing
+    # else. This is the LOBBY pick; `start` re-resolves it if the map or the operator
+    # asked for something specific.
+    #
+    # MUSIC_SELECT is deliberately NOT written to shared scope here. Leaving the shared
+    # var absent is what lets a map's `Defaults: MUSIC_SELECT` (set-if-absent) and the
+    # dropdown below claim it - seeding it from settings would lock both out.
+    #
+    shared music = music_schedule_select(SETTINGS.get("MUSIC_SELECT", "random"))
 
     shared mission_index = 0
     shared mission_list = maps_get_list()
@@ -242,11 +252,27 @@ gui_reroute_clients("client_main")
         #         mission_index = mission_list.index(loaded)
         #         jump show_server_menu
 
-        gui_row()
         # Seed the selected map's Defaults (set-if-absent shared vars) BEFORE the panel renders,
         # so a map-local property var (e.g. JOBS_SELECT) shows its starting value instead of
         # blank/0. Settings.yaml / story / game-code values already set are left untouched.
         map_apply_defaults(WORLD_SELECT)
+
+        # Music. The list comes from music_get_list(), not a fixed one, so a mod that ships
+        # its own banks shows up here without this file knowing about it. It sits AFTER
+        # map_apply_defaults so a map's `Defaults: MUSIC_SELECT` is what reads as the
+        # current pick.
+        #
+        # Interpolated inline, like the preset dropdown above and for the same reason: a
+        # bare MAST string assignment is re-run through f-string formatting, and a display
+        # name comes from whatever mod declared the label.
+        gui_row("row-height: 30px;")
+        music_choices = music_get_list()
+        gui_blank(1, "col-width: 6em;")
+        music_dd = gui_drop_down(f"$text: {get_shared_variable('MUSIC_SELECT', SETTINGS.get('MUSIC_SELECT', 'random'))}; list: {','.join(['random'] + [m.display_name for m in music_choices])}")
+        on gui_message(music_dd):
+            shared MUSIC_SELECT = music_dd.value
+
+        gui_row()
         gui_property_list_box(name="Options")
         p = map_get_properties(WORLD_SELECT)
         if sbs.is_demo():
@@ -314,6 +340,14 @@ Main:
         # ever presenting the panel, so this guarantees the map body's vars exist (set-if-absent,
         # so anything the operator changed on the panel is preserved).
         map_apply_defaults(WORLD_SELECT)
+        #
+        # The operator's dropdown or the map's `Defaults: MUSIC_SELECT` outranks the lobby
+        # pick. Absent both, the lobby's choice STANDS rather than re-rolling - re-rolling
+        # here would change the track the moment the game started, every time.
+        #
+        music_pick = get_shared_variable("MUSIC_SELECT", "")
+        if music_pick:
+            shared music = music_schedule_select(music_pick)
         #
         # ROSTER BEFORE WORLD. //shared/signal/reconcile_player_roster (fleets/map_common.mast)
         # culls the roster to PLAYER_COUNT and applies any game-code loadout. It needs nothing
