@@ -13,14 +13,11 @@
 #  sky-specific in one. Note it runs per client, so guard with `if client_id==0:` for
 #  anything that should happen once.
 #
-
+#  The stock music banks used to be declared here too. They moved to
+#  `consoles/media_music.mast`, beside the console that picks one - a profile that swaps
+#  these skies for a mod's pack excludes this whole add-on, and the soundtrack must not
+#  go with the scenery.
 #
-#  The music banks this mission offers. `music_get_list()` reads these, so they are what
-#  the console dropdown shows; MUSIC_SELECT names one of them (or "random").
-#
-@media/music/default "Cosmos Default Music"
-@media/music/Artemis2 "Classic Artemis2 music"
-
 
 @media/skybox/sky1  "Default red"
 

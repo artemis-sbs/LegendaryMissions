@@ -1,0 +1,16 @@
+#
+#  The stock music banks.
+#
+#  THEY LIVE HERE, beside the server console that picks one, and not in
+#  `basic_random_skybox` where they used to. That mattered the moment skyboxes and music
+#  became independent: a profile that swaps the stock skies for a mod's pack excludes
+#  `basic_random_skybox`, and if the banks went with it the game fell silent - a profile
+#  about SCENERY quietly turning the soundtrack off.
+#
+#  A `@media/music` label declares a bank as AVAILABLE. Which one plays is the
+#  MUSIC_SELECT setting ("random" by default), a map's `Defaults:`, or the Music dropdown
+#  on the server console. `music_get_list()` reads these, plus whatever any loaded mod
+#  declares.
+#
+@media/music/default "Cosmos Default Music"
+@media/music/Artemis2 "Classic Artemis2 music"

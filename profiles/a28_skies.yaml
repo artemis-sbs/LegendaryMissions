@@ -1,0 +1,23 @@
+# Fly the Artemis 2.8 skies instead of the stock Cosmos ones.
+#
+# This is the smallest useful shape of a profile that selects CONTENT rather than
+# settings: drop one add-on, add another, and pull in the media pack the new one needs.
+# Everything else about the mission is untouched.
+#
+#   python -m cosmos_dev.mission_runner . --test 20 --map 0 --profile a28_skies
+#   Artemis3-x64-release.exe autostartserver defaultmission=LegendaryMissions profile=a28_skies
+#
+# Names are the addon FOLDER and a substring of the media pack - never a version. Versions
+# belong in story.json, so a profile does not rot on the next release of a pack.
+addons:
+    exclude:
+        - basic_random_skybox      # the eight stock skies
+    include:
+        - a28_skyboxes             # the thirty 2.8 ones
+
+media:
+    include:
+        - A28-Skybox-Mod.media     # ...and their art, or every label fails its file test
+
+# Music is independent of the skybox now, so this profile says nothing about it and the
+# mission's own MUSIC_SELECT still applies.

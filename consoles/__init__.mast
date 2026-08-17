@@ -7,6 +7,7 @@ import game_results.mast
 
 import server_console.py
 import server_console.mast
+import media_music.mast
 
 import layout_widgets.mast
 
