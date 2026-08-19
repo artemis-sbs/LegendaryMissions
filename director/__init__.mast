@@ -23,6 +23,9 @@ shared DIRECTOR_enabled = DIRECTOR.get("enable", True)
 # Consoles the panel can show/capture (shared so the panel + its tasks see it).
 default shared CV_CONSOLES = ["helm", "weapons", "science", "engineering", "comms", "mainscreen", "cinematic"]
 
+# Auto-follow's ship picker. Named `director_follow` rather than `director` because a
+# module's own name becomes a MAST global too, and the addon already has `DIRECTOR`.
+import director_follow.py
 import panel.mast
 
 # --- shared primitive --------------------------------------------------------

@@ -27,6 +27,14 @@ default shared cv_screens       = None   # list of program-screen client ids
 default shared cv_view_consoles = None   # list of console names
 default shared cv_view_ships    = None   # list of ship ids
 
+# AUTO-FOLLOW. Off by default, so an untouched Director behaves exactly as it always has.
+# On, a loop keeps the program screens pointed at the ship worth watching without anyone
+# picking one - see director_follow.py for how it chooses and why it does not twitch.
+# It changes only the SHIP: screens and consoles stay whatever was applied, so it composes
+# with the carousel rather than competing with it.
+default shared cv_follow      = False
+default shared cv_follow_poll = 3        # seconds between auto-follow checks
+
 @console/director !0 ^94 "Director" if DIRECTOR_enabled
     " route any ship's console to program screens multiview wall, rotating carousel, developer screenshots.
     jump director_pin_gate
@@ -93,6 +101,16 @@ default shared cv_view_ships    = None   # list of ship ids
     """Rotate dwell (s) - used when more consoles than screens are selected:"""
     gui_int_slider("$text:int;low:2;high:20;", var="cv_dwell")
 
+    # ---- auto-follow ----
+    # The Ships selection above is a snapshot: it is built when this console opens, so it
+    # goes stale the moment a ship is replaced or a new crew is seated. With this on, the
+    # SHIP stops being an operator decision - the screens track whatever is worth watching
+    # and keep tracking it as the cast changes. Screens and consoles stay as applied.
+    gui_row()
+    followcb = gui_checkbox("text: Auto-follow the ship worth watching; state: {cv_follow}")
+    on gui_message(followcb):
+        shared cv_follow = not cv_follow
+
     # ---- screen shots (dev only) - always the SERVER screen (client 0) ----
     if is_dev_build():
         gui_section("area: 3, 81, 97, 95;")
@@ -121,6 +139,10 @@ default shared cv_view_ships    = None   # list of ship ids
     # One persistent rotator for this console (idles unless cv_carousel is on);
     # scheduling once avoids duplicate rotators when Apply is pressed repeatedly.
     gui_sub_task_schedule(cv_carousel_task)
+    # Same shape for auto-follow: one idle loop rather than a task per Apply. Both are
+    # gui_sub_task_schedule, which is tagged end_on_new_gui - so a repaint cancels the old
+    # pair instead of stacking a new one on every pass.
+    gui_sub_task_schedule(cv_follow_task)
     await gui()
 
 
@@ -151,6 +173,35 @@ default shared cv_view_ships    = None   # list of ship ids
         gui_reroute_client(scr, cv_show, {"cv_ship_id": shp, "cv_console": con})
         _i = _i + 1
     ->END
+
+
+# Keep the program screens on the ship worth watching, without an operator picking one.
+#
+# It rewrites `cv_view_ships` and nothing else, so whatever Apply set for screens and
+# consoles still stands - and the carousel, which reads the same shared list, simply
+# rotates consoles for the new ship. That is why this is a separate idle loop rather than
+# a branch inside cv_carousel_task: the two do different jobs and compose.
+#
+# `shared` ON THE WRITE, not just on the declaration above. A bare write inside a task
+# binds a task-local, so cv_carousel_task would go on reading the OLD list forever and the
+# screens would never move - the failure looks like auto-follow doing nothing at all.
+=== cv_follow_task
+    follow_last = None
+--- cv_follow_loop
+    if cv_follow and cv_screens is not None:
+        follow_next = director_follow_pick(follow_last)
+        if follow_next is not None and follow_next != follow_last:
+            follow_last = follow_next
+            shared cv_view_ships = [follow_next]
+            shared cv_status = director_follow_status(follow_next)
+            task_schedule(cv_apply_views, {"screens": cv_screens, "consoles": cv_view_consoles, "ships": cv_view_ships, "offset": 0})
+        await delay_app(cv_follow_poll)
+    else:
+        # Idle cheaply, and forget what was on screen so re-enabling re-applies rather
+        # than assuming the screens are still where this loop last put them.
+        follow_last = None
+        await delay_app(1)
+    jump cv_follow_loop
 
 
 === cv_carousel_task
