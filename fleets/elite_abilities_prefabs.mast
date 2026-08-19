@@ -3,7 +3,7 @@
 metadata: ```
 type: elite/cloak
 display_name: Cloak
-range: close or far
+ability_range: close or far
 ```
     set_timer(ELITE_ID, "WARMUP", 25)
 --- warmup

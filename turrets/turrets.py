@@ -97,7 +97,7 @@ def lm_turret_declare_ships():
     return reached
 
 
-def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, range=2500, targets=None,
+def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, acquire_range=2500, targets=None,
                            name="Turret #", owner=0, behave=None):
     """Place a live, autonomous defense turret and return its id.
 
@@ -112,7 +112,7 @@ def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, range=2500, targets=N
         hull (str, optional): shipData key. Defaults to
             :data:`LM_TURRET_DEFAULT_HULL`. Must be an entry from
             extraShipData_turrets.yaml or the turret will never fire.
-        range (float): Acquisition range. Keep in step with the hull's beam range -
+        acquire_range (float): Acquisition range. Keep in step with the hull's beam range -
             beam stats are not readable from a live object, so nothing can check this
             for you.
         targets (str, optional): Role expression of what to engage. Defaults to the
@@ -142,7 +142,7 @@ def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, range=2500, targets=N
     # and every "protect the station" objective in the game.
     remove_role(tid, "station")
 
-    turret_make(tid, range=range, targets=targets)
+    turret_make(tid, range=acquire_range, targets=targets)
     # ALWAYS written, even when 0. A reader asking "who owns this?" must get an answer
     # rather than a missing key it has to guess the meaning of, and 0 is a real answer:
     # mission hardware, owned by nobody.
@@ -181,7 +181,7 @@ def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, range=2500, targets=N
     return tid
 
 
-def lm_turret_bolt_ring(host, count=4, hull=None, range=1200, targets=None,
+def lm_turret_bolt_ring(host, count=4, hull=None, acquire_range=1200, targets=None,
                         radius=None, delete_with_host=True):
     """Bolt a ring of autonomous turrets onto a ship or a station.
 
@@ -194,7 +194,7 @@ def lm_turret_bolt_ring(host, count=4, hull=None, range=1200, targets=None,
         count (int): How many turrets, evenly spaced around the hull.
         hull (str, optional): shipData key. Defaults to
             :data:`LM_TURRET_MOUNT_HULL`. Must be one of ours or it will never fire.
-        range (float): Acquisition range; keep in step with the hull's beam range.
+        acquire_range (float): Acquisition range; keep in step with the hull's beam range.
         targets (str, optional): Role expression of what to engage.
         radius (float, optional): Ring radius. Defaults to just outside the host's
             exclusion radius.
@@ -214,7 +214,7 @@ def lm_turret_bolt_ring(host, count=4, hull=None, range=1200, targets=None,
     for tid in ids:
         # A mount must not inherit `station` from its art, same as a tower.
         remove_role(tid, "station")
-        turret_make(tid, range=range, targets=targets)
+        turret_make(tid, range=acquire_range, targets=targets)
         clear_target(tid)
         brain_add(tid, LM_TURRET_BRAIN)
     if ids:
