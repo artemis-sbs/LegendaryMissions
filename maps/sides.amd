@@ -13,6 +13,16 @@
 // hostility from both ends, which is why LegendaryMissions looked correct for years while a
 // mission declaring each pair once drew every enemy grey. Do not "tidy up" the duplication
 // as redundant, and do not read this as the engine being symmetric.
+//
+// `players` AND `civilians` ARE AUDIENCES, NOT SIDE KEYS, and they are what makes this file
+// work beside a total conversion. `players` is every side the roster seats a crew on;
+// `civilians` is every side declaring `Civilian: true`, in THIS file or any other addon's.
+// Raider used to name `tsn, civ` - correct here and inert next to a mod whose crews fly
+// `federation`, because relations only exist where they are declared and no document can
+// name another's sides. Written this way, raiders prey on whoever turns up.
+//
+// `tsn` keeps naming `raider` explicitly: it is this file's own player side, and saying so
+// costs nothing and reads better than relying on the mirror.
 
 # [TSN](tsn)
 ---
@@ -24,13 +34,14 @@ The Terran Stellar Navy.
 # [Raider](raider)
 ---
 Color: #F00
-Enemies: tsn, civ
+Enemies: players, civilians
 ---
 Hostile Aliens.
 
 # [Civ](civ)
 ---
 Color: white
-Neutral: tsn
+Civilian: true
+Neutral: players
 ---
 Civilians. Protect them from attack.

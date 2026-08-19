@@ -276,3 +276,112 @@ def game_results_map(world_select):
         return ""
     name = getattr(world_select, "display_name", None) or getattr(world_select, "path", None)
     return str(name) if name else str(world_select)
+
+
+# ---------------------------------------------------------------------------
+# Markdown for the results screen
+#
+# The summary and enemy breakdowns used to be built as one gui_row per stat, each row
+# taking an equal share of the section - so six stats spread themselves over three
+# quarters of the screen with a hand's width of black between each line, and a longer
+# list simply ran off the bottom with no way to reach it.
+#
+# A text area renders markdown TABLES and scrolls when it has to, so the same numbers
+# become one widget, tightly set, with the overflow problem solved rather than avoided.
+# ---------------------------------------------------------------------------
+
+_MD_NL = chr(10)
+
+
+def _md_clean(text):
+    """Cell text with braces removed.
+
+    A `{` reaching MAST is re-run as an f-string, and these strings pass through MAST on
+    their way to the widget. Ship and pilot names are author-set and could carry one.
+    """
+    return str(text).replace("{", "(").replace("}", ")")
+
+
+def _md_table(pairs, head=("", "")):
+    """[(label, value), ...] -> a two-column markdown table. Empty when there are no rows."""
+    if not pairs:
+        return ""
+    out = ["| " + _md_clean(head[0]) + " | " + _md_clean(head[1]) + " |", "|---|---:|"]
+    for label, value in pairs:
+        out.append("| " + _md_clean(label) + " | " + _md_clean(value) + " |")
+    return _MD_NL.join(out)
+
+
+def results_summary_md(difficulty, surrendered, minutes, credits=None,
+                       top_name="", top_earned=0):
+    """The Summary tab as markdown.
+
+    `credits` None hides its row (a mission that never captured CREDITS_START), and an
+    empty `top_name` hides the multiplayer standing - same opt-in rules the row-based
+    version had, kept here so the MAST side stays a single call.
+    """
+    t = results_summary()
+    pairs = [
+        ("Difficulty", difficulty),
+        ("Enemies destroyed", t["kills"]),
+        ("Tonnage destroyed", t["tonnage"]),
+        ("Damage dealt", t["damage"]),
+        ("Enemies surrendered", surrendered),
+        ("Game time", str(minutes) + " minutes"),
+    ]
+    if credits is not None:
+        pairs.append(("Credits earned", credits))
+    if top_name:
+        pairs.append(("Top earner", str(top_name) + " - " + str(top_earned)))
+    return _md_table(pairs, ("", ""))
+
+
+# shipData race key -> the name a player would recognize.
+_MD_RACES = (
+    ("tsn_destroyed", "Terran"),
+    ("arvonian_ships_destroyed", "Arvonian"),
+    ("kralien_ships_destroyed", "Kralien"),
+    ("skaraan_ships_destroyed", "Skaraan"),
+    ("ximni_ships_destroyed", "Ximni"),
+    ("torgoth_ships_destroyed", "Torgoth"),
+)
+
+
+def results_enemies_md(stats):
+    """The Enemies tab as markdown.
+
+    Races with no kills are LEFT OUT rather than listed as zero: six stock races padded
+    with zeroes tells a total-conversion mission's crew nothing, and a mission that fields
+    other races had them counted under keys this list never knew about. Anything counted
+    under an unrecognized `*_destroyed` key is picked up and titled, so a mod's races
+    appear without this list being edited.
+    """
+    stats = stats or {}
+    pairs = []
+    known = set()
+    for key, label in _MD_RACES:
+        known.add(key)
+        n = int(stats.get(key, 0) or 0)
+        if n:
+            pairs.append((label, n))
+    for key in sorted(stats):
+        if key in known or not str(key).endswith("_destroyed"):
+            continue
+        n = int(stats.get(key, 0) or 0)
+        if not n:
+            continue
+        # Two shapes reach this dict: `<side>_destroyed` (from obj.side) and
+        # `<race>_ships_destroyed` (from the art id). Strip the longer suffix first or a
+        # race reads as "Tng Jem Ships" instead of "Tng Jem".
+        label = str(key)
+        for suffix in ("_ships_destroyed", "_destroyed"):
+            if label.endswith(suffix):
+                label = label[:-len(suffix)]
+                break
+        pairs.append((label.replace("_", " ").title(), n))
+    surrendered = int(stats.get("ships_surrender", 0) or 0)
+    if surrendered:
+        pairs.append(("Surrendered", surrendered))
+    if not pairs:
+        return "Nothing was destroyed."
+    return _md_table(pairs, ("Destroyed", ""))

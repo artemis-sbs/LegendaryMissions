@@ -113,7 +113,7 @@ shared game_stats = ~~{
     # a helper that does not exist anywhere in sbs_utils or LegendaryMissions - it
     # raised NameError on TAB_KEY (see results_set_tab), which killed the results
     # page's GUI task and left the replay button with no main GUI task to return to.
-    gui_section(style="area: 40, 0, 100, 5;")
+    gui_section(style="area: 28, 0, 99, 5;")
     gui_row("row-height:35px;")
     for _tab_key, _tab_label in results_tabs:
         if _tab_key == RESULTS_TAB:
@@ -122,11 +122,42 @@ shared game_stats = ~~{
             _tab_style = f"$text:{_tab_label};justify:center;color:#8aa;"
         gui_button(_tab_style, data={"results_tab_key": _tab_key}, on_press="results_set_tab")
 
-    # Title band
-    gui_section(style="area: 10, 6, 90, 16;")
-    """color:white;justify: center; font: gui-6;$text:Game results"""
-    gui_row()
-    """""color:cyan;justify:center;font:gui-5;$text:{START_TEXT}"""""
+    # LEFT RAIL: what happened. RIGHT: the numbers.
+    #
+    # This used to be a centered title band across the top with the stats below it, and
+    # the stats were one gui_row each with no height - so six of them shared three
+    # quarters of the screen and sat a hand's width apart, with a longer list running off
+    # the bottom unreachable. Splitting identity from data gives the tables somewhere to
+    # be dense, and gives a long outcome line somewhere to wrap.
+    #
+    # The three identity rows are sized in EMS, not `content`. A `"""..."""` row is a
+    # TEXT AREA, and a text area is deliberately unmeasurable (it scrolls its own
+    # overflow, so it never asks the row to grow - see TextArea.measure). `content` on
+    # one therefore resolves to nothing and falls back to FLEX, so all three took an
+    # equal share of the rail alongside the outcome below: four rows of 22%, the
+    # mission name and the run time floating a hand's width apart, and the outcome
+    # squeezed into the bottom quarter. An em is one line of the row's own font, so
+    # the identity block now costs 115px of a 1300px rail and the rest is the outcome.
+    #
+    # The `font:` on each ROW is load-bearing: em arithmetic uses the ROW's font, so
+    # without it the title would reserve lines of the default font (gui-2) while
+    # drawing in gui-5, and come up short.
+    #
+    gui_section(style="area: 2, 6, 26, 94;")
+    gui_row("row-height: 1.6em; font: gui-5;")
+    """color:white;justify:left;font: gui-5;$text:Game results"""
+    gui_row("row-height: 1.3em; font: gui-1;")
+    """color:#8aa;justify:left;font:gui-1;$text:{mission}"""
+    gui_row("row-height: 1.3em; font: gui-1;")
+    """color:#8aa;justify:left;font:gui-1;$text:{end_time} minutes"""
+    # A TEXT AREA, not a text row: the outcome is written by the mission and can be a
+    # sentence. In a rail a quarter of the screen wide a plain text widget would overrun
+    # its rect - the engine does not clip - and paint straight over the tab content.
+    #
+    # START_TEXT is passed as a VARIABLE, not interpolated into a literal: a `{` in it
+    # would otherwise be re-run as an f-string, and this is mission-authored text.
+    gui_row("row-height: 1fr;")
+    gui_text_area(START_TEXT, style="color:cyan;padding:0,8px,0,0;")
 
     # Credits earned this mission (opt-in): a mission captures CREDITS_START + CREDIT_SIDE_IDS
     # at start; missions that don't leave CREDITS_START None and the row stays hidden. Credits
@@ -153,60 +184,13 @@ shared game_stats = ~~{
             mp_top = _e
             mp_top_name = _mp.name
 
-    # Active tab content
-    gui_section(style="area: 10, 17, 90, 90;")
+    # Active tab content - right of the rail, and top-aligned under the tabs.
+    gui_section(style="area: 28, 6, 99, 94;")
 
     if RESULTS_TAB == "summary":
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Difficulty"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{DIFFICULTY}"""
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Enemies destroyed"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{totals["kills"]}"""
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Tonnage destroyed"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{totals["tonnage"]}"""
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Damage dealt"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{totals["damage"]}"""
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Enemies surrendered"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{game_stats["ships_surrender"]}"""
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Game Time"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{end_time} minutes"""
-        if credits_earned is not None:
-            gui_row()
-            gui_hole(5)
-            """color:yellow; justify: right;$text:Credits earned"""
-            gui_blank(style="col-width: 1;")
-            gui_hole(5)
-            """color:yellow;justify: left;$text:{credits_earned}"""
-        if mp_any:
-            gui_row()
-            gui_hole(5)
-            """color:cyan; justify: right;$text:Top earner"""
-            gui_blank(style="col-width: 1;")
-            gui_hole(5)
-            """color:cyan;justify: left;$text:{mp_top_name} ({mp_top})"""
+        # One widget, one string. `credits_earned` None and an empty `mp_top_name` hide
+        # their rows, which is the same opt-in the row-per-stat version had.
+        gui_text_area(results_summary_md(DIFFICULTY, game_stats["ships_surrender"], end_time, credits_earned, mp_top_name, mp_top), style="padding:10px,15px,10px,15px;")
 
     if RESULTS_TAB == "fleet":
         fleet_box = gui_list_box(results_ship_items(), "padding:0,0,10px,0;", item_template=results_ship_template, title_template=results_ship_title_template, select=False)
@@ -228,9 +212,9 @@ shared game_stats = ~~{
             # Match the in-game quest log: collapsible Game/ship sections on the
             # left, the selected quest's description on the right.
             q_sel_desc = "Select a quest to see its details."
-            gui_section(style="area: 10, 17, 46, 90;")
+            gui_section(style="area: 28, 6, 62, 94;")
             quest_box = gui_list_box(quest_items, "item-gap:0.1em;", item_template=quest_log_template, title_template=quest_log_title, select=True, collapsible=True)
-            gui_section(style="area: 48, 17, 90, 90; background:#1572;")
+            gui_section(style="area: 64, 6, 99, 94; background:#1572;")
             q_desc = gui_text_area("{q_sel_desc}", style="padding:10px,15px,10px,15px;")
             on change quest_box.get_value():
                 qsel = quest_box.get_value()
@@ -246,48 +230,10 @@ shared game_stats = ~~{
                     q_desc.value = q_sel_desc
 
     if RESULTS_TAB == "enemies":
-        gui_row()
-        gui_hole(5)
-        """color:yellow;justify: right;$text:Terran destroyed"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{game_stats["tsn_destroyed"]}"""
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Arvonian ships destroyed"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{game_stats["arvonian_ships_destroyed"]}"""
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Kralien ships destroyed"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{game_stats["kralien_ships_destroyed"]}"""
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Skaraan ships destroyed"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{game_stats["skaraan_ships_destroyed"]}"""
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Ximni ships destroyed"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{game_stats["ximni_ships_destroyed"]}"""
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Torgoth ships destroyed"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{game_stats["torgoth_ships_destroyed"]}"""
-        gui_row()
-        gui_hole(5)
-        """color:yellow; justify: right;$text:Enemies surrendered"""
-        gui_blank(style="col-width: 1;")
-        gui_hole(5)
-        """color:yellow;justify: left;$text:{game_stats["ships_surrender"]}"""
+        # Races with no kills are omitted rather than listed as zero - and a mod's own
+        # races are picked up from the stats dict, which the fixed six-race list could
+        # never show. See results_enemies_md.
+        gui_text_area(results_enemies_md(game_stats), style="padding:10px,15px,10px,15px;")
 
     await gui():
         + "replay" if show_replay:
