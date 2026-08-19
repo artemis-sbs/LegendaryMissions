@@ -143,13 +143,20 @@ shared game_stats = ~~{
     # without it the title would reserve lines of the default font (gui-2) while
     # drawing in gui-5, and come up short.
     #
+    # And that is why each $text is BACKTICK-QUOTED and semicolon-terminated. A row
+    # font is CASCADED onto the widget by appending `font:gui-5;` to its style string,
+    # and an unterminated `$text:` runs to the end of that string - so the cascade
+    # landed INSIDE the text and the title rendered as "Game resultsfont:gui-5".
+    # Backticks close the value (helpers.split_props reads past them), and they also
+    # make a `:` in an interpolated mission name literal instead of a style key.
+    #
     gui_section(style="area: 2, 6, 26, 94;")
     gui_row("row-height: 1.6em; font: gui-5;")
-    """color:white;justify:left;font: gui-5;$text:Game results"""
+    """color:white;justify:left;font:gui-5;$text:`Game results`;"""
     gui_row("row-height: 1.3em; font: gui-1;")
-    """color:#8aa;justify:left;font:gui-1;$text:{mission}"""
+    """color:#8aa;justify:left;font:gui-1;$text:`{mission}`;"""
     gui_row("row-height: 1.3em; font: gui-1;")
-    """color:#8aa;justify:left;font:gui-1;$text:{end_time} minutes"""
+    """color:#8aa;justify:left;font:gui-1;$text:`{end_time} minutes`;"""
     # A TEXT AREA, not a text row: the outcome is written by the mission and can be a
     # sentence. In a rail a quarter of the screen wide a plain text widget would overrun
     # its rect - the engine does not clip - and paint straight over the tab content.
@@ -187,10 +194,26 @@ shared game_stats = ~~{
     # Active tab content - right of the rail, and top-aligned under the tabs.
     gui_section(style="area: 28, 6, 99, 94;")
 
+    # Shared by both stat tabs, so Summary and Enemies line up with each other.
+    #
+    # gui-4 on a 1.6em row: this screen is read across a room at the end of a game, not
+    # scanned like a console panel, and each table is half a dozen rows in a panel three
+    # quarters of the screen wide. The `font:` also has to be on the ROW, because an em
+    # is a line of the ROW's font - without it a gui-4 cell would sit in a row built for
+    # the default gui-2 and the text would be taller than the band it was given.
+    #
+    # The columns are sized from the ROWS (measured in the cell font, in pixels, for
+    # this screen) and 70 is the width in SCREEN points of the tab panel below
+    # (area: 28..99). A column width is resolved against the SCREEN, not against the
+    # table, so a table that is not full width has to be told - see results_stat_columns.
+    stat_style = "row-height: 1.6em; item-gap: 0.4em; font: gui-4;"
+
     if RESULTS_TAB == "summary":
-        # One widget, one string. `credits_earned` None and an empty `mp_top_name` hide
-        # their rows, which is the same opt-in the row-per-stat version had.
-        gui_text_area(results_summary_md(DIFFICULTY, game_stats["ships_surrender"], end_time, credits_earned, mp_top_name, mp_top), style="padding:10px,15px,10px,15px;")
+        # One widget. `credits_earned` None and an empty `mp_top_name` hide their rows,
+        # which is the same opt-in the row-per-stat version had.
+        summary_items = results_summary_items(DIFFICULTY, game_stats["ships_surrender"], end_time, credits_earned, mp_top_name, mp_top)
+        summary_columns = results_stat_columns(summary_items, 70)
+        summary_box = gui_table(summary_items, summary_columns, style=stat_style, select=False, header=False, font="gui-4")
 
     if RESULTS_TAB == "fleet":
         fleet_box = gui_list_box(results_ship_items(), "padding:0,0,10px,0;", item_template=results_ship_template, title_template=results_ship_title_template, select=False)
@@ -232,8 +255,14 @@ shared game_stats = ~~{
     if RESULTS_TAB == "enemies":
         # Races with no kills are omitted rather than listed as zero - and a mod's own
         # races are picked up from the stats dict, which the fixed six-race list could
-        # never show. See results_enemies_md.
-        gui_text_area(results_enemies_md(game_stats), style="padding:10px,15px,10px,15px;")
+        # never show. See results_enemies_items.
+        enemy_items = results_enemies_items(game_stats)
+        if len(enemy_items)==0:
+            gui_row()
+            """color:yellow;justify:center;$text:`Nothing was destroyed.`;"""
+        else:
+            enemy_columns = results_stat_columns(enemy_items, 70)
+            enemy_box = gui_table(enemy_items, enemy_columns, style=stat_style, select=False, header=False, font="gui-4")
 
     await gui():
         + "replay" if show_replay:

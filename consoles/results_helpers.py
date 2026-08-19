@@ -11,6 +11,9 @@ from sbs_utils.procedural.quest import (
 from sbs_utils.mast.mast_node import MastDataObject
 from sbs_utils.procedural.gui import gui_row, gui_text, gui_icon, gui_list_box_header, gui_list_box_is_header, gui_text_escape
 from sbs_utils.agent import Agent
+from sbs_utils.gui import get_client_aspect_ratio
+from sbs_utils.helpers import FrameContext
+from sbs_utils.pages.layout.measure import measure_line_width
 
 
 # "Tonnage" is flavor: a destroyed hull's shipData `hullpoints` (a small 1-8 tier)
@@ -279,19 +282,16 @@ def game_results_map(world_select):
 
 
 # ---------------------------------------------------------------------------
-# Markdown for the results screen
+# The stat tabs
 #
 # The summary and enemy breakdowns used to be built as one gui_row per stat, each row
 # taking an equal share of the section - so six stats spread themselves over three
 # quarters of the screen with a hand's width of black between each line, and a longer
-# list simply ran off the bottom with no way to reach it.
-#
-# A text area renders markdown TABLES and scrolls when it has to, so the same numbers
-# become one widget, tightly set, with the overflow problem solved rather than avoided.
+# list simply ran off the bottom with no way to reach it. They became a markdown table
+# in a text area next, which fixed the spread and the overflow but is fixed at the
+# text area's own fonts and only ever uses as much width as the words need. They are
+# now gui_tables: one widget, scrolls when it has to, sized and fonted by the screen.
 # ---------------------------------------------------------------------------
-
-_MD_NL = chr(10)
-
 
 def _md_clean(text):
     """Cell text with braces removed.
@@ -302,19 +302,100 @@ def _md_clean(text):
     return str(text).replace("{", "(").replace("}", ")")
 
 
-def _md_table(pairs, head=("", "")):
-    """[(label, value), ...] -> a two-column markdown table. Empty when there are no rows."""
-    if not pairs:
-        return ""
-    out = ["| " + _md_clean(head[0]) + " | " + _md_clean(head[1]) + " |", "|---|---:|"]
-    for label, value in pairs:
-        out.append("| " + _md_clean(label) + " | " + _md_clean(value) + " |")
-    return _MD_NL.join(out)
+# ---------------------------------------------------------------------------
+# The stat tabs are gui_table ROWS + COLUMNS, not a markdown table.
+#
+# A text-area table cannot do either thing this screen needs. Its fonts are class
+# constants (TableLine.HDR_FONT gui-3 / BODY_FONT gui-2), so a stat block cannot be
+# made bigger; and its columns are sized to their NATURAL content and only ever
+# shrunk to fit - never grown. Measured at 2880x1394 the Summary was handed a 2025px
+# panel and drew a 232px table in the corner of it, with "Enemies surrendered"
+# wrapping inside a column sized to the exact width of that same text.
+#
+# gui_table sizes `auto` columns to the widest cell across ALL rows and shares the
+# FULL width between them, and it takes a `font`. Same pairs, same opt-in rules.
+# ---------------------------------------------------------------------------
+
+def _pair_rows(pairs):
+    """[(label, value), ...] -> the row dicts gui_table reads (see _RESULT_COLUMNS)."""
+    return [{"stat": _md_clean(label), "value": _md_clean(value)}
+            for label, value in pairs]
 
 
-def results_summary_md(difficulty, surrendered, minutes, credits=None,
-                       top_name="", top_earned=0):
-    """The Summary tab as markdown.
+# The font both stat tabs are drawn in. Here rather than in the .mast because the
+# column widths below are MEASURED in it - the two cannot be allowed to drift apart.
+STAT_FONT = "gui-4"
+
+
+def _fit_pct(texts, font, span, floor_frac, ceil_frac):
+    """Screen-percent width that fits the widest of `texts`, with a little slack.
+
+    Falls back to `span * ceil_frac` when the engine cannot measure (no client aspect
+    ratio yet, headless), so a screen still lays out - just not as tightly.
+    """
+    ar = get_client_aspect_ratio(FrameContext.client_id)
+    widest = 0
+    for t in texts:
+        w = measure_line_width(font, str(t))
+        if w is None:
+            return round(span * ceil_frac, 2)
+        if w > widest:
+            widest = w
+    if not ar or not ar.x:
+        return round(span * ceil_frac, 2)
+    # 1.12: a column sized to the exact width of its own longest string wraps on any
+    # rounding disagreement between measuring the text and drawing it, and a wrap in a
+    # fixed-height table row spills into the row below.
+    pct = (widest * 1.12 / ar.x) * 100.0
+    return round(min(max(pct, span * floor_frac), span * ceil_frac), 2)
+
+
+def results_stat_columns(items=None, span=70.0, font=None):
+    """Column spec shared by every stat tab, so they line up with each other.
+
+    `span` is how many points of SCREEN WIDTH the panel holding the table covers - the
+    tab content sits at `area: 28, 6, 99, 94`, so ~70. It is a parameter and not a
+    constant because a `col-width` is resolved against the SCREEN, not against the
+    table: gui_table's `auto` columns are shared out of 100, which put the second column
+    of this table at 97..129% - off the screen entirely, drawn and invisible.
+
+    So the widths are MEASURED here instead, in the font the cells are drawn in, and
+    converted to screen percent for the screen actually in front of the player. A fixed
+    percentage cannot do this job: a font is an absolute pixel size, so a value column
+    of 10 points is 288px on an ultrawide and 102px on 1024x768 - wide enough for
+    "6 minutes" on one and not the other.
+
+    The NUMBER LEADS and the label follows it, left-justified:
+
+          12  Enemies destroyed
+        4750  Damage dealt
+
+    THREE columns, not two, and the middle one is empty. A right-justified column puts
+    its text hard against the column that follows, and widening it moves both - so the
+    gap cannot come from either of the two columns that carry text ("5Difficulty" is
+    what happens without this). A spacer column one "MM" wide is the gap.
+
+    Only the value column is measured: right-justified so the figures line up on their
+    units, and no wider than the widest of them. Values are kept NUMERIC (the unit lives
+    in the label - "Game time (minutes)") so that column stays narrow and the numbers
+    stay a column of numbers. The label column is everything left in the panel; being
+    left-justified, its width decides nothing but how long a label may get before it
+    wraps, so a label can never wrap.
+    """
+    font = font or STAT_FONT
+    items = items or []
+    value_w = _fit_pct([i["value"] for i in items], font, span, 0.06, 0.25)
+    gap_w = _fit_pct(["MM"], font, span, 0.01, 0.08)
+    return [
+        {"key": "value", "label": "", "align": "r", "width": value_w},
+        {"key": None, "label": "", "align": "l", "width": gap_w},
+        {"key": "stat", "label": "", "align": "l", "width": round(span - value_w - gap_w, 2)},
+    ]
+
+
+def results_summary_items(difficulty, surrendered, minutes, credits=None,
+                          top_name="", top_earned=0):
+    """The Summary tab's rows.
 
     `credits` None hides its row (a mission that never captured CREDITS_START), and an
     empty `top_name` hides the multiplayer standing - same opt-in rules the row-based
@@ -327,13 +408,16 @@ def results_summary_md(difficulty, surrendered, minutes, credits=None,
         ("Tonnage destroyed", t["tonnage"]),
         ("Damage dealt", t["damage"]),
         ("Enemies surrendered", surrendered),
-        ("Game time", str(minutes) + " minutes"),
+        # The unit rides in the LABEL, and so does the earner's name: the value column is
+        # measured on its widest entry, so one "6 minutes" or "Artemis - 120" in it makes
+        # every number in the table sit that far from its label.
+        ("Game time (minutes)", minutes),
     ]
     if credits is not None:
         pairs.append(("Credits earned", credits))
     if top_name:
-        pairs.append(("Top earner", str(top_name) + " - " + str(top_earned)))
-    return _md_table(pairs, ("", ""))
+        pairs.append(("Top earner - " + str(top_name), top_earned))
+    return _pair_rows(pairs)
 
 
 # shipData race key -> the name a player would recognize.
@@ -347,8 +431,8 @@ _MD_RACES = (
 )
 
 
-def results_enemies_md(stats):
-    """The Enemies tab as markdown.
+def results_enemies_items(stats):
+    """The Enemies tab's rows (empty when nothing was destroyed).
 
     Races with no kills are LEFT OUT rather than listed as zero: six stock races padded
     with zeroes tells a total-conversion mission's crew nothing, and a mission that fields
@@ -382,6 +466,4 @@ def results_enemies_md(stats):
     surrendered = int(stats.get("ships_surrender", 0) or 0)
     if surrendered:
         pairs.append(("Surrendered", surrendered))
-    if not pairs:
-        return "Nothing was destroyed."
-    return _md_table(pairs, ("Destroyed", ""))
+    return _pair_rows(pairs)
