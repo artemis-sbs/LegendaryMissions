@@ -13,11 +13,28 @@ Terrain is built from phased, keyed seeding, so the **same seed always lays out 
 same battlefield** (no surprise spawns inside an asteroid). Each map exposes **seed
 options** you can set.
 
-## Shareable game codes
+## Shareable game codes, and saved setups
 
-A **game code** captures the exact setup &mdash; map, size, seed, and options
-&mdash; so crews can replay an **identical** match. Share the code and everyone
-gets the same challenge.
+A **game code** captures the exact setup &mdash; map, size, seed, and options &mdash; so
+crews can replay an **identical** match. Share the code and everyone gets the same
+challenge. It does **not** carry your ship names: those are yours, not part of the match.
+
+The same machinery is also a **saved setup**. On the server screen: build the setup you
+want, type a name beside the Presets dropdown, and press the save icon. It is there in
+the dropdown afterwards &mdash; including after restarting the mission. Presets are kept
+per map, and a *saved* setup does bring your crew's ship names and hulls back with it.
+
+Loading one puts those ships straight on the picker, so helm can still change them and
+the change sticks.
+
+If you would rather not press anything, `RESTORE_LAST_SETUP` brings back whatever the
+last game started with, automatically. It is off by default; see
+[Settings](../hosting/settings.yaml.md#restore_last_setup).
+
+Saved setups live in `data/missions/common_data/game_codes/`, outside the mission folder,
+so updating the mission keeps them. A map chooses which options its code carries with a
+`GameCode:` list in its metadata; leave that out and it carries everything on the Options
+panel, plus the ships.
 
 ## Bonus objectives
 

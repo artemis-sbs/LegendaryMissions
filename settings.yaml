@@ -2,6 +2,18 @@
 # Auto start will automatically start the mission when it is selected
 AUTO_START: false
 
+# Come back on this screen with the settings the LAST game started with, instead of the
+# ones below. Remembered per mission and per map, and it carries the crew's ship names and
+# hulls too. Saved when a game STARTS, so a crash or a quit still leaves it recorded.
+#
+# Commented out deliberately, and that IS the setting: the library default is false, and a
+# key present here is explicit, so uncommenting "false" would stop a mod built on
+# LegendaryMissions from ever turning it on. Uncomment to pin it either way.
+#
+# Off suits a venue or convention machine - every group starts from the same known state.
+# On suits a crew replaying the same setup after an early death.
+#RESTORE_LAST_SETUP: false
+
 # Auto play is a special mode
 # Typically used for testing
 # But could be useful with

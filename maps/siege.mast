@@ -28,11 +28,15 @@ Properties:
     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
     Survive Clock: 'gui_drop_down("$text: {SIEGE_TIMEOUT};list: Win, Loss", var="SIEGE_TIMEOUT")'
     Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
-# GameCode (optional): which property vars a saved game code includes. Omitting
-# this whole block defaults to ALL the properties above (same as listing them
-# all, as shown here). Delete any lines you don't want a code to carry - e.g.
-# drop the terrain/monsters/upgrades selects to share only difficulty, players,
-# length, and seed while each host picks their own world flavor.
+# GameCode (optional): which property vars a game code includes. Omitting this
+# whole block defaults to ALL the properties above (same as listing them all, as
+# shown here). Delete any lines you don't want a code to carry - e.g. drop the
+# terrain/monsters/upgrades selects to share only difficulty, players, length,
+# and seed while each host picks their own world flavor.
+#
+# The crew's ship names and hulls are NOT listed here and should not be: they ride
+# a SAVED setup (a preset, or RESTORE_LAST_SETUP) automatically, and deliberately
+# never ride a code you share with another host.
 GameCode:
   - PLAYER_COUNT
   - DIFFICULTY
@@ -46,7 +50,6 @@ GameCode:
   - SIEGE_TIMEOUT
   - BOSS_SELECT
   - seed_value
-  - SHIP_LOADOUT
 ```
 
 

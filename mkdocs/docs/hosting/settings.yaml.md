@@ -18,6 +18,28 @@ Seconds to wait on the game-results screen before AUTO_START restarts the missio
 Defaults to 10. Measured in real (wall-clock) time, because the simulation is
 paused at game end.
 
+## RESTORE_LAST_SETUP
+Come back on the setup screen with the settings the **last game started with**, instead of
+the defaults below. Remembered per mission and per map, and it carries the crew's ship
+names and hulls as well as the options.
+
+Defaults to `false`, which is the behavior LegendaryMissions has always had: every game
+starts from this file. That suits a venue or a convention, where each group should start
+from the same known state. Set it to `true` when the same crew keeps replaying a setup -
+after an early death, or while tuning one option at a time.
+
+``` yaml
+    RESTORE_LAST_SETUP: true
+```
+
+It is saved when a game **starts**, not when it ends, so a crash or a quit still leaves it
+recorded. The file is `data/missions/common_data/game_codes/<mission>.yaml`, outside the
+mission folder, so updating the mission does not lose it.
+
+Prefer a **[profile](profiles.md)** when you have several standing setups rather than one
+rolling one, and a **saved preset** when you want to name a setup and come back to it
+later.
+
 ## OPERATOR_MODE
 
 ### enable

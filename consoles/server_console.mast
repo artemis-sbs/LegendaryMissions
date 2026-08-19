@@ -161,6 +161,25 @@ gui_reroute_clients("client_main")
 # The Server GUI
 #
 ====== show_server_menu =====
+    # Opt-in (RESTORE_LAST_SETUP, default off): come back with the settings the LAST game
+    # on this map started with, instead of the ones in settings.yaml. Off by default
+    # because a venue or convention machine wants every group to start from the same known
+    # state - which is the behavior it already has.
+    #
+    # Ahead of the AUTO_START jump on purpose: an unattended loop that was asked to keep
+    # its setup should keep it too, and this must land before any widget below reads one
+    # of these vars.
+    #
+    # Once per MAP SELECTION, not once per build: this label is re-entered on every
+    # dropdown change, so re-applying on each build would overwrite the very edit that
+    # caused the rebuild. Keyed by path, so switching maps restores that map's own setup.
+    #
+    # It runs before map_apply_defaults, which is set-if-absent and so leaves this alone.
+    default shared LAST_SETUP_APPLIED_FOR = ""
+    if SETTINGS.get("RESTORE_LAST_SETUP", False) and WORLD_SELECT is not None:
+        if WORLD_SELECT.path != LAST_SETUP_APPLIED_FOR:
+            shared LAST_SETUP_APPLIED_FOR = WORLD_SELECT.path
+            game_code_last_apply(WORLD_SELECT)
     #
     jump start if AUTO_START
 
@@ -231,6 +250,10 @@ gui_reroute_clients("client_main")
             for p in presets:
                 if p["name"] == preset_dd.value:
                     game_code_decode(p["code"])
+                    # Put any saved crew on the ships NOW and clear the pending loadout,
+                    # so a helm that picks a ship afterwards wins rather than being
+                    # silently overwritten at start. See player_loadout_apply_to_ships.
+                    player_loadout_apply_to_ships()
                     jump game_code_reload
 
         # Optional name for the next saved preset; blank -> auto "Preset N".
@@ -240,7 +263,7 @@ gui_reroute_clients("client_main")
             # Capture the current crew's hulls + names into SHIP_LOADOUT so the
             # saved preset reproduces the same ships for the next crew.
             player_loadout_capture(to_object_list(role("default_player_ship")))
-            game_code_presets_save_code(game_code_encode(WORLD_SELECT), GAME_CODE_NAME)
+            game_code_presets_save_code(game_code_encode(WORLD_SELECT, with_loadout=True), GAME_CODE_NAME)
             jump game_code_reload
         # copy_ic = gui_icon("icon_index: 134; color: white;", "click_tag: gc_copy;")
         # on gui_message(copy_ic):
@@ -358,6 +381,18 @@ Main:
         #
         # This is what makes the deferred schedule below safe.
         signal_emit("reconcile_player_roster")
+        #
+        # Remember this setup as this map's last-used, so the next game can start the same
+        # way. AFTER reconcile_player_roster, which is what culls the roster to
+        # PLAYER_COUNT - so this captures the crew that is actually playing rather than the
+        # full staging roster.
+        #
+        # On START rather than at game end: it records what was actually played, and it
+        # survives a crash or a quit that never reaches the results screen.
+        #
+        if SETTINGS.get("RESTORE_LAST_SETUP", False):
+            player_loadout_capture(to_object_list(role("default_player_ship") & role("__player__")))
+            game_code_last_save(game_code_encode(WORLD_SELECT, with_loadout=True))
         #
         # DEFERRED on purpose, and this is the point of the whole exercise. The map body is the
         # mission's entire opening burst - stations, minefields, NPCs, terrain, fleets - and

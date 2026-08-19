@@ -69,10 +69,34 @@ In general the settings.yaml is useful for setting things up to avoid constantly
 
 [see here ](settings.yaml.md) for what settings Operators may want to tweak.
 
-!!! tip "Different defaults"
+!!! tip "Different defaults: use a profile"
 
-    Operators that want different setups for varied crews, could copy the mission and alter the settings.yaml. While this takes up more space, It could be a time saver. This only needs to be don on the server.
+    Operators who want different setups for varied crews should use a **[profile](profiles.md)** - one named file per setup, selected on the command line, with nothing else changed:
 
+    ``` text
+    Artemis3-x64-release.exe autostartserver defaultmission=LegendaryMissions profile=eastern_front
+    ```
+
+    This replaces the old advice of copying the whole mission folder and editing each copy's settings.yaml. A profile is one small file, it does not duplicate the mission, and it survives updating the mission.
+
+!!! tip "Keep the last game's setup"
+
+    To come back on the setup screen with whatever the last game started with - options, and the crew's ship names and hulls - turn on `RESTORE_LAST_SETUP`. It is remembered per mission and per map, and it is **off by default** so a venue machine keeps starting every group from the same known state. See [Saved setups](#saved-setups) below.
+
+
+### Saved setups
+
+Two ways to stop retyping the setup screen, for two different needs.
+
+**A named preset** is saved from the server console: set the options up, type a name, press the save icon. It records everything on the Options panel - players, difficulty, terrain, seed - plus the crew's current ship names and hulls. Pick it from the Presets dropdown to load it back, including after a restart. Presets are per map.
+
+**`RESTORE_LAST_SETUP: true`** in settings.yaml does the same thing without the button: whatever the last game started with comes back automatically, per mission and per map. Off by default.
+
+Both are stored **outside the mission folder**, in `data/missions/common_data/game_codes/<mission>.yaml`, so updating or re-extracting the mission does not lose them.
+
+A preset is the same **game code** you can share with another host - so "save my setup" and "give everyone the identical match" are one feature. The one difference: a *saved* setup also carries the crew's ship names and hulls, while a code you share does not. A map decides which options a code carries with a `GameCode:` block in its metadata.
+
+If you want a standing roster rather than whatever was flown last, put it in `PLAYER_LIST` in [settings.yaml](settings.yaml.md) or a [profile](profiles.md) - that carries each ship's side and face as well, which a game code does not.
 
 ### Default mission
 Look above for setting the default Mission Folder. This will help run your most common mission e.g. Legendary Missions.
