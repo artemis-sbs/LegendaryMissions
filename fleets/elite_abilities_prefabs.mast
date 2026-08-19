@@ -170,9 +170,9 @@ display_name: HET
     yield SUCCESS
 
 ==== elite_tractor_start ===
-" Activate tractor - snare the nearest enemy so it cannot flee. Tethers the
-" target to this elite at its current range for the active window, then
-" releases and starts the cooldown. Matches the other abilities' timings.
+" Activate tractor - snare the nearest enemy so it cannot flee. Hauls the
+" target in and holds it a couple of hull-lengths off for the active window,
+" then releases and starts the cooldown. Matches the other abilities' timings.
 metadata: ```
 type: elite/tractor
 display_name: Tractor
@@ -187,10 +187,13 @@ display_name: Tractor
     target_id = tgt.id
     yield FAIL if not object_exists(target_id)
 
-    # Anchor the target to this elite at the current separation so it can't run.
-    # AddTractorConnection(sourceID, targetID, offsetPoint, pullDistance).
-    d = tgt.distance
-    sim.AddTractorConnection(ELITE_ID, target_id, sbs.vec3(0, 0, 0), d)
+    # Haul the target in and park it a couple of hull-lengths off, rather than handing
+    # the engine one connection and walking away - a tether left attached reels its
+    # target all the way into the source hull whatever pull distance it was given, and
+    # a target sitting inside the elite is what made the beam particle look wrong.
+    # elite_tractor_pull() does one tick of that: hard pull outside the standoff, beam
+    # cut inside it.
+    hold = elite_tractor_hold_distance(ELITE_ID, target_id)
 
     # Visible tether particle on the held target for the duration.
     emittor_id = None
@@ -200,14 +203,16 @@ display_name: Tractor
 
     task_schedule(elite_update_science_status, {"ELITE_ID": ELITE_ID, "status": "Caught in a tractor beam"})
 
-    # Hold for the active window.
-    await delay_sim(30)
+    # Hold for the active window, driving the beam as we go.
+    set_timer(ELITE_ID, "tractor_hold", 30)
+--- hold
+    await delay_sim(0.25)
+    jump clear if not elite_tractor_pull(ELITE_ID, target_id, hold)
+    jump hold if not is_timer_finished(ELITE_ID, "tractor_hold")
 
 --- clear
     # Release the tractor and tidy the particle.
-    sim.DeleteTractorConnection(ELITE_ID, target_id)
-    if emittor_id is not None:
-        sbs.delete_particle_emittor(emittor_id)
+    elite_tractor_release(ELITE_ID, target_id, emittor_id)
 
     set_timer(ELITE_ID, f"{type}_cooldown", 10)
     yield SUCCESS
