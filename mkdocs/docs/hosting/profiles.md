@@ -15,18 +15,21 @@ and it replaces the older advice of copying the whole mission folder per setup.
 
 Two places are searched, in this order:
 
-| | | |
+| | | applies to |
 |---|---|---|
-| `LegendaryMissions/profiles/<name>.yaml` | the mission's own | settings, add-ons and art packs |
-| `data/missions/common_data/profiles/<name>.yaml` | **yours** | settings only |
+| `LegendaryMissions/profiles/<name>.yaml` | the mission's own | this mission |
+| `data/missions/common_data/profiles/<name>.yaml` | **yours** | every mission |
 
 The mission's own wins on a name collision.
 
 **Put your house setups in `common_data/profiles/`.** It sits beside the missions rather
-than inside one, so updating or re-extracting LegendaryMissions cannot lose it. Add-on and
-art-pack selection is not available there, because those only mean something against one
-specific mission - a shared profile that names them is refused, with a message saying so,
-and its settings still apply.
+than inside one, so updating or re-extracting LegendaryMissions cannot lose it - and one
+file there covers every mission you run, not just this one. That includes add-ons and art
+packs, so the Artemis 2.8 skies can follow you into any mission:
+
+``` text
+sbs run server,science,comms profile=a28_skies -m WalkTheLine
+```
 
 ## What goes in one
 
@@ -49,7 +52,8 @@ profile - so you can name a configuration and still change one thing for tonight
 
 LegendaryMissions ships three of its own as examples, in its `profiles/` folder:
 `autoplay7` (a full settings setup), and `a28_add` / `a28_skies` (which swap the skyboxes
-for the Artemis 2.8 set - the add-on half, which only a mission-local profile can do).
+for the Artemis 2.8 set). Copy any of them into `common_data/profiles/` to have it apply
+everywhere instead of only here.
 
 ## Profile, preset, or RESTORE_LAST_SETUP?
 
