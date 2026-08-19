@@ -339,10 +339,35 @@ if CAN_CHANGE_CONSOLE:
     gui_section( style="area: 80,100-60px, 99,100;row-height: 50px;")
     if not GAME_STARTED:
         cb_ready = gui_checkbox("ready", var="console_ready")
+        # The game can start while this panel is up, and then this checkbox is a
+        # dead control: console_ready is read ONCE, by game_started_console, at the
+        # moment the server presses Start. Ticking it afterwards sets a flag nothing
+        # reads again - the console looks like it can say ready and cannot. So after
+        # the start the tick MEANS "join", exactly like the button below. This is the
+        # last line of defence; the repaint below is what normally swaps the control.
+        on gui_message(cb_ready):
+            jump console_selected if GAME_STARTED and console_ready
     else:
         on gui_message(gui_button("ready")):
             console_ready = True
             jump console_selected
+
+    #
+    # This panel is BUILT from GAME_STARTED (checkbox before the start, Ready button
+    # after), so it has to be rebuilt when GAME_STARTED flips. The server rerouting
+    # every client through game_started_console is still the normal way that happens
+    # and is unchanged - this is the same console driving the same handover for
+    # itself, so a reroute that does not land cannot strand a console on a picker it
+    # can no longer act on: checkbox on screen, no way to say ready.
+    #
+    # game_started_console, not select_console, deliberately: it is the one entry
+    # point for "the game just started", so a console that HAS said ready still walks
+    # straight into its console, and the console list is re-read there for map-gated
+    # consoles. Registered on this build, so it fires at most once - the rebuild it
+    # causes registers a fresh one already holding True.
+    #
+    on change GAME_STARTED:
+        jump game_started_console
 
     gui_section(style="area: 0,100-50px, 35,100;")
     # The space the text waterfall used to occupy. Before a ship is picked there is
@@ -535,7 +560,12 @@ $t Waiting for the server to start the mission
         # of universe_map_begin), so one tick is enough. This costs nothing anyone
         # notices - it is a menu, not a crew station, and the consoles that DID choose
         # never reach this branch.
-        await delay_sim(0)
+        # delay_app, not delay_sim: this is a one-TICK wait, and sim time is the one
+        # clock that can be stopped. Everything else in this file that waits around
+        # the start already learned that (game_code_reload, console_auto_start_wait,
+        # `start` itself) - a sim delay that never fires here leaves the console on
+        # the stale picker for good, which is indistinguishable from a hang.
+        await delay_app(0)
         consoles = gui_get_console_type_list()
         jump select_console
 
