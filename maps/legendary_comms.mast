@@ -93,7 +93,7 @@ prefab_spawn(prefab_lifeform_generic, {"name": "TSNN", "path": "//comms/tsnn"})
             with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
                 << "Casualties are being treated"
                     % Currently we have {crew_size} healthy crew members and {dead} casualties.
-                    % Sickbay is treating {dead} casualties. The remaining {cew_size} crew are in good condition.
+                    % Sickbay is treating {dead} casualties. The remaining {crew_size} crew are in good condition.
         if dead == 0:
             physicals = random.randint(2,10)
             with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
