@@ -4,7 +4,10 @@
 =$xmas green,red
 
 
-//enable/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "civ, friendly")
+# Hailing a civilian means you have IDENTIFIED it, the same rule the right-click order
+# menu follows below (issue #694). Enable and body are gated together on purpose - an
+# //enable/comms without a matching //comms body opens an empty comms panel.
+//enable/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "civ, friendly") and not science_is_unknown(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
 
 #
 # This is an example of how to create an overridable button, but it is not used
@@ -16,7 +19,7 @@
 
 
 
-//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "civ, friendly")
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and has_roles(COMMS_SELECTED_ID, "civ, friendly") and not science_is_unknown(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
     + "Hail":
         obj_ids = linked_to(COMMS_SELECTED_ID, "OBJECTIVE")
         yield success if len(obj_ids) == 0
