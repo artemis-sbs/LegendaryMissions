@@ -2,6 +2,7 @@ from sbs_utils.procedural.roles import role
 from sbs_utils.procedural.query import to_id, to_object
 from sbs_utils.procedural.execution import task_cancel, task_schedule
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+from sbs_utils.procedural.torpedoes import torpedo_get_available_types_for_ship
 
 
 
@@ -53,3 +54,45 @@ def docking_build_munition_queue_task(id_or_obj, torp_type):
         data={"station_id": to_id(id_or_obj), "build_time": build_time, "torpedo_build_type": torp_type}))
     return True
 
+
+def docking_order_torpedo_keys(reference_id_or_obj, keys):
+    """Order torpedo keys the way the engine orders them for a given ship.
+
+    The authority is the ship's own ``torpedo_types_available`` data_set value, which
+    the engine fills from its shipData ``torpedostart`` list - the same source and the
+    same order the ship-data widget renders. Ordering a menu by it is what makes the
+    menu agree with the widget (LegendaryMissions#693).
+
+    Anything the reference ship does not carry - Beacon, or every type but Homing when
+    the reference is a fighter - has no engine opinion to follow, so it falls to the
+    tail ordered by the definition's ``sort_order``, then by key. That keeps the tail
+    stable instead of handing it back in set order.
+
+    Do NOT pass a station as the reference. Stations have no ``torpedostart`` in
+    shipData, so the engine answers None for them - while the mock answers with its
+    own default ("Homing,Nuke,EMP,Mine"), which would look correct in a headless run
+    and silently reorder on a real bridge.
+
+    Args:
+        reference_id_or_obj (Agent | int): The PLAYER ship whose order to follow,
+            normally the console asking for the menu.
+        keys (list[str]): Torpedo type keys to order.
+
+    Returns:
+        list[str]: The keys, ordered.
+    """
+    if not keys:
+        return list(keys or [])
+    engine_order = torpedo_get_available_types_for_ship(reference_id_or_obj) or []
+    rank = {key: i for i, key in enumerate(engine_order)}
+    tail = len(rank)
+    return sorted(keys, key=lambda k: (rank.get(k, tail), _docking_torp_sort_order(k), k))
+
+
+def _docking_torp_sort_order(key):
+    """The sort_order the torpedo prefab declared, or 100 if it declared none."""
+    torps = role(key) & role("torpedo_definition")
+    if not torps:
+        return 100
+    order = get_inventory_value(next(iter(torps)), "sort_order", 100)
+    return 100 if order is None else order
