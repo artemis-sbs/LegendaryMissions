@@ -109,7 +109,11 @@ def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet"
     #all_abilities.extend(engine_abilities)
     #all_abilities.extend(script_abilities)
     all_abilities_copy = elite_get_all_abilities().copy()
-    hard = ["elite_cloak", "elite_low_vis", "elite_jump_back"]
+    # These are keyed by each ability label's `type:` value, which is a PATH. Spelled
+    # with underscores ("elite_cloak", "elite_jump_back") they matched nothing, so only
+    # low-vis was ever held back and easy fleets have been cloaking and teleporting away
+    # at every difficulty.
+    hard = ["elite/cloak", "elite_low_vis", "elite/jump/back"]
     # remove more difficult abilities
     if fleet_diff <5:
         for h in hard:

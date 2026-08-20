@@ -75,6 +75,36 @@ The end-of-game screen is a **tabbed results board**, and it keeps score.
 **Saved every game.** Each result is written to a rolling history with an even
 denser per-ship / per-pilot / per-quest breakdown than the screen displays.
 
+## Elite enemies, and what Science can see
+
+Some enemies &mdash; Skaraans especially &mdash; carry **elite abilities**. They come in
+two kinds, and the difference is what your Science officer can do about them.
+
+**Always on.** Low visibility, main-screen invisibility, drones, anti-mine and
+anti-torpedo defenses are part of the ship. Nothing switches them on, so there is
+nothing to catch. Science reads them off the **Intel** tab as soon as the contact is
+scanned, which is your warning.
+
+**Chosen.** Cloak, warp, and the two teleports have to be decided on and powered up
+first, and an elite can only charge one at a time. The moment it commits, its **Status**
+tab says so, with a countdown:
+
+> Ready for combat. Preparing to cloak - 18s
+
+That is the window. Call it out, and the bridge gets to act on it &mdash; hold fire for
+the cloak, close the range so the teleport is wasted, or kill it before the charge
+finishes. Talk it out of the idea &mdash; a Tag torpedo, or simply nothing left worth
+using the ability on &mdash; and the line disappears.
+
+The window is **wider on lower difficulty and tighter on higher**: the same cloak that
+gives you thirty-five seconds at difficulty 1 gives you fifteen at 11.
+
+**Status is worth reading on any enemy**, elite or not. When nothing is charging it
+reports the ship's condition &mdash; a damaged system, a shield facet that is down, or
+one visibly coming back up:
+
+> Rebuilding its forward shields.
+
 ## Running a tournament
 
 The pieces above combine into a simple, fair competition format &mdash; handy for

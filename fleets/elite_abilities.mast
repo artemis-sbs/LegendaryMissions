@@ -15,11 +15,16 @@ metadata: ```
 brain:
   SEQ Elite Abilities:
     - elite_bt_gate
+    - elite_bt_charge
     - elite_bt_activate
 ```
     ->END if ELITE_ID is None
-    ->END if get_inventory_value(ELITE_ID, "__BRAIN__", None) is not None
-    brain_add(ELITE_ID, brain, None, 0, None)
+    # elite_brain_attach, not brain_add: the tree has to go FIRST (the root Select
+    # stops at the first child that succeeds, so an elite already chasing something
+    # would starve it), and it has to be idempotent on ITS OWN flag. The guard here
+    # used to be "does this ship have any brain at all", which handed every elite that
+    # arrived with a movement brain an ability set it could never use.
+    elite_brain_attach(ELITE_ID, brain)
     ->END
 
 
@@ -38,44 +43,100 @@ type: brain/npc
     if elite_task is not None:
         yield fail if not elite_task.done()
         ability = get_inventory_value(BRAIN_AGENT_ID, "ELITE_ACTIVE_ABILITY", None)
+        # The cooldown is set HERE, from the ability's own `cool_down:` metadata scaled
+        # for this crew, rather than by each ability's last line. One place, and an
+        # ability that ends early - or is killed with its ship - still gets one.
+        if ability is not None:
+            set_timer(BRAIN_AGENT_ID, f"{ability}_cooldown", elite_ability_cool_down(BRAIN_AGENT_ID, ability))
         signal_emit("elite_ability_end", {"ELITE_ID": BRAIN_AGENT_ID, "ability": ability})
         set_inventory_value(BRAIN_AGENT_ID, "ELITE_TASK", None)
         set_inventory_value(BRAIN_AGENT_ID, "ELITE_ACTIVE_ABILITY", None)
 
     # Tag torpedo suppression (timer set in damage/destroy.mast; True when unset).
-    yield fail if not is_timer_finished(BRAIN_AGENT_ID, "tag_suppression")
+    # A charge in progress is called off rather than left standing: the tell Science is
+    # reading has to stop being true the moment it stops being true.
+    if not is_timer_finished(BRAIN_AGENT_ID, "tag_suppression"):
+        elite_charge_abort(BRAIN_AGENT_ID)
+        yield fail
 
     # Elites only use powers when near non-friendly ships.
     stuff = broad_test_around(so, 18000, 18000, 0xF0)
     nearest_target = closest(so, stuff - role(so.side))
-    yield fail if nearest_target is None
+    if nearest_target is None:
+        elite_charge_abort(BRAIN_AGENT_ID)
+        yield fail
+    yield success
+
+
+=== elite_bt_charge
+" Choose an ability, then charge it in the open.
+"
+" This is the node the ticket asked for: the elite commits to what it is about to
+" do some time BEFORE it does it, and says so, so a Science officer has something
+" to notice and to call out. How long it charges is the ability's own `warm_up:`,
+" scaled for the crew opposite (elite_ability_warm_up). An ability that declares
+" no warm-up succeeds the moment it is chosen, exactly as every ability did before.
+metadata: ```
+type: brain/npc
+```
+    pending = get_inventory_value(BRAIN_AGENT_ID, "ELITE_PENDING_ABILITY", None)
+
+    if pending is None:
+        all_abilities = elite_get_non_engine()
+        ready = []
+        for ab in all_abilities:
+            if not has_role(BRAIN_AGENT_ID, ab):
+                continue
+            if is_timer_finished(BRAIN_AGENT_ID, f"{ab}_cooldown"):
+                ready.append(ab)
+
+        yield fail if len(ready) == 0
+
+        pending = random.choice(ready)
+        set_inventory_value(BRAIN_AGENT_ID, "ELITE_PENDING_ABILITY", pending)
+        # Returns 0 when the ability declares no warm-up - fire this same tick.
+        yield success if elite_charge_begin(BRAIN_AGENT_ID, pending) <= 0
+        yield fail
+
+    # Some abilities are worth calling off while they charge. Warp is: it used to
+    # bail out of its own warm-up loop when its target got close, and that loop is
+    # gone, so the reason to bail is metadata now (`abort_if_target_within:`).
+    abort_within = elite_ability_meta(pending, "abort_if_target_within", 0)
+    if abort_within:
+        # default=0, not a bare read: the engine answers None for a field it never
+        # set, and the comparison below would raise on a real bridge.
+        target_id = get_data_set_value(BRAIN_AGENT_ID, "target_id", default=0)
+        if target_id:
+            if sbs.distance_id(BRAIN_AGENT_ID, target_id) <= abort_within:
+                elite_charge_abort(BRAIN_AGENT_ID)
+                yield fail
+
+    yield fail if not is_timer_finished(BRAIN_AGENT_ID, "elite_warmup")
     yield success
 
 
 === elite_bt_activate
-" Action node: pick one of this elite's ready scripted abilities (role present
-" and per-ability cooldown finished) and launch it as its own task. The task
-" runs the ability sequence; the gate holds the tree until it completes.
+" Action node: launch the ability this elite spent its warm-up committing to. The
+" task runs the ability sequence; the gate holds the tree until it completes.
 metadata: ```
 type: brain/npc
 ```
+    ab = get_inventory_value(BRAIN_AGENT_ID, "ELITE_PENDING_ABILITY", None)
+    yield fail if ab is None
+
     all_abilities = elite_get_non_engine()
-    ready = []
-    for ab in all_abilities:
-        if not has_role(BRAIN_AGENT_ID, ab):
-            continue
-        if is_timer_finished(BRAIN_AGENT_ID, f"{ab}_cooldown"):
-            ready.append(ab)
-
-    yield fail if len(ready) == 0
-
-    ab = random.choice(ready)
     elite_label = all_abilities.get(ab)
-    yield fail if elite_label is None
+    if elite_label is None:
+        elite_charge_abort(BRAIN_AGENT_ID)
+        yield fail
 
     elite_task = task_schedule(elite_label, data={"ELITE_ID": BRAIN_AGENT_ID})
     set_inventory_value(BRAIN_AGENT_ID, "ELITE_TASK", elite_task)
     set_inventory_value(BRAIN_AGENT_ID, "ELITE_ACTIVE_ABILITY", ab)
+    set_inventory_value(BRAIN_AGENT_ID, "ELITE_PENDING_ABILITY", None)
+    # The charge is spent. Take the tell down BEFORE the ability runs - what Science
+    # reads next is the ability's own doing, not a leftover countdown.
+    elite_charge_clear(BRAIN_AGENT_ID)
     signal_emit("elite_ability_start", {"ELITE_ID": BRAIN_AGENT_ID, "ability": ab})
     yield success
 

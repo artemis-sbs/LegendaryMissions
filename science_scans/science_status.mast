@@ -1,0 +1,27 @@
+# Keeping the STATUS tab true.
+#
+# A science tab is a stored string: the scan writes it once and re-selecting the
+# contact never runs that block again. So something has to push. The ticker does the
+# ordinary work (a shield coming back, a countdown falling), and the dirty signal is
+# for the moments worth landing in the same frame - an elite committing to an ability,
+# or being talked out of it.
+#
+# Both are //shared/signal, not //signal. The write is indexed by the SCANNING SIDE,
+# so one console doing it is the whole side done; five consoles each starting a watcher
+# is five tickers writing the same blob. SIGNAL_ROUTING.md.
+
+//shared/signal/game_started
+    task_schedule(science_status_watch)
+
+//shared/signal/science_status_dirty
+    science_status_push(STATUS_ID)
+
+
+=== science_status_watch
+" Re-render every contact a science officer has scanned. Only lines that actually
+" moved are written, and the registry only holds ships somebody scanned, so this is a
+" walk over a handful of ids rather than over the world.
+--- science_status_beat
+    await delay_sim(1)
+    science_status_tick()
+    jump science_status_beat

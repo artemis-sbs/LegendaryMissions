@@ -199,8 +199,13 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
         <scan>
             " Enemy vessel. Exercise caution.
     + "status":
+        # Reading SCIENCE_SELECTED_ID here rather than through a data dict is the
+        # pattern the declarative route above uses: the button block runs outside the
+        # route's own task, and the id survives where a snapshot would go stale.
+        science_status_track(SCIENCE_SELECTED_ID, SCIENCE_ORIGIN_ID)
+        sci_status = science_status_text(SCIENCE_SELECTED_ID)
         <scan>
-            " Dynamic properties will appear in this area.
+            " {sci_status}
 
     + "intel" {"taunt_intel": taunt_intel, "elite_intel": elite_intel}:
         <scan>
