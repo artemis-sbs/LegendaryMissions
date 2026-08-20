@@ -1,0 +1,93 @@
+# The player: it keeps the two feeds moving. Program is what goes out; Preview is what is next.
+#
+# WHY THIS IS A SERVER TASK AND NOT A GUI SUB-TASK. A gui sub-task is tagged end_on_new_gui, so
+# it dies the moment the operator repaints the page or steps onto another tab. Playback must
+# outlive all of that - the whole point is that the show keeps running while the director goes
+# off to build the next item. So it is scheduled ONCE from the top level, idles cheaply when
+# nothing is playing, and reads its instructions from the shared cv_* variables.
+#
+# Scheduled once, at story load, rather than on every Send: scheduling on Send would stack a
+# second player on the second press, and two players advancing the same rundown at different
+# offsets is a feed that flickers.
+#
+# IT TICKS FASTER THAN THE DWELL. A half-second tick with a counter, not a sleep of cv_dwell:
+# preview has to follow the editor as it is typed in, and a camera leg re-issues when the leg
+# ENDS (a 22-second dolly) rather than when the rundown advances.
+task_schedule(cv_play_task)
+
+default shared cv_play_index = 0
+default shared cv_air = ""
+
+=== cv_play_task
+    cv_play_elapsed = 0.0
+--- cv_play_loop
+    await delay_app(0.5)
+
+    # Every declared screen, re-read each tick: consoles connect, disconnect and change mode
+    # behind this, and a screen's MODE is its selection - there is no picker any more.
+    cv_prog = director_program_screens()
+    cv_prev = director_preview_screens()
+    director_play_forget_absent(cv_prog + cv_prev)
+
+    # RE-EVALUATED EVERY TICK, not captured at Send. A generator rundown tracks ships that
+    # spawn and die, and the play set drops items whose subject has gone - so a rundown does
+    # not slowly rot into a list of dead contacts over a long session.
+    cv_play_items = []
+    if cv_playing:
+        cv_play_items = director_rundown_play_set(cv_rundowns)
+
+    # The dwell, counted rather than slept. A punch HOLDS: on a six-second dwell an item that
+    # did not would be overwritten on the next advance and Send to Program would read as a
+    # button that does nothing.
+    cv_play_elapsed = cv_play_elapsed + 0.5
+    if cv_playing and cv_punch is None and cv_play_elapsed >= cv_dwell:
+        cv_play_elapsed = 0.0
+        shared cv_play_index = cv_play_index + 1
+
+    # TWO FEEDS, ONE ITEM EACH. Every program screen shows the same thing and every preview
+    # screen shows the same thing - that is broadcast, and it is what replaced a per-screen
+    # distribution nobody wanted.
+    cv_prog_item = director_play_program_item(cv_play_items, cv_play_index, cv_auto, cv_punch)
+    cv_prev_item = director_play_preview_item(cv_play_items, cv_play_index)
+    cv_play_plan = director_play_plan(cv_prog_item, cv_prog) + director_play_plan(cv_prev_item, cv_prev)
+
+    for cv_p in cv_play_plan:
+        # `changed` is what keeps this cheap: a reroute is a full page rebuild on the target
+        # screen and restarts its camera, and re-issuing one that is already correct twice a
+        # second would make both feeds unwatchable. A furniture-only change never reaches here
+        # at all - director_play_plan re-shows the cards in place.
+        if cv_p["changed"]:
+            cv_p_item = cv_p["item"]
+            if cv_p_item is None:
+                director_play_release(cv_p["screen"])
+                gui_reroute_client(cv_p["screen"], cv_screen_home)
+            elif cv_p_item["kind"] == "con":
+                gui_reroute_client(cv_p["screen"], cv_show, {"cv_ship_id": cv_p_item["ship"], "cv_console": cv_p_item["console"], "cv_shot": None})
+            elif cv_p_item["mode"] == "tactical":
+                # A 2D view, not a camera - the screen keeps its own cam and the view is
+                # centered per CLIENT, so two screens can hold different modes for one ship.
+                gui_reroute_client(cv_p["screen"], cv_show_2d, {"cv_subject": cv_p_item["subject"]})
+            else:
+                # A camera item needs a screen that can SHOW a camera, so the screen is put on
+                # the cinematic console (a full-screen 3dview) and cv_show applies the shot
+                # once that console exists. Applying the camera first would aim a view the
+                # screen does not have yet.
+                gui_reroute_client(cv_p["screen"], cv_show, {"cv_ship_id": cv_p_item["subject"], "cv_console": "cinematic", "cv_shot": cv_p_item})
+
+    # LEGS ADVANCE EVERY TICK, independent of `changed`: a 22-second dolly on a screen that is
+    # not changing item would otherwise run once and freeze on its last frame. A chase re-aims
+    # here too, which is what keeps it behind a turning ship.
+    director_play_tick_shots()
+
+    # A SEPARATE LINE FROM cv_status. The operator's own messages ("added 3 console items")
+    # would be wiped half a second after they appeared if the player wrote over them.
+    shared cv_air = director_play_status(cv_prog_item, len(cv_prog), len(cv_prev), cv_auto, cv_punch is not None)
+    jump cv_play_loop
+
+
+# Back to whichever holding page this screen belongs on. ONE label, so the player has one None
+# branch instead of two nearly-identical ones - the mode already knows which page it is.
+=== cv_screen_home
+    if director_mode_of(client_id) == "preview":
+        jump cv_screen_preview
+    jump cv_screen_program

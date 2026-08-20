@@ -1,248 +1,190 @@
-# Director panel (single console).
+# Director - the MAIN PAGE. "Play these rundowns."
 #
-# Multiview highlight: multi-select Program screens, Ships, and Consoles, then
-# Apply. Screens are paired with consoles (and ships) by index with round-robin:
-#   screen[i] shows console[i % nConsoles] for ship[i % nShips].
-# So 1 console + N screens = mirror; N screens + N consoles = a multiview wall.
-# Multi-select implies the mode: if MORE consoles than screens are selected they
-# can't all show at once, so Apply auto-rotates them (carousel); equal/fewer is a
-# static wall. No separate carousel toggle - the selection shape decides.
+# That sentence is the whole console now. It used to be "play these rundowns on these SCREENS",
+# with a picker down the left listing every declared console - and the picker turned out to be
+# answering a question nobody had. A console declares itself Program or Preview when it opens;
+# that declaration IS its selection, so the list only ever restated what the operator had
+# already said, one repaint behind, with an un-tick that could hold a screen back for no reason
+# anybody wanted. Send goes to ALL the program screens. There is no wall.
 #
-# Screen shots (dev only): capture the selected consoles (or ALL) for the first
-# selected ship, ALWAYS via the SERVER screen (client 0) - the only surface
-# gui_screenshot can grab. Files: shot_<console>.bmp in the mission folder.
+# Everything that BUILDS a rundown item lives on the rundown tab. This page authors nothing,
+# which is the correction the first version needed: it led with the authoring tools and had
+# nowhere to say what should actually go out.
 #
-# Reuses cv_show from __init__.mast. cv_ui is top-level so the capture tour can
-# reroute client 0 back to it. cv_apply_views does the reroute work (run via
-# task_schedule - MAST labels are scheduled, not called like functions).
+# director_play.mast owns playback; director_rundowns.py owns the item model; cv_show (in
+# __init__.mast) is still the primitive that puts a console on a screen.
 
-default shared cv_ship_id  = None        # fallback ship when none selected
-default shared cv_console  = "mainscreen"  # fallback console when none selected
-default shared cv_carousel = False
-default shared cv_dwell    = 6           # carousel seconds per step
-default shared cv_settle   = 2           # screenshot render-settle seconds
+default shared cv_ship_id  = None          # fallback ship when an item has none
+default shared cv_console  = "mainscreen"  # fallback console
 default shared cv_status   = ""
-# Applied multiview state (set on Apply / carousel-enable; read by the carousel).
-default shared cv_screens       = None   # list of program-screen client ids
-default shared cv_view_consoles = None   # list of console names
-default shared cv_view_ships    = None   # list of ship ids
+default shared cv_dwell    = 6             # seconds a screen holds an item before advancing
+default shared cv_watch_poll = 2           # seconds between live-refresh checks
 
-# AUTO-FOLLOW. Off by default, so an untouched Director behaves exactly as it always has.
-# On, a loop keeps the program screens pointed at the ship worth watching without anyone
-# picking one - see director_follow.py for how it chooses and why it does not twitch.
-# It changes only the SHIP: screens and consoles stay whatever was applied, so it composes
-# with the carousel rather than competing with it.
-default shared cv_follow      = False
-default shared cv_follow_poll = 3        # seconds between auto-follow checks
+# What Send last applied. Read by the player task, which runs server-side and outlives this
+# page - so these are shared, not task variables.
+default shared cv_rundowns  = None         # list of selected rundown keys
+default shared cv_playing   = False
+default shared cv_auto      = False        # the auto-director
+# A live take from the editor: one item on every program screen, no advancing, until Resume or
+# Stop clears it. Without the hold, a six-second dwell would overwrite it on the next tick and
+# the button would read as doing nothing.
+default shared cv_punch     = None
 
-@console/director !0 ^94 "Director" if DIRECTOR_enabled
-    " route any ship's console to program screens multiview wall, rotating carousel, developer screenshots.
-    jump director_pin_gate
-
-=== director_pin_gate
-    # Optional pin, like OPERATOR_MODE. No pin configured (empty/None) -> straight in.
-    jump cv_ui if not DIRECTOR.get("pin")
-    gui_section(style="area: 20, 40, 80, 40+40px;")
-    pin = ""
-    """Director pin"""
-    _in = gui_input("""desc: Enter pin;password:True;""", var="pin")
-    on gui_message(_in):
-        jump cv_ui if pin == DIRECTOR.get("pin")
-    await gui():
-        + "cancel":
-            jump select_console
-
+# ONE-TIME per ENTRY. The camera work is in director_cam_ensure, which EVERY tab calls -
+# see director_cam.py for why that is not optional.
 === cv_ui
+    director_cam_ensure(client_id)
     my_id = client_id
-    screen_items = []
-    screen_ids = []
-    for tid in role("console"):
-        if tid != my_id:
-            screen_items.append("client " + str(tid))
-            screen_ids.append(tid)
-    ship_items = []
-    ship_ids = []
-    for sid in role("__player__"):
-        ship_items.append(to_object(sid).name)
-        ship_ids.append(sid)
-    # get_selected() returns the item strings; map back to ids via list.index()
-    # (dict/zip are not in the MAST eval globals, but list.index is a method).
+    jump cv_paint
 
-    gui_section("area: 3, 3, 97, 8;")
-    """Director - multi-select screens, ships, consoles; Apply for a multiview"""
+# THE MAIN PAGE, and the repaint entry point.
+#
+# TOP-LEVEL (===), not an inline `--- repaint`: the live-refresh watcher reaches this with
+# gui_task_jump, which resolves the name against the CONSOLE gui task. An inline label only
+# resolves inside its own parent scope and fails with `command 0 not found`. Task variables
+# survive the jump either way.
+=== cv_paint
+    default my_id      = client_id
+    default rundown_lb = None
 
-    gui_section("area: 3, 9, 33, 66;")
-    screen_lb = gui_list_box(screen_items, "row-height:1.6em;", title_template="Program screens", select=True, multi=True)
-    gui_section("area: 35, 9, 65, 66;")
-    ship_lb = gui_list_box(ship_items, "row-height:1.6em;", title_template="Ships", select=True, multi=True)
-    gui_section("area: 67, 9, 97, 66;")
-    console_lb = gui_list_box(CV_CONSOLES, "row-height:1.6em;", title_template="Consoles", select=True, multi=True)
+    # Re-seat before painting: staging a shot reassigns this client to whatever it is filming,
+    # and every //focus route is gated on the client riding its own cam.
+    director_cam_ensure(client_id)
 
-    # ---- apply ----
-    # Multi-select implies the mode: more consoles than screens can't all show at
-    # once, so Apply rotates them (auto-carousel); equal/fewer = a static wall.
-    gui_section("area: 3, 67, 97, 80;")
-    gui_row()
-    applyb = gui_button("Apply to program screens")
-    on gui_message(applyb):
-        cv_screens = []
-        for it in screen_lb.get_selected():
-            cv_screens.append(screen_ids[screen_items.index(it)])
-        cv_view_ships = []
-        for it in ship_lb.get_selected():
-            cv_view_ships.append(ship_ids[ship_items.index(it)])
-        cv_view_consoles = console_lb.get_selected()
-        if len(cv_view_consoles) > len(cv_screens):
-            cv_carousel = True
-        else:
-            cv_carousel = False
-            task_schedule(cv_apply_views, {"screens": cv_screens, "consoles": cv_view_consoles, "ships": cv_view_ships, "offset": 0})
-    gui_row()
-    """Rotate dwell (s) - used when more consoles than screens are selected:"""
-    gui_int_slider("$text:int;low:2;high:20;", var="cv_dwell")
+    # Take the OUTGOING selection and view before anything is rebuilt. HERE rather than in the
+    # handlers, because the watcher repaint has no handler to hang a save on - the GUI task is
+    # parked in `await gui()` when that jump lands.
+    cv_sel_rundowns = director_selected_items(rundown_lb)
+    cv_hint_runs    = director_selection_hint(rundown_lb)
 
-    # ---- auto-follow ----
-    # The Ships selection above is a snapshot: it is built when this console opens, so it
-    # goes stale the moment a ship is replaced or a new crew is seated. With this on, the
-    # SHIP stops being an operator decision - the screens track whatever is worth watching
-    # and keep tracking it as the cast changes. Screens and consoles stay as applied.
-    gui_row()
-    followcb = gui_checkbox("text: Auto-follow the ship worth watching; state: {cv_follow}")
-    on gui_message(followcb):
-        shared cv_follow = not cv_follow
+    cv_runs   = director_rundown_rows()
+    run_items = cv_runs[0]
+    run_keys  = cv_runs[1]
 
-    # ---- screen shots (dev only) - always the SERVER screen (client 0) ----
+    # Tabs must be re-enabled on EVERY build: the enable set is read at swap time and then
+    # cleared. Never gui_tab_add_top - that adds the tab to every console in the game.
+    gui_tab_enable("rundown")
+    gui_tab_back(CONSOLE_SELECT)
     if is_dev_build():
-        gui_section("area: 3, 81, 97, 95;")
-        """Screen shots capture the SERVER screen (client 0) - single-PC, Windows, BMP -> shot_<console>.bmp"""
-        gui_row()
-        capsel = gui_button("Capture selected consoles")
-        on gui_message(capsel):
-            shot_ship = cv_ship_id
-            _sel_ships = ship_lb.get_selected()
-            if len(_sel_ships) > 0:
-                shot_ship = ship_ids[ship_items.index(_sel_ships[0])]
-            task_schedule(cv_shot_set, {"ship_id": shot_ship, "settle": cv_settle, "consoles": console_lb.get_selected()})
-        capall = gui_button("Capture ALL consoles")
-        on gui_message(capall):
-            shot_ship = cv_ship_id
-            _sel_ships = ship_lb.get_selected()
-            if len(_sel_ships) > 0:
-                shot_ship = ship_ids[ship_items.index(_sel_ships[0])]
-            task_schedule(cv_shot_set, {"ship_id": shot_ship, "settle": cv_settle, "consoles": CV_CONSOLES})
-        gui_row()
-        """Settle (s):"""
-        gui_int_slider("$text:int;low:1;high:5;", var="cv_settle")
-        gui_row()
-        """{cv_status}"""
+        gui_tab_enable("capture")
+    gui_activate_console("director")
 
-    # One persistent rotator for this console (idles unless cv_carousel is on);
-    # scheduling once avoids duplicate rotators when Apply is pressed repeatedly.
-    gui_sub_task_schedule(cv_carousel_task)
-    # Same shape for auto-follow: one idle loop rather than a task per Apply. Both are
-    # gui_sub_task_schedule, which is tagged end_on_new_gui - so a repaint cancels the old
-    # pair instead of stacking a new one on every pass.
-    gui_sub_task_schedule(cv_follow_task)
+    # px, not percent: a percent section full of `em` rows is only correct at the resolution it
+    # was tuned at. The tab strip owns the top 35px. gui-2 is 24px a line, so 2.4em = 58,
+    # 2.2em = 53, 2em = 48.
+    cv_ctrl_px = 219                    # send 58 + dwell 58 + on-air 48 + status 48 (+7)
+
+    # ---- header: this director's NAME, and what it is driving ----------------------------
+    # gui_text, never a """...""" row - that is a text area and it declines measurement.
+    gui_section("area: 2, 40px, 98, 82px;")
+    gui_row("row-height: 1.5em; font: gui-3;")
+    gui_text("$text:" + gui_text_escape(director_cam_name(client_id)) + ";font:gui-3;color:#8cf;", "col-width: content;")
+    cv_screens_w = gui_text("$text:" + gui_text_escape(director_screen_summary()) + ";font:gui-2;color:#9ab;")
+    on change director_screen_summary():
+        cv_screens_w.update("text:" + gui_text_escape(director_screen_summary()) + ";font:gui-2;color:#9ab;")
+
+    # ---- the rundowns --------------------------------------------------------------------
+    # `font:` on the listbox itself - a listbox resolves its own `em` against its own default
+    # font. No col-width (that makes a listbox HORIZONTAL) and no `row-height: content` (that
+    # raises); a bare number would be percent of SCREEN.
+    gui_section(f"area: 2, 88px, 98, 100-{cv_ctrl_px}px;")
+    rundown_lb = gui_list_box(run_items, "row-height: 1.7em; font: gui-2;", title_template="Rundowns - select one or more, then Send", select=True, multi=True, reveal=True, hint=cv_hint_runs)
+    director_restore_items(rundown_lb, cv_sel_rundowns)
+
+    # ---- controls -------------------------------------------------------------------------
+    gui_section(f"area: 2, 100-{cv_ctrl_px}px, 98, 100-6px;")
+
+    gui_row("row-height: 2.4em; font: gui-2;")
+    sendb = gui_button("Send to Program", "col-width: 210px;")
+    stopb = gui_button("Stop", "col-width: 110px;")
+    resumeb = gui_button("Resume", "col-width: 120px;")
+    refreshb = gui_button("Refresh", "col-width: 130px;")
+    gui_text("$text:`Send goes to every Program screen. Preview follows the editor.`;font:gui-1;color:#9ab;")
+    on gui_message(sendb):
+        # get_selected_index() walks unfiltered_items, so a selection index IS an index into
+        # the parallel list. Mapping back by LABEL breaks on the first duplicate.
+        shared cv_rundowns = director_selected_ids(rundown_lb, run_keys)
+        # RELEASE BEFORE FORGETTING. director_play_reset() drops the record of which overlay
+        # slots are up, and a card orphaned that way can never be named again - so it clears
+        # them first. Send used not to, which is why a stuck lower third outlived Stop.
+        director_play_reset()
+        shared cv_play_index = 0
+        shared cv_punch = None
+        shared cv_playing = True
+        shared cv_status = "sent " + str(len(cv_rundowns)) + " rundowns"
+    on gui_message(stopb):
+        jump cv_stop
+    on gui_message(resumeb):
+        # Drop the take and let the rundown have the feed back.
+        shared cv_punch = None
+        shared cv_status = "resumed"
+    on gui_message(refreshb):
+        jump cv_paint
+
+    gui_row("row-height: 2.4em; font: gui-2;")
+    gui_text("$text:`Dwell (s)`;font:gui-2;", "col-width: content;")
+    gui_int_slider("$text:int;low:2;high:30;", "col-width: 220px;", var="cv_dwell")
+    # THE CHECKBOX FORM MATTERS. `state:` in the message is dead weight: Checkbox.__init__
+    # parses it and then clobbers _value with the constructor argument, and _present emits
+    # `state:` twice - the engine takes the first. Assigning `.value` after construction is the
+    # only thing that renders a tick.
+    autocb = gui_checkbox("text: Auto-director - let the action pick the order;", "col-width: 420px;")
+    autocb.value = cv_auto
+    gui_blank()
+    on gui_message(autocb):
+        shared cv_auto = not cv_auto
+
+    # ON AIR, in EVERY build. The player owns this line and rewrites it twice a second, which
+    # is exactly why it is not cv_status: the operator's own messages would be wiped half a
+    # second after they appeared. gui_text_escape because the text can contain a colon, which
+    # is a style-property separator.
+    gui_row("row-height: 2.0em; font: gui-2;")
+    cv_air_w = gui_text("$text:" + gui_text_escape(director_status_line(cv_air)) + ";font:gui-2;color:#fc8;background:#332;")
+    on change cv_air:
+        cv_air_w.update("text:" + gui_text_escape(director_status_line(cv_air)) + ";font:gui-2;color:#fc8;background:#332;")
+
+    gui_row("row-height: 2.0em; font: gui-2;")
+    cv_status_w = gui_text("$text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")
+    on change cv_status:
+        cv_status_w.update("text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")
+
+    # THE WATCHER MUST STAY BELOW THE WIDGETS. StoryPage.on_new_gui() ends every end_on_new_gui
+    # sub-task, and it fires from add_tag - on the FIRST TAGGED WIDGET of a build. Scheduled
+    # after the widgets, a repaint cancels the previous one a few lines above and this replaces
+    # it: one watcher, never a stack. Above the header text it would be killed the instant it
+    # was created.
+    gui_sub_task_schedule(cv_watch_task)
     await gui()
 
+# Stop playback and hand every screen back to the engine's own camera. A separate label because
+# the same thing has to happen from a button and from a torn-down console.
+=== cv_stop
+    shared cv_playing = False
+    shared cv_punch = None
+    # A director screen has no bridge to go back to - it IS a screen. So Stop releases the
+    # camera and sends it back to its own holding page, program or preview.
+    cv_stop_n = 0
+    for scr in director_program_screens() + director_preview_screens():
+        director_play_release(scr)
+        gui_reroute_client(scr, cv_screen_home)
+        cv_stop_n = cv_stop_n + 1
+    director_play_reset()
+    shared cv_status = "stopped - " + str(cv_stop_n) + " screens released"
+    jump cv_paint
 
-# Reroute each applied program screen to its paired console/ship (round-robin,
-# rotated by offset). Run via task_schedule with the lists passed in `data`.
-=== cv_apply_views
-    default screens  = None
-    default consoles = None
-    default ships    = None
-    default offset   = 0
-    ->END if screens is None
-    _nc = 0
-    if consoles is not None:
-        _nc = len(consoles)
-    _ns = 0
-    if ships is not None:
-        _ns = len(ships)
-    _i = 0
-    for scr in screens:
-        if _nc > 0:
-            con = consoles[(_i + offset) % _nc]
-        else:
-            con = cv_console
-        if _ns > 0:
-            shp = ships[_i % _ns]
-        else:
-            shp = cv_ship_id
-        gui_reroute_client(scr, cv_show, {"cv_ship_id": shp, "cv_console": con})
-        _i = _i + 1
-    ->END
-
-
-# Keep the program screens on the ship worth watching, without an operator picking one.
+# LIVE REFRESH. The declared screens are a snapshot; consoles connect, disconnect and change
+# mode behind it. A cheap poll, and gui_task_jump when the answer moves.
 #
-# It rewrites `cv_view_ships` and nothing else, so whatever Apply set for screens and
-# consoles still stands - and the carousel, which reads the same shared list, simply
-# rotates consoles for the new ship. That is why this is a separate idle loop rather than
-# a branch inside cv_carousel_task: the two do different jobs and compose.
-#
-# `shared` ON THE WRITE, not just on the declaration above. A bare write inside a task
-# binds a task-local, so cv_carousel_task would go on reading the OLD list forever and the
-# screens would never move - the failure looks like auto-follow doing nothing at all.
-=== cv_follow_task
-    follow_last = None
---- cv_follow_loop
-    if cv_follow and cv_screens is not None:
-        follow_next = director_follow_pick(follow_last)
-        if follow_next is not None and follow_next != follow_last:
-            follow_last = follow_next
-            shared cv_view_ships = [follow_next]
-            shared cv_status = director_follow_status(follow_next)
-            task_schedule(cv_apply_views, {"screens": cv_screens, "consoles": cv_view_consoles, "ships": cv_view_ships, "offset": 0})
-        await delay_app(cv_follow_poll)
-    else:
-        # Idle cheaply, and forget what was on screen so re-enabling re-applies rather
-        # than assuming the screens are still where this loop last put them.
-        follow_last = None
-        await delay_app(1)
-    jump cv_follow_loop
-
-
-=== cv_carousel_task
-    off = 0
---- cv_carousel_loop
-    if cv_carousel and cv_screens is not None:
-        task_schedule(cv_apply_views, {"screens": cv_screens, "consoles": cv_view_consoles, "ships": cv_view_ships, "offset": off})
-        off = off + 1
-        await delay_app(cv_dwell)
-    else:
-        await delay_app(1)
-    jump cv_carousel_loop
-
-
-=== cv_shot_set
-    default ship_id  = None
-    default settle   = 2
-    default consoles = None
-    if consoles is None or len(consoles) == 0:
-        consoles = CV_CONSOLES
-    for con in consoles:
-        await task_schedule(cv_shot_one, {"ship_id": ship_id, "settle": settle, "console": con, "restore": False})
-    gui_reroute_client(0, cv_ui)          # back to the controller on the server screen
-    ->END
-
-=== cv_shot_one
-    default ship_id  = None
-    default settle   = 2
-    default console  = "helm"
-    default restore  = False
-    # Select a target so weapons/science/comms data widgets populate.
-    tgt = closest(ship_id, any_role("raider,enemy,monster")) if ship_id is not None else None
-    if tgt is not None:
-        set_weapons_selection(ship_id, tgt)
-        set_science_selection(ship_id, tgt)
-        set_comms_selection(ship_id, tgt)
-    # Put the console on the SERVER screen, let it render, then grab the desktop.
-    gui_reroute_client(0, cv_show, {"cv_ship_id": ship_id, "cv_console": console})
-    await delay_app(settle)
-    gui_screenshot(get_mission_dir_filename(f"shot_{console}.bmp"))
-    cv_status = f"saved shot_{console}.bmp"
-    if restore:
-        gui_reroute_client(0, cv_ui)
-    ->END
+# The fingerprint deliberately ignores what each screen is SHOWING: the player rewrites a
+# program screen's CONSOLE_TYPE every time it changes item, so a full fingerprint would repaint
+# this page every dwell, under the operator's hands. "Refresh" covers the residual case.
+=== cv_watch_task
+    cv_watch_fp = director_mode_fingerprint()
+--- cv_watch_loop
+    await delay_app(cv_watch_poll)
+    cv_watch_now = director_mode_fingerprint()
+    if cv_watch_now != cv_watch_fp:
+        cv_watch_fp = cv_watch_now
+        # A STRING, and a TOP-LEVEL label - see the note on cv_paint.
+        gui_task_jump("cv_paint")
+    jump cv_watch_loop

@@ -1,0 +1,97 @@
+# Director - the CAPTURE tab (dev builds only).
+#
+# Screen shots ALWAYS drive the SERVER screen (client 0), because gui_screenshot grabs the
+# desktop of the machine running the script and that is the only surface it can reach. The
+# program-screen selection has nothing to do with it; the caption says so on screen, because
+# "capture selected consoles" reads like it means the selected SCREENS.
+#
+# The tab is only ENABLED under is_dev_build() (see cv_paint), so on a release build the route
+# exists and is unreachable.
+
+# Seconds to let a rerouted console render before grabbing the desktop.
+default shared cv_settle = 2
+
+//gui/tab/capture
+    jump cv_capture
+
+=== cv_capture
+    director_cam_ensure(client_id)
+    gui_tab_enable("rundown")
+    gui_tab_back(CONSOLE_SELECT)
+    if is_dev_build():
+        gui_tab_enable("capture")
+    gui_activate_console("director")
+
+    cv_cap_ships = director_ship_rows()
+    cap_ship_items = cv_cap_ships[0]
+    cap_ship_ids = cv_cap_ships[1]
+
+    gui_section("area: 2, 40px, 98, 82px;")
+    # gui_text, not a """...""" row: a triple-quoted row is a gui_text_area, which declines
+    # measurement, so it would flex against the sized rows below and swallow the tab.
+    gui_row("row-height: 2.0em; font: gui-1;")
+    gui_text("$text:`Screen shots capture the SERVER screen (client 0) - single-PC, Windows, BMP, saved as shot_<console>.bmp`;font:gui-1;color:#fc8;")
+
+    gui_section("area: 2, 88px, 40, 100-124px;")
+    cap_ship_lb = gui_list_box(cap_ship_items, "row-height: 1.7em; font: gui-2;", title_template="Ship to film", select=True, reveal=True)
+
+    gui_section("area: 42, 88px, 98, 100-124px;")
+    cap_console_lb = gui_list_box(CV_CONSOLES, "row-height: 1.7em; font: gui-2;", title_template="Consoles", select=True, multi=True, reveal=True)
+
+    gui_section("area: 2, 100-120px, 98, 100-6px;")
+    gui_row("row-height: 2.4em; font: gui-2;")
+    capsel = gui_button("Capture selected consoles", "col-width: 280px;")
+    capall = gui_button("Capture ALL consoles", "col-width: 250px;")
+    gui_blank()
+    on gui_message(capsel):
+        task_schedule(cv_shot_set, {"ship_id": director_first_id(cap_ship_lb, cap_ship_ids, cv_ship_id), "settle": cv_settle, "consoles": director_selected_items(cap_console_lb)})
+    on gui_message(capall):
+        task_schedule(cv_shot_set, {"ship_id": director_first_id(cap_ship_lb, cap_ship_ids, cv_ship_id), "settle": cv_settle, "consoles": CV_CONSOLES})
+
+    # `col-width: content` hugs the label; the slider declines measurement (it falls back to
+    # flex, never to zero) so it needs an explicit width, and gui_blank absorbs the slack.
+    gui_row("row-height: 2.2em; font: gui-2;")
+    gui_text("$text:`Render settle (s)`;font:gui-2;", "col-width: content;")
+    gui_int_slider("$text:int;low:1;high:5;", "col-width: 240px;", var="cv_settle")
+    gui_blank()
+
+    gui_row("row-height: 2.0em; font: gui-2;")
+    cap_status_w = gui_text("$text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")
+    on change cv_status:
+        cap_status_w.update("text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")
+
+    await gui()
+
+
+=== cv_shot_set
+    default ship_id  = None
+    default settle   = 2
+    default consoles = None
+    if consoles is None or len(consoles) == 0:
+        consoles = CV_CONSOLES
+    for con in consoles:
+        await task_schedule(cv_shot_one, {"ship_id": ship_id, "settle": settle, "console": con, "restore": False})
+    # Back to the controller on the server screen. On a multi-PC setup this leaves the server
+    # screen showing a second Director panel, with a cam of its own - dev-only, and accepted.
+    gui_reroute_client(0, cv_ui)
+    ->END
+
+=== cv_shot_one
+    default ship_id  = None
+    default settle   = 2
+    default console  = "helm"
+    default restore  = False
+    # Select a target so weapons/science/comms data widgets populate.
+    tgt = closest(ship_id, any_role("raider,enemy,monster")) if ship_id is not None else None
+    if tgt is not None:
+        set_weapons_selection(ship_id, tgt)
+        set_science_selection(ship_id, tgt)
+        set_comms_selection(ship_id, tgt)
+    # Put the console on the SERVER screen, let it render, then grab the desktop.
+    gui_reroute_client(0, cv_show, {"cv_ship_id": ship_id, "cv_console": console, "cv_shot": None})
+    await delay_app(settle)
+    gui_screenshot(get_mission_dir_filename(f"shot_{console}.bmp"))
+    shared cv_status = f"saved shot_{console}.bmp"
+    if restore:
+        gui_reroute_client(0, cv_ui)
+    ->END

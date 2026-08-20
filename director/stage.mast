@@ -1,0 +1,59 @@
+# Director - the 2D-view click routes.
+#
+# The stage PAGE now lives in rundown.mast: picking a subject and choosing a shot turned out to
+# be one job, not two, so Stage and Camera merged into one editor. What is left here is the
+# part that was never a page - the routes that turn a click on the 2D view into a subject.
+#
+# The console these fire for is named `gamemaster_director_sci`, set by the editor:
+#   * `gamemaster_` prefix -> the engine optimized network path for detached command consoles.
+#   * `sci` in the name    -> consoledispatcher routes a 2D-view click to the SCIENCE
+#                             selection, which is what //focus/science below reads. A name
+#                             matching none of its substrings falls through to
+#                             normal_target_UID and the clicks drive nothing at all.
+
+# The rundown the editor is adding to. Set on the editor page; read by its actions.
+default shared cv_target_rundown = None
+
+# Click handling, copied from the Game Master (gamemaster.mast //focus/science).
+#
+# extra_extra_tag carries lmb/rmb; blank is a fake event. Left-click on empty space PANS the
+# camera to that point, left-click on an object pans to it AND makes it the subject. Right is
+# left alone, matching the GM, so a right-drag stays available to the engine.
+#
+# The route runs SERVER-side, so `shared` is on the write - a bare assignment would bind a
+# task-local and the shot tab would go on reading the old subject forever.
+//focus/science if has_roles(SCIENCE_ORIGIN_ID, "director_cam")
+    # The origin can be gone - the cam is a real object and a GM area-delete brush can take
+    # it. Without this the whole route raises on a dead reference.
+    ->END if SCIENCE_ORIGIN is None
+    if EVENT.extra_extra_tag != "rmb":
+        pos = Vec3(EVENT.source_point)
+        if SCIENCE_SELECTED_ID != 0 and SCIENCE_SELECTED is not None:
+            pos = Vec3(SCIENCE_SELECTED.pos)
+            shared cv_subject_id = SCIENCE_SELECTED_ID
+            # STAGE IT HERE, not from the editor's `on change`. The bench is what every
+            # Preview screen follows, and pushing it at the point the subject is actually
+            # picked means the preview updates on the click rather than on the next repaint.
+            director_stage_subject(SCIENCE_SELECTED_ID)
+        # KEEP THE HEIGHT. The cam spawns above the plane so the 2D view reads like a plan;
+        # copying the target position wholesale drops it to the target own altitude on the
+        # first click and it never comes back up. The GM and the OU Admiral both do that and
+        # both are worse for it.
+        pos.y = SCIENCE_ORIGIN.pos.y
+        SCIENCE_ORIGIN.pos = pos
+
+# Scan data is stored per the ORIGIN SIDE, so one pass marks a whole side objects known and
+# comms/science enable on the first click rather than the second.
+#
+# science_update_scan_data, NOT science_set_scan_data with a bare string: the bare-string form
+# builds an empty tab list and then writes it, clobbering the target scan_type_list to ""
+# for every ship on the side. The update form merges instead.
+//enable/science if has_roles(SCIENCE_ORIGIN_ID, "director_cam")
+    science_update_scan_data(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID, "Director")
+
+# Keep every director cam seeing new arrivals. The link is made once at spawn against the
+# ships that existed THEN, so without this a contact that arrives later is invisible to the
+# stage view - the same reason the GM carries this route.
+//spawn if has_any_role(SPAWNED_ID, "ship,station")
+    for _dc in role("director_cam"):
+        link(_dc, "extra_scan_source", to_set(SPAWNED_ID))

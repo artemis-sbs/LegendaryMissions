@@ -1,0 +1,132 @@
+# Director - the entry screen. Name this console, and say what it IS.
+#
+# ALWAYS SHOWN, pin or no pin. The old gate skipped itself entirely when DIRECTOR.pin was empty,
+# which left nowhere to declare a mode - and mode is the first thing a streamer needs to say,
+# because it decides whether this client is a control console or a screen the show goes out on.
+#
+# The three modes and why they exist are in director_modes.py. Short version: the Director is a
+# streaming tool, so you open extra clients and declare each one program or preview, rather than
+# the Director reaching out and taking over a mainscreen or somebody's crew seat.
+
+default shared cv_entry_mode = "Director"
+
+@console/director !0 ^94 "Director" if DIRECTOR_enabled
+    " Stream director - name this screen, pick program, preview or the control console.
+    jump director_entry
+
+//gui/tab/director
+    jump cv_ui
+
+=== director_entry
+    # A camera first, so this client is never sitting on somebody's bridge while it decides.
+    director_cam_ensure(client_id)
+    cv_entry_mode = director_mode_label(director_mode_of(client_id))
+    cv_name = director_cam_default_name(client_id, director_mode_for(cv_entry_mode))
+    pin = ""
+
+    gui_section("area: 25, 22, 75, 78;")
+    gui_row("row-height: 1.6em; font: gui-4;")
+    gui_text("$text:`Director`;font:gui-4;color:#8cf;justify:center;")
+
+    gui_row("row-height: 2.2em; font: gui-2;")
+    gui_text("$text:`Name`;font:gui-2;", "col-width: content;")
+    # EVERY props string ends in `;`. TextInput._present does `props += self.props` and then
+    # appends the cascaded styling straight onto the end, so a missing terminator arrives on the
+    # wire as `desc: name this screenfont:gui-2` and the widget draws that as its prompt.
+    name_in = gui_input("desc: name this screen;", "col-width: 280px;", var="cv_name")
+    gui_blank()
+
+    gui_row("row-height: 1.4em; font: gui-2;")
+    gui_text("$text:`This console is a`;font:gui-2;color:#9ab;")
+    gui_row("row-height: 1.8em; font: gui-3;")
+    mode_rb = gui_radio(director_mode_list(), var="cv_entry_mode")
+    gui_blank()
+    on gui_message(mode_rb):
+        # THE NAME FOLLOWS THE MODE - but only while it is still ours. `PROG01` becomes `PRE01`
+        # when the radio moves; "Wall Left" is left exactly as typed. Read the widget rather
+        # than cv_entry_mode: the var write and this block are both on the message path and
+        # nothing promises which lands first.
+        if director_screen_name_is_generated(name_in.value):
+            name_in.value = director_cam_default_name(client_id, director_mode_for(mode_rb.value))
+
+    gui_row("row-height: 1.4em; font: gui-1;")
+    gui_text("$text:`Program is what the stream shows. Preview is the shot before it goes out. Director drives them.`;font:gui-1;color:#9ab;")
+
+    # The pin row only exists when one is configured. Set DIRECTOR.pin to "" and this screen
+    # still appears - it is where the mode is chosen, not just a lock.
+    if DIRECTOR.get("pin"):
+        gui_row("row-height: 2.2em; font: gui-2;")
+        gui_text("$text:`Pin`;font:gui-2;", "col-width: content;")
+        gui_input("""desc: Enter pin;password:True;""", "col-width: 200px;", var="pin")
+        gui_blank()
+
+    gui_row("row-height: 2.2em; font: gui-2;")
+    startb = gui_button("Start", "col-width: 160px;")
+    gui_blank()
+    on gui_message(startb):
+        jump director_entry_start
+
+    gui_row("row-height: 1.6em; font: gui-2;")
+    cv_entry_status_w = gui_text("$text:`  `;font:gui-2;color:#f88;")
+
+    await gui():
+        + "cancel":
+            jump select_console
+
+# Commit the name and mode, then go where the mode says. Separate label because the pin check
+# has to happen before anything is stored - a wrong pin should change nothing.
+=== director_entry_start
+    if DIRECTOR.get("pin") and pin != DIRECTOR.get("pin"):
+        cv_entry_status_w.update("text:`wrong pin`;font:gui-2;color:#f88;")
+        await gui()
+    director_cam_name(client_id, name_in.value)
+    cv_entry_chosen = director_mode_set(client_id, director_mode_for(cv_entry_mode))
+    if cv_entry_chosen == "program":
+        jump cv_screen_program
+    if cv_entry_chosen == "preview":
+        jump cv_screen_preview
+    jump cv_ui
+
+
+# ---- a screen, waiting for the show --------------------------------------------------------
+#
+# Both of these are holding pages. The player reroutes the client away to whatever the Director
+# sends, and back here when there is nothing - so what they mostly do is say which screen this
+# is, so a streamer setting up four windows can tell them apart.
+#
+# THE FIRST LINE IS THE CLEAR. `director_screen_enter` is called by every one of the four
+# reroute targets, and this is two of them: a screen arriving here from a live shot is arriving
+# with a lower third and a running camera leg still on it, and nothing else would take them
+# down. See director_play.py - one door is cheaper to keep true than six.
+
+=== cv_screen_program
+    director_screen_enter(client_id)
+    director_screen_park(client_id)
+    set_inventory_value(client_id, "CONSOLE_TYPE", "program")
+    for cv_name_iter in gui_get_console_types():
+        remove_role(client_id, cv_name_iter)
+    add_role(client_id, "console, program")
+    gui_section("area: 0, 0, 100, 100;")
+    gui_row("row-height: 2.0em; font: gui-4;")
+    gui_text("$text:" + gui_text_escape(director_cam_name(client_id) + " - PROGRAM") + ";font:gui-4;color:#8cf;justify:center;")
+    gui_row("row-height: 1.4em; font: gui-2;")
+    gui_text("$text:`waiting for the director`;font:gui-2;color:#9ab;justify:center;")
+    gui_row()
+    gui_blank()
+    await gui()
+
+=== cv_screen_preview
+    director_screen_enter(client_id)
+    director_screen_park(client_id)
+    set_inventory_value(client_id, "CONSOLE_TYPE", "preview")
+    for cv_name_iter in gui_get_console_types():
+        remove_role(client_id, cv_name_iter)
+    add_role(client_id, "console, preview")
+    gui_section("area: 0, 0, 100, 100;")
+    gui_row("row-height: 2.0em; font: gui-4;")
+    gui_text("$text:" + gui_text_escape(director_cam_name(client_id) + " - PREVIEW") + ";font:gui-4;color:#8f8;justify:center;")
+    gui_row("row-height: 1.4em; font: gui-2;")
+    gui_text("$text:`nothing staged`;font:gui-2;color:#9ab;justify:center;")
+    gui_row()
+    gui_blank()
+    await gui()

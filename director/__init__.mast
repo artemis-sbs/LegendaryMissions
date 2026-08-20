@@ -1,14 +1,21 @@
 # director addon
 #
-# One console ("Director") with two functions sharing the cv_show primitive:
-#   * Highlight  (shippable) - show a chosen console for a chosen ship on a chosen
-#                              program/stream screen; carousel to auto-cycle.
-#                              Great as a streamer "director": one control window.
-#   * Screen shots (dev only) - capture buttons that drive the SERVER screen
-#                              (client 0 - the only surface gui_screenshot grabs).
+# A broadcast director console, and a STREAMING TOOL: it drives extra clients the streamer
+# opens, never a mainscreen or somebody's crew seat. There are two feeds -
 #
-# See README.md. EXPERIMENTAL: rendering gameplay widgets on a rerouted screen and
-# the screenshot grab itself need in-engine verification.
+#     PROGRAM   what goes out, on every console that declared itself Program
+#     PREVIEW   what the editor is building, live, on every console that declared Preview
+#
+# - and the main page is "play these rundowns", because a console's declared MODE is its
+# selection. Everything that BUILDS a rundown item lives on the other tabs.
+#
+#   director   the main page - rundowns, Send/Stop/Resume, dwell, auto-director, on air
+#   rundown    the editor - the rundown and its items on the left, and the tools that make
+#              an item on the right: Stage (2D view, shot mode, overlays) and Console
+#   capture    developer screenshots (dev builds only)
+#
+# See README.md. EXPERIMENTAL: the camera work needs in-engine verification - the mock cannot
+# judge a black frame.
 
 # Enable/disable + optional pin via SETTINGS, like OPERATOR_MODE. The defaults are
 # registered here so the addon works without editing settings.yaml; a DIRECTOR block
@@ -20,37 +27,99 @@ settings_add_defaults({"DIRECTOR": {"enable": True, "pin": "000000"}})
 shared DIRECTOR = settings_get_defaults().get("DIRECTOR", {"enable": True, "pin": "000000"})
 shared DIRECTOR_enabled = DIRECTOR.get("enable", True)
 
-# Consoles the panel can show/capture (shared so the panel + its tasks see it).
+# Console types the shot tab can build a console item from, and the ones the bridge-wall
+# rundown generates. One list, so the picker and the generator cannot drift.
 default shared CV_CONSOLES = ["helm", "weapons", "science", "engineering", "comms", "mainscreen", "cinematic"]
 
-# Auto-follow's ship picker. Named `director_follow` rather than `director` because a
-# module's own name becomes a MAST global too, and the addon already has `DIRECTOR`.
-import director_follow.py
+import director_cam.py
+import director_screens.py
+import director_rundowns.py
+import director_overlays.py
+import director_shots.py
+import director_play.py
+import director_layout.py
+import director_modes.py
+import director_entry.mast
 import panel.mast
+import director_play.mast
+import rundown.mast
+import stage.mast
+import capture.mast
+
+# PER-MISSION RESET. cosmos_dev reuses ONE interpreter across run_next_mission, so a
+# module-level container that nothing clears survives into the next mission and the bug only
+# shows from run 2 onward. Top-level code runs on every story load, which is exactly the hook
+# these need; the engine forks a fresh process and does not care either way.
+director_rundowns_reset()
+director_play_reset()
+director_modes_reset()
+director_overlay_presets_reset()
+# AFTER the presets: the bench seeds each overlay row with its first built-in preset, so a
+# director who ticks Lower third and takes the shot gets the ship's name on air rather than an
+# empty card that reads as a broken overlay.
+director_stage_reset()
+# The bridge-wall generator builds from the mission console list rather than a second copy.
+director_bridge_consoles_set(CV_CONSOLES)
 
 # --- shared primitive --------------------------------------------------------
-# Show <cv_console> for <cv_ship_id> on whichever client runs this label.
+# Show <cv_console> for <cv_ship_id> on whichever client runs this label, and - when the
+# player sent a camera item - aim the camera once that console exists.
 # Entered via gui_reroute_client(target, cv_show, {"cv_ship_id":.., "cv_console":..}).
 === cv_show
     default cv_ship_id = None
     default cv_console = "mainscreen"
+    default cv_shot = None
+    # THE FIRST LINE IS THE CLEAR, on all four reroute targets. A screen arriving here from a
+    # camera item is arriving with a lower third and a running camera leg still on it, and the
+    # branch below never reaches director_play_apply_shot for a CONSOLE item - which is one of
+    # the six leaks this replaced. See director_play.py: one door is cheaper to keep true.
+    director_screen_enter(client_id)
     if cv_ship_id is not None:
         assign_client_to_ship(client_id, cv_ship_id)
     gui_console(cv_console)
-    # A console is not just its widgets: it is also its TYPE and its ROLE, and
-    # this label used to set neither.
+    # A console is not just its widgets: it is also its TYPE and its ROLE.
     #
-    # Anything that narrows an audience -- overlays, announce(), comms targeting --
-    # resolves it through any_role(), so a screen with no console role is invisible
-    # to all of them and the message is dropped in SILENCE, with nothing logged.
-    # A director screen showing helm would miss every overlay a real helm gets,
-    # which is exactly wrong for a program feed. show_main_game_screen has always
-    # set all three; this now matches it.
+    # Anything that narrows an audience -- overlays, announce(), comms targeting -- resolves
+    # it through any_role(), so a screen with no console role is invisible to all of them and
+    # the message is dropped in SILENCE, with nothing logged. A director screen showing helm
+    # would miss every overlay a real helm gets, which is exactly wrong for a program feed.
     set_inventory_value(client_id, "CONSOLE_TYPE", cv_console)
-    # Stale roles first, or a screen that used to be a mainscreen keeps answering
-    # as one and receives both. The carousel re-enters this label per cycle, so
+    # Stale roles first, or a screen that used to be a mainscreen keeps answering as one and
+    # receives both. The player re-enters this label whenever a screen changes item, so
     # without this the roles would accumulate.
     for cv_name in gui_get_console_types():
         remove_role(client_id, cv_name)
     add_role(client_id, f"console, {cv_console}")
+    # THE CAMERA GOES LAST. shot_apply aims a view this screen only has once gui_console has
+    # given it one; aiming first would point a 3dview that does not exist yet.
+    if cv_shot is not None:
+        director_play_apply_shot(client_id, cv_shot)
+    await gui()
+
+
+# --- the tactical item -------------------------------------------------------------------
+# A 2D view of the subject, on ONE screen.
+#
+# `MAIN_SCREEN_VIEW` lives on the SHIP, so the main-screen route to a tactical view cannot give
+# two screens different modes for the same ship. This does not use it: the screen keeps its OWN
+# camera and the 2D view is centered with science_set_2dview_focus, which is per CLIENT. That
+# is also why the screen does not have to be assigned to the subject - a 2D view is not a
+# cinematic camera and has none of the dolly/target constraint that a 3D shot does.
+=== cv_show_2d
+    default cv_subject = None
+    # THE CLEAR, again. This label never touched overlays or _SHOTS, so a camera item followed
+    # by a tactical one left a lower third up AND a camera still stepping its legs at a 2D view.
+    director_screen_enter(client_id)
+    director_screen_park(client_id)
+    set_inventory_value(client_id, "CONSOLE_TYPE", "tactical")
+    for cv_name in gui_get_console_types():
+        remove_role(client_id, cv_name)
+    add_role(client_id, "console, tactical")
+    if cv_subject is not None:
+        science_set_2dview_focus(client_id, cv_subject)
+    gui_section("area: 0, 0, 100, 100;")
+    gui_row("row-height: 34px;")
+    gui_layout_widget("radar_zoom_ctrl")
+    gui_row()
+    gui_layout_widget("2dview")
     await gui()

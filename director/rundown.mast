@@ -1,0 +1,392 @@
+# Director - the RUNDOWN EDITOR. Everything that makes an item lives here.
+#
+# Stage and Camera used to be two tabs. They are one thing: pick a subject, choose a shot, tick
+# the overlays, add it - or put it on air now. Splitting them meant the rundown you were adding
+# to was never on screen while you worked, which is the whole reason this page exists.
+#
+# The shot modes are the BRIDGE vocabulary - viewscreen.SHOT_LABELS, the science and weapons
+# "On Screen" list - so a Director shot and a bridge shot of the same ship are the same shot.
+# Framing comes from the subject's own hull radius (viewscreen_framing), not from a slider.
+#
+# THERE IS NO "SEND TO PREVIEW" BUTTON. Every control here restages as it is touched, so every
+# console in Preview mode is already showing what is being built - a button to push it would
+# only be a way to forget. That is why the handlers below call director_stage_* and do NOT
+# repaint: a rebuild would throw away whatever is half-typed in the next box.
+
+default shared cv_sub = "Stage"          # which sub-tab is showing
+default shared cv_edit_mode = ""         # "" | new | rename - the rundown row morphs
+default shared cv_new_name = ""
+default shared cv_target_label = ""
+default shared cv_preset_name = ""       # what Save calls the preset it writes
+default shared cv_preset_kind = ""       # which row's Save was pressed
+
+# What the 2D view last picked, and how it is framed. The bench in director_shots.py is the
+# real state - these two mirror it because a widget `var=` and an `on change` both need a MAST
+# name to watch.
+default shared cv_subject_id = None
+default shared cv_shot_mode_label = "Orbit"
+
+//gui/tab/rundown
+    jump cv_edit
+
+=== cv_edit
+    # RE-SEAT. Staging reassigns this client to whatever it is filming, and the //focus routes
+    # are gated on the client riding its own cam. See director_cam.py.
+    cv_edit_cam = director_cam_ensure(client_id)
+
+    gui_tab_enable("rundown")
+    gui_tab_back(CONSOLE_SELECT)
+    if is_dev_build():
+        gui_tab_enable("capture")
+    # EXPLICITLY on every sub-tab: pending_console resets to "" after each build, so omitting
+    # the call does NOT revert the name - the previous one stays in force. `sci` in the name is
+    # what makes consoledispatcher route a 2D click to the science selection.
+    if cv_sub == "Stage":
+        gui_activate_console("gamemaster_director_sci")
+    else:
+        gui_activate_console("director")
+
+    cv_user = director_rundown_user_keys()
+    cv_user_labels = cv_user[1]
+    cv_item_rows = director_shot_item_rows(cv_target_rundown)
+    cv_item_labels = cv_item_rows[0]
+
+    # ---- sub-tab strip -------------------------------------------------------------------
+    # gui_radio: comma-separated TEXT labels, engine-drawn active state. gui_tabbed_panel is
+    # icon-only and cannot label these.
+    gui_section(director_area("subtab"))
+    gui_row("row-height: 1.5em; font: gui-3;")
+    sub_rb = gui_radio("Stage,Console", var="cv_sub")
+    gui_blank()
+    on gui_message(sub_rb):
+        jump cv_edit
+
+    # ---- left: the rundown and its items --------------------------------------------------
+    gui_section(director_area("rundown"))
+    gui_row("row-height: 2.2em; font: gui-2;")
+    if cv_edit_mode == "":
+        gui_text("$text:`Rundown`;font:gui-2;", "col-width: content;")
+        target_dd = gui_drop_down("$text:{cv_target_label};list: " + ",".join(cv_user_labels) + ";", "col-width: 200px;")
+        gui_blank()
+        on gui_message(target_dd):
+            shared cv_target_label = target_dd.value
+            shared cv_target_rundown = director_rundown_key_for(cv_target_label)
+            jump cv_edit
+        gui_row("row-height: 2.2em; font: gui-2;")
+        newb = gui_button("New", "col-width: 90px;")
+        renameb = gui_button("Rename", "col-width: 110px;")
+        delb = gui_button("Delete", "col-width: 110px;")
+        gui_blank()
+        on gui_message(newb):
+            shared cv_new_name = ""
+            shared cv_edit_mode = "new"
+            jump cv_edit
+        on gui_message(renameb):
+            shared cv_new_name = cv_target_label
+            shared cv_edit_mode = "rename"
+            jump cv_edit
+        on gui_message(delb):
+            director_rundown_delete(cv_target_rundown)
+            shared cv_target_rundown = None
+            shared cv_target_label = ""
+            jump cv_edit
+    else:
+        # THE ROW MORPHS rather than growing a second one - the item list keeps the column
+        # either way, because that is the list actually worked in.
+        name_in = gui_input("desc: rundown name;", "col-width: 200px;", var="cv_new_name")
+        gui_blank()
+        gui_row("row-height: 2.2em; font: gui-2;")
+        saveb = gui_button("Save", "col-width: 100px;")
+        cancelb = gui_button("Cancel", "col-width: 110px;")
+        gui_blank()
+        on gui_message(saveb):
+            jump cv_edit_save
+        on gui_message(cancelb):
+            shared cv_edit_mode = ""
+            jump cv_edit
+
+    gui_section(director_area("items"))
+    item_lb = gui_list_box(cv_item_labels, "row-height: 1.7em; font: gui-2;", title_template="Items", select=True, reveal=True)
+
+    gui_section(director_area("itembtn"))
+    gui_row("row-height: 2.2em; font: gui-2;")
+    upb = gui_button("Up", "col-width: 80px;")
+    downb = gui_button("Down", "col-width: 100px;")
+    remb = gui_button("Remove", "col-width: 130px;")
+    gui_blank()
+    on gui_message(upb):
+        director_rundown_item_move(cv_target_rundown, item_lb.get_selected_index(), -1)
+        jump cv_edit
+    on gui_message(downb):
+        director_rundown_item_move(cv_target_rundown, item_lb.get_selected_index(), 1)
+        jump cv_edit
+    on gui_message(remb):
+        director_rundown_item_remove(cv_target_rundown, item_lb.get_selected_index())
+        jump cv_edit
+
+    # ---- right: the tool ------------------------------------------------------------------
+    if cv_sub == "Stage":
+        jump cv_edit_stage
+    jump cv_edit_console
+
+
+# The rundown row committed. Separate label because Save has two meanings and neither belongs
+# inline in a handler.
+=== cv_edit_save
+    if cv_edit_mode == "rename":
+        director_rundown_rename(cv_target_rundown, cv_new_name)
+        shared cv_target_label = cv_new_name
+    else:
+        shared cv_target_rundown = director_rundown_new(cv_new_name)
+        shared cv_target_label = cv_new_name
+    shared cv_edit_mode = ""
+    shared cv_status = "rundown " + str(cv_new_name)
+    jump cv_edit
+
+
+# ---- STAGE: pick a subject, choose a shot, write the overlays, add or take -------------------
+#
+# THE 3D PREVIEW PANE IS GONE. It was a scaled approximation - overlays drawn into their own
+# small slot set, at the wrong size, in an approximate rectangle - and every real Preview
+# screen shows the actual thing, live, at full size. Losing it gave the whole width back to the
+# overlay rows, which is what makes a template box wide enough to read.
+=== cv_edit_stage
+    # Comms and science will not OPEN on an object this side has no scan data for, so a first
+    # click on a never-scanned contact would do nothing. //enable/science fills that in per
+    # click; this pass covers what is already on screen when the editor opens.
+    #
+    # any_role, NOT role: role() is a single dict lookup and does not split on commas, so
+    # role("__npc__,__player__") looks for a collection of that literal name, finds nothing,
+    # and the loop never runs at all.
+    for _st_id in any_role("__npc__,__player__"):
+        science_update_scan_data(cv_edit_cam, _st_id, "Director")
+
+    # The engine widget gets its OWN section. Never share a row with MAST controls: the engine
+    # draws its widget at its own size over whatever MAST put beside it.
+    gui_section(director_area("view2d"))
+    gui_row("row-height: 30px;")
+    gui_layout_widget("radar_zoom_ctrl")
+    gui_row()
+    gui_layout_widget("science_2d_view")
+
+    gui_section(director_area("ctrl"))
+
+    gui_row("row-height: 2.0em; font: gui-2;")
+    gui_text("$text:`Subject`;font:gui-2;", "col-width: content;")
+    cv_subj_w = gui_text("$text:" + gui_text_escape(director_subject_label(cv_subject_id)) + ";font:gui-2;color:#8f8;")
+    clearb = gui_button("Clear", "col-width: 90px;")
+    mode_rb = gui_radio(director_shot_mode_list(), var="cv_shot_mode_label", style="col-width: 330px;")
+    on gui_message(clearb):
+        jump cv_edit_unstage
+    on change cv_subject_id:
+        cv_subj_w.update("text:" + gui_text_escape(director_subject_label(cv_subject_id)) + ";font:gui-2;color:#8f8;")
+        director_stage_subject(cv_subject_id)
+    on gui_message(mode_rb):
+        director_stage_mode_label(mode_rb.value)
+
+    gui_row("row-height: 2.2em; font: gui-2;")
+    addb = gui_button("Add to rundown", "col-width: 180px;")
+    nowb = gui_button("Send to Program", "col-width: 200px;")
+    gui_text("$text:`Preview screens already show this - they follow every change.`;font:gui-1;color:#9ab;")
+    on gui_message(addb):
+        jump cv_edit_add
+    on gui_message(nowb):
+        jump cv_edit_punch
+
+    # ---- the four overlay rows -----------------------------------------------------------
+    #
+    # UNROLLED, not a for loop over DIRECTOR_OVERLAY_ROWS. An `on gui_message` block registered
+    # in a loop captures the loop variable at its LAST value, so all four rows would edit the
+    # letterbox. Unrolling a fixed count is the proven way out.
+    #
+    # THE CHECKBOX FORM MATTERS. `state:` in the message is dead weight: Checkbox.__init__
+    # parses it and then clobbers _value with the constructor argument, and _present emits
+    # `state:` twice - the engine takes the first. Assigning `.value` after construction is the
+    # only thing that renders a tick.
+    #
+    # The text boxes take TEMPLATES, not text. `<<name>>` and `<<class>>` resolve against
+    # whatever the item is pointed at, which is the only way a generated rundown - one item per
+    # ship - can name each ship. See director_overlays.py for why the delimiter is `<<...>>`
+    # and not `{...}`.
+    gui_row("row-height: 1.9em; font: gui-2;")
+    ov_lower = gui_checkbox("text: Lower third;", "col-width: 130px;")
+    ov_lower.value = director_stage_on("lower_third")
+    pre_lower = gui_drop_down("$text:" + director_stage_preset("lower_third") + ";list: " + director_overlay_preset_list("lower_third") + ";", "col-width: 140px;")
+    in_lower_name = gui_input("$text:" + gui_text_escape(director_stage_field("lower_third", "name")) + ";desc: name;", "col-width: 170px;")
+    in_lower_line = gui_input("$text:" + gui_text_escape(director_stage_field("lower_third", "line")) + ";desc: line;", "col-width: 210px;")
+    save_lower = gui_button("Save", "col-width: 60px;")
+    gui_blank()
+    on gui_message(ov_lower):
+        director_stage_toggle("lower_third")
+    on gui_message(pre_lower):
+        director_stage_apply_preset("lower_third", pre_lower.value)
+        in_lower_name.value = director_stage_field("lower_third", "name")
+        in_lower_line.value = director_stage_field("lower_third", "line")
+    on gui_message(in_lower_name):
+        director_stage_set_field("lower_third", "name", in_lower_name.value)
+    on gui_message(in_lower_line):
+        director_stage_set_field("lower_third", "line", in_lower_line.value)
+    on gui_message(save_lower):
+        shared cv_preset_kind = "lower_third"
+        jump cv_edit_save_preset
+
+    gui_row("row-height: 1.9em; font: gui-2;")
+    ov_hero = gui_checkbox("text: Hero;", "col-width: 130px;")
+    ov_hero.value = director_stage_on("hero")
+    pre_hero = gui_drop_down("$text:" + director_stage_preset("hero") + ";list: " + director_overlay_preset_list("hero") + ";", "col-width: 140px;")
+    in_hero_title = gui_input("$text:" + gui_text_escape(director_stage_field("hero", "title")) + ";desc: title;", "col-width: 170px;")
+    in_hero_sub = gui_input("$text:" + gui_text_escape(director_stage_field("hero", "subtitle")) + ";desc: subtitle;", "col-width: 210px;")
+    save_hero = gui_button("Save", "col-width: 60px;")
+    gui_blank()
+    on gui_message(ov_hero):
+        director_stage_toggle("hero")
+    on gui_message(pre_hero):
+        director_stage_apply_preset("hero", pre_hero.value)
+        in_hero_title.value = director_stage_field("hero", "title")
+        in_hero_sub.value = director_stage_field("hero", "subtitle")
+    on gui_message(in_hero_title):
+        director_stage_set_field("hero", "title", in_hero_title.value)
+    on gui_message(in_hero_sub):
+        director_stage_set_field("hero", "subtitle", in_hero_sub.value)
+    on gui_message(save_hero):
+        shared cv_preset_kind = "hero"
+        jump cv_edit_save_preset
+
+    gui_row("row-height: 1.9em; font: gui-2;")
+    ov_banner = gui_checkbox("text: Top status;", "col-width: 130px;")
+    ov_banner.value = director_stage_on("banner")
+    pre_banner = gui_drop_down("$text:" + director_stage_preset("banner") + ";list: " + director_overlay_preset_list("banner") + ";", "col-width: 140px;")
+    in_banner_text = gui_input("$text:" + gui_text_escape(director_stage_field("banner", "text")) + ";desc: text;", "col-width: 390px;")
+    save_banner = gui_button("Save", "col-width: 60px;")
+    gui_blank()
+    on gui_message(ov_banner):
+        director_stage_toggle("banner")
+    on gui_message(pre_banner):
+        director_stage_apply_preset("banner", pre_banner.value)
+        in_banner_text.value = director_stage_field("banner", "text")
+    on gui_message(in_banner_text):
+        director_stage_set_field("banner", "text", in_banner_text.value)
+    on gui_message(save_banner):
+        shared cv_preset_kind = "banner"
+        jump cv_edit_save_preset
+
+    gui_row("row-height: 1.9em; font: gui-2;")
+    ov_letter = gui_checkbox("text: Letterbox;", "col-width: 130px;")
+    ov_letter.value = director_stage_on("letterbox")
+    pre_letter = gui_drop_down("$text:" + director_stage_preset("letterbox") + ";list: " + director_overlay_preset_list("letterbox") + ";", "col-width: 140px;")
+    in_letter_line = gui_input("$text:" + gui_text_escape(director_stage_field("letterbox", "line")) + ";desc: line;", "col-width: 390px;")
+    save_letter = gui_button("Save", "col-width: 60px;")
+    gui_blank()
+    on gui_message(ov_letter):
+        director_stage_toggle("letterbox")
+    on gui_message(pre_letter):
+        director_stage_apply_preset("letterbox", pre_letter.value)
+        in_letter_line.value = director_stage_field("letterbox", "line")
+    on gui_message(in_letter_line):
+        director_stage_set_field("letterbox", "line", in_letter_line.value)
+    on gui_message(save_letter):
+        shared cv_preset_kind = "letterbox"
+        jump cv_edit_save_preset
+
+    gui_row("row-height: 1.8em; font: gui-2;")
+    gui_text("$text:`Save preset as`;font:gui-2;", "col-width: content;")
+    gui_input("desc: preset name;", "col-width: 180px;", var="cv_preset_name")
+    cv_edit_status_w = gui_text("$text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")
+    on change cv_status:
+        cv_edit_status_w.update("text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")
+
+    await gui()
+
+
+# ---- CONSOLE: a ship and one or more console types -----------------------------------------
+=== cv_edit_console
+    cv_ships = director_ship_rows()
+    ship_items = cv_ships[0]
+    ship_ids = cv_ships[1]
+
+    gui_section(director_area("ships"))
+    ship_lb = gui_list_box(ship_items, "row-height: 1.7em; font: gui-2;", title_template="Ships", select=True, reveal=True)
+
+    gui_section(director_area("consoles"))
+    console_lb = gui_list_box(CV_CONSOLES, "row-height: 1.7em; font: gui-2;", title_template="Consoles", select=True, multi=True, reveal=True)
+
+    gui_section(director_area("conbtn"))
+    gui_row("row-height: 2.2em; font: gui-2;")
+    addconb = gui_button("Add console items", "col-width: 230px;")
+    gui_text("$text:`One item per selected console, for the selected ship.`;font:gui-2;color:#9ab;")
+    on gui_message(addconb):
+        jump cv_edit_add_con
+
+    gui_row("row-height: 1.8em; font: gui-2;")
+    cv_con_status_w = gui_text("$text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")
+    on change cv_status:
+        cv_con_status_w.update("text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")
+
+    await gui()
+
+
+# ---- the actions ---------------------------------------------------------------------------
+
+# Stop staging: drop the subject and let preview screens fall back to the next item up.
+# Clearing the subject without this left the card on screen with nothing selected, which is the
+# "it does not go away" report.
+=== cv_edit_unstage
+    shared cv_subject_id = None
+    director_stage_subject(clear=True)
+    shared cv_status = "cleared"
+    jump cv_edit
+
+=== cv_edit_add
+    if cv_target_rundown is None:
+        shared cv_status = "make a rundown first"
+        jump cv_edit
+    cv_add_item = director_stage_item()
+    if cv_add_item is None:
+        shared cv_status = "click something in the 2D view first"
+        jump cv_edit
+    if director_rundown_add_item(cv_target_rundown, cv_add_item):
+        shared cv_status = "added " + str(cv_add_item["label"])
+    else:
+        shared cv_status = "already in that rundown"
+    jump cv_edit
+
+# THE TAKE. It has to HOLD: on a six-second dwell an item that did not would be overwritten on
+# the next advance and read as a button that does nothing. cv_punch overrides the play set
+# entirely until Resume or Stop clears it, and it goes to EVERY program screen.
+=== cv_edit_punch
+    cv_punch_item = director_stage_item()
+    if cv_punch_item is None:
+        shared cv_status = "click something in the 2D view first"
+        jump cv_edit
+    if len(director_program_screens()) == 0:
+        shared cv_status = "no program screens - open a client and declare it Program"
+        jump cv_edit
+    shared cv_punch = cv_punch_item
+    shared cv_playing = True
+    shared cv_status = "ON AIR " + str(cv_punch_item["label"])
+    jump cv_edit
+
+# Save what is typed in one overlay row as a preset, under the name in the Save box. A repaint
+# is right here and only here: the row's dropdown has to grow the new entry.
+=== cv_edit_save_preset
+    cv_saved = director_stage_save_preset(cv_preset_kind, cv_preset_name)
+    if cv_saved is None:
+        shared cv_status = "type a preset name first"
+    else:
+        shared cv_status = "saved preset " + str(cv_saved) + " for " + director_overlay_row_label(cv_preset_kind)
+    jump cv_edit
+
+=== cv_edit_add_con
+    if cv_target_rundown is None:
+        shared cv_status = "make a rundown first"
+        jump cv_edit
+    cv_add_ship = director_selected_ids(ship_lb, ship_ids)
+    if len(cv_add_ship) == 0:
+        shared cv_status = "pick a ship"
+        jump cv_edit
+    cv_add_n = 0
+    for cv_add_it in director_shot_console_items(cv_add_ship[0], director_selected_items(console_lb)):
+        if director_rundown_add_item(cv_target_rundown, cv_add_it):
+            cv_add_n = cv_add_n + 1
+    shared cv_status = "added " + str(cv_add_n) + " console items"
+    jump cv_edit

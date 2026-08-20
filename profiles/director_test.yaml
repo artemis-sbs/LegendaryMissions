@@ -1,0 +1,53 @@
+# Driving the Director console headless.
+#
+# The pin is the reason this file exists: the addon default is "000000", and nothing
+# headless can type it - --exercise would sit on the pin prompt for the whole run and the
+# console would report zero coverage while looking like it had been exercised. An empty pin
+# skips the prompt.
+#
+# Several player ships as well, because the Director panel is mostly about picking between
+# them: with one ship the Ships list has one row and proves nothing.
+#
+# MEASURED 2026-08-20: the DIRECTOR block below does NOT reach a cosmos_dev run, although
+# AUTO_START from this same file does. So a headless drive must ALSO pass the pin through
+# COSMOS_SETTINGS, which is the highest-priority override and does arrive. The block stays
+# here because it is what the ENGINE reads, where the launch command line is real.
+#
+#   COSMOS_SETTINGS='{"DIRECTOR": {"enable": true, "pin": ""}}' \
+#   python -m cosmos_dev.mission_runner . --test 150 --map siege --use-working-tree \
+#       --profile director_test --exercise --exercise-console director --exercise-dwell 8
+#
+# --exercise-dwell 8, not 25: the console cycle visits the five gameplay consoles before
+# `director`, so a long dwell means a short run never reaches it at all - which reads as
+# "the panel is broken" when it is really "the panel was never opened".
+
+DIRECTOR:
+    enable: true
+    pin: ""
+
+AUTO_START: true
+WORLD_SELECT: "siege"
+DIFFICULTY: 5
+
+PLAYER_CREATE_DEFAULT: true
+PLAYER_COUNT: 4
+PLAYER_LIST:
+    -   name: "Artemis"
+        side: "tsn"
+        ship: "tsn_light_cruiser"
+        face: "terran"
+
+    -   name: "Intrepid"
+        side: "tsn"
+        ship: "tsn_battle_cruiser"
+        face: "terran"
+
+    -   name: "Aegis"
+        side: "tsn"
+        ship: "tsn_battle_cruiser"
+        face: "terran"
+
+    -   name: "Hera"
+        side: "tsn"
+        ship: "tsn_battle_cruiser"
+        face: "terran"
