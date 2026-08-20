@@ -13,7 +13,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     # Top Left
     
     with gui_sub_section("col-width:280px;"):
-        gui_row("row-height: 400px;")
+        gui_row("row-height: 400px-3em;")
         #gui_layout_widget("ship_data")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
@@ -39,6 +39,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # console so the crew always looks in ONE place for the latest line. The waterfall
         # was declared by gui_console and could not be styled from script; this is the same
         # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+        #
+        # The strip comes OUT of the panel's height (the `400px-Nem` row above), not
+        # below it: the waterfall used to be the bottom few lines of that same block,
+        # with ship data shrunk to suit. Appending a row instead pushed the strip a whole
+        # strip-height further down - below where the waterfall was, and off the bottom of
+        # the half-screen section Engineering gives this column.
         gui_row("row-height: 4em;")
         gui_log_tail()
         # if is_dev_build():
@@ -153,7 +159,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     gui_section(style="area:0,45px,100,100;")
     
     default tab = 1
-    gui_row("row-height: 400px;col-width:280px;")
+    gui_row("row-height: 400px-4em;col-width:280px;")
     gui_info_panel(tab=tab)
     gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
     # The log/replay tab: every card ever filed, re-readable. Cards only take
@@ -169,6 +175,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     # console so the crew always looks in ONE place for the latest line. The waterfall
     # was declared by gui_console and could not be styled from script; this is the same
     # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+    #
+    # The strip comes OUT of the panel's height (the `400px-Nem` row above), not
+    # below it: the waterfall used to be the bottom few lines of that same block,
+    # with ship data shrunk to suit. Appending a row instead pushed the strip a whole
+    # strip-height further down - below where the waterfall was, and off the bottom of
+    # the half-screen section Engineering gives this column.
     gui_row("row-height: 4em;col-width:280px;")
     gui_log_tail()
 
@@ -244,7 +256,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     # Ship Data, 
     gui_section(style="area:0,45px,min(55,900px),50-50px;")
     with gui_sub_section("col-width:280px;"):
-        gui_row("row-height: 400px;")
+        gui_row("row-height: 400px-3em;")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
         # The log/replay tab: every card ever filed, re-readable. Cards only take
@@ -259,6 +271,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # console so the crew always looks in ONE place for the latest line. The waterfall
         # was declared by gui_console and could not be styled from script; this is the same
         # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+        #
+        # The strip comes OUT of the panel's height (the `400px-Nem` row above), not
+        # below it: the waterfall used to be the bottom few lines of that same block,
+        # with ship data shrunk to suit. Appending a row instead pushed the strip a whole
+        # strip-height further down - below where the waterfall was, and off the bottom of
+        # the half-screen section Engineering gives this column.
         gui_row("row-height: 4em;")
         gui_log_tail()
     with gui_sub_section():
@@ -296,7 +314,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     # Ship Data, 0
     gui_section(style="area:0,45px,100-300px,100;")
     with gui_sub_section("col-width:280px;"):
-        gui_row("row-height: 400px;")
+        gui_row("row-height: 400px-3em;")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
         # The log/replay tab: every card ever filed, re-readable. Cards only take
@@ -312,15 +330,31 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # console so the crew always looks in ONE place for the latest line. The waterfall
         # was declared by gui_console and could not be styled from script; this is the same
         # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+        #
+        # The strip comes OUT of the panel's height (the `400px-Nem` row above), not
+        # below it: the waterfall used to be the bottom few lines of that same block,
+        # with ship data shrunk to suit. Appending a row instead pushed the strip a whole
+        # strip-height further down - below where the waterfall was, and off the bottom of
+        # the half-screen section Engineering gives this column.
         gui_row("row-height: 4em;")
         gui_log_tail()
+
+    gui_section(style="area:0,45px,100,100;")
+    with gui_sub_section():
+        # Same band above the view as comms and the cockpit.
+        gui_row("row-height:45px;")
+        gui_blank(1,"col-width:280px")
+        gui_layout_widget("radar_zoom_ctrl")
+        gui_blank(1,"col-width:25")
+        gui_row()
+        gui_layout_widget("2dview")
 
 //gui/normal_weap
     default tab = 1
     # Ship Data, 
     gui_section(style="area:0,45px,100-300px,100;")
     with gui_sub_section("col-width:280px;"):
-        gui_row("row-height: 400px;")
+        gui_row("row-height: 400px-3em;")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
         # The log/replay tab: every card ever filed, re-readable. Cards only take
@@ -336,10 +370,16 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # console so the crew always looks in ONE place for the latest line. The waterfall
         # was declared by gui_console and could not be styled from script; this is the same
         # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+        #
+        # The strip comes OUT of the panel's height (the `400px-Nem` row above), not
+        # below it: the waterfall used to be the bottom few lines of that same block,
+        # with ship data shrunk to suit. Appending a row instead pushed the strip a whole
+        # strip-height further down - below where the waterfall was, and off the bottom of
+        # the half-screen section Engineering gives this column.
         gui_row("row-height: 4em;")
         gui_log_tail()
 
-     gui_section(style="area:0,45px,100,100;")
+    gui_section(style="area:0,45px,100,100;")
     with gui_sub_section():
         # Same band above the view as comms and the cockpit.
         gui_row("row-height:45px;")
@@ -354,7 +394,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     # Ship Data, 
     gui_section(style="area:0,45px,100-300px,100;")
     with gui_sub_section("col-width:280px;"):
-        gui_row("row-height: 400px;")
+        gui_row("row-height: 400px-3em;")
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
         # The log/replay tab: every card ever filed, re-readable. Cards only take
@@ -370,6 +410,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # console so the crew always looks in ONE place for the latest line. The waterfall
         # was declared by gui_console and could not be styled from script; this is the same
         # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
+        #
+        # The strip comes OUT of the panel's height (the `400px-Nem` row above), not
+        # below it: the waterfall used to be the bottom few lines of that same block,
+        # with ship data shrunk to suit. Appending a row instead pushed the strip a whole
+        # strip-height further down - below where the waterfall was, and off the bottom of
+        # the half-screen section Engineering gives this column.
         gui_row("row-height: 4em;")
         gui_log_tail()
 
