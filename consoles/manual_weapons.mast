@@ -31,7 +31,7 @@ shared manual_beams_version_task = None
     ship_id = sbs.get_ship_of_client(client_id)
     # mast_scheduler.page.add_console_widget("3dview")
     gui_update_widget_list("3dview")
-    gui_section("area: 0,70,600px,90;")
+    gui_section("area: 0,70,600px,88;")
     with gui_sub_section():
         gui_layout_widget("3dview")
         source = Vec3(0,0, 0)
@@ -39,12 +39,43 @@ shared manual_beams_version_task = None
     #    gui_cinematic_full_control(client_id, ship_id, source, ship_id, source)
         gui_cinematic_full_control(client_id, 0, source, 0, source)
 
-    manual =  gui_region("area: 0,90,600px,100;orientation:BT;")
+    manual =  gui_region("area: 0,88,600px,96;orientation:BT;")
 
+    # "On screen" - the same tool science has, on the console that already has the enemy
+    # selected. Its own strip UNDER the manual panel rather than a row inside it: the
+    # panel is torn down and rebuilt every 3 seconds (check_all_manual_beams), which
+    # would take an open drop-down with it. The four percent comes off the 3dview above,
+    # not off the panel, which already runs about 5em of rows when it is maximized.
+    on_screen_sec = gui_region("area: 0,96,300px,100;")
+    with gui_rebuild(on_screen_sec):
+        gui_row("row-height: 35px;")
+        # viewscreen_home_ship, not get_ship_of_client: a shot assigns its console to the
+        # SUBJECT. It only ever reassigns mainscreen consoles, so the rest of this file is
+        # right as it stands - but this is the call that means "my own ship" regardless.
+        _weap_ship = viewscreen_home_ship(client_id)
+        # The list comes from the library so the labels here and the mode names there
+        # cannot drift, exactly as the science block does it. VIEWSCREEN_PLAN.md
+        default on_screen = viewscreen_label_for(viewscreen_mode(_weap_ship))
+        on_screen_dd = gui_drop_down(viewscreen_shot_props(on_screen), var="on_screen")
+        on gui_message(on_screen_dd):
+            _ship = viewscreen_home_ship(client_id)
+            _tgt = get_weapons_selection(_ship)
+            viewscreen_set(_ship, viewscreen_mode_for(on_screen), _tgt)
+            # Remember what WE put on screen, so the re-point below can tell a shot this
+            # console started from one science set up.
+            set_inventory_value(client_id, "WEAP_VIEWER_SUBJECT", _tgt)
 
     latest_target = None
 
     on change get_weapons_selection(ship_id):
+        # The shot follows the target, but only while it is still showing what weapons
+        # put there - re-targeting must not yank a contact science asked to look at.
+        _ship = viewscreen_home_ship(client_id)
+        _tgt = get_weapons_selection(_ship)
+        _ours = get_inventory_value(client_id, "WEAP_VIEWER_SUBJECT", 0)
+        if viewscreen_is_live(_ship) and viewscreen_subject(_ship) == _ours:
+            viewscreen_set(_ship, viewscreen_mode(_ship), _tgt)
+            set_inventory_value(client_id, "WEAP_VIEWER_SUBJECT", _tgt)
         jump  manual_weapons_show
 
     on change manual_beams_version:
