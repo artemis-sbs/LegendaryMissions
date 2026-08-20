@@ -857,8 +857,16 @@ yield success
             if n and has_roles(n, "suspect"):
                 #
                 # Check if the tab is already showing
-                scan_tabs = sel_so.data_set.get("scan_type_list",  0)
-                dist = scan_tabs and sbs.distance_id(p, n)
+                # `or ""` because a suspect nobody has scanned yet has NO scan_type_list:
+                # the engine answers None for a data_set field that was never set, and
+                # `"Hold 1" not in None` raises - which ended this watcher task outright,
+                # so the hold tabs stopped appearing for the rest of the mission after the
+                # first unscanned suspect was selected. Empty reads as "no tabs yet",
+                # which is the right answer.
+                scan_tabs = sel_so.data_set.get("scan_type_list",  0) or ""
+                # Unconditionally: gating this on scan_tabs left dist falsy exactly when
+                # there were no tabs, and every `dist <= 600` below then raised instead.
+                dist = sbs.distance_id(p, n)
                 # Show if it is not there and should be
                 if "Hold 1" not in scan_tabs and dist <= 600:
                     # Reselect science
