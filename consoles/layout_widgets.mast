@@ -159,7 +159,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     gui_section(style="area:0,45px,100,100;")
     
     default tab = 1
-    gui_row("row-height: 400px-4em;col-width:280px;")
+    gui_row("row-height: 400px-3em;col-width:280px;")
     gui_info_panel(tab=tab)
     gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
     # The log/replay tab: every card ever filed, re-readable. Cards only take
