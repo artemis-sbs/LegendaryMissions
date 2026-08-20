@@ -93,7 +93,14 @@
         + "Have {COMMS_SELECTED.name} {display_name}" carry_out_orders {"cur_objective": order}
 
 
-//popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "civilian")
+# Ordering a civilian around means you have IDENTIFIED it. An unscanned contact is just a
+# blip on the radar, so the right-click order menu stays off until science has scanned it
+# (issue #694 - peacetime civilians spawn far from any station, so a crew could hand orders
+# to a ship it had never looked at). science_is_unknown reads the scan slot for the ORIGIN's
+# SIDE, so one scan by any ship on the side opens the menu for the whole side. Deliberately
+# NOT applied to the prefab_npc_defender routes above: those are your own side's escorts,
+# spawned under your command, and there is nothing to identify.
+//popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "civilian") and not science_is_unknown(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
     current = set(linked_to(COMMS_SELECTED_ID, "OBJECTIVE"))
     original = get_inventory_value(COMMS_SELECTED_ID, "ORIGINAL_OBJECTIVE")
     if original is None:
