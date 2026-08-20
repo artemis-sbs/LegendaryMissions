@@ -1,48 +1,33 @@
 @map/sandbox "Game master sandbox"
-" Creates a small map with no enemies. Useful in game mastered games using the Admiral Console
-" The map will contain players ships, stations, and friendly ships
-" To end the game, use the Admiral command end game 
+" An empty map with nothing in it but the player ships - no enemies, no stations,
+" no terrain. A Game Master builds the scenario live from the Game Master console:
+" Spawn places ships, fleets, stations, players and terrain wherever it is pointed.
+" To end the game, use the Game Master console: Commands, then end game.
 metadata:``` yaml
 Properties:
   Main:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
     Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
   Map:
-    Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'
-    Lethal Terrain: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, max", var="LETHAL_SELECT")'
-    Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, max", var="FRIENDLY_SELECT")'
-    Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, max", var="MONSTER_SELECT")'
-    Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
-    Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
 ```
-
-
-    terrain_value = terrain_to_value(TERRAIN_SELECT)
-    lethal_value =  terrain_to_value(LETHAL_SELECT)
-    friendly_value = terrain_to_value(FRIENDLY_SELECT)
-    monster_value = terrain_to_value(MONSTER_SELECT)
-    upgrade_value = terrain_to_value(UPGRADE_SELECT)
-    # Seed arrives from a gui_input typein / loaded game code, so it can be a
-    # string; normalize to int before any comparison or arithmetic.
-    seed_value = safe_int(seed_value)
-
-    if seed_value != 0:
-        random.seed(seed_value)
-        print(f"Seed Value: {seed_value}")
-        
-    
+# The map settings are deliberately NOT offered here (issue #576). Terrain, Lethal
+# Terrain, Friendly Ships and Monsters only feed a map's opening spawn, and this map has
+# none. Upgrades and Seed went the same way: a setup screen for a map the Game Master
+# builds by hand should ask for the two things that are still decided up front - how many
+# player ships, and how long the game runs - and nothing else. Both settings keep whatever
+# settings.yaml gives them, so a mission that wants them can still set them there.
 
     #------------------------------------------------------------------------------------------------------------
-    # terrain_spawn_stations(DIFFICULTY, lethal_value)
-    # await task_schedule(spawn_friendly_npc)
-    # terrain_asteroid_clusters(terrain_value)
-    # terrain_spawn_nebula_clusters(terrain_value)
-    # terrain_spawn_pickups(upgrade_value)
-
+    # EMPTY BY DESIGN. Nothing is spawned here beyond the player ships - the Game Master
+    # populates the map during play. This map has never spawned stations or friendlies
+    # (they were commented out in the commit that created it); the description used to
+    # promise them anyway, which is what #576 reported.
     await task_schedule(spawn_players)
+    # Player ships share scan data with each other (an extra_scan_source link each way).
     await task_schedule(default_player_friendly_eyes)
+    # Registers the docking logic rather than docking anything now - it is what makes the
+    # stations the GM spawns LATER dockable. Not dead code, despite the empty map.
     await task_schedule(docking_standard_player_station)
 
     #------------------------------------------------------------------------------------------------------------
-

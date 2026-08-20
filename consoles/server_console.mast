@@ -290,7 +290,10 @@ gui_reroute_clients("client_main")
         # name comes from whatever mod declared the label.
         gui_row("row-height: 30px;")
         music_choices = music_get_list()
-        gui_blank(1, "col-width: 6em;")
+        # A LABEL, not a blank: the dropdown shows the bank that is selected ("random",
+        # or a mod's display name), which tells the operator nothing about what the
+        # control IS. The 6em here was an empty spacer of the same width.
+        gui_text("$text: Music;justify:right;", "col-width: 6em;")
         music_dd = gui_drop_down(f"$text: {get_shared_variable('MUSIC_SELECT', SETTINGS.get('MUSIC_SELECT', 'random'))}; list: {','.join(['random'] + [m.display_name for m in music_choices])}")
         on gui_message(music_dd):
             shared MUSIC_SELECT = music_dd.value
