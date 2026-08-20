@@ -200,7 +200,20 @@ hangar_get_craft_data("terran")
     # Live Air Wing roster as a top tab next to the hangar (see //gui/tab/airwing).
     gui_tab_enable("airwing")
 
-    gui_section(style="area: 41+1em,0, 100,60;")
+    # Both bands start at 45px, the top strip every console in
+    # consoles/layout_widgets.mast leaves for the tab bar. This view used to start at 0
+    # and bled into it - and an engine widget is painted by the engine over MAST content,
+    # so the tabs on this half of the screen were under the radar.
+    #
+    # The zoom control belongs to the view it zooms: a 45px band directly above it,
+    # spanning the same width, which is what the cockpit (show_cockpit) and the standard
+    # consoles do. Its own section, because an engine widget covers anything sharing its
+    # row. Without it this was the one 2D view on the console you could not zoom, so you
+    # picked a craft with no lay of the land (LM #603).
+    gui_section(style="area: 41+1em,45px, 100,90px;")
+    gui_layout_widget("radar_zoom_ctrl")
+
+    gui_section(style="area: 41+1em,90px, 100,60;")
     gui_layout_widget("2dview")
 
     # Sortie board (quests addon only): the quest LIST and its briefing share one
