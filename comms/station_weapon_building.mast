@@ -57,12 +57,12 @@ shared surrender_color = "yellow"
     # station_build_times = get_build_times(station_id)
     torpedo_build_type = get_inventory_value(station_id, "build_type", 0)
 
-    s_max = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 0))
-    s_cur = int(get_data_set_value(COMMS_SELECTED_ID, "shield_val", 0))
-    s_per = int(s_cur / s_max * 100)
-    a_max = int(get_data_set_value(COMMS_SELECTED_ID, "armorMax", 0))
-    a_cur = int(get_data_set_value(COMMS_SELECTED_ID, "armor", 0))
-    a_per = int(a_cur / a_max * 100)
+    s_max = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 0) or 0)
+    s_cur = int(get_data_set_value(COMMS_SELECTED_ID, "shield_val", 0) or 0)
+    s_per = int(s_cur / s_max * 100) if s_max else 0
+    a_max = int(get_data_set_value(COMMS_SELECTED_ID, "armorMax", 0) or 0)
+    a_cur = int(get_data_set_value(COMMS_SELECTED_ID, "armor", 0) or 0)
+    a_per = int(a_cur / a_max * 100) if a_max else 0
 
     homing = get_data_set_value(COMMS_SELECTED_ID, "Homing_NUM", 0)
     nuke = get_data_set_value(COMMS_SELECTED_ID, "Nuke_NUM", 0)

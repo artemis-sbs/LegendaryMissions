@@ -140,7 +140,11 @@ distance: 600
     # print(f"docking {t}")
     if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"refuel") >= refuel_delay:
         start_counter(DOCKING_PLAYER_ID,"refuel")
-        fuel_value = DOCKING_PLAYER.data_set.get("energy",0)
+        # `or 0` because the ENGINE answers None for a field never set, and an unfuelled
+        # ship is exactly the one that docks to refuel. The mock returns 0.0 instead, so
+        # this reads clean headless and raises 'NoneType' < int on a real bridge - the
+        # same shape as the helm energy crash. sbs lint: blob-unguarded-none.
+        fuel_value = DOCKING_PLAYER.data_set.get("energy",0) or 0
         if fuel_value < 1000:
             fuel_value = fuel_value + refuel_amount
             DOCKING_PLAYER.data_set.set("energy", int(fuel_value),0)
@@ -148,7 +152,7 @@ distance: 600
     if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"torps") >= torps_delay:
         start_counter(DOCKING_PLAYER_ID,"torps")
 
-        _torp_types = npc_blob.get("torpedo_types_available",0)
+        _torp_types = npc_blob.get("torpedo_types_available",0) or ""
         _torp_types =  [x.strip() for x in _torp_types.split(',')]
         for torps in _torp_types:
             tLeft = npc_blob.get(f"{torps}_NUM", 0)
@@ -156,7 +160,7 @@ distance: 600
                 torp_max = player_blob.get(f"{torps}_MAX", 0)
                 if torp_max is None:
                     torp_max = 10
-                torp_now = player_blob.get(f"{torps}_NUM", 0)
+                torp_now = player_blob.get(f"{torps}_NUM", 0) or 0
                 if torp_now < torp_max:
                     torp_now = torp_now + 1
                     player_blob.set(f"{torps}_NUM", torp_now,0)
@@ -164,12 +168,12 @@ distance: 600
 ### Repair shields
     if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"shields") >= shields_delay:
         start_counter(DOCKING_PLAYER_ID,"shields")
-        shield_rate = player_blob.get("repair_rate_shields",0)
+        shield_rate = player_blob.get("repair_rate_shields",0) or 0
         shield_rate *= shields_coeff
-        sCount = player_blob.get("shield_count",0)
+        sCount = player_blob.get("shield_count",0) or 0
         for shield in range(sCount):
-            sVal = player_blob.get("shield_val", shield)
-            sValMax = player_blob.get("shield_max_val", shield)
+            sVal = player_blob.get("shield_val", shield) or 0
+            sValMax = player_blob.get("shield_max_val", shield) or 0
             changed = (sVal < sValMax)
             sVal = max(0.0, min(sVal + shield_rate, sValMax)) # clamp the value
             if changed:
@@ -242,7 +246,11 @@ match_side: True
 
     if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"refuel") > refuel_delay:
         start_counter(DOCKING_PLAYER_ID,"refuel")
-        fuel_value = DOCKING_PLAYER.data_set.get("energy",0)
+        # `or 0` because the ENGINE answers None for a field never set, and an unfuelled
+        # ship is exactly the one that docks to refuel. The mock returns 0.0 instead, so
+        # this reads clean headless and raises 'NoneType' < int on a real bridge - the
+        # same shape as the helm energy crash. sbs lint: blob-unguarded-none.
+        fuel_value = DOCKING_PLAYER.data_set.get("energy",0) or 0
         if fuel_value < 1000:
             fuel_value = fuel_value + refuel_amount
             DOCKING_PLAYER.data_set.set("energy", int(fuel_value),0)
@@ -253,7 +261,7 @@ match_side: True
         player_id = DOCKING_PLAYER_ID
         npc_blob = DOCKING_NPC.data_set
 
-        _torp_types = npc_blob.get("torpedo_types_available",0)
+        _torp_types = npc_blob.get("torpedo_types_available",0) or ""
         _torp_types =  [x.strip() for x in _torp_types.split(',')]
         for torps in _torp_types:
             tLeft = npc_blob.get(f"{torps}_NUM", 0)
@@ -261,7 +269,7 @@ match_side: True
                 torp_max = player_blob.get(f"{torps}_MAX", 0)
                 if torp_max is None:
                     torp_max = 10
-                torp_now = player_blob.get(f"{torps}_NUM", 0)
+                torp_now = player_blob.get(f"{torps}_NUM", 0) or 0
                 if torp_now < torp_max:
                     torp_now = torp_now + 1
                     player_blob.set(f"{torps}_NUM", torp_now,0)
@@ -321,12 +329,12 @@ surface_distance: 1000
     player_blob = DOCKING_PLAYER.data_set
     if get_counter_elapsed_seconds(DOCKING_PLAYER_ID,"giant_shields") >= DOCKING_GIANT_SHIELD_DELAY:
         start_counter(DOCKING_PLAYER_ID,"giant_shields")
-        shield_rate = player_blob.get("repair_rate_shields",0)
+        shield_rate = player_blob.get("repair_rate_shields",0) or 0
         shield_rate *= DOCKING_GIANT_SHIELD_COEFF
-        sCount = player_blob.get("shield_count",0)
+        sCount = player_blob.get("shield_count",0) or 0
         for shield in range(sCount):
-            sVal = player_blob.get("shield_val", shield)
-            sValMax = player_blob.get("shield_max_val", shield)
+            sVal = player_blob.get("shield_val", shield) or 0
+            sValMax = player_blob.get("shield_max_val", shield) or 0
             changed = (sVal < sValMax)
             sVal = max(0.0, min(sVal + shield_rate, sValMax)) # clamp the value
             if changed:

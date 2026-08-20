@@ -66,7 +66,11 @@ import epad.mast
     if cur_select is not None and cur_select > 0:
         cur_blob = to_blob(cur_select)
         if cur_blob is not None:
-            cur_scale = cur_blob.get("icon_scale", 0) 
+            # `or 1` because a grid object nobody has scaled has NO icon_scale at all -
+            # the ENGINE answers None there and `None/2` raises, which is what killed
+            # this route on the first click of a fresh node (found by --strict-blob).
+            # One, not zero: the neutral scale is 1, and halving 0 leaves the icon gone.
+            cur_scale = cur_blob.get("icon_scale", 0) or 1 
             cur_blob.set("icon_scale", cur_scale/2,0) 
 
     #
@@ -75,7 +79,7 @@ import epad.mast
     set_inventory_value(GRID_ORIGIN_ID, "click_select", GRID_SELECTED_ID)
     cur_blob = to_blob(GRID_SELECTED_ID)
     if cur_blob is not None:
-        cur_scale = cur_blob.get("icon_scale", 0) 
+        cur_scale = cur_blob.get("icon_scale", 0) or 1
         cur_blob.set("icon_scale", cur_scale*2,0) 
 
     ->END

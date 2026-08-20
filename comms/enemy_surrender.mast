@@ -62,9 +62,10 @@ shared _surrender_return = task_schedule(take_surrendered_home)
     ->END if shield_count is None
     s_ratio = 100
     for s in range(shield_count):
-        s_max = blob.get("shield_max_val", s )
-        s_cur = blob.get("shield_val", s )
-        s_ratio = min(s_cur/s_max, s_ratio)
+        s_max = blob.get("shield_max_val", s ) or 0
+        s_cur = blob.get("shield_val", s ) or 0
+        if s_max:
+            s_ratio = min(s_cur/s_max, s_ratio)
 
     s_chance = random.randint(1,100)
     s_crew = to_object(COMMS_SELECTED_ID).crew

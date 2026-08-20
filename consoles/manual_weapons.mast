@@ -245,7 +245,7 @@ shared manual_beams_version_task = None
     # Cause some damage
     #
     max_damage = t.data_set.get('system_max_damage', system)
-    cur = t.data_set.get('system_damage', system)
+    cur = t.data_set.get('system_damage', system) or 0
     if cur < 1:
         cur = 1
     up = cur*1.35
@@ -255,7 +255,7 @@ shared manual_beams_version_task = None
     #
 
     t.data_set.set('system_damage', up, system)
-    if cur > max_damage:
+    if max_damage is not None and cur > max_damage:
         comms_broadcast(DAMAGE_SOURCE_ID, f"{t.name} {system.name} Destroyed", "white")
     else:
 

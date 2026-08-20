@@ -74,13 +74,13 @@ default gamemaster_face = random_terran()
         type = gui_get_variable("gm_torp_mod_type", "Homing")
         count = gui_get_variable("gm_torp_mod_count", 0)
         count = int(count)
-        newCount = get_data_set_value(COMMS_SELECTED_ID, f"{type}_NUM", 0) + count
+        newCount = (get_data_set_value(COMMS_SELECTED_ID, f"{type}_NUM", 0) or 0) + count
         set_data_set_value(COMMS_SELECTED_ID, f"{type}_NUM", newCount)
     +[$gamemaster]"Remove Torpedoes":
         type = gui_get_variable("gm_torp_mod_type", "Homing")
         count = gui_get_variable("gm_torp_mod_count", 0)
         count = int(count)
-        curCount = get_data_set_value(COMMS_SELECTED_ID, f"{type}_NUM", 0)
+        curCount = get_data_set_value(COMMS_SELECTED_ID, f"{type}_NUM", 0) or 0
         curCount = int(curCount)
         newCount = curCount - count
         if newCount < 0:
@@ -150,14 +150,14 @@ default gamemaster_face = random_terran()
         if _other and COMMS_ORIGIN_ID != _other:
             _blob = to_blob(_other)
             if _blob is not None:
-                energy = _blob.get("energy",0)
+                energy = _blob.get("energy",0) or 0
                 _blob.set("energy", energy+20)
     +[$gamemaster]"Remove Fuel":
         _other = COMMS_SELECTED_ID
         if _other and COMMS_ORIGIN_ID != _other:
             _blob = to_blob(_other)
             if _blob is not None:
-                energy = _blob.get("energy",0)
+                energy = _blob.get("energy",0) or 0
                 _blob.set("energy", max(0,energy-20)) # Limit minimum to zero
     +[$gamemaster]"Refill Fuel":
         blob = to_blob(COMMS_SELECTED_ID)

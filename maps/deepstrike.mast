@@ -195,7 +195,7 @@ Properties:
             else:
                 # Add +1 nuke to player ship, Comms message to confirm transfer.
                 player_blob = to_blob(COMMS_ORIGIN_ID)
-                addtorp = player_blob.get(f"Nuke_NUM", 0)
+                addtorp = player_blob.get(f"Nuke_NUM", 0) or 0
                 addtorp += 1
                 player_blob.set(f"Nuke_NUM", addtorp, 0)
                 comms_receive_internal(f"""Nuclear torpedo transfer complete. Good luck, {COMMS_ORIGIN.name}!""", COMMS_ORIGIN_ID, "TSN Ganymede", title="Nuke Transferred", title_color="green")
@@ -218,12 +218,12 @@ Properties:
     comms_id = to_object(COMMS_ORIGIN_ID).name
     resupply_comms_id = resupply_obj.name
 
-    s_max_f = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 0))
-    s_cur_f = int(get_data_set_value(COMMS_SELECTED_ID, "shield_val", 0))
-    s_per_f = int(s_cur_f / s_max_f * 100)
-    s_max_r = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 1))
-    s_cur_r = int(get_data_set_value(COMMS_SELECTED_ID, "shield_val", 1))
-    s_per_r = int(s_cur_r / s_max_r * 100)
+    s_max_f = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 0) or 0)
+    s_cur_f = int(get_data_set_value(COMMS_SELECTED_ID, "shield_val", 0) or 0)
+    s_per_f = int(s_cur_f / s_max_f * 100) if s_max_f else 0
+    s_max_r = int(get_data_set_value(COMMS_SELECTED_ID, "shield_max_val", 1) or 0)
+    s_cur_r = int(get_data_set_value(COMMS_SELECTED_ID, "shield_val", 1) or 0)
+    s_per_r = int(s_cur_r / s_max_r * 100) if s_max_r else 0
 
     if resupply_energy == 0:
         energy_msg = "HiDens Energy Cell is ready for deployment."

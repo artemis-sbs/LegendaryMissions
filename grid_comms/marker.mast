@@ -39,7 +39,7 @@
 
 ====== rotate_beam_arc1 ======
         sblob = to_blob(COMMS_ORIGIN_ID)
-        ang1 = sblob.get("beamBarrelAngle", 1)
+        ang1 = sblob.get("beamBarrelAngle", 1) or 0
         print(ang1)
         ->END if ang1 > 62 and ang1 < 82
         if ang1 == 82:
@@ -56,7 +56,7 @@
 
 ======= rotate_beam_arc2 ======
         sblob = to_blob(COMMS_ORIGIN_ID)
-        ang2 = sblob.get("beamBarrelAngle", 3)
+        ang2 = sblob.get("beamBarrelAngle", 3) or 0
         print(ang2)
         ->END if ang2 > 278 and ang2 < 298
         if ang2 == 278:
@@ -73,8 +73,8 @@
 
 ======= refocus_primary_beam ======
         sblob = to_blob(COMMS_ORIGIN_ID)
-        b_range = sblob.get("beamRange", 1)
-        b_width = sblob.get("beamArcWidth", 1)
+        b_range = sblob.get("beamRange", 1) or 0
+        b_width = sblob.get("beamArcWidth", 1) or 0
         ->END if b_range > 2000 and b_range < 2800
         if b_range == 2000:
             for i in range(10):

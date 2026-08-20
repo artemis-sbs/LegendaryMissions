@@ -512,11 +512,11 @@ Defaults:
 ===== pr_poacher_surrender =====
     blob = to_blob(COMMS_SELECTED_ID)
     ->END if blob is None
-    shield_count = blob.get("shield_count", 0)
+    shield_count = blob.get("shield_count", 0) or 0
     s_ratio = 100
     for s in range(shield_count):
-        s_max = blob.get("shield_max_val", s)
-        s_cur = blob.get("shield_val", s)
+        s_max = blob.get("shield_max_val", s) or 0
+        s_cur = blob.get("shield_val", s) or 0
         if s_max > 0:
             s_ratio = min(s_cur/s_max, s_ratio)
     if s_ratio < 0.5:
