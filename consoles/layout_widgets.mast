@@ -176,6 +176,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     with gui_sub_section():
         # Same band above the view as comms and the cockpit.
         gui_row("row-height:45px;")
+        gui_blank(1,"col-width:280px")
         gui_layout_widget("radar_zoom_ctrl")
         gui_row()
         gui_layout_widget("science_2d_view")
@@ -337,6 +338,16 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # traffic in a text area the console owns. The history is the log tab. LOG_PANEL_PLAN.md
         gui_row("row-height: 4em;")
         gui_log_tail()
+
+     gui_section(style="area:0,45px,100,100;")
+    with gui_sub_section():
+        # Same band above the view as comms and the cockpit.
+        gui_row("row-height:45px;")
+        gui_blank(1,"col-width:280px")
+        gui_layout_widget("radar_zoom_ctrl")
+        gui_blank(1,"col-width:25")
+        gui_row()
+        gui_layout_widget("weapon_2d_view")
 
 //gui/normal_main
     default tab = 1
