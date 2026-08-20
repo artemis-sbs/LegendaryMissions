@@ -21,9 +21,11 @@
 "        player_ship_roles (str, optional): A comma-separated string of roles that should get this torpedo. The `__player__` role is always necessary.
 "        energy_conversion_value (int, optional): The amount of energy to provide to the ship by disassembling the torpedo. Default is 100.
 "        build_times (dict, optional): A dictionary of (str, int) representing the station type and the rate of production.
+"        sort_order (int, optional): Where this type sits in every ordinance list - the Build Weapons menu, the station hail readout, the order tubes are made available. Lower comes first. The stock types follow the engine ship-data widget (Homing 0, Nuke 1, EMP 2, Mine 3, PShock 4, Tag 5). Default is 100, so a mod-added type lands after the stock ones.
 metadata: ```
 key: Homing
 gui_name: Homing
+sort_order: 100
 speed: 10
 lifetime: 25
 flare_color: white
@@ -61,6 +63,7 @@ build_times:
     default energy_conversion_value = 100
     default default_max_count = 10
     default player_ship_roles = "__player__"
+    default sort_order = 100
     default build_times = {"default": 3, "industry": 1}
 
     ~~ torpedo_type(key=key, 
@@ -107,10 +110,17 @@ build_times:
         ->END
     # TODO: instead of using art_id, might be better to use roles? The applicable roles would need added to shipData.yaml
     artid = so.art_id
-    torps = role("torpedo_definition")
+    # role() hands back a SET, so iterating it walks the definitions in id-hash order.
+    # Every ordinance list built from that order came out shuffled - the Build Weapons
+    # comms menu listed Homing/Mine/EMP/Nuke where the ship-data widget says
+    # Homing/Nuke/EMP/Mine (issue #693). Sort by each definition's sort_order first, so
+    # the keys - and the menu, the hail readout and torpedo_types_available with them -
+    # come out in one fixed engine-matching order.
+    torp_defs = []
+    for tr in role("torpedo_definition"):
+        torp_defs.append((get_inventory_value(tr, "sort_order", 100), get_inventory_value(tr, "key"), tr))
     torp_keys = []
-    for tr in torps:
-        key = get_inventory_value(tr, "key")
+    for torp_sort, key, tr in sorted(torp_defs):
         torp_keys.append(key)
         times = get_inventory_value(tr, "build_times")
         for station_type in times:
@@ -143,9 +153,12 @@ build_times:
     if to_object(ship) is None:
         # print("Object for `ship` not found.") # This fires multiple times on startup, not sure why.
         ->END
-    torps = role("torpedo_definition")
-    for tr in torps:
-        key = get_inventory_value(tr, "key")
+    # Sorted for the same reason as the station loop above: the order torpedo_make_available
+    # is called in is the order the tubes show up in, so it has to be fixed too.
+    torp_defs = []
+    for tr in role("torpedo_definition"):
+        torp_defs.append((get_inventory_value(tr, "sort_order", 100), get_inventory_value(tr, "key"), tr))
+    for torp_sort, key, tr in sorted(torp_defs):
         player_ship_roles = get_inventory_value(tr, "player_ship_roles")
         count = get_inventory_value(tr, "default_max_count")
         if player_ship_roles is not None:
@@ -163,6 +176,7 @@ build_times:
 metadata: ```
 key: Homing
 gui_name: Homing
+sort_order: 0
 speed: 10
 lifetime: 25
 flare_color: white
@@ -189,6 +203,7 @@ build_times:
 metadata: ```
 key: EMP
 gui_name: EMP
+sort_order: 2
 speed: 10
 lifetime: 25
 flare_color: blue
@@ -215,6 +230,7 @@ build_times:
 metadata: ```
 key: Nuke
 gui_name: Nuke
+sort_order: 1
 speed: 10
 lifetime: 25
 flare_color: red
@@ -241,6 +257,7 @@ build_times:
 metadata: ```
 key: Mine
 gui_name: Mine
+sort_order: 3
 speed: 10
 lifetime: 25
 flare_color: orange
@@ -268,6 +285,7 @@ build_times:
 metadata: ```
 key: Tag
 gui_name: Tag
+sort_order: 5
 flare_color: yellow
 trail_color: #aa0
 damage: 0
@@ -287,6 +305,7 @@ build_times:
 metadata: ```
 key: PShock
 gui_name: PShock
+sort_order: 4
 speed: 10
 lifetime: 25
 flare_color: purple
@@ -320,6 +339,7 @@ build_times:
 metadata: ```
 key: Beacon
 gui_name: Beacon
+sort_order: 6
 speed: 3
 lifetime: 2
 flare_color: #0cf
