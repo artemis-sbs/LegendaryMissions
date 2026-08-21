@@ -3,7 +3,14 @@
 The grouping, the program-target marking and the screen fingerprint that used to live here went
 with the narrowing to a streaming tool - they are `director_modes.py` now, and tested there.
 
-Two of these guard failures that are invisible in a log and only ever show on screen:
+THE SHAPE TESTS ARE THE IMPORTANT ONES HERE. `get_selected_index()` answers with a LIST when a
+listbox is `multi=True` and a bare INT when it is single-select, and `get_selected()` does the
+same with values. Every one of these helpers is called from MAST, which cannot see which shape
+it is about to get - and a helper that iterated the answer raised `TypeError` on a single-select
+list, which STOPS THE MAST COMMAND, ends the task, and leaves a button that does nothing at all
+with no error on screen. "Add console items" and the capture tab's Shoot were both dead that way.
+
+Two more guard failures that are invisible in a log and only ever show on screen:
 
   * `test_duplicate_ship_names_are_deduped` - a listbox decides what is selected by comparing
     ITEMS with `==`, so two rows reading the same string select and DESELECT together, and one
@@ -124,6 +131,8 @@ class SelectionTests(unittest.TestCase):
     """The repaint contract, without a page: save ids, restore by id."""
 
     class _LB:
+        """A MULTI-select listbox: indexes come back as a list, values as a list."""
+
         def __init__(self, items, selected_index=None):
             self.unfiltered_items = list(items)
             self._sel_idx = selected_index or []
@@ -137,6 +146,55 @@ class SelectionTests(unittest.TestCase):
 
         def get_selection_hint(self):
             return "hint"
+
+    class _SingleLB:
+        """A SINGLE-select listbox, which answers in a different shape entirely.
+
+        Copied from LayoutListbox.get_selected_index / get_selected: a bare int and a bare
+        item when not multi, None when nothing is chosen.
+        """
+
+        def __init__(self, items, selected_index=None):
+            self.unfiltered_items = list(items)
+            self._sel = selected_index
+            self.selected = [] if selected_index is None else [items[selected_index]]
+
+        def get_selected_index(self):
+            return self._sel
+
+        def get_selected(self):
+            return self.selected[0] if self.selected else None
+
+        def get_selection_hint(self):
+            return "hint"
+
+    def test_a_single_select_index_is_not_iterated(self):
+        # THE BUG. `for i in 1` raises TypeError, a failing MAST expression stops the command,
+        # and "Add console items" ended its task with nothing added and nothing said.
+        lb = self._SingleLB(["row-a", "row-b"], selected_index=1)
+        self.assertEqual(ds.director_selected_ids(lb, [11, 12]), [12])
+
+    def test_a_single_select_with_nothing_chosen_is_empty(self):
+        lb = self._SingleLB(["row-a", "row-b"])
+        self.assertEqual(ds.director_selected_ids(lb, [11, 12]), [])
+        self.assertEqual(ds.director_selected_items(lb), [])
+
+    def test_first_id_works_on_a_single_select_list(self):
+        # capture.mast's Shoot went through this one.
+        lb = self._SingleLB(["row-a", "row-b"], selected_index=0)
+        self.assertEqual(ds.director_first_id(lb, [11, 12], fallback=7), 11)
+
+    def test_a_single_select_value_is_not_split_into_characters(self):
+        # WORSE THAN A CRASH, because it does not raise: list("helm") is ['h','e','l','m'], so
+        # a single-select console list would have produced four consoles with one-letter names.
+        lb = self._SingleLB(["helm", "science"], selected_index=0)
+        self.assertEqual(ds.director_selected_items(lb), ["helm"])
+
+    def test_the_multi_shape_still_works(self):
+        lb = self._LB(["row-a", "row-b"], selected_index=[0, 1])
+        self.assertEqual(ds.director_selected_ids(lb, [11, 12]), [11, 12])
+        lb.selected = ["row-a"]
+        self.assertEqual(ds.director_selected_items(lb), ["row-a"])
 
     def test_header_slots_are_skipped(self):
         lb = self._LB(["h", "a", "b"], selected_index=[0, 2])

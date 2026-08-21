@@ -105,12 +105,33 @@ def _exciting(obj):
 
 # --- item constructors ------------------------------------------------------------------
 
-def director_item_cam(subject_id, mode="orbit", label=None, overlays=None):
-    """A camera item: a subject and one of DIRECTOR_MODES. No geometry.
+def _hold(seconds):
+    """A per-item hold in whole seconds, or None for "use the operator's dwell".
+
+    0 and negatives mean None rather than "cut instantly": the control that sets this is a
+    slider whose bottom stop has to mean something, and "no opinion" is the useful thing for it
+    to mean. A hold of half a second would be unwatchable anyway.
+    """
+    try:
+        seconds = int(float(seconds))
+    except (TypeError, ValueError):
+        return None
+    return seconds if seconds > 0 else None
+
+
+def director_item_cam(subject_id, mode="orbit", label=None, overlays=None, hold=None):
+    """A camera item: a subject, one of DIRECTOR_MODES, and optionally how long it holds.
 
     Geometry is resolved at play time from `viewscreen_framing`, so the same item frames
     correctly whatever it ends up pointed at - and a subject that grows a bigger hull between
     builds does not need the item rewritten.
+
+    `hold` is seconds on air, overriding the operator's dwell for this item alone - an
+    establishing shot that wants ten seconds next to action beats that want three. Absent means
+    the dwell decides. It IS part of the item's identity (director_item_ident), so the same
+    shot held for three seconds and for ten are two different beats and a rundown can hold
+    both - but it is NOT part of the SHOT key, so cutting between them keeps the camera
+    running.
     """
     from sbs_utils.procedural.query import to_object
     mode = str(mode).strip().lower()
@@ -119,27 +140,60 @@ def director_item_cam(subject_id, mode="orbit", label=None, overlays=None):
     if label is None:
         label = DIRECTOR_MODE_LABELS[mode] + " - " + _name_of(to_object(subject_id))
     return {"kind": "cam", "mode": mode, "subject": subject_id,
-            "label": _plain(label), "overlays": list(overlays or ())}
+            "label": _plain(label), "overlays": list(overlays or ()),
+            "hold": _hold(hold)}
 
 
-def director_item_con(ship_id, console, label=None):
+def director_item_con(ship_id, console, label=None, hold=None):
     """A console item: show `console` for `ship_id` on whichever screen gets this."""
     console = str(console).strip()
     if label is None:
         from sbs_utils.procedural.query import to_object
         label = console.capitalize() + " - " + _name_of(to_object(ship_id), "no ship")
-    return {"kind": "con", "label": _plain(label), "ship": ship_id, "console": console}
+    return {"kind": "con", "label": _plain(label), "ship": ship_id, "console": console,
+            "hold": _hold(hold)}
 
 
 def director_item_key(item):
-    """Identity for de-duplication: two rundowns naming the same view are one item."""
+    """Which SHOT this is: subject + mode. NOT what makes two items different.
+
+    Not the label: two rundowns can name the same shot differently and it is still one shot,
+    and a label that changes with the subject's name would break any comparison built on it.
+
+    Use this only where "is the camera pointed at the same thing the same way" is the actual
+    question - which is one place, the player's re-route tracking. For "are these the same
+    item", use director_item_ident.
+    """
     if item is None:
         return None
     if item.get("kind") == "con":
         return ("con", item.get("ship"), item.get("console"))
-    # Subject + MODE, not the label: two rundowns can name the same shot differently and it
-    # is still one shot, and a label that changes with the subject's name would break dedupe.
     return ("cam", item.get("subject"), item.get("mode"))
+
+
+def director_item_overlay_ident(item):
+    """A hashable fingerprint of an item's FURNITURE."""
+    out = []
+    for entry in ((item or {}).get("overlays") or ()):
+        out.append(tuple(sorted((str(k), str(v)) for k, v in entry.items())))
+    return tuple(out)
+
+
+def director_item_ident(item):
+    """Which ITEM this is - the whole beat: shot, furniture and hold.
+
+    THE SHOT IS NOT THE ITEM, and conflating them cost a whole feature. A rundown legitimately
+    holds "wide on the station with a lower third, seven seconds" followed by "the same shot,
+    clean" - two beats of one shot, and that is ordinary direction, not a mistake. Keyed on
+    subject + mode alone, the second Add answered "already in that rundown" and did nothing,
+    and the play set would have dropped it even if it had gone in.
+
+    Two items are the same only when everything about them matches, so a double-click still
+    collapses and a generated orbit of Artemis appearing in two rundowns still collapses.
+    """
+    if item is None:
+        return None
+    return (director_item_key(item), director_item_overlay_ident(item), item.get("hold"))
 
 
 def director_item_subject(item):
@@ -268,13 +322,17 @@ def director_rundown_rename(key, name):
 
 
 def director_rundown_add_item(key, item):
-    """Append an item to a user rundown, skipping one it already holds."""
+    """Append an item to a user rundown, skipping one it already holds.
+
+    "Already holds" means the same BEAT - see director_item_ident. The same shot with different
+    furniture or a different hold is a different beat and goes in.
+    """
     record = _RUNDOWNS.get(key)
     if record is None or item is None:
         return False
-    ident = director_item_key(item)
+    ident = director_item_ident(item)
     for existing in record["items"]:
-        if director_item_key(existing) == ident:
+        if director_item_ident(existing) == ident:
             return False
     record["items"].append(item)
     return True
@@ -374,7 +432,7 @@ def director_rundown_play_set(keys):
             subject = director_item_subject(item)
             if subject is None or to_object(subject) is None:
                 continue
-            ident = director_item_key(item)
+            ident = director_item_ident(item)
             if ident in seen:
                 continue
             seen.add(ident)

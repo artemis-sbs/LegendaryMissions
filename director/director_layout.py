@@ -48,6 +48,11 @@ def director_rows_px(rows):
 _ROWS_SUBTAB = [(1.5, "gui-3")]
 _ROWS_RUNDOWN = [(2.2, "gui-2"), (2.2, "gui-2")]        # picker row, then the button row
 _ROWS_ITEMBTN = [(2.2, "gui-2")]
+# The Console sub-tab's block is TALLER than the item one: a button row AND the status line.
+# It shared `itembtn_up` while it had two rows to itembtn's one, so the status line - the only
+# thing that says "added 3 console items" or "make a rundown first" - was drawn off the bottom
+# of its own section. That is a fair part of why "Add console items" read as doing nothing.
+_ROWS_CONBTN = [(2.2, "gui-2"), (1.8, "gui-2")]
 # The control block, stacked and FULL WIDTH under the 2D view.
 #
 # It was two columns while the Stage carried a 3D preview pane beside the radar, which left the
@@ -69,6 +74,7 @@ _SECTION_ROWS = {
     "subtab": _ROWS_SUBTAB,
     "rundown": _ROWS_RUNDOWN,
     "itembtn": _ROWS_ITEMBTN,
+    "conbtn": _ROWS_CONBTN,
     "ctrl": _ROWS_CTRL,
 }
 
@@ -87,6 +93,7 @@ def director_layout_metrics():
     rundown_h = director_rows_px(_ROWS_RUNDOWN) + DIRECTOR_SECTION_PAD + 2
     items_top = content_top + rundown_h + 4
     itembtn_h = director_rows_px(_ROWS_ITEMBTN) + DIRECTOR_SECTION_PAD
+    conbtn_h = director_rows_px(_ROWS_CONBTN) + DIRECTOR_SECTION_PAD
     ctrl_h = director_rows_px(_ROWS_CTRL) + DIRECTOR_SECTION_PAD + 2
     bottom = 6
     return {
@@ -97,6 +104,8 @@ def director_layout_metrics():
         "items_top": items_top,
         "itembtn_h": itembtn_h,
         "itembtn_up": itembtn_h + bottom,
+        "conbtn_h": conbtn_h,
+        "conbtn_up": conbtn_h + bottom,
         "ctrl_h": ctrl_h,
         "ctrl_up": ctrl_h + bottom,
         "bottom": bottom,
@@ -112,10 +121,10 @@ _AREAS = {
     # Stage: the 2D view across the top, the control block full width under it.
     "view2d":   (32, "content_top", 98, "-ctrl_up"),
     "ctrl":     (32, "-ctrl_up", 98, "-bottom"),
-    # Console sub-tab: two lists, and one button row under them.
-    "ships":    (32, "content_top", 64, "-itembtn_up"),
-    "consoles": (66, "content_top", 98, "-itembtn_up"),
-    "conbtn":   (32, "-itembtn_up", 98, "-bottom"),
+    # Console sub-tab: two lists, and a button row plus a status line under them.
+    "ships":    (32, "content_top", 64, "-conbtn_up"),
+    "consoles": (66, "content_top", 98, "-conbtn_up"),
+    "conbtn":   (32, "-conbtn_up", 98, "-bottom"),
 }
 
 

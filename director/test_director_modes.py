@@ -149,16 +149,13 @@ class NameTests(unittest.TestCase):
         self.inventory[(10, "CREW_NAME")] = "PROG01"
         self.assertEqual(dm.director_screen_suggest_name(10, "program"), "PROG01")
 
-    def test_a_typed_name_is_not_ours_to_replace(self):
-        # THE ONE THAT MATTERS. The entry screen re-suggests on every move of the mode radio,
-        # and overwriting "Wall Left" there would be indefensible.
-        self.assertFalse(dm.director_screen_name_is_generated("Wall Left"))
-        self.assertFalse(dm.director_screen_name_is_generated("PROG"))
-        self.assertFalse(dm.director_screen_name_is_generated("PROGRAM 1"))
-
-    def test_a_suggested_name_is_ours(self):
-        for name in ("PROG01", "PRE07", "DIR1", ""):
-            self.assertTrue(dm.director_screen_name_is_generated(name), name)
+    def test_a_persons_name_does_not_take_a_number(self):
+        # The prefix scan reads every console's CREW_NAME, and `common_console_select` writes
+        # crew names into that same key - so a bridge crew member must not be able to reserve
+        # PROG02 by being called something odd.
+        self.inventory[(10, "CREW_NAME")] = "Doug"
+        self.inventory[(11, "CREW_NAME")] = "PROGRAM 1"
+        self.assertEqual(dm.director_screen_suggest_name(99, "program"), "PROG01")
 
 
 class FingerprintTests(unittest.TestCase):

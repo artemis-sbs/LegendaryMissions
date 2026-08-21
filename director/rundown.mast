@@ -25,6 +25,7 @@ default shared cv_preset_kind = ""       # which row's Save was pressed
 # name to watch.
 default shared cv_subject_id = None
 default shared cv_shot_mode_label = "Orbit"
+default shared cv_hold = 0               # seconds this item holds on air; 0 = use the dwell
 
 //gui/tab/rundown
     jump cv_edit
@@ -187,11 +188,20 @@ default shared cv_shot_mode_label = "Orbit"
     gui_row("row-height: 2.2em; font: gui-2;")
     addb = gui_button("Add to rundown", "col-width: 180px;")
     nowb = gui_button("Send to Program", "col-width: 200px;")
-    gui_text("$text:`Preview screens already show this - they follow every change.`;font:gui-1;color:#9ab;")
+    # THE HOLD IS PART OF THE ITEM, not a setting. An establishing shot of a starbase wants ten
+    # seconds where a chase in a firefight wants three, and the rundown is where that belongs -
+    # the dwell stays the answer for everything with no opinion. 0 is the bottom stop and means
+    # exactly that, which is why the label reads back rather than showing a bare number.
+    gui_text("$text:`Hold`;font:gui-2;", "col-width: content;")
+    hold_sl = gui_int_slider("$text:int;low:0;high:30;", "col-width: 170px;", var="cv_hold")
+    cv_hold_w = gui_text("$text:" + gui_text_escape(director_stage_hold_label()) + ";font:gui-1;color:#9ab;")
     on gui_message(addb):
         jump cv_edit_add
     on gui_message(nowb):
         jump cv_edit_punch
+    on gui_message(hold_sl):
+        director_stage_hold(hold_sl.value)
+        cv_hold_w.update("text:" + gui_text_escape(director_stage_hold_label()) + ";font:gui-1;color:#9ab;")
 
     # ---- the four overlay rows -----------------------------------------------------------
     #

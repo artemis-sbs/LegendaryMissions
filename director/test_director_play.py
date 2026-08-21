@@ -56,7 +56,9 @@ def _items(n):
     return [dr.director_item_con(900 + i, "helm", "item" + str(i)) for i in range(n)]
 
 
-class ProgramFeedTests(unittest.TestCase):
+class FeedTests(unittest.TestCase):
+    """Which item each feed shows, and the hold that stops it flickering."""
+
     def setUp(self):
         dp.director_play_reset()
         self.restore = _install({})
@@ -65,58 +67,111 @@ class ProgramFeedTests(unittest.TestCase):
         self.restore()
         dp.director_play_reset()
 
+    def _prog(self, items, **kw):
+        return dp.director_play_feeds(items, **kw)["program"]
+
+    def _prev(self, items, **kw):
+        return dp.director_play_feeds(items, **kw)["preview"]
+
+    # --- program -------------------------------------------------------------------------
+
     def test_one_item_for_every_program_screen(self):
         # Broadcast, not a wall. Two program screens show the SAME thing.
-        item = dp.director_play_program_item(_items(3), index=1)
+        item = self._prog(_items(3))
         plan = dp.director_play_plan(item, [10, 11, 12])
-        self.assertEqual([p["item"]["label"] for p in plan], ["item1"] * 3)
+        self.assertEqual([p["item"]["label"] for p in plan], [item["label"]] * 3)
 
-    def test_the_index_advances_through_the_rundown(self):
+    def test_it_starts_at_the_front(self):
+        self.assertEqual(self._prog(_items(3))["label"], "item0")
+
+    def test_the_dwell_advances_it(self):
         items = _items(3)
-        got = [dp.director_play_program_item(items, index=i)["label"] for i in range(5)]
+        got = [self._prog(items)["label"]]
+        for _ in range(4):
+            got.append(self._prog(items, elapsed=99)["label"])
         self.assertEqual(got, ["item0", "item1", "item2", "item0", "item1"])
+
+    def test_nothing_moves_without_an_advance(self):
+        items = _items(3)
+        self._prog(items)
+        for _ in range(12):
+            self.assertEqual(self._prog(items)["label"], "item0")
+
+    def test_a_reordered_play_set_does_not_move_the_feed(self):
+        # THE FLICKER. The play set is rebuilt every tick - twelve times per dwell - and "The
+        # action" re-sorts it by live excitement each time, so its order is different on nearly
+        # every evaluation. Anything positional followed the sort instead of the dwell.
+        items = _items(3)
+        self.assertEqual(self._prog(items)["label"], "item0")
+        for shuffled in ([items[2], items[0], items[1]],
+                         [items[1], items[2], items[0]],
+                         [items[2], items[1], items[0]]):
+            self.assertEqual(self._prog(shuffled)["label"], "item0")
+
+    def test_an_advance_follows_the_CURRENT_order(self):
+        # Held by identity, but the step is taken in the list as it stands now - so a rundown
+        # that legitimately reordered is honored at the moment the dwell fires.
+        items = _items(3)
+        self._prog(items)                                   # holding item0
+        reordered = [items[0], items[2], items[1]]
+        self.assertEqual(self._prog(reordered, elapsed=99)["label"], "item2")
+
+    def test_a_vanished_item_falls_to_the_front(self):
+        # Its subject died, or the operator deselected the rundown carrying it. Taking the old
+        # POSITION in a re-sorted list is exactly the bug; the front is the honest answer.
+        items = _items(3)
+        self._prog(items, elapsed=99)                     # holding item1
+        self.assertEqual(self._prog([items[0], items[2]])["label"], "item0")
 
     def test_an_empty_play_set_is_nothing_on_air(self):
         # Leaving the last shot frozen on air would be worse than an empty screen: it looks
         # live and is not.
-        self.assertIsNone(dp.director_play_program_item([], index=0))
+        self.assertIsNone(self._prog([]))
+
+    def test_an_empty_play_set_forgets_the_hold(self):
+        items = _items(3)
+        self._prog(items, elapsed=99)                     # holding item1
+        self._prog([])
+        self.assertEqual(self._prog(items)["label"], "item0")
 
     def test_no_screens_is_an_empty_plan_not_a_crash(self):
         self.assertEqual(dp.director_play_plan(_items(1)[0], []), [])
 
-
-class PreviewFeedTests(unittest.TestCase):
-    def setUp(self):
-        dp.director_play_reset()
-        self.restore = _install({})
-
-    def tearDown(self):
-        self.restore()
-        dp.director_play_reset()
+    # --- preview -------------------------------------------------------------------------
 
     def test_staged_wins(self):
         staged = dr.director_item_cam(999, "orbit", label="STAGED")
         dp.director_play_stage(staged)
-        self.assertEqual(dp.director_play_preview_item(_items(3), index=0)["label"], "STAGED")
+        self.assertEqual(self._prev(_items(3))["label"], "STAGED")
 
-    def test_nothing_staged_shows_the_next_one_up(self):
+    def test_nothing_staged_shows_what_the_next_advance_will_take(self):
         # A preview screen that goes blank whenever the operator is not staging reads as broken
-        # rather than as idle - and "next up" is the other thing a director wants to see coming.
-        self.assertEqual(dp.director_play_preview_item(_items(3), index=0)["label"], "item1")
+        # rather than as idle - and "next up" is the other thing a director wants to see.
+        items = _items(3)
+        feeds = dp.director_play_feeds(items)
+        self.assertEqual(feeds["program"]["label"], "item0")
+        self.assertEqual(feeds["preview"]["label"], "item1")
+        # And it is not a guess: advancing takes exactly what preview promised.
+        self.assertEqual(self._prog(items, elapsed=99)["label"], "item1")
 
     def test_clearing_the_stage_falls_back(self):
         dp.director_play_stage(dr.director_item_cam(999, "orbit", label="STAGED"))
         dp.director_play_stage(clear=True)
-        self.assertEqual(dp.director_play_preview_item(_items(3), index=0)["label"], "item1")
+        self.assertEqual(self._prev(_items(3))["label"], "item1")
 
     def test_nothing_at_all_is_nothing(self):
-        self.assertIsNone(dp.director_play_preview_item([], index=0))
+        self.assertIsNone(self._prev([]))
 
     def test_the_two_feeds_differ(self):
-        items = _items(3)
-        program = dp.director_play_program_item(items, index=0)
-        preview = dp.director_play_preview_item(items, index=0)
-        self.assertNotEqual(program["label"], preview["label"])
+        feeds = dp.director_play_feeds(_items(3))
+        self.assertNotEqual(feeds["program"]["label"], feeds["preview"]["label"])
+
+    def test_a_single_item_is_both_feeds(self):
+        # One item and nowhere to go. Preview showing the same thing is right; a blank preview
+        # or a crash would not be.
+        feeds = dp.director_play_feeds(_items(1))
+        self.assertEqual(feeds["program"]["label"], "item0")
+        self.assertEqual(feeds["preview"]["label"], "item0")
 
 
 class ChangeTrackingTests(unittest.TestCase):
@@ -221,8 +276,33 @@ class AutoDirectorTests(unittest.TestCase):
 
     def test_auto_picks_the_program_item(self):
         self._setup({902: 5.0})
-        item = dp.director_play_program_item(_items(3), index=0, auto=True)
+        item = dp.director_play_feeds(_items(3), auto=True)["program"]
         self.assertEqual(item["label"], "item2")
+
+    def test_auto_still_honors_the_dwell(self):
+        # "Switching too soon" is the complaint this guards. Auto decides WHICH item, the dwell
+        # decides WHEN - so a fight that swings the excitement wildly cannot cut the feed twelve
+        # times a dwell.
+        self._setup({900: 9.0})
+        self.assertEqual(dp.director_play_feeds(_items(3), auto=True)["program"]["label"],
+                         "item0")
+        self.restore()
+        self.restore = _install({902: 99.0})
+        for _ in range(12):
+            self.assertEqual(dp.director_play_feeds(_items(3), auto=True)["program"]["label"],
+                             "item0")
+        self.assertEqual(
+            dp.director_play_feeds(_items(3), elapsed=99, auto=True)["program"]["label"],
+            "item2")
+
+    def test_auto_steps_on_rather_than_sitting_forever(self):
+        # The leader is already on air and nothing has changed. Staying put would make a
+        # two-item action rundown a single static shot.
+        self._setup({900: 9.0})
+        dp.director_play_feeds(_items(3), auto=True)
+        self.assertEqual(
+            dp.director_play_feeds(_items(3), elapsed=99, auto=True)["program"]["label"],
+            "item1")
 
     def test_auto_holds_through_noise(self):
         self._setup({900: 1.0, 901: 0.0})
@@ -271,28 +351,177 @@ class PunchTests(unittest.TestCase):
         dp.director_play_reset()
 
     def test_a_punch_goes_to_every_program_screen(self):
-        item = dp.director_play_program_item(_items(3), index=0, punch=self.punch)
+        item = dp.director_play_feeds(_items(3), punch=self.punch)["program"]
         plan = dp.director_play_plan(item, [10, 11, 12])
         self.assertEqual([p["item"]["label"] for p in plan], ["PUNCH"] * 3)
 
     def test_a_punch_ignores_the_advance(self):
-        for index in range(4):
-            item = dp.director_play_program_item(_items(3), index=index, punch=self.punch)
+        for _ in range(4):
+            item = dp.director_play_feeds(_items(3), elapsed=99, punch=self.punch)["program"]
             self.assertEqual(item["label"], "PUNCH")
 
     def test_a_punch_ignores_the_auto_director(self):
-        item = dp.director_play_program_item(_items(3), index=0, auto=True, punch=self.punch)
+        item = dp.director_play_feeds(_items(3), auto=True, punch=self.punch)["program"]
         self.assertEqual(item["label"], "PUNCH")
 
     def test_a_punch_works_with_no_rundown_at_all(self):
         # Send to Program from the editor, before anything has been sent. It must not need a
         # play set to have something to override.
-        self.assertEqual(
-            dp.director_play_program_item([], index=0, punch=self.punch)["label"], "PUNCH")
+        self.assertEqual(dp.director_play_feeds([], punch=self.punch)["program"]["label"],
+                         "PUNCH")
 
-    def test_clearing_the_punch_returns_the_rundown(self):
-        item = dp.director_play_program_item(_items(3), index=1, punch=None)
-        self.assertEqual(item["label"], "item1")
+    def test_a_take_freezes_the_clock(self):
+        # Resume must hand the feed back exactly where it was. If the clock ran under the take,
+        # the first tick after Resume would find the dwell long expired and cut immediately -
+        # so Resume would look like Skip.
+        dp.director_play_feeds(_items(3), elapsed=0.0)                   # acquire item0
+        dp.director_play_feeds(_items(3), elapsed=99)                    # advance to item1
+        for _ in range(5):
+            out = dp.director_play_feeds(_items(3), elapsed=99, punch=self.punch)
+            self.assertEqual(out["program"]["label"], "PUNCH")
+            self.assertEqual(out["elapsed"], 99)
+        self.assertEqual(dp.director_play_feeds(_items(3))["program"]["label"], "item1")
+
+
+class BeatTests(unittest.TestCase):
+    """Two beats of one shot, on air. The reported case, at the player level."""
+
+    def setUp(self):
+        dp.director_play_reset()
+        self.restore = _install({})
+        self.titled = dr.director_item_cam(
+            901, "orbit", label="Station",
+            overlays=[{"kind": "lower_third", "name": "Phoenix", "line": "starbase"}], hold=7)
+        self.clean = dr.director_item_cam(901, "orbit", label="Station")
+
+    def tearDown(self):
+        self.restore()
+        dp.director_play_reset()
+
+    def test_the_feed_advances_from_one_beat_to_the_other(self):
+        # Held by the SHOT key, `_index_of` would find the first of the two and advancing from
+        # the titled beat would snap straight back to it - a rundown that never moved.
+        items = [self.titled, self.clean]
+        first = dp.director_play_feeds(items, elapsed=0.0, dwell=6)["program"]
+        self.assertEqual(first["overlays"][0]["name"], "Phoenix")
+        second = dp.director_play_feeds(items, elapsed=99, dwell=6)["program"]
+        self.assertEqual(second["overlays"], [])
+
+    def test_the_titled_beat_gets_its_own_hold(self):
+        items = [self.titled, self.clean]
+        dp.director_play_feeds(items, elapsed=0.0, dwell=3)
+        # dwell 3, but this beat asked for 7.
+        self.assertEqual(
+            dp.director_play_feeds(items, elapsed=5, dwell=3)["program"]["overlays"][0]["name"],
+            "Phoenix")
+        self.assertEqual(dp.director_play_feeds(items, elapsed=7, dwell=3)["program"]["overlays"],
+                         [])
+
+    def test_the_cut_between_them_does_not_reroute(self):
+        # Same subject, same mode: the camera keeps running and only the cards swap. A reroute
+        # would rebuild the page and restart the orbit, which reads as a jump cut on a shot
+        # that is meant to be continuous.
+        dp.director_play_plan(self.titled, [10])
+        plan = dp.director_play_plan(self.clean, [10])
+        self.assertFalse(plan[0]["changed"])
+
+
+class ClockTests(unittest.TestCase):
+    """The dwell, and a per-item hold that overrides it.
+
+    The clock lives in `director_play_feeds` because whether to advance depends on the HELD
+    item's own hold - a caller that decided first would have to know what is held before asking
+    what is held.
+    """
+
+    def setUp(self):
+        dp.director_play_reset()
+        self.restore = _install({})
+
+    def tearDown(self):
+        self.restore()
+        dp.director_play_reset()
+
+    def test_the_clock_runs_until_the_dwell(self):
+        items = _items(3)
+        dp.director_play_feeds(items, elapsed=0.0, dwell=6)          # acquire item0
+        for elapsed in (0.5, 3.0, 5.5):
+            out = dp.director_play_feeds(items, elapsed=elapsed, dwell=6)
+            self.assertEqual(out["program"]["label"], "item0")
+            self.assertEqual(out["elapsed"], elapsed)
+
+    def test_acquiring_an_item_restarts_the_clock(self):
+        # The held item died or left the play set, so the feed takes the front - and the
+        # replacement gets a full dwell rather than inheriting the dead item's spent clock and
+        # being cut a tick later.
+        items = _items(3)
+        out = dp.director_play_feeds(items, elapsed=99, dwell=6)
+        self.assertEqual(out["program"]["label"], "item0")
+        self.assertEqual(out["elapsed"], 0.0)
+
+    def test_reaching_the_dwell_advances_and_resets_it(self):
+        items = _items(3)
+        dp.director_play_feeds(items, elapsed=0.5, dwell=6)
+        out = dp.director_play_feeds(items, elapsed=6.0, dwell=6)
+        self.assertEqual(out["program"]["label"], "item1")
+        self.assertEqual(out["elapsed"], 0.0)
+
+    def test_no_clock_at_all_is_a_pure_read(self):
+        items = _items(3)
+        dp.director_play_feeds(items, elapsed=0.0, dwell=6)          # acquire item0
+        dp.director_play_feeds(items, elapsed=99, dwell=6)           # advance to item1
+        for _ in range(5):
+            self.assertEqual(dp.director_play_feeds(items)["program"]["label"], "item1")
+
+    def test_an_items_own_hold_beats_the_dwell(self):
+        # An establishing shot of a starbase wants ten seconds next to action beats that want
+        # three, and the rundown is where that belongs.
+        slow = dr.director_item_cam(901, "orbit", label="SLOW", hold=20)
+        fast = dr.director_item_cam(902, "orbit", label="FAST")
+        items = [slow, fast]
+        self.assertEqual(dp.director_play_feeds(items, elapsed=8, dwell=6)["program"]["label"],
+                         "SLOW")
+        self.assertEqual(dp.director_play_feeds(items, elapsed=20, dwell=6)["program"]["label"],
+                         "FAST")
+
+    def test_a_short_hold_cuts_before_the_dwell(self):
+        quick = dr.director_item_cam(901, "orbit", label="QUICK", hold=2)
+        items = [quick, dr.director_item_cam(902, "orbit", label="NEXT")]
+        self.assertEqual(dp.director_play_feeds(items, elapsed=1, dwell=30)["program"]["label"],
+                         "QUICK")
+        self.assertEqual(dp.director_play_feeds(items, elapsed=2, dwell=30)["program"]["label"],
+                         "NEXT")
+
+    def test_the_hold_that_counts_is_the_one_on_air(self):
+        # Not the one being advanced TO. The item on screen is what the operator is watching
+        # the clock against.
+        slow = dr.director_item_cam(901, "orbit", label="SLOW", hold=20)
+        quick = dr.director_item_cam(902, "orbit", label="QUICK", hold=2)
+        items = [slow, quick]
+        self.assertEqual(dp.director_play_feeds(items, elapsed=3, dwell=6)["program"]["label"],
+                         "SLOW")
+
+    def test_no_hold_means_the_dwell(self):
+        self.assertEqual(dp.director_play_hold(dr.director_item_cam(901, "orbit"), 6), 6)
+        self.assertEqual(dp.director_play_hold(None, 6), 6)
+
+    def test_zero_is_no_opinion_not_an_instant_cut(self):
+        # The control is a slider, and its bottom stop has to mean something. A half-second
+        # shot would be unwatchable, so 0 reads as "use the dwell".
+        item = dr.director_item_cam(901, "orbit", hold=0)
+        self.assertIsNone(item["hold"])
+        self.assertEqual(dp.director_play_hold(item, 6), 6)
+
+    def test_a_junk_hold_falls_back_rather_than_raising(self):
+        self.assertIsNone(dr.director_item_cam(901, "orbit", hold="soon")["hold"])
+        self.assertEqual(dp.director_play_hold({"hold": "soon"}, 6), 6)
+
+    def test_the_hold_is_not_part_of_an_items_identity(self):
+        # Two rundowns naming the same shot with different holds are still one shot; the play
+        # set de-duplicates them and the first one in wins.
+        a = dr.director_item_cam(901, "orbit", hold=3)
+        b = dr.director_item_cam(901, "orbit", hold=30)
+        self.assertEqual(dr.director_item_key(a), dr.director_item_key(b))
 
 
 class _OverlayHarness(unittest.TestCase):

@@ -108,7 +108,6 @@ default shared cv_punch     = None
         # slots are up, and a card orphaned that way can never be named again - so it clears
         # them first. Send used not to, which is why a stuck lower third outlived Stop.
         director_play_reset()
-        shared cv_play_index = 0
         shared cv_punch = None
         shared cv_playing = True
         shared cv_status = "sent " + str(len(cv_rundowns)) + " rundowns"

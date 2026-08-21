@@ -1,4 +1,4 @@
-# Director - the entry screen. Name this console, and say what it IS.
+# Director - the entry screen. Say what this console IS.
 #
 # ALWAYS SHOWN, pin or no pin. The old gate skipped itself entirely when DIRECTOR.pin was empty,
 # which left nowhere to declare a mode - and mode is the first thing a streamer needs to say,
@@ -7,11 +7,19 @@
 # The three modes and why they exist are in director_modes.py. Short version: the Director is a
 # streaming tool, so you open extra clients and declare each one program or preview, rather than
 # the Director reaching out and taking over a mainscreen or somebody's crew seat.
+#
+# THERE IS NOTHING TO TYPE. The mode names the screen - PROG01, PRE01, DIR01 - so the name field
+# went: it only ever held what the radio above it already implied, and a streamer opening four
+# windows had to type in all four. Pick a mode, press Start.
 
-default shared cv_entry_mode = "Director"
+# NOT `shared`. This is one console deciding what IT is, and `set_value_keep_scope` writes a
+# shared variable back to SHARED - so a radio bound to a shared name is ONE radio for every
+# client, and a second streamer opening the entry screen would move the first one's selection
+# under their hand. `director_entry` seeds it per client before the radio is built, which is
+# all the declaration was doing.
 
 @console/director !0 ^94 "Director" if DIRECTOR_enabled
-    " Stream director - name this screen, pick program, preview or the control console.
+    " Stream director - pick program, preview or the control console.
     jump director_entry
 
 //gui/tab/director
@@ -28,26 +36,20 @@ default shared cv_entry_mode = "Director"
     gui_row("row-height: 1.6em; font: gui-4;")
     gui_text("$text:`Director`;font:gui-4;color:#8cf;justify:center;")
 
-    gui_row("row-height: 2.2em; font: gui-2;")
-    gui_text("$text:`Name`;font:gui-2;", "col-width: content;")
-    # EVERY props string ends in `;`. TextInput._present does `props += self.props` and then
-    # appends the cascaded styling straight onto the end, so a missing terminator arrives on the
-    # wire as `desc: name this screenfont:gui-2` and the widget draws that as its prompt.
-    name_in = gui_input("desc: name this screen;", "col-width: 280px;", var="cv_name")
-    gui_blank()
-
     gui_row("row-height: 1.4em; font: gui-2;")
     gui_text("$text:`This console is a`;font:gui-2;color:#9ab;")
     gui_row("row-height: 1.8em; font: gui-3;")
     mode_rb = gui_radio(director_mode_list(), var="cv_entry_mode")
     gui_blank()
+
+    gui_row("row-height: 1.6em; font: gui-3;")
+    cv_entry_name_w = gui_text("$text:" + gui_text_escape("This screen will be called " + cv_name) + ";font:gui-3;color:#8cf;")
     on gui_message(mode_rb):
-        # THE NAME FOLLOWS THE MODE - but only while it is still ours. `PROG01` becomes `PRE01`
-        # when the radio moves; "Wall Left" is left exactly as typed. Read the widget rather
-        # than cv_entry_mode: the var write and this block are both on the message path and
-        # nothing promises which lands first.
-        if director_screen_name_is_generated(name_in.value):
-            name_in.value = director_cam_default_name(client_id, director_mode_for(mode_rb.value))
+        # THE NAME FOLLOWS THE MODE, and says so before you commit - `PROG01` becomes `PRE01`
+        # as the radio moves. Read the WIDGET rather than cv_entry_mode: the var write and this
+        # block are both on the message path and nothing promises which lands first.
+        cv_name = director_cam_default_name(client_id, director_mode_for(mode_rb.value))
+        cv_entry_name_w.update("text:" + gui_text_escape("This screen will be called " + cv_name) + ";font:gui-3;color:#8cf;")
 
     gui_row("row-height: 1.4em; font: gui-1;")
     gui_text("$text:`Program is what the stream shows. Preview is the shot before it goes out. Director drives them.`;font:gui-1;color:#9ab;")
@@ -79,8 +81,12 @@ default shared cv_entry_mode = "Director"
     if DIRECTOR.get("pin") and pin != DIRECTOR.get("pin"):
         cv_entry_status_w.update("text:`wrong pin`;font:gui-2;color:#f88;")
         await gui()
-    director_cam_name(client_id, name_in.value)
+    # NAME IT FROM THE MODE, and store the mode FIRST so a later re-entry derives the same
+    # name from the same answer. director_cam_default_name ignores whatever CREW_NAME already
+    # holds - common_console_select writes a person's name into that key, and a program screen
+    # called "Doug" says nothing about what it is.
     cv_entry_chosen = director_mode_set(client_id, director_mode_for(cv_entry_mode))
+    director_cam_name(client_id, director_cam_default_name(client_id, cv_entry_chosen))
     if cv_entry_chosen == "program":
         jump cv_screen_program
     if cv_entry_chosen == "preview":

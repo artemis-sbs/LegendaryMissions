@@ -178,8 +178,9 @@ def director_cam_name(client_id, name=None):
     """Read or set the name this Director console is known by.
 
     Stored as CREW_NAME on the client, which is the key `director_screen_name` also reads - so
-    naming a screen makes it say so on its own holding page and in the operator's summary. A
-    console with no name is not an error; it just reads as `unnamed` until someone types one.
+    a named screen says so on its own holding page and in the operator's summary. The only
+    caller that sets one is the entry screen, and it passes `director_cam_default_name`; a
+    console that never went through it reads as `unnamed`, which is not an error.
     """
     from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
     if name is not None:
@@ -197,20 +198,24 @@ def director_cam_name(client_id, name=None):
 
 
 def director_cam_default_name(client_id, mode=None):
-    """The name to suggest for this console: `DIR01`, `PROG01`, `PRE01`.
+    """This console's name: `DIR01`, `PROG01`, `PRE01`. DERIVED, never typed.
 
     THE MODE PICKS THE PREFIX, because that is what a streamer is reading when four windows
     are open - "Director 3" on a program screen says the wrong thing about what it is. The
     numbering rule (lowest free per prefix, so a screen that leaves frees its number) lives in
     director_modes.py beside the modes themselves.
 
-    A name the operator TYPED is never overwritten - only one that still looks like ours.
+    IT IGNORES WHATEVER `CREW_NAME` ALREADY HOLDS, and that is the point rather than an
+    oversight. `common_console_select` writes that key from the crew-name flow, so a client
+    that named itself before opening the Director arrives with a person's name in it - and a
+    program screen called "Doug" says nothing about what it is. There is no name field on the
+    entry screen any more, so there is no typed name to protect, and the derivation is the
+    only source.
+
+    Stable under re-entry: `director_screen_suggest_name` skips this client's own name, so a
+    console already called PROG01 asking again for a program name gets PROG01 back.
     """
-    from director_modes import (director_mode_of, director_screen_suggest_name,
-                                director_screen_name_is_generated)
-    existing = director_cam_name(client_id)
-    if existing and not director_screen_name_is_generated(existing):
-        return existing
+    from director_modes import director_mode_of, director_screen_suggest_name
     if mode is None:
         mode = director_mode_of(client_id)
     return director_screen_suggest_name(client_id, mode)

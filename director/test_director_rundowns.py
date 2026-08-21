@@ -136,6 +136,68 @@ class RegistryTests(unittest.TestCase):
         self.assertEqual(dr.director_rundown_user_keys()[0], [])
 
 
+class BeatTests(unittest.TestCase):
+    """One SHOT can be several BEATS, and a rundown has to be able to hold them.
+
+    THE REPORTED CASE, verbatim: "show a station with a lower third, dwell for 7, then show
+    the same station without the lower third". Keyed on subject + mode alone, the second Add
+    answered "already in that rundown" and did nothing - so a rundown could not hold more than
+    one item per shot at all.
+    """
+
+    def setUp(self):
+        dr.director_rundowns_reset()
+        self.restore = _install(_World(objects={901: _Obj(901, "Phoenix")}))
+        self.key = dr.director_rundown_new("Show")
+        self.titled = dr.director_item_cam(
+            901, "orbit", label="Station",
+            overlays=[{"kind": "lower_third", "name": "<<name>>", "line": "<<class>>"}],
+            hold=7)
+        self.clean = dr.director_item_cam(901, "orbit", label="Station")
+
+    def tearDown(self):
+        self.restore()
+        dr.director_rundowns_reset()
+
+    def test_the_same_shot_twice_with_different_furniture_is_two_items(self):
+        self.assertTrue(dr.director_rundown_add_item(self.key, self.titled))
+        self.assertTrue(dr.director_rundown_add_item(self.key, self.clean))
+        self.assertEqual(len(dr.director_rundown_items_of(self.key)), 2)
+
+    def test_both_beats_survive_into_the_play_set(self):
+        # Adding them was only half of it: the play set de-duplicated on the same coarse key,
+        # so the second beat would have been dropped on the way to air even once it went in.
+        dr.director_rundown_add_item(self.key, self.titled)
+        dr.director_rundown_add_item(self.key, self.clean)
+        self.assertEqual(len(dr.director_rundown_play_set([self.key])), 2)
+
+    def test_a_different_hold_alone_is_a_different_beat(self):
+        dr.director_rundown_add_item(self.key, dr.director_item_cam(901, "orbit", hold=3))
+        self.assertTrue(dr.director_rundown_add_item(
+            self.key, dr.director_item_cam(901, "orbit", hold=10)))
+
+    def test_an_identical_item_is_still_refused(self):
+        # A double-click must still collapse, or the guard is worthless.
+        self.assertTrue(dr.director_rundown_add_item(self.key, self.titled))
+        self.assertFalse(dr.director_rundown_add_item(self.key, dict(self.titled)))
+
+    def test_the_two_beats_are_still_ONE_shot(self):
+        # Which is what keeps the camera running across the cut: the player compares the shot
+        # key to decide whether to re-route, and only the cards change here.
+        self.assertEqual(dr.director_item_key(self.titled), dr.director_item_key(self.clean))
+        self.assertNotEqual(dr.director_item_ident(self.titled),
+                            dr.director_item_ident(self.clean))
+
+    def test_overlay_order_matters_but_dict_order_does_not(self):
+        # The fingerprint sorts each overlay's keys, so two identical cards written in a
+        # different key order are the same beat.
+        a = dr.director_item_cam(901, "orbit", overlays=[{"kind": "hero", "title": "A",
+                                                          "subtitle": "B"}])
+        b = dr.director_item_cam(901, "orbit", overlays=[{"subtitle": "B", "title": "A",
+                                                          "kind": "hero"}])
+        self.assertEqual(dr.director_item_ident(a), dr.director_item_ident(b))
+
+
 class GeneratorTests(unittest.TestCase):
     def setUp(self):
         dr.director_rundowns_reset()

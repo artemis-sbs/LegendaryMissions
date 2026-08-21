@@ -67,6 +67,28 @@ two unrelated mechanisms:
 They cannot be unified: one is a camera, the other is `assign_client_to_ship` +
 `gui_console` + roles. Pretending otherwise is what would break.
 
+### A SHOT is not an ITEM
+
+Two identities, and collapsing them into one cost a whole feature:
+
+| | What it answers | Used by |
+|---|---|---|
+| `director_item_key` | *is the camera pointed at the same thing, the same way?* - subject + mode | the player's re-route tracking, and **only** that |
+| `director_item_ident` | *is this the same item?* - the shot, plus its furniture, plus its hold | Add to rundown, the play-set dedupe, and what is held on air |
+
+The reported case: **"show a station with a lower third, dwell for 7, then show the same
+station without the lower third."** That is two beats of one shot and it is ordinary direction.
+Keyed on subject + mode alone, the second Add answered *"already in that rundown"* and did
+nothing - so a rundown could not hold more than one item per shot at all. The play set
+de-duplicated the same way, so the second beat would have been dropped on the way to air even
+if it had gone in; and `_PROGRAM_HELD` matched the same way, so advancing from the titled beat
+would have found the first match and snapped straight back to it.
+
+Keeping the coarse key for the player's tracking is what makes that cut look right: the SHOT is
+unchanged across the two beats, so there is no re-route, the camera keeps orbiting, and only
+the cards swap. A double-click still collapses, and a generated orbit of Artemis appearing in
+two rundowns still collapses, because everything about those matches.
+
 ### The shot vocabulary is the bridge's
 
 A camera item carries a **mode**, not geometry:
@@ -182,11 +204,52 @@ that mode. A screen is only rerouted when its ITEM changed; a furniture-only cha
 text, a row ticked) re-shows the cards in place, because a reroute rebuilds the page and restarts
 the camera, and preview restages on every keystroke.
 
+### The on-air item is held by IDENTITY, not by position
+
+This is the one thing to keep true in here. The play set is **rebuilt every tick** - twelve
+times per dwell - so that generated rundowns track ships that spawn and die. **"The action" then
+re-sorts it by live `exciting` values on every one of those evaluations**, and its top-N
+membership churns in a fight. So indexing that list positionally moved the on-air item whenever
+the *sort* moved, with no advance having happened. Reported as: *"The action rundown flickers a
+lot. Switching too soon."*
+
+`director_play_feeds` therefore remembers the **key** of what is on air and looks it up each
+tick, so the list can reorder underneath it freely. Only the clock moves the feed. Two details
+fall out:
+
+- **An advance steps in the CURRENT order.** Held by identity, but the step is taken in the list
+  as it stands at that moment - so a rundown that legitimately reordered is honored at the
+  instant the dwell fires, rather than being frozen to the order at Send.
+- **A vanished item falls to the FRONT, not to its old position.** Its subject died or the
+  operator deselected the rundown carrying it. A stale index into a re-sorted list is exactly
+  the bug; the front is the honest answer, and acquiring it restarts the clock so the
+  replacement gets a full hold instead of inheriting a spent one.
+
+### A hold: how long ONE item stays up
+
+An establishing shot of a starbase wants ten seconds; a chase in a firefight wants three. So a
+hold is **part of the item**, set on the Stage tab and carried in the rundown, and the dwell
+stays the answer for everything with no opinion - including every generated item. The slider's
+bottom stop is 0 and reads back as *"holds for the dwell"*, because a control's low end has to
+mean something and half a second would be unwatchable.
+
+The clock lives inside `director_play_feeds` rather than in the player loop, and that is not
+tidiness: whether to advance depends on the **held** item's own hold, so a caller that decided
+first would have to know what is held before asking what is held. The player hands `elapsed` in
+and takes back whatever the function says it now is.
+
+The hold is **not** part of an item's identity (`director_item_key` is subject + mode), so two
+rundowns naming the same shot with different holds are still one shot and the first into the
+play set wins.
+
 **There is no Send to Preview.** Every control in the editor restages as it is touched, so a
 button to push it would only be a way to forget. **Send to Program** skips the rundown entirely:
 it puts the current subject, shot and overlays on every program screen at once. It **holds** - on
 a six-second dwell an item that did not hold would be overwritten on the next advance and read as
 a button that does nothing - until **Resume** or **Stop** on the main page clears it.
+
+**A take also freezes the clock.** Without that, the dwell would expire while the take was up and
+the first tick after Resume would cut immediately - so Resume would behave like Skip.
 
 A preview screen with nothing staged shows **the next item up** rather than going blank; blank
 reads as broken, and what is coming next is the other thing a director wants to see.
@@ -232,6 +295,14 @@ target ids differ (engine-confirmed, CameraRepro rungs 10 and 11), and `camera_t
 separate dolly away and assigns the console to the target. While a Dolly, Orbit or Chase shot is
 live, the screen rides the subject. That is the engine's model.
 
+**The cinematic view is sized explicitly.** `gui_console("cinematic")` sets the widget list to
+a bare `3dview`, but the engine sizes it from that console's own default rect, which leaves an
+inset for furniture that is not there - so a program feed came out letterboxed inside its own
+window. `cv_show` follows it with a full-screen section and `gui_layout_widget("3dview")`, which
+sends an explicit rect (`send_client_widget_rects`) and is the documented way to size either
+view. Its own section, with nothing else in it: an engine widget draws at its own size over
+whatever MAST put beside it.
+
 What the screen's own cam IS for: **Tactical** (a 2D view is not a cinematic camera and has none
 of that constraint, so the screen keeps its own cam and the view is centered per client with
 `science_set_2dview_focus` - which also means two screens can hold different modes for the same
@@ -268,8 +339,9 @@ Three more things the camera needs, each of which had gone missing:
 **Ask `director_cam_of(client_id)`, never `sbs.get_ship_of_client`,** for "this console own
 ship" - the same hazard `viewscreen_home_ship` exists to solve for the main screen.
 
-**Name your screen.** The entry field writes `CREW_NAME`, which is what the holding pages and
-the operator's summary read, so a streamer with four windows open can tell PROG01 from PRE01.
+**The screen names itself.** `director_cam_default_name` writes `CREW_NAME`, which is what the
+holding pages and the operator's summary read, so a streamer with four windows open can tell
+PROG01 from PRE01 without having typed anything.
 
 **Known and not solved: the cam leaks on disconnect.** LM Game Master and OU Admiral both do
 this too; it is called out here rather than quietly inherited.
@@ -289,10 +361,17 @@ fingerprint deliberately **ignores what each screen is showing**, because the pl
 `CONSOLE_TYPE` every time it changes a screen item - watching that would repaint the operator
 page every dwell, moving the selection under their hands.
 
-**Names follow the mode.** The entry screen suggests `PROG01`, `PRE01`, `DIR01` - the lowest free
-number **per prefix**, so a screen that leaves frees its number and a program screen and a preview
-screen can both be 01. Moving the mode radio re-suggests the name **only while it still looks
-auto-generated**; once you type "Wall Left", switching mode leaves it alone.
+**Names follow the mode, and there is nothing to type.** The entry screen names the console
+`PROG01`, `PRE01` or `DIR01` - the lowest free number **per prefix**, so a screen that leaves
+frees its number and a program screen and a preview screen can both be 01. Moving the mode radio
+re-derives it in front of you; Start commits it.
+
+The name field went because it only ever held what the radio above it already implied, and a
+streamer opening four windows had to fill it in four times. One consequence is worth knowing:
+the derivation now **ignores whatever `CREW_NAME` already holds**. That key is also written by
+`common_console_select` from the crew-name flow, so a client that named itself before opening
+the Director arrives with a person's name in it - and a program screen called "Doug" says
+nothing about what it is. Guarded by `test_director_cam.py`.
 
 ---
 
@@ -309,6 +388,21 @@ the cascaded styling straight onto the end, so `gui_input("desc: name")` goes on
 `desc: namefont:gui-2` and the widget draws that as its prompt. Same for `gui_drop_down` and
 `gui_checkbox`. `gui_input`s own docstring example has the terminator; fourteen calls in this
 addon did not.
+
+**A listbox answers in two different SHAPES.** `get_selected_index()` returns a LIST of indexes
+when the listbox was built `multi=True` and a bare INT (or `None`) when it is single-select;
+`get_selected()` is the same story with values - a list when multi, the bare ITEM when not.
+
+So a helper that iterated the answer worked on every multi list and raised
+`TypeError: 'int' object is not iterable` on every single-select one. **And a failing MAST
+expression stops the command**, so the assignment never happened, the task ended, and the button
+read as doing nothing at all with *no error anywhere on screen*. That was **Add console items**
+(its Ships list is single-select) and the capture tab's **Shoot**. The values case is worse than
+a crash because it does not raise: `list("helm")` is `['h','e','l','m']`, so a single-select
+console list would have produced four consoles with one-letter names.
+
+Both shapes are normalized once, in `director_screens.py` - the call sites are MAST and cannot
+see which shape they are about to get.
 
 **An overlay with an audience and no `seconds` never dies on its own.** It gets a permanent
 `_LIVE` record, and a one-second catch-up ticker re-shows it onto any page in the audience whose
@@ -451,6 +545,10 @@ assigned to the dolly - are all engine-observed. Check:
 2. A camera item with a lower third, then a **console** item: the card goes. *(leak 2)*
 3. The same into a **tactical** item: the card goes and the camera stops moving. *(leak 3)*
 4. Leave the editor by every route - tab, back tab, console change: nothing stuck. *(leak 4)*
+4b. **Console sub-tab**: pick a ship, tick two consoles, **Add console items** - both appear in
+    the item list and the status line under the buttons is readable, not off the bottom.
+4c. Stage a station with a lower third and a 7s hold, Add; untick the lower third, Add again -
+    **two** items in the list, and the feed cuts between them without the orbit restarting.
 5. **Clear** the subject while preview screens are live: they go idle and empty. *(leaks 5, 6)*
 6. Untick an overlay: it leaves the Preview screens without pressing anything else.
 7. Type in an overlay text field: Preview updates and the field keeps its focus and its text.
@@ -458,8 +556,8 @@ assigned to the dolly - are all engine-observed. Check:
 9. A **Player ships** rundown with a Ship ID lower third names each ship correctly as it
    advances - the whole point of templates.
 10. `<<class>>` on a terrain object falls back rather than leaving the line blank.
-11. The entry screen suggests `PROG01` for Program and `PRE01` for Preview, and does **not**
-    overwrite a name typed by hand.
+11. The entry screen reads `PROG01` for Program and re-reads `PRE01` the moment the radio
+    moves to Preview, and the holding page it lands on carries the same name.
 12. Visit the editor, stage a shot, return to the main page - clicking the 2D view still
     selects. *(the re-seat bug)*
 

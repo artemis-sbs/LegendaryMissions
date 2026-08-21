@@ -90,6 +90,18 @@ director_bridge_consoles_set(CV_CONSOLES)
     for cv_name in gui_get_console_types():
         remove_role(client_id, cv_name)
     add_role(client_id, f"console, {cv_console}")
+    # FULL BLEED. `gui_console("cinematic")` sets the widget list to a bare `3dview`, but the
+    # engine sizes it from the console's own default rect, which leaves an inset for furniture
+    # that is not there - so a program feed came out letterboxed inside its own window.
+    # `gui_layout_widget` places it in the MAST layout and sends an explicit rect
+    # (send_client_widget_rects), which is the documented way to size either view.
+    #
+    # ITS OWN SECTION, with nothing else in it. An engine widget draws at its own size over
+    # whatever MAST put beside it, so sharing a row is how you lose the other half.
+    if cv_console == "cinematic":
+        gui_section("area: 0, 0, 100, 100;")
+        gui_row()
+        gui_layout_widget("3dview")
     # THE CAMERA GOES LAST. shot_apply aims a view this screen only has once gui_console has
     # given it one; aiming first would point a 3dview that does not exist yet.
     if cv_shot is not None:

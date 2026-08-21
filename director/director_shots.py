@@ -62,7 +62,7 @@ def director_stage_reset():
     """
     from director_overlays import director_overlay_preset_rows, director_overlay_preset_fields
     _STAGE.clear()
-    _STAGE.update({"subject": None, "mode_label": "Orbit", "on": set(),
+    _STAGE.update({"subject": None, "mode_label": "Orbit", "hold": 0, "on": set(),
                    "fields": {}, "preset": {}})
     for kind, _label, _fields in DIRECTOR_OVERLAY_ROWS:
         labels, _keys = director_overlay_preset_rows(kind)
@@ -135,6 +135,31 @@ def director_stage_mode_label(label=None):
         bench["mode_label"] = director_shot_mode_label(director_shot_mode_for(label))
         director_stage_restage()
     return bench["mode_label"]
+
+
+def director_stage_hold(seconds=None):
+    """Read or set how long the staged item holds on air. 0 means "use the dwell".
+
+    Zero rather than None as the bottom stop, because the control is a slider and its low end
+    has to mean something: "no opinion" is the useful thing for it to mean, and a half-second
+    shot would be unwatchable anyway.
+    """
+    bench = _bench()
+    if seconds is not None:
+        try:
+            bench["hold"] = max(0, int(float(seconds)))
+        except (TypeError, ValueError):
+            bench["hold"] = 0
+        director_stage_restage()
+    return bench.get("hold", 0)
+
+
+def director_stage_hold_label():
+    """One short line for the editor: what the hold slider currently means."""
+    seconds = director_stage_hold()
+    if not seconds:
+        return "holds for the dwell"
+    return "holds " + str(seconds) + "s"
 
 
 def director_stage_on(kind):
@@ -223,7 +248,7 @@ def director_stage_item():
     """The item the bench currently describes, or None when nothing is staged."""
     bench = _bench()
     return director_shot_build(bench["subject"], director_shot_mode_for(bench["mode_label"]),
-                               director_stage_overlays())
+                               director_stage_overlays(), hold=bench.get("hold", 0))
 
 
 def director_stage_restage():
@@ -246,6 +271,8 @@ def director_stage_summary():
         return "nothing staged - click something in the 2D view"
     line = "staged " + director_shot_mode_label(bench["mode_label"]) + " - " \
         + director_subject_label(bench["subject"])
+    if bench.get("hold"):
+        line = line + " " + str(bench["hold"]) + "s"
     extra = director_overlay_summary(director_stage_overlays())
     if extra:
         line = line + " [" + extra + "]"
@@ -274,12 +301,12 @@ def director_overlay_row_label(kind):
 
 # --- item builders ----------------------------------------------------------------------
 
-def director_shot_build(subject_id, mode, overlays=None):
+def director_shot_build(subject_id, mode, overlays=None, hold=None):
     """One camera item. None with no subject."""
     if not subject_id:
         return None
     from director_rundowns import director_item_cam
-    return director_item_cam(subject_id, mode, overlays=overlays)
+    return director_item_cam(subject_id, mode, overlays=overlays, hold=hold)
 
 
 def director_shot_console_items(ship_id, consoles):
@@ -308,6 +335,8 @@ def director_shot_item_rows(key):
         else:
             tag = (item.get("mode") or "orbit")[:5].ljust(5)
         label = tag + " " + _plain(item.get("label"))
+        if item.get("hold"):
+            label = label + "  " + str(item["hold"]) + "s"
         extra = director_overlay_summary(item.get("overlays"))
         if extra:
             label = label + "  [" + extra + "]"

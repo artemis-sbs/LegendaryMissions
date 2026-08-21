@@ -172,16 +172,23 @@ class DirectorNameTests(unittest.TestCase):
         self.assertEqual(dc.director_cam_default_name(CLIENT, "program"), "PROG01")
         self.assertEqual(dc.director_cam_default_name(CLIENT, "preview"), "PRE01")
 
-    def test_a_typed_name_is_not_overwritten_by_the_default(self):
-        dc.director_cam_name(CLIENT, "Stream Out")
-        self.assertEqual(dc.director_cam_default_name(CLIENT), "Stream Out")
-        self.assertEqual(dc.director_cam_default_name(CLIENT, "program"), "Stream Out")
+    def test_a_crew_name_does_not_survive_into_a_screen_name(self):
+        # THE ONE THAT MATTERS since the Name field went. `common_console_select` writes
+        # CREW_NAME from the crew-name flow, so a client that named itself before opening the
+        # Director arrives with a person's name in that key - and a program screen called
+        # "Doug" says nothing about what it is. The derivation ignores it.
+        dc.director_cam_name(CLIENT, "Doug")
+        self.assertEqual(dc.director_cam_default_name(CLIENT, "program"), "PROG01")
 
-    def test_a_suggested_name_IS_replaced_when_the_mode_moves(self):
-        # The entry screen re-suggests on every move of the mode radio. A name that still looks
-        # like ours is ours to change; anything typed is not.
+    def test_the_name_moves_when_the_mode_does(self):
         dc.director_cam_name(CLIENT, "PROG01")
         self.assertEqual(dc.director_cam_default_name(CLIENT, "preview"), "PRE01")
+
+    def test_re_entering_the_same_mode_keeps_the_number(self):
+        # suggest_name skips this client's own name, so asking again is stable rather than
+        # climbing PROG01 -> PROG02 every time the entry screen is revisited.
+        dc.director_cam_name(CLIENT, "PROG01")
+        self.assertEqual(dc.director_cam_default_name(CLIENT, "program"), "PROG01")
 
     def test_the_number_auto_increments_past_names_in_use(self):
         other = 0x8080000000000002

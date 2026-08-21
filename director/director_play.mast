@@ -15,7 +15,6 @@
 # ENDS (a 22-second dolly) rather than when the rundown advances.
 task_schedule(cv_play_task)
 
-default shared cv_play_index = 0
 default shared cv_air = ""
 
 === cv_play_task
@@ -36,19 +35,23 @@ default shared cv_air = ""
     if cv_playing:
         cv_play_items = director_rundown_play_set(cv_rundowns)
 
-    # The dwell, counted rather than slept. A punch HOLDS: on a six-second dwell an item that
-    # did not would be overwritten on the next advance and Send to Program would read as a
-    # button that does nothing.
+    # THE DWELL IS COUNTED, NOT SLEPT, and the decision belongs to director_play_feeds - whether
+    # to advance depends on the HELD item's own hold, so deciding out here would mean knowing
+    # what is held before asking what is held. Hand the clock over and take back what it says.
+    #
+    # It is also the only thing that may move the feed. The play set is rebuilt every tick so
+    # generated rundowns track ships that spawn and die, and "The action" re-sorts it by live
+    # excitement each time - so anything positional would drift twelve times a dwell.
     cv_play_elapsed = cv_play_elapsed + 0.5
-    if cv_playing and cv_punch is None and cv_play_elapsed >= cv_dwell:
-        cv_play_elapsed = 0.0
-        shared cv_play_index = cv_play_index + 1
 
-    # TWO FEEDS, ONE ITEM EACH. Every program screen shows the same thing and every preview
-    # screen shows the same thing - that is broadcast, and it is what replaced a per-screen
-    # distribution nobody wanted.
-    cv_prog_item = director_play_program_item(cv_play_items, cv_play_index, cv_auto, cv_punch)
-    cv_prev_item = director_play_preview_item(cv_play_items, cv_play_index)
+    # TWO FEEDS, ONE ITEM EACH, ONE EVALUATION. Every program screen shows the same thing and
+    # every preview screen shows the same thing - that is broadcast, and it is what replaced a
+    # per-screen distribution nobody wanted. One call, so preview's "next up" is computed
+    # against the same ordering program just used.
+    cv_feeds = director_play_feeds(cv_play_items, cv_play_elapsed, cv_dwell, cv_auto, cv_punch)
+    cv_prog_item = cv_feeds["program"]
+    cv_prev_item = cv_feeds["preview"]
+    cv_play_elapsed = cv_feeds["elapsed"]
     cv_play_plan = director_play_plan(cv_prog_item, cv_prog) + director_play_plan(cv_prev_item, cv_prev)
 
     for cv_p in cv_play_plan:

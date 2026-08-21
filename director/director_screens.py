@@ -64,12 +64,54 @@ def director_ship_rows():
 # whole contract between one build and the next.
 
 
+# A LISTBOX ANSWERS IN TWO DIFFERENT SHAPES, and that asymmetry cost a button.
+#
+# `LayoutListbox.get_selected_index()` returns a LIST of indexes when the listbox was built
+# `multi=True`, and a bare INT (or None) when it is single-select. `get_selected()` is the same
+# story with values: a list when multi, the bare ITEM when not.
+#
+# So code that iterated the answer worked on every multi list and raised
+# `TypeError: 'int' object is not iterable` on every single-select one - and because a failing
+# MAST expression STOPS THE COMMAND, the assignment never happened, the task ended, and the
+# button read as doing nothing with no error anywhere on screen. That was "Add console items"
+# (its Ships list is single-select) and the capture tab's Shoot.
+#
+# The values case is worse than a crash: `list("helm")` does not fail, it SPLITS THE STRING,
+# so a single-select console list would have arrived as five consoles named h, e, l and m.
+#
+# Both are normalized here, once, rather than at each call site - the call sites are MAST and
+# cannot see which shape they are about to get.
+
+def _selected_indexes(lb):
+    """The selection as a list of indexes, whatever shape the listbox answered in."""
+    if lb is None:
+        return []
+    raw = lb.get_selected_index()
+    if raw is None:
+        return []
+    if isinstance(raw, int):
+        return [raw]
+    return list(raw)
+
+
+def _selected_values(lb):
+    """The selection as a list of items, whatever shape the listbox answered in."""
+    if lb is None:
+        return []
+    raw = lb.get_selected()
+    if raw is None:
+        return []
+    if isinstance(raw, (list, tuple, set)):
+        return list(raw)
+    return [raw]
+
+
 def director_selected_ids(lb, ids):
-    """The ids behind a multi-select listbox's selection. Header slots are skipped."""
+    """The ids behind a listbox's selection, single or multi. Header slots are skipped."""
     if lb is None or ids is None:
         return []
     out = []
-    for i in (lb.get_selected_index() or []):
+    for i in _selected_indexes(lb):
         if 0 <= i < len(ids) and ids[i] is not None:
             out.append(ids[i])
     return out
@@ -81,9 +123,7 @@ def director_first_id(lb, ids, fallback=None):
 
 def director_selected_items(lb):
     """The selected item objects, for a listbox whose items ARE the values."""
-    if lb is None:
-        return []
-    return list(lb.get_selected() or [])
+    return _selected_values(lb)
 
 def director_selection_hint(lb):
     """The opaque view token to hand the next build, so the list does not jump to the top."""

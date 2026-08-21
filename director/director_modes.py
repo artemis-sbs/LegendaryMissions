@@ -147,22 +147,6 @@ def director_screen_suggest_name(client_id, mode):
     return prefix + str(n).zfill(2)
 
 
-def director_screen_name_is_generated(name):
-    """Was this name suggested by us, or typed by a person?
-
-    The entry screen re-suggests a name when the mode radio moves, and it MUST NOT overwrite
-    "Wall Left" when it does. Anything matching a prefix plus digits is ours to replace;
-    everything else belongs to whoever typed it.
-    """
-    text = str(name or "").strip()
-    if not text:
-        return True
-    for prefix in DIRECTOR_MODE_PREFIX.values():
-        if text.startswith(prefix) and text[len(prefix):].strip().isdigit():
-            return True
-    return False
-
-
 def director_mode_fingerprint():
     """Changes when the declared screens or their names do - drives the live refresh.
 

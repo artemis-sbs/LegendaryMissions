@@ -45,6 +45,9 @@ _SHOTS = {}
 _STAGED = [None]
 # The auto-director's memory: the item key it settled on, so it can hold through noise.
 _AUTO_HELD = [None]
+# The key of the item currently ON AIR. Identity, deliberately, not an index - see
+# director_play_program_item.
+_PROGRAM_HELD = [None]
 
 
 def director_screen_enter(client_id):
@@ -86,6 +89,7 @@ def director_play_reset():
     _SHOTS.clear()
     _STAGED[0] = None
     _AUTO_HELD[0] = None
+    _PROGRAM_HELD[0] = None
 
 
 def _exciting(subject_id):
@@ -118,7 +122,7 @@ def director_play_auto_order(items):
     two contacts trading a fractionally higher score would swap the feed several times a minute,
     which reads as a fault rather than as direction.
     """
-    from director_rundowns import director_item_key, director_item_subject
+    from director_rundowns import director_item_ident, director_item_subject
     if not items:
         _AUTO_HELD[0] = None
         return []
@@ -127,18 +131,18 @@ def director_play_auto_order(items):
     if held_key is not None:
         held = None
         for item in items:
-            if director_item_key(item) == held_key:
+            if director_item_ident(item) == held_key:
                 held = item
                 break
         if held is not None:
             leader = ranked[0]
-            if director_item_key(leader) != held_key:
+            if director_item_ident(leader) != held_key:
                 gain = (_exciting(director_item_subject(leader))
                         - _exciting(director_item_subject(held)))
                 if gain <= DIRECTOR_AUTO_MARGIN:
                     ranked = [held] + [i for i in ranked
-                                       if director_item_key(i) != held_key]
-    _AUTO_HELD[0] = director_item_key(ranked[0])
+                                       if director_item_ident(i) != held_key]
+    _AUTO_HELD[0] = director_item_ident(ranked[0])
     return ranked
 
 
@@ -153,36 +157,114 @@ def director_play_stage(item=None, clear=False):
     return _STAGED[0]
 
 
-def director_play_program_item(items, index=0, auto=False, punch=None):
-    """The ONE item every program screen shows.
+def _index_of(order, ident):
+    """Where `ident` sits in `order`, or None if it is not there any more.
 
-    `punch` is what "Send to Program" took, and it wins outright until cleared - on a six-second
-    dwell a punch that did not hold would be overwritten on the next advance and read as a button
-    that does nothing.
+    The full IDENT, not the shot key: a rundown can hold the same shot twice with different
+    furniture, and matching on the shot would find the first of them - so advancing from the
+    titled beat to the clean one would snap straight back to the titled one.
     """
-    if punch is not None:
-        return punch
-    items = list(items or [])
-    if not items:
+    if ident is None:
         return None
+    from director_rundowns import director_item_ident
+    for index, item in enumerate(order):
+        if director_item_ident(item) == ident:
+            return index
+    return None
+
+
+def _next_after(order, ident, auto):
+    """The item that should follow `ident` when the clock runs out."""
+    from director_rundowns import director_item_ident
+    at = _index_of(order, ident)
+    if at is None:
+        return order[0]
     if auto:
-        return director_play_auto_order(items)[0]
-    return items[index % len(items)]
+        # Auto means "follow the action", so an advance goes to the LEADER - unless the leader
+        # is already what is on air, in which case sitting on it forever is not direction
+        # either and it steps on.
+        if director_item_ident(order[0]) != ident:
+            return order[0]
+    return order[(at + 1) % len(order)]
 
 
-def director_play_preview_item(items, index=0):
-    """The ONE item every preview screen shows: staged, else the next one up.
+def director_play_hold(item, dwell):
+    """How long `item` stays on air: its own hold, else the operator's dwell.
 
-    The fallback matters. A preview screen that goes blank whenever the operator is not actively
-    staging something reads as broken rather than as idle, and "next up" - what the rundown will
-    hand to program on its next advance - is the other thing a director wants to see coming.
+    An establishing shot of a starbase wants ten seconds; a chase in a firefight wants three.
+    The hold is per item so a rundown can say that, and the dwell stays the answer for
+    everything that has no opinion - including every generated item.
     """
-    if _STAGED[0] is not None:
-        return _STAGED[0]
+    try:
+        dwell = float(dwell)
+    except (TypeError, ValueError):
+        dwell = 6.0
+    own = (item or {}).get("hold")
+    if own is None:
+        return dwell
+    try:
+        return float(own)
+    except (TypeError, ValueError):
+        return dwell
+
+
+def director_play_feeds(items, elapsed=None, dwell=6.0, auto=False, punch=None):
+    """Both feeds and the dwell clock, from one evaluation.
+
+    Returns `{"program": item, "preview": item, "elapsed": seconds}`. Hand `elapsed` back to
+    the player each tick; it comes back reset to 0.0 on an advance.
+
+    ONE CALL, so preview's "next up" is computed against the same ordering program just used.
+    Two calls could disagree, and a preview screen showing something the next advance will not
+    actually take is worse than no preview at all. THE CLOCK IS HERE TOO, because whether to
+    advance depends on the HELD item's own hold - so a caller that decided first would have to
+    know what is held before asking what is held.
+
+    THE PROGRAM ITEM IS HELD BY IDENTITY, AND THAT IS THE WHOLE POINT OF THIS FUNCTION. The
+    play set is rebuilt every tick - twelve times per dwell - so that generated rundowns track
+    ships that spawn and die. "The action" then re-sorts it by live `exciting` values every
+    time, and its top-N membership churns in a fight. Indexing that list POSITIONALLY meant the
+    on-air item moved whenever the sort moved, with no advance having happened: the reported
+    flicker. Holding the KEY makes the item immune to the list reordering underneath it, and
+    the clock is the only thing that can change what is on air.
+
+    `elapsed=None` means "do not consider advancing" - a pure read of the two feeds.
+
+    `punch` is what "Send to Program" took. It wins outright AND FREEZES THE CLOCK, so Resume
+    hands the feed back exactly where it was rather than cutting immediately because the dwell
+    expired while the take was up.
+    """
+    from director_rundowns import director_item_ident
     items = list(items or [])
     if not items:
-        return None
-    return items[(index + 1) % len(items)]
+        _PROGRAM_HELD[0] = None
+        return {"program": punch, "preview": _STAGED[0], "elapsed": 0.0}
+
+    order = director_play_auto_order(items) if auto else items
+    at = _index_of(order, _PROGRAM_HELD[0])
+    if at is None:
+        # Nothing held, or what was held has died or left the play set. Take the front rather
+        # than the old position: a stale index into a re-sorted list is what this exists to
+        # avoid.
+        program = order[0]
+        elapsed = 0.0 if elapsed is not None else None
+    else:
+        program = order[at]
+        if punch is None and elapsed is not None:
+            if elapsed >= director_play_hold(program, dwell):
+                program = _next_after(order, _PROGRAM_HELD[0], auto)
+                elapsed = 0.0
+    _PROGRAM_HELD[0] = director_item_ident(program)
+
+    # Preview follows the editor when something is staged; otherwise it shows what the NEXT
+    # advance will take. A preview screen that goes blank whenever the operator is not staging
+    # reads as broken rather than as idle.
+    preview = _STAGED[0]
+    if preview is None:
+        preview = _next_after(order, _PROGRAM_HELD[0], auto)
+    return {"program": punch if punch is not None else program,
+            "preview": preview,
+            "elapsed": 0.0 if elapsed is None else elapsed}
 
 
 def _overlay_key(item):
@@ -191,13 +273,13 @@ def _overlay_key(item):
     Separate because they want different treatments: a new shot needs a reroute, while new
     text on the same shot must not get one. Preview restages on every keystroke, and a reroute
     per keystroke would rebuild the page and restart the camera each time.
+
+    This is also what makes "the station with a lower third, then the same shot clean" look
+    right on air: the SHOT key is unchanged across those two beats, so the camera keeps
+    running and only the cards swap.
     """
-    parts = []
-    for entry in ((item or {}).get("overlays") or ()):
-        for key in sorted(entry):
-            parts.append(str(key) + "=" + str(entry[key]))
-        parts.append("/")
-    return ";".join(parts)
+    from director_rundowns import director_item_overlay_ident
+    return director_item_overlay_ident(item)
 
 
 def director_play_plan(item, screens):
