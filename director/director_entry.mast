@@ -18,7 +18,21 @@
 # under their hand. `director_entry` seeds it per client before the radio is built, which is
 # all the declaration was doing.
 
+# `pre_game: true` is how this console asks the picker to let it be set up BEFORE the mission
+# starts - see the Ready handler in consoles/common_console_select.mast. It is read off the
+# LABEL, so that file names no addon; a console that does not declare it is unchanged.
+#
+# THE METADATA BLOCK GOES ABOVE THE DESCRIPTION LINE, and that is not a style choice. The
+# `metadata:` line and its closing fence sit at column 0, so putting them after ANY indented
+# body line - the `"` description included - is an indentation drop mid-label and fails to
+# compile with "Bad indentation". Measured on `@console`, `@map` and a plain `==` label alike;
+# MAST_CLAUDE.md's `@map` example has them the other way round and does not compile. A story
+# that does not compile schedules NO task at all, so this is a whole-mission failure, not a
+# local one.
 @console/director !0 ^94 "Director" if DIRECTOR_enabled
+metadata: ``` yaml
+pre_game: true
+```
     " Stream director - pick program, preview or the control console.
     jump director_entry
 
@@ -31,6 +45,23 @@
     default cv_entry_error = ""
     # A camera first, so this client is never sitting on somebody's bridge while it decides.
     director_cam_ensure(client_id)
+
+    # ALREADY DECLARED, AND SENT BACK HERE BY THE START OF THE GAME? Go straight to the mode.
+    #
+    # A console set up before the mission starts is rerouted through `game_started_console`
+    # when the server presses Start, and that walks it into its console the ordinary way -
+    # `jump(console.label)`, which lands right here. Without this, a screen the streamer had
+    # already declared as PROG01 comes back to the pin screen, and with four windows open
+    # somebody has to walk round and press Start in all of them. Setting up early would buy
+    # nothing.
+    #
+    # ONE-SHOT, and that is the whole design - see director_mode_resume_take. The picker path
+    # and the start reroute arrive by the same jump and are otherwise identical, so the flag is
+    # armed when a mode is committed and SPENT here. The start reroute spends it; an operator
+    # who later re-picks Director off the console list finds it spent and gets this screen,
+    # which is the only way to change a mode.
+    if director_mode_resume_take(client_id):
+        jump director_entry_resume
     cv_entry_mode = director_mode_label(director_mode_of(client_id))
     cv_name = director_cam_default_name(client_id, director_mode_for(cv_entry_mode))
     pin = ""
@@ -79,6 +110,15 @@
 
     await gui():
         + "cancel":
+            # BACKING OUT UNDECLARES THIS CONSOLE. Without it the next visit would find a mode
+            # still stored and could skip the screen just cancelled out of.
+            director_mode_clear(client_id)
+            # ...AND UNTICKS READY, before the game starts. `console_ready` is a task variable
+            # of THIS task - the same GUI task that ran the picker - so the picker's own
+            # clear-and-return label can still reach it from here. After the start it is a dead
+            # flag (game_started_console read it once, at Start) and the picker shows a Ready
+            # BUTTON instead of the checkbox, so there is nothing to untick.
+            jump select_console_clear_ready if not GAME_STARTED
             jump select_console
 
 # Commit the name and mode, then go where the mode says. Separate label because the pin check
@@ -100,9 +140,18 @@
     # called "Doug" says nothing about what it is.
     cv_entry_chosen = director_mode_set(client_id, director_mode_for(cv_entry_mode))
     director_cam_name(client_id, director_cam_default_name(client_id, cv_entry_chosen))
-    if cv_entry_chosen == "program":
+    # ARM THE RESUME. Spent by the next entry to this screen, which - for a console set up
+    # before the mission - is the start-of-game reroute. See director_entry.
+    director_mode_resume_arm(client_id)
+    jump director_entry_resume
+
+
+# Where a declared mode actually sends this console. TWO CALLERS, which is why it is a label
+# and not three lines repeated: a fresh Start, and the start-of-game reroute skipping the pin.
+=== director_entry_resume
+    if director_mode_of(client_id) == "program":
         jump cv_screen_program
-    if cv_entry_chosen == "preview":
+    if director_mode_of(client_id) == "preview":
         jump cv_screen_preview
     jump cv_ui
 

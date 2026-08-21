@@ -38,13 +38,18 @@ default shared cv_target_rundown = None
     # MAST command, ends the route, and leaves picking from the list doing nothing at all with
     # nothing logged. Reading the point first put that raise ahead of every other line here.
     if SCIENCE_SELECTED_ID != 0 and SCIENCE_SELECTED is not None:
-        shared cv_subject_id = SCIENCE_SELECTED_ID
-        # STAGE IT HERE, not from the editor's `on change`. The bench is what every Preview
-        # screen follows, and pushing it at the point the subject is actually picked means the
-        # preview updates on the click rather than on the next repaint.
-        director_stage_subject(SCIENCE_SELECTED_ID)
+        cv_focus_pick = SCIENCE_SELECTED_ID
         cv_focus_pos = Vec3(SCIENCE_SELECTED.pos)
     elif EVENT.source_point is not None:
+        # EMPTY SPACE STILL SELECTS SOMETHING - the CAM. The click pans the cam to that point,
+        # and the cam is a real object, so it is the honest answer to "what did I just point
+        # at": a place. That makes a bound item a shot of the REGION - click a spot and every
+        # `<<selected_id>>` beat frames it, and the shot then glides with the cam on the next
+        # pan, because camera_orbit rebuilds its offset from the subject's live position.
+        #
+        # Leaving the selection alone here was the gap: the cam moved, the radar moved, and
+        # every bound item went on framing whatever contact had been clicked before.
+        cv_focus_pick = SCIENCE_ORIGIN_ID
         cv_focus_pos = Vec3(EVENT.source_point)
     else:
         ->END
@@ -54,6 +59,21 @@ default shared cv_target_rundown = None
     # worse for it.
     cv_focus_pos.y = SCIENCE_ORIGIN.pos.y
     SCIENCE_ORIGIN.pos = cv_focus_pos
+
+    # AFTER THE MOVE, all three of them. Staging pushes the shot to every Preview screen
+    # immediately, so it has to frame where the cam now IS - announcing the pick first would
+    # preview the old position for a tick and read as lag.
+    shared cv_subject_id = cv_focus_pick
+    # THE SHOW'S SELECTION. Separate from the bench, and set on EVERY click - this route is
+    # gated on the client riding its own director_cam, not on which tab is open, so it fires
+    # for the main panel's 2D view as well as the editor's. That is the point: every
+    # `<<selected_id>>` item in the play set re-aims the moment the operator clicks, without
+    # them going anywhere near the editor.
+    director_selection(cv_focus_pick)
+    # STAGE IT HERE, not from the editor's `on change`. The bench is what every Preview screen
+    # follows, and pushing it at the point the subject is actually picked means the preview
+    # updates on the click rather than on the next repaint.
+    director_stage_subject(cv_focus_pick)
 
 # Scan data is stored per the ORIGIN SIDE, so one pass marks a whole side objects known and
 # comms/science enable on the first click rather than the second.

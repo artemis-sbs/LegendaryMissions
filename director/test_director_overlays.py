@@ -270,5 +270,166 @@ class PresetTests(unittest.TestCase):
         ov.director_overlay_token_help().encode("ascii")
 
 
+class ItemTokenTests(unittest.TestCase):
+    """`<<name>> - <<console>> - <<crew_name>>` -> "Artemis - Helm - Viper".
+
+    Only one third of that line is a property of the ship. `<<console>>` belongs to the BEAT and
+    `<<crew_name>>` to the person sitting at that station, which is why they need the item and
+    cannot be answered from the subject alone.
+    """
+
+    def setUp(self):
+        self._real_obj = ov._obj
+        ov._obj = lambda sid: self._ship if sid == 901 else None
+
+        class _Ship:
+            id = 901
+            name = "Artemis"
+
+        self._ship = _Ship()
+        # The ship's consoles are its `consoles` LINK; each client carries CONSOLE_TYPE and
+        # CREW_NAME as inventory. Both are what show_console_selected writes.
+        self.links = {(901, "consoles"): {10, 11}}
+        self.inv = {(10, "CONSOLE_TYPE"): "helm", (10, "CREW_NAME"): "Viper",
+                    (11, "CONSOLE_TYPE"): "weapons", (11, "CREW_NAME"): "Maverick"}
+        links_mod = types.ModuleType("sbs_utils.procedural.links")
+        links_mod.linked_to = lambda src, name: self.links.get((src, name), set())
+        inv_mod = types.ModuleType("sbs_utils.procedural.inventory")
+        inv_mod.get_inventory_value = lambda cid, key, default=None: self.inv.get((cid, key), default)
+        self.saved = {}
+        for name, mod in (("sbs_utils.procedural.links", links_mod),
+                          ("sbs_utils.procedural.inventory", inv_mod)):
+            self.saved[name] = sys.modules.get(name)
+            sys.modules[name] = mod
+
+    def tearDown(self):
+        ov._obj = self._real_obj
+        for name, mod in self.saved.items():
+            if mod is None:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = mod
+
+    def _con(self, console="helm"):
+        return {"kind": "con", "ship": 901, "console": console}
+
+    def test_the_whole_line(self):
+        got = ov.director_overlay_resolve("<<name>> - <<console>> - <<crew_name>>",
+                                          901, self._con())
+        self.assertEqual(got, "Artemis - Helm - Viper")
+
+    def test_the_console_is_title_cased_for_display(self):
+        self.assertEqual(ov.director_overlay_resolve("<<console>>", 901, self._con("weapons")),
+                         "Weapons")
+
+    def test_the_crew_name_matches_the_BEATS_console(self):
+        # A bridge has five people on it. Naming the wrong one on air is worse than naming
+        # nobody, so this matches the station rather than taking the first client on the ship.
+        self.assertEqual(ov.director_overlay_resolve("<<crew_name>>", 901, self._con("weapons")),
+                         "Maverick")
+
+    def test_an_unmanned_station_takes_the_fallback(self):
+        # The ordinary case on a small bridge, and a blank second line reads as a broken card.
+        self.assertEqual(
+            ov.director_overlay_resolve("<<crew_name|unmanned>>", 901, self._con("science")),
+            "unmanned")
+
+    def test_a_camera_beat_has_no_console_and_no_crew(self):
+        # `<<name>> - <<console>>` on a camera item must read as the ship's name, not as the
+        # name followed by a dash and a lie.
+        cam = {"kind": "cam", "subject": 901, "mode": "orbit"}
+        self.assertEqual(ov.director_overlay_resolve("<<console>>", 901, cam), "")
+        self.assertEqual(ov.director_overlay_resolve("<<crew_name>>", 901, cam), "")
+
+    def test_no_item_at_all_degrades_rather_than_raising(self):
+        # An older caller that does not pass one. These resolve to their fallback like any
+        # other token that cannot answer.
+        self.assertEqual(ov.director_overlay_resolve("<<console|-->>", 901), "--")
+
+    def test_the_console_survives_a_dead_subject(self):
+        # It is a property of the BEAT, so a console beat pointed at a ship that just blew up
+        # still says which station it was.
+        self.assertEqual(ov.director_overlay_resolve("<<console>>", 999, self._con()), "Helm")
+
+    def test_the_station_preset_is_offered(self):
+        fields = ov.director_overlay_preset_fields("lower_third", "Station and crew")
+        self.assertEqual(fields["name"], "<<name>> - <<console>>")
+
+    def test_the_help_line_names_them(self):
+        help_line = ov.director_overlay_token_help()
+        self.assertIn("console", help_line)
+        self.assertIn("crew_name", help_line)
+        help_line.encode("ascii")
+
+
+class BuildFieldsTests(unittest.TestCase):
+    """The two fields that are NOT text by the time overlay.py's builders see them.
+
+    The editor can only offer a text box, so the conversion has to happen on the way out - and
+    it has to happen ONCE, in the library-facing layer, because the call site is MAST and can
+    do neither of these.
+    """
+
+    def test_text_fields_pass_through_even_when_empty(self):
+        # Several builders take their primary field positionally, and a blank line is a
+        # legitimate thing to want on a lower third.
+        built = ov.director_overlay_build_fields(
+            {"kind": "lower_third", "name": "", "line": ""}, None)
+        self.assertEqual(built, {"kind": "lower_third", "name": "", "line": ""})
+
+    def test_credits_entries_become_a_list(self):
+        # overlay_credits iterates `entries`. A string would be iterated one CHARACTER at a
+        # time and roll the alphabet.
+        built = ov.director_overlay_build_fields(
+            {"kind": "credits", "title": "Cast", "entries": "Kirk; Spock ;McCoy"}, None)
+        self.assertEqual(built["entries"], ["Kirk", "Spock", "McCoy"])
+
+    def test_empty_credits_entries_are_still_a_list(self):
+        built = ov.director_overlay_build_fields({"kind": "credits", "entries": ""}, None)
+        self.assertEqual(built["entries"], [])
+
+    def test_a_portrait_ship_becomes_an_id(self):
+        # `ship` builds a `ship://` visual from an object ID. A str id would name nothing and
+        # draw a blank square.
+        built = ov.director_overlay_build_fields(
+            {"kind": "lower_third_portrait", "name": "A", "line": "B", "ship": " 901 "}, None)
+        self.assertEqual(built["ship"], 901)
+
+    def test_an_unusable_ship_is_omitted_not_zeroed(self):
+        # Its default is None, not "" - so it has to be ABSENT for the builder to draw no
+        # square. This is the narrator case: a speaker card with nobody to show.
+        for value in ("", "0", "nonsense", None):
+            built = ov.director_overlay_build_fields(
+                {"kind": "lower_third_portrait", "name": "Narrator", "ship": value}, None)
+            self.assertNotIn("ship", built, value)
+
+    def test_the_subject_id_token_fills_the_portrait(self):
+        # The preset points a speaker card at whatever the item is pointed at, so the common
+        # case needs no typing at all.
+        class _Obj:
+            id = 901
+            name = "Artemis"
+
+        real = ov._obj
+        ov._obj = lambda sid: _Obj() if sid else None
+        try:
+            built = ov.director_overlay_build_fields(
+                {"kind": "lower_third_portrait", "name": "<<name>>",
+                 "ship": "<<subject_id>>"}, 901)
+        finally:
+            ov._obj = real
+        self.assertEqual(built["ship"], 901)
+        self.assertEqual(built["name"], "Artemis")
+
+    def test_an_overlay_only_item_resolves_the_token_to_nothing(self):
+        # No subject, so the portrait token yields empty and the card draws without a square -
+        # which is exactly right for a narrator or a title.
+        built = ov.director_overlay_build_fields(
+            {"kind": "lower_third_portrait", "name": "Narrator",
+             "ship": "<<subject_id>>"}, None)
+        self.assertNotIn("ship", built)
+        self.assertEqual(built["name"], "Narrator")
+
+
 if __name__ == "__main__":
     unittest.main()

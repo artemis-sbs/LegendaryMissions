@@ -24,6 +24,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import director_rundowns as dr
+import director_bind as db
 
 # WARM THE REAL MODULES FIRST. The stubs below replace `sbs_utils.procedural.query` in
 # sys.modules, and sbs_utils imports `from ..query import to_id` all over its own package -
@@ -120,6 +121,35 @@ class RegistryTests(unittest.TestCase):
         self.assertFalse(dr.director_rundown_item_remove(key, 0))
         self.assertTrue(dr.director_rundown_delete(key))
         self.assertFalse(dr.director_rundown_delete(key))
+
+    def test_replace_swaps_in_place(self):
+        key = dr.director_rundown_new("Act One")
+        for console in ("helm", "science", "comms"):
+            dr.director_rundown_add_item(key, dr.director_item_con(901, console))
+        self.assertTrue(dr.director_rundown_item_replace(
+            key, 1, dr.director_item_con(901, "engineering")))
+        order = [i["console"] for i in dr.director_rundown_items_of(key)]
+        self.assertEqual(order, ["helm", "engineering", "comms"])
+
+    def test_replace_does_NOT_dedupe(self):
+        # Add's "you already have it" is right for Add. Replace means "make row 1 be this", and
+        # refusing because row 2 already matches would leave the operator staring at a row that
+        # did not change with nothing to say why.
+        key = dr.director_rundown_new("Act One")
+        dr.director_rundown_add_item(key, dr.director_item_con(901, "helm"))
+        dr.director_rundown_add_item(key, dr.director_item_con(901, "science"))
+        self.assertTrue(dr.director_rundown_item_replace(
+            key, 0, dr.director_item_con(901, "science")))
+        order = [i["console"] for i in dr.director_rundown_items_of(key)]
+        self.assertEqual(order, ["science", "science"])
+
+    def test_replace_off_the_end_does_nothing(self):
+        key = dr.director_rundown_new("Act One")
+        dr.director_rundown_add_item(key, dr.director_item_con(901, "helm"))
+        self.assertFalse(dr.director_rundown_item_replace(key, 5, dr.director_item_con(901, "x")))
+        self.assertFalse(dr.director_rundown_item_replace(key, None, dr.director_item_con(901, "x")))
+        self.assertFalse(dr.director_rundown_item_replace(key, 0, None))
+        self.assertEqual(len(dr.director_rundown_items_of(key)), 1)
 
     def test_key_for_maps_a_display_name_back(self):
         # A dropdown carries display TEXT, not keys, so the selection has to map back.
@@ -398,7 +428,6 @@ class GeneratorTests(unittest.TestCase):
             exciting={950: 4.0, 901: 1.0},
         )
         self.restore = _install(self.world)
-        dr.director_bridge_consoles_set(["helm", "science"])
 
     def tearDown(self):
         self.restore()
@@ -413,10 +442,61 @@ class GeneratorTests(unittest.TestCase):
         self.assertEqual([i["label"] for i in dr.director_rundown_gen_players()],
                          [i["label"] for i in dr.director_rundown_gen_players()])
 
-    def test_bridge_is_one_console_item_per_console_per_ship(self):
-        items = dr.director_rundown_gen_bridge()
-        self.assertEqual(len(items), 4)                     # 2 ships x 2 consoles
-        self.assertTrue(all(i["kind"] == "con" for i in items))
+    def test_the_stock_rundowns_carry_furniture(self):
+        # They are the first thing a new operator sends to air, and a bare shot of an unnamed
+        # ship is the least the console can do rather than a demonstration of it.
+        for item in dr.director_rundown_gen_players():
+            self.assertEqual([o["kind"] for o in item["overlays"]], ["lower_third"])
+        for item in dr.director_rundown_gen_action():
+            self.assertEqual([o["kind"] for o in item["overlays"]], ["banner"])
+        for item in dr.director_rundown_gen_scenery():
+            self.assertEqual([o["kind"] for o in item["overlays"]], ["hero"])
+
+    def test_generated_furniture_is_a_TEMPLATE(self):
+        # THE WHOLE REASON a generator can carry furniture at all: it makes one item per ship,
+        # so there is nowhere to type "Artemis". Baking the name at generate time would name the
+        # wrong ship for every other item - and for a BOUND beat, for every other click.
+        item = dr.director_rundown_gen_players()[0]
+        self.assertEqual(item["overlays"][0]["name"], "<<name>>")
+        self.assertNotIn("Artemis", str(item["overlays"]))
+
+    def test_each_generated_item_gets_its_own_overlay_dict(self):
+        # They are shared module constants; handing the same dict to two items would let an
+        # edit to one silently change the other.
+        items = dr.director_rundown_gen_players()
+        self.assertIsNot(items[0]["overlays"][0], items[1]["overlays"][0])
+
+    def test_the_bridge_wall_is_gone(self):
+        # Its premise died with the screen-distribution model: with one program feed showing one
+        # item, twelve console beats are a rotation, not a wall.
+        self.assertFalse(hasattr(dr, "director_rundown_gen_bridge"))
+        self.assertEqual(dr.director_rundown_items_of("bridge"), [])
+
+    def test_follow_names_no_object_at_all(self):
+        items = dr.director_rundown_gen_follow()
+        self.assertEqual(len(items), 3)
+        for item in items:
+            self.assertTrue(db.director_bind_is(item["subject"]), item)
+
+    def test_crew_is_bound_console_beats(self):
+        items = dr.director_rundown_gen_crew()
+        self.assertEqual(len(items), len(dr.DIRECTOR_CREW_CONSOLES))
+        for item in items:
+            self.assertEqual(item["kind"], "con")
+            self.assertTrue(db.director_bind_is(item["ship"]), item)
+
+    def test_crew_offers_no_mainscreen_or_cinematic(self):
+        # Neither is a crew view, and a `cinematic` console beat is the worse of the two: a
+        # full-screen 3dview with no camera applied to it.
+        consoles = [i["console"] for i in dr.director_rundown_gen_crew()]
+        self.assertNotIn("mainscreen", consoles)
+        self.assertNotIn("cinematic", consoles)
+
+    def test_a_bound_console_item_is_labelled_from_the_binding(self):
+        # to_object on a binding answers None, which used to label every one "Helm - no ship".
+        item = dr.director_rundown_gen_crew()[0]
+        self.assertIn("Selection", item["label"])
+        self.assertNotIn("no ship", item["label"])
 
     def test_the_action_is_ranked_and_capped(self):
         items = dr.director_rundown_gen_action()
@@ -476,6 +556,193 @@ class PlaySetTests(unittest.TestCase):
         self.assertEqual(len(labels), len(keys))
         self.assertTrue(any(l.startswith("Act One") and l.endswith("1") for l in labels),
                         labels)
+
+
+class BoundSubjectTests(unittest.TestCase):
+    """Items whose subject is the Director's SELECTION rather than a baked id.
+
+    The whole value of these is that the item survives being re-pointed, so the tests that
+    matter are the ones about IDENTITY - an item that changed identity when the operator
+    clicked would lose the feed's place and snap the show back to its first beat.
+    """
+
+    def setUp(self):
+        dr.director_rundowns_reset()
+        db.director_selection_reset()
+        self.world = _World(
+            roles={"__player__": {901, 902}, "director_cam": set()},
+            objects={901: _Obj(901, "Artemis"), 902: _Obj(902, "Raider")},
+        )
+        self.restore = _install(self.world)
+        # The bind resolver reaches for its own selection getters, which the rundowns harness
+        # has no reason to carry. Add them to the same stub module.
+        query = sys.modules["sbs_utils.procedural.query"]
+        self.weapons = {}
+        query.get_weapons_selection = lambda oid: self.weapons.get(oid)
+        query.get_science_selection = lambda oid: None
+        query.get_comms_selection = lambda oid: None
+        query.get_grid_selection = lambda oid: None
+
+    def tearDown(self):
+        self.restore()
+        dr.director_rundowns_reset()
+        db.director_selection_reset()
+
+    def test_the_label_names_the_binding_not_a_ship(self):
+        # Baking "Artemis" into the row would be a lie the moment the operator clicked
+        # anything else - and it is the row that tells them what the item actually does.
+        db.director_selection(901)
+        item = dr.director_item_cam("<<selected_id>>", "orbit")
+        self.assertIn("Selection", item["label"])
+        self.assertNotIn("Artemis", item["label"])
+
+    def test_the_subject_resolves_to_whatever_is_selected(self):
+        item = dr.director_item_cam("<<selected_id>>", "orbit")
+        db.director_selection(901)
+        self.assertEqual(dr.director_item_subject_id(item), 901)
+        db.director_selection(902)
+        self.assertEqual(dr.director_item_subject_id(item), 902)
+
+    def test_the_declared_subject_stays_the_binding(self):
+        item = dr.director_item_cam("<<selected_id>>", "orbit")
+        db.director_selection(901)
+        self.assertEqual(dr.director_item_subject(item), "<<selected_id>>")
+
+    def test_identity_does_not_move_with_the_selection(self):
+        # THE LOAD-BEARING ONE. director_play_feeds holds its place by ident; if this moved,
+        # _index_of would lose _PROGRAM_HELD and the program would snap to order[0] with the
+        # dwell clock reset - on every click.
+        item = dr.director_item_cam("<<selected_id>>", "orbit")
+        db.director_selection(901)
+        before = dr.director_item_ident(item)
+        db.director_selection(902)
+        self.assertEqual(dr.director_item_ident(item), before)
+
+    def test_a_bound_item_is_skipped_while_it_cannot_resolve(self):
+        a = dr.director_rundown_new("A")
+        dr.director_rundown_add_item(a, dr.director_item_con(901, "helm"))
+        dr.director_rundown_add_item(a, dr.director_item_cam("<<selected_id>>", "orbit"))
+        self.assertEqual(len(dr.director_rundown_play_set([a])), 1)
+        db.director_selection(902)
+        self.assertEqual(len(dr.director_rundown_play_set([a])), 2)
+
+    def test_it_comes_back_the_moment_it_resolves_again(self):
+        # Skipping is not removal. A show that dropped a beat permanently the first time the
+        # operator deselected would be unusable.
+        a = dr.director_rundown_new("A")
+        dr.director_rundown_add_item(a, dr.director_item_cam("<<selected_id>>", "orbit"))
+        db.director_selection(901)
+        self.assertEqual(len(dr.director_rundown_play_set([a])), 1)
+        db.director_selection(clear=True)
+        self.assertEqual(len(dr.director_rundown_play_set([a])), 0)
+        db.director_selection(901)
+        self.assertEqual(len(dr.director_rundown_play_set([a])), 1)
+
+    def test_a_console_beat_needs_a_PLAYER_ship(self):
+        # Clicking a rock ignores the console list. cv_show would otherwise assign a screen to
+        # the asteroid and draw helm widgets for it.
+        self.world.roles["__terrain__"] = {930}
+        self.world.objects[930] = _Obj(930, "Black Hole")
+        a = dr.director_rundown_new("A")
+        dr.director_rundown_add_item(a, dr.director_item_con("<<selected_id>>", "helm"))
+        db.director_selection(930)
+        self.assertEqual(len(dr.director_rundown_play_set([a])), 0)
+        db.director_selection(901)
+        self.assertEqual(len(dr.director_rundown_play_set([a])), 1)
+
+    def test_the_player_ship_rule_is_CONSOLE_only(self):
+        # A camera beat pointed at a rock is a perfectly good shot of a rock.
+        self.world.roles["__terrain__"] = {930}
+        self.world.objects[930] = _Obj(930, "Black Hole")
+        a = dr.director_rundown_new("A")
+        dr.director_rundown_add_item(a, dr.director_item_cam("<<selected_id>>", "orbit"))
+        db.director_selection(930)
+        self.assertEqual(len(dr.director_rundown_play_set([a])), 1)
+
+    def test_a_console_beat_on_a_director_cam_is_skipped(self):
+        # Cams are stripped of __player__ at spawn, which is exactly what keeps a camera POINT
+        # from being mistaken for a crewable ship.
+        self.world.roles["director_cam"] = {940}
+        self.world.objects[940] = _Obj(940, "")
+        a = dr.director_rundown_new("A")
+        dr.director_rundown_add_item(a, dr.director_item_con("<<selected_id>>", "helm"))
+        db.director_selection(940)
+        self.assertEqual(len(dr.director_rundown_play_set([a])), 0)
+
+    def test_a_hop_resolves_through_the_selected_ship(self):
+        a = dr.director_rundown_new("A")
+        dr.director_rundown_add_item(
+            a, dr.director_item_cam("<<selected_id>><<weapons_selection>>", "chase"))
+        db.director_selection(901)
+        # No target yet, so the hop falls back to the SHIP - the beat still plays, as a chase
+        # of the ship that is not shooting at anything.
+        played = dr.director_rundown_play_set([a])
+        self.assertEqual(len(played), 1)
+        self.assertEqual(dr.director_item_subject_id(played[0]), 901)
+        # Now it has one, and the same authored item follows it.
+        self.weapons[901] = 902
+        played = dr.director_rundown_play_set([a])
+        self.assertEqual(len(played), 1)
+        self.assertEqual(dr.director_item_subject_id(played[0]), 902)
+
+    def test_two_bindings_are_two_items(self):
+        # They resolve to the same ship right now, which is not the same as being one beat.
+        a = dr.director_rundown_new("A")
+        self.assertTrue(dr.director_rundown_add_item(
+            a, dr.director_item_cam("<<selected_id>>", "orbit")))
+        self.assertTrue(dr.director_rundown_add_item(
+            a, dr.director_item_cam("<<selected_id>>", "chase")))
+        self.assertEqual(len(dr.director_rundown_items_of(a)), 2)
+
+
+class OverlayItemTests(unittest.TestCase):
+    """Items that are furniture and nothing else - a title, an intro, an outro."""
+
+    def setUp(self):
+        dr.director_rundowns_reset()
+        self.world = _World(
+            roles={"__player__": {901}, "director_cam": set()},
+            objects={901: _Obj(901, "Artemis")},
+        )
+        self.restore = _install(self.world)
+
+    def tearDown(self):
+        self.restore()
+        dr.director_rundowns_reset()
+
+    def _title(self):
+        return dr.director_item_overlay(
+            overlays=[{"kind": "hero", "title": "Act One", "subtitle": ""}])
+
+    def test_it_declares_no_subject(self):
+        item = self._title()
+        self.assertIsNone(dr.director_item_subject(item))
+        self.assertIsNone(dr.director_item_subject_id(item))
+
+    def test_it_survives_the_play_set(self):
+        # The liveness filter drops what cannot name a live object. An ovl item names nothing
+        # ON PURPOSE, and the two have to be told apart or no title ever goes to air.
+        a = dr.director_rundown_new("A")
+        dr.director_rundown_add_item(a, self._title())
+        self.assertEqual(len(dr.director_rundown_play_set([a])), 1)
+
+    def test_every_overlay_item_shares_one_shot_key(self):
+        # It has no shot, so it must never read as a NEW one - that is what stops it causing a
+        # reroute and cutting away from the shot it is supposed to be drawn over.
+        other = dr.director_item_overlay(overlays=[{"kind": "banner", "text": "hi"}])
+        self.assertEqual(dr.director_item_key(self._title()), dr.director_item_key(other))
+
+    def test_but_they_are_still_different_items(self):
+        other = dr.director_item_overlay(overlays=[{"kind": "banner", "text": "hi"}])
+        self.assertNotEqual(dr.director_item_ident(self._title()),
+                            dr.director_item_ident(other))
+
+    def test_the_default_label_names_what_it_carries(self):
+        # An empty row reads as a broken item, and the row is all the operator has.
+        self.assertEqual(self._title()["label"], "hero")
+
+    def test_the_row_tag_says_which_kind_it_is(self):
+        self.assertEqual(dr.director_item_row_tag(self._title()), "ovl  ")
 
 
 if __name__ == "__main__":

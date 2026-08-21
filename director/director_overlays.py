@@ -27,13 +27,29 @@ import re
 # <<token>> or <<token|fallback when it will not resolve>>.
 _TOKEN = re.compile(r"<<\s*(?P<tok>[A-Za-z_][A-Za-z_0-9]*)\s*(?:\|(?P<alt>[^>]*?))?\s*>>")
 
-# What each overlay kind's fields are called, so a preset knows what it is filling.
-DIRECTOR_OVERLAY_FIELDS = {
-    "lower_third": ("name", "line"),
-    "hero": ("title", "subtitle"),
-    "banner": ("text",),
-    "letterbox": ("line",),
-}
+# THE OVERLAY VOCABULARY. (kind, editor label, field names), in picker order.
+#
+# ONE TABLE. The editor used to carry its own copy - four kinds, hand-unrolled into four MAST
+# rows - and this file carried the field names again beside the presets. Two tables that have
+# to agree are two tables that will not, and adding a kind meant editing both plus eighty lines
+# of MAST. The editor now reads THIS and builds its picker from it, so a new kind is one line.
+#
+# The fields are the ones each builder in overlay.py ACTUALLY reads. A field a builder ignores
+# is a text box that silently does nothing, which is worse than not offering it at all.
+DIRECTOR_OVERLAY_KINDS = (
+    ("lower_third",          "Lower third", ("name", "line")),
+    ("lower_third_portrait", "Speaker",     ("name", "line", "ship")),
+    ("hero",                 "Hero",        ("title", "subtitle")),
+    ("banner",               "Top status",  ("text",)),
+    ("letterbox",            "Letterbox",   ("line",)),
+    ("credits",              "Credits",     ("title", "entries")),
+)
+
+# The most fields any one kind has - how many field rows the editor unrolls.
+DIRECTOR_OVERLAY_MAX_FIELDS = max(len(f) for _k, _l, f in DIRECTOR_OVERLAY_KINDS)
+
+# kind -> field names, derived so it cannot drift from the table above.
+DIRECTOR_OVERLAY_FIELDS = {kind: fields for kind, _label, fields in DIRECTOR_OVERLAY_KINDS}
 
 # kind -> ((key, label, {field: template}), ...). Built-ins; user saves land beside these.
 _BUILTIN = {
@@ -42,6 +58,10 @@ _BUILTIN = {
         ("ship_side", "Ship and side", {"name": "<<name>>", "line": "<<class|ship>> - <<side>>"}),
         ("condition", "Condition", {"name": "<<name>>", "line": "hull <<hull|--%>>"}),
         ("contact", "Contact", {"name": "<<comms_id>>", "line": "<<role|contact>>"}),
+        # "Artemis - Helm" over "Viper". The one worth having on a CONSOLE beat, and the reason
+        # console items learned to carry furniture at all.
+        ("station", "Station and crew",
+         {"name": "<<name>> - <<console>>", "line": "<<crew_name|unmanned>>"}),
     ),
     "hero": (
         ("ship_id", "Ship ID", {"title": "<<name>>", "subtitle": "<<class>>"}),
@@ -55,7 +75,33 @@ _BUILTIN = {
         ("ship_id", "Ship ID", {"line": "<<name>>"}),
         ("ship_side", "Ship and side", {"line": "<<name>> - <<side>>"}),
     ),
+    # A SPEAKER CARD. `ship` takes an id, not text - overlay_lower_third_portrait draws a
+    # `ship://` square from it - so the preset fills it with the subject's own id and a
+    # speaker card of whatever is on screen needs no typing at all. See _tok_subject_id.
+    "lower_third_portrait": (
+        ("speaker", "Speaker", {"name": "<<name>>", "line": "", "ship": "<<subject_id>>"}),
+        ("speaker_side", "Speaker and side",
+         {"name": "<<name>>", "line": "<<side>>", "ship": "<<subject_id>>"}),
+        # SUBJECT-FREE, for an overlay-only beat: a named narrator over whatever is on air.
+        ("narrator", "Narrator", {"name": "Narrator", "line": "", "ship": ""}),
+    ),
+    "credits": (
+        ("roll", "Roll", {"title": "", "entries": ""}),
+        ("titled_roll", "Titled roll", {"title": "Artemis Cosmos", "entries": ""}),
+    ),
 }
+
+# Kinds whose built-ins are the ones an OVERLAY-ONLY item wants - a title, an intro, an outro.
+# A subject-free preset per kind is not a nicety: the first thing a director does with an ovl
+# item is tick Hero and expect a card, and every other preset there resolves to empty.
+_BUILTIN_FREE = {
+    "hero": ("title", "Title card", {"title": "", "subtitle": ""}),
+    "banner": ("plain", "Plain text", {"text": ""}),
+    "letterbox": ("plain", "Plain text", {"line": ""}),
+    "lower_third": ("plain", "Plain text", {"name": "", "line": ""}),
+}
+for _kind, _row in _BUILTIN_FREE.items():
+    _BUILTIN[_kind] = _BUILTIN[_kind] + (_row,)
 
 # kind -> {key: {"label", "fields"}} for what a person saved. PER MISSION: cosmos_dev reuses one
 # interpreter across run_next_mission, so a module dict nothing clears is the classic "works on
@@ -186,7 +232,21 @@ def _tok_shields(obj, sid):
     return str(front) + "% / " + str(rear) + "%"
 
 
+def _tok_subject_id(obj, sid):
+    """The subject's own id, as text.
+
+    NOT display text - it is for a field that takes an ID, `lower_third_portrait`'s `ship=`.
+    A token rather than a special case in the builder, so a speaker card can be pointed at
+    the subject by a PRESET and the operator can still override it by typing.
+
+    Empty on an overlay-only item, where there is no subject. The portrait builder then draws
+    the card without a square, which is the right answer for a narrator card.
+    """
+    return str(sid) if sid else ""
+
+
 _TOKENS = {
+    "subject_id": _tok_subject_id,
     "name": _tok_name,
     "class": _tok_class,
     "side": _tok_side,
@@ -205,16 +265,22 @@ def director_overlay_tokens():
 
 def director_overlay_token_help():
     """One ASCII line naming what an operator can type."""
-    return "<<" + ">>  <<".join(director_overlay_tokens()) + ">>   (<<class|ship>> for a fallback)"
+    names = director_overlay_tokens() + director_overlay_item_tokens()
+    return "<<" + ">>  <<".join(sorted(names)) + ">>   (<<class|ship>> for a fallback)"
 
 
-def director_overlay_resolve(text, subject_id):
-    """Fill a template against one subject.
+def director_overlay_resolve(text, subject_id, item=None):
+    """Fill a template against one subject, and optionally against the BEAT showing it.
 
     An UNKNOWN token is left literal rather than raising - the same missing-key-safe contract
     `amd_fill` settled on, so a typo shows up on screen as `<<shpi>>` and is obvious, instead of
     blanking the card. A KNOWN token that cannot resolve (no hull class on a rock) becomes its
     `|fallback`, or empty.
+
+    `item` is what lets `<<name>> - <<console>> - <<crew_name>>` read as
+    "Artemis - Helm - Viper": two of those three are properties of the beat and the person at
+    that station, not of the ship. Absent, those tokens resolve to their fallback like any other
+    that cannot answer - so an old caller that does not pass it degrades rather than raising.
     """
     if not text:
         return ""
@@ -226,6 +292,18 @@ def director_overlay_resolve(text, subject_id):
     def swap(m):
         tok = m.group("tok").lower()
         alt = m.group("alt")
+        # ITEM TOKENS FIRST, and they are asked even when the subject is gone: `<<console>>` is
+        # a property of the beat, so a console beat pointed at a ship that just blew up should
+        # still say which station it was.
+        item_fn = _ITEM_TOKENS.get(tok)
+        if item_fn is not None:
+            try:
+                value = item_fn(item, obj, subject_id)
+            except Exception:
+                value = ""
+            if value:
+                return str(value)
+            return alt if alt is not None else ""
         fn = _TOKENS.get(tok)
         if fn is None:
             return m.group(0)          # unknown: leave it visible
@@ -244,11 +322,114 @@ def director_overlay_resolve(text, subject_id):
     return _plain(_TOKEN.sub(swap, text))
 
 
-def director_overlay_resolve_fields(fields, subject_id):
+# --- tokens that come off the ITEM rather than the subject --------------------------------
+#
+# A console beat is "Artemis - Helm - Viper", and only one third of that is a property of the
+# ship. `<<console>>` is a property of the BEAT, and `<<crew_name>>` is a property of the person
+# sitting at that console on that ship - which needs both.
+#
+# A separate table rather than more entries in `_TOKENS`, because the signatures genuinely
+# differ: a subject token is answered from the object alone, and these cannot be.
+
+
+def _tok_console(item, obj, sid):
+    """The beat's console, title-cased for display: "Helm", "Weapons".
+
+    Empty on a camera beat, which has no console - and empty is right rather than a fallback,
+    because `<<name>> - <<console>>` on a camera item should read as the ship's name and not as
+    the ship's name followed by a dash and a lie.
+    """
+    console = str((item or {}).get("console") or "").strip()
+    return console.capitalize() if console else ""
+
+
+def _tok_crew_name(item, obj, sid):
+    """Who is sitting at this beat's console on this ship, or "".
+
+    The ship's own consoles are its `consoles` LINK - that is what common_console_select writes
+    when a client picks a station, and what the Director's own cam takes with it when it moves.
+    A client carries CONSOLE_TYPE and CREW_NAME as inventory, both set in show_console_selected.
+
+    NOT the first client on the ship: a bridge has five, and naming the wrong one on air is
+    worse than naming nobody. It matches the beat's console, so a camera beat - which has no
+    console - correctly resolves to nothing.
+    """
+    console = str((item or {}).get("console") or "").strip().lower()
+    if not console or not sid:
+        return ""
+    from sbs_utils.procedural.links import linked_to
+    from sbs_utils.procedural.inventory import get_inventory_value
+    try:
+        clients = linked_to(sid, "consoles")
+    except Exception:
+        return ""
+    for client_id in sorted(clients or ()):
+        seat = get_inventory_value(client_id, "CONSOLE_TYPE", None)
+        if str(seat or "").strip().lower() != console:
+            continue
+        name = get_inventory_value(client_id, "CREW_NAME", None)
+        if name:
+            return _plain(name)
+    return ""
+
+
+_ITEM_TOKENS = {
+    "console": _tok_console,
+    "crew_name": _tok_crew_name,
+}
+
+
+def director_overlay_item_tokens():
+    """The token names that need the item rather than just the subject."""
+    return sorted(_ITEM_TOKENS)
+
+
+def director_overlay_resolve_fields(fields, subject_id, item=None):
     """Resolve every value in one overlay's field dict. `kind` is passed through untouched."""
     out = {}
     for key, value in (fields or {}).items():
-        out[key] = value if key == "kind" else director_overlay_resolve(value, subject_id)
+        out[key] = value if key == "kind" else director_overlay_resolve(value, subject_id, item)
+    return out
+
+
+# Fields that are NOT text by the time overlay.py sees them. The editor can only offer a text
+# box, so the conversion has to happen on the way out - once, here, rather than at the call
+# site, which is MAST and cannot do either of these.
+#
+#   entries   overlay_credits takes a LIST of lines. Split on `;` - not a newline, because a
+#             single-line gui_input cannot produce one.
+#   ship      overlay_lower_third_portrait takes an object ID for its `ship://` square. The
+#             `<<subject_id>>` token resolves to the id as TEXT, and a str id would be built
+#             into a `ship://` path that names nothing and draw a blank square.
+_LIST_FIELDS = ("entries",)
+_ID_FIELDS = ("ship",)
+
+
+def director_overlay_build_fields(entry, subject_id, item=None):
+    """One overlay's fields, resolved AND in the shapes overlay.py's builders expect.
+
+    TEXT FIELDS ARE PASSED THROUGH EVEN WHEN EMPTY. Several builders take their primary field
+    positionally (`overlay_lower_third(name, line)`), so dropping a blank one would raise
+    rather than draw a card with a blank line - and a blank line is a legitimate thing to want.
+
+    An unusable `ship` is the one exception, because its default is `None` and not `""`: an
+    empty or zero id has to be OMITTED so the builder draws no square, rather than being sent
+    a `ship://` path that names nothing.
+    """
+    out = {}
+    for key, value in director_overlay_resolve_fields(entry, subject_id, item).items():
+        if key in _LIST_FIELDS:
+            lines = [part.strip() for part in str(value or "").split(";")]
+            out[key] = [line for line in lines if line]
+        elif key in _ID_FIELDS:
+            try:
+                oid = int(str(value).strip())
+            except (TypeError, ValueError):
+                oid = 0
+            if oid:
+                out[key] = oid
+        else:
+            out[key] = value
     return out
 
 

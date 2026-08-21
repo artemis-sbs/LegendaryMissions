@@ -185,5 +185,73 @@ class FingerprintTests(unittest.TestCase):
         self.assertEqual(before, dm.director_mode_fingerprint())
 
 
+class DeclarationTests(unittest.TestCase):
+    """Declared vs defaulted, and the one-shot that carries a setup across the game starting.
+
+    All of this exists because the entry screen became reachable BEFORE the mission starts. A
+    streamer opening four windows declares each one early; the server's Start then reroutes
+    every client through `game_started_console`, which walks them into their console the
+    ordinary way - straight back to the pin screen. Without the resume flag, setting up early
+    would buy nothing at all.
+    """
+
+    def setUp(self):
+        self.inventory = {}
+        self.restore = _install({}, self.inventory)
+
+    def tearDown(self):
+        self.restore()
+
+    def test_an_undeclared_console_still_reads_as_director(self):
+        # director_mode_of DEFAULTS, which is why it cannot answer "has this console chosen".
+        self.assertEqual(dm.director_mode_of(10), "director")
+        self.assertFalse(dm.director_mode_declared(10))
+
+    def test_declaring_the_default_mode_still_counts_as_declaring(self):
+        # THE CASE director_mode_of CANNOT SEE. Choosing "Director" on the entry screen is a
+        # real choice and has to be distinguishable from never having been asked.
+        dm.director_mode_set(10, "director")
+        self.assertTrue(dm.director_mode_declared(10))
+
+    def test_clearing_undeclares(self):
+        dm.director_mode_set(10, "program")
+        dm.director_mode_clear(10)
+        self.assertFalse(dm.director_mode_declared(10))
+        self.assertEqual(dm.director_mode_of(10), "director")
+
+    def test_the_resume_is_one_shot(self):
+        # Spent by the first entry, so the START REROUTE skips the pin screen and a later
+        # re-pick off the console list does not - which is the only way to change a mode.
+        self.assertFalse(dm.director_mode_resume_take(10))
+        dm.director_mode_resume_arm(10)
+        self.assertTrue(dm.director_mode_resume_take(10))
+        self.assertFalse(dm.director_mode_resume_take(10))
+
+    def test_cancel_disarms_the_resume_too(self):
+        # Otherwise backing out would leave a flag that skips the very screen just cancelled.
+        dm.director_mode_set(10, "program")
+        dm.director_mode_resume_arm(10)
+        dm.director_mode_clear(10)
+        self.assertFalse(dm.director_mode_resume_take(10))
+
+    def test_the_resume_is_per_console(self):
+        # Four windows, four independent setups. A shared flag would have one window's Start
+        # skip another window's pin screen.
+        dm.director_mode_resume_arm(10)
+        self.assertFalse(dm.director_mode_resume_take(11))
+        self.assertTrue(dm.director_mode_resume_take(10))
+
+    def test_a_declared_screen_is_still_in_its_feed_set(self):
+        # The declaration is the same key the feed sets read, so arming and spending the
+        # resume must not disturb it - a PROG01 that dropped out of director_program_screens
+        # when the game started would simply never receive the show.
+        self.inventory[(10, "__ROLES__")] = None
+        dm.director_mode_set(10, "program")
+        dm.director_mode_resume_arm(10)
+        dm.director_mode_resume_take(10)
+        self.assertTrue(dm.director_mode_declared(10))
+        self.assertEqual(dm.director_mode_of(10), "program")
+
+
 if __name__ == "__main__":
     unittest.main()

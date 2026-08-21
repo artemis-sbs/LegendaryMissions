@@ -226,5 +226,75 @@ class DirectorNameTests(unittest.TestCase):
         self.assertEqual(dc.director_cam_default_name(CLIENT, "preview"), "PRE01")
 
 
+class CameraPointTests(unittest.TestCase):
+    """The cam used as a SUBJECT - "a shot of this place".
+
+    A click on empty space pans the cam and selects it, so a bound item parked on the cam
+    orbits wherever the operator dropped it. Two things follow, and neither is cosmetic: the
+    cam is nameless by design, and it has no hull to size a shot off.
+    """
+
+    def setUp(self):
+        _fresh_client()
+        FrameContext.context = Context(sbs.sim, sbs, FakeEvent())
+
+    def tearDown(self):
+        SpaceObject.clear()
+        FrameContext.context = None
+
+    def test_a_cam_is_a_camera_point(self):
+        cam_id = dc.director_cam_ensure(CLIENT)
+        self.assertTrue(dc.director_is_camera_point(cam_id))
+
+    def test_an_ordinary_ship_is_not(self):
+        ship = to_id(player_spawn(0, 0, 0, "Artemis", "tsn", "behav_playership"))
+        self.assertFalse(dc.director_is_camera_point(ship))
+
+    def test_nothing_is_not(self):
+        # Every labeller and the framing call this before doing anything, so `None` and a dead
+        # id have to be answers rather than raises.
+        self.assertFalse(dc.director_is_camera_point(None))
+        self.assertFalse(dc.director_is_camera_point(0))
+        self.assertFalse(dc.director_is_camera_point(999999))
+
+    def test_the_cam_is_nameless(self):
+        # The premise of director_cam_point_name. If this ever stops being true the display
+        # name should go with it - a name would put the cam in engine lists it is kept out of.
+        cam = Agent.get(dc.director_cam_ensure(CLIENT))
+        self.assertFalse(getattr(cam, "name", None))
+
+    def test_a_point_is_named_after_its_console(self):
+        # "camera point" alone does not say whose, with four windows open.
+        dc.director_cam_name(CLIENT, "DIR01")
+        cam_id = dc.director_cam_ensure(CLIENT)
+        self.assertEqual(dc.director_cam_point_name(cam_id), "DIR01 point")
+
+    def test_an_unnamed_console_still_gets_a_readable_point(self):
+        cam_id = dc.director_cam_ensure(CLIENT)
+        self.assertEqual(dc.director_cam_point_name(cam_id), "camera point")
+
+    def test_a_ship_has_no_point_name(self):
+        ship = to_id(player_spawn(0, 0, 0, "Artemis", "tsn", "behav_playership"))
+        self.assertIsNone(dc.director_cam_point_name(ship))
+
+    def test_a_point_is_framed_for_a_battle_not_a_hull(self):
+        # THE ONE THAT MATTERS FOR THE SHOT. viewscreen_framing sizes off exclusion_radius, and
+        # an invisible cam has none - so it falls to DEFAULT_RADIUS (90) and gives a 540/1440
+        # shot, which frames one mid-sized ship. Parking the cam in the middle of a fight and
+        # orbiting it at 540 units would be inside the engagement looking at nothing.
+        import director_play as dp
+        cam_id = dc.director_cam_ensure(CLIENT)
+        near, far = dp._framing(cam_id)
+        self.assertEqual((near, far), (dp.DIRECTOR_POINT_NEAR, dp.DIRECTOR_POINT_FAR))
+        ship = to_id(player_spawn(0, 0, 0, "Artemis", "tsn", "behav_playership"))
+        self.assertNotEqual(dp._framing(ship), (near, far))
+
+    def test_the_wide_end_holds_an_engagement(self):
+        # Sized against how far apart ships actually fight, not picked to look round.
+        import director_play as dp
+        self.assertGreater(dp.DIRECTOR_POINT_FAR, dp.DIRECTOR_POINT_NEAR)
+        self.assertGreaterEqual(dp.DIRECTOR_POINT_NEAR, 1000.0)
+
+
 if __name__ == "__main__":
     unittest.main()

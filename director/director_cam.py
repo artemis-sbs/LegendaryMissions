@@ -174,6 +174,41 @@ def director_screen_park(client_id):
     return director_screen_cam(client_id, seat=True)
 
 
+def director_is_camera_point(object_id):
+    """Is this subject a Director cam - that is, a PLACE rather than a hull?
+
+    A click on empty space pans the cam and selects it, so the cam is a legitimate subject:
+    park it in the middle of a fight and orbit it, and the shot is of the fight. Everything
+    that treats a subject as a ship has to ask this first.
+    """
+    from sbs_utils.procedural.roles import has_roles
+    if not object_id:
+        return False
+    try:
+        return bool(has_roles(object_id, "director_cam"))
+    except Exception:
+        return False
+
+
+def director_cam_point_name(object_id):
+    """What to call a camera point on screen, or None if `object_id` is not one.
+
+    The cam is spawned NAMELESS on purpose - `player_spawn(..., "", ...)`, because a name would
+    put it in engine lists it is deliberately kept out of - so every labeller reads it back as
+    `unnamed`, which says nothing about what the operator just did.
+
+    NAMED AT THE DISPLAY LAYER instead, and named after the CONSOLE it belongs to: with four
+    windows open, "camera point" alone does not say whose. The `cam_client` back-pointer is
+    already there for the //focus routes, which run server-side and have no client of their own.
+    """
+    from sbs_utils.procedural.inventory import get_inventory_value
+    if not director_is_camera_point(object_id):
+        return None
+    client_id = get_inventory_value(object_id, "cam_client", None)
+    who = director_cam_name(client_id) if client_id else ""
+    return (who + " point") if who else "camera point"
+
+
 def director_cam_name(client_id, name=None):
     """Read or set the name this Director console is known by.
 

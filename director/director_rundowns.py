@@ -14,14 +14,27 @@ So the desks are not used. What IS reused is everything that fits: `shot_apply` 
 `camera_orbit_lens` stays the framing maths; the engine's own `exciting` value stays the
 auto-director's ranking. Do not "fix" this back to `rundown_program()`.
 
-AN ITEM is one thing a screen can show, and there are two kinds because the engine has two
-unrelated mechanisms:
+AN ITEM is one thing a screen can show, and there are three kinds:
 
     {"kind": "cam", "mode": "dolly"|"orbit"|"chase"|"tactical", "subject": id,
-     "label": ..., "overlays": [ {...}, ... ]}
+     "label": ..., "overlays": [ {...}, ... ], "distance": units|None}
 
-    {"kind": "con", "label": ..., "ship": id, "console": "helm"}
+    {"kind": "con", "label": ..., "ship": id, "console": "helm", "overlays": [ ... ]}
                                     -> gui_reroute_client(screen, cv_show, {...})
+
+    {"kind": "ovl", "label": ..., "overlays": [ {...}, ... ]}
+
+A camera item's SUBJECT may be an object id or a BINDING - a `<<selected_id>>` chain resolved
+at play time against whatever the director has clicked (director_bind.py). The item model does
+not care which: it stores what it was given and asks `director_item_subject_id` for a live id
+at the point of use. That is what lets ONE authored item mean "orbit whatever I am pointing at"
+and be re-pointed mid-show without touching the rundown.
+
+THE THIRD KIND IS NOT A SHOT. An `ovl` item has no subject and no camera - it changes only what
+is drawn OVER whatever is already on air, which is what a title, an intro, an outro or a
+speaker card is. It is deliberately not a camera item with an empty subject: every liveness
+test here asks "does this item name something that still exists", and an item that names
+nothing ON PURPOSE has to be distinguishable from one whose ship blew up.
 
 A camera item carries a MODE, not geometry. The modes are the ones a bridge already offers -
 `viewscreen.SHOT_LABELS`, the science and weapons "On Screen" list - so a Director shot and a
@@ -50,23 +63,20 @@ DIRECTOR_MODE_LABELS = {"dolly": "Dolly", "orbit": "Orbit",
 DIRECTOR_ACTION_COUNT = 6
 DIRECTOR_SCENERY_COUNT = 8
 
-# The bridge wall's console types. Kept in step with CV_CONSOLES by a setter rather than
-# duplicated, so the Shot tab's picker and this generator cannot drift.
-_BRIDGE_CONSOLES = ["helm", "weapons", "science", "engineering", "comms", "mainscreen"]
+# The crew stations a GENERATED console beat is allowed to use.
+#
+# NOT `CV_CONSOLES`. That list is what the editor offers when a person is building a console
+# item by hand, and it carries `mainscreen` and `cinematic` - neither of which is a crew view.
+# `cinematic` is the worse of the two: `cv_show` gives it a full-screen `3dview` with
+# `cv_shot=None`, so it is a 3D window with no camera applied to it. A generated rundown that
+# cut to one would look like a fault.
+DIRECTOR_CREW_CONSOLES = ("helm", "weapons", "science", "comms")
 
 # key -> {"key", "label", "items": [...]} for the rundowns a person built.
 # PER MISSION. `director_rundowns_reset()` is called from the addon's top level, which runs
 # on every story load - cosmos_dev reuses one interpreter across run_next_mission, so a
 # module-level dict that nothing clears is the classic "works on run 1, broken on run 2".
 _RUNDOWNS = {}
-
-
-def director_bridge_consoles_set(consoles):
-    """Point the bridge-wall generator at the mission's console list (CV_CONSOLES)."""
-    global _BRIDGE_CONSOLES
-    if consoles:
-        _BRIDGE_CONSOLES = [str(c).strip() for c in consoles if str(c).strip()]
-    return list(_BRIDGE_CONSOLES)
 
 
 def director_rundowns_reset():
@@ -121,7 +131,22 @@ def _hold(seconds):
     return seconds if seconds > 0 else None
 
 
-def director_item_cam(subject_id, mode="orbit", label=None, overlays=None, hold=None):
+def _distance(units):
+    """An explicit lens distance in world units, or None for "frame it automatically".
+
+    0 and negatives mean None rather than "sit on top of it": the control that sets this is a
+    slider whose bottom stop has to mean something, and automatic is the useful thing for it to
+    mean - a camera at zero units would be inside the hull.
+    """
+    try:
+        units = float(units)
+    except (TypeError, ValueError):
+        return None
+    return units if units > 0 else None
+
+
+def director_item_cam(subject_id, mode="orbit", label=None, overlays=None, hold=None,
+                      distance=None):
     """A camera item: a subject, one of DIRECTOR_MODES, and optionally how long it holds.
 
     Geometry is resolved at play time from `viewscreen_framing`, so the same item frames
@@ -134,25 +159,77 @@ def director_item_cam(subject_id, mode="orbit", label=None, overlays=None, hold=
     shot held for three seconds and for ten are two different beats and a rundown can hold
     both - but it is NOT part of the SHOT key, so cutting between them keeps the camera
     running.
+
+    `distance` is the same bargain for the LENS. Absent means the automatic framing above,
+    which is the right answer almost always and is why the hand-built distance sliders of the
+    first version were deleted - a FIXED distance framed a starbase and a fighter equally
+    badly. This is not those sliders: it is a per-item override for the shot that wants a
+    specific look, and the automatic path is untouched when it is absent.
     """
-    from sbs_utils.procedural.query import to_object
+    from director_bind import director_bind_is, director_bind_label
     mode = str(mode).strip().lower()
     if mode not in DIRECTOR_MODES:
         mode = "orbit"
     if label is None:
-        label = DIRECTOR_MODE_LABELS[mode] + " - " + _name_of(to_object(subject_id))
+        # A BOUND subject must never reach to_object, and must never bake a ship name into the
+        # label either: the point of the binding is that it names a different ship whenever the
+        # director clicks a different contact, so a row reading "Orbit - Artemis" would be a lie
+        # the moment it was written.
+        if director_bind_is(subject_id):
+            label = DIRECTOR_MODE_LABELS[mode] + " - " + director_bind_label(subject_id)
+        else:
+            from sbs_utils.procedural.query import to_object
+            label = DIRECTOR_MODE_LABELS[mode] + " - " + _name_of(to_object(subject_id))
     return {"kind": "cam", "mode": mode, "subject": subject_id,
             "label": _plain(label), "overlays": list(overlays or ()),
-            "hold": _hold(hold)}
+            "hold": _hold(hold), "distance": _distance(distance)}
 
 
-def director_item_con(ship_id, console, label=None, hold=None):
-    """A console item: show `console` for `ship_id` on whichever screen gets this."""
+def director_item_con(ship_id, console, label=None, hold=None, overlays=None):
+    """A console item: show `console` for `ship_id` on whichever screen gets this.
+
+    `ship_id` may be a BINDING, exactly like a camera item's subject - "the selected ship's
+    weapons console" is one item that follows whoever the director clicks, against one item
+    per console per ship that goes stale the moment the roster changes.
+
+    The subject has to resolve to a PLAYER SHIP for the beat to play, and that is checked
+    where every other skip lives - director_rundown_play_set. A console view of an asteroid
+    would assign a screen to the asteroid and draw helm widgets for it.
+
+    IT CARRIES FURNITURE NOW. It could not, which is why the stock bridge rundown went to air
+    unlabelled: the field a lower third most wants on a console beat is
+    `<<name>> - <<console>> - <<crew_name>>`, and two of those three are properties of the BEAT
+    and the person at that station rather than of the ship. See director_overlays._ITEM_TOKENS.
+    """
+    from director_bind import director_bind_is, director_bind_label
     console = str(console).strip()
     if label is None:
-        from sbs_utils.procedural.query import to_object
-        label = console.capitalize() + " - " + _name_of(to_object(ship_id), "no ship")
+        # The same rule as director_item_cam, and it was missing here: `to_object` on a
+        # binding answers None, so every bound console item was labelled "Helm - no ship".
+        if director_bind_is(ship_id):
+            label = console.capitalize() + " - " + director_bind_label(ship_id)
+        else:
+            from sbs_utils.procedural.query import to_object
+            label = console.capitalize() + " - " + _name_of(to_object(ship_id), "no ship")
     return {"kind": "con", "label": _plain(label), "ship": ship_id, "console": console,
+            "overlays": list(overlays or ()), "hold": _hold(hold)}
+
+
+def director_item_overlay(label=None, overlays=None, hold=None):
+    """An overlay-only item: furniture, no shot.
+
+    The camera is left exactly as it is - a title belongs OVER the shot that is running, not
+    instead of it - so this never causes a reroute. `director_play_plan` is where that is
+    actually enforced; there is nothing here that could.
+
+    A default label rather than a blank one, because the row is the only thing that says what
+    the beat carries and an empty row reads as a broken item.
+    """
+    overlays = list(overlays or ())
+    if label is None:
+        kinds = [str(entry.get("kind", "")).replace("_", " ") for entry in overlays]
+        label = ", ".join(k for k in kinds if k) or "no overlays"
+    return {"kind": "ovl", "label": _plain(label), "overlays": overlays,
             "hold": _hold(hold)}
 
 
@@ -168,8 +245,13 @@ def director_item_key(item):
     """
     if item is None:
         return None
-    if item.get("kind") == "con":
+    kind = item.get("kind")
+    if kind == "con":
         return ("con", item.get("ship"), item.get("console"))
+    if kind == "ovl":
+        # No shot at all, so EVERY ovl item shares one key - none of them may ever read as a
+        # new shot. director_play_plan inherits the running shot's key instead of using this.
+        return ("ovl", None, None)
     return ("cam", item.get("subject"), item.get("mode"))
 
 
@@ -192,29 +274,114 @@ def director_item_ident(item):
 
     Two items are the same only when everything about them matches, so a double-click still
     collapses and a generated orbit of Artemis appearing in two rundowns still collapses.
+
+    THE DISTANCE IS IN HERE FOR THE SAME REASON THE HOLD IS. "Wide on the station, then push
+    in on it" is two beats of one shot, and a rundown has to be able to hold both - but the
+    SHOT key is unchanged across them, so cutting between them keeps the camera running and
+    only the lens moves.
     """
     if item is None:
         return None
-    return (director_item_key(item), director_item_overlay_ident(item), item.get("hold"))
+    return (director_item_key(item), director_item_overlay_ident(item),
+            item.get("hold"), item.get("distance"))
 
 
 def director_item_subject(item):
-    """The object an item needs alive - the subject for a camera, the ship for a console."""
+    """What an item DECLARES as its subject - an id, a binding string, or None.
+
+    AS AUTHORED, not resolved: a binding comes back as the `<<selected_id>>` string it was
+    written as. `None` means the item declares no subject at all, which is a different thing
+    from a subject that has died - see director_rundown_play_set, which needs to tell them
+    apart to know whether to skip the item.
+    """
     if item is None:
         return None
-    return item.get("ship") if item.get("kind") == "con" else item.get("subject")
+    kind = item.get("kind")
+    if kind == "ovl":
+        return None
+    return item.get("ship") if kind == "con" else item.get("subject")
 
 
-def _shot(subject_id, mode):
-    return director_item_cam(subject_id, mode)
+def director_item_subject_id(item):
+    """The LIVE object id an item is pointed at right now, or None.
+
+    The resolved twin of director_item_subject, and the one every CONSUMER wants: the play
+    set's liveness test, the excitement ranking, the camera, the overlay templates and the
+    reroute all need an id the engine will accept.
+
+    KEPT SEPARATE rather than folded in, and that separation is the whole reason a bound item
+    works. The item's IDENTITY is built from the authored subject, so a bound item whose
+    selection moves is still the same item in the rundown - only what it is pointed at
+    changed. Resolving inside director_item_subject would move `director_item_ident` on every
+    click, `_index_of` would lose `_PROGRAM_HELD`, and the feed would snap back to the top of
+    the play set each time the operator selected something.
+
+    IT DOES NOT CHECK LIVENESS, and deliberately: "what is this pointed at" and "is that still
+    alive" are two questions, and the second one belongs in the one place that has always asked
+    it - director_rundown_play_set. Folding it in here would put a `to_object` call behind the
+    excitement ranking and every reroute as well, several times a second per screen, to answer
+    a question those callers do not have.
+
+    A BINDING is the exception, and it is not one really: resolution itself validates the last
+    hop, because a chain that arrives at a corpse has genuinely failed to resolve rather than
+    resolved to something dead.
+    """
+    declared = director_item_subject(item)
+    if declared is None:
+        return None
+    from director_bind import director_bind_is, director_bind_resolve
+    if director_bind_is(declared):
+        return director_bind_resolve(declared)
+    return declared
+
+
+def _shot(subject_id, mode, overlays=None):
+    return director_item_cam(subject_id, mode, overlays=overlays)
+
+
+def _overlay(kind, **fields):
+    """One overlay record for a generated beat.
+
+    TEMPLATES, NOT TEXT, and that is the whole reason generated rundowns can carry furniture
+    at all: a generator makes one item per ship, so there is nowhere to type "Artemis".
+    `<<name>>` resolves against whatever the beat is pointed at, one line before `overlay_kind`
+    - which for a BOUND beat is a different ship every time the director clicks.
+    """
+    entry = {"kind": kind}
+    entry.update(fields)
+    return entry
+
+
+# The furniture the stock rundowns wear. Kept beside each other rather than inline so the
+# generators read as one line per beat, and so what a new operator first sees on air is in one
+# place to argue with. These mirror director_overlays._BUILTIN, which is what the editor's
+# preset picker offers - a generated beat and a hand-built one should look the same on screen.
+_OVL_SHIP_ID = {"kind": "lower_third", "name": "<<name>>", "line": "<<class>>"}
+_OVL_CONDITION = {"kind": "banner",
+                  "text": "<<name>>  hull <<hull|--%>>  shields <<shields|--%>>"}
+_OVL_ESTABLISH = {"kind": "hero", "title": "<<name>>", "subtitle": "<<class|>>"}
+# "Artemis - Helm" over "Viper". `<<console>>` and `<<crew_name>>` are ITEM tokens - the beat
+# knows which station it is, and the person is found by matching that station against the
+# ship's `consoles` link. `|unmanned` because an empty seat is the ordinary case on a small
+# bridge and a blank second line reads as a broken card.
+_OVL_STATION = {"kind": "lower_third", "name": "<<name>> - <<console>>",
+                "line": "<<crew_name|unmanned>>"}
 
 
 # --- the generators ---------------------------------------------------------------------
 #
 # Functions, not stored lists, and re-evaluated every time the play set is computed - so a
 # rundown tracks ships that spawn and die instead of going stale the moment it was chosen.
-# Each sorts by id, because `role()` returns a SET: without a total order the wall would
+# Each sorts by id, because `role()` returns a SET: without a total order the feed would
 # reshuffle on every dwell and read as a fault rather than as direction.
+#
+# WHAT WENT, AND WHY. `director_rundown_gen_bridge` - "Bridge wall" - generated a console item
+# per console per player ship, twelve rows for a two-ship roster. Its premise died with the
+# screen-distribution model: every program screen shows the SAME item, so those twelve beats
+# were never a wall, they were a twelve-beat rotation the one program feed cycled through on a
+# dwell. Cutting to what the weapons officer is seeing is a real broadcast move; cycling all of
+# them for every ship is noise. `director_rundown_gen_crew` is what a director actually wanted
+# from it - the SELECTED ship's stations, four rows, following whoever they click.
 
 
 def _player_ships():
@@ -228,19 +395,44 @@ def _player_ships():
     return out
 
 
-def director_rundown_gen_bridge():
-    """A console item per console type per player ship - the classic Director multiview."""
-    items = []
-    for ship in _player_ships():
-        for console in _BRIDGE_CONSOLES:
-            items.append(director_item_con(ship.id, console,
-                                           console.capitalize() + " - " + _name_of(ship)))
-    return items
+def director_rundown_gen_follow():
+    """Three beats that all follow whatever the director has clicked. No object is named.
+
+    THE SHOWCASE FOR THE BINDING, and the one rundown that needs no setup: send it, then point
+    at things. The middle beat is the one worth having - "chase what the selected ship is
+    shooting at" - and it falls back to the ship itself when the weapons officer has no target,
+    so it is a shot rather than a gap for most of a fight.
+
+    With nothing selected all three fail to resolve and are skipped by the play set, so this
+    shows three rows and plays none. That is the ordinary rule, not a special case.
+    """
+    return [
+        _shot("<<selected_id>>", "orbit", [dict(_OVL_SHIP_ID)]),
+        _shot("<<selected_id>><<weapons_selection>>", "chase", [dict(_OVL_SHIP_ID)]),
+        _shot("<<selected_id>>", "tactical"),
+    ]
+
+
+def director_rundown_gen_crew():
+    """The SELECTED ship's crew stations - what replaced the bridge wall.
+
+    Four bound rows that follow whoever the director clicks, rather than one row per console
+    per ship naming hulls that may not exist by the time the rundown is sent.
+
+    DIRECTOR_CREW_CONSOLES, not CV_CONSOLES: `mainscreen` and `cinematic` are not crew views,
+    and a `cinematic` console beat is a full-screen 3dview with no camera applied to it.
+
+    A beat whose selection is not a player ship is skipped by the play set - see
+    director_rundown_play_set. Clicking a rock ignores the console list rather than showing
+    helm widgets for an asteroid.
+    """
+    return [director_item_con("<<selected_id>>", console, overlays=[dict(_OVL_STATION)])
+            for console in DIRECTOR_CREW_CONSOLES]
 
 
 def director_rundown_gen_players():
-    """A slow orbit of each player ship."""
-    return [_shot(ship.id, "orbit") for ship in _player_ships()]
+    """A slow orbit of each player ship, with its name and class on a lower third."""
+    return [_shot(ship.id, "orbit", [dict(_OVL_SHIP_ID)]) for ship in _player_ships()]
 
 
 def director_rundown_gen_action():
@@ -261,7 +453,13 @@ def director_rundown_gen_action():
     ranked.sort(key=lambda t: (t[0], t[1]))
     # CHASE for the action: these are moving ships in a fight, and a chase holds them in
     # frame where an orbit would swing away from what is happening.
-    return [_shot(obj.id, "chase") for _v, _i, obj in ranked[:DIRECTOR_ACTION_COUNT]]
+    #
+    # A CONDITION BANNER rather than a lower third, because this is the fight: hull and shields
+    # are what a viewer wants off a ship that is being shot at, and the top strip is where a
+    # broadcast puts a running score. `|--%` so a rock or an unscanned contact reads as unknown
+    # instead of blank.
+    return [_shot(obj.id, "chase", [dict(_OVL_CONDITION)])
+            for _v, _i, obj in ranked[:DIRECTOR_ACTION_COUNT]]
 
 
 def director_rundown_gen_scenery():
@@ -270,6 +468,11 @@ def director_rundown_gen_scenery():
     Named terrain only, and capped. A map carries well over a thousand terrain objects; an
     uncapped generator would turn a rundown into a scrollbar, and the unnamed ones are
     asteroids nobody wants a shot of.
+
+    A HERO CARD, because these are the establishing shots: the beat between fights that says
+    where you are. `<<class|>>` with an EMPTY fallback - a station has a hull class worth
+    naming and a gas cloud does not, and a subtitle reading "--" under a title card looks
+    broken where no subtitle at all looks deliberate.
     """
     from sbs_utils.procedural.roles import role
     from sbs_utils.procedural.query import to_object
@@ -277,20 +480,24 @@ def director_rundown_gen_scenery():
     for sid in sorted(role("station")):
         obj = to_object(sid)
         if obj is not None:
-            items.append(_shot(sid, "orbit"))
+            items.append(_shot(sid, "orbit", [dict(_OVL_ESTABLISH)]))
     for tid in sorted(role("__terrain__")):
         if len(items) >= DIRECTOR_SCENERY_COUNT:
             break
         obj = to_object(tid)
         if obj is None or not getattr(obj, "name", None):
             continue
-        items.append(_shot(tid, "orbit"))
+        items.append(_shot(tid, "orbit", [dict(_OVL_ESTABLISH)]))
     return items[:DIRECTOR_SCENERY_COUNT]
 
 
 # key -> (label, generator). Order here is the order in the picker.
+#
+# FOLLOW FIRST, because it is the only one that needs no setup at all: send it and point at
+# things. "bridge" is gone - see the note above the generators.
 _GENERATORS = (
-    ("bridge", "Bridge wall", director_rundown_gen_bridge),
+    ("follow", "Follow the selection", director_rundown_gen_follow),
+    ("crew", "Crew consoles", director_rundown_gen_crew),
     ("players", "Player ships", director_rundown_gen_players),
     ("action", "The action", director_rundown_gen_action),
     ("scenery", "Stations & terrain", director_rundown_gen_scenery),
@@ -345,6 +552,24 @@ def director_rundown_item_remove(key, index):
     if record is None or index is None or not (0 <= index < len(record["items"])):
         return False
     record["items"].pop(index)
+    return True
+
+
+def director_rundown_item_replace(key, index, item):
+    """Overwrite one item in place. What Replace does after recalling a beat onto the bench.
+
+    NO DEDUPE, deliberately, where `director_rundown_add_item` has one. Add is "put this beat
+    in the rundown", so answering "you already have it" is right; Replace is "make row 4 be
+    this", and refusing because row 7 already matches would leave the operator staring at a
+    row that did not change with no way to see why. Replacing a beat with a copy of one two
+    rows down is also an ordinary thing to do while working.
+    """
+    record = _RUNDOWNS.get(key)
+    if record is None or item is None or index is None:
+        return False
+    if not (0 <= index < len(record["items"])):
+        return False
+    record["items"][index] = item
     return True
 
 
@@ -591,21 +816,46 @@ def director_rundown_label_for(key):
     return record["label"] if record else str(key)
 
 
-def _row_label(item):
-    """One item's row text: the mode, the label, its hold and what furniture it carries."""
-    if item.get("kind") == "con":
-        tag = "con  "
-    else:
-        tag = (item.get("mode") or "orbit")[:5].ljust(5)
-    label = tag + " " + _plain(item.get("label"))
+def director_item_row_tag(item):
+    """The five-character kind tag that leads every item row.
+
+    ONE definition, because TWO list renderers draw these rows - the tree here and
+    `director_shot_item_rows` in director_shots - and a tag that disagreed between them would
+    make one item look like two different things depending on which list was being read.
+    """
+    kind = item.get("kind")
+    if kind == "con":
+        return "con  "
+    if kind == "ovl":
+        return "ovl  "
+    return (item.get("mode") or "orbit")[:5].ljust(5)
+
+
+def director_item_row_suffix(item):
+    """Everything a row says AFTER the label: the hold, the distance, and the furniture.
+
+    ONE definition, for the same reason `director_item_row_tag` is one: two list renderers draw
+    these rows - the tree here and `director_shot_item_rows` in director_shots - and a suffix
+    that disagreed between them would make one item look like two different beats depending on
+    which list was being read. The distance was added here once rather than in both.
+    """
+    out = ""
     if item.get("hold"):
-        label = label + "  " + str(item["hold"]) + "s"
+        out = out + "  " + str(item["hold"]) + "s"
+    if item.get("distance"):
+        out = out + "  " + str(int(item["distance"])) + "u"
     kinds = []
     for entry in (item.get("overlays") or ()):
         kinds.append(str(entry.get("kind", "")).replace("_", " "))
     if kinds:
-        label = label + "  [" + ", ".join(kinds) + "]"
-    return label
+        out = out + "  [" + ", ".join(kinds) + "]"
+    return out
+
+
+def _row_label(item):
+    """One item's row text: the mode, the label, its hold and what furniture it carries."""
+    return (director_item_row_tag(item) + " " + _plain(item.get("label"))
+            + director_item_row_suffix(item))
 
 
 def director_rundown_row_template(item, **kwargs):
@@ -712,13 +962,42 @@ def director_rundown_play_set(keys):
     objects that were removed without ever being destroyed.
     """
     from sbs_utils.procedural.query import to_object
+    from sbs_utils.procedural.roles import role
+    players = None
     out = []
     seen = set()
     for key in (keys or []):
         for item in director_rundown_items_of(key):
-            subject = director_item_subject(item)
-            if subject is None or to_object(subject) is None:
-                continue
+            # DECLARES a subject but cannot resolve one right now -> skip. One rule covering
+            # three cases that are the same thing to the feed: a destroyed ship, an object
+            # removed without ever being destroyed, and a BINDING with nothing selected (or a
+            # weapons officer with no target). This beat cannot be shown, so the rundown steps
+            # past it and picks it up again the moment it can be.
+            #
+            # An item that declares NO subject - kind "ovl" - is kept. It is furniture; asking
+            # it to name something alive is asking the wrong question.
+            #
+            # RESOLVE, THEN CHECK. Two steps because they can each fail on their own: a
+            # binding fails to resolve (nothing selected), and a baked id resolves to itself
+            # and then turns out to name a corpse.
+            if director_item_subject(item) is not None:
+                live = director_item_subject_id(item)
+                if live is None or to_object(live) is None:
+                    continue
+                # A CONSOLE BEAT NEEDS A CREWABLE SHIP, and a bound one can easily point at
+                # something that is not: the operator clicks a rock, or a monster, or their own
+                # camera point. `cv_show` would assign a screen to it and draw helm widgets for
+                # an asteroid. So the console list is simply ignored for that selection - the
+                # beat is skipped like any other that cannot be shown right now.
+                #
+                # `role("__player__")` and not a hull check: director cams are stripped of it at
+                # spawn (director_cam.py), so a cambot can never be mistaken for a ship. Read
+                # once per play set - this runs twice a second.
+                if item.get("kind") == "con":
+                    if players is None:
+                        players = role("__player__")
+                    if live not in players:
+                        continue
             ident = director_item_ident(item)
             if ident in seen:
                 continue

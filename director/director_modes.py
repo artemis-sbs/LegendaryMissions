@@ -74,6 +74,61 @@ def director_mode_of(client_id):
     return director_mode_for(get_inventory_value(client_id, "DIRECTOR_SCREEN_MODE", None))
 
 
+def director_mode_declared(client_id):
+    """Has this console COMMITTED a mode, as opposed to defaulting to one?
+
+    `director_mode_of` cannot answer this: it defaults to `director`, so a console that has
+    never seen the entry screen is indistinguishable from one that chose the control console.
+    That distinction only started to matter when the entry screen became reachable BEFORE the
+    game starts - see director_mode_resume_take.
+    """
+    from sbs_utils.procedural.inventory import get_inventory_value
+    return get_inventory_value(client_id, "DIRECTOR_SCREEN_MODE", None) is not None
+
+
+def director_mode_clear(client_id):
+    """Forget the declaration: this console has not said what it is.
+
+    What Cancel does. A console that backs out of the entry screen has to become genuinely
+    undeclared, or the next visit would skip the screen it just cancelled out of.
+    """
+    from sbs_utils.procedural.inventory import set_inventory_value
+    set_inventory_value(client_id, "DIRECTOR_SCREEN_MODE", None)
+    director_mode_resume_take(client_id)
+    return True
+
+
+# --- surviving the start of the game ------------------------------------------------------
+#
+# THE PROBLEM THIS SOLVES. A console set up before the mission starts is rerouted through
+# `game_started_console` the moment the server presses Start, and that walks it into its
+# console the ordinary way - `jump(console.label)`, which for this addon is `director_entry`.
+# So a screen the streamer had already declared as PROG01 lands back on the pin screen, and
+# with four windows open somebody has to walk round and press Start in all of them. The whole
+# point of setting up early is not having to.
+#
+# A ONE-SHOT flag rather than "skip whenever a mode is declared", because the picker path and the
+# start reroute arrive at the same label by the same jump and are otherwise indistinguishable.
+# Armed at the moment a mode is committed and CONSUMED by the next entry: the start reroute
+# spends it, and an operator who later re-picks Director from the console list finds it spent
+# and gets the screen - which is the only way to change a mode.
+
+
+def director_mode_resume_arm(client_id):
+    """Say that the next entry to the pin screen should be skipped. Consumed once."""
+    from sbs_utils.procedural.inventory import set_inventory_value
+    set_inventory_value(client_id, "DIRECTOR_RESUME", True)
+    return True
+
+
+def director_mode_resume_take(client_id):
+    """Spend the resume flag. True when it was armed - meaning: go straight to the mode."""
+    from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+    armed = bool(get_inventory_value(client_id, "DIRECTOR_RESUME", False))
+    set_inventory_value(client_id, "DIRECTOR_RESUME", False)
+    return armed
+
+
 def _clients_in_mode(mode):
     from sbs_utils.procedural.roles import role
     from sbs_utils.procedural.inventory import get_inventory_value

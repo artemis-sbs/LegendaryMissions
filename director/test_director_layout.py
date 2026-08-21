@@ -36,7 +36,7 @@ SCREENS = (720, 1080)
 # Sections that must hold declared rows. The others are lists and engine views, which scroll or
 # size themselves - what matters for those is that they are not left with nothing.
 SIZED = ("subtab", "rundown", "itembtn", "conbtn", "ctrl")
-FLEX = ("items", "view2d", "scilist", "ships", "consoles")
+FLEX = ("items", "view2d", "scilist", "consoles")
 
 # A list with less than this is not a list. Four rows at 1.7em gui-2 plus a title.
 MIN_LIST_PX = 180
@@ -77,12 +77,12 @@ class SectionFitTests(unittest.TestCase):
         self.assertGreaterEqual(m["top"], dl.DIRECTOR_TAB_STRIP_PX)
 
     def test_sections_in_a_column_do_not_overlap(self):
-        # rundown -> items -> itembtn share the left column and are stacked; ships -> conbtn
+        # rundown -> items -> itembtn share the left column and are stacked; consoles -> conbtn
         # do the same on the Console sub-tab, and that pair is what went wrong: conbtn held two
         # rows while it was sized from the ONE-row itembtn metric, so its status line drew
         # outside it.
         for screen in SCREENS:
-            for stack in (("rundown", "items", "itembtn"), ("ships", "conbtn")):
+            for stack in (("rundown", "items", "itembtn"), ("consoles", "conbtn")):
                 self._assert_stacked(stack, screen)
 
     def _assert_stacked(self, names, screen):

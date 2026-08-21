@@ -28,8 +28,19 @@ Every public name is prefixed `director_`; a leading underscore is private.
 DIRECTOR_AUTO_MARGIN = 0.15
 
 # Where a chase sits relative to the subject, in multiples of the framing near-distance.
-DIRECTOR_CHASE_BACK = 3.0
-DIRECTOR_CHASE_UP = 0.5
+#
+# HALVED, both of them, and halving BOTH is what keeps it a chase. At 3.0 back the ship was a
+# speck - `near` is already 6 hull radii, so a light cruiser was being chased from about 1600
+# units out, which reads as a wide shot that happens to follow something.
+#
+# The height matters as much as the distance here, because what makes a shot read as BEHIND is
+# the elevation ANGLE, not the height itself. Back and up are both multiples of the same
+# `near`, so the ratio between them IS the angle - 0.5/3.0 is about 9.5 degrees above the
+# subject's own line, which is over its shoulder. Halving the distance alone would have left
+# that at 18.4 degrees and tipped the shot toward looking DOWN on the ship, which is exactly
+# what it should not be. Halved together, the angle is unchanged and the shot is simply closer.
+DIRECTOR_CHASE_BACK = 1.5
+DIRECTOR_CHASE_UP = 0.25
 # How long one chase leg runs before it is re-issued. Long, because unlike a dolly or an orbit
 # a chase has no shape to complete - the leg exists only so a dead subject or a stolen camera
 # recovers, which `_drive` already handles at the end of one.
@@ -116,10 +127,13 @@ def director_play_rank(items):
     where nothing populates `exciting` and everything reads 0.0 - leaves the operator's own
     ordering intact instead of replacing it with an arbitrary one.
     """
-    from director_rundowns import director_item_subject
+    from director_rundowns import director_item_subject_id
     decorated = []
     for index, item in enumerate(items or []):
-        decorated.append((-_exciting(director_item_subject(item)), index, item))
+        # The RESOLVED subject: a bound item's excitement is whatever it is pointed at now,
+        # and an overlay-only item resolves to None and scores 0.0 - it is furniture, so it
+        # has no action of its own to rank and keeps the operator's own ordering.
+        decorated.append((-_exciting(director_item_subject_id(item)), index, item))
     decorated.sort(key=lambda t: (t[0], t[1]))
     return [item for _v, _i, item in decorated]
 
@@ -131,7 +145,7 @@ def director_play_auto_order(items):
     two contacts trading a fractionally higher score would swap the feed several times a minute,
     which reads as a fault rather than as direction.
     """
-    from director_rundowns import director_item_ident, director_item_subject
+    from director_rundowns import director_item_ident, director_item_subject_id
     if not items:
         _AUTO_HELD[0] = None
         return []
@@ -146,8 +160,8 @@ def director_play_auto_order(items):
         if held is not None:
             leader = ranked[0]
             if director_item_ident(leader) != held_key:
-                gain = (_exciting(director_item_subject(leader))
-                        - _exciting(director_item_subject(held)))
+                gain = (_exciting(director_item_subject_id(leader))
+                        - _exciting(director_item_subject_id(held)))
                 if gain <= DIRECTOR_AUTO_MARGIN:
                     ranked = [held] + [i for i in ranked
                                        if director_item_ident(i) != held_key]
@@ -314,14 +328,46 @@ def director_play_plan(item, screens):
     screen, and re-issuing one that is already correct several times a minute would flicker every
     screen for nothing. A furniture-only change is handled HERE rather than reported, because it
     needs no reroute at all - the cards are simply re-shown.
+
+    TWO DIFFERENT KEYS, AND THE DIFFERENCE IS THE WHOLE OF SELECTION BINDING.
+
+    The FEED holds its place by `director_item_ident`, built from the item AS AUTHORED - see
+    director_play_feeds. A bound item is the same item in the rundown however the selection
+    moves; if its ident moved on every click, `_index_of` would lose `_PROGRAM_HELD`, the
+    program would snap to `order[0]` and the dwell clock would reset - the exact flicker that
+    identity-holding was written to prevent.
+
+    A SCREEN, though, must re-aim when the resolved subject moves: the camera is pointed at an
+    id, not at a binding. So the key compared here carries the RESOLVED subject alongside the
+    authored one. A bound item whose selection changed then reports `changed`, gets a fresh
+    reroute and a fresh camera, and the rundown keeps its place through all of it.
     """
-    from director_rundowns import director_item_key
+    from director_rundowns import director_item_key, director_item_subject_id
     screens = list(screens or [])
-    key = director_item_key(item)
     ovkey = _overlay_key(item)
+    overlay_only = item is not None and item.get("kind") == "ovl"
+    # `None` for no item at all is a REAL STATE, not an absence - an idle screen's entry is
+    # `(None, "")` and director_play_release depends on it staying that way. Keep it a bare
+    # None rather than a one-tuple, so nothing downstream has to know the difference.
+    key = None
+    if item is not None and not overlay_only:
+        key = director_item_key(item) + (director_item_subject_id(item),)
     plan = []
     for screen in screens:
         was = _LAST.get(screen)
+        if overlay_only:
+            # A TITLE BELONGS OVER THE SHOT THAT IS RUNNING, not instead of it. So an overlay
+            # item INHERITS the screen's current shot key and never reports changed: no
+            # reroute, no page rebuild, the camera keeps stepping its legs, and only the cards
+            # swap. That also makes two ovl beats in a row a straight card change.
+            #
+            # Its overlays are applied unconditionally rather than on an ovkey difference,
+            # because the beat before it may have been a camera item that left its own
+            # furniture up - and `changed` being False means nothing else will clear it.
+            director_play_overlays(screen, item)
+            _LAST[screen] = (was[0] if was else None, ovkey)
+            plan.append({"screen": screen, "item": item, "changed": False})
+            continue
         changed = was is None or was[0] != key
         if not changed and was[1] != ovkey and item is not None:
             director_play_overlays(screen, item)
@@ -352,8 +398,23 @@ def director_play_forget_absent(screens):
 # which is why a starbase and a fighter both fill the frame; the timings and angles are the
 # library's, so a Director shot and a bridge "On Screen" shot of the same ship look identical.
 
+# A CAMERA POINT IS NOT FRAMED LIKE A HULL. `viewscreen_framing` sizes a shot off the
+# subject's `exclusion_radius`, and the cam is invisible with none - so it falls to
+# DEFAULT_RADIUS (90) and gives a 540/1440 shot, which frames one mid-sized ship.
+#
+# But the whole point of parking the cam is to put it in the MIDDLE OF A FIGHT and orbit the
+# fight. These are sized for that: ships engage from a few hundred units out to a few thousand,
+# so the wide end has to hold the whole engagement and the near end still has to sit outside
+# it rather than inside somebody's hull.
+DIRECTOR_POINT_NEAR = 2500.0
+DIRECTOR_POINT_FAR = 7000.0
+
+
 def _framing(subject):
     from sbs_utils.procedural.gui.viewscreen import viewscreen_framing
+    from director_cam import director_is_camera_point
+    if director_is_camera_point(subject):
+        return DIRECTOR_POINT_NEAR, DIRECTOR_POINT_FAR
     return viewscreen_framing(subject)
 
 
@@ -365,13 +426,16 @@ def director_play_overlays(client_id, item):
     an unresolved `<<class>>` could be split across two of them.
     """
     from sbs_utils.procedural.gui.overlay import overlay_kind, _KIND_DEFAULT_SLOT
-    from director_overlays import director_overlay_resolve_fields
-    from director_rundowns import director_item_subject
+    from director_overlays import director_overlay_build_fields
+    from director_rundowns import director_item_subject_id
     _director_clear_overlays(client_id)
-    subject = director_item_subject(item)
+    # RESOLVED, so `<<name>>` on a bound item names whatever it is pointed at THIS time round
+    # rather than whatever it was pointed at when the item was written. None on an
+    # overlay-only item, where every subject token correctly resolves to its fallback.
+    subject = director_item_subject_id(item)
     used = set()
     for entry in ((item or {}).get("overlays") or ()):
-        fields = director_overlay_resolve_fields(entry, subject)
+        fields = director_overlay_build_fields(entry, subject, item)
         kind = fields.pop("kind", None)
         if not kind:
             continue
@@ -385,13 +449,21 @@ def director_play_overlays(client_id, item):
 
 def director_play_apply_shot(client_id, item):
     """Put a camera item on ONE screen and start its first leg. True when it applied."""
+    from director_rundowns import director_item_subject_id
     if item is None or item.get("kind") != "cam":
         return False
-    subject = item.get("subject")
+    # THE RESOLVED id, never the authored field: a binding is a string and the camera takes an
+    # object. It can come back None between the play set being built and this running - the
+    # operator deselected in that half-second - so this is a real branch, not a formality.
+    subject = director_item_subject_id(item)
     if not subject:
         return False
     mode = item.get("mode") or "orbit"
-    _SHOTS[client_id] = {"mode": mode, "subject": subject, "prom": None, "yaw": 0.0, "leg": 0}
+    # THE DISTANCE RIDES ON THE RECORD, not looked up per leg: the item can be replaced
+    # under a running shot (Replace on the editor), and a leg re-issued half a second
+    # later should still be the shot that was applied until the feed says otherwise.
+    _SHOTS[client_id] = {"mode": mode, "subject": subject, "prom": None, "yaw": 0.0,
+                         "leg": 0, "distance": item.get("distance")}
     if mode != "tactical":
         director_play_next_leg(client_id)
     director_play_overlays(client_id, item)
@@ -418,11 +490,21 @@ def director_play_next_leg(client_id):
         _SHOTS.pop(client_id, None)
         return False
     near, far = _framing(subject)
+    # AN EXPLICIT DISTANCE IS WHERE THE CAMERA SITS - the orbit radius, the chase back, the
+    # dolly's wide end. Absent (the usual case) leaves the hull-derived framing alone, which is
+    # why this is an override rather than the return of the sliders that were deleted: those
+    # were the ONLY way to size a shot, and a fixed number framed a starbase and a fighter
+    # equally badly.
+    #
+    # The dolly still pushes: half the distance and back out, so "3500" is a shot that lives at
+    # 3500 rather than a static hold there.
+    want = record.get("distance")
     cids = [client_id]
     mode = record["mode"]
     if mode == "orbit":
         yaw = record["yaw"]
-        record["prom"] = camera_orbit(cids, subject, far, from_yaw=yaw, to_yaw=yaw + 360.0,
+        radius = want if want else far
+        record["prom"] = camera_orbit(cids, subject, radius, from_yaw=yaw, to_yaw=yaw + 360.0,
                                       seconds=ORBIT_SECONDS, pitch=ORBIT_PITCH)
         # Carry the angle over: a loop restarting at 0 would whip back round every lap.
         record["yaw"] = (yaw + 360.0) % 360.0
@@ -433,13 +515,20 @@ def director_play_next_leg(client_id):
         # a stutter. `camera_chase` rebuilds the offset from the subject's live heading every
         # dispatcher tick, which is how camera_dolly and camera_orbit already work - and they
         # were the two modes that never flickered.
-        record["prom"] = camera_chase(cids, subject, near * DIRECTOR_CHASE_BACK,
+        #
+        # THE HEIGHT STAYS TIED TO THE FRAMING, not to the explicit distance. What makes a
+        # chase read as behind is the elevation ANGLE, and scaling the height with a distance
+        # the operator is dragging would tip the shot overhead as they came closer - the exact
+        # thing halving DIRECTOR_CHASE_UP alongside DIRECTOR_CHASE_BACK was done to avoid.
+        back = want if want else near * DIRECTOR_CHASE_BACK
+        record["prom"] = camera_chase(cids, subject, back,
                                       height=near * DIRECTOR_CHASE_UP,
                                       seconds=DIRECTOR_CHASE_SECONDS)
     else:
         # Ping-pong: in, then out. A push that cut back to wide each time would read as a jump
         # cut every 22 seconds.
-        a, b = (far, near) if record["leg"] % 2 == 0 else (near, far)
+        wide, close = (want, want * 0.5) if want else (far, near)
+        a, b = (wide, close) if record["leg"] % 2 == 0 else (close, wide)
         record["prom"] = camera_dolly(cids, subject, a, b, yaw=DOLLY_YAW,
                                       pitch=ORBIT_PITCH, seconds=DOLLY_SECONDS)
     record["leg"] += 1

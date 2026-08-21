@@ -38,6 +38,7 @@ import sbs_utils.procedural.gui  # noqa: F401
 
 import director_rundowns as dr
 import director_play as dp
+import director_bind as db
 
 
 def _install(exciting):
@@ -533,8 +534,9 @@ class ChaseTests(unittest.TestCase):
         self.restore()
         dp.director_play_reset()
 
-    def _start(self, mode):
-        dp._SHOTS[10] = {"mode": mode, "subject": 901, "prom": None, "yaw": 0.0, "leg": 0}
+    def _start(self, mode, distance=None, leg=0):
+        dp._SHOTS[10] = {"mode": mode, "subject": 901, "prom": None, "yaw": 0.0, "leg": leg,
+                         "distance": distance}
         dp.director_play_next_leg(10)
 
     def test_a_chase_leg_goes_through_the_library_mover(self):
@@ -544,10 +546,77 @@ class ChaseTests(unittest.TestCase):
     def test_the_chase_sits_behind_and_above(self):
         self._start("chase")
         _name, args, kwargs = self.calls[0]
-        # framing near = 100, so back = 300 and up = 50.
+        # framing near = 100, so back = 150 and up = 25.
         self.assertEqual(args[2], 100.0 * dp.DIRECTOR_CHASE_BACK)
         self.assertEqual(kwargs["height"], 100.0 * dp.DIRECTOR_CHASE_UP)
         self.assertEqual(kwargs["seconds"], dp.DIRECTOR_CHASE_SECONDS)
+
+    def test_the_chase_is_over_the_shoulder_not_overhead(self):
+        # WHAT MAKES IT READ AS "BEHIND" IS THE ANGLE, not the height. Back and up are both
+        # multiples of the same framing `near`, so their RATIO is the elevation above the
+        # subject's own line - and it has to stay shallow. Halving the distance without halving
+        # the height would double this and tip the shot toward looking DOWN on the ship.
+        import math
+        elevation = math.degrees(math.atan2(dp.DIRECTOR_CHASE_UP, dp.DIRECTOR_CHASE_BACK))
+        self.assertLess(elevation, 12.0)
+        self.assertGreater(elevation, 0.0)
+
+    def test_an_explicit_distance_is_the_chase_back_distance(self):
+        self._start("chase", distance=800.0)
+        _name, args, kwargs = self.calls[0]
+        self.assertEqual(args[2], 800.0)
+
+    def test_an_explicit_distance_does_NOT_move_the_chase_height(self):
+        # THE ELEVATION-ANGLE RULE. What makes a chase read as behind is the angle, and tying
+        # the height to a distance the operator is dragging would tip the shot overhead as they
+        # came closer - the exact thing halving DIRECTOR_CHASE_UP alongside BACK avoided.
+        self._start("chase", distance=800.0)
+        _name, _args, kwargs = self.calls[0]
+        self.assertEqual(kwargs["height"], 100.0 * dp.DIRECTOR_CHASE_UP)
+
+    def test_the_chase_is_close_enough_to_read_the_ship(self):
+        # `near` is already 6 hull radii, so a multiplier of 3 put a light cruiser about 1600
+        # units away - a wide shot that happens to follow something, not a chase.
+        self.assertLessEqual(dp.DIRECTOR_CHASE_BACK, 2.0)
+
+    # --- an explicit distance overrides the automatic framing, per mode --------------------
+    #
+    # The framing stub answers (100, 400), so the automatic values below are those.
+
+    def test_an_orbit_takes_the_distance_as_its_radius(self):
+        self._start("orbit", distance=3500.0)
+        _name, args, _kwargs = self.calls[0]
+        self.assertEqual(args[2], 3500.0)
+
+    def test_an_automatic_orbit_still_uses_the_framing(self):
+        self._start("orbit")
+        _name, args, _kwargs = self.calls[0]
+        self.assertEqual(args[2], 400.0)
+
+    def test_a_dolly_pushes_between_the_distance_and_half_of_it(self):
+        # A static hold at 3500 would not be a dolly. It is a shot that LIVES at 3500.
+        self._start("dolly", distance=3500.0)
+        _name, args, _kwargs = self.calls[0]
+        self.assertEqual((args[2], args[3]), (3500.0, 1750.0))
+
+    def test_the_dolly_ping_pongs_at_an_explicit_distance_too(self):
+        # A push that cut back to wide each time would read as a jump cut every 22 seconds.
+        self._start("dolly", distance=3500.0, leg=1)
+        _name, args, _kwargs = self.calls[0]
+        self.assertEqual((args[2], args[3]), (1750.0, 3500.0))
+
+    def test_an_automatic_dolly_still_uses_the_framing(self):
+        self._start("dolly")
+        _name, args, _kwargs = self.calls[0]
+        self.assertEqual((args[2], args[3]), (400.0, 100.0))
+
+    def test_a_missing_distance_key_is_automatic(self):
+        # A record built before the field existed, or by anything that forgot it. `.get` rather
+        # than `[...]` is what keeps that a framing rather than a KeyError mid-show.
+        dp._SHOTS[10] = {"mode": "orbit", "subject": 901, "prom": None, "yaw": 0.0, "leg": 0}
+        dp.director_play_next_leg(10)
+        _name, args, _kwargs = self.calls[0]
+        self.assertEqual(args[2], 400.0)
 
     def test_a_chase_returns_a_promise_like_every_other_mode(self):
         # It used to record None, which is what forced the player to special-case it.
@@ -815,6 +884,106 @@ class StatusTests(unittest.TestCase):
         item = dr.director_item_con(901, "helm", "Helm")
         self.assertIn("held", dp.director_play_status(item, 1, 0, True, True))
         self.assertIn("auto-director", dp.director_play_status(item, 1, 0, True, False))
+
+
+class BoundItemPlanTests(unittest.TestCase):
+    """A bound item re-aims the SCREEN without disturbing the FEED's place.
+
+    Two keys, two questions. This class is the one that would catch conflating them, which is
+    the mistake that would look like "the show jumps back to its first shot every time I click
+    something".
+    """
+
+    def setUp(self):
+        dp.director_play_reset()
+        db.director_selection_reset()
+        self.restore = _install({})
+        query = sys.modules["sbs_utils.procedural.query"]
+        query.to_object = lambda oid: object() if oid else None
+        query.get_weapons_selection = lambda oid: None
+        query.get_science_selection = lambda oid: None
+        query.get_comms_selection = lambda oid: None
+        query.get_grid_selection = lambda oid: None
+
+    def tearDown(self):
+        self.restore()
+        db.director_selection_reset()
+        dp.director_play_reset()
+
+    def _bound(self):
+        return dr.director_item_cam("<<selected_id>>", "orbit", label="BOUND")
+
+    def test_the_screen_re_aims_when_the_selection_moves(self):
+        item = self._bound()
+        db.director_selection(901)
+        dp.director_play_plan(item, [10])
+        db.director_selection(902)
+        self.assertTrue(dp.director_play_plan(item, [10])[0]["changed"])
+
+    def test_the_screen_settles_while_the_selection_holds(self):
+        item = self._bound()
+        db.director_selection(901)
+        dp.director_play_plan(item, [10])
+        self.assertFalse(dp.director_play_plan(item, [10])[0]["changed"])
+
+    def test_the_feed_keeps_its_place_across_a_re_aim(self):
+        # THE ONE THAT MATTERS. The play set holds three items; the middle one is bound. Moving
+        # the selection must re-aim it, not move the feed off it and reset the dwell.
+        items = [_items(1)[0], self._bound(), _items(1)[0]]
+        items[2] = dr.director_item_con(902, "helm", "last")
+        db.director_selection(901)
+        dp.director_play_feeds(items, elapsed=0.0, dwell=6.0)
+        dp.director_play_feeds(items, elapsed=1.0, dwell=6.0)
+        held = dp.director_play_feeds(items, elapsed=2.0, dwell=6.0)
+        db.director_selection(902)
+        after = dp.director_play_feeds(items, elapsed=3.0, dwell=6.0)
+        self.assertEqual(after["program"]["label"], held["program"]["label"])
+        self.assertEqual(after["elapsed"], 3.0)
+
+
+class OverlayItemPlanTests(unittest.TestCase):
+    """An overlay-only beat draws OVER the running shot instead of replacing it."""
+
+    def setUp(self):
+        dp.director_play_reset()
+        self.restore = _install({})
+        self.shown = []
+        self.real_overlays = dp.director_play_overlays
+        dp.director_play_overlays = lambda cid, item: self.shown.append((cid, item))
+
+    def tearDown(self):
+        dp.director_play_overlays = self.real_overlays
+        self.restore()
+        dp.director_play_reset()
+
+    def _title(self):
+        return dr.director_item_overlay(overlays=[{"kind": "hero", "title": "Act One"}])
+
+    def test_it_never_reports_changed(self):
+        # `changed` is what causes a reroute, and a reroute is a page rebuild that restarts the
+        # camera. A title that cut away from the shot it is drawn over would be the opposite of
+        # a title.
+        self.assertFalse(dp.director_play_plan(self._title(), [10])[0]["changed"])
+
+    def test_its_cards_go_up_anyway(self):
+        dp.director_play_plan(self._title(), [10])
+        self.assertEqual([cid for cid, _i in self.shown], [10])
+
+    def test_it_does_not_forget_the_running_shot(self):
+        # It INHERITS the screen's shot key, so the camera item under it is still recognized as
+        # already correct when the show comes back to it - no reroute, no restarted camera.
+        shot = _items(1)[0]
+        dp.director_play_plan(shot, [10])
+        dp.director_play_plan(self._title(), [10])
+        self.assertFalse(dp.director_play_plan(shot, [10])[0]["changed"])
+
+    def test_two_title_beats_in_a_row_both_paint(self):
+        # The cards must be re-applied unconditionally: `changed` is False, so nothing else
+        # will ever clear the beat before it.
+        other = dr.director_item_overlay(overlays=[{"kind": "banner", "text": "hi"}])
+        dp.director_play_plan(self._title(), [10])
+        dp.director_play_plan(other, [10])
+        self.assertEqual(len(self.shown), 2)
 
 
 if __name__ == "__main__":

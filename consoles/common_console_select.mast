@@ -347,6 +347,21 @@ if CAN_CHANGE_CONSOLE:
         # last line of defence; the repaint below is what normally swaps the control.
         on gui_message(cb_ready):
             jump console_selected if GAME_STARTED and console_ready
+            # PRE-GAME ENTRY, for a console that declares it wants one.
+            #
+            # Most consoles have nothing to do before the mission starts - a helm with no
+            # world to fly through is just a screen - so Ready means "I am waiting" and the
+            # server's Start is what walks everybody in. But some are SET UP rather than
+            # crewed: the Director is a streaming tool, and a streamer opening four windows
+            # wants to declare which is program, which is preview and which is the desk
+            # BEFORE the mission is running, not while it is.
+            #
+            # OPT-IN, off the @console label's own metadata, so this file names no addon. A
+            # console asks by declaring `pre_game: true`; anything that does not is unchanged.
+            # `console_ready` stays True either way, which is what stops the server's start
+            # reroute (game_started_console) reading it as False and sending the console back
+            # to this picker with its choice thrown away.
+            jump console_selected if console_ready and console_select_item.label.get_inventory_value("pre_game")
     else:
         on gui_message(gui_button("ready")):
             console_ready = True

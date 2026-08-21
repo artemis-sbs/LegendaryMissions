@@ -8,6 +8,7 @@ looks at pixels. Both black screens in this addon shipped under a green `--test`
     PYTHONPATH=../sbs_utils python -m unittest director.test_director_mast
 """
 import glob
+import re
 import io
 import os
 import unittest
@@ -165,6 +166,128 @@ class PropsTerminatorTests(unittest.TestCase):
         self.assertIsNone(self._unterminated(good, "gui_input"))
         self.assertEqual(self._unterminated(bad, "gui_input"), "desc: bad")
         self.assertIsNone(self._unterminated(joined, "gui_input"))
+
+
+class CallableNamesTests(unittest.TestCase):
+    """Every `director_*` the MAST calls has to be a real def somewhere in the addon.
+
+    A MISSPELLED NAME IS A NameError AT RUNTIME, and a failing MAST expression STOPS THE
+    COMMAND - the assignment does not happen, the task ends, and the button reads as doing
+    nothing with nothing on screen to say why. That is the same failure mode that made "Add
+    console items" look broken, and neither the headless run nor `sbs lint` catches it: the
+    editor's tabs are unreachable to `--exercise-click`, and the panel's own handlers only fire
+    on a press.
+
+    It also catches the reverse - a helper renamed in Python with a MAST call site left behind.
+
+    A LEADING UNDERSCORE IS PRIVATE (2026-08-16): `_name` is skipped by
+    register_mission_functions and is NOT a MAST global, so this deliberately only accepts
+    public defs.
+    """
+
+    def _defs(self):
+        names = set()
+        for path in glob.glob(os.path.join(HERE, "*.py")):
+            if os.path.basename(path).startswith("test_"):
+                continue
+            with io.open(path, encoding="utf-8") as handle:
+                for line in handle:
+                    if line.startswith("def director_"):
+                        names.add(line[4:line.index("(")].strip())
+        return names
+
+    def _called(self):
+        """`director_*(` occurrences in the .mast, with the label and line they are on.
+
+        Comment lines are dropped by `_labels`, which is what keeps a name that only appears in
+        a design note from being demanded as a def.
+        """
+        out = []
+        for path in sorted(glob.glob(os.path.join(HERE, "*.mast"))):
+            for label, n, raw, is_label in _labels(path):
+                if is_label:
+                    continue
+                for match in re.finditer(r"\b(director_[A-Za-z_0-9]*)\s*\(", raw):
+                    out.append((os.path.basename(path), n, match.group(1)))
+        return out
+
+    def test_every_call_resolves(self):
+        defined = self._defs()
+        missing = ["%s:%d %s" % (f, n, name)
+                   for f, n, name in self._called() if name not in defined]
+        self.assertEqual(missing, [], "MAST calls a director_* that no .py defines")
+
+    def test_the_console_declares_pre_game_and_compiles(self):
+        """The `@console/director` metadata block, compiled for real.
+
+        TWO THINGS AT ONCE, because they fail together. The picker's Ready handler reads
+        `pre_game` off this label, so a block that is absent silently turns the feature off -
+        and a block in the WRONG PLACE fails to compile, which is far worse: a story that does
+        not compile schedules no task at all, so the whole mission runs with 0 labels.
+
+        `metadata:` and its closing fence sit at column 0, so putting them after ANY indented
+        body line - the `"` description included - is an indentation drop mid-label and raises
+        "Bad indentation". Measured on `@console`, `@map` and a plain `==` label alike. It is
+        the sort of thing that gets "tidied" into the wrong order by someone matching the
+        example in MAST_CLAUDE.md, which has it the other way round and does not compile.
+        """
+        from sbs_utils.fs import test_set_exe_dir
+        test_set_exe_dir()
+        from sbs_utils.mast_sbs import story_nodes  # noqa: F401 - registers story nodes
+        from sbs_utils.mast.mast import Mast
+        from sbs_utils.agent import clear_shared
+
+        with io.open(os.path.join(HERE, "director_entry.mast"), encoding="utf-8") as handle:
+            lines = handle.read().splitlines()
+        start = next(i for i, l in enumerate(lines) if l.startswith("@console/director"))
+        end = next(i for i in range(start + 1, len(lines))
+                   if lines[i].strip().startswith("jump "))
+        # The real declaration, with its body replaced so nothing else has to resolve.
+        code = "\n".join(lines[start:end]) + "\n    ->END\n"
+        self.assertIn("metadata:", code, "the console no longer declares metadata")
+        self.assertIn("pre_game", code, "the console no longer declares pre_game")
+
+        mast = Mast()
+        clear_shared()
+        errors = mast.compile(code.replace(" if DIRECTOR_enabled", ""), "t", mast)
+        self.assertEqual(errors, [], "the @console/director declaration does not compile")
+        label = None
+        for name, node in mast.labels.items():
+            if "console" in name:
+                label = node
+        self.assertIsNotNone(label)
+        self.assertTrue(label.get_inventory_value("pre_game"),
+                        "pre_game did not reach the label's inventory")
+
+    def test_metadata_after_the_description_really_does_not_compile(self):
+        # The companion to the test above: prove the trap is real rather than trusting that a
+        # passing compile means the order mattered. Same declaration, block moved below the
+        # description line - which is the order MAST_CLAUDE.md's example uses.
+        from sbs_utils.fs import test_set_exe_dir
+        test_set_exe_dir()
+        from sbs_utils.mast_sbs import story_nodes  # noqa: F401
+        from sbs_utils.mast.mast import Mast
+        from sbs_utils.agent import clear_shared
+
+        bad = ('@console/director !0 ^94 "Director"\n'
+               '    " Stream director\n'
+               'metadata: ``` yaml\n'
+               'pre_game: true\n'
+               '```\n'
+               '    ->END\n')
+        mast = Mast()
+        clear_shared()
+        errors = mast.compile(bad, "t", mast)
+        self.assertTrue(errors)
+        self.assertIn("indentation", errors[0].lower())
+
+    def test_the_scan_finds_the_calls_it_should(self):
+        # A guard that matched nothing would pass forever. These are load-bearing call sites -
+        # the selection, the resolved subject, and the bind picker.
+        found = {name for _f, _n, name in self._called()}
+        for name in ("director_selection", "director_item_subject_id", "director_bind_list",
+                     "director_area", "director_cam_ensure"):
+            self.assertIn(name, found)
 
 
 if __name__ == "__main__":

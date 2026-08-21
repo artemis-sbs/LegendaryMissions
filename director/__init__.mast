@@ -33,6 +33,7 @@ default shared CV_CONSOLES = ["helm", "weapons", "science", "engineering", "comm
 
 import director_cam.py
 import director_screens.py
+import director_bind.py
 import director_rundowns.py
 import director_overlays.py
 import director_shots.py
@@ -52,14 +53,13 @@ import capture.mast
 # these need; the engine forks a fresh process and does not care either way.
 director_rundowns_reset()
 director_play_reset()
+director_selection_reset()
 director_modes_reset()
 director_overlay_presets_reset()
 # AFTER the presets: the bench seeds each overlay row with its first built-in preset, so a
 # director who ticks Lower third and takes the shot gets the ship's name on air rather than an
 # empty card that reads as a broken overlay.
 director_stage_reset()
-# The bridge-wall generator builds from the mission console list rather than a second copy.
-director_bridge_consoles_set(CV_CONSOLES)
 
 # --- shared primitive --------------------------------------------------------
 # Show <cv_console> for <cv_ship_id> on whichever client runs this label, and - when the
@@ -104,8 +104,17 @@ director_bridge_consoles_set(CV_CONSOLES)
         gui_layout_widget("3dview")
     # THE CAMERA GOES LAST. shot_apply aims a view this screen only has once gui_console has
     # given it one; aiming first would point a 3dview that does not exist yet.
+    #
+    # FURNITURE FOR A CONSOLE BEAT TOO. director_play_apply_shot puts the cards up itself for a
+    # CAMERA item and returns False for anything else, so a console beat needs its own call -
+    # and it wants one, because "Artemis - Helm - Viper" on a lower third is the whole reason
+    # console items learned to carry overlays. One branch or the other, never both: applying
+    # twice would clear the cards and re-show them for nothing.
     if cv_shot is not None:
-        director_play_apply_shot(client_id, cv_shot)
+        if cv_shot["kind"] == "con":
+            director_play_overlays(client_id, cv_shot)
+        else:
+            director_play_apply_shot(client_id, cv_shot)
     await gui()
 
 

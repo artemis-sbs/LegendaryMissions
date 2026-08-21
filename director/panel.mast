@@ -1,4 +1,11 @@
-# Director - the MAIN PAGE. "Play these rundowns."
+# Director - the MAIN PAGE. "Play these rundowns", with the 2D view that points them.
+#
+# THE 2D VIEW IS A SELECTION SURFACE, NOT A MONITOR, and that is the whole reason it is on this
+# page rather than only in the editor. A rundown item can bind its subject to the Director's
+# SELECTION (`<<selected_id>>`, or one hop on to the selected ship's weapons target - see
+# director_bind.py), and clicking a contact here re-points every bound item in the play set on
+# the next tick. The show is re-aimed from the page the show is run from; the operator never
+# has to leave it, and the rundown is not edited at all.
 #
 # That sentence is the whole console now. It used to be "play these rundowns on these SCREENS",
 # with a picker down the left listing every declared console - and the picker turned out to be
@@ -34,6 +41,12 @@ default shared cv_punch     = None
 # because a clip launcher that needed a second press would not be one.
 default shared cv_pick_mode = "Rundowns"
 
+# What the 2D view last picked. rundown.mast declares this too - `default` is set-if-absent, so
+# both are correct and neither depends on which file's top level ran first. It is the name the
+# selection line's `on change` watches; the SELECTION itself lives in director_bind.py, because
+# the play set is evaluated on a server task that has no page and no MAST scope to read.
+default shared cv_subject_id = None
+
 # ONE-TIME per ENTRY. The camera work is in director_cam_ensure, which EVERY tab calls -
 # see director_cam.py for why that is not optional.
 === cv_ui
@@ -52,8 +65,10 @@ default shared cv_pick_mode = "Rundowns"
     default rundown_lb = None
 
     # Re-seat before painting: staging a shot reassigns this client to whatever it is filming,
-    # and every //focus route is gated on the client riding its own cam.
-    director_cam_ensure(client_id)
+    # and every //focus route is gated on the client riding its own cam. The id is kept because
+    # the scan-priming pass below needs an ORIGIN to store the scan data against, and
+    # sbs.get_ship_of_client is exactly the thing director_cam.py says never to ask.
+    cv_paint_cam = director_cam_ensure(client_id)
 
     # Take the OUTGOING selection and view before anything is rebuilt. HERE rather than in the
     # handlers, because the watcher repaint has no handler to hang a save on - the GUI task is
@@ -83,27 +98,57 @@ default shared cv_pick_mode = "Rundowns"
     gui_tab_back(CONSOLE_SELECT)
     if is_dev_build():
         gui_tab_enable("capture")
-    gui_activate_console("director")
+    # `sci` IN THE NAME IS LOAD-BEARING, and this page is named for it now that it carries a
+    # 2D view. consoledispatcher routes a 2D-view click by matching substrings of the console
+    # name: `sci` sends it to the SCIENCE selection, which is what //focus/science in
+    # stage.mast reads. A name matching none of them falls through to `normal_target_UID` and
+    # every click drives nothing at all, silently. The `gamemaster_` prefix picks the engine's
+    # optimized detached-console network path. Same name the editor's Stage tab uses.
+    gui_activate_console("gamemaster_director_sci")
 
-    # px, not percent: a percent section full of `em` rows is only correct at the resolution it
-    # was tuned at. The tab strip owns the top 35px. gui-2 is 24px a line, so 2.4em = 58,
-    # 2.2em = 53, 2em = 48.
-    cv_ctrl_px = 219                    # send 58 + dwell 58 + on-air 48 + status 48 (+7)
+    # Comms and science will not OPEN on an object this side has no scan data for, so a first
+    # click on a never-scanned contact would do nothing. //enable/science fills that in per
+    # click; this pass covers what is already on screen when the panel opens.
+    #
+    # any_role, NOT role: role() is a single dict lookup and does not split on commas, so
+    # role("__npc__,__player__") looks for a collection of that literal name, finds nothing,
+    # and the loop never runs at all.
+    for _pn_id in any_role("__npc__,__player__"):
+        science_update_scan_data(cv_paint_cam, _pn_id, "Director")
 
-    # ---- header: this director's NAME, and what it is driving ----------------------------
+    # ---- header: this director's NAME, what it is driving, and what is SELECTED -----------
     # gui_text, never a """...""" row - that is a text area and it declines measurement.
-    gui_section("area: 2, 40px, 98, 82px;")
+    gui_section(director_area("panel_head"))
     gui_row("row-height: 1.5em; font: gui-3;")
     gui_text("$text:" + gui_text_escape(director_cam_name(client_id)) + ";font:gui-3;color:#8cf;", "col-width: content;")
     cv_screens_w = gui_text("$text:" + gui_text_escape(director_screen_summary()) + ";font:gui-2;color:#9ab;")
+    # THE SELECTION LINE UPDATES IN PLACE, and must never repaint this page. The tree carries
+    # the operator's collapse state and their scroll position, and a repaint to move a piece
+    # of text is exactly what director_tree_recolor exists to avoid. director_mode_fingerprint
+    # deliberately knows nothing about the selection for the same reason.
+    cv_sel_w = gui_text("$text:" + gui_text_escape(director_selection_label()) + ";font:gui-2;color:#8f8;", "col-width: 220px;")
     on change director_screen_summary():
         cv_screens_w.update("text:" + gui_text_escape(director_screen_summary()) + ";font:gui-2;color:#9ab;")
+    on change cv_subject_id:
+        cv_sel_w.update("text:" + gui_text_escape(director_selection_label()) + ";font:gui-2;color:#8f8;")
+
+    # ---- right: the 2D view ---------------------------------------------------------------
+    # EACH ENGINE WIDGET IN ITS OWN SECTION. Never share a row with MAST controls: the engine
+    # draws its widget at its own size over whatever MAST put beside it, so sharing a row is
+    # how you lose the other half.
+    gui_section(director_area("panel_zoom"))
+    gui_row("row-height: 30px;")
+    gui_layout_widget("radar_zoom_ctrl")
+
+    gui_section(director_area("panel_view2d"))
+    gui_row()
+    gui_layout_widget("science_2d_view")
 
     # ---- the rundowns --------------------------------------------------------------------
     # `font:` on the listbox itself - a listbox resolves its own `em` against its own default
     # font. No col-width (that makes a listbox HORIZONTAL) and no `row-height: content` (that
     # raises); a bare number would be percent of SCREEN.
-    gui_section(f"area: 2, 88px, 98, 100-{cv_ctrl_px}px;")
+    gui_section(director_area("panel_tree"))
     # NO `reveal=`. It fires on every view re-establish, and a re-establish would drag the view
     # back to the selection while the operator was trying to scroll. `hint=` keeps the slot
     # without moving anything.
@@ -136,15 +181,18 @@ default shared cv_pick_mode = "Rundowns"
                 shared cv_status = "ON AIR " + str(cv_take_item["label"])
 
     # ---- controls -------------------------------------------------------------------------
-    gui_section(f"area: 2, 100-{cv_ctrl_px}px, 98, 100-6px;")
+    # The geometry is in director_layout.py, not a `cv_ctrl_px = 219` with the arithmetic in a
+    # comment beside it. Same reason the editor's is: this page is only reachable by clicking a
+    # tab-strip button, which the headless layout audit cannot press - so a hand-computed
+    # number here is a number nothing ever measures.
+    gui_section(director_area("panel_ctrl"))
 
     gui_row("row-height: 2.4em; font: gui-2;")
-    sendb = gui_button("Send to Program", "col-width: 210px;")
-    stopb = gui_button("Stop", "col-width: 110px;")
-    resumeb = gui_button("Resume", "col-width: 120px;")
-    refreshb = gui_button("Refresh", "col-width: 130px;")
-    gui_text("$text:`Pick`;font:gui-2;", "col-width: content;")
-    pick_rb = gui_radio("Rundowns,Items", var="cv_pick_mode", style="col-width: 240px;")
+    sendb = gui_button("Send to Program", "col-width: 190px;")
+    stopb = gui_button("Stop", "col-width: 90px;")
+    resumeb = gui_button("Resume", "col-width: 110px;")
+    refreshb = gui_button("Refresh", "col-width: 110px;")
+    pick_rb = gui_radio("Rundowns,Items", var="cv_pick_mode", style="col-width: 220px;")
     gui_blank()
     on gui_message(pick_rb):
         # A repaint, deliberately: the two modes are a different LIST - collapsed branches and
@@ -172,14 +220,18 @@ default shared cv_pick_mode = "Rundowns"
     on gui_message(refreshb):
         jump cv_paint
 
+    # NARROWER THAN IT WAS. The control block shares its row with nothing, but it now shares
+    # the PAGE with the 2D view, so it has 58% of the width instead of 96%. At 1280 that is
+    # about 740px, which these add up to; the checkbox lost its explanatory tail rather than
+    # the dwell slider losing usable travel.
     gui_row("row-height: 2.4em; font: gui-2;")
     gui_text("$text:`Dwell (s)`;font:gui-2;", "col-width: content;")
-    gui_int_slider("$text:int;low:2;high:30;", "col-width: 220px;", var="cv_dwell")
+    gui_int_slider("$text:int;low:2;high:30;", "col-width: 200px;", var="cv_dwell")
     # THE CHECKBOX FORM MATTERS. `state:` in the message is dead weight: Checkbox.__init__
     # parses it and then clobbers _value with the constructor argument, and _present emits
     # `state:` twice - the engine takes the first. Assigning `.value` after construction is the
     # only thing that renders a tick.
-    autocb = gui_checkbox("text: Auto-director - let the action pick the order;", "col-width: 420px;")
+    autocb = gui_checkbox("text: Auto-director;", "col-width: 190px;")
     autocb.value = cv_auto
     gui_blank()
     on gui_message(autocb):

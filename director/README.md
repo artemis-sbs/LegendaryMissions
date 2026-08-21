@@ -27,6 +27,47 @@ that appears whether or not a pin is configured:
 | **Preview** | The same, showing the shot **before** it goes out: whatever is staged, or the next item up when nothing is. |
 | **Director** | The control console: the tabs below. |
 
+### Set it up before the mission starts
+
+A show is configured *before* the curtain, not during it. So the Director is reachable from the
+console picker **pre-game**: select it, tick **Ready**, and you go straight to the entry screen
+instead of waiting. Declare the window as PROG01, do the same in the next window, and the whole
+gallery is standing by before the server presses Start.
+
+**It is opt-in, off the label's own metadata**, so `consoles/common_console_select.mast` names
+no addon:
+
+```
+@console/director !0 ^94 "Director" if DIRECTOR_enabled
+metadata: ``` yaml
+pre_game: true
+```
+```
+
+Most consoles genuinely have nothing to do early - a helm with no world to fly through is just a
+screen - so Ready still means "I am waiting" for everything that does not ask.
+
+**THE METADATA BLOCK GOES ABOVE THE DESCRIPTION LINE.** `metadata:` and its closing fence sit at
+column 0, so putting them after *any* indented body line - the `"` description included - is an
+indentation drop mid-label and fails to compile with *"Bad indentation"*. Measured on
+`@console`, `@map` and a plain `==` label alike; MAST_CLAUDE.md's `@map` example has them the
+other way round and does **not** compile. A story that does not compile schedules no task at
+all, so getting this wrong is a whole-mission failure rather than a local one.
+`test_director_mast` compiles the real declaration, and proves the wrong order still fails.
+
+**Surviving the start.** The server reroutes every client through `game_started_console` when it
+presses Start, which walks each one into its console the ordinary way - `jump(console.label)`,
+landing back on the pin screen. A **one-shot resume flag** is armed when a mode is committed and
+spent by the next entry: the start reroute spends it and goes straight to the declared mode, and
+an operator who later re-picks Director off the console list finds it spent and gets the screen,
+which is the only way to change a mode. Cancel clears the declaration *and* disarms the flag, so
+backing out cannot skip the screen it just backed out of.
+
+**Cancel unticks Ready** while the game has not started. `console_ready` is a task variable of
+the same GUI task that ran the picker, so the picker's own `select_console_clear_ready` reaches
+it from the entry screen. After the start it is a dead flag - `game_started_console` read it once
+- and the picker shows a Ready *button* instead of the checkbox, so there is nothing to untick.
+
 **Declaring a mode IS the selection.** A console that opens as Program is a program screen, and
 Send goes to every one of them. There was a picker here once - two grouped lists, a pre-tick that
 had to be one-shot so an un-tick could stick, and a set remembering which ids had been offered -
@@ -41,8 +82,8 @@ camera and sends each screen back to its own holding page.
 
 | Tab | What it is |
 |---|---|
-| **director** | The main page. Rundowns, Send/Stop/Resume, dwell, auto-director, and the ON AIR line. |
-| **rundown** | The editor. The rundown and its items on the left; the tools that make an item on the right, as sub-tabs: **Stage** and **Console**. |
+| **director** | The main page. Rundowns, Send/Stop/Resume, dwell, auto-director and the ON AIR line down the left; the **2D view** down the right. |
+| **rundown** | The editor. The rundown and its items on the left; the tools that make an item on the right, as sub-tabs: **Stage** and **Console**. Picking an item RECALLS it onto the bench. |
 | **capture** | Developer screenshots. Enabled only under `is_dev_build()`. |
 
 The editor is **tools that make rundown items**, plus one button that takes a shot straight to
@@ -51,21 +92,174 @@ Ships x Consoles x Screens pickers and had nowhere to say what should play, and 
 Stage and Camera into separate tabs - so the rundown you were adding to was never on screen
 while you worked. Picking a subject and choosing a shot is one job.
 
+**The Console sub-tab has no Ships list.** It went when a console item learned to bind its ship:
+the Stage's Subject/Bind row already answers *"which ship"*, and two controls that can disagree
+about it is the same duplicate the screen picker and the shot-mode picker were each deleted for.
+What is left is the one thing that tab is uniquely good at - ticking three stations and getting
+three items from one press - with the bench's subject shown read-only above it. **One bench, two
+views of it**, which is also what lets a console beat be recalled and replaced like any other.
+
+### The main page's 2D view is a selection surface, not a monitor
+
+It is there so a **bound item** can be re-pointed from the page the show is actually run from.
+Click a contact and every `<<selected_id>>` item in the play set re-aims on the next tick,
+without the operator going near the editor and without the rundown being edited at all. That is
+the whole reason it was added; a confidence monitor would not have earned the width.
+
+Three things it needs, none of them optional:
+
+1. **The console is named `gamemaster_director_sci`,** not `director`. `consoledispatcher`
+   routes a 2D-view click by matching substrings of the console name: `sci` sends it to the
+   SCIENCE selection, which is what `//focus/science` in `stage.mast` reads. A name matching
+   none of them falls through to `normal_target_UID` and every click drives nothing at all,
+   **silently**. The `gamemaster_` prefix picks the engine's optimized detached-console network
+   path. Same name the Stage sub-tab uses, for the same reason.
+2. **A scan-priming pass on build.** Science will not select an object this side has no scan
+   data for, so a first click on a never-scanned contact does nothing. `//enable/science` covers
+   each click; the loop in `cv_paint` covers what is already on screen when the panel opens.
+3. **The selection line updates in place and NEVER repaints.** The tree carries the operator's
+   collapse state and their scroll position - a repaint to move a piece of text is exactly what
+   `director_tree_recolor` exists to avoid. `director_mode_fingerprint()`, the watcher's repaint
+   trigger, deliberately knows nothing about the selection.
+
+The left column dropped from 96% of the width to 58%, so the transport row was re-measured and
+the auto-director checkbox lost its explanatory tail rather than the dwell slider losing travel.
+Both columns' geometry is in `director_layout.py` now - `cv_ctrl_px = 219` with the arithmetic
+spelled out in a comment beside it was the last hand-computed number on a page nothing measures.
+
 ---
 
 ## Items and rundowns
 
-An **item** is one thing a screen can show, and there are two kinds because the engine has
-two unrelated mechanisms:
+An **item** is one thing a screen can show, and there are three kinds:
 
 ```python
-{"kind": "cam", "mode": "dolly"|"orbit"|"chase"|"tactical", "subject": id,
+{"kind": "cam", "mode": "dolly"|"orbit"|"chase"|"tactical", "subject": id | "<<chain>>",
  "label": ..., "overlays": [ {"kind": "lower_third", ...}, ... ]}
 {"kind": "con", "label": "Helm - Artemis", "ship": id, "console": "helm"}  # -> cv_show
+{"kind": "ovl", "label": "Act One", "overlays": [ ... ]}                   # furniture only
 ```
 
-They cannot be unified: one is a camera, the other is `assign_client_to_ship` +
-`gui_console` + roles. Pretending otherwise is what would break.
+The first two cannot be unified: one is a camera, the other is `assign_client_to_ship` +
+`gui_console` + roles. Pretending otherwise is what would break. The third is not a shot at
+all - see below.
+
+### A subject can name a SELECTION instead of an object
+
+`"subject"` may be an object id **or** a binding: a string of `<<token>>` hops resolved at
+play time against whatever the director has clicked.
+
+```
+<<selected_id>>                            orbit whatever I am pointing at
+<<selected_id>><<weapons_selection>>       chase whatever the selected ship is shooting at
+<<selected_id>><<science_selection>>       ...whatever its science officer is looking at
+```
+
+The chain **seeds from the selection**, so `<<weapons_selection>>` alone means the same thing
+and `<<selected_id>>` is just the identity hop. That is not a parser convenience - it is what
+makes the picker's labels read as one sentence (*"Selection > weapons target"*) rather than
+forcing a prefix nobody would ever omit deliberately.
+
+**Why this exists.** A baked id makes a rundown a list of specific ships, so a show has to be
+re-authored whenever the interesting ship changes - and the four dynamic generators exist
+mostly to paper over that. One bound item is re-pointable live, mid-show, by clicking a
+contact on the 2D view that the main panel now carries. The rundown is not edited at all.
+
+There is **no grid hop.** `grid_selected_UID` names a room or a system on a ship's *internal*
+grid, not a space object - there is nothing out there for a camera to point at. It was in the
+first version of the table purely because `get_grid_selection` sits beside the other three in
+`query.py`.
+
+#### A click on empty space selects a PLACE
+
+The 2D view's other click pans the cam, and **the cam is a real object**, so it is the honest
+answer to *"what did I just point at"*. `//focus/science` selects it. That makes a bound item a
+shot of a **region**: park the cambot in the middle of a fight, and every `<<selected_id>>` beat
+orbits or dollies the fight. The shot then glides with the cam on the next pan, because
+`camera_orbit` rebuilds its offset from the subject's live position every dispatcher tick.
+
+Leaving the selection alone there was the gap: the cam moved, the radar moved, and every bound
+item went on framing whatever contact had been clicked before.
+
+Two consequences, and neither is cosmetic:
+
+- **A camera point is not framed like a hull.** `viewscreen_framing` sizes a shot off
+  `exclusion_radius`, and an invisible cam has none - so it falls to `DEFAULT_RADIUS` (90) and
+  gives a 540/1440 shot, which frames one mid-sized ship. Orbiting a battle at 540 units is
+  inside the engagement looking at nothing. `director_play._framing` answers
+  `DIRECTOR_POINT_NEAR` / `DIRECTOR_POINT_FAR` (2500/7000) for a cam instead, sized against how
+  far apart ships actually fight.
+- **The cam is nameless on purpose** - `player_spawn(..., "", ...)`, because a name would put it
+  in engine lists it is deliberately kept out of. So every labeller would read it back as
+  `unnamed`. `director_cam_point_name` names it at the **display layer** instead, after the
+  console it belongs to (`DIR01 point`), via the `cam_client` back-pointer that is already there
+  for the server-side `//focus` routes.
+
+The pick, the selection and the stage all happen **after** the cam is moved. Staging pushes to
+every Preview screen immediately, so announcing the pick first would preview the old position
+for a tick and read as lag.
+
+`director_bind.py` owns the resolver. Three rules in it are load-bearing:
+
+- **A hop that leads nowhere falls back to the ship it was asked about.** *"Chase what the
+  selected ship is shooting at"* is a shot of that **ship** when it is shooting at nothing. A
+  fight is full of moments with no target, and a gap in the rotation every time the weapons
+  officer drops theirs is worse direction than the ship itself. Each hop is tried, and the last
+  **live** object stands. Three ways a hop leads nowhere and they are all the same thing here:
+  the console has no target, it is holding an id that has since been destroyed, or the blob
+  read raises (which a tombstoned object can do from inside the engine).
+- **`0` is unset, not an id**, and the fallback does not excuse this. `get_weapons_selection`
+  pulls `weapon_target_UID` straight out of the blob and the engine's "no target" value is `0`,
+  not `None`. A `is None` check would hand **object zero** to the camera instead of falling
+  back - a live bug on a real bridge, invisible in the mock.
+- **An unknown token kills the chain** - the one failure that does *not* fall back, and
+  deliberately the opposite of the overlay resolver, which leaves an unknown token *literal*.
+  It is an authoring error rather than a runtime state; a visible `<<shpi>>` on a card is
+  informative, but a camera quietly pointed at the selection by a typo looks deliberate.
+
+Two things still resolve to nothing, and those beats are **SKIPPED** by the same filter that
+drops a destroyed ship (`director_rundown_play_set`): **nothing selected**, and **the selection
+itself is gone**. There is no ship to fall back *to*, so there is nothing to show. The seed is
+validated for exactly that reason - every later hop falls back to it, so a dead selection would
+otherwise be what the whole chain settled on. The rundown steps straight past the beat and
+picks it up again the moment it can be shown; skipping is not removal.
+
+### Two keys, and why they must stay two
+
+This is the part that would be tempting to collapse, and collapsing it looks like *"the show
+jumps back to its first shot every time I click something"*.
+
+| | Built from | Answers |
+|---|---|---|
+| `director_item_ident` | the item **as authored** | *where is the feed?* - `_PROGRAM_HELD`, `_ON_AIR`, the play-set dedupe |
+| `director_play_plan`'s key | the authored key **+ the resolved subject** | *is this screen aimed correctly?* |
+
+A bound item is the **same item** in the rundown however the selection moves; only what it is
+pointed at changed. If its ident moved on every click, `_index_of` would lose `_PROGRAM_HELD`,
+the program would snap to `order[0]`, and the dwell clock would reset - the exact flicker that
+identity-holding was written to prevent. But a *screen* is aimed at an id, not at a binding, so
+its key has to carry the resolved one: click a different contact and that screen re-routes and
+re-aims while the rundown keeps its place.
+
+`director_item_subject(item)` is the authored subject; `director_item_subject_id(item)` is the
+live id. Everything that talks to the engine wants the second.
+
+### An item does not need a subject at all
+
+`{"kind": "ovl"}` is furniture and nothing else - a title, an intro, an outro, a speaker card.
+It has no shot, so:
+
+- every `ovl` item shares **one** shot key, and `director_play_plan` **inherits** the screen's
+  running one rather than using it;
+- it never reports `changed`, so there is no reroute, no page rebuild and no restarted camera.
+  A title belongs **over** the shot that is running, not instead of it;
+- its overlays are applied **unconditionally** rather than on an ovkey difference, because the
+  beat before it may have been a camera item that left its own furniture up - and `changed`
+  being `False` means nothing else will ever clear it.
+
+It is deliberately not a camera item with an empty subject. Every liveness test in
+`director_rundowns.py` asks *"does this item name something that still exists"*, and an item
+that names nothing **on purpose** has to be distinguishable from one whose ship blew up.
 
 ### A SHOT is not an ITEM
 
@@ -89,6 +283,56 @@ unchanged across the two beats, so there is no re-route, the camera keeps orbiti
 the cards swap. A double-click still collapses, and a generated orbit of Artemis appearing in
 two rundowns still collapses, because everything about those matches.
 
+### Picking an item RECALLS it onto the bench
+
+An item already in a rundown used to be a dead end: to fix a typo in a lower third you rebuilt
+the whole beat, and a beat is a subject, a binding, a mode, a hold, a distance and up to six
+overlays with their templates. Picking one out of the item list now loads all of it back, and
+**Replace** writes it down again in place. Add still appends, which is what you want when you
+are duplicating a beat rather than fixing one.
+
+**The templates come back as TEMPLATES.** Resolving on the way in would bake the currently
+selected ship's name into a beat written to follow whatever it is pointed at - and you would not
+see the difference until it went to air naming the wrong ship.
+
+**Replace does not dedupe, where Add does.** Add's *"you already have it"* is right for Add;
+Replace means *"make row 4 be this"*, and refusing because row 7 already matches would leave the
+operator staring at a row that did not change with nothing on screen to say why.
+
+**The repaint loop is the trap**, and this page has grown one twice. Recall has to repaint - the
+bind picker, the mode radio, two sliders, the kind listbox and every field box change in value
+*and* in shape, which no `.update()` can express - and the rebuild restores the selection, which
+re-fires the handler. The guard is to remember the index in `cv_item_index` and act only when the
+selection has actually **moved**; the restored index equals the remembered one, so the second
+firing does nothing. Remove forgets the index, because the row underneath takes it and would
+recall a different beat.
+
+### How far away the camera sits
+
+Framing comes from the subject's own hull radius and that is still the default. **`Distance` is a
+per-item override**, `0` means automatic, and an item that never touches it behaves exactly as it
+always did. This is not the return of the hand-built sliders the first version had: those were
+the *only* way to size a shot, and a fixed number framed a starbase and a fighter equally badly.
+
+| Mode | automatic | explicit |
+|---|---|---|
+| orbit | radius = the framing's wide end | radius = the distance |
+| chase | back = `near * DIRECTOR_CHASE_BACK` | back = the distance |
+| dolly | ping-pong wide ↔ near | ping-pong distance ↔ distance/2 |
+
+Three things worth knowing:
+
+- **The slider is seeded from the automatic framing**, so staging a fighter starts it near 1400
+  and a starbase near 4800 - a sensible number for *that* hull to nudge from. The stored value
+  stays 0 until you commit one.
+- **The slider does not restage**, alone on this page. Everything else pushes to Preview as it is
+  touched, which is right for a tick or a keystroke; re-issuing the shot on every step of a drag
+  is a cut per step. **Dolly to** is what applies it, and seeing the *move* instead of a cut is
+  the whole reason there is a button. **Auto** hands it back.
+- **A chase's height does not follow it.** What makes a chase read as behind is the elevation
+  *angle*; tying the height to a distance the operator is dragging would tip the shot overhead as
+  they came closer - the exact thing halving `DIRECTOR_CHASE_UP` alongside `BACK` avoided.
+
 ### The shot vocabulary is the bridge's
 
 A camera item carries a **mode**, not geometry:
@@ -97,7 +341,7 @@ A camera item carries a **mode**, not geometry:
 |---|---|
 | **Dolly** | pushes in and back out, ping-ponging so it does not read as a jump cut |
 | **Orbit** | one turn, carrying the yaw over so a lap does not whip back to the start |
-| **Chase** | sits behind the subject, re-aimed every tick so it stays there through a turn |
+| **Chase** | sits close behind the subject, re-aimed every tick so it stays there through a turn |
 | **Tactical** | a 2D view of the subject on that screen |
 
 Dolly, Orbit and Tactical are `viewscreen.SHOT_LABELS` - the science and weapons **"On Screen"**
@@ -145,6 +389,25 @@ field takes a template resolved against **that item's own subject**, one line be
 | `<<comms_id>>` | "Artemis (TSN)" | `obj.comms_id` - the engine already builds this |
 | `<<hull>>` | hull percent | `viewscreen_hull_percent(subject)` |
 | `<<shields>>` | front / rear percent | blob `shield_val` / `shield_max_val`, slots 0 and 1 |
+| `<<subject_id>>` | the subject's own id, as text | for `Speaker`'s `ship` field, which takes an ID and not text |
+| `<<console>>` | the BEAT's station, "Helm" | the item, not the ship - empty on a camera beat |
+| `<<crew_name>>` | who is sitting at that station | the ship's `consoles` link, matched on `CONSOLE_TYPE`, then `CREW_NAME` |
+
+**Two of those come off the ITEM, not the subject.** `<<name>> - <<console>> - <<crew_name>>`
+reads as *"Artemis - Helm - Viper"*, and only the first third is a property of the ship - which
+is why `director_overlay_resolve` takes the beat as well, and why they live in their own
+`_ITEM_TOKENS` table with a different signature rather than being squeezed into `_TOKENS`.
+
+`<<crew_name>>` matches the **beat's** station rather than taking the first client on the ship:
+a bridge has five people on it, and naming the wrong one on air is worse than naming nobody. An
+empty seat is ordinary on a small bridge, so the stock preset is `<<crew_name|unmanned>>` - a
+blank second line reads as a broken card.
+
+**This is why a console item learned to carry overlays.** It could not, which is the real reason
+the old bridge rundown went to air unlabelled; `director_item_con` has an `overlays` list now and
+`cv_show` puts the cards up for a console beat the same way `director_play_apply_shot` does for a
+camera one. One branch or the other, never both - applying twice would clear the cards and
+re-show them for nothing.
 
 `<<class|contact>>` gives a fallback when a token cannot resolve, so a rock with no hull class
 does not leave a blank line. An **unknown** token is left LITERAL rather than raising - the
@@ -165,27 +428,83 @@ Resolution happens in `director_play_overlays`, **not** in a builder: `banner` a
 are cycle kinds whose text is word-wrapped and split into timed segments, so an unresolved token
 could be split across two of them.
 
-**Presets** sit beside each row's fields: a picker of built-ins (**Ship ID**, **Ship and side**,
-**Condition**, **Contact**) plus anything you Save, in one list, exactly as the rundown picker
-mixes generators with your own. A preset name is flattened of `,` `;` `:` before it is stored -
-it reaches the wire as one entry of `list: a,b,c;`, so a comma in it would become two entries and
-the picker would then hold a name matching no preset. Saving over a name replaces it.
+**Presets** sit beside the field editor: a picker of built-ins (**Ship ID**, **Ship and side**,
+**Condition**, **Contact**, and per kind a subject-free one for an overlay-only beat) plus
+anything you Save, in one list, exactly as the rundown picker mixes generators with your own. A
+preset name is flattened of `,` `;` `:` before it is stored - it reaches the wire as one entry of
+`list: a,b,c;`, so a comma in it would become two entries and the picker would then hold a name
+matching no preset. Saving over a name replaces it.
+
+#### The kinds are a table, not a layout
+
+The editor used to be **one hand-unrolled MAST row per overlay kind** - four checkboxes, four
+preset dropdowns, eight text boxes, four Save buttons, about eighty lines. Unrolled for a real
+reason: an `on gui_message` registered in a `for` loop captures the loop variable at its LAST
+value, so a loop over the kinds would have made all four rows edit the letterbox.
+
+But that put the **vocabulary in the layout**. Offering `lower_third_portrait` (a speaker card)
+or `credits` (an intro/outro roll) meant another block of MAST, another entry in two Python
+tables that had to agree, and another 46px off the 2D view above. Both kinds already existed in
+the library; they were simply unreachable from here.
+
+It is a **kind picker plus one field editor** now:
+
+- a `multi=True` listbox whose **selection is the enabled set** - an untick is a row leaving the
+  selection and has no event of its own, so the handler replaces the whole set;
+- a dropdown choosing **which kind's text you are typing**, and three unrolled field rows that
+  read `DIRECTOR_OVERLAY_KINDS`. Still unrolled - but over the FIELDS of one kind, not over the
+  kinds - and three because that is `DIRECTOR_OVERLAY_MAX_FIELDS`, with the spare rows hidden and
+  the section sized for the widest kind so it does not resize under the operator.
+
+Ticking and editing are **two questions**, which is why they are two widgets: wanting to write
+the hero card before ticking it is ordinary, and one widget meaning both would jump the boxes on
+every tick. A seventh kind is now one line in `director_overlays.py` and nothing at all in MAST.
+
+**A slot holds one card.** `lower_third` and `lower_third_portrait` both default to the
+`lower_third` slot, so ticking both draws one over the other - an authoring mistake, but one
+nothing on screen would otherwise explain. `director_overlay_slot_clash` names the hidden one in
+the status line, on every tick, before a subject has even been picked.
+
+**Two fields are not text by the time a builder sees them,** and the editor can only offer a text
+box - so `director_overlay_build_fields` converts on the way out. `credits`' `entries` splits on
+`;` into a list (a string would be iterated one character at a time and roll the alphabet), and
+`Speaker`'s `ship` becomes an int, or is **omitted** when it is empty or zero - its default is
+`None`, not `""`, so it has to be absent for the card to draw with no square. That is the
+narrator case: a speaker card with nobody to show.
 
 ### Rundowns
 
-A **rundown** is a named, ordered list of items. Four ship with the addon and are **built at
+A **rundown** is a named, ordered list of items. Five ship with the addon and are **built at
 runtime from live roles**, so they track ships that spawn and die rather than going stale the
-moment you choose one:
+moment you choose one. All five carry furniture, because they are the first thing a new
+operator sends to air and a bare shot of an unnamed ship is the least this console can do:
 
-| Rundown | Contents |
-|---|---|
-| **Bridge wall** | a console item per console type per player ship - the classic multiview |
-| **Player ships** | an orbit of each player ship |
-| **The action** | a chase on each of the most exciting objects right now, best first |
-| **Stations & terrain** | orbits of stations and NAMED terrain - the establishing shots |
+| Rundown | Contents | Furniture |
+|---|---|---|
+| **Follow the selection** | orbit the selection, chase what it is shooting at, its 2D view - **all bound**, no object named | lower third, Ship ID |
+| **Crew consoles** | the SELECTED ship's helm, weapons, science and comms - **all bound** | lower third, *Artemis - Helm / Viper* |
+| **Player ships** | an orbit of each player ship | lower third, Ship ID |
+| **The action** | a chase on each of the most exciting objects right now, best first | top status, hull and shields |
+| **Stations & terrain** | orbits of stations and NAMED terrain - the establishing shots | hero, as a title card |
 
 Plus any you create in the editor. Every generator sorts by id: `role()` returns a **set**, and
 without a total order the feed reshuffles every dwell and reads as a fault.
+
+**The furniture is TEMPLATES, and that is what makes it possible at all.** A generator makes one
+item per ship, so there is nowhere to type "Artemis" - and for a *bound* beat there is nowhere
+to type it even in principle, because the answer changes every time the director clicks.
+
+**"Bridge wall" is gone.** It generated a console item per console per player ship - twelve rows
+for a two-ship roster - and its premise died with the screen-distribution model. Every program
+screen shows the *same* item, so those twelve beats were never a wall: they were a twelve-beat
+rotation the one program feed cycled through on a dwell, one console at a time. Cutting to what
+the weapons officer is seeing is a real broadcast move; cycling all of them for every ship is
+noise. **Crew consoles** is what a director actually wanted from it.
+
+Generated console beats use `helm, weapons, science, comms` and **not** `CV_CONSOLES`. That list
+is what the editor offers when you build one by hand, and it carries `mainscreen` and
+`cinematic` - neither is a crew view, and a `cinematic` console beat is the worse of the two: a
+full-screen `3dview` with no camera applied to it.
 
 **The play set is the union of the SELECTED rundowns.** Multi-select, so unselected is *off*.
 Duplicates across two rundowns collapse to one item, and an item whose subject has gone is
@@ -334,7 +653,31 @@ a dead subject or a stolen camera recovers.
 
 A subject with no usable heading (a rock, an engine object that will not answer) falls back to a
 fixed rear offset rather than raising: a chase that is merely not behind the ship still shows
-the ship.
+the ship. **That fallback is the one way a chase can come out not-behind**, and it is silent -
+the offset is a fixed `-Z`, which is only "behind" for a subject that happens to be heading
+`+Z`. The maths on the live-heading path is measured correct at every heading; if a chase ever
+reads as beside or in front on a real bridge, `forward_vector()` not answering is the thing to
+check first.
+
+#### How far back, and why the height goes with it
+
+Both are multiples of the framing `near`, which is already 6 hull radii:
+
+| | was | now |
+|---|---|---|
+| `DIRECTOR_CHASE_BACK` | 3.0 | **1.5** |
+| `DIRECTOR_CHASE_UP` | 0.5 | **0.25** |
+
+At 3.0 back a light cruiser was chased from about 1600 units out - a wide shot that happens to
+follow something rather than a chase.
+
+**The height had to halve with it.** What makes a shot read as *behind* is the elevation
+**angle**, not the height, and because back and up are multiples of the same `near` their ratio
+*is* that angle: `0.5/3.0` is about 9.5 degrees above the subject's own line, which is over its
+shoulder. Halving the distance alone would have left the height where it was and doubled that to
+18.4 degrees - tipping the shot toward looking *down* on the ship, which is the opposite of what
+a chase is for. Halved together, the angle is unchanged and the shot is simply closer.
+`test_the_chase_is_over_the_shoulder_not_overhead` holds that at under 12 degrees.
 
 **`director_cam_ensure(client_id)` is called at the top of EVERY tab, and that is not
 optional.** Staging a shot calls `shot_apply` -> `camera_track`, which does
@@ -554,11 +897,26 @@ mission-wide; LM registers 22 tab paths and none collide.
 
 ```
 PYTHONPATH=../sbs_utils python -m unittest \
-    director.test_director_cam director.test_director_layout \
+    director.test_director_bind director.test_director_cam \
+    director.test_director_layout director.test_director_mast \
     director.test_director_modes director.test_director_overlays \
     director.test_director_play director.test_director_rundowns \
     director.test_director_screens director.test_director_shots
 ```
+
+Or, from inside the addon folder:
+
+```
+cd director && PYTHONPATH=../../sbs_utils python -m unittest discover -s . -p "test_director_*.py"
+```
+
+`test_director_mast` is a **static scan of the addon's own .mast**, for the shapes that fail
+silently at runtime: `await gui()` with nothing built (a black screen), an unterminated props
+string, and - added with the bindings - **every `director_*(` call resolving to a real public
+def**. That last one matters because a misspelled name is a `NameError`, a failing MAST
+expression STOPS THE COMMAND, and the button then reads as doing nothing with nothing on screen
+to say why. Neither `--test` nor `sbs lint` catches it: the editor's tabs are unreachable to
+`--exercise-click` and the panel's handlers only fire on a press.
 
 Headless drive - note **both** the `COSMOS_SETTINGS` pin and the short dwell:
 
@@ -615,6 +973,71 @@ assigned to the dolly - are all engine-observed. Check:
     goes through, and the message is gone on the next visit.
 12. Visit the editor, stage a shot, return to the main page - clicking the 2D view still
     selects. *(the re-seat bug)*
+
+### Selection binding, overlay-only items, and the panel's 2D view
+
+13. On the **main page**, click a contact in the 2D view: the selection line in the header
+    changes, and the tree does **not** repaint - collapsed branches stay collapsed and the
+    scroll position holds.
+14. Author `Orbit / Bind: Selection` and `Chase / Bind: Selection > weapons target`, Send, then
+    click a different ship. Program **re-aims**, and the rundown does **not** jump back to its
+    first item. *(the two keys)*
+15. Deselect: both bound items drop out of the rotation and the show steps past them. Select
+    again and they come back. *(skipping is not removal)*
+16. Point the selection at a ship whose weapons officer has **no target**: the
+    `Selection > weapons target` item shows **that ship**, and nothing is aimed at object zero.
+    Give the officer a target and the same beat follows it without the rundown moving.
+17. Author `Bind: None - overlays only` with a Hero card and put it in the rundown. The card
+    appears **over** the running shot: no cut, no black frame, and the orbit under it does not
+    restart.
+18. Two overlay-only beats in a row: the cards swap and the camera keeps running.
+19. Tick **Lower third** and **Speaker** together: the status line names the one that will be
+    hidden. Untick one and the warning goes.
+20. Pick **Credits** in the Editing dropdown and type `Kirk; Spock; McCoy` into `entries`: three
+    lines roll, not one string spelled out a character at a time.
+21. **Speaker** with the built-in preset shows the subject's ship square; the **Narrator**
+    preset shows the card with no square at all.
+22. Click **empty space** in the 2D view: the cam pans there and the selection line reads
+    `DIR01 point`, not `unnamed`. A `Bind: Selection` orbit then frames that spot **wide** -
+    park it between two fighting ships and the orbit should hold both, not sit inside them.
+23. Pan again while that shot is on air: the orbit glides to the new point without a cut.
+
+### Setting up before the mission starts
+
+24. **Before** the server presses Start: open a client, pick **Director** in the console list,
+    tick **Ready**. It goes to the pin/mode screen rather than waiting.
+25. Declare it **Program**. Open a second window, declare that one **Preview**, and a third as
+    **Director**. All three are standing by with the mission not yet running.
+26. Press **Start** on the server. All three stay where they are - **none** of them bounces
+    back to the pin screen, and the names PROG01 / PRE01 / DIR01 are unchanged.
+27. From the running Director, go back to the console list and pick **Director** again: the pin
+    screen **does** appear, because the resume was already spent. That is how a mode is changed.
+28. Pre-game, tick Ready on the Director and then press **cancel** on the entry screen: you land
+    back on the picker with **Ready unticked** and the console still selectable.
+29. Do the same *after* the game has started: cancel returns to the picker, which shows the
+    Ready **button** - there is no checkbox to untick and nothing should look stuck.
+
+### The stock rundowns, recall, and the distance
+
+30. Send **Follow the selection** with nothing selected: nothing goes out and the status line
+    says so. Click a ship: all three beats play and the lower third names it. Click a different
+    one: they re-aim without the rundown losing its place.
+31. Send **Crew consoles** and click a player ship: program cycles that ship's helm, weapons,
+    science and comms, each with **"Artemis - Helm"** over the crew name - or *unmanned* where
+    nobody is sitting there. Click a **rock**: every beat is skipped and the feed moves on,
+    rather than showing helm widgets for an asteroid.
+32. Send **The action** in a firefight: the top banner reads hull and shields and follows it.
+33. Pick an existing item out of the item list: the bind picker, mode, hold, distance and every
+    overlay field come back **as templates**. Change the lower third's line, press **Replace** -
+    the row updates in place and the list does not reorder or scroll. Press it twice: no loop.
+34. Stage a fighter, then a starbase: the distance slider seeds to a different sensible number
+    each time while the stored value stays automatic.
+35. Set a distance and press **Dolly to**: Preview *moves* to it rather than cutting. **Auto**
+    puts it back. Add the item and play it: it holds the distance, and a chase at 800u is still
+    over the shoulder rather than looking down.
+36. On the Console tab, confirm the subject reads back from the Stage's bind - there is no second
+    Ships list to disagree with it. Tick three consoles, Add: three items, all bound, all
+    carrying whatever overlays were ticked on the Stage.
 
 ---
 
