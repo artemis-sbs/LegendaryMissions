@@ -23,6 +23,7 @@ rather than stubs, because the whole bug lives in what `get_ship_of_client` answ
 from sbs_utils.fs import test_set_exe_dir
 test_set_exe_dir()
 
+import io
 import os
 import sys
 import unittest
@@ -141,6 +142,95 @@ class DirectorCamTests(unittest.TestCase):
         cam_id = dc.director_cam_ensure(CLIENT)
         from sbs_utils.procedural.query import to_object
         self.assertEqual(to_object(cam_id).side, "tsn")
+
+
+class CrewNameIntegrationTests(unittest.TestCase):
+    """`<<crew_name>>` against a REALLY seated client, not a stubbed one.
+
+    WHY THIS EXISTS SEPARATELY from the token tests in test_director_overlays. Those stub
+    `linked_to` and `get_inventory_value`, so they prove the resolver's LOGIC and nothing about
+    whether it reads the same keys `common_console_select` writes. That is the actual risk: a
+    key name is a string agreed between two files that never import each other, and getting it
+    wrong fails silently - the lower third just says `unmanned` forever.
+
+    So this seats a client the way the picker does, through the real link and inventory APIs,
+    and asks the real resolver. `test_the_keys_match_the_picker` then pins the agreement to the
+    picker's source, so a rename there fails here rather than on air.
+    """
+
+    PICKER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                          "consoles", "common_console_select.mast")
+
+    def setUp(self):
+        _fresh_client()
+        FrameContext.context = Context(sbs.sim, sbs, FakeEvent())
+
+    def tearDown(self):
+        SpaceObject.clear()
+        FrameContext.context = None
+
+    def _seat(self, ship_id, client_id, console, crew_name):
+        """Exactly what show_console_selected does, in the same order."""
+        from sbs_utils.procedural.links import link
+        from sbs_utils.procedural.inventory import set_inventory_value
+        Gui.clients[client_id] = GuiClient(client_id)
+        link(ship_id, "consoles", client_id)
+        set_inventory_value(client_id, "CONSOLE_TYPE", console)
+        set_inventory_value(client_id, "CREW_NAME", crew_name)
+
+    def test_the_token_names_the_person_at_that_station(self):
+        import director_overlays as ov
+        ship = to_id(player_spawn(0, 0, 0, "Artemis", "tsn", "tsn_light_cruiser"))
+        self._seat(ship, 0x8080000000000010, "helm", "Viper")
+        self._seat(ship, 0x8080000000000011, "weapons", "Maverick")
+
+        item = {"kind": "con", "ship": ship, "console": "helm"}
+        got = ov.director_overlay_resolve("<<name>> - <<console>> - <<crew_name>>", ship, item)
+        self.assertEqual(got, "Artemis - Helm - Viper")
+
+    def test_it_picks_the_BEATS_station_off_a_full_bridge(self):
+        # A bridge has five people on it. Naming the wrong one on air is worse than naming
+        # nobody, and a resolver that took the first linked client would do exactly that.
+        import director_overlays as ov
+        ship = to_id(player_spawn(0, 0, 0, "Artemis", "tsn", "tsn_light_cruiser"))
+        seats = {"helm": "Viper", "weapons": "Maverick", "science": "Goose",
+                 "comms": "Iceman", "engineering": "Jester"}
+        for i, (console, who) in enumerate(sorted(seats.items())):
+            self._seat(ship, 0x8080000000000020 + i, console, who)
+        for console, who in seats.items():
+            item = {"kind": "con", "ship": ship, "console": console}
+            self.assertEqual(ov.director_overlay_resolve("<<crew_name>>", ship, item), who,
+                             console)
+
+    def test_an_empty_seat_falls_back(self):
+        import director_overlays as ov
+        ship = to_id(player_spawn(0, 0, 0, "Artemis", "tsn", "tsn_light_cruiser"))
+        self._seat(ship, 0x8080000000000030, "helm", "Viper")
+        item = {"kind": "con", "ship": ship, "console": "science"}
+        self.assertEqual(
+            ov.director_overlay_resolve("<<crew_name|unmanned>>", ship, item), "unmanned")
+
+    def test_a_ship_with_nobody_aboard_falls_back(self):
+        import director_overlays as ov
+        ship = to_id(player_spawn(0, 0, 0, "Artemis", "tsn", "tsn_light_cruiser"))
+        item = {"kind": "con", "ship": ship, "console": "helm"}
+        self.assertEqual(
+            ov.director_overlay_resolve("<<crew_name|unmanned>>", ship, item), "unmanned")
+
+    def test_the_keys_match_the_picker(self):
+        """The agreement, pinned to the picker's own source.
+
+        Three strings shared between two files that never import each other. A rename in
+        `common_console_select` would leave the lower third permanently reading `unmanned`,
+        with nothing logged and nothing failing - so it fails HERE instead.
+        """
+        with io.open(self.PICKER, encoding="utf-8") as handle:
+            picker = handle.read()
+        for wrote in ('link(_ship_id, "consoles", client_id)',
+                      'set_inventory_value(client_id, "CONSOLE_TYPE"',
+                      'set_inventory_value(client_id, "CREW_NAME"'):
+            self.assertIn(wrote, picker,
+                          "the console picker no longer writes what <<crew_name>> reads")
 
 
 class DirectorNameTests(unittest.TestCase):
@@ -289,11 +379,34 @@ class CameraPointTests(unittest.TestCase):
         ship = to_id(player_spawn(0, 0, 0, "Artemis", "tsn", "behav_playership"))
         self.assertNotEqual(dp._framing(ship), (near, far))
 
-    def test_the_wide_end_holds_an_engagement(self):
-        # Sized against how far apart ships actually fight, not picked to look round.
+    # What a probe measured off the siege map, sampling the densest knot of armed combatants
+    # twice a second for 90s. These are the numbers the framing is sized against, and having
+    # them here is what stops the next edit going back to round numbers that feel right.
+    MEASURED_TYPICAL_RADIUS = 140.0     # median cluster radius
+    MEASURED_WIDE_RADIUS = 3234.0       # the widest cluster seen
+    # A camera at d with a ~60 degree vertical FOV holds a cluster of radius d * 0.577 / 1.3.
+    FRAME_FACTOR = 2.25
+
+    def test_the_framing_holds_a_real_engagement(self):
+        """Sized against measured cluster radii, not against numbers that sound round.
+
+        The first pass used 2500/7000, which held the WIDEST cluster ever seen and made the
+        common one - four ships inside 140u - four dots. Both ends matter: NEAR is what a dolly
+        pushes in to, FAR is the orbit radius and the shot most beats actually get.
+        """
         import director_play as dp
         self.assertGreater(dp.DIRECTOR_POINT_FAR, dp.DIRECTOR_POINT_NEAR)
-        self.assertGreaterEqual(dp.DIRECTOR_POINT_NEAR, 1000.0)
+        # NEAR frames a TIGHT knot filling the frame - comfortably outside it, not inside.
+        near_holds = dp.DIRECTOR_POINT_NEAR / self.FRAME_FACTOR
+        self.assertGreater(near_holds, self.MEASURED_TYPICAL_RADIUS,
+                           "NEAR is inside a typical engagement")
+        self.assertLess(near_holds, self.MEASURED_WIDE_RADIUS,
+                        "NEAR is so far out that the close end of a dolly is still a wide shot")
+        # FAR holds a spread fight without making a typical one specks: it should cover well
+        # over the median and stay under the widest, which is a rare outlier.
+        far_holds = dp.DIRECTOR_POINT_FAR / self.FRAME_FACTOR
+        self.assertGreater(far_holds, 4 * self.MEASURED_TYPICAL_RADIUS)
+        self.assertLess(far_holds, self.MEASURED_WIDE_RADIUS)
 
 
 if __name__ == "__main__":

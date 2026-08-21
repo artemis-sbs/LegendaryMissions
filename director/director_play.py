@@ -400,14 +400,33 @@ def director_play_forget_absent(screens):
 
 # A CAMERA POINT IS NOT FRAMED LIKE A HULL. `viewscreen_framing` sizes a shot off the
 # subject's `exclusion_radius`, and the cam is invisible with none - so it falls to
-# DEFAULT_RADIUS (90) and gives a 540/1440 shot, which frames one mid-sized ship.
+# DEFAULT_RADIUS (90) and gives a 540/1440 shot, which frames one mid-sized ship. The point of
+# parking the cam is to orbit a FIGHT, and a fight is not a ship.
 #
-# But the whole point of parking the cam is to put it in the MIDDLE OF A FIGHT and orbit the
-# fight. These are sized for that: ships engage from a few hundred units out to a few thousand,
-# so the wide end has to hold the whole engagement and the near end still has to sit outside
-# it rather than inside somebody's hull.
-DIRECTOR_POINT_NEAR = 2500.0
-DIRECTOR_POINT_FAR = 7000.0
+# MEASURED, not guessed - and the guess was wrong. A probe sampled the siege map twice a second
+# for 90s, taking the densest knot of armed combatants within 6000u of each other (the whole
+# map's spread is 60,000u, which is the size of the SYSTEM and not of a battle - a camera at
+# that centroid is in deep space):
+#
+#     cluster size    median 4 ships
+#     cluster radius  median 140u, p90 151u, max 3234u
+#     nearest pair    median 100u
+#     player->enemy   803u to 3500u across runs
+#
+# So an engagement is USUALLY a tight knot a few hundred units across, and occasionally spreads
+# to a few thousand. The first pass at these numbers - 2500 and 7000 - was sized for the widest
+# case alone, which made the common one a speck: at 7000u a 140u knot is four dots.
+#
+# A camera at distance d with a ~60 degree vertical FOV sees a half-height of about 0.577d, so
+# it holds a cluster of radius R at d ~= 2.25R with a little margin. FAR holds ~1400u (most of
+# the measured range); NEAR holds ~520u, which is a tight knot filling the frame. The dolly
+# ping-pongs between them, so one item covers both looks.
+#
+# CAVEAT, because it decides how much these are worth: the headless run never produced a proper
+# brawl - the player ended 3500u from its nearest enemy - so the upper end comes from cluster
+# GEOMETRY rather than from watching a fight. Worth re-checking on a real bridge.
+DIRECTOR_POINT_NEAR = 900.0
+DIRECTOR_POINT_FAR = 2500.0
 
 
 def _framing(subject):
