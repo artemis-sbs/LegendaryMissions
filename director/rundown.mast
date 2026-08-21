@@ -60,7 +60,7 @@ default shared cv_item_index = None
     # gui_radio: comma-separated TEXT labels, engine-drawn active state. gui_tabbed_panel is
     # icon-only and cannot label these.
     gui_section(director_area("subtab"))
-    gui_row("row-height: 1.5em; font: gui-3;")
+    gui_row(director_row_control("gui-3"))
     sub_rb = gui_radio("Stage,Console", var="cv_sub")
     gui_blank()
     on gui_message(sub_rb):
@@ -68,19 +68,19 @@ default shared cv_item_index = None
 
     # ---- left: the rundown and its items --------------------------------------------------
     gui_section(director_area("rundown"))
-    gui_row("row-height: 2.2em; font: gui-2;")
+    gui_row(director_row_control())
     if cv_edit_mode == "":
-        gui_text("$text:`Rundown`;font:gui-2;", "col-width: content;")
-        target_dd = gui_drop_down("$text:{cv_target_label};list: " + ",".join(cv_user_labels) + ";", "col-width: 200px;")
+        gui_text("$text:`Rundown`;font:gui-2;", director_col("content"))
+        target_dd = gui_drop_down("$text:{cv_target_label};list: " + ",".join(cv_user_labels) + ";", director_col("200px"))
         gui_blank()
         on gui_message(target_dd):
             shared cv_target_label = target_dd.value
             shared cv_target_rundown = director_rundown_key_for(cv_target_label)
             jump cv_edit
-        gui_row("row-height: 2.2em; font: gui-2;")
-        newb = gui_button("New", "col-width: 90px;")
-        renameb = gui_button("Rename", "col-width: 110px;")
-        delb = gui_button("Delete", "col-width: 110px;")
+        gui_row(director_row_control())
+        newb = gui_button("New", director_col("90px"))
+        renameb = gui_button("Rename", director_col("110px"))
+        delb = gui_button("Delete", director_col("110px"))
         gui_blank()
         on gui_message(newb):
             shared cv_new_name = ""
@@ -98,11 +98,11 @@ default shared cv_item_index = None
     else:
         # THE ROW MORPHS rather than growing a second one - the item list keeps the column
         # either way, because that is the list actually worked in.
-        name_in = gui_input("desc: rundown name;", "col-width: 200px;", var="cv_new_name")
+        name_in = gui_input("desc: rundown name;", director_col("200px"), var="cv_new_name")
         gui_blank()
-        gui_row("row-height: 2.2em; font: gui-2;")
-        saveb = gui_button("Save", "col-width: 100px;")
-        cancelb = gui_button("Cancel", "col-width: 110px;")
+        gui_row(director_row_control())
+        saveb = gui_button("Save", director_col("100px"))
+        cancelb = gui_button("Cancel", director_col("110px"))
         gui_blank()
         on gui_message(saveb):
             jump cv_edit_save
@@ -132,16 +132,16 @@ default shared cv_item_index = None
             jump cv_edit_recall
 
     gui_section(director_area("itembtn"))
-    gui_row("row-height: 2.2em; font: gui-2;")
-    upb = gui_button("Up", "col-width: 80px;")
-    downb = gui_button("Down", "col-width: 100px;")
-    remb = gui_button("Remove", "col-width: 130px;")
+    gui_row(director_row_control())
+    upb = gui_button("Up", director_col("80px"))
+    downb = gui_button("Down", director_col("100px"))
+    remb = gui_button("Remove", director_col("130px"))
     # REPLACE IS THE OTHER HALF OF RECALL. Add appends - which is what you want when you are
     # duplicating a beat and changing it - and this is what you want when you are FIXING one.
     # Stage only: the Console tab builds several items per press, so there is no single item for
     # a Replace to mean.
     if cv_sub == "Stage":
-        repb = gui_button("Replace", "col-width: 130px;")
+        repb = gui_button("Replace", director_col("130px"))
         on gui_message(repb):
             jump cv_edit_replace
     gui_blank()
@@ -219,12 +219,12 @@ default shared cv_item_index = None
     # hop further means "chase whatever the selected ship's weapons officer is shooting at".
     # The last entry has no subject at all and makes the item pure furniture: a title, an
     # intro, an outro, a speaker card. See director_bind.py.
-    gui_row("row-height: 2.0em; font: gui-2;")
-    gui_text("$text:`Subject`;font:gui-2;", "col-width: content;")
-    cv_subj_w = gui_text("$text:" + gui_text_escape(director_subject_label(cv_subject_id)) + ";font:gui-2;color:#8f8;", "col-width: 150px;")
-    clearb = gui_button("Clear", "col-width: 80px;")
-    bind_dd = gui_drop_down("$text:" + director_stage_bind_label() + ";list: " + director_bind_list() + ";", "col-width: 260px;")
-    mode_rb = gui_radio(director_shot_mode_list(), var="cv_shot_mode_label", style="col-width: 330px;")
+    gui_row(director_row_control())
+    gui_text("$text:`Subject`;font:gui-2;", director_col("content"))
+    cv_subj_w = gui_text("$text:" + gui_text_escape(director_subject_label(cv_subject_id)) + ";font:gui-2;color:#8f8;", director_col("150px"))
+    clearb = gui_button("Clear", director_col("80px"))
+    bind_dd = gui_drop_down("$text:" + director_stage_bind_label() + ";list: " + director_bind_list() + ";", director_col("260px"))
+    mode_rb = gui_radio(director_shot_mode_list(), var="cv_shot_mode_label", style=director_col("330px"))
     on gui_message(clearb):
         jump cv_edit_unstage
     on change cv_subject_id:
@@ -239,15 +239,15 @@ default shared cv_item_index = None
     on gui_message(mode_rb):
         director_stage_mode_label(mode_rb.value)
 
-    gui_row("row-height: 2.2em; font: gui-2;")
-    addb = gui_button("Add to rundown", "col-width: 180px;")
-    nowb = gui_button("Send to Program", "col-width: 200px;")
+    gui_row(director_row_control())
+    addb = gui_button("Add to rundown", director_col("180px"))
+    nowb = gui_button("Send to Program", director_col("200px"))
     # THE HOLD IS PART OF THE ITEM, not a setting. An establishing shot of a starbase wants ten
     # seconds where a chase in a firefight wants three, and the rundown is where that belongs -
     # the dwell stays the answer for everything with no opinion. 0 is the bottom stop and means
     # exactly that, which is why the label reads back rather than showing a bare number.
-    gui_text("$text:`Hold`;font:gui-2;", "col-width: content;")
-    hold_sl = gui_int_slider("$text:int;low:0;high:30;", "col-width: 170px;", var="cv_hold")
+    gui_text("$text:`Hold`;font:gui-2;", director_col("content"))
+    hold_sl = gui_int_slider("$text:int;low:0;high:30;", director_col("170px"), var="cv_hold")
     cv_hold_w = gui_text("$text:" + gui_text_escape(director_stage_hold_label()) + ";font:gui-1;color:#9ab;")
     on gui_message(addb):
         jump cv_edit_add
@@ -269,11 +269,11 @@ default shared cv_item_index = None
     # THE SLIDER DOES NOT RESTAGE, alone on this page. Re-issuing the shot on every step of a
     # drag is a cut per step. "Dolly to" is what applies it, and seeing the move instead of a
     # cut is the whole reason there is a button.
-    gui_row("row-height: 2.0em; font: gui-2;")
-    gui_text("$text:`Distance`;font:gui-2;", "col-width: content;")
-    dist_sl = gui_int_slider("$text:int;low:0;high:20000;", "col-width: 260px;", var="cv_distance")
-    dollyb = gui_button("Dolly to", "col-width: 130px;")
-    autob = gui_button("Auto", "col-width: 90px;")
+    gui_row(director_row_control())
+    gui_text("$text:`Distance`;font:gui-2;", director_col("content"))
+    dist_sl = gui_int_slider("$text:int;low:0;high:20000;", director_col("260px"), var="cv_distance")
+    dollyb = gui_button("Dolly to", director_col("130px"))
+    autob = gui_button("Auto", director_col("90px"))
     cv_dist_w = gui_text("$text:" + gui_text_escape(director_stage_distance_label()) + ";font:gui-1;color:#9ab;")
     on gui_message(dist_sl):
         director_stage_distance(dist_sl.value)
@@ -323,10 +323,10 @@ default shared cv_item_index = None
     # be the same answer four times and one more place for the two to drift.
     cv_edit_kind = director_stage_edit_kind()
 
-    gui_row("row-height: 1.8em; font: gui-2;")
-    gui_text("$text:`Editing`;font:gui-2;", "col-width: content;")
-    edit_dd = gui_drop_down("$text:" + director_stage_edit_kind_label() + ";list: " + ",".join(director_overlay_kind_labels()) + ";", "col-width: 150px;")
-    preset_dd = gui_drop_down("$text:" + director_stage_preset(cv_edit_kind) + ";list: " + director_overlay_preset_list(cv_edit_kind) + ";", "col-width: 170px;")
+    gui_row(director_row_control())
+    gui_text("$text:`Editing`;font:gui-2;", director_col("content"))
+    edit_dd = gui_drop_down("$text:" + director_stage_edit_kind_label() + ";list: " + ",".join(director_overlay_kind_labels()) + ";", director_col("150px"))
+    preset_dd = gui_drop_down("$text:" + director_stage_preset(cv_edit_kind) + ";list: " + director_overlay_preset_list(cv_edit_kind) + ";", director_col("170px"))
     gui_blank()
     on gui_message(edit_dd):
         # A REPAINT, and this is the ONE place on this page one is right: the field boxes
@@ -349,25 +349,25 @@ default shared cv_item_index = None
     # item per ship - can name each ship. See director_overlays.py for why the delimiter is
     # `<<...>>` and not `{...}`.
     if director_stage_edit_field_name(0) != "":
-        gui_row("row-height: 1.9em; font: gui-2;")
-        gui_text("$text:" + gui_text_escape(director_stage_edit_field_name(0)) + ";font:gui-2;color:#9ab;", "col-width: 90px;")
-        in_f0 = gui_input("$text:" + gui_text_escape(director_stage_edit_field(0)) + ";desc: " + director_stage_edit_field_name(0) + ";", "col-width: 420px;")
+        gui_row(director_row_control())
+        gui_text("$text:" + gui_text_escape(director_stage_edit_field_name(0)) + ";font:gui-2;color:#9ab;", director_col("90px"))
+        in_f0 = gui_input("$text:" + gui_text_escape(director_stage_edit_field(0)) + ";desc: " + director_stage_edit_field_name(0) + ";", director_col("420px"))
         gui_blank()
         on gui_message(in_f0):
             director_stage_edit_set_field(0, in_f0.value)
 
     if director_stage_edit_field_name(1) != "":
-        gui_row("row-height: 1.9em; font: gui-2;")
-        gui_text("$text:" + gui_text_escape(director_stage_edit_field_name(1)) + ";font:gui-2;color:#9ab;", "col-width: 90px;")
-        in_f1 = gui_input("$text:" + gui_text_escape(director_stage_edit_field(1)) + ";desc: " + director_stage_edit_field_name(1) + ";", "col-width: 420px;")
+        gui_row(director_row_control())
+        gui_text("$text:" + gui_text_escape(director_stage_edit_field_name(1)) + ";font:gui-2;color:#9ab;", director_col("90px"))
+        in_f1 = gui_input("$text:" + gui_text_escape(director_stage_edit_field(1)) + ";desc: " + director_stage_edit_field_name(1) + ";", director_col("420px"))
         gui_blank()
         on gui_message(in_f1):
             director_stage_edit_set_field(1, in_f1.value)
 
     if director_stage_edit_field_name(2) != "":
-        gui_row("row-height: 1.9em; font: gui-2;")
-        gui_text("$text:" + gui_text_escape(director_stage_edit_field_name(2)) + ";font:gui-2;color:#9ab;", "col-width: 90px;")
-        in_f2 = gui_input("$text:" + gui_text_escape(director_stage_edit_field(2)) + ";desc: " + director_stage_edit_field_name(2) + ";", "col-width: 420px;")
+        gui_row(director_row_control())
+        gui_text("$text:" + gui_text_escape(director_stage_edit_field_name(2)) + ";font:gui-2;color:#9ab;", director_col("90px"))
+        in_f2 = gui_input("$text:" + gui_text_escape(director_stage_edit_field(2)) + ";desc: " + director_stage_edit_field_name(2) + ";", director_col("420px"))
         gui_blank()
         on gui_message(in_f2):
             director_stage_edit_set_field(2, in_f2.value)
@@ -385,10 +385,10 @@ default shared cv_item_index = None
         if director_stage_edit_field_name(2) != "":
             in_f2.value = director_stage_edit_field(2)
 
-    gui_row("row-height: 1.8em; font: gui-2;")
-    gui_text("$text:`Save preset as`;font:gui-2;", "col-width: content;")
-    gui_input("desc: preset name;", "col-width: 160px;", var="cv_preset_name")
-    saveprb = gui_button("Save", "col-width: 70px;")
+    gui_row(director_row_control())
+    gui_text("$text:`Save preset as`;font:gui-2;", director_col("content"))
+    gui_input("desc: preset name;", director_col("160px"), var="cv_preset_name")
+    saveprb = gui_button("Save", director_col("70px"))
     cv_edit_status_w = gui_text("$text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")
     on gui_message(saveprb):
         shared cv_preset_kind = cv_edit_kind
@@ -421,18 +421,18 @@ default shared cv_item_index = None
         shared cv_status = director_status_line(director_stage_console_problem())
 
     gui_section(director_area("conbtn"))
-    gui_row("row-height: 2.0em; font: gui-2;")
-    gui_text("$text:`Subject`;font:gui-2;", "col-width: content;")
-    gui_text("$text:" + gui_text_escape(director_stage_bind_label()) + ";font:gui-2;color:#8f8;", "col-width: 260px;")
+    gui_row(director_row_control())
+    gui_text("$text:`Subject`;font:gui-2;", director_col("content"))
+    gui_text("$text:" + gui_text_escape(director_stage_bind_label()) + ";font:gui-2;color:#8f8;", director_col("260px"))
     gui_text("$text:" + gui_text_escape(director_subject_label(director_stage_subject_id())) + ";font:gui-2;color:#9ab;")
 
-    gui_row("row-height: 2.2em; font: gui-2;")
-    addconb = gui_button("Add console items", "col-width: 230px;")
+    gui_row(director_row_control())
+    addconb = gui_button("Add console items", director_col("230px"))
     gui_text("$text:`One item per ticked console, for the Stage's subject.`;font:gui-2;color:#9ab;")
     on gui_message(addconb):
         jump cv_edit_add_con
 
-    gui_row("row-height: 1.8em; font: gui-2;")
+    gui_row(director_row_control())
     cv_con_status_w = gui_text("$text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")
     on change cv_status:
         cv_con_status_w.update("text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")

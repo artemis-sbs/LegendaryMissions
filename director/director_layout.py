@@ -33,21 +33,124 @@ DIRECTOR_TAB_STRIP_PX = 35
 DIRECTOR_SECTION_PAD = 6
 
 
-def director_row_px(em, font="gui-2"):
-    """One row's height in pixels. `em` is a multiple of the ROW's font line height."""
-    return int(round(float(em) * DIRECTOR_FONT_PX.get(font, 24)))
+def director_row_px(em, font="gui-2", pad=0):
+    """One row's height in pixels: `em` lines of the ROW's font, plus `pad` pixels.
+
+    `pad` is the row's VERTICAL PADDING, and it is a separate term because it is a separate
+    thing. Padding is what puts air around a control; making the row taller instead just makes
+    the CONTROL taller, because a widget fills the cell it is given. That is not a nicety - it
+    is the difference between a 28px button with room to breathe and a 62px slab.
+    """
+    return int(round(float(em) * DIRECTOR_FONT_PX.get(font, 24))) + int(pad)
 
 
 def director_rows_px(rows):
-    """Total height of `[(em, font), ...]`."""
-    return sum(director_row_px(em, font) for em, font in rows)
+    """Total height of `[(em, font), ...]` or `[(em, font, pad), ...]`.
+
+    Both shapes, because most sections declare no padding and should not have to say `0`.
+    """
+    total = 0
+    for row in rows:
+        em, font = row[0], row[1]
+        pad = row[2] if len(row) > 2 else 0
+        total += director_row_px(em, font, pad)
+    return total
+
+
+# --- the row idiom -------------------------------------------------------------------------
+#
+# A WIDGET FILLS THE CELL IT IS GIVEN. That one fact is why every control on this console used
+# to be a slab: the rows were declared 1.8em to 2.4em - 43 to 58 pixels - so the buttons, the
+# typeins and the dropdowns in them were 43 to 58 pixels tall. Reaching for more height to stop
+# things overlapping makes the overlap go away and leaves the slabs behind.
+#
+#   `row-height` is for the LINE OF TEXT.  `padding:` is for the AIR around it.
+#
+# Padding comes OUT of the row (layout.py shrinks the row's area by it) rather than adding to
+# it, so a one-line row plus 16px of padding is a 40px row holding a 24px control with room to
+# breathe - against a 53px row holding a 53px control with none.
+#
+# More below than above on purpose: the gap UNDER a row is what a reader perceives as separating
+# it from the next one, and an even split wastes half of it on a gap nobody reads.
+DIRECTOR_PAD_TOP = 4
+DIRECTOR_PAD_BOTTOM = 12
+DIRECTOR_CONTROL_PAD = DIRECTOR_PAD_TOP + DIRECTOR_PAD_BOTTOM
+
+# HORIZONTAL AIR, and it is TWO different gaps. BOTH IN PIXELS.
+#
+# Pixels and not percent, which is worth stating because a bare number in a style string IS
+# percent - LayoutAreaParser returns `digits` as-is and converts `px` and `em` into it. A 2%
+# inset is 26px at 1280 and 38px at 1920: a margin that grows with the screen, when what is
+# wanted is a hairline that does not.
+#
+# `DIRECTOR_PAD_SIDE` insets a row's content from the edges of its section, so text and controls
+# do not start hard against the panel border.
+#
+# `DIRECTOR_COL_GAP` is the gap BETWEEN two controls in the same row. Columns are laid out edge
+# to edge with no gap of their own - there is no `col-gap`, and `item-gap` belongs to a listbox -
+# so without this a label sits welded to the box it labels: `Pin` and `Enter pin` with nothing
+# at all between them. It is the one to raise if the row still reads as one run-on control.
+DIRECTOR_PAD_SIDE = 5
+DIRECTOR_COL_GAP = 5
+
+
+def director_row_control(font="gui-2", extra=0):
+    """The `gui_row` style for a row of CONTROLS - buttons, typeins, dropdowns, sliders.
+
+    One line of `font` tall, with the standard air around it. `extra` adds height for a widget
+    that needs more than its text - a radio group is the one here, because it DECLINES
+    measurement (RadioButtonGroup inherits the base Column.measure, which returns None) and so
+    it has nothing to size itself from.
+    """
+    height = DIRECTOR_PAD_TOP + DIRECTOR_PAD_BOTTOM + int(extra)
+    return ("row-height: 1em+%dpx; font: %s; padding: %dpx,%dpx,%dpx,%dpx;"
+            % (height, font, DIRECTOR_PAD_SIDE, DIRECTOR_PAD_TOP + int(extra),
+               DIRECTOR_PAD_SIDE, DIRECTOR_PAD_BOTTOM))
+
+
+def director_row_text(font="gui-2", gap=6):
+    """The `gui_row` style for a row of TEXT - one line, with a gap under it.
+
+    No top padding: text has no chrome to clear, so air above it only pushes it away from the
+    thing it usually labels.
+    """
+    return ("row-height: 1em+%dpx; font: %s; padding: %dpx,0,%dpx,%dpx;"
+            % (gap, font, DIRECTOR_PAD_SIDE, DIRECTOR_PAD_SIDE, gap))
+
+
+def director_col(width=None, gap=None):
+    """A control's style: how wide it is, and the gap to whatever sits beside it.
+
+    COLUMNS ARE LAID OUT EDGE TO EDGE. There is no `col-gap` and `item-gap` belongs to a
+    listbox, so two controls in one row touch unless one of them says otherwise - which is why
+    the pin label sat welded to the box it labels. The gap goes on the RIGHT, so a row reads as
+    a series of things each followed by a space; the last one's gap is absorbed by the
+    `gui_blank()` that takes the slack.
+
+    `width` is passed through verbatim - "160px", "content", "1fr" - because the vocabulary is
+    the layout's, not this function's.
+    """
+    gap = DIRECTOR_COL_GAP if gap is None else int(gap)
+    style = "col-width: %s; " % width if width else ""
+    return style + "padding: 0,0,%dpx,0;" % gap
+
+
+def director_row_control_budget(font="gui-2", extra=0):
+    """The `_ROWS_*` entry matching `director_row_control` - so the two cannot drift."""
+    return (1.0, font, DIRECTOR_PAD_TOP + DIRECTOR_PAD_BOTTOM + int(extra))
+
+
+def director_row_text_budget(font="gui-2", gap=6):
+    """The `_ROWS_*` entry matching `director_row_text`."""
+    return (1.0, font, gap)
 
 
 # Each section: the rows it must hold, and its horizontal extent in screen percent.
 # `stack` is how the vertical budget is built - see director_layout_metrics.
-_ROWS_SUBTAB = [(1.5, "gui-3")]
-_ROWS_RUNDOWN = [(2.2, "gui-2"), (2.2, "gui-2")]        # picker row, then the button row
-_ROWS_ITEMBTN = [(2.2, "gui-2")]
+_ROWS_SUBTAB = [director_row_control_budget("gui-3")]
+_ROWS_RUNDOWN = [director_row_control_budget(),         # the rundown picker
+                 director_row_control_budget()]        # new / rename / delete
+_ROWS_ITEMBTN = [director_row_control_budget()]
 # The Console sub-tab's block is TALLER than the item one: a subject line, a button row AND the
 # status line. It shared `itembtn_up` while it had two rows to itembtn's one, so the status
 # line - the only thing that says "added 3 console items" or "make a rundown first" - was drawn
@@ -58,7 +161,9 @@ _ROWS_ITEMBTN = [(2.2, "gui-2")]
 # when a console item learned to bind its ship, because the Stage's Subject/Bind row already
 # answers "which ship" and two controls that can disagree about it is the duplicate the screen
 # picker was deleted for.
-_ROWS_CONBTN = [(2.0, "gui-2"), (2.2, "gui-2"), (1.8, "gui-2")]
+_ROWS_CONBTN = [director_row_control_budget(),          # the bench subject, read-only
+                director_row_control_budget(),          # add console items
+                director_row_control_budget()]          # the status line
 # The Stage's control block: what the ITEM is, stacked and full width under the 2D view.
 #
 # IT USED TO CARRY THE OVERLAY ROWS TOO - one hand-unrolled row per overlay kind, four of them,
@@ -72,9 +177,9 @@ _ROWS_CONBTN = [(2.0, "gui-2"), (2.2, "gui-2"), (1.8, "gui-2")]
 # 1080p it is nearly 600px and none of this matters. A fourth row wants measuring before it is
 # added, not guessing - which is what this whole module exists for.
 _ROWS_CTRL = [
-    (2.0, "gui-2"),         # subject + clear + the BIND picker + the shot-mode radio
-    (2.2, "gui-2"),         # add to rundown + send to program + hold
-    (2.0, "gui-2"),         # distance + dolly-to + auto
+    director_row_control_budget(),      # subject + clear + the BIND picker + the shot-mode radio
+    director_row_control_budget(),      # add to rundown + send to program + hold
+    director_row_control_budget(),      # distance + dolly-to + auto
 ]
 
 # The overlay editor: which kind is being written, its fields, and the preset controls.
@@ -84,11 +189,11 @@ _ROWS_CTRL = [
 # WIDEST kind - a section sized for the kind currently showing would resize under the operator
 # every time they changed the dropdown.
 _ROWS_OVEDIT = [
-    (1.8, "gui-2"),         # "Editing" + the kind dropdown + the preset dropdown
-    (1.9, "gui-2"),         # field 1
-    (1.9, "gui-2"),         # field 2
-    (1.9, "gui-2"),         # field 3
-    (1.8, "gui-2"),         # preset name + save + status
+    director_row_control_budget(),      # "Editing" + the kind dropdown + the preset dropdown
+    director_row_control_budget(),      # field 1
+    director_row_control_budget(),      # field 2
+    director_row_control_budget(),      # field 3
+    director_row_control_budget(),      # preset name + save + status
 ]
 
 # The MAIN PANEL's bottom stack, which used to be the literal `cv_ctrl_px = 219` in panel.mast
@@ -96,14 +201,45 @@ _ROWS_OVEDIT = [
 # here: the tab-strip pages are the ones the headless layout audit cannot reach, so a number
 # nothing measures is a number that goes wrong quietly.
 _ROWS_PANEL_CTRL = [
-    (2.4, "gui-2"),         # send / stop / resume / refresh / pick mode
-    (2.4, "gui-2"),         # dwell slider + auto-director checkbox
-    (2.0, "gui-2"),         # ON AIR - written by the player
-    (2.0, "gui-2"),         # status - written by the operator's own actions
+    director_row_control_budget(),      # send / stop / resume / refresh / pick mode
+    director_row_control_budget(),      # dwell slider + auto-director checkbox
+    director_row_text_budget(),         # ON AIR - written by the player
+    director_row_text_budget(),         # status - written by the operator's own actions
 ]
 
 # The panel's header: the cam name, the screen summary, and the live SELECTION.
-_ROWS_PANEL_HEAD = [(1.5, "gui-3")]
+_ROWS_PANEL_HEAD = [director_row_text_budget("gui-3", 10)]
+
+# THE ENTRY SCREEN - the pin / mode card every console lands on.
+#
+# IT WAS THE PAGE NOTHING MEASURED, and it drifted exactly the way this module's docstring says
+# the editor did: a hand-written `area:` with hand-written `em` rows, and it shipped rendering
+# with the radio labels wrapped mid-word, the help sentence overlapping the pin row, and the
+# input drawn on top of the button. The engine does not clip, so a row declared one size and
+# rendered another spills into whatever sits under it.
+#
+# THE FIRST FIX MADE THE ROWS TALLER, AND THAT WAS THE WRONG INSTINCT. A widget FILLS the cell
+# it is given, so a taller row is a taller BUTTON - the overlap went away and left 62px slabs
+# behind. Height is for the line of text; PADDING is for the air around it. Every row here is
+# therefore ONE line plus an explicit pad, and the pad is the third term so it cannot be
+# mistaken for content.
+#
+# The pad is mostly on the BOTTOM: that is the gap to the next row, which is the spacing a
+# reader actually perceives. Where a control needs air on both sides - the radio, the pin row -
+# it is split, and the MAST puts the same numbers on the row's `padding:`.
+_ROWS_ENTRY = [
+    director_row_text_budget("gui-4", 12),      # title
+    director_row_text_budget("gui-2", 6),       # "This console is a"
+    # THE RADIO IS THE ONE THAT CANNOT BE MEASURED. RadioButtonGroup inherits the base
+    # Column.measure, which returns None - so `row-height: content` would fall back to FLEX and
+    # it would fill whatever was left. It gets an explicit line plus its padding, and the
+    # padding is what stops the buttons being as tall as the row.
+    director_row_control_budget("gui-3", 8),    # the mode radio
+    director_row_text_budget("gui-3", 12),      # "This screen will be called DIR01"
+    (2.0, "gui-1", 14),                         # the help text - TWO lines at this width
+    director_row_control_budget(),              # pin + input + start, one action on one row
+    director_row_text_budget("gui-2", 0),       # the error line
+]
 
 _SECTION_ROWS = {
     "subtab": _ROWS_SUBTAB,
@@ -114,6 +250,7 @@ _SECTION_ROWS = {
     "ovedit": _ROWS_OVEDIT,
     "panel_head": _ROWS_PANEL_HEAD,
     "panel_ctrl": _ROWS_PANEL_CTRL,
+    "entry": _ROWS_ENTRY,
 }
 
 
@@ -150,6 +287,14 @@ def director_layout_metrics():
     # is given pixels rather than em for the same reason it gets its own section.
     panel_zoom_h = 34
     panel_view_top = top + panel_zoom_h + 4
+
+    # THE ENTRY CARD, anchored from the TOP in pixels rather than centred. The metrics here
+    # are deliberately resolution-independent - `_edge` resolves `top`-relative and
+    # `-bottom`-relative expressions and knows no screen height at all - so there is nothing
+    # to centre against. Top-anchored is what every other section does, and it is what keeps
+    # the card in the same place at 720p and 1080p instead of drifting between them.
+    entry_h = director_rows_px(_ROWS_ENTRY) + DIRECTOR_SECTION_PAD + 2
+    entry_top = top + 60
     return {
         "top": top,
         "subtab_h": subtab_h,
@@ -170,6 +315,8 @@ def director_layout_metrics():
         "panel_ctrl_up": panel_ctrl_h + bottom,
         "panel_zoom_h": panel_zoom_h,
         "panel_view_top": panel_view_top,
+        "entry_h": entry_h,
+        "entry_top": entry_top,
         "bottom": bottom,
     }
 
@@ -212,6 +359,12 @@ _AREAS = {
     "panel_ctrl":   (2, "-panel_ctrl_up", 60, "-bottom"),
     "panel_zoom":   (61, "top", 99, "top+panel_zoom_h"),
     "panel_view2d": (61, "panel_view_top", 99, "-bottom"),
+    # --- the ENTRY CARD -------------------------------------------------------------------
+    # 60% wide, up from the 50% it shipped with. The radio needs room for three gui-3 labels
+    # side by side and 50% is what left them wrapping mid-word; this is the width that fits
+    # them. Narrower than the working pages on purpose - it is a card on an otherwise empty
+    # screen, not a console.
+    "entry":        (20, "entry_top", 80, "entry_top+entry_h"),
 }
 
 

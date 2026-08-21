@@ -170,7 +170,10 @@ def director_screen_summary():
     program = len(director_program_screens())
     preview = len(director_preview_screens())
     if not program and not preview:
-        return "no screens - open a client and declare it Program or Preview"
+        # SHORT ENOUGH TO FIT. The panel's left column is 58% wide and the audit measured
+        # the long form at 447px in a 444px box - the engine does not clip, so it drew
+        # over the row under it. Three pixels, but the fix is three words.
+        return "no screens - open a client and declare it"
     return str(program) + " program, " + str(preview) + " preview"
 
 

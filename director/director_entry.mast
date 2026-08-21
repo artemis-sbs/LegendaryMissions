@@ -66,17 +66,39 @@ pre_game: true
     cv_name = director_cam_default_name(client_id, director_mode_for(cv_entry_mode))
     pin = ""
 
-    gui_section("area: 25, 22, 75, 78;")
-    gui_row("row-height: 1.6em; font: gui-4;")
+    # THE GEOMETRY IS IN director_layout.py, and this page is why that module's warning is
+    # worth reading twice. It shipped with a hand-written `area:` and hand-written `em` rows,
+    # nothing measured it, and it rendered with the radio labels wrapped mid-word, the help
+    # text overlapping the pin row and the input drawn on top of the button. The engine does
+    # not clip: a row declared one size and rendered another spills into whatever is under it.
+    gui_section(director_area("entry"))
+
+    # EVERY ROW IS ONE LINE PLUS AN EXPLICIT PAD, and that is the correction the first pass
+    # needed. Making a row taller to stop things overlapping does not give a control room - a
+    # widget FILLS its cell, so a taller row is a taller BUTTON, and the fix left 62px slabs
+    # behind. `row-height` is for the line of text; `padding:` is for the air around it, and it
+    # comes out of the row rather than adding to it (layout.py shrinks the row's area by it).
+    #
+    # The pad is mostly on the BOTTOM - that is the gap to the next row, which is the spacing a
+    # reader actually sees. The numbers here are the same ones _ROWS_ENTRY declares.
+    gui_row("row-height: 1em+12px; font: gui-4; padding: 0,0,0,12px;")
     gui_text("$text:`Director`;font:gui-4;color:#8cf;justify:center;")
 
-    gui_row("row-height: 1.4em; font: gui-2;")
+    gui_row("row-height: 1em+6px; font: gui-2; padding: 0,0,0,6px;")
     gui_text("$text:`This console is a`;font:gui-2;color:#9ab;")
-    gui_row("row-height: 1.8em; font: gui-3;")
-    mode_rb = gui_radio(director_mode_list(), var="cv_entry_mode")
-    gui_blank()
 
-    gui_row("row-height: 1.6em; font: gui-3;")
+    # THE RADIO IS THE ONE THAT CANNOT BE MEASURED, so it is the one that needs both numbers.
+    # `RadioButtonGroup` inherits the base `Column.measure`, which returns None - so it declines,
+    # falls back to FLEX and fills whatever it is given. An explicit line height is what stops
+    # that, and the padding is what keeps the buttons from being as tall as the row.
+    #
+    # And NO gui_blank() beside it. The group is ONE content item whose own layout splits its
+    # width across the buttons, so a second flex column starved all three labels at once - that
+    # is what broke "Director" into "Direct/r". Alone on the row it sizes them to their text.
+    gui_row("row-height: 1em+24px; font: gui-3; padding: 0,8px,0,16px;")
+    mode_rb = gui_radio(director_mode_list(), var="cv_entry_mode")
+
+    gui_row("row-height: 1em+12px; font: gui-3; padding: 0,0,0,12px;")
     cv_entry_name_w = gui_text("$text:" + gui_text_escape("This screen will be called " + cv_name) + ";font:gui-3;color:#8cf;")
     on gui_message(mode_rb):
         # THE NAME FOLLOWS THE MODE, and says so before you commit - `PROG01` becomes `PRE01`
@@ -85,24 +107,35 @@ pre_game: true
         cv_name = director_cam_default_name(client_id, director_mode_for(mode_rb.value))
         cv_entry_name_w.update("text:" + gui_text_escape("This screen will be called " + cv_name) + ";font:gui-3;color:#8cf;")
 
-    gui_row("row-height: 1.4em; font: gui-1;")
+    # `row-height: content`, because this sentence WRAPS and how many lines it wraps to depends
+    # on the width - declared as one line it put its second line through the pin row. `content`
+    # measures the wrapped height at the row's real width and gets the padding added back to it,
+    # and _ROWS_ENTRY reserves two lines so the section has the space to give.
+    #
+    # This card is ~770px wide at 1280, inside the range the measured wrap is trustworthy in - it
+    # matches the engine at 600px and up, and diverges below ~300px.
+    gui_row("row-height: content; font: gui-1; padding: 0,0,0,14px;")
     gui_text("$text:`Program is what the stream shows. Preview is the shot before it goes out. Director drives them.`;font:gui-1;color:#9ab;")
 
-    # The pin row only exists when one is configured. Set DIRECTOR.pin to "" and this screen
-    # still appears - it is where the mode is chosen, not just a lock.
+    # PIN AND START ARE ONE ACTION - type the pin, press Start - so they are one row. The row is
+    # one gui-2 line plus its pad, which makes the input and the button one line tall with air
+    # around them rather than the two slabs they were.
+    #
+    # The pin half is conditional: set DIRECTOR.pin to "" and this screen still appears, because
+    # it is where the mode is chosen and not just a lock. Building it INSIDE the row means a
+    # pinless console gets `[ Start ]` alone rather than a gap where the box would have been.
+    gui_row("row-height: 1em+16px; font: gui-2; padding: 0,4px,0,12px;")
     if DIRECTOR.get("pin"):
-        gui_row("row-height: 2.2em; font: gui-2;")
-        gui_text("$text:`Pin`;font:gui-2;", "col-width: content;")
-        gui_input("""desc: Enter pin;password:True;""", "col-width: 200px;", var="pin")
-        gui_blank()
-
-    gui_row("row-height: 2.2em; font: gui-2;")
-    startb = gui_button("Start", "col-width: 160px;")
+        gui_text("$text:`Pin`;font:gui-2;color:#9ab;", director_col("content"))
+        gui_input("""desc: Enter pin;password:True;""", director_col("220px"), var="pin")
+    startb = gui_button("Start", director_col("160px"))
+    # THIS blank IS wanted, where the radio's was not: it takes the leftover width so the button
+    # keeps its 160px instead of stretching across the card.
     gui_blank()
     on gui_message(startb):
         jump director_entry_start
 
-    gui_row("row-height: 1.6em; font: gui-2;")
+    gui_row("row-height: 1em; font: gui-2;")
     gui_text("$text:" + gui_text_escape(cv_entry_error) + ";font:gui-2;color:#f88;")
     # Consumed: the message belongs to the attempt that caused it, so a later repaint of this
     # screen comes up clean rather than still accusing you of the last wrong pin.

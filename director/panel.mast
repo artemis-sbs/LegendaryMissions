@@ -119,14 +119,14 @@ default shared cv_subject_id = None
     # ---- header: this director's NAME, what it is driving, and what is SELECTED -----------
     # gui_text, never a """...""" row - that is a text area and it declines measurement.
     gui_section(director_area("panel_head"))
-    gui_row("row-height: 1.5em; font: gui-3;")
-    gui_text("$text:" + gui_text_escape(director_cam_name(client_id)) + ";font:gui-3;color:#8cf;", "col-width: content;")
+    gui_row(director_row_text("gui-3", 10))
+    gui_text("$text:" + gui_text_escape(director_cam_name(client_id)) + ";font:gui-3;color:#8cf;", director_col("content"))
     cv_screens_w = gui_text("$text:" + gui_text_escape(director_screen_summary()) + ";font:gui-2;color:#9ab;")
     # THE SELECTION LINE UPDATES IN PLACE, and must never repaint this page. The tree carries
     # the operator's collapse state and their scroll position, and a repaint to move a piece
     # of text is exactly what director_tree_recolor exists to avoid. director_mode_fingerprint
     # deliberately knows nothing about the selection for the same reason.
-    cv_sel_w = gui_text("$text:" + gui_text_escape(director_selection_label()) + ";font:gui-2;color:#8f8;", "col-width: 220px;")
+    cv_sel_w = gui_text("$text:" + gui_text_escape(director_selection_label()) + ";font:gui-2;color:#8f8;", director_col("220px"))
     on change director_screen_summary():
         cv_screens_w.update("text:" + gui_text_escape(director_screen_summary()) + ";font:gui-2;color:#9ab;")
     on change cv_subject_id:
@@ -187,12 +187,12 @@ default shared cv_subject_id = None
     # number here is a number nothing ever measures.
     gui_section(director_area("panel_ctrl"))
 
-    gui_row("row-height: 2.4em; font: gui-2;")
-    sendb = gui_button("Send to Program", "col-width: 190px;")
-    stopb = gui_button("Stop", "col-width: 90px;")
-    resumeb = gui_button("Resume", "col-width: 110px;")
-    refreshb = gui_button("Refresh", "col-width: 110px;")
-    pick_rb = gui_radio("Rundowns,Items", var="cv_pick_mode", style="col-width: 220px;")
+    gui_row(director_row_control())
+    sendb = gui_button("Send to Program", director_col("190px"))
+    stopb = gui_button("Stop", director_col("90px"))
+    resumeb = gui_button("Resume", director_col("110px"))
+    refreshb = gui_button("Refresh", director_col("110px"))
+    pick_rb = gui_radio("Rundowns,Items", var="cv_pick_mode", style=director_col("220px"))
     gui_blank()
     on gui_message(pick_rb):
         # A repaint, deliberately: the two modes are a different LIST - collapsed branches and
@@ -224,14 +224,14 @@ default shared cv_subject_id = None
     # the PAGE with the 2D view, so it has 58% of the width instead of 96%. At 1280 that is
     # about 740px, which these add up to; the checkbox lost its explanatory tail rather than
     # the dwell slider losing usable travel.
-    gui_row("row-height: 2.4em; font: gui-2;")
-    gui_text("$text:`Dwell (s)`;font:gui-2;", "col-width: content;")
-    gui_int_slider("$text:int;low:2;high:30;", "col-width: 200px;", var="cv_dwell")
+    gui_row(director_row_control())
+    gui_text("$text:`Dwell (s)`;font:gui-2;", director_col("content"))
+    gui_int_slider("$text:int;low:2;high:30;", director_col("200px"), var="cv_dwell")
     # THE CHECKBOX FORM MATTERS. `state:` in the message is dead weight: Checkbox.__init__
     # parses it and then clobbers _value with the constructor argument, and _present emits
     # `state:` twice - the engine takes the first. Assigning `.value` after construction is the
     # only thing that renders a tick.
-    autocb = gui_checkbox("text: Auto-director;", "col-width: 190px;")
+    autocb = gui_checkbox("text: Auto-director;", director_col("190px"))
     autocb.value = cv_auto
     gui_blank()
     on gui_message(autocb):
@@ -241,12 +241,12 @@ default shared cv_subject_id = None
     # is exactly why it is not cv_status: the operator's own messages would be wiped half a
     # second after they appeared. gui_text_escape because the text can contain a colon, which
     # is a style-property separator.
-    gui_row("row-height: 2.0em; font: gui-2;")
+    gui_row(director_row_text("gui-2", 6))
     cv_air_w = gui_text("$text:" + gui_text_escape(director_status_line(cv_air)) + ";font:gui-2;color:#fc8;background:#332;")
     on change cv_air:
         cv_air_w.update("text:" + gui_text_escape(director_status_line(cv_air)) + ";font:gui-2;color:#fc8;background:#332;")
 
-    gui_row("row-height: 2.0em; font: gui-2;")
+    gui_row(director_row_text("gui-2", 6))
     cv_status_w = gui_text("$text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")
     on change cv_status:
         cv_status_w.update("text:" + gui_text_escape(director_status_line(cv_status)) + ";font:gui-2;color:#8f8;background:#243;")

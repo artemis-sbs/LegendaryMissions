@@ -854,6 +854,79 @@ of `em` rows is only correct at the resolution it was tuned at. The tab strip ow
   so each gets an explicit width and a `gui_blank()` absorbs the slack.
 - On a listbox: `col-width` flips it horizontal, `row-height: content` raises, and a bare
   number is percent-of-SCREEN. `font:` goes on the listbox, which resolves its own `em`.
+
+### Height is for the text; padding is for the air
+
+**A widget FILLS the cell it is given.** That one fact is why every control on this console used
+to be a slab: the rows were declared 1.8em to 2.4em - 43 to 58 pixels - so the buttons, typeins
+and dropdowns in them were 43 to 58 pixels tall. Reaching for more height to stop things
+overlapping makes the overlap go away and leaves the slabs behind, which is exactly what the
+first fix for the entry screen did.
+
+Padding comes **out of** the row (`layout.py` shrinks the row's area by it) rather than adding to
+it, so a one-line row plus 16px of padding is a **40px row holding a 24px control with room to
+breathe**, against a 53px row holding a 53px control with none.
+
+Two helpers say it once, and the budget entries that match them cannot drift:
+
+```python
+gui_row(director_row_control())            # buttons, typeins, dropdowns, sliders
+gui_row(director_row_text("gui-3", 10))    # a line of text with a gap under it
+```
+
+More pad below than above on purpose: the gap **under** a row is what a reader perceives as
+separating it from the next one, and an even split spends half of it on a gap nobody reads.
+
+**Horizontally there are two gaps, and both are in PIXELS.** Worth stating, because a bare
+number in a style string *is* percent - `LayoutAreaParser` returns `digits` as-is and converts
+`px` and `em` into it - so `padding: 2` is 26px at 1280 and 38px at 1920. A margin that grows
+with the screen is not what a hairline wants.
+
+| | what it is |
+|---|---|
+| `DIRECTOR_PAD_SIDE` | insets a row's content from its section's edges, so nothing starts hard against the border |
+| `DIRECTOR_COL_GAP` | the gap **between** two controls in one row, via `director_col()` |
+
+Columns are laid out **edge to edge** with no gap of their own - there is no `col-gap`, and
+`item-gap` belongs to a listbox - so without the second one a label sits welded to the box it
+labels: `Pin` and `Enter pin` with nothing at all between them. `director_col("160px")` is how a
+control says its width and its gap together, and it is the one call site to change if a row
+still reads as one run-on control.
+
+**The radio is the one that needs `extra`.** `RadioButtonGroup` inherits the base
+`Column.measure`, which returns `None` - it declines, falls back to flex, and fills whatever it
+is given, so it has nothing to size itself from.
+
+Shrinking the rows gave the space back to the things that wanted it: the Stage's 2D view went
+from 231px to **282px** at 720p, and the panel's rundown tree from 402px to **478px**.
+
+### The entry screen, and why it drifted
+
+Every section on this console declares the rows it must hold in `director_layout.py`, and
+`test_director_layout` asserts it fits. **The entry screen did not**, and it drifted exactly the
+way the editor did before that module existed: a hand-written `area:` with hand-written `em`
+rows, nothing measuring it, and it shipped rendering broken. Three faults, all of one kind - a
+row declared one size and rendered another - and because the engine does not clip, each one
+spilled into whatever sat underneath:
+
+| Fault | Cause |
+|---|---|
+| radio labels wrapped mid-word - "Direct/r", "Progr/am" | a trailing `gui_blank()` gave the group HALF the row |
+| the help text overlapped the pin row | `row-height: 1.4em` over a sentence that wraps to two lines |
+| the input and the button drew over each other | `2.2em` is the text height; both are drawn with chrome past it |
+
+**`RadioButtonGroup` is ONE content item.** Its own layout splits its width across the buttons,
+so a second flex column beside it starves every label at once - the group got half a card that
+was already half the screen, and each of three labels got a sixth of it. Alone on its row it
+sizes its buttons to their text.
+
+The help row is `row-height: content` now, which measures the wrapped height at the row's real
+width; `_ROWS_ENTRY` reserves `2.8em` so the section has the space to give it. That is only
+trustworthy because this card is wide - the measured wrap matches the engine at 600px and up and
+diverges below ~300px, so a narrow card would want fixed rows and text short enough not to wrap.
+
+Three tests guard the specific faults, and each was checked to actually fail when the fault is
+put back.
 - **Escape dynamic text** with `gui_text_escape` - a status line can contain a colon, which is
   a style-property separator.
 

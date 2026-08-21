@@ -35,7 +35,7 @@ SCREENS = (720, 1080)
 
 # Sections that must hold declared rows. The others are lists and engine views, which scroll or
 # size themselves - what matters for those is that they are not left with nothing.
-SIZED = ("subtab", "rundown", "itembtn", "conbtn", "ctrl")
+SIZED = ("subtab", "rundown", "itembtn", "conbtn", "ctrl", "entry")
 FLEX = ("items", "view2d", "scilist", "consoles")
 
 # A list with less than this is not a list. Four rows at 1.7em gui-2 plus a title.
@@ -69,6 +69,65 @@ class SectionFitTests(unittest.TestCase):
         used = m["content_top"] + m["ctrl_up"]
         self.assertLess(used, 720,
                         "the fixed top and bottom bands leave nothing for the views at 720p")
+
+    def test_a_row_over_wrapping_text_is_declared_for_more_than_one_line(self):
+        """THE BUG THAT PUT THE ENTRY SCREEN IN THIS MODULE, as a test.
+
+        Its help sentence wraps to two lines at the card's width and the row was declared
+        `1.4em` - one line. The engine does not clip, so the second line drew straight through
+        the pin row underneath it, and the input and button drew over each other from there.
+
+        The MAST row is `row-height: content` so it takes what it measures, but the section has
+        to have the space to give it, and that is what `_ROWS_ENTRY` reserves. A future edit
+        trimming this back to one line would put the overlap straight back.
+        """
+        help_row = dl.director_section_rows("entry")[4]
+        self.assertEqual(help_row[1], "gui-1")
+        self.assertGreaterEqual(
+            help_row[0], 2.0,
+            "the entry screen's help text wraps - a one-line row spills into the pin row")
+
+    def test_the_entry_card_pads_rather_than_growing_its_rows(self):
+        """Height is for the line of text; PADDING is for the air around it.
+
+        This test replaced one asserting the opposite, and the one it replaced was the bug.
+        A widget FILLS the cell it is given, so making a row taller to stop things overlapping
+        makes a taller BUTTON - the first fix for this screen cleared the overlap and left 62px
+        slabs behind. Every row here is ONE line plus an explicit pad.
+        """
+        for i, row in enumerate(dl.director_section_rows("entry")):
+            em, font = row[0], row[1]
+            # The help row is the one legitimate multi-line row - its text genuinely wraps.
+            limit = 2.0 if i == 4 else 1.0
+            self.assertLessEqual(
+                em, limit,
+                f"entry row {i} is {em} lines of {font} - put the air in `padding:`, "
+                f"not in `row-height:`, or the control grows with the row")
+
+    def test_the_entry_cards_controls_get_air(self):
+        # The radio and the pin/start row hold widgets that FILL their cell - a
+        # RadioButtonGroup declines measurement entirely - so without vertical padding they
+        # are exactly as tall as the row, whatever the row is.
+        rows = dl.director_section_rows("entry")
+        for i, what in ((2, "the mode radio"), (5, "the pin and start row")):
+            pad = rows[i][2] if len(rows[i]) > 2 else 0
+            self.assertGreaterEqual(
+                pad, 12,
+                f"{what} needs vertical padding - its controls fill the row without it")
+
+    def test_the_entry_card_is_not_a_stack_of_slabs(self):
+        # The whole card, as the reviewer sees it. Seven rows of one line each should not add
+        # up to much more than seven lines and their gaps.
+        need = dl.director_rows_px(dl.director_section_rows("entry"))
+        self.assertLessEqual(need, 340, f"the entry card is {need}px of rows - too tall for "
+                                        "seven lines of text")
+
+    def test_the_entry_card_is_wide_enough_for_its_radio(self):
+        # Three gui-3 labels side by side in ONE content item. At 50% of the screen they
+        # wrapped mid-word - "Direct/r", "Progr/am", "Previe/w".
+        left, _top, right, _bottom = dl._AREAS["entry"]
+        self.assertGreaterEqual(right - left, 55,
+                                "the mode radio needs room for three labels in a row")
 
     def test_nothing_starts_under_the_tab_strip(self):
         # The console tab strip owns Layout(tag, None, 20, 0, 100, 3) - a 35px row. Content
