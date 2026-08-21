@@ -29,6 +29,10 @@ default shared cv_auto      = False        # the auto-director
 # Stop clears it. Without the hold, a six-second dwell would overwrite it on the next tick and
 # the button would read as doing nothing.
 default shared cv_punch     = None
+# Which unit the list picks in. "Rundowns" multi-selects whole rundowns and Send puts them on
+# air; "Items" single-selects one item and it goes ON AIR THE MOMENT IT IS PICKED - no Send,
+# because a clip launcher that needed a second press would not be one.
+default shared cv_pick_mode = "Rundowns"
 
 # ONE-TIME per ENTRY. The camera work is in director_cam_ensure, which EVERY tab calls -
 # see director_cam.py for why that is not optional.
@@ -53,11 +57,23 @@ default shared cv_punch     = None
 
     # Take the OUTGOING selection and view before anything is rebuilt. HERE rather than in the
     # handlers, because the watcher repaint has no handler to hang a save on - the GUI task is
-    # parked in `await gui()` when that jump lands.
-    cv_sel_rundowns = director_selected_items(rundown_lb)
-    cv_hint_runs    = director_selection_hint(rundown_lb)
+    # parked in `await gui()` when that jump lands. By KEY, not by label: a row's text carries
+    # its live item count and its hold, so it changes under a selection that has not moved.
+    default run_keys = None
+    # WHICH BRANCHES ARE SHUT, off the outgoing widget and before anything is rebuilt. The
+    # listbox handles collapse internally, so this is the only place that state can be read.
+    director_tree_remember_collapse(rundown_lb, run_keys)
+    cv_pick_items = cv_pick_mode == "Items"
+    # Only the kind of row THIS mode can select survives the carry-over: a mode change repaints
+    # with the outgoing selection in hand, and restoring an item key onto a list with no item
+    # rows marks something the operator can neither see nor unmark.
+    cv_sel_keys  = director_tree_keep_selectable(director_selected_ids(rundown_lb, run_keys), cv_pick_items)
+    cv_hint_runs = director_selection_hint(rundown_lb)
 
-    cv_runs   = director_rundown_rows()
+    # THE TREE. Rundowns ALONE while picking rundowns - the items are not the unit of choice
+    # there, and sixty of them bury the four names being chosen between. In Items mode the
+    # headers turn COLLAPSIBLE instead of selectable - see director_rundown_tree_rows.
+    cv_runs   = director_rundown_tree_rows(director_play_on_air_ident(), cv_pick_items)
     run_items = cv_runs[0]
     run_keys  = cv_runs[1]
 
@@ -88,8 +104,36 @@ default shared cv_punch     = None
     # font. No col-width (that makes a listbox HORIZONTAL) and no `row-height: content` (that
     # raises); a bare number would be percent of SCREEN.
     gui_section(f"area: 2, 88px, 98, 100-{cv_ctrl_px}px;")
-    rundown_lb = gui_list_box(run_items, "row-height: 1.7em; font: gui-2;", title_template="Rundowns - select one or more, then Send", select=True, multi=True, reveal=True, hint=cv_hint_runs)
-    director_restore_items(rundown_lb, cv_sel_rundowns)
+    # NO `reveal=`. It fires on every view re-establish, and a re-establish would drag the view
+    # back to the selection while the operator was trying to scroll. `hint=` keeps the slot
+    # without moving anything.
+    cv_run_title = "Rundowns - pick one or more, then Send"
+    if cv_pick_items:
+        cv_run_title = "Items - picking one puts it ON AIR"
+    rundown_lb = gui_list_box(run_items, "row-height: 1.7em; font: gui-2;", title_template=cv_run_title, item_template=director_rundown_row_template, select=True, multi=not cv_pick_items, collapsible=True, hint=cv_hint_runs)
+    director_restore_ids(rundown_lb, run_keys, cv_sel_keys)
+    on change rundown_lb.value:
+        # ITEMS MODE IS A CLIP LAUNCHER: picking is the take.
+        #
+        # INLINE, WITH NO JUMP. A jump to a label that ends in `await gui()` without building
+        # anything swaps the EMPTY pending layout in and the screen goes black; a jump to
+        # cv_paint instead rebuilds, which re-fires this handler the moment the selection is
+        # restored and loops. Doing the work here leaves the GUI task parked in cv_paint's own
+        # `await gui()` - nothing swaps, nothing rebuilds, and the collapse and selection are
+        # untouched. Same shape as consoles/common_console_select.mast's ship-select handler.
+        #
+        # Re-punching the same item is a no-op on air (same ident, so the player does not
+        # re-route), which is what makes it safe for this to fire again after a repaint.
+        if cv_pick_items:
+            cv_take_item = director_tree_selected_item(director_selected_ids(rundown_lb, run_keys))
+            if cv_take_item is None:
+                shared cv_status = "pick an item"
+            elif len(director_program_screens()) == 0:
+                shared cv_status = "no program screens - open a client and declare it Program"
+            else:
+                shared cv_punch = cv_take_item
+                shared cv_playing = True
+                shared cv_status = "ON AIR " + str(cv_take_item["label"])
 
     # ---- controls -------------------------------------------------------------------------
     gui_section(f"area: 2, 100-{cv_ctrl_px}px, 98, 100-6px;")
@@ -99,11 +143,19 @@ default shared cv_punch     = None
     stopb = gui_button("Stop", "col-width: 110px;")
     resumeb = gui_button("Resume", "col-width: 120px;")
     refreshb = gui_button("Refresh", "col-width: 130px;")
-    gui_text("$text:`Send goes to every Program screen. Preview follows the editor.`;font:gui-1;color:#9ab;")
+    gui_text("$text:`Pick`;font:gui-2;", "col-width: content;")
+    pick_rb = gui_radio("Rundowns,Items", var="cv_pick_mode", style="col-width: 240px;")
+    gui_blank()
+    on gui_message(pick_rb):
+        # A repaint, deliberately: the two modes are a different LIST - collapsed branches and
+        # multi-select against expanded branches and single-select - not a different reading of
+        # the same one.
+        jump cv_paint
     on gui_message(sendb):
         # get_selected_index() walks unfiltered_items, so a selection index IS an index into
         # the parallel list. Mapping back by LABEL breaks on the first duplicate.
-        shared cv_rundowns = director_selected_ids(rundown_lb, run_keys)
+        # A picked ITEM implies its rundown, so Send does the obvious thing in either mode.
+        shared cv_rundowns = director_tree_selected_rundowns(director_selected_ids(rundown_lb, run_keys))
         # RELEASE BEFORE FORGETTING. director_play_reset() drops the record of which overlay
         # slots are up, and a card orphaned that way can never be named again - so it clears
         # them first. Send used not to, which is why a stuck lower third outlived Stop.
@@ -155,6 +207,17 @@ default shared cv_punch     = None
     gui_sub_task_schedule(cv_watch_task)
     await gui()
 
+# THERE IS NO `cv_take_selected` AND NO `cv_paint_wait`, deliberately - the take is inline in
+# the listbox handler above. Both labels existed here and both were wrong:
+#
+#   `cv_take_selected` ended in `jump cv_paint`, and the rebuild restored the selection, which
+#   re-fired the handler, which came straight back - a repaint loop under the operator's hands.
+#   `cv_paint_wait` was the attempt to fix that by parking instead, and `await gui()` in a label
+#   that BUILDS NOTHING swaps the empty pending layout in: the screen went black until the next
+#   repaint, and in the two failure branches nothing ever repainted it.
+#
+# A handler that only changes STATE needs no label and no jump at all. See README.md.
+
 # Stop playback and hand every screen back to the engine's own camera. A separate label because
 # the same thing has to happen from a button and from a torn-down console.
 === cv_stop
@@ -171,19 +234,42 @@ default shared cv_punch     = None
     shared cv_status = "stopped - " + str(cv_stop_n) + " screens released"
     jump cv_paint
 
-# LIVE REFRESH. The declared screens are a snapshot; consoles connect, disconnect and change
-# mode behind it. A cheap poll, and gui_task_jump when the answer moves.
+# LIVE REFRESH, AND IT DOES TWO DIFFERENT THINGS - which is the point.
 #
-# The fingerprint deliberately ignores what each screen is SHOWING: the player rewrites a
-# program screen's CONSOLE_TYPE every time it changes item, so a full fingerprint would repaint
-# this page every dwell, under the operator's hands. "Refresh" covers the residual case.
+#   SHAPE CHANGED (a console declared a mode, disconnected, was renamed) -> REPAINT. The list
+#   has different rows in it, so it has to be rebuilt.
+#   ON AIR CHANGED (the feed advanced, or an item was taken) -> RECOLOR IN PLACE. Only a colour
+#   moved, and a repaint to move a colour is what cost a black frame, a repaint loop, the
+#   operator's collapse and their scroll position.
+#
+# Folding the on-air ident into the repaint fingerprint - which is what this did - made every
+# advance of the feed a full rebuild of the page. It is a `gui_update` per changed row instead.
+#
+# The fingerprint still ignores what each screen is SHOWING: the player rewrites a program
+# screen's CONSOLE_TYPE every time it changes item, so watching that would repaint several times
+# a dwell. "Refresh" covers the residual case.
+#
+# POLLED FAST (0.25s), because recolouring is a handful of gui_update calls rather than a page
+# rebuild - so the green can follow the feed closely without any of the cost that made the old
+# 2-second poll a compromise. cv_watch_poll still paces the repaint check.
 === cv_watch_task
     cv_watch_fp = director_mode_fingerprint()
+    cv_watch_air = director_play_on_air_ident()
+    cv_watch_age = 0.0
 --- cv_watch_loop
-    await delay_app(cv_watch_poll)
-    cv_watch_now = director_mode_fingerprint()
-    if cv_watch_now != cv_watch_fp:
-        cv_watch_fp = cv_watch_now
-        # A STRING, and a TOP-LEVEL label - see the note on cv_paint.
-        gui_task_jump("cv_paint")
+    await delay_app(0.25)
+
+    cv_air_now = director_play_on_air_ident()
+    if cv_air_now != cv_watch_air:
+        cv_watch_air = cv_air_now
+        director_tree_recolor(cv_air_now)
+
+    cv_watch_age = cv_watch_age + 0.25
+    if cv_watch_age >= cv_watch_poll:
+        cv_watch_age = 0.0
+        cv_watch_now = director_mode_fingerprint()
+        if cv_watch_now != cv_watch_fp:
+            cv_watch_fp = cv_watch_now
+            # A STRING, and a TOP-LEVEL label - see the note on cv_paint.
+            gui_task_jump("cv_paint")
     jump cv_watch_loop

@@ -162,13 +162,21 @@ default shared cv_hold = 0               # seconds this item holds on air; 0 = u
     for _st_id in any_role("__npc__,__player__"):
         science_update_scan_data(cv_edit_cam, _st_id, "Director")
 
-    # The engine widget gets its OWN section. Never share a row with MAST controls: the engine
+    # EACH ENGINE WIDGET IN ITS OWN SECTION. Never share a row with MAST controls: the engine
     # draws its widget at its own size over whatever MAST put beside it.
     gui_section(director_area("view2d"))
     gui_row("row-height: 30px;")
     gui_layout_widget("radar_zoom_ctrl")
     gui_row()
     gui_layout_widget("science_2d_view")
+
+    # The science object list, beside the radar. It is the same selection the 2D view drives -
+    # this console is named `gamemaster_director_sci`, so consoledispatcher routes both to the
+    # SCIENCE selection - so picking a name off the list stages that object exactly as clicking
+    # it on the radar does, and a contact that is hard to hit with a mouse stops being hard.
+    gui_section(director_area("scilist"))
+    gui_row()
+    gui_layout_widget("science_sorted_list")
 
     gui_section(director_area("ctrl"))
 

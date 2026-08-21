@@ -118,8 +118,12 @@ _AREAS = {
     "rundown":  (2, "content_top", 30, "content_top+rundown_h"),
     "items":    (2, "items_top", 30, "-itembtn_up"),
     "itembtn":  (2, "-itembtn_up", 30, "-bottom"),
-    # Stage: the 2D view across the top, the control block full width under it.
-    "view2d":   (32, "content_top", 98, "-ctrl_up"),
+    # Stage: the 2D view with the science object list beside it, then the control block full
+    # width under both. The split is FOUR FIFTHS to the view: the list is a column of names and
+    # wants no more than that, while picking a subject off the radar wants every pixel it can
+    # get. 32..85 is 53 of the 66 available (80.3%), 85..98 is 13 (19.7%).
+    "view2d":   (32, "content_top", 85, "-ctrl_up"),
+    "scilist":  (85, "content_top", 98, "-ctrl_up"),
     "ctrl":     (32, "-ctrl_up", 98, "-bottom"),
     # Console sub-tab: two lists, and a button row plus a status line under them.
     "ships":    (32, "content_top", 64, "-conbtn_up"),

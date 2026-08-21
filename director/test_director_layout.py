@@ -36,7 +36,7 @@ SCREENS = (720, 1080)
 # Sections that must hold declared rows. The others are lists and engine views, which scroll or
 # size themselves - what matters for those is that they are not left with nothing.
 SIZED = ("subtab", "rundown", "itembtn", "conbtn", "ctrl")
-FLEX = ("items", "view2d", "ships", "consoles")
+FLEX = ("items", "view2d", "scilist", "ships", "consoles")
 
 # A list with less than this is not a list. Four rows at 1.7em gui-2 plus a title.
 MIN_LIST_PX = 180

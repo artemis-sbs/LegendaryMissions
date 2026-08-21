@@ -28,6 +28,14 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# WARM THE REAL LIBRARY FIRST. `_install` shadows `sbs_utils.procedural.query`, and every
+# sbs_utils module that imports `to_id` from it fails while the stub is in place - so any
+# FIRST-TIME import of the gui package from inside a test blows up with an ImportError that
+# reads like a real bug. Importing it here caches it before any stub exists. Without this the
+# module passes only when some other test file happens to warm it first, which is a test that
+# depends on the order it is run in.
+import sbs_utils.procedural.gui  # noqa: F401
+
 import director_rundowns as dr
 import director_play as dp
 
@@ -50,6 +58,16 @@ def _install(exciting):
             sys.modules["sbs_utils.procedural.query"] = saved
 
     return restore
+
+
+class _Prom:
+    """A stand-in for the Promise a camera move returns."""
+
+    def __init__(self, done=False):
+        self._done = done
+
+    def done(self):
+        return self._done
 
 
 def _items(n):
@@ -424,6 +442,139 @@ class BeatTests(unittest.TestCase):
         dp.director_play_plan(self.titled, [10])
         plan = dp.director_play_plan(self.clean, [10])
         self.assertFalse(plan[0]["changed"])
+
+
+class OnAirTests(unittest.TestCase):
+    """What the operator's list marks green: what is ACTUALLY going out."""
+
+    def setUp(self):
+        dp.director_play_reset()
+        self.restore = _install({})
+        self.punch = dr.director_item_cam(999, "orbit", label="PUNCH")
+
+    def tearDown(self):
+        self.restore()
+        dp.director_play_reset()
+
+    def test_it_follows_the_rundown(self):
+        items = _items(3)
+        dp.director_play_feeds(items, elapsed=0.0)
+        self.assertEqual(dp.director_play_on_air_ident(), dr.director_item_ident(items[0]))
+
+    def test_a_take_moves_it(self):
+        # NOT the rundown's place. A take overrides the feed without disturbing where the
+        # rundown is, so marking the rundown's item would put the green on a row that is not
+        # going out.
+        items = _items(3)
+        dp.director_play_feeds(items, elapsed=0.0)
+        dp.director_play_feeds(items, punch=self.punch)
+        self.assertEqual(dp.director_play_on_air_ident(), dr.director_item_ident(self.punch))
+
+    def test_resuming_gives_it_back_to_the_rundown(self):
+        items = _items(3)
+        dp.director_play_feeds(items, elapsed=0.0)
+        dp.director_play_feeds(items, punch=self.punch)
+        dp.director_play_feeds(items)
+        self.assertEqual(dp.director_play_on_air_ident(), dr.director_item_ident(items[0]))
+
+    def test_a_take_with_no_rundown_at_all_still_shows(self):
+        dp.director_play_feeds([], punch=self.punch)
+        self.assertEqual(dp.director_play_on_air_ident(), dr.director_item_ident(self.punch))
+
+    def test_nothing_on_air_is_none(self):
+        dp.director_play_feeds([])
+        self.assertIsNone(dp.director_play_on_air_ident())
+
+    def test_reset_clears_it(self):
+        dp.director_play_feeds(_items(1), elapsed=0.0)
+        dp.director_play_reset()
+        self.assertIsNone(dp.director_play_on_air_ident())
+
+
+class ChaseTests(unittest.TestCase):
+    """Chase is a tick-driven library move now, not something re-aimed by the player loop.
+
+    It flickered because it was re-issued from the player's own 0.5s tick with a lens
+    recomputed there. The engine has no interpolation, so the driver IS the animation and a few
+    hertz reads as a stutter - camera.py says exactly that, and dolly and orbit, which were
+    already tick-driven, were the two modes that never flickered.
+    """
+
+    def setUp(self):
+        dp.director_play_reset()
+        self.restore = _install({})
+        # The shared harness answers None for every object, and a leg bails on a subject that
+        # is gone - which would make every assertion below pass for the wrong reason.
+        sys.modules["sbs_utils.procedural.query"].to_object = lambda oid: object()
+        self.calls = []
+        cam = types.ModuleType("sbs_utils.procedural.gui.camera")
+        cam.camera_chase = lambda *a, **k: self.calls.append(("chase", a, k)) or _Prom()
+        cam.camera_dolly = lambda *a, **k: self.calls.append(("dolly", a, k)) or _Prom()
+        cam.camera_orbit = lambda *a, **k: self.calls.append(("orbit", a, k)) or _Prom()
+        cam.camera_auto = lambda cids: None
+        vs = types.ModuleType("sbs_utils.procedural.gui.viewscreen")
+        vs.DOLLY_SECONDS = 22.0
+        vs.ORBIT_SECONDS = 20.0
+        vs.ORBIT_PITCH = 15.0
+        vs.DOLLY_YAW = 20.0
+        vs.viewscreen_framing = lambda subject: (100.0, 400.0)
+        self.saved = {}
+        for name, mod in (("sbs_utils.procedural.gui.camera", cam),
+                          ("sbs_utils.procedural.gui.viewscreen", vs)):
+            self.saved[name] = sys.modules.get(name)
+            sys.modules[name] = mod
+
+    def tearDown(self):
+        for name, mod in self.saved.items():
+            if mod is None:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = mod
+        self.restore()
+        dp.director_play_reset()
+
+    def _start(self, mode):
+        dp._SHOTS[10] = {"mode": mode, "subject": 901, "prom": None, "yaw": 0.0, "leg": 0}
+        dp.director_play_next_leg(10)
+
+    def test_a_chase_leg_goes_through_the_library_mover(self):
+        self._start("chase")
+        self.assertEqual([c[0] for c in self.calls], ["chase"])
+
+    def test_the_chase_sits_behind_and_above(self):
+        self._start("chase")
+        _name, args, kwargs = self.calls[0]
+        # framing near = 100, so back = 300 and up = 50.
+        self.assertEqual(args[2], 100.0 * dp.DIRECTOR_CHASE_BACK)
+        self.assertEqual(kwargs["height"], 100.0 * dp.DIRECTOR_CHASE_UP)
+        self.assertEqual(kwargs["seconds"], dp.DIRECTOR_CHASE_SECONDS)
+
+    def test_a_chase_returns_a_promise_like_every_other_mode(self):
+        # It used to record None, which is what forced the player to special-case it.
+        self._start("chase")
+        self.assertIsNotNone(dp._SHOTS[10]["prom"])
+
+    def test_the_player_does_not_re_issue_a_running_chase(self):
+        # THE FLICKER. Re-aiming from the player tick is what this stopped doing.
+        self._start("chase")
+        self.calls[:] = []
+        for _ in range(5):
+            dp.director_play_tick_shots()
+        self.assertEqual(self.calls, [])
+
+    def test_a_finished_chase_leg_is_re_issued(self):
+        # The leg exists only so a dead subject or a stolen camera recovers.
+        self._start("chase")
+        dp._SHOTS[10]["prom"] = _Prom(done=True)
+        self.calls[:] = []
+        dp.director_play_tick_shots()
+        self.assertEqual([c[0] for c in self.calls], ["chase"])
+
+    def test_orbit_and_dolly_are_unchanged(self):
+        for mode in ("orbit", "dolly"):
+            self.calls[:] = []
+            self._start(mode)
+            self.assertEqual([c[0] for c in self.calls], [mode])
 
 
 class ClockTests(unittest.TestCase):

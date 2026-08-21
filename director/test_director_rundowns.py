@@ -198,6 +198,193 @@ class BeatTests(unittest.TestCase):
         self.assertEqual(dr.director_item_ident(a), dr.director_item_ident(b))
 
 
+class TreeTests(unittest.TestCase):
+    """The main page's list: rundowns as headers, items as children, green for what is on air.
+
+    `test_a_label_does_not_change_as_the_feed_moves` is the load-bearing one. A listbox decides
+    what is SELECTED by comparing items with `==`, so if the green were baked into the row text
+    the operator's selection would be dropped every time the show advanced.
+    """
+
+    def setUp(self):
+        dr.director_rundowns_reset()
+        self.restore = _install(_World(
+            roles={"__player__": {901}, "director_cam": set(), "station": {950}},
+            objects={901: _Obj(901, "Artemis"), 950: _Obj(950, "Phoenix")}))
+        self.key = dr.director_rundown_new("My Show")
+        self.titled = dr.director_item_cam(
+            950, "orbit", overlays=[{"kind": "lower_third", "name": "a", "line": "b"}], hold=7)
+        self.clean = dr.director_item_cam(950, "orbit")
+        dr.director_rundown_add_item(self.key, self.titled)
+        dr.director_rundown_add_item(self.key, self.clean)
+
+    def tearDown(self):
+        self.restore()
+        dr.director_rundowns_reset()
+
+    def _headers(self, items):
+        from sbs_utils.procedural.gui.listbox import gui_list_box_is_header
+        return [i for i in items if gui_list_box_is_header(i)]
+
+    def _rows(self, items):
+        from sbs_utils.procedural.gui.listbox import gui_list_box_is_header
+        return [i.label for i in items if not gui_list_box_is_header(i)]
+
+    def test_items_mode_shows_rundowns_and_their_items(self):
+        items, keys = dr.director_rundown_tree_rows(None, True)
+        self.assertEqual(len(items), len(keys))
+        self.assertTrue(self._headers(items))
+        self.assertTrue(self._rows(items))
+
+    def test_rundowns_mode_shows_ONLY_rundowns(self):
+        # Not collapsed branches - absent. The items are not the unit of choice there.
+        items, keys = dr.director_rundown_tree_rows(None, False)
+        self.assertEqual(self._rows(items), [])
+        self.assertTrue(all(k[0] == "run" for k in keys))
+
+    def test_keys_are_parallel_to_items(self):
+        # get_selected_index() walks unfiltered_items, so index i of a selection has to be
+        # index i of the keys - a header slot cannot be skipped.
+        for with_items in (True, False):
+            items, keys = dr.director_rundown_tree_rows(None, with_items)
+            self.assertEqual(len(items), len(keys))
+
+    def test_the_on_air_item_and_its_rundown_go_green(self):
+        items, _keys = dr.director_rundown_tree_rows(dr.director_item_ident(self.titled), True)
+        green = dr._TREE_GREEN
+        self.assertTrue(any(h.label in green for h in self._headers(items)))
+        self.assertEqual(len([r for r in self._rows(items) if r in green]), 1)
+
+    def test_the_rundown_goes_green_even_with_its_items_hidden(self):
+        # A headers-only list still has to say where the show is.
+        items, _keys = dr.director_rundown_tree_rows(dr.director_item_ident(self.titled), False)
+        self.assertTrue(any(h.label in dr._TREE_GREEN for h in self._headers(items)))
+
+    def test_nothing_on_air_is_nothing_green(self):
+        dr.director_rundown_tree_rows(None, True)
+        self.assertEqual(dr._TREE_GREEN, set())
+
+    def test_green_is_rebuilt_not_accumulated(self):
+        dr.director_rundown_tree_rows(dr.director_item_ident(self.titled), True)
+        first = set(dr._TREE_GREEN)
+        dr.director_rundown_tree_rows(dr.director_item_ident(self.clean), True)
+        self.assertNotEqual(first, dr._TREE_GREEN)
+
+    def test_a_label_does_not_change_as_the_feed_moves(self):
+        # THE ONE THAT MATTERS. Green lives in a set beside the rows, never in the text - a row
+        # whose label changed when the show advanced would drop the operator's selection.
+        a, _ = dr.director_rundown_tree_rows(dr.director_item_ident(self.titled), True)
+        b, _ = dr.director_rundown_tree_rows(dr.director_item_ident(self.clean), True)
+        self.assertEqual([str(x) for x in self._rows(a)], [str(x) for x in self._rows(b)])
+
+    def test_rows_are_unique(self):
+        # A tree makes duplicates likely: the same shot can sit in two rundowns.
+        items, _keys = dr.director_rundown_tree_rows(None, True)
+        labels = [i.label for i in self._headers(items)] + self._rows(items)
+        self.assertEqual(len(labels), len(set(labels)), labels)
+
+    def test_a_row_says_what_the_item_carries(self):
+        items, _keys = dr.director_rundown_tree_rows(None, True)
+        titled_row = [r for r in self._rows(items) if "7s" in r]
+        self.assertTrue(titled_row)
+        self.assertIn("lower third", titled_row[0])
+
+    def test_selecting_an_item_names_its_rundown(self):
+        self.assertEqual(dr.director_tree_selected_rundowns([("item", self.key, 0)]), [self.key])
+
+    def test_selecting_headers_names_the_rundowns(self):
+        self.assertEqual(dr.director_tree_selected_rundowns([("run", "action"), ("run", "players")]),
+                         ["action", "players"])
+
+    def test_a_rundown_is_named_once_however_it_was_picked(self):
+        self.assertEqual(
+            dr.director_tree_selected_rundowns([("run", self.key), ("item", self.key, 1)]),
+            [self.key])
+
+    def test_the_selected_item_is_the_item(self):
+        picked = dr.director_tree_selected_item([("item", self.key, 0)])
+        self.assertEqual(dr.director_item_ident(picked), dr.director_item_ident(self.titled))
+
+    def test_a_header_selection_is_not_an_item(self):
+        # Rundowns mode selects headers, and taking one to air would be meaningless.
+        self.assertIsNone(dr.director_tree_selected_item([("run", self.key)]))
+
+    def test_a_stale_index_is_not_a_crash(self):
+        # The rundown shrank between the build and the click.
+        self.assertIsNone(dr.director_tree_selected_item([("item", self.key, 99)]))
+        self.assertIsNone(dr.director_tree_selected_item([("item", "nope", 0)]))
+
+    def test_an_empty_selection_is_nothing(self):
+        self.assertEqual(dr.director_tree_selected_rundowns([]), [])
+        self.assertIsNone(dr.director_tree_selected_item(None))
+
+    def test_item_rows_carry_the_listboxs_own_indent(self):
+        # LayoutListbox indents a row by `item.indent * indent_pixels`, read off the ITEM - so
+        # a plain string row has nothing to read and draws flush under its header. Carrying the
+        # attribute is what puts the children in from the rundown.
+        items, _keys = dr.director_rundown_tree_rows(None, True)
+        from sbs_utils.procedural.gui.listbox import gui_list_box_is_header
+        rows = [i for i in items if not gui_list_box_is_header(i)]
+        self.assertTrue(rows)
+        for row in rows:
+            self.assertEqual(row.indent, 1)
+            self.assertEqual(row.visual_indent, 1)
+        for head in self._headers(items):
+            self.assertEqual(head.indent, 0)
+
+    def test_collapse_survives_a_rebuild(self):
+        # THE ONE THE OPERATOR FELT. A rebuild makes NEW header objects and the listbox toggles
+        # the OLD ones in place, so without a memory every repaint re-opened every branch - and
+        # this page repaints whenever the feed advances.
+        class _LB:
+            def __init__(self, items):
+                self.unfiltered_items = list(items)
+
+        items, keys = dr.director_rundown_tree_rows(None, True)
+        for item, key in zip(items, keys):
+            if key[0] == "run" and key[1] == self.key:
+                item.collapse = True
+        dr.director_tree_remember_collapse(_LB(items), keys)
+        items2, keys2 = dr.director_rundown_tree_rows(None, True)
+        shut = [k[1] for i, k in zip(items2, keys2)
+                if k[0] == "run" and getattr(i, "collapse", False)]
+        self.assertEqual(shut, [self.key])
+
+    def test_a_mission_reset_opens_every_branch(self):
+        class _LB:
+            def __init__(self, items):
+                self.unfiltered_items = list(items)
+
+        items, keys = dr.director_rundown_tree_rows(None, True)
+        for item, key in zip(items, keys):
+            if key[0] == "run":
+                item.collapse = True
+        dr.director_tree_remember_collapse(_LB(items), keys)
+        dr.director_rundowns_reset()
+        items2, keys2 = dr.director_rundown_tree_rows(None, True)
+        self.assertFalse(any(getattr(i, "collapse", False) for i in items2))
+
+    def test_remembering_from_nothing_is_not_a_crash(self):
+        # The FIRST build has no previous listbox to read.
+        dr.director_tree_remember_collapse(None, None)
+
+    def test_collapsible_and_selectable_are_opposite_header_modes(self):
+        # The listbox gives the header's whole section the collapse click ONLY when it is not
+        # selectable; ask for both and the section becomes the select and collapse is handed to
+        # the template instead. So picking rundowns gets selectable headers and picking items
+        # gets collapsible ones.
+        runs, _k = dr.director_rundown_tree_rows(None, False)
+        items, _k2 = dr.director_rundown_tree_rows(None, True)
+        self.assertTrue(all(h.selectable for h in self._headers(runs)))
+        self.assertFalse(any(h.selectable for h in self._headers(items)))
+
+    def test_a_carried_selection_is_filtered_to_what_the_mode_can_select(self):
+        picked = [("run", self.key), ("item", self.key, 0)]
+        self.assertEqual(dr.director_tree_keep_selectable(picked, True), [("item", self.key, 0)])
+        self.assertEqual(dr.director_tree_keep_selectable(picked, False), [("run", self.key)])
+        self.assertEqual(dr.director_tree_keep_selectable(None, True), [])
+
+
 class GeneratorTests(unittest.TestCase):
     def setUp(self):
         dr.director_rundowns_reset()

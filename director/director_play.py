@@ -30,6 +30,10 @@ DIRECTOR_AUTO_MARGIN = 0.15
 # Where a chase sits relative to the subject, in multiples of the framing near-distance.
 DIRECTOR_CHASE_BACK = 3.0
 DIRECTOR_CHASE_UP = 0.5
+# How long one chase leg runs before it is re-issued. Long, because unlike a dolly or an orbit
+# a chase has no shape to complete - the leg exists only so a dead subject or a stolen camera
+# recovers, which `_drive` already handles at the end of one.
+DIRECTOR_CHASE_SECONDS = 30.0
 
 # client_id -> the item key that screen is currently showing.
 # client_id -> the set of overlay slots it currently has up.
@@ -45,9 +49,13 @@ _SHOTS = {}
 _STAGED = [None]
 # The auto-director's memory: the item key it settled on, so it can hold through noise.
 _AUTO_HELD = [None]
-# The key of the item currently ON AIR. Identity, deliberately, not an index - see
-# director_play_program_item.
+# The ident of the item the RUNDOWN is holding. Identity, deliberately, not an index - see
+# director_play_feeds.
 _PROGRAM_HELD = [None]
+# The ident of what is ACTUALLY going out, which is the take when there is one. Separate from
+# _PROGRAM_HELD because a take does not disturb the rundown's place - so the two differ for as
+# long as the take is up, and the operator's list has to mark the one on screen.
+_ON_AIR = [None]
 
 
 def director_screen_enter(client_id):
@@ -90,6 +98,7 @@ def director_play_reset():
     _STAGED[0] = None
     _AUTO_HELD[0] = None
     _PROGRAM_HELD[0] = None
+    _ON_AIR[0] = None
 
 
 def _exciting(subject_id):
@@ -147,6 +156,19 @@ def director_play_auto_order(items):
 
 
 # --- what each feed is showing ---------------------------------------------------------------
+
+def director_play_on_air_ident():
+    """The ident of the item actually on PROGRAM right now, or None.
+
+    NOT `_PROGRAM_HELD`, which is where the RUNDOWN is - a take overrides the feed without
+    disturbing that, so the two differ for as long as the take is up. The operator's list marks
+    what is on screen, so it needs this one; using the rundown's place would put the green on a
+    row that is not going out.
+
+    The ident rather than the item, because that is what each row is compared against.
+    """
+    return _ON_AIR[0]
+
 
 def director_play_stage(item=None, clear=False):
     """Read or set what the editor is staging - what PREVIEW screens follow."""
@@ -238,6 +260,7 @@ def director_play_feeds(items, elapsed=None, dwell=6.0, auto=False, punch=None):
     items = list(items or [])
     if not items:
         _PROGRAM_HELD[0] = None
+        _ON_AIR[0] = director_item_ident(punch)
         return {"program": punch, "preview": _STAGED[0], "elapsed": 0.0}
 
     order = director_play_auto_order(items) if auto else items
@@ -262,7 +285,9 @@ def director_play_feeds(items, elapsed=None, dwell=6.0, auto=False, punch=None):
     preview = _STAGED[0]
     if preview is None:
         preview = _next_after(order, _PROGRAM_HELD[0], auto)
-    return {"program": punch if punch is not None else program,
+    on_air = punch if punch is not None else program
+    _ON_AIR[0] = director_item_ident(on_air)
+    return {"program": on_air,
             "preview": preview,
             "elapsed": 0.0 if elapsed is None else elapsed}
 
@@ -332,50 +357,6 @@ def _framing(subject):
     return viewscreen_framing(subject)
 
 
-def _forward(subject):
-    """The subject's forward vector, or None.
-
-    GUARDED, because it is not on every object - the grav-tether harness hit exactly this and had
-    to wrap it. A chase with no heading is still a shot (it falls back to a fixed rear offset); a
-    chase that raises is a dead screen.
-    """
-    from sbs_utils.procedural.query import to_object
-    obj = to_object(subject)
-    if obj is None:
-        return None
-    for get in (getattr(obj, "space_object", None),
-                lambda: getattr(obj, "engine_object", None)):
-        try:
-            eo = get() if get is not None else None
-            if eo is None:
-                continue
-            fwd = eo.forward_vector()
-            if fwd is None:
-                continue
-            from sbs_utils.vec import Vec3
-            return Vec3(fwd.x, fwd.y, fwd.z)
-        except Exception:
-            continue
-    return None
-
-
-def _chase_lens(subject):
-    """A world-space lens offset sitting BEHIND the subject, along its heading.
-
-    Recomputed every tick, and that is the whole point: the engine does not rotate offsets into
-    the dolly frame, so a fixed offset trails the ship only until it turns and then swings out to
-    the side. Re-aiming is what makes a chase a chase.
-    """
-    from sbs_utils.vec import Vec3
-    near, _far = _framing(subject)
-    back = near * DIRECTOR_CHASE_BACK
-    up = near * DIRECTOR_CHASE_UP
-    fwd = _forward(subject)
-    if fwd is None:
-        return Vec3(0.0, up, -back)
-    return Vec3(-fwd.x * back, up - fwd.y * back, -fwd.z * back)
-
-
 def director_play_overlays(client_id, item):
     """Show an item's overlays on one screen, clearing whatever it had first.
 
@@ -425,7 +406,7 @@ def director_play_next_leg(client_id):
     Finite legs also recover by themselves: if one is cut short because the subject died or
     another console stole the camera, the next tick starts the next one.
     """
-    from sbs_utils.procedural.gui.camera import camera_dolly, camera_orbit, camera_track
+    from sbs_utils.procedural.gui.camera import camera_chase, camera_dolly, camera_orbit
     from sbs_utils.procedural.gui.viewscreen import (DOLLY_SECONDS, ORBIT_SECONDS,
                                                      ORBIT_PITCH, DOLLY_YAW)
     from sbs_utils.procedural.query import to_object
@@ -446,8 +427,15 @@ def director_play_next_leg(client_id):
         # Carry the angle over: a loop restarting at 0 would whip back round every lap.
         record["yaw"] = (yaw + 360.0) % 360.0
     elif mode == "chase":
-        camera_track(cids, subject, lens=_chase_lens(subject))
-        record["prom"] = None
+        # THIRD PERSON, DRIVEN ON THE TICK. This used to re-issue `camera_track` from the
+        # player's own 0.5s loop with a lens recomputed here, and that is what flickered: the
+        # engine has no interpolation, so the driver IS the animation and a few hertz reads as
+        # a stutter. `camera_chase` rebuilds the offset from the subject's live heading every
+        # dispatcher tick, which is how camera_dolly and camera_orbit already work - and they
+        # were the two modes that never flickered.
+        record["prom"] = camera_chase(cids, subject, near * DIRECTOR_CHASE_BACK,
+                                      height=near * DIRECTOR_CHASE_UP,
+                                      seconds=DIRECTOR_CHASE_SECONDS)
     else:
         # Ping-pong: in, then out. A push that cut back to wide each time would read as a jump
         # cut every 22 seconds.
@@ -468,9 +456,9 @@ def director_play_tick_shots():
         record = _SHOTS.get(client_id)
         if record is None:
             continue
-        if record["mode"] == "chase":
-            director_play_next_leg(client_id)      # re-aim every tick
-            continue
+        # NO SPECIAL CASE FOR CHASE any more. It used to be re-aimed here on every player
+        # tick; it is a tick-driven library move now, so like every other mode it only needs
+        # its next leg when the current one ends.
         prom = record.get("prom")
         if prom is None or prom.done():
             director_play_next_leg(client_id)

@@ -14,11 +14,15 @@
 # The rundown the editor is adding to. Set on the editor page; read by its actions.
 default shared cv_target_rundown = None
 
-# Click handling, copied from the Game Master (gamemaster.mast //focus/science).
+# Selection handling, adapted from the Game Master (gamemaster.mast //focus/science).
+#
+# TWO WAYS IN, one route. A click on the 2D view and a row picked off the science object list
+# both convert to `science_target_UID` (consoledispatcher.convert), so both land here - which
+# is why the Stage tab can offer the list beside the radar and have it stage the same subject.
 #
 # extra_extra_tag carries lmb/rmb; blank is a fake event. Left-click on empty space PANS the
-# camera to that point, left-click on an object pans to it AND makes it the subject. Right is
-# left alone, matching the GM, so a right-drag stays available to the engine.
+# camera to that point; picking an object - from either surface - pans to it AND makes it the
+# subject. Right is left alone, matching the GM, so a right-drag stays available to the engine.
 #
 # The route runs SERVER-side, so `shared` is on the write - a bare assignment would bind a
 # task-local and the shot tab would go on reading the old subject forever.
@@ -26,21 +30,30 @@ default shared cv_target_rundown = None
     # The origin can be gone - the cam is a real object and a GM area-delete brush can take
     # it. Without this the whole route raises on a dead reference.
     ->END if SCIENCE_ORIGIN is None
-    if EVENT.extra_extra_tag != "rmb":
-        pos = Vec3(EVENT.source_point)
-        if SCIENCE_SELECTED_ID != 0 and SCIENCE_SELECTED is not None:
-            pos = Vec3(SCIENCE_SELECTED.pos)
-            shared cv_subject_id = SCIENCE_SELECTED_ID
-            # STAGE IT HERE, not from the editor's `on change`. The bench is what every
-            # Preview screen follows, and pushing it at the point the subject is actually
-            # picked means the preview updates on the click rather than on the next repaint.
-            director_stage_subject(SCIENCE_SELECTED_ID)
-        # KEEP THE HEIGHT. The cam spawns above the plane so the 2D view reads like a plan;
-        # copying the target position wholesale drops it to the target own altitude on the
-        # first click and it never comes back up. The GM and the OU Admiral both do that and
-        # both are worse for it.
-        pos.y = SCIENCE_ORIGIN.pos.y
-        SCIENCE_ORIGIN.pos = pos
+    # Right is left alone, matching the GM, so a right-drag stays available to the engine.
+    ->END if EVENT.extra_extra_tag == "rmb"
+    # SELECTION FIRST, source_point only if there is no selection - and that order is what
+    # makes the science object list usable at all. A list row carries a selection but not
+    # necessarily a clicked POINT, and `Vec3(None)` raises AttributeError - which stops the
+    # MAST command, ends the route, and leaves picking from the list doing nothing at all with
+    # nothing logged. Reading the point first put that raise ahead of every other line here.
+    if SCIENCE_SELECTED_ID != 0 and SCIENCE_SELECTED is not None:
+        shared cv_subject_id = SCIENCE_SELECTED_ID
+        # STAGE IT HERE, not from the editor's `on change`. The bench is what every Preview
+        # screen follows, and pushing it at the point the subject is actually picked means the
+        # preview updates on the click rather than on the next repaint.
+        director_stage_subject(SCIENCE_SELECTED_ID)
+        cv_focus_pos = Vec3(SCIENCE_SELECTED.pos)
+    elif EVENT.source_point is not None:
+        cv_focus_pos = Vec3(EVENT.source_point)
+    else:
+        ->END
+    # KEEP THE HEIGHT. The cam spawns above the plane so the 2D view reads like a plan;
+    # copying the target position wholesale drops it to the target own altitude on the first
+    # click and it never comes back up. The GM and the OU Admiral both do that and both are
+    # worse for it.
+    cv_focus_pos.y = SCIENCE_ORIGIN.pos.y
+    SCIENCE_ORIGIN.pos = cv_focus_pos
 
 # Scan data is stored per the ORIGIN SIDE, so one pass marks a whole side objects known and
 # comms/science enable on the first click rather than the second.

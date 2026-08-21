@@ -309,9 +309,32 @@ of that constraint, so the screen keeps its own cam and the view is centered per
 ship), and **parking** a screen that is idle or released instead of leaving it riding whatever
 it last filmed.
 
-No tractors. `AddTractorConnection` would drag a camera behind a ship, but nothing would look
-through it, and the mock stores the connection without applying the pull - so it would be both
-decorative and unverifiable.
+### Chase is a tick-driven move, not a tractor
+
+**There is nothing to attach.** The intuitive way to chase is to tractor the camera to the
+target and let the engine drag it - but the dolly and the target must be the SAME object or the
+frame is black, so the lens already rides the subject. A tractored camera object would be
+dragged along with nothing looking through it, and the mock stores the connection without
+applying the pull, so it would be decorative *and* unverifiable. Following IS re-aiming; the
+engine has no interpolation to do it for us.
+
+**What actually made it flicker was the RATE.** Chase was re-issued from the player's own 0.5s
+loop with a lens recomputed there, while dolly and orbit went through `camera_dolly` /
+`camera_orbit` - library movers that run on `TickDispatcher.do_interval(_tick, 0)`, every engine
+tick. `camera.py` says it outright: *"the driver IS the animation, so a coarser interval is
+visible as a stutter rather than a saving."* Those two modes never flickered; chase was the one
+mode doing it by hand.
+
+So chase is `camera_chase` now (added to `sbs_utils/procedural/gui/camera.py` beside the other
+movers), which rebuilds the offset from the subject's live `forward_vector()` every tick. It is
+the one move whose lens is a function of HEADING rather than of time, which works only because
+`_drive` calls `lens_at` per tick instead of sampling a path up front. Legs are re-issued on
+promise-done like every other mode - a chase has no shape to complete, so the leg exists only so
+a dead subject or a stolen camera recovers.
+
+A subject with no usable heading (a rock, an engine object that will not answer) falls back to a
+fixed rear offset rather than raising: a chase that is merely not behind the ship still shows
+the ship.
 
 **`director_cam_ensure(client_id)` is called at the top of EVERY tab, and that is not
 optional.** Staging a shot calls `shot_apply` -> `camera_track`, which does
@@ -355,8 +378,12 @@ A console's declared mode is its selection, so the main page carries a **count**
 Program or Preview`. "Send appears to do nothing" is the commonest confusion on this console and
 the reason is invisible otherwise.
 
-**Live refresh.** `cv_watch_task` polls a cheap fingerprint and repaints when a console declares
-a mode, disconnects or is renamed; the rundown selection and the scroll position survive. The
+**Live refresh does two different things.** `cv_watch_task` polls at 0.25s and splits them:
+a SHAPE change (a console declared a mode, disconnected, was renamed) repaints, because the list
+has different rows in it; the ON-AIR item moving only recolours, through
+`director_tree_recolor()` -> `gui_update` per changed row. Folding the on-air ident into the
+repaint fingerprint - which is what it did first - made every advance of the feed a full rebuild.
+The rundown selection and the scroll position survive a repaint; The
 fingerprint deliberately **ignores what each screen is showing**, because the player rewrites
 `CONSOLE_TYPE` every time it changes a screen item - watching that would repaint the operator
 page every dwell, moving the selection under their hands.
@@ -388,6 +415,31 @@ the cascaded styling straight onto the end, so `gui_input("desc: name")` goes on
 `desc: namefont:gui-2` and the widget draws that as its prompt. Same for `gui_drop_down` and
 `gui_checkbox`. `gui_input`s own docstring example has the terminator; fourteen calls in this
 addon did not.
+
+**`await gui()` must follow a BUILD - and there is now a test for it.** It swaps the pending layout in
+(`StoryPage.set_button_layout` -> `swap_layout`), and the previous swap left `pending_layouts`
+as a fresh EMPTY section - so a label that builds nothing and then awaits hands the client a
+blank page with no way back. A wrong pin did exactly that: the check sat in `director_entry_start`,
+updated a widget from the previous build and awaited, and the screen went black. The fix is to
+jump back to the label that BUILDS and let it repaint, carrying the message in a variable, which
+also clears the pin box after a bad attempt.
+
+(The one legitimate build-free await is `cv_show` for a console item: `gui_console()` sets
+`pending_console`/`pending_widgets`, so the engine's own console widgets are the page.)
+
+It happened TWICE - the wrong pin, and then `cv_paint_wait`, the label added to break a repaint
+loop one message after the rule was written down here. So `test_director_mast.py` now scans every
+`.mast` in the addon for it. Prose mentioning `await gui()` is not a violation; the scan drops
+comment lines whole, because an earlier ad-hoc version reported the README's own explanation and
+that is how a guard starts getting ignored.
+
+**The rule behind the rule: do not repaint to reflect a change.** Every symptom this feature had
+- the black frame, a repaint loop, the operator's collapse being thrown away, the selection
+moving under their hand - came from rebuilding the page to show something new. The editor tab
+never had any of them, because it sets `.value` on a held widget and never repaints. The main
+page did, because its rows live inside a listbox `item_template` where there is no handle to
+hold - and *that* is what `gui_update(tag, ...)` is for. Rebuild only when the layout's SHAPE
+changes: a mode switch, a rundown added or deleted, Refresh.
 
 **A listbox answers in two different SHAPES.** `get_selected_index()` returns a LIST of indexes
 when the listbox was built `multi=True` and a bare INT (or `None`) when it is single-select;
@@ -558,6 +610,9 @@ assigned to the dolly - are all engine-observed. Check:
 10. `<<class>>` on a terrain object falls back rather than leaving the line blank.
 11. The entry screen reads `PROG01` for Program and re-reads `PRE01` the moment the radio
     moves to Preview, and the holding page it lands on carries the same name.
+12. With `DIRECTOR.pin` set, press Start with the **wrong** pin: the entry screen comes back
+    saying `wrong pin` with the pin box cleared - **not** a black screen. Then the right pin
+    goes through, and the message is gone on the next visit.
 12. Visit the editor, stage a shot, return to the main page - clicking the 2D view still
     selects. *(the re-seat bug)*
 

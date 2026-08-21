@@ -26,6 +26,9 @@
     jump cv_ui
 
 === director_entry
+    # Carried over from a rejected Start. `default`, so a first visit has none and a repaint
+    # coming back from director_entry_start keeps the one it just set.
+    default cv_entry_error = ""
     # A camera first, so this client is never sitting on somebody's bridge while it decides.
     director_cam_ensure(client_id)
     cv_entry_mode = director_mode_label(director_mode_of(client_id))
@@ -69,7 +72,10 @@
         jump director_entry_start
 
     gui_row("row-height: 1.6em; font: gui-2;")
-    cv_entry_status_w = gui_text("$text:`  `;font:gui-2;color:#f88;")
+    gui_text("$text:" + gui_text_escape(cv_entry_error) + ";font:gui-2;color:#f88;")
+    # Consumed: the message belongs to the attempt that caused it, so a later repaint of this
+    # screen comes up clean rather than still accusing you of the last wrong pin.
+    cv_entry_error = ""
 
     await gui():
         + "cancel":
@@ -79,8 +85,15 @@
 # has to happen before anything is stored - a wrong pin should change nothing.
 === director_entry_start
     if DIRECTOR.get("pin") and pin != DIRECTOR.get("pin"):
-        cv_entry_status_w.update("text:`wrong pin`;font:gui-2;color:#f88;")
-        await gui()
+        # JUMP BACK AND REBUILD - never `await gui()` here.
+        #
+        # `await gui()` swaps the PENDING layout in (StoryPage.set_button_layout ->
+        # swap_layout), and the previous swap left pending as a fresh EMPTY section. So a label
+        # that builds nothing and then awaits hands the client a blank page: a wrong pin went
+        # to a black screen with no way back. Repainting the whole screen also clears the pin
+        # box, which is what you want after a bad attempt.
+        cv_entry_error = "wrong pin"
+        jump director_entry
     # NAME IT FROM THE MODE, and store the mode FIRST so a later re-entry derives the same
     # name from the same answer. director_cam_default_name ignores whatever CREW_NAME already
     # holds - common_console_select writes a person's name into that key, and a program screen
