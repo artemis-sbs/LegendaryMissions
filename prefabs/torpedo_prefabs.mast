@@ -19,6 +19,7 @@
 "            * mine - the torpedo will not move after it has been placed and will detonate when a ship gets close.
 "
 "        player_ship_roles (str, optional): A comma-separated string of roles that should get this torpedo. The `__player__` role is always necessary.
+"        fill_on_spawn (bool, optional): Whether a ship that gains this type also gets its tubes FILLED to `default_max_count`. Default is True (the stock behavior). Set False for a fabricate-only type - the ship gets the CAPACITY (`{key}_MAX`) but 0 loaded rounds, so the only way to a round is to build one. The Beacon uses this.
 "        energy_conversion_value (int, optional): The amount of energy to provide to the ship by disassembling the torpedo. Default is 100.
 "        build_times (dict, optional): A dictionary of (str, int) representing the station type and the rate of production.
 "        sort_order (int, optional): Where this type sits in every ordinance list - the Build Weapons menu, the station hail readout, the order tubes are made available. Lower comes first. The stock types follow the engine ship-data widget (Homing 0, Nuke 1, EMP 2, Mine 3, PShock 4, Tag 5). Default is 100, so a mod-added type lands after the stock ones.
@@ -38,6 +39,7 @@ explosion_color: fire
 behavior: homing
 energy_conversion_value: 100
 default_max_count: 10
+fill_on_spawn: true
 player_ship_roles: __player__
 build_times:
     industry: 1
@@ -62,6 +64,7 @@ build_times:
     default behavior = "homing"
     default energy_conversion_value = 100
     default default_max_count = 10
+    default fill_on_spawn = True
     default player_ship_roles = "__player__"
     default sort_order = 100
     default build_times = {"default": 3, "industry": 1}
@@ -91,7 +94,8 @@ build_times:
             count,_max = torpedo_get_count_for_ship(ship, key)
             if _max == 0: # Only add if not already defined in shipData
                 _max = default_max_count
-            torpedo_make_available(ship, key, _max)
+            # fill_on_spawn False = give the CAPACITY but no loaded rounds (fabricate-only).
+            torpedo_make_available(ship, key, _max, fill_on_spawn)
 
     yield result id
 
@@ -161,6 +165,9 @@ build_times:
     for torp_sort, key, tr in sorted(torp_defs):
         player_ship_roles = get_inventory_value(tr, "player_ship_roles")
         count = get_inventory_value(tr, "default_max_count")
+        # A fabricate-only type (fill_on_spawn False, e.g. the Beacon) gets its CAPACITY
+        # here but no loaded rounds - the only way to a round is to build one.
+        fill_on_spawn = get_inventory_value(tr, "fill_on_spawn", True)
         if player_ship_roles is not None:
             roles = player_ship_roles.split(",")
             for r in roles:
@@ -168,7 +175,7 @@ build_times:
                     counts = torpedo_get_count_for_ship(ship, key)
                     if counts[1] == 0: # Only add if the torp isn't added already
                         # print(f"Making {key} available: {count}")
-                        torpedo_make_available(ship, key, count)
+                        torpedo_make_available(ship, key, count, fill_on_spawn)
     ->END
 #endregion
 
@@ -335,7 +342,9 @@ build_times:
 " the per-instance PROGRAM carried via the deliver queue and stamped on the object at
 " launch. The native round is harmless (damage 0, tiny/brief); the real broadcasting beacon
 " object is spawned aft on //launch/missile (see the fabrication addon). Fabricate-only: NO
-" build_times, so stations never produce it.
+" build_times, so stations never produce it, and fill_on_spawn false, so a ship carries the
+" capacity but spawns with 0 loaded rounds. Capacity is ONE - the tube holds a single beacon,
+" so the count IS the program and there is never a queue to get out of order.
 metadata: ```
 key: Beacon
 gui_name: Beacon
@@ -350,7 +359,8 @@ explosion_size: 1
 explosion_color: #0cf
 behavior: mine
 energy_conversion_value: 100
-default_max_count: 8
+default_max_count: 1
+fill_on_spawn: false
 player_ship_roles: tsn
 ```
     jump prefab_torpedo_type

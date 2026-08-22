@@ -191,13 +191,17 @@ default CONSOLE_SELECT = ""
 
     # RIGHT (actions): beacon -> Deliver + Eject; item/material -> Eject
     gui_section(style="area: 47, 40, 95, 68;")
+    # Both act on the cargo INDEX, not on the beacon's (kind, monster, mode): two Sensor
+    # Beacons differing only in beacon_range are indistinguishable to such a match, and the
+    # workflow would deliver whichever came first. The list is rebuilt on item_changed, so
+    # the index a click carries is the one the row was painted with.
     if car_sel is not None and car_sel["ckind"] == "beacon":
-        car_dv = gui_button("$text:Deliver to Weapons;justify:center;", data={"bk": car_sel["kind"], "bm": car_sel["monster"], "bd": car_sel["mode"]})
+        car_dv = gui_button("$text:Deliver to Weapons;justify:center;", data={"bi": car_sel["cidx"]})
         on gui_message(car_dv):
-            signal_emit("beacon_deliver", {"ship_id": ship_id, "kind": bk, "monster": bm, "mode": bd})
-        car_ej = gui_button("$text:Eject;justify:center;", data={"ek": car_sel["kind"], "em": car_sel["monster"], "ed": car_sel["mode"]})
+            signal_emit("beacon_deliver", {"ship_id": ship_id, "bidx": bi})
+        car_ej = gui_button("$text:Eject;justify:center;", data={"bi": car_sel["cidx"]})
         on gui_message(car_ej):
-            signal_emit("beacon_eject", {"ship_id": ship_id, "kind": ek, "monster": em, "mode": ed})
+            signal_emit("beacon_eject", {"ship_id": ship_id, "bidx": bi})
     elif car_sel is not None:
         car_ejg = gui_button("$text:Eject;justify:center;", data={"gk": car_sel["key"]})
         on gui_message(car_ejg):

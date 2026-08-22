@@ -1084,7 +1084,9 @@ Defaults:
 
 
 # Recover Lost Probes: flying a ship over an adrift probe credits the job. The fabrication addon's
-# own beacon-recover route also fires (adding a beacon round back), so this only emits the signal.
+# own beacon-recover route also fires on the same collision (scrapping the probe into materials --
+# a probe carries no beacon_recipe stamp, so it pays out by its KIND), so this only emits the
+# signal. It does NOT put a beacon round in the tube; only Engineering's deliver does that.
 //collision/interactive if has_role(COLLISION_ORIGIN_ID, "lost_probe") and has_any_role(COLLISION_SELECTED_ID, "__player__,cockpit")
     signal_emit("quest_signal", {"SIGNAL_NAME": "probe_recovered"})
 

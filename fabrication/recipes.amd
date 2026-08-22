@@ -29,7 +29,7 @@ Output: Beacon
 Inputs: salvage x8
 Time: 20
 Build at: engineering
-Program: kind=sensor, range=medium
+Program: kind=sensor, beacon_range=medium
 ---
 A passive relay that brightens sensor returns around its position - a future kind; drops and
 scans like any beacon. The standard (medium-range) build. Replaces the 2.8 Probe.
@@ -40,10 +40,12 @@ Output: Beacon
 Inputs: salvage x16
 Time: 30
 Build at: engineering
-Program: kind=sensor, range=long
+Program: kind=sensor, beacon_range=long
 ---
 A wider-reaching sensor relay: greater range costs more materials (2x salvage) and build
-time. The beacon's program carries range=long for the sensor sweep to read.
+time. The beacon's program carries beacon_range=long for the sensor sweep to read. (The key
+is beacon_range, not range: a recipe key can end up bound as a MAST variable, and `range` is
+one of MAST's own globals.)
 
 ## [Coolant Cell](recipe_coolant_cell)
 ---

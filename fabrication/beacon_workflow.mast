@@ -8,11 +8,17 @@
 # //shared/signal intents; the server-side state changes live here so they run once.
 #
 # Per-ship state (inventory unless noted):
-#   beacon_built           : list of {kind, monster, mode} built-but-undelivered beacons
+#   beacon_built           : list of program dicts, the built-but-undelivered beacons
 #   Beacon_NUM  (DATA_SET) : the loadable tube count -- ONLY delivery raises it
-#   beacon_program_queue   : FIFO of {kind, monster, mode}, one per delivered-but-unfired round
-# Recipes are data (recipes.py + beacon_recipes.amd): a recipe gives the input cost, build
-# time, and the beacon KIND; the monster + attract/repel come from the Weapons request.
+#   beacon_program_queue   : one program per delivered-but-unfired round
+# The stock Beacon tube holds ONE round (default_max_count: 1 on prefab_beacon_torpedo), so
+# the count IS the program. Delivery is the queue's only writer and launch its only reader,
+# and delivery refuses when the tube is full, so len(queue) == Beacon_NUM by construction --
+# no cap to re-check anywhere else. Recovery deliberately pays in MATERIALS rather than a
+# round (see beacon.mast), which is what keeps that true.
+# Recipes are data (recipes.py + recipes.amd): a recipe gives the input cost, build time, and
+# its own Program fence (kind, beacon_range); the monster + attract/repel come from the
+# Weapons request via the Fabricate tab's property grid.
 # ==========================================================================
 
 # --- build: Engineering fabricates a beacon via its data-driven recipe ---
@@ -25,17 +31,26 @@
     bw_time = bw_recipe["time"]
     bw_kind = bw_recipe["program"].get("kind", "bio")
     set_timer(ship_id, "beacon_fab", seconds=bw_time)
-    task_schedule(beacon_build_done, {"ship_id": ship_id, "kind": bw_kind, "prog": program, "btime": bw_time})
+    task_schedule(beacon_build_done, {"ship_id": ship_id, "kind": bw_kind, "prog": program, "rprog": bw_recipe["program"], "rkey": recipe, "btime": bw_time})
     ->END
 
 == beacon_build_done
     await delay_sim(btime)
     ->END if to_object(ship_id) is None
-    # a built beacon = its kind + the program properties (monster/mode/... from the grid),
-    # flattened so deliver/effect read them as before.
-    bw_entry = {"kind": kind}
+    # A built beacon = the RECIPE's own Program fence (kind, beacon_range, ...) with the
+    # player's build-time choices from the property grid overlaid on top, flattened so
+    # deliver/effect read them directly. The recipe KEY rides along so a recovered beacon
+    # can be scrapped back into exactly what it cost.
+    # Seeding from rprog is what carries beacon_range: the grid only ever yields the vars a
+    # recipe declares in Properties, and the sensor recipes declare none -- so before this
+    # a Long Range build produced a plain {"kind": "sensor"} and 16 salvage bought nothing.
+    bw_entry = {}
+    for bw_rk in rprog:
+        bw_entry[bw_rk] = rprog[bw_rk]
     for bw_pk in prog:
         bw_entry[bw_pk] = prog[bw_pk]
+    bw_entry["kind"] = kind
+    bw_entry["recipe"] = rkey
     bw_built = get_inventory_value(ship_id, "beacon_built", [])
     bw_built.append(bw_entry)
     set_inventory_value(ship_id, "beacon_built", bw_built)
@@ -46,47 +61,47 @@
     ->END
 
 # --- deliver: hand ONE built beacon to Weapons -> loadable round + queued program ---
+# Refuse a full tube BEFORE touching cargo. This used to drop through: the beacon left cargo
+# and its program was queued whatever the count did, so a second Deliver click destroyed a
+# built beacon and left the queue one deeper than the tube -- after which every round fired
+# carried the previous round's program and the queue never drained. At a capacity of ONE that
+# was the second click, not the ninth.
 //shared/signal/beacon_deliver
+    bw_max = get_data_set_value(ship_id, "Beacon_MAX", default=0) or 0
+    if bw_max < 1:
+        overlay_toast("No beacon tube on this ship", to=ship_id)
+        ->END
+    bw_num = get_data_set_value(ship_id, "Beacon_NUM", default=0) or 0
+    if bw_num >= bw_max:
+        overlay_toast("Beacon tube full - fire it first", to=ship_id)
+        ->END
+    # Act on the cargo INDEX the Cargo tab selected, not on a (kind, monster, mode) match:
+    # two Sensor Beacons differing only in beacon_range are identical to such a match.
     bw_built = get_inventory_value(ship_id, "beacon_built", [])
-    bw_keep = []
-    bw_prog = None
-    for bw_b in bw_built:
-        if bw_prog is None and bw_b["kind"] == kind and bw_b.get("monster") == monster and bw_b.get("mode") == mode:
-            bw_prog = bw_b
-        else:
-            bw_keep.append(bw_b)
-    ->END if bw_prog is None
-    set_inventory_value(ship_id, "beacon_built", bw_keep)
-    # raise the ship's loadable tube count (DATA_SET), capped at Beacon_MAX
-    bw_num = get_data_set_value(ship_id, "Beacon_NUM")
-    if bw_num is None:
-        bw_num = 0
-    bw_max = get_data_set_value(ship_id, "Beacon_MAX")
-    if bw_max is None:
-        bw_max = 99
-    if bw_num < bw_max:
-        set_data_set_value(ship_id, "Beacon_NUM", bw_num + 1)
-    # queue the program so the fired round carries this behaviour (FIFO, matches fire order)
+    ->END if bidx is None or bidx < 0 or bidx >= len(bw_built)
+    bw_prog = bw_built[bidx]
+    set_inventory_value(ship_id, "beacon_built", bw_built[:bidx] + bw_built[bidx+1:])
+    # count, queue and cargo move together -- that is the whole invariant
+    set_data_set_value(ship_id, "Beacon_NUM", bw_num + 1)
     bw_q = get_inventory_value(ship_id, "beacon_program_queue", [])
     bw_q.append(bw_prog)
     set_inventory_value(ship_id, "beacon_program_queue", bw_q)
-    overlay_toast(f"Beacon delivered to tube: {mode} {monster}", to=ship_id)
+    bw_dmon = bw_prog.get("monster", bw_prog.get("kind", "beacon"))
+    bw_dmode = bw_prog.get("mode", "")
+    overlay_toast(f"Beacon delivered to tube: {bw_dmode} {bw_dmon}", to=ship_id)
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END
 
 # --- eject: jettison a built beacon into space (inert, but recoverable by fly-over) ---
+# By cargo index, for the same reason deliver is.
 //shared/signal/beacon_eject
     bw_built = get_inventory_value(ship_id, "beacon_built", [])
-    bw_keep = []
-    bw_found = None
-    for bw_b in bw_built:
-        if bw_found is None and bw_b["kind"] == kind and bw_b.get("monster") == monster and bw_b.get("mode") == mode:
-            bw_found = bw_b
-        else:
-            bw_keep.append(bw_b)
-    ->END if bw_found is None
-    set_inventory_value(ship_id, "beacon_built", bw_keep)
-    task_schedule(beacon_spawn_aft, {"sp_ship": ship_id, "sp_kind": kind, "sp_monster": monster, "sp_mode": mode, "sp_live": False})
+    ->END if bidx is None or bidx < 0 or bidx >= len(bw_built)
+    bw_found = bw_built[bidx]
+    set_inventory_value(ship_id, "beacon_built", bw_built[:bidx] + bw_built[bidx+1:])
+    # The whole program goes with it, recipe key included, so flying back over it scraps
+    # out what it cost rather than a guess.
+    task_schedule(beacon_spawn_aft, {"sp_ship": ship_id, "sp_prog": bw_found, "sp_live": False})
     overlay_toast("Cargo ejected", to=ship_id)
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END

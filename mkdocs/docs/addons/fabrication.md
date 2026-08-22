@@ -37,8 +37,13 @@ Loading it puts the **Fabricate** and **Cargo** tabs on the Engineering console 
 ## The build → deliver → fire loop
 
 Beacons are **fabricate-only**: a player ship carries beacon *capacity* (`Beacon_MAX`)
-but spawns with **0 loaded rounds** — a `//spawn` route zeroes `Beacon_NUM` so the
-prefab registrar can't top it off. The only way to a loadable round is to build one.
+but spawns with **0 loaded rounds**. The Beacon prefab declares `fill_on_spawn: false`,
+so the torpedo registrar gives the ship the tube without stocking it. The only way to a
+loadable round is to build one.
+
+The tube holds **one** beacon (`default_max_count: 1`). That is deliberate: with a single
+slot the count *is* the program, so what Weapons has loaded is never in doubt — the stock
+tube widget shows a bare number and nothing anywhere displays which program is in it.
 
 By design the loop is **slow and comms-heavy — the coordination is two humans talking**:
 
@@ -50,8 +55,9 @@ By design the loop is **slow and comms-heavy — the coordination is two humans 
    **build timer**; the finished beacon lands in cargo (`beacon_built`), built but
    **not yet loaded**.
 3. **Engineering delivers** one from the **Cargo** tab — **Deliver to Weapons**. Only
-   delivery raises the ship's loadable tube count (`Beacon_NUM`, capped at
-   `Beacon_MAX`) and queues the beacon's **program** (FIFO, matching fire order).
+   delivery raises the ship's loadable tube count (`Beacon_NUM`) and queues the beacon's
+   **program**. Delivering into a **full** tube is refused and the beacon stays in cargo,
+   so nothing is destroyed by an extra click; fire the loaded one first.
 4. **Weapons fires** the Beacon through the stock tube UI. The fired round is harmless;
    on `//launch/missile` the addon drops a **real broadcasting beacon ~635u aft**,
    stamped with the next queued program.
@@ -70,12 +76,18 @@ fades:
   matching [space monsters](biomech.md) across a wide radius (default 50 000u), steering
   them toward the beacon or away from it until it expires (~120s).
 - **Sensor Beacon** — a passive **sensor relay** (the 2.8 Probe). It drops and scans
-  like any beacon; its program carries a `range` (`medium` / `long`) for the sensor
-  sweep to read.
-- **Science** can scan any beacon to read its program (kind, target, attract/repel).
-- **Recover** a beacon by **flying over it** — it adds a loadable round back
-  (`Beacon_NUM` +1) and re-queues its program, so the recovered round keeps its
-  behaviour when relaunched.
+  like any beacon; its program carries a `beacon_range` (`medium` / `long`) for the
+  sensor sweep to read. (The key is `beacon_range`, never `range`: a program key can end
+  up bound as a MAST variable, and `range` is one of MAST's own globals.)
+- **Science** can scan any beacon to read its program. The readout is per **kind** — a
+  Sensor Beacon reports as a relay and names its range; a Bio Beacon names its target and
+  whether it attracts or repels.
+- **Recover** a beacon by **flying over it** — it is **scrapped back into its recipe's
+  Inputs**, credited to the ship's materials. Recovery does **not** put a round in the
+  tube: only Engineering loads the tube, so a pickup always does something useful whatever
+  the tube holds, and you still have to re-fabricate. A beacon with no recipe stamp — an
+  adrift probe, or an a2x-imported store — pays out by its kind, so salvaging a derelict
+  is never a wasted trip.
 
 ---
 

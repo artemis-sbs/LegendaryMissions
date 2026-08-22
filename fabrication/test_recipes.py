@@ -29,8 +29,8 @@ import recipes as R
 
 class ParseProgramTests(unittest.TestCase):
     def test_kv_pairs(self):
-        self.assertEqual(R._parse_program("kind=sensor, range=medium"),
-                         {"kind": "sensor", "range": "medium"})
+        self.assertEqual(R._parse_program("kind=sensor, beacon_range=medium"),
+                         {"kind": "sensor", "beacon_range": "medium"})
 
     def test_bio(self):
         self.assertEqual(R._parse_program("kind=bio"), {"kind": "bio"})
@@ -81,8 +81,12 @@ class LoadRecipesAmdTests(unittest.TestCase):
     def test_program_survives_the_read(self):
         self.assertEqual(R.fabrication_get_recipe("recipe_beacon_bio")["program"],
                          {"kind": "bio"})
+        # `beacon_range`, never `range`: a program key can end up bound as a MAST
+        # variable, and `range` is one of MAST's own globals.
         self.assertEqual(R.fabrication_get_recipe("recipe_beacon_sensor")["program"],
-                         {"kind": "sensor", "range": "medium"})
+                         {"kind": "sensor", "beacon_range": "medium"})
+        self.assertEqual(R.fabrication_get_recipe("recipe_beacon_sensor_long")["program"],
+                         {"kind": "sensor", "beacon_range": "long"})
 
     def test_cost_text_carries_no_braces(self):
         # A MAST `x = f()` re-formats a string result as an f-string, so a `{` in this
@@ -129,6 +133,21 @@ class CargoListNamingTests(unittest.TestCase):
         self.assertEqual(rows[0]["kind"], "sensor")
         self.assertIsNone(rows[0]["monster"])
         self.assertIsNone(rows[0]["mode"])
+
+    def test_sensor_beacons_named_apart_by_range(self):
+        # Both sensor recipes produce kind "sensor"; only beacon_range tells them apart.
+        # Before the recipe's own Program fence was carried into the built entry, the Long
+        # Range build produced a bare {"kind": "sensor"} -- so 16 salvage bought a beacon
+        # indistinguishable from the 8-salvage one, here and everywhere downstream.
+        rows = self._beacon_rows(self._ship([
+            {"kind": "sensor", "beacon_range": "medium"},
+            {"kind": "sensor", "beacon_range": "long"},
+        ]))
+        self.assertEqual([r["name"] for r in rows],
+                         ["Sensor Beacon", "Sensor Beacon (Long Range)"])
+        # ...and the two rows carry distinct cargo indices, which is what Deliver/Eject
+        # act on now: a (kind, monster, mode) match cannot separate these two at all.
+        self.assertEqual([r["cidx"] for r in rows], [0, 1])
 
     def test_bio_beacon_named_with_program(self):
         rows = self._beacon_rows(self._ship([{"kind": "bio", "monster": "shark", "mode": "attract"}]))

@@ -8,8 +8,16 @@
 # lives for a while: attracting or repelling matching monsters over a wide radius, scannable
 # by Science, expiring when its power fades, and recoverable by flying over it.
 #
-# Program shape (a dict): {"kind": "bio", "monster": <role or "any">, "mode": "attract"|"repel"}.
-# The delivered programs sit FIFO on the ship inventory key "beacon_program_queue".
+# Program shape (a dict): {"kind": "bio", "monster": <role or "any">, "mode": "attract"|"repel",
+# "beacon_range": "medium"|"long", "recipe": <recipe key>}. It is the recipe's own Program
+# fence with the player's build-time choices overlaid, plus the recipe key so a recovered
+# beacon can be scrapped back into exactly what it cost. Delivered programs sit on the ship
+# inventory key "beacon_program_queue" -- at the stock capacity of ONE that is a single slot,
+# and delivery is its only writer, so the count and the program can never disagree.
+#
+# NOTE the key is "beacon_range", not "range": a program key can end up bound as a MAST
+# variable (the Fabricate tab binds a recipe's Properties var= names through set_variable),
+# and `range` is one of MAST's own globals - shadowing it kills range() for the whole scope.
 # ==========================================================================
 
 # --- deploy: a fired Beacon drops a broadcasting beacon ~635u aft of the ship ---
@@ -17,12 +25,16 @@
     ->END if (LAUNCH_TYPE or "").lower() != "beacon"
     beacon_ship = LAUNCH_ORIGIN_ID
     ->END if to_object(beacon_ship) is None
-    # pop the next delivered program (FIFO); fall back to a default if none was queued
+    # pop the delivered program; fall back to a default if none was queued
     beacon_q = get_inventory_value(beacon_ship, "beacon_program_queue", [])
     if len(beacon_q) > 0:
         beacon_prog = beacon_q[0]
         set_inventory_value(beacon_ship, "beacon_program_queue", beacon_q[1:])
     else:
+        # Only reachable for a ship whose Beacon_NUM did NOT come from a delivery - an
+        # a2x-imported 2.8 store. Delivery is the queue's only writer and it moves the
+        # count with it, so say so rather than firing a mystery round in silence.
+        log(f"fired a Beacon with an empty program queue on {beacon_ship} - using the default bio program", "beacon", "warning")
         beacon_prog = {"kind": "bio", "monster": "any", "mode": "attract"}
     # A Sensor Beacon program carries no monster/mode (it does not herd wildlife), so read
     # every field with a default -- direct indexing would KeyError on a sensor round.
@@ -33,12 +45,14 @@
         overlay_toast("Sensor Beacon deployed", to=beacon_ship)
     else:
         overlay_toast(f"Beacon deployed: {beacon_mode} / {beacon_mon}", to=beacon_ship)
-    task_schedule(beacon_spawn_aft, {"sp_ship": beacon_ship, "sp_kind": beacon_kind, "sp_monster": beacon_mon, "sp_mode": beacon_mode, "sp_live": True})
+    task_schedule(beacon_spawn_aft, {"sp_ship": beacon_ship, "sp_prog": beacon_prog, "sp_live": True})
     ->END
 
-# Spawn a beacon object ~635u aft of a ship, stamped with a program. Shared by the launch
-# deploy (sp_live=True -> starts broadcasting) and the cargo Eject (sp_live=False -> inert,
-# just a recoverable anomaly). role "beacon" (NOT "item") so only our recover route fires.
+# Spawn a beacon object ~635u aft of a ship, stamped with its whole program (sp_prog).
+# Shared by the launch deploy (sp_live=True -> starts broadcasting) and the cargo Eject
+# (sp_live=False -> inert, just a recoverable anomaly). role "beacon" (NOT "item") so only
+# our recover route fires. The stamp carries beacon_recipe as well as the behaviour fields,
+# because scrapping a recovered beacon pays out that recipe's Inputs.
 == beacon_spawn_aft
     sp_eo = to_engine_object(sp_ship)
     ->END if sp_eo is None
@@ -46,11 +60,16 @@
     sp_x = sp_eo.pos.x + sp_fwd.x * -635
     sp_y = sp_eo.pos.y + sp_fwd.y * -635
     sp_z = sp_eo.pos.z + sp_fwd.z * -635
+    sp_kind = sp_prog.get("kind", "bio")
+    sp_monster = sp_prog.get("monster", "any")
+    sp_mode = sp_prog.get("mode", "")
     sp_obj = terrain_spawn(sp_x, sp_y, sp_z, "Beacon", "#,beacon", "danger_4a", "behav_pickup")
     sp_id = sp_obj.id
     set_inventory_value(sp_id, "beacon_kind", sp_kind)
     set_inventory_value(sp_id, "beacon_monster", sp_monster)
     set_inventory_value(sp_id, "beacon_mode", sp_mode)
+    set_inventory_value(sp_id, "beacon_range", sp_prog.get("beacon_range", "medium"))
+    set_inventory_value(sp_id, "beacon_recipe", sp_prog.get("recipe", ""))
     if sp_live:
         task_schedule(beacon_life, {"bid": sp_id, "monster": sp_monster, "mode": sp_mode, "radius": 50000, "life": 120, "throttle": 0.6, "interval": 2})
     ->END
@@ -85,36 +104,73 @@
         delete_object(bid)
     ->END
 
-# Fabricate-only: players carry Beacon capacity (MAX) but start with 0 loaded rounds; the
-# prefab registrar would otherwise fill tsn ships to max. Zero the loadable count on spawn.
-//spawn if has_role(SPAWNED_ID, "__player__")
-    beacon_max = get_data_set_value(SPAWNED_ID, "Beacon_MAX")
-    if beacon_max is not None:
-        set_data_set_value(SPAWNED_ID, "Beacon_NUM", 0)
+# The route that used to sit here zeroed Beacon_NUM on spawn, to undo the prefab
+# registrar filling tsn ships to max. It could never work: it ran synchronously on
+# //spawn, while the registrar waits `await delay_sim(1)` first, so it always read
+# Beacon_MAX as None and always skipped. The capacity now comes with `fill_on_spawn:
+# false` on prefab_beacon_torpedo instead, which needs no route and cannot race.
 
-# --- recover: fly over a live/dead beacon to add it back as a loadable round ---
-# Beacon_NUM is the ship's loadable tube count -- a DATA_SET value (not inventory).
+# --- recover: fly over a live/dead beacon to SCRAP it back into its ingredients ---
+# Recovery does NOT put a round in the tube. The tube holds ONE beacon and only a delivery
+# from Engineering fills it, so a pickup that credited a round would need a cap, a refusal
+# case, and a program to re-queue -- and could still leave the count and the queue
+# disagreeing. Paying out the recipe's Inputs instead keeps the fabricate-only loop intact
+# (you still have to build it again), and it always does something whatever the tube holds.
 //collision/interactive if has_role(COLLISION_ORIGIN_ID, "beacon") and has_any_role(COLLISION_SELECTED_ID, "__player__,cockpit")
-    beacon_have = get_data_set_value(COLLISION_SELECTED_ID, "Beacon_NUM")
-    if beacon_have is None:
-        beacon_have = 0
-    set_data_set_value(COLLISION_SELECTED_ID, "Beacon_NUM", beacon_have + 1)
-    # also re-queue the recovered program so the relaunched round keeps its behaviour
-    beacon_rk = get_inventory_value(COLLISION_ORIGIN_ID, "beacon_kind", "bio")
-    beacon_rm = get_inventory_value(COLLISION_ORIGIN_ID, "beacon_monster", "any")
-    beacon_rmode = get_inventory_value(COLLISION_ORIGIN_ID, "beacon_mode", "attract")
-    beacon_rq = get_inventory_value(COLLISION_SELECTED_ID, "beacon_program_queue", [])
-    beacon_rq.append({"kind": beacon_rk, "monster": beacon_rm, "mode": beacon_rmode})
-    set_inventory_value(COLLISION_SELECTED_ID, "beacon_program_queue", beacon_rq)
-    overlay_toast("Beacon recovered - reprogram and relaunch", to=COLLISION_SELECTED_ID)
-    delete_object(COLLISION_ORIGIN_ID)
+    task_schedule(beacon_scrap, {"bs_ship": COLLISION_SELECTED_ID, "bs_beacon": COLLISION_ORIGIN_ID})
+    ->END
+
+# Scrap one beacon object into the ship's materials and delete it. A label rather than
+# inline route code so a conformance test can drive it -- a collision cannot be faked.
+== beacon_scrap
+    ->END if to_object(bs_ship) is None
+    ->END if not object_exists(bs_beacon)
+    bs_key = get_inventory_value(bs_beacon, "beacon_recipe", "")
+    # A beacon with no recipe stamp -- an adrift lost probe, or an a2x-imported store --
+    # still pays, chosen by its kind, so salvaging a derelict is never a wasted trip.
+    if bs_key is None or bs_key == "":
+        bs_kind = get_inventory_value(bs_beacon, "beacon_kind", "bio")
+        if bs_kind == "sensor":
+            bs_key = "recipe_beacon_sensor"
+        else:
+            bs_key = "recipe_beacon_bio"
+    bs_rec = fabrication_get_recipe(bs_key)
+    bs_parts = []
+    if bs_rec is not None:
+        # Credit the inputs back the same way fabrication_recipe_consume debits them.
+        for bs_in in bs_rec["inputs"]:
+            bs_n = bs_rec["inputs"][bs_in]
+            bs_have = get_inventory_value(bs_ship, bs_in, 0) or 0
+            set_inventory_value(bs_ship, bs_in, bs_have + bs_n)
+            bs_parts.append(f"+{bs_n} {bs_in}")
+    delete_object(bs_beacon)
+    if len(bs_parts) > 0:
+        bs_text = ", ".join(bs_parts)
+        overlay_toast(f"Beacon scrapped: {bs_text}", to=bs_ship)
+    else:
+        overlay_toast("Beacon scrapped - nothing salvageable", to=bs_ship)
+    signal_emit("item_changed", {"holder_id": bs_ship})
     ->END
 
 # --- science: scan a beacon to read its program ---
+# Branch on the KIND. One sentence for every beacon read a passive sensor relay out as a
+# wildlife lure with a blank adjective ("a  broadcast tuned to 'any'"), because a sensor
+# program carries no mode and no monster.
 //enable/science if has_role(SCIENCE_SELECTED_ID, "beacon")
 //science if has_role(SCIENCE_SELECTED_ID, "beacon")
+    sci_kind = get_inventory_value(SCIENCE_SELECTED_ID, "beacon_kind", "bio")
     sci_mode = get_inventory_value(SCIENCE_SELECTED_ID, "beacon_mode", "unknown")
     sci_mon = get_inventory_value(SCIENCE_SELECTED_ID, "beacon_monster", "unknown")
-    + "scan":
-        <scan>
-            % Beacon - a {sci_mode} broadcast tuned to '{sci_mon}'. It emits an ultrawave carrier across the sector; monsters of that type are drawn to (or driven from) this point until its power fades.
+    sci_range = get_inventory_value(SCIENCE_SELECTED_ID, "beacon_range", "medium")
+    if sci_kind == "sensor":
+        + "scan":
+            <scan>
+                % Sensor Beacon - a passive {sci_range}-range relay. It carries no carrier program of its own; it brightens sensor returns around its position until its power fades.
+    elif sci_kind == "bio":
+        + "scan":
+            <scan>
+                % Bio Beacon - a {sci_mode} broadcast tuned to '{sci_mon}'. It emits an ultrawave carrier across the sector; monsters of that type are drawn to (or driven from) this point until its power fades.
+    else:
+        + "scan":
+            <scan>
+                % Beacon - an unfamiliar {sci_kind} program. It is broadcasting, but nothing in our library matches the carrier.

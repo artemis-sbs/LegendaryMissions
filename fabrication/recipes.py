@@ -68,7 +68,10 @@ def _declare_recipe_vocabulary():
         "inputs": counted(hint="salvage x5, bio_sample x1"),
         "time": integer(hint="build seconds"),
         "build at": enum("engineering", "science", "weapons", "comms", "helm", open=True),
-        "program": kv(hint="kind=bio, range=medium"),
+        # Program keys can end up bound as MAST variables (the Properties grid binds
+        # var= names through set_variable), so keep them off MAST's globals table -
+        # `beacon_range`, never `range`. See the ns-amd-var-shadows-builtin lint rule.
+        "program": kv(hint="kind=bio, beacon_range=medium"),
         # Blocks, not scalars: a {label: 'gui_control_expr'} property grid and a
         # {var: value} seed map. Their INNER names belong to the recipe, so they are
         # declared as text and the linter does not look inside them.
@@ -218,16 +221,18 @@ def recipe_title():
 def cargo_list(ship_id):
     """A general cargo manifest for the Cargo tab: built beacons + held registry items + held
     non-beacon recipe outputs (materials). Each entry: {ckind, name, count, ...}. Beacons carry
-    their program (kind/monster/mode) and a cidx into beacon_built; items/materials carry a key.
+    their program (kind/monster/mode/beacon_range) and a cidx into beacon_built; items/materials
+    carry a key. Deliver and Eject act on the cidx, not on the program values -- two Sensor
+    Beacons differing only in range would otherwise be indistinguishable to a match.
     So the Cargo tab isn't beacon-only -- it lists everything the ship is carrying."""
     out = []
     # built beacons (one row each, so a single one can be delivered / ejected)
     built = get_inventory_value(ship_id, "beacon_built", []) or []
     idx = 0
     for b in built:
-        # A Sensor Beacon carries no monster/mode; name it plainly rather than "? / ?".
+        # A Sensor Beacon carries no monster/mode; name it by its range rather than "? / ?".
         if b.get("kind") == "sensor":
-            b_name = "Sensor Beacon"
+            b_name = "Sensor Beacon (Long Range)" if b.get("beacon_range") == "long" else "Sensor Beacon"
         else:
             b_name = f"Beacon: {b.get('mode', '?')} / {b.get('monster', '?')}"
         out.append({
