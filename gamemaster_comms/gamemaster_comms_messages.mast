@@ -105,13 +105,16 @@
         gm_message = gui_get_variable("gm_message", "")
         # gm_message = gui_clipboard_get()
         for console_client_id in role("console"):
-            crew = get_inventory_value(console_client_id, "CREW_NAME")
+            # console_display_name, not CREW_NAME: a Director output screen calls itself
+            # PROG01 and has no crew name at all, and dropping it here would take it off
+            # the Gamemaster's list. The two used to share one key, so it came for free.
+            crew = console_display_name(console_client_id)
             continue if crew is None # or crew == "" # I think if it's being sent to all then why should this be here?
             comms_broadcast(console_client_id, gm_message)
 
 
     for console_client_id in role("console"):
-        crew = get_inventory_value(console_client_id, "CREW_NAME")
+        crew = console_display_name(console_client_id)
         console = get_inventory_value(console_client_id, "CONSOLE_TYPE", "unassigned")
         ship_id = sbs.get_ship_of_client(console_client_id)
         ship = "unassigned"

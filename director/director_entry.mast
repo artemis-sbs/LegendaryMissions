@@ -168,9 +168,9 @@ pre_game: true
         cv_entry_error = "wrong pin"
         jump director_entry
     # NAME IT FROM THE MODE, and store the mode FIRST so a later re-entry derives the same
-    # name from the same answer. director_cam_default_name ignores whatever CREW_NAME already
-    # holds - common_console_select writes a person's name into that key, and a program screen
-    # called "Doug" says nothing about what it is.
+    # name from the same answer. The name goes to SCREEN_NAME, which is the SCREEN's; the
+    # person at the console keeps CREW_NAME, which is theirs. They used to share one key, so
+    # opening a Director console renamed whoever was sitting there.
     cv_entry_chosen = director_mode_set(client_id, director_mode_for(cv_entry_mode))
     director_cam_name(client_id, director_cam_default_name(client_id, cv_entry_chosen))
     # ARM THE RESUME. Spent by the next entry to this screen, which - for a console set up

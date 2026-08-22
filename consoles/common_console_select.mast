@@ -1,8 +1,26 @@
 import common_console_selection.py
 
+# What THIS HUMAN chose. All four are tier 1 of the crew resolution and the only things
+# written back to a client string - a client string persists per MACHINE, so a resolved
+# roster name written there would follow this PC into every future mission and, being tier 1,
+# could never be dislodged.
 crew_name = ""
+crew_face = ""
+crew_portrait = ""
+crew_pick = ""
 default shared grid_data = grid_get_grid_data()
 default SETTINGS = settings_get_defaults()
+
+# The picker's Edit affordance. Off switches it back to the plain name box this screen has
+# always had. `allow_portrait` stays False: pointing a console UI at an arbitrary file is a
+# different conversation, and the group-photo case is served by a reviewable .amd.
+settings_add_defaults({"CREW_EDIT": {"enable": True, "allow_face": True, "allow_portrait": False}})
+shared CREW_EDIT = settings_get_defaults().get("CREW_EDIT", {"enable": True, "allow_face": True, "allow_portrait": False})
+
+# Set by the avatar_editor addon's top level when it is loaded. SUGGESTS, never requires:
+# a hard dependency on an addon most missions do not load is how LM's hangar took 22
+# missions to zero labels. The Edit button is built only behind this.
+default shared CREW_AVATAR_EDITOR = False
 shared SHIP_PICK_READ_ONLY  = SETTINGS.get("SHIP_PICK_READ_ONLY", False)
 shared CAN_CHANGE_CONSOLE  = SETTINGS.get("CAN_CHANGE_CONSOLE", True)
 
@@ -85,6 +103,13 @@ if CAN_CHANGE_CONSOLE:
     mode = await gui_request_client_string(client_id, "console_mode")
     previous_console = await gui_request_client_string(client_id, "console_previous")
     crew_name = await gui_request_client_string(client_id, "crew_name")
+    # ONE more round trip, not three. Every key costs a request the picker AWAITS before it
+    # can draw, and these awaits carry no timeout, so each is somewhere the screen can stop.
+    # The face, the portrait and the picked person travel packed in a single value.
+    # Two statements, not one: `a, b, c = <something with an await>` is a COMPILE ERROR
+    # ("'await' outside function"), and a compile error takes the whole story to zero labels.
+    crew_self = await gui_request_client_string(client_id, "crew_self")
+    crew_pick, crew_face, crew_portrait = crew_self_unpack(crew_self)
 
     if mode is not None and len(mode) > 0:
         jump operator_admin_console if mode=='admin'
@@ -306,6 +331,61 @@ if CAN_CHANGE_CONSOLE:
     gui_row(style="row-height: 45px;")
 
     crew_input = gui_input("desc:Crew person Name", var="crew_name")
+    # BESIDE the name box, not under it - it edits the person that box names, and a button
+    # on its own row reads as belonging to whatever follows it. Fixed width so the input
+    # keeps the rest of the row rather than the two splitting it evenly.
+    #
+    # Guarded on CREW_AVATAR_EDITOR, which the avatar_editor addon sets at its own top
+    # level - SUGGESTED, never required. A hard dependency on an addon most missions do not
+    # load is how LM's hangar took twenty-two missions to zero labels. A jump to a label
+    # nothing defines compiles clean, so the guard on the button is the whole guard needed.
+    if CREW_EDIT.get("enable", True) and CREW_EDIT.get("allow_face", True) and CREW_AVATAR_EDITOR:
+        on gui_message(gui_button("Edit Face", style="col-width: 7em;")):
+            jump crew_edit_avatar
+
+    #
+    # WHO IS AT THIS CONSOLE
+    #
+    # The name box above is unchanged and still outranks everything: what a person typed
+    # about themselves beats what a mission decided about them.
+    #
+    # CREW_EDIT.enable off puts this screen back to exactly the plain name box it has always
+    # been. It does NOT stop a roster staffing consoles - that is not an edit, it is the
+    # mission's own answer, and a game that wants no crew at all simply declares no roster.
+    default crew_choice = ""
+    crew_people = crew_choices_for(client_select_ship_id, None, client_id)
+    crew_ui = CREW_EDIT.get("enable", True) and len(crew_people) > 0
+
+    if crew_ui:
+        # An OVERRIDE, not the normal path. A cast roster already fills consoles by itself,
+        # so reaching for this list is reaching past the automatic answer - which is why it
+        # offers everyone free rather than only the people who crew the selected station.
+        # That also keeps it honest: this panel updates CONSOLE_SELECT in place without
+        # repainting, so a console-narrowed list would go stale the moment somebody clicked
+        # a different station.
+        gui_row(style="row-height: 45px;")
+        crew_list = ",".join([p.name for p in crew_people])
+        crew_dd = gui_drop_down(f"$text: {crew_choice or 'auto'};list: auto,{crew_list}")
+
+        # ONE text area for the likeness, because a text area already speaks both `face://`
+        # and `image://` - so nothing has to swap widgets when a roster answers with a
+        # photograph instead of a face string. Deliberately NOT inside a gui_region: a child
+        # updated in place inside an absolute region ghosts in the real engine, and this very
+        # file has already paid for that once with the ship name.
+        #
+        # No background on this row. gui_face takes the face string where every other widget
+        # takes a style, so a face cannot carry a draw layer and an opaque raised backdrop
+        # here would simply hide it.
+        gui_row(style="row-height: 96px;")
+        crew_pic = gui_text_area(crew_preview_markdown(crew_face, crew_portrait))
+
+        on gui_message(crew_dd):
+            crew_choice = crew_dd.value
+            crew_pick = crew_pick_for(client_select_ship_id, crew_choice, client_id)
+            crew_name, crew_face, crew_portrait = crew_preview(crew_pick)
+            crew_input.value = crew_name
+            crew_pic.value = crew_preview_markdown(crew_face, crew_portrait)
+
     gui_row(style="row-height: 45px;")
     gui_blank()
     gui_row()
@@ -631,6 +711,10 @@ $t Waiting for the server to start the mission
     ## unlink previous ship
     old_ship_id = sbs.get_ship_of_client(client_id)
     unlink(old_ship_id, "consoles", client_id)
+    # Give up whoever this console was crewing, so the person is free for the next client
+    # in this same frame. Occupancy is self-healing anyway - a seat is believed only while
+    # the client's CONSOLE_TYPE still agrees with it - so this is promptness, not correctness.
+    crew_release(client_id)
 
     sbs.assign_client_to_ship(client_id, _ship_id)
     assign_client_to_alt_ship(client_id, 0)
@@ -669,8 +753,29 @@ $t Waiting for the server to start the mission
     
     sbs.set_client_string(client_id, "console_previous", CONSOLE_SELECT)
 
+    # WHO IS AT THIS CONSOLE.
+    #
+    # crew_assign resolves the whole chain - what this person chose, then a roster bound to
+    # this ship, selected for this game, or declared by a mod for this hull - and publishes
+    # CREW_NAME with exactly the meaning it has always had, so the Director's <<crew_name>>
+    # overlay and the Gamemaster's message list keep reading it unchanged. It also takes the
+    # seat, so a second client opening this same station gets the NEXT person rather than
+    # the same one.
+    #
+    # With no roster declared anywhere this resolves to what was typed, or to "" - which is
+    # precisely what these two lines used to do on their own.
+    # The ship the ENGINE says this client is on, not `_ship_id`: show_console_selected is
+    # also entered by a direct jump (the headless exerciser does exactly that), and a task
+    # variable set by the picker's own walk-through is not defined on that path.
+    crew_ship_id = sbs.get_ship_of_client(client_id)
+    crew_post = crew_assign(client_id, crew_ship_id, CONSOLE_SELECT, own_name=crew_name, own_face=crew_face, own_portrait=crew_portrait, own_pick=crew_pick)
+
+    # ONLY WHAT THIS HUMAN CHOSE goes to a client string. They persist per MACHINE, in
+    # client_string_set.txt, so writing a RESOLVED name here would follow this PC into every
+    # future console of every future mission - and being tier 1 of the resolution, nothing
+    # could ever dislodge it.
     sbs.set_client_string(client_id, "crew_name", crew_name)
-    set_inventory_value(client_id, "CREW_NAME", crew_name)
+    sbs.set_client_string(client_id, "crew_self", crew_self_pack(crew_pick, crew_face, crew_portrait))
 
     #
     #
@@ -787,3 +892,38 @@ $t on ship {client_select_ship}
 //gui/tab/hangar
     CONSOLE_SELECT= "hangar"
     jump console_selected 
+
+
+# ---------------------------------------------------------------------------------------
+# AT THE END OF THE FILE ON PURPOSE.
+#
+# A MAST label FALLS THROUGH into the next one. These two sat between `console_selected`
+# and `show_console_selected`, so the ship-assignment block stopped falling into the
+# console and fell into the avatar editor instead - every console selection, including the
+# reroute when the server presses Start, opened the face builder.
+#
+# Here they follow `//` routes, which do not fall through, so the only way in is the jump
+# from the Edit Face button. `test_console_select_fallthrough.py` pins the pair that broke.
+# ---------------------------------------------------------------------------------------
+===== crew_edit_avatar =====
+    # Hand the GUI task to the avatar editor and ask for it back. The editor is built for
+    # exactly this - `av_return` is its documented "run inline in an existing GUI task and
+    # come back" form - so it repaints over this screen and jumps home on Done.
+    #
+    # Only reachable from a button that is only built when CREW_AVATAR_EDITOR says the addon
+    # is loaded. A jump to a label nothing defines compiles clean and would only fail if it
+    # ever RAN, so the guard on the button is the whole guard needed.
+    av_race = crew_avatar_race(client_select_ship_id)
+    av_title = "YOUR AVATAR"
+    av_return = "crew_edit_done"
+    jump avatar_editor_show
+
+===== crew_edit_done =====
+    # A face you BUILT replaces a picked person, explicitly and in both directions: the
+    # portrait goes because a photograph and a built face are two answers to one question,
+    # and the pick goes because you are now yourself rather than somebody off the roster.
+    crew_face = AVATAR_FACE
+    crew_portrait = ""
+    crew_pick = ""
+    crew_choice = ""
+    jump select_console

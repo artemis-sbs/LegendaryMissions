@@ -62,6 +62,12 @@ _BUILTIN = {
         # console items learned to carry furniture at all.
         ("station", "Station and crew",
          {"name": "<<name>> - <<console>>", "line": "<<crew_name|unmanned>>"}),
+        # The same card with a rank in front, for a game whose crew comes from a ROSTER -
+        # "Artemis - Helm" over "Commander William Riker". A typed name has no rank, so the
+        # fallback collapses this back to plain "Station and crew" rather than leaving a
+        # gap: `<<crew_rank|>>` resolves to nothing and the space before the name is trimmed.
+        ("station_rank", "Station and ranked crew",
+         {"name": "<<name>> - <<console>>", "line": "<<crew_rank|>> <<crew_name|unmanned>>"}),
     ),
     "hero": (
         ("ship_id", "Ship ID", {"title": "<<name>>", "subtitle": "<<class>>"}),
@@ -343,16 +349,21 @@ def _tok_console(item, obj, sid):
     return console.capitalize() if console else ""
 
 
-def _tok_crew_name(item, obj, sid):
-    """Who is sitting at this beat's console on this ship, or "".
+def _crew_value(item, sid, key):
+    """One of the seated crew member's inventory values for this beat's console, or "".
 
     The ship's own consoles are its `consoles` LINK - that is what common_console_select writes
     when a client picks a station, and what the Director's own cam takes with it when it moves.
-    A client carries CONSOLE_TYPE and CREW_NAME as inventory, both set in show_console_selected.
+    A client carries CONSOLE_TYPE and the CREW_* keys as inventory, all set in
+    show_console_selected (via `crew_assign`).
 
     NOT the first client on the ship: a bridge has five, and naming the wrong one on air is
     worse than naming nobody. It matches the beat's console, so a camera beat - which has no
     console - correctly resolves to nothing.
+
+    A seat is identified by its NAME being set, not by the key being asked for: a crew member
+    with no rank must still resolve `<<crew_rank>>` to "" rather than falling through to the
+    next client at that console and borrowing theirs.
     """
     console = str((item or {}).get("console") or "").strip().lower()
     if not console or not sid:
@@ -367,15 +378,31 @@ def _tok_crew_name(item, obj, sid):
         seat = get_inventory_value(client_id, "CONSOLE_TYPE", None)
         if str(seat or "").strip().lower() != console:
             continue
-        name = get_inventory_value(client_id, "CREW_NAME", None)
-        if name:
-            return _plain(name)
+        if not get_inventory_value(client_id, "CREW_NAME", None):
+            continue
+        return _plain(get_inventory_value(client_id, key, None) or "")
     return ""
+
+
+def _tok_crew_name(item, obj, sid):
+    """Who is sitting at this beat's console on this ship, or "". See :func:`_crew_value`."""
+    return _crew_value(item, sid, "CREW_NAME")
+
+
+def _tok_crew_rank(item, obj, sid):
+    """Their rank - "Captain", "Lt. Commander" - or "".
+
+    Only a crew ROSTER supplies one; a name somebody typed at the picker has no rank, so this
+    is empty far more often than `<<crew_name>>` is. Write it with a fallback
+    (`<<crew_rank|crew>>`) or in a field that reads acceptably blank.
+    """
+    return _crew_value(item, sid, "CREW_RANK")
 
 
 _ITEM_TOKENS = {
     "console": _tok_console,
     "crew_name": _tok_crew_name,
+    "crew_rank": _tok_crew_rank,
 }
 
 

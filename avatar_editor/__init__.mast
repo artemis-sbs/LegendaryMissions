@@ -1,1 +1,12 @@
+# PROVIDES the face builder the console picker offers as "Edit Face".
+#
+# A runtime twin of `provides`: the picker declares `default shared CREW_AVATAR_EDITOR =
+# False` and builds the button only behind this, so a mission that does not load this addon
+# simply has no button. Order-safe whichever top level runs first, because the other side is
+# a `default`. Deliberately NOT a compile-time `requires` on the picker - a hard dependency
+# on an addon most missions do not load is how LM's hangar took twenty-two missions to zero
+# labels, the `sbs create` template included.
+provides crew.avatar_editor
+shared CREW_AVATAR_EDITOR = True
+
 import avatar_editor.mast

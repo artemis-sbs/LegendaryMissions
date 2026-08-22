@@ -209,27 +209,47 @@ def director_cam_point_name(object_id):
     return (who + " point") if who else "camera point"
 
 
+# A screen's name and a PERSON's name are two different things that used to share one key.
+#
+# This console is called PROG01 because of what it IS; the player sitting at helm is called
+# Doug because of who they ARE. Storing both in CREW_NAME meant opening a Director console
+# overwrote whoever was there - and because it also wrote the `crew_name` CLIENT STRING, which
+# persists per MACHINE in client_string_set.txt, the overwrite followed that PC into every
+# future console of every future mission. Nothing could dislodge it, because the console
+# picker reads that string back as the player's own answer, which outranks everything.
+#
+# So: SCREEN_NAME is the screen's, CREW_NAME is the person's, and nothing here touches a
+# client string. Read through `director_screen_name_raw` rather than either key directly.
+DIRECTOR_SCREEN_KEY = "SCREEN_NAME"
+
+
+def director_screen_name_raw(client_id):
+    """The bare name this screen is known by, or "".
+
+    Falls back to CREW_NAME so a console named by an OLDER build - which wrote the screen
+    name there - still reads correctly in a mixed-generation run. New writes only ever go to
+    SCREEN_NAME, so the fallback drains on its own.
+    """
+    from sbs_utils.procedural.inventory import get_inventory_value
+    return (get_inventory_value(client_id, DIRECTOR_SCREEN_KEY, None)
+            or get_inventory_value(client_id, "CREW_NAME", None) or "")
+
+
 def director_cam_name(client_id, name=None):
     """Read or set the name this Director console is known by.
 
-    Stored as CREW_NAME on the client, which is the key `director_screen_name` also reads - so
-    a named screen says so on its own holding page and in the operator's summary. The only
-    caller that sets one is the entry screen, and it passes `director_cam_default_name`; a
-    console that never went through it reads as `unnamed`, which is not an error.
+    Stored as SCREEN_NAME on the client. The only caller that sets one is the entry screen,
+    and it passes `director_cam_default_name`; a console that never went through it reads as
+    `unnamed`, which is not an error.
+
+    DELIBERATELY DOES NOT WRITE A CLIENT STRING - see DIRECTOR_SCREEN_KEY above. A screen name
+    is per-run and per-console; per-machine persistence is the wrong lifetime for it.
     """
-    from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+    from sbs_utils.procedural.inventory import set_inventory_value
     if name is not None:
         name = str(name).replace("{", "(").replace("}", ")").replace("`", "'").strip()
-        set_inventory_value(client_id, "CREW_NAME", name)
-        sbs = _sbs()
-        if sbs is not None:
-            try:
-                sbs.set_client_string(client_id, "crew_name", name)
-            except Exception:
-                # Older engines and the mock may not carry the client string; the inventory
-                # value is the one the picker reads, so this is a nice-to-have.
-                pass
-    return get_inventory_value(client_id, "CREW_NAME", None) or ""
+        set_inventory_value(client_id, DIRECTOR_SCREEN_KEY, name)
+    return director_screen_name_raw(client_id)
 
 
 def director_cam_default_name(client_id, mode=None):
@@ -240,12 +260,14 @@ def director_cam_default_name(client_id, mode=None):
     numbering rule (lowest free per prefix, so a screen that leaves frees its number) lives in
     director_modes.py beside the modes themselves.
 
-    IT IGNORES WHATEVER `CREW_NAME` ALREADY HOLDS, and that is the point rather than an
-    oversight. `common_console_select` writes that key from the crew-name flow, so a client
-    that named itself before opening the Director arrives with a person's name in it - and a
-    program screen called "Doug" says nothing about what it is. There is no name field on the
-    entry screen any more, so there is no typed name to protect, and the derivation is the
-    only source.
+    IT IGNORES WHATEVER `SCREEN_NAME` ALREADY HOLDS, and that is the point rather than an
+    oversight: the derivation is the only source, since there is no name field on the entry
+    screen any more.
+
+    It no longer has anything to say about `CREW_NAME`. It used to, because the two shared a
+    key and a client that named itself at the console picker arrived with a person's name in
+    it - a program screen called "Doug" says nothing about what it is. They are separate keys
+    now (see DIRECTOR_SCREEN_KEY), so a person's name is simply not in the way.
 
     Stable under re-entry: `director_screen_suggest_name` skips this client's own name, so a
     console already called PROG01 asking again for a program name gets PROG01 back.

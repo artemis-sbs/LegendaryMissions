@@ -152,7 +152,8 @@ def director_preview_screens():
 def director_screen_name(client_id):
     """What a screen calls itself, plus what it is currently showing."""
     from sbs_utils.procedural.inventory import get_inventory_value
-    name = get_inventory_value(client_id, "CREW_NAME", None) or "unnamed"
+    from director_cam import director_screen_name_raw
+    name = director_screen_name_raw(client_id) or "unnamed"
     showing = get_inventory_value(client_id, "CONSOLE_TYPE", None) or ""
     name = str(name).replace("{", "(").replace("}", ")").replace("`", "'").strip()
     if showing and showing != "director":
@@ -189,12 +190,18 @@ def director_screen_suggest_name(client_id, mode):
     """
     from sbs_utils.procedural.roles import role
     from sbs_utils.procedural.inventory import get_inventory_value
+    from director_cam import DIRECTOR_SCREEN_KEY
     prefix = DIRECTOR_MODE_PREFIX.get(director_mode_for(mode), "DIR")
     taken = set()
     for cid in role("console"):
         if cid == client_id:
             continue
-        name = str(get_inventory_value(cid, "CREW_NAME", "") or "")
+        # SCREEN_NAME ONLY - deliberately not `director_screen_name_raw`, which falls back to
+        # CREW_NAME for a console named by an older build. That fallback is right for
+        # DISPLAY, where a stale name is better than a blank one, and wrong here: reading it
+        # would let a bridge crew member who happens to be called PROG02 reserve a number off
+        # a screen with every right to it, which is the collision the split exists to end.
+        name = str(get_inventory_value(cid, DIRECTOR_SCREEN_KEY, "") or "")
         if name.startswith(prefix):
             tail = name[len(prefix):].strip()
             if tail.isdigit():
@@ -212,10 +219,10 @@ def director_mode_fingerprint():
     CONSOLE_TYPE every time it changes a screen's item, and watching that would repaint the
     operator's page every dwell, under their hands.
     """
-    from sbs_utils.procedural.inventory import get_inventory_value
+    from director_cam import director_screen_name_raw
     parts = []
     for mode in ("program", "preview"):
         for cid in _clients_in_mode(mode):
             parts.append(str(cid) + ":" + mode + ":"
-                         + str(get_inventory_value(cid, "CREW_NAME", "?")))
+                         + str(director_screen_name_raw(cid) or "?"))
     return "|".join(parts)

@@ -318,6 +318,30 @@ class ItemTokenTests(unittest.TestCase):
                                           901, self._con())
         self.assertEqual(got, "Artemis - Helm - Viper")
 
+    def test_a_rank_comes_off_the_same_seat_as_the_name(self):
+        self.inv[(10, "CREW_RANK")] = "Commander"
+        self.inv[(11, "CREW_RANK")] = "Lieutenant"
+        self.assertEqual(ov.director_overlay_resolve("<<crew_rank>> <<crew_name>>",
+                                                     901, self._con()),
+                         "Commander Viper")
+        self.assertEqual(ov.director_overlay_resolve("<<crew_rank>> <<crew_name>>",
+                                                     901, self._con("weapons")),
+                         "Lieutenant Maverick")
+
+    def test_a_ranked_card_collapses_cleanly_when_nobody_has_a_rank(self):
+        # A name somebody TYPED at the picker has no rank - only a roster supplies one - so
+        # the ranked preset has to read as the plain one rather than leaving a gap.
+        got = ov.director_overlay_resolve("<<crew_rank|>> <<crew_name|unmanned>>",
+                                          901, self._con())
+        self.assertEqual(got, "Viper")
+
+    def test_an_empty_seat_gives_neither_name_nor_rank(self):
+        # A console nobody is at must not borrow the next client's rank.
+        self.assertEqual(ov.director_overlay_resolve("<<crew_rank>>", 901,
+                                                     self._con("science")), "")
+        self.assertEqual(ov.director_overlay_resolve("<<crew_name>>", 901,
+                                                     self._con("science")), "")
+
     def test_the_console_is_title_cased_for_display(self):
         self.assertEqual(ov.director_overlay_resolve("<<console>>", 901, self._con("weapons")),
                          "Weapons")

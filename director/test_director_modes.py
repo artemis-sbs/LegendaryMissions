@@ -73,10 +73,10 @@ class DeclarationTests(unittest.TestCase):
         dm.director_modes_reset()
         self.roles = {"console": {10, 11, 12, 13}}
         self.inventory = {
-            (10, "CREW_NAME"): "PROG01",
-            (11, "CREW_NAME"): "PROG02",
-            (12, "CREW_NAME"): "PRE01",
-            (13, "CREW_NAME"): "DIR01",
+            (10, "SCREEN_NAME"): "PROG01",
+            (11, "SCREEN_NAME"): "PROG02",
+            (12, "SCREEN_NAME"): "PRE01",
+            (13, "SCREEN_NAME"): "DIR01",
         }
         self.restore = _install(self.roles, self.inventory)
         dm.director_mode_set(10, "program")
@@ -135,32 +135,40 @@ class NameTests(unittest.TestCase):
     def test_numbering_is_per_prefix(self):
         # PROG01 and PRE01 can both exist - they read as different screens, which is the whole
         # point of naming by mode.
-        self.inventory[(10, "CREW_NAME")] = "PROG01"
+        self.inventory[(10, "SCREEN_NAME")] = "PROG01"
         self.assertEqual(dm.director_screen_suggest_name(99, "program"), "PROG02")
         self.assertEqual(dm.director_screen_suggest_name(99, "preview"), "PRE01")
 
     def test_it_takes_the_lowest_free_number(self):
         # A screen that left frees its number. Counting consoles instead would keep climbing.
-        self.inventory[(10, "CREW_NAME")] = "PROG01"
-        self.inventory[(11, "CREW_NAME")] = "PROG03"
+        self.inventory[(10, "SCREEN_NAME")] = "PROG01"
+        self.inventory[(11, "SCREEN_NAME")] = "PROG03"
         self.assertEqual(dm.director_screen_suggest_name(99, "program"), "PROG02")
 
     def test_a_console_does_not_block_its_own_number(self):
-        self.inventory[(10, "CREW_NAME")] = "PROG01"
+        self.inventory[(10, "SCREEN_NAME")] = "PROG01"
         self.assertEqual(dm.director_screen_suggest_name(10, "program"), "PROG01")
 
     def test_a_persons_name_does_not_take_a_number(self):
-        # The prefix scan reads every console's CREW_NAME, and `common_console_select` writes
-        # crew names into that same key - so a bridge crew member must not be able to reserve
-        # PROG02 by being called something odd.
-        self.inventory[(10, "CREW_NAME")] = "Doug"
-        self.inventory[(11, "CREW_NAME")] = "PROGRAM 1"
+        # A name that is not PROG<n> reserves nothing, however odd it is.
+        self.inventory[(10, "SCREEN_NAME")] = "Doug"
+        self.inventory[(11, "SCREEN_NAME")] = "PROGRAM 1"
+        self.assertEqual(dm.director_screen_suggest_name(99, "program"), "PROG01")
+
+    def test_a_crew_name_is_not_scanned_at_all(self):
+        # The two used to share one key, so a bridge crew member called PROG02 could reserve
+        # a number off a screen that had every right to it. They are separate keys now: the
+        # prefix scan reads SCREEN_NAME and never sees a person.
+        self.inventory[(10, "CREW_NAME")] = "PROG01"
+        self.inventory[(11, "CREW_NAME")] = "PROG02"
+        self.inventory.pop((10, "SCREEN_NAME"), None)
+        self.inventory.pop((11, "SCREEN_NAME"), None)
         self.assertEqual(dm.director_screen_suggest_name(99, "program"), "PROG01")
 
 
 class FingerprintTests(unittest.TestCase):
     def setUp(self):
-        self.inventory = {(10, "CREW_NAME"): "PROG01"}
+        self.inventory = {(10, "SCREEN_NAME"): "PROG01"}
         self.restore = _install({"console": {10, 11}}, self.inventory)
         dm.director_mode_set(10, "program")
 
@@ -174,7 +182,7 @@ class FingerprintTests(unittest.TestCase):
 
     def test_a_rename_moves_it(self):
         before = dm.director_mode_fingerprint()
-        self.inventory[(10, "CREW_NAME")] = "Stream Out"
+        self.inventory[(10, "SCREEN_NAME")] = "Stream Out"
         self.assertNotEqual(before, dm.director_mode_fingerprint())
 
     def test_the_fingerprint_ignores_what_a_screen_is_showing(self):

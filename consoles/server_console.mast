@@ -298,6 +298,19 @@ gui_reroute_clients("client_main")
         on gui_message(music_dd):
             shared MUSIC_SELECT = music_dd.value
 
+        # WHICH CREW staffs consoles nobody named. Guarded on there being any: music's row is
+        # unconditional because a "default" bank always exists, and crew genuinely can be
+        # empty - a mission that declares no roster has to get exactly the panel it got
+        # before. Placed AFTER map_apply_defaults above, so a map's `Defaults: CREW_SELECT`
+        # reads back as the current pick rather than being overwritten by a stale one.
+        crew_choices = crew_get_list()
+        if len(crew_choices) > 0:
+            gui_row("row-height: 30px;")
+            gui_text("$text: Crew;justify:right;", "col-width: 6em;")
+            crew_dd = gui_drop_down(f"$text: {get_shared_variable('CREW_SELECT', SETTINGS.get('CREW_SELECT', ''))}; list: {','.join(['none', 'random'] + [c.display_name for c in crew_choices])}")
+            on gui_message(crew_dd):
+                shared CREW_SELECT = crew_dd.value
+
         gui_row()
         gui_property_list_box(name="Options")
         p = map_get_properties(WORLD_SELECT)

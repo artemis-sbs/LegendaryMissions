@@ -1,0 +1,121 @@
+# [Crew Rosters](lm_crew_rosters)
+
+The stock crews. A mission that loads this addon can pick one from the server console's
+**Crew** dropdown, or pin one with `Defaults: CREW_SELECT` on its `@map`, and every console
+nobody named arrives with somebody at it.
+
+None of these bind to a hull or a ship name, deliberately - they are offered, never imposed.
+A mod that wants its own crew on its own hulls declares `Hull:` and needs none of this.
+
+## [TSN Watch](tsn_watch)
+---
+crew
+Race: terran
+---
+A Terran Stellar Navy bridge watch. The default answer for a TSN hull.
+
+### [Ione Marek](marek)
+---
+Rank: Commander
+Console: mainscreen
+---
+
+### [Sana Okonjo](okonjo)
+---
+Rank: Lieutenant
+Console: helm
+---
+
+### [Bex Ferrero](ferrero)
+---
+Rank: Lieutenant
+Console: weapons
+---
+
+### [Tomas Lindqvist](lindqvist)
+---
+Rank: Lt. Commander
+Console: science
+---
+
+### [Priya Raghunathan](raghunathan)
+---
+Rank: Lt. Commander
+Console: engineering
+---
+
+### [Ada Nwosu](nwosu)
+---
+Rank: Ensign
+Console: comms
+---
+
+### [Kwame Osei](osei)
+---
+Rank: Ensign
+---
+
+### [Mirela Vasquez](vasquez)
+---
+Rank: Ensign
+---
+
+## [Deep Watch](deep_watch)
+---
+crew
+Race: terran
+---
+The quiet late shift - a skeleton watch, long past anything scheduled. Fewer names than
+there are stations, on purpose: consoles nobody covers read as unmanned, which is the point
+of a skeleton watch.
+
+### [Halden Rooke](rooke)
+---
+Rank: Lieutenant
+Console: helm
+---
+
+### [Yusra Al-Amin](alamin)
+---
+Rank: Ensign
+Console: science
+---
+
+### [Dmitri Sarkisian](sarkisian)
+---
+Rank: Ensign
+Console: engineering
+---
+
+## [Free Traders](free_traders)
+---
+crew
+Race: terran
+---
+A civilian hauler's crew - no ranks, because nobody out here has one. For a mission where
+the players are not navy.
+
+### [Corbin Vale](vale)
+---
+Console: helm
+---
+
+### [Nkechi Balogun](balogun)
+---
+Console: science
+---
+
+### [Rasa Petrauskas](petrauskas)
+---
+Console: engineering
+---
+
+### [Joaquin Ferreira](ferreira)
+---
+Console: comms
+---
+
+### [Sunny Tsai](tsai)
+---
+Console: weapons
+---

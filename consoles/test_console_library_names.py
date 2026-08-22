@@ -28,7 +28,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # Library API families a console reaches for. Deliberately a list of PREFIXES rather
 # than "every identifier": a .mast is full of mission-local names, and a check that
 # cannot tell those apart from library ones is a check nobody keeps passing.
-LIBRARY_PREFIXES = ("viewscreen_", "gui_", "overlay_", "camera_", "science_", "comms_")
+LIBRARY_PREFIXES = ("viewscreen_", "gui_", "overlay_", "camera_", "science_", "comms_",
+                    "crew_")
 
 CALL = re.compile(r"\b([a-z_][a-z0-9_]*)\s*\(")
 
@@ -85,7 +86,9 @@ def _resolves_elsewhere(name):
                 "sbs_utils.procedural.query", "sbs_utils.procedural.roles",
                 "sbs_utils.procedural.inventory", "sbs_utils.procedural.links",
                 "sbs_utils.procedural.execution", "sbs_utils.procedural.settings",
-                "sbs_utils.procedural.quest", "sbs_utils.procedural.maps"):
+                "sbs_utils.procedural.quest", "sbs_utils.procedural.maps",
+                "sbs_utils.procedural.crew", "sbs_utils.procedural.amd_crew",
+                "sbs_utils.procedural.amd_doc", "sbs_utils.procedural.media"):
         try:
             if hasattr(importlib.import_module(mod), name):
                 return True

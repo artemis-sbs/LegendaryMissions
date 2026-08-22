@@ -1,0 +1,25 @@
+# Crew rosters - who is at a console when nobody typed a name.
+#
+# The library owns the MECHANISM (sbs_utils.procedural.crew); this addon owns the CONTENT.
+# That split is why a mod can supply its own crew for its own hulls without going near
+# LegendaryMissions, and why a mission can pick one of these from the server console's Crew
+# dropdown or pin one with `Defaults: CREW_SELECT` on its @map.
+#
+# Loading this addon changes nothing on its own. The rosters are OFFERED - not one of them
+# declares a `Hull:` or a `Ship:` - so with CREW_SELECT unset (the library default) every
+# console still reads exactly as it did before: whatever the player typed, or nothing.
+provides crew.rosters
+
+# ONE top-level `shared` line, the shape `comms/enemy_taunt.mast` already uses for its hails.
+# Top-level `shared` runs once for the whole story rather than once per connecting client,
+# which is what a registry write wants - three rosters registered five times is five times
+# the work and the same answer.
+#
+# The file text is passed STRAIGHT THROUGH rather than parked in a variable first: a MAST
+# assignment re-runs a string through f-string formatting, so a roster that ever contained a
+# brace would become a syntax error reported against this line.
+#
+# `crew_load_amd` is the mission-relative form and cannot see inside a mastlib, so an addon
+# reads its own file out of its own zip - the same shape sides_declare_amd needs, and for the
+# same reason.
+shared CREW_ROSTERS = crew_declare_amd(amd_document(media_read_relative_file("crew_rosters.amd"), data_parser=amd_crew_data))

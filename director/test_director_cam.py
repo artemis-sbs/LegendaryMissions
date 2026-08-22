@@ -220,17 +220,31 @@ class CrewNameIntegrationTests(unittest.TestCase):
     def test_the_keys_match_the_picker(self):
         """The agreement, pinned to the picker's own source.
 
-        Three strings shared between two files that never import each other. A rename in
+        Strings shared between files that never import each other. A rename in
         `common_console_select` would leave the lower third permanently reading `unmanned`,
         with nothing logged and nothing failing - so it fails HERE instead.
+
+        `CREW_NAME` is no longer written by the picker directly: it hands the whole question
+        to `crew_assign`, which resolves the roster chain and publishes the same key. So the
+        chain is pinned across BOTH halves of that seam - the picker must still call it, and
+        it must still write what the token reads.
         """
         with io.open(self.PICKER, encoding="utf-8") as handle:
             picker = handle.read()
         for wrote in ('link(_ship_id, "consoles", client_id)',
                       'set_inventory_value(client_id, "CONSOLE_TYPE"',
-                      'set_inventory_value(client_id, "CREW_NAME"'):
+                      'crew_assign(client_id,'):
             self.assertIn(wrote, picker,
-                          "the console picker no longer writes what <<crew_name>> reads")
+                          "the console picker no longer feeds what <<crew_name>> reads")
+
+    def test_crew_assign_still_publishes_the_key_the_token_reads(self):
+        """The other half of the seam above, pinned in behaviour rather than in source."""
+        from sbs_utils.procedural.inventory import get_inventory_value
+        from sbs_utils.procedural.crew import crew_assign
+        ship = to_id(player_spawn(0, 0, 0, "Artemis", "tsn", "tsn_light_cruiser"))
+        Gui.clients[CLIENT] = GuiClient(CLIENT)
+        crew_assign(CLIENT, ship, "helm", own_name="Viper")
+        self.assertEqual(get_inventory_value(CLIENT, "CREW_NAME", None), "Viper")
 
 
 class DirectorNameTests(unittest.TestCase):
@@ -262,13 +276,45 @@ class DirectorNameTests(unittest.TestCase):
         self.assertEqual(dc.director_cam_default_name(CLIENT, "program"), "PROG01")
         self.assertEqual(dc.director_cam_default_name(CLIENT, "preview"), "PRE01")
 
-    def test_a_crew_name_does_not_survive_into_a_screen_name(self):
-        # THE ONE THAT MATTERS since the Name field went. `common_console_select` writes
-        # CREW_NAME from the crew-name flow, so a client that named itself before opening the
-        # Director arrives with a person's name in that key - and a program screen called
-        # "Doug" says nothing about what it is. The derivation ignores it.
+    def test_a_screen_name_does_not_survive_into_another_screen_name(self):
+        # A screen already called something derives its name from the MODE regardless: the
+        # derivation is the only source, so there is nothing to protect.
         dc.director_cam_name(CLIENT, "Doug")
         self.assertEqual(dc.director_cam_default_name(CLIENT, "program"), "PROG01")
+
+    def test_a_screen_name_does_not_overwrite_a_crew_name(self):
+        """THE ONE THAT MATTERS. A screen's name and a person's name are separate keys.
+
+        They used to be one, so opening the Director on a console somebody had already named
+        replaced that person with PROG01 - and because it also wrote the `crew_name` CLIENT
+        STRING, which persists per MACHINE, the overwrite followed that PC into every future
+        console of every future mission, where nothing could dislodge it.
+        """
+        from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
+        set_inventory_value(CLIENT, "CREW_NAME", "Doug")
+        dc.director_cam_name(CLIENT, "PROG01")
+        self.assertEqual(get_inventory_value(CLIENT, "CREW_NAME", None), "Doug")
+        self.assertEqual(dc.director_cam_name(CLIENT), "PROG01")
+
+    def test_naming_a_screen_writes_no_client_string(self):
+        # The per-machine write is the half that was unfixable from inside a mission.
+        wrote = []
+        sbs_mod = dc._sbs()
+        real = getattr(sbs_mod, "set_client_string", None)
+        if real is None:
+            self.skipTest("no set_client_string in this mock")
+        sbs_mod.set_client_string = lambda cid, k, v: wrote.append((cid, k, v))
+        try:
+            dc.director_cam_name(CLIENT, "PROG01")
+        finally:
+            sbs_mod.set_client_string = real
+        self.assertEqual(wrote, [])
+
+    def test_an_older_builds_screen_name_still_reads(self):
+        # Compat: a console named before the split has its screen name in CREW_NAME.
+        from sbs_utils.procedural.inventory import set_inventory_value
+        set_inventory_value(CLIENT, "CREW_NAME", "PROG07")
+        self.assertEqual(dc.director_screen_name_raw(CLIENT), "PROG07")
 
     def test_the_name_moves_when_the_mode_does(self):
         dc.director_cam_name(CLIENT, "PROG01")
