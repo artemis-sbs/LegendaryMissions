@@ -1,0 +1,42 @@
+# LegendaryMissions, entirely in TNG hulls - players, raiders and stations.
+#
+#   python -m cosmos_dev.mission_runner . --test 30 --map 0 --profile tng_total
+#   Artemis3-x64-release.exe autostartserver defaultmission=LegendaryMissions profile=tng_total
+#
+# THE DIFFERENCE FROM `tng_ships`. That profile puts the CREW in Trek hulls and leaves the
+# galaxy stock, because the roster is a setting and nothing else is. This one converts the
+# whole board, and it takes a different mechanism to do it: LM names its enemies and its
+# stations in literals, in its own content - `enemyTypeNameList = ["Kralien", "Torgoth",
+# "Arvonian"]` in every map, thirteen `station_type` keys across maps and prefabs - and
+# none of it reads a setting. No amount of profile could repoint them.
+#
+# So `tng_reskin` declares the GAME'S OWN keys carrying TNG ships. An add-on entry overrides
+# a key data/shipData.yaml already owns, so LM asks for `starbase_kralien` exactly as it
+# always did and gets a Trek station. LM is not edited at all.
+#
+# WHAT THIS COSTS. It is a conversion, and conversions are exclusive: with `tng_reskin`
+# loaded nothing can spawn a Light Cruiser AS a Light Cruiser, because that key is a Saber
+# now. If you want Trek ships alongside stock ones, use `tng_ships` instead.
+#
+# THE RACE LISTS ARE DELIBERATELY UNTOUCHED. LM's maps ask for Kralien, Torgoth and Arvonian
+# by name, and those ladders only register when the races are in NPC_RACES. Replacing the
+# lists with TNG factions would leave `fleet_create` unable to find a `kralien` ladder - it
+# says so and spawns NOTHING, which is a worse outcome than stock enemies. The stock races
+# stay, and the re-skin makes the ships they spawn Trek ships.
+addons:
+    include:
+        - tng_races
+        - tng_reskin
+
+media:
+    include:
+        - Cosmos-TNG-Mod.media
+
+# NO PLAYER_LIST. It is not needed and that is the point: with the re-skin on, the library
+# default roster of `tsn_battle_cruiser`s IS a roster of Ambassador-class ships. Naming
+# hulls here would only pin the crew to specific ones - use `tng_ships` for that.
+
+# The mod declares this and it loses to a mission's own settings, so say it here or LM's
+# own choice stands. A bank name, not a display name; on an engine where set_music_folder
+# still hangs on a path this resolves, it declines and plays `default` with a warning.
+MUSIC_SELECT: "TNG_Music"

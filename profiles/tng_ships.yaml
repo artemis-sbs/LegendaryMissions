@@ -1,0 +1,47 @@
+# LegendaryMissions, flown in TNG hulls - the SHIPS from the mod and nothing else changed.
+#
+#   python -m cosmos_dev.mission_runner . --test 30 --map 0 --profile tng_ships
+#   Artemis3-x64-release.exe autostartserver defaultmission=LegendaryMissions profile=tng_ships
+#
+# WHAT THIS IS NOT. It is not the TNG conversion - that is Cosmos-TNG-Missions with its own
+# `tng` profile, where the races, music, sides and enemies are all Trek. This is ordinary
+# LegendaryMissions - Kralien raiders, LM's maps, LM's diplomacy - with the crew flying
+# Federation ships instead of TSN ones.
+#
+# `include:` names the addon FOLDER, never a version: versions live in story.json, so a
+# profile does not rot on the next release of the pack. The media line is not optional -
+# the mod's 51 hulls are declared from a ship-data file the ENGINE opens itself, and it
+# lives in the media pack. Without it the hulls have no stats and no art.
+addons:
+    include:
+        - tng_races
+
+media:
+    include:
+        - Cosmos-TNG-Mod.media
+
+# THE ROSTER IS WHAT PUTS THE CREW IN A TREK HULL, and it is a separate setting from the
+# race lists. PLAYABLE_RACES only gates what the ship-selection UI OFFERS; the roster is
+# PLAYER_LIST, and the library default is eight identical `tsn_battle_cruiser`s. Measured
+# on the TNG suite: a profile that set only the race lists still reported
+# `__player__ hulls: [('tsn_battle_cruiser', ...)]`.
+#
+# SIDE STAYS `tsn`, deliberately, and this is the whole difference from the conversion
+# profile. LM's maps, diplomacy and mission logic are written against its own sides; a
+# crew on `federation` would be a faction LM's raiders have no declared relationship with,
+# which reads as grey unknown contacts rather than an enemy. Keeping `tsn` means only the
+# HULL changes - the game around it is untouched.
+#
+# The mod ADDS its factions rather than replacing anything, so the stock races are all
+# still here and stock hulls still spawn as usual. That is what makes this "ships only":
+# the TNG interiors and fleet ladders do load, but LM's maps never ask for a TNG race, so
+# nothing of the mod appears unless the roster below puts it there.
+PLAYER_LIST:
+  - { name: "Enterprise", id: null, side: "tsn", ship: "tng_fed_galaxy",          face: "human" }
+  - { name: "Defiant",    id: null, side: "tsn", ship: "tng_fed_defiant",         face: "human" }
+  - { name: "Voyager",    id: null, side: "tsn", ship: "tng_fed_intrepid",        face: "human" }
+  - { name: "Sovereign",  id: null, side: "tsn", ship: "tng_fed_sovereign",       face: "human" }
+  - { name: "Akira",      id: null, side: "tsn", ship: "tng_fed_akira",           face: "human" }
+  - { name: "Nebula",     id: null, side: "tsn", ship: "tng_fed_nebula",          face: "human" }
+  - { name: "Excalibur",  id: null, side: "tsn", ship: "tng_fed_excelsior_refit", face: "human" }
+  - { name: "Titan",      id: null, side: "tsn", ship: "tng_fed_luna",            face: "human" }
