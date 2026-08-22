@@ -464,6 +464,21 @@ if CAN_CHANGE_CONSOLE:
     on change GAME_STARTED:
         jump game_started_console
 
+    # THE SERVER CAN CHANGE THE CREW WHILE THIS PANEL IS UP.
+    #
+    # The operator picks a roster from the server console's Crew dropdown, which writes
+    # `shared CREW_SELECT`. Everything crew on this screen - who the dropdown offers, the
+    # portrait, whether the block appears at all - was computed once when the panel was
+    # painted, so without this a client that was already sitting on the picker keeps
+    # offering the previous roster's people and shows the previous face. It looks like the
+    # server's choice did not take.
+    #
+    # A full repaint rather than an in-place update: the crew block is BUILT conditionally
+    # (no roster, no dropdown and no preview at all), so there is not always a widget to
+    # update - and `select_console` is the repaint entry the rest of this file already uses.
+    on change get_shared_variable("CREW_SELECT", ""):
+        jump select_console
+
     gui_section(style="area: 0,100-50px, 35,100;")
     # The space the text waterfall used to occupy. Before a ship is picked there is
     # nothing to show and it renders empty, which is honest - the alternative was a
@@ -913,6 +928,14 @@ $t on ship {client_select_ship}
     # Only reachable from a button that is only built when CREW_AVATAR_EDITOR says the addon
     # is loaded. A jump to a label nothing defines compiles clean and would only fail if it
     # ever RAN, so the guard on the button is the whole guard needed.
+    # HAND IT THE FACE THEY ALREADY HAVE, so the editor opens on them rather than on a
+    # stranger. `crew_face` first - that is what the preview beside the button is showing -
+    # then whatever they were last actually assigned, which is where an automatic face lives
+    # once they have opened a console. Empty is fine; the editor starts from its defaults.
+    av_face = crew_face
+    if not av_face:
+        av_face = get_inventory_value(client_id, "CREW_FACE", "")
+    # Only used when the face does not name its own race, which it does whenever there is one.
     av_race = crew_avatar_race(client_select_ship_id)
     av_title = "YOUR AVATAR"
     av_return = "crew_edit_done"

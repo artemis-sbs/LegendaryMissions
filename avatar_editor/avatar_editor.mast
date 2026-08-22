@@ -40,12 +40,29 @@ av_race: terran
 av_title: AVATAR EDITOR
 av_done_signal: avatar_editor_done
 av_return: ""
+av_face: ""
 ```
+    # START FROM THE FACE THEY ALREADY HAVE, when they have one. `parse_face` is the inverse
+    # of `build_face` and round-trips exactly, so the sliders open where the person is rather
+    # than at the feature minimums - opening on a stranger and making the editor a
+    # start-from-scratch tool was the whole complaint.
+    #
+    # It answers None for an empty spec, for anything malformed, and for a MOD face (whose
+    # atlas is whole drawn busts with no features to take apart). All three fall back to the
+    # defaults, which is the right answer for each: there is nothing to resume.
+    av_start = faces.parse_face(av_face)
+    if av_start is not None:
+        # The face names its own race - the caller's guess does not get to disagree with it.
+        av_race = av_start["race"]
     av_race = str(av_race).lower()
     av_features = faces.FACE_FEATURES.get(av_race)
     jump avatar_editor_bad_race if av_features is None
-    av_values = [f.get("min", 0) for f in av_features]
-    av_enables = [True] * len(av_features)
+    if av_start is not None:
+        av_values = av_start["values"]
+        av_enables = av_start["enables"]
+    else:
+        av_values = [f.get("min", 0) for f in av_features]
+        av_enables = [True] * len(av_features)
 
 --- avatar_editor_paint
     face = faces.build_face(av_race, av_values, av_enables)
