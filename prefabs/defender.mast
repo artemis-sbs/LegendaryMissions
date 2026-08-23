@@ -19,6 +19,9 @@ allies: civ,surrendered
 
 
 #TODO: This seems like it will slow things down
+    # ART ONLY - see basic_enemy.mast for why this goes after `crew` and before the lookup.
+    # `side_value` is untouched, so a re-skinned defender is still on the same side.
+    origin = ship_data_art_faction_for(origin, "defender")
     tsn_ship_data = ship_data_filter_ship_data_by_side(None, origin, "defender", ret_key_only=True)
 #
 #

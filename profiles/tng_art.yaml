@@ -1,0 +1,98 @@
+# LegendaryMissions with TNG ART on the NPCs and stations - and LM's own diplomacy intact.
+#
+#   python -m cosmos_dev.mission_runner . --test 30 --map 0 --profile tng_art
+#   Artemis3-x64-release.exe autostartserver defaultmission=LegendaryMissions profile=tng_art
+#
+# WHY THIS EXISTS AND `tng_reskin` DOES NOT DO IT. The reskin declares TNG art against the
+# GAME'S OWN ship keys, which works on the server and never on a client: a client resolves a
+# key it already knows against its own data/shipData.yaml, so its stock artfileroot wins and
+# the override never crosses the wire. That is why the player ship came out Trek (its key is
+# `tng_*`, which the client has no record for, so it renders what the server sends) while
+# every NPC and station came out stock TSN.
+#
+# This profile instead points the ship-data LOOKUP at the mod's OWN keys. The client has no
+# local record for those either, so it renders the mod art - the same route that already
+# works for the player ship.
+#
+# NOTHING HERE CHANGES A SIDE. `RACE_ART` maps the faction hulls are CHOSEN FROM; the side a
+# ship spawns on - and therefore relations, comms and contact colour - is `side_value`, which
+# the prefabs keep as a separate variable and this does not touch. LM's raiders are still
+# raiders, they just fly Cardassian hulls. Faces are unaffected too: they come from `crew`,
+# which is resolved before the art mapping.
+addons:
+    include:
+        - tng_races
+
+media:
+    include:
+        - Cosmos-TNG-Mod.media
+
+# LM race -> the shipData faction its hulls are drawn from. A race with no entry is left
+# alone, and an entry whose faction has no hull for the role being spawned is ignored rather
+# than obeyed - spawning nothing is far harder to notice than wrong art.
+RACE_ART:
+    kralien:  Cardassian
+    torgoth:  Klingon
+    arvonian: Romulan
+    ximni:    Dominion
+    skaraan:  Breen
+    pirate:   Orion
+    tsn:      Federation
+    civ:      Federation
+
+# The OTHER way a hull gets chosen: named outright, by key. Fleet ladders do this (so a
+# wave keeps its shape) and so do stations. Those never reach RACE_ART, so they get a key
+# map instead. Generated from the stock->TNG mapping in Cosmos-TNG-Mod/_build_from_zip.py,
+# which is where that correspondence is recorded once.
+ART_KEYS:
+    arvonian_carrier:      tng_crd_damar
+    arvonian_destroyer:    tng_crd_galor
+    arvonian_fighter:      tng_crd_heideki
+    arvonian_light_carrier: tng_crd_keldon
+    cargo_ship:            tng_fed_freighter
+    kazon_fighter:         tng_kaz_fighter
+    kralien_battleship:    tng_kaz_cruiser
+    kralien_cruiser:       tng_kaz_raider
+    kralien_dreadnought:   tng_kaz_carrier
+    pirate_brigantine:     tng_orn_corsair
+    pirate_fighter:        tng_orn_interceptor
+    pirate_longbow:        tng_orn_corvette
+    pirate_strongbow:      tng_orn_brigand
+    science_ship:          tng_fed_nova
+    skaraan_defiler:       tng_jem_attack_ship
+    skaraan_enforcer:      tng_brn_chel_grett
+    skaraan_executor:      tng_jem_battlecruiser
+    starbase_arvonian:     tng_crd_terok_nor
+    starbase_civil:        tng_fed_station
+    starbase_command:      tng_fed_starbase
+    starbase_industry:     tng_fed_ds9
+    starbase_kralien:      tng_kaz_base
+    starbase_science:      tng_fed_comms_base
+    starbase_skaraan:      tng_jem_base
+    starbase_torgoth:      tng_rmn_base
+    torgoth_behemoth:      tng_rmn_scimitar
+    torgoth_destroyer:     tng_rmn_tvaro
+    torgoth_goliath:       tng_rmn_mogai
+    torgoth_leviathan:     tng_rmn_dderidex
+    transport_ship:        tng_fed_olympic
+    tsn_battle_cruiser:    tng_fed_ambassador
+    tsn_battleship:        tng_fed_galaxy
+    tsn_bomber:            tng_fed_danube_rollbar
+    tsn_carrier:           tng_fed_akira
+    tsn_destroyer:         tng_fed_defiant
+    tsn_dreadnought:       tng_fed_sovereign
+    tsn_escort:            tng_fed_intrepid
+    tsn_fighter:           tng_fed_peregrine
+    tsn_heavy_cruiser:     tng_fed_luna
+    tsn_juggernaut:        tng_fed_galaxy_x
+    tsn_light_carrier:     tng_fed_constellation
+    tsn_light_cruiser:     tng_fed_saber
+    tsn_mine_layer:        tng_fed_excelsior_refit
+    tsn_missile_cruiser:   tng_fed_nebula
+    tsn_scout:             tng_fed_california
+    tsn_shuttle:           tng_fed_danube
+    tsn_warpster:          tng_fed_centaur
+    xim_battleship:        tng_klg_vorcha
+    xim_corsair:           tng_klg_brel
+    xim_destroyer:         tng_klg_ktinga
+    xim_dreadnought:       tng_klg_neghvar

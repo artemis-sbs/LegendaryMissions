@@ -36,7 +36,9 @@ objective:
         - deliver_ammo
         - goto_station
 ```
-  default ship_art = "cargo_ship"
+  # ART ONLY - these name their hull outright, so they never reach RACE_ART. ART_KEYS,
+  # no-op unless set. Side and roles are untouched.
+  default ship_art = ship_data_art_key_for("cargo_ship")
   await task_schedule(prefab_npc_civilian_common)
   ->END
 
@@ -58,7 +60,7 @@ objective:
           - explore_asteroid
           - goto_station
 ```
-  default ship_art = "luxury_liner"
+  default ship_art = ship_data_art_key_for("luxury_liner")
   await task_schedule(prefab_npc_civilian_common)
   ->END
 
@@ -78,7 +80,7 @@ objective:
           - explore_asteroid
           - goto_station
 ```
-  default ship_art = "science_ship"
+  default ship_art = ship_data_art_key_for("science_ship")
   await task_schedule(prefab_npc_civilian_common)
   ->END
 
@@ -98,7 +100,7 @@ objective:
           - goto_station
           - deliver_lifeform
 ```
-  default ship_art = "transport_ship"
+  default ship_art = ship_data_art_key_for("transport_ship")
   await task_schedule(prefab_npc_civilian_common)
   ->END
 

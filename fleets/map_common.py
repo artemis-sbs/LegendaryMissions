@@ -15,6 +15,7 @@ import random
 from fleet import fleet_spawn
 from sbs_utils.procedural.fleet_tables import (
     fleet_table_get, fleet_table_races, fleet_table_pick_race)
+from sbs_utils.procedural.ship_data import art_key_for
 from elite_abilitites import elite_get_all_abilities, elite_is_engine_ability, random_bits
 
 
@@ -129,7 +130,15 @@ def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet"
 
 #    carrier_count = 0
     for b in range(num_ships):
-        art_id = siege_fleet[b]
+        # ART ONLY. A fleet ladder names its hulls OUTRIGHT, class by class, so a wave keeps
+        # its shape - which means these never reach RACE_ART, the faction-lookup route the
+        # basic_enemy/defender prefabs use. They get the key map instead, so a mod can
+        # re-point them while the ladder's choices (battleship stays a battleship) survive.
+        # No-op unless ART_KEYS is set, and it falls back to the stock key when the
+        # replacement is not in the ship table.
+        #
+        # `roles` below - and therefore the side, and therefore diplomacy - is untouched.
+        art_id = art_key_for(siege_fleet[b])
         if faction_side:
             roles = f"{race},{ship_roles}" if ship_roles is not None else f"{race},raider"
         else:

@@ -374,7 +374,9 @@ Defaults:
             # Scatter idle salvage hulks + a stationary Refinery Platform as the drop-off; the
             # crew tows each hulk to the refinery. pr_salvage_watch credits each delivery.
             comms_info_card(all_roles("console, comms"), "Salvage hulks are cluttering the lane. Grav-tether each one and tow it to the Refinery Platform.", title="Salvage Order", color="#0cf", notify=True)
-            npc_spawn(-18000, 0, -6000, "Refinery Platform", "tsn, station, refinery", "starbase_command", "behav_station")
+            # ART ONLY - ART_KEYS, no-op unless set. Side/roles unchanged.
+            refinery_hull = ship_data_art_key_for("starbase_command")
+            npc_spawn(-18000, 0, -6000, "Refinery Platform", "tsn, station, refinery", refinery_hull, "behav_station")
             for v in scatter.box(PR_JOB_COUNTS.get("salvage", 3), -9000, 0, -12000, 3000, 400, 3000, centered=True):
                 npc_spawn(v.x, v.y, v.z, "Salvage Hulk", "civ, salvage_hulk, claimable", "cargo_ship", "behav_npcship")
             task_schedule(pr_salvage_watch)

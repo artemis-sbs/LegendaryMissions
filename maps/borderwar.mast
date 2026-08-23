@@ -126,6 +126,12 @@ Properties:
         station_prefix = "AB"
         station_type = "starbase_arvonian"
 
+    # ART ONLY - resolve the stock station key through ART_KEYS once, here, so both the
+    # spawn and the navproxy below draw the same hull. No-op unless a mission or profile
+    # sets it. The roles string keeps naming the mission's own faction, so diplomacy is
+    # unchanged; only the art moves.
+    station_type = ship_data_art_key_for(station_type)
+
     # for each station
     for index in range(num_enemy_stations):
 

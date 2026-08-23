@@ -9,6 +9,16 @@
     default use_nav_proxy = True
     default nav_proxy_color = "#65653d"
     
+    # ART ONLY. Stations pick their hull by explicit KEY rather than by faction, so they get
+    # their own map (ART_KEYS, keyed by the stock key being replaced) instead of the
+    # RACE_ART route the ship prefabs use. No-op unless a mission or profile sets it, and it
+    # falls back to the stock key when the replacement is not in the ship table - a
+    # half-written map should degrade to stock art, never to no station at all.
+    #
+    # `side_value` and `race_value` below are deliberately untouched: the first is diplomacy,
+    # the second drives random_face(), and neither is art.
+    station_type = ship_data_art_key_for(station_type)
+
     s_roles = "{side_value}, station, {roles_value}"
     # NOTE: all cap NAME is deprecated
     default name = get_variable('NAME')

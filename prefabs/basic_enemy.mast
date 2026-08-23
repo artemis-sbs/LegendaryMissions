@@ -44,6 +44,15 @@ brain:
     #TODO: This seems like it will slow things down
     default ship_role = "ship"
     print("ROLE: " + ship_role)
+    # ART ONLY, and the placement is deliberate. This sits AFTER `crew` so faces still come
+    # from the mission's own race, and BEFORE the lookup, which is the only thing it is
+    # allowed to move. `side_value` - the diplomatic side handed to npc_spawn below - is
+    # never touched, so a mod can field Cardassian hulls as `raider` and every relation,
+    # comms route and contact colour behaves exactly as before.
+    #
+    # No-op unless RACE_ART is set, and it falls back to `origin` when the mapped faction
+    # has no hulls in this role - spawning nothing is much harder to spot than wrong art.
+    origin = ship_data_art_faction_for(origin, ship_role)
     ship_data_options = ship_data_filter_ship_data_by_side(None, origin, ship_role, ret_key_only=True)
     if len(ship_data_options) == 0:
         print("Ship data options empty in basic_enemy.mast")
