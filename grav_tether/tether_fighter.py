@@ -143,9 +143,11 @@ def lm_tether_open_popup(ship, target):
     sid, tid = to_id(ship), to_id(target)
     if sid is None or tid is None:
         return None
-    ctx = FrameContext.context
+    # parent_id as well as selected_id: the popup takes its TITLE from the parent (that
+    # is the object a real hold-click was on), so without it a synthesized menu came up
+    # headed "Location" instead of naming what the nose had found.
     ev = FakeEvent(client_id=(FrameContext.client_id or 0), tag="popup",
-                   sub_tag="tether", origin_id=sid, selected_id=tid)
+                   sub_tag="tether", origin_id=sid, selected_id=tid, parent_id=tid)
     return start_popup_selected(ev)
 
 

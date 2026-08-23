@@ -76,23 +76,28 @@ desc: Ejects a drone tower kit. Launches attack drones on its own.
 # reels the load right in, while the rope-toggle Tow holds it at a distance (measured
 # 798/801/801 at rope_len 800).
 
-//popup/weapons if has_any_role(WEAPONS_ORIGIN_ID, "__player__") and has_role(WEAPONS_SELECTED_ID, "turret_crate")
+# WEAPONS_POPUP_ID, the object under the cursor - not WEAPONS_SELECTED_ID, the console's
+# standing lock. This menu shares one hold-click with the grav_tether addon's, so the two
+# have to agree on WHICH object was clicked or a crate offers "Grav Tow" with no "Deploy
+# Turret" beside it. And a gunner has no reason to have targeted a crate they are about
+# to tow - most of the time they are still locked on whoever is shooting at them.
+//popup/weapons if has_any_role(WEAPONS_ORIGIN_ID, "__player__") and has_role(WEAPONS_POPUP_ID, "turret_crate")
     # grav_tether_involves, NOT grav_tether_get. A Tow is a rope-TOGGLE: it deletes the
     # engine connection whenever the load is inside the rope length and re-engages when it
     # drifts out, so grav_tether_get reads None for most of a normal tow. Gating on it
     # would offer "Deploy Turret" mid-tow and unfold the turret wherever the ship was.
-    lmtk_towed = grav_tether_involves(WEAPONS_SELECTED_ID)
+    lmtk_towed = grav_tether_involves(WEAPONS_POPUP_ID)
     if not lmtk_towed:
         + "Grav Tow Kit":
-            grav_tether_tow(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID, 500)
+            grav_tether_tow(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID, 500)
     if lmtk_towed:
         + "Release Kit":
-            grav_tether_release(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)
+            grav_tether_release(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
     # Deploy only once it is NOT under tow - otherwise a turret unfolds while still
     # being dragged and ends up wherever the ship happened to be.
     if not lmtk_towed:
         + "Deploy Turret":
-            lmtk_data = ~~{"lmtd_crate": WEAPONS_SELECTED_ID}~~
+            lmtk_data = ~~{"lmtd_crate": WEAPONS_POPUP_ID}~~
             signal_emit("lm_turret_deploy_kit", lmtk_data)
 
 

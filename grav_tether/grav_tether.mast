@@ -16,25 +16,32 @@
 # Impulse-only is canonical (old-game Arena a28): the primitive caps the source back to
 # impulse by default (grav_tether_set_overspeed_default to change to snap/off).
 
-//popup/weapons if has_any_role(WEAPONS_ORIGIN_ID, "__player__")
+# THE OBJECT UNDER THE CURSOR, NOT THE WEAPONS LOCK. `WEAPONS_POPUP_ID` is what the
+# gunner actually held the button on; `WEAPONS_SELECTED_ID` is whatever the console
+# happens to have targeted, which for a tether is the wrong object nearly every time -
+# you tow the derelict while you are still locked on the raider shooting at you. Gated on
+# the selection, this menu offered to tether the WEAPONS TARGET no matter what was
+# clicked, and offered nothing at all when the console had no lock. It is 0 for a
+# hold-click on empty space, so the guard is required, not defensive.
+//popup/weapons if has_any_role(WEAPONS_ORIGIN_ID, "__player__") and WEAPONS_POPUP_ID != 0 and WEAPONS_POPUP_ID != WEAPONS_ORIGIN_ID
     # grav_tether_HAS (the registry), not grav_tether_get (the live engine connection).
     # A Tow is a rope-TOGGLE: it deletes the connection whenever the load is inside the
     # rope length and re-adds it when the load drifts out - so `get` reads None for most
     # of a perfectly normal tow. Gated on that, this menu offered "Grav Tow" to something
     # already under tow and never offered "Release", so a crew could not let go.
-    gt_has = grav_tether_has(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)
+    gt_has = grav_tether_has(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
     if gt_has:
         + "Release":
-            grav_tether_release(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)
-    if not gt_has and has_any_role(WEAPONS_SELECTED_ID, "item,upgrade"):
+            grav_tether_release(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
+    if not gt_has and has_any_role(WEAPONS_POPUP_ID, "item,upgrade"):
         + "Grav Reel":
-            grav_tether_reel(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)
-    if not gt_has and has_any_role(WEAPONS_SELECTED_ID, "station,asteroid,__npc__"):
+            grav_tether_reel(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
+    if not gt_has and has_any_role(WEAPONS_POPUP_ID, "station,asteroid,__npc__"):
         + "Grav Tow":
-            grav_tether_tow(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID, 500)
-    if not gt_has and not has_any_role(WEAPONS_SELECTED_ID, "item,upgrade,station,asteroid,__npc__"):
+            grav_tether_tow(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID, 500)
+    if not gt_has and not has_any_role(WEAPONS_POPUP_ID, "item,upgrade,station,asteroid,__npc__"):
         + "Grav Lock":
-            grav_tether_lock(WEAPONS_ORIGIN_ID, WEAPONS_SELECTED_ID)
+            grav_tether_lock(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
 
 
 # ---------------------------------------------------------------------------------------
