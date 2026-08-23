@@ -260,7 +260,13 @@ if CAN_CHANGE_CONSOLE:
         _input = gui_input("desc:Ship Name", var="ship_name")
         on gui_message(_input):
             if len(PLAYER_LIST)>0:
-                PLAYER_LIST[client_selected_index].name = ship_name
+                # PLAYER_LIST is a SNAPSHOT of Agent objects taken when this screen
+                # was built. A slot can be culled out from under it - the unused
+                # player ships are deleted at Start - and a write through a dead
+                # Agent sets a field on freed memory. Re-resolve at the point of use.
+                picked_ship = to_object(PLAYER_LIST[client_selected_index])
+                if picked_ship is not None:
+                    picked_ship.name = ship_name
             client_select_ship = ship_name
             # Refresh the ship list on EVERY console, not just this one. The local
             # `on change ...name` watcher only fires on a console that has the
@@ -286,7 +292,13 @@ if CAN_CHANGE_CONSOLE:
         on change ship_type:
             #if not GAME_STARTED:
             if len(PLAYER_LIST)>0:
-                PLAYER_LIST[client_selected_index].art_id = ship_type
+                # PLAYER_LIST is a SNAPSHOT of Agent objects taken when this screen
+                # was built. A slot can be culled out from under it - the unused
+                # player ships are deleted at Start - and a write through a dead
+                # Agent sets a field on freed memory. Re-resolve at the point of use.
+                picked_ship = to_object(PLAYER_LIST[client_selected_index])
+                if picked_ship is not None:
+                    picked_ship.art_id = ship_type
             gui_update_shared("sh_ship_list", None)
 
     if sbs.is_demo() or console_select_item.path != "helm" or GAME_STARTED or SHIP_PICK_READ_ONLY:

@@ -77,6 +77,16 @@ shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
 
     jump reassign_to_console_select if len(players)>0
 
+    # Last player ship gone. There is nowhere to reassign this client to, so it
+    # stays assign_client_to_ship-bound to an id whose native memory was freed at
+    # the end of the previous tick, and the results screen takes over from here.
+    #
+    # The engine widgets that were on screen (ship_internal_view, grid_object_list,
+    # ...) are retired by the library when the results screen swaps the widget list
+    # - see StoryPage._retire_dropped_engine_widgets. Clearing the ENGINE-side ship
+    # binding as well would need sbs.assign_client_to_ship(client_id, 0), which is
+    # not used anywhere in Cosmos and is unverified; it is an open question in the
+    # GridObjectList crash report rather than something to guess at here.
     ->END
 
 

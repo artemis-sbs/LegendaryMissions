@@ -190,7 +190,7 @@ value: 20
     else:
         val = blob.get("shield_val", shield_arc)
         maxVal = blob.get("shield_max_val",shield_arc)
-        if val is not None or maxVal is None:
+        if val is None or maxVal is None:
             print(f"shield val for index {shield_arc} is None")
             yield fail
         newVal = val + value
