@@ -99,6 +99,13 @@ shared manual_beams_version_task = None
     on change manual_beams_signature(get_weapons_selection(ship_id)):
         jump manual_weapons_show
 
+    # Grabbing and letting go have to show at once, not on the next 3 second tick - a
+    # readout that lags the button by three seconds reads as a button that did not work.
+    # The signature deliberately leaves RANGE out, so the panel is not torn down every
+    # tick while the number moves; the ticker below refreshes that.
+    on change manual_tether_signature(ship_id):
+        jump manual_weapons_show
+
     on change manual_beams_version:
         cc= sbs.get_type_of_client(client_id)
 
@@ -116,6 +123,12 @@ shared manual_beams_version_task = None
     ship_id = sbs.get_ship_of_client(client_id)
     ship = to_object(ship_id)
     yield fail if ship is None
+
+    # The square is empty in this state, and a tether is exactly the thing worth putting
+    # in an empty square. Tested HERE rather than in manual_weapons_show because every
+    # way the panel gives the square up - Manual off, no lock, target out of range, the
+    # checkbox handler - lands on this label.
+    jump manual_weapons_tether if manual_tether_partner(ship_id) != 0
 
     with gui_rebuild(manual):
         gui_row("row-height: 72px;")
@@ -183,7 +196,9 @@ shared manual_beams_version_task = None
         # The hole the square stands in. It draws nothing, so the two regions above show
         # through; it is here so the target's name starts clear of them.
         gui_blank(1, "col-width: 166px;")
-        gui_text(f"$text:targeting {name};font:gui-1;")
+        # The called-shot panel owns the square in this state, so the tow is stated in
+        # the strip instead. It is never left completely unsaid.
+        gui_text(f"$text:targeting {name}{manual_tether_suffix(ship_id)};font:gui-1;")
 
     with gui_rebuild(mb_bars):
         manual_beams_bars(target_id, _hit)
@@ -249,3 +264,44 @@ shared manual_beams_version_task = None
     shared manual_beams_version += 1
 
     ->END
+
+
+#
+# THE TETHER READOUT. Deliberately the LAST label in the file: labels fall through, so
+# the adjacency of two of them is an interface, and this one must not sit between the
+# panel's existing states. Nothing falls into it - manual_weapons_minimize jumps here -
+# and nothing falls out of it.
+#
+# It borrows the called-shot square rather than asking for screen of its own. The two
+# never want it at the same moment: the called-shot panel is up while the gunner is
+# working a target in beam range, and a tow is what the console is doing the rest of the
+# time. While the called-shot panel does own the square, the strip along the bottom still
+# names the tow (manual_tether_suffix, in manual_weapons_maximize).
+#
+====== manual_weapons_tether ======
+    ship_id = sbs.get_ship_of_client(client_id)
+    ship = to_object(ship_id)
+    yield fail if ship is None
+
+    with gui_rebuild(manual):
+        gui_row("row-height: 72px;")
+        cb = gui_checkbox("$text:Manual;state:True", "col-width: 120px;")
+        cb.value = ship.get_inventory_value("MANUAL_BEAMS_ON", False)
+        on gui_message(cb):
+            ship_id = sbs.get_ship_of_client(client_id)
+            ship = to_object(ship_id)
+            if ship_id != 0 and ship is not None:
+                ship.set_inventory_value("MANUAL_BEAMS_ON", not ship.get_inventory_value("MANUAL_BEAMS_ON", False))
+            jump manual_weapons_maximize
+        # The hole the square stands in, same as the maximized state - the two regions
+        # draw through it, and the text starts clear of them.
+        gui_blank(1, "col-width: 166px;")
+        gui_text(f"$text:grav-tether engaged;font:gui-1;color:#0ff;")
+
+    with gui_rebuild(mb_bars):
+        manual_tether_bars(ship_id)
+
+    with gui_rebuild(mb_labels):
+        manual_tether_labels(ship_id)
+
+    yield idle
