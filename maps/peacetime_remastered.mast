@@ -480,6 +480,25 @@ Defaults:
     else:
         signal_emit("quest_signal", {"SIGNAL_NAME": "drone_down"})
 
+# A hulk that STRIKES ITS COLORS is qualified too. The range squawks hostile IFF, so the
+# standard raider-surrender comms works on it - and a talked-down hulk is out of the drill
+# for good (take_surrendered_home flies it off and deletes it). Counting only the destroyed
+# ones meant a surrender REMOVED a target with no credit, and since the range spawns exactly
+# as many hulks as the goal needs, one surrender made the job impossible to finish. Now it
+# counts, which gives Comms a real way to work the gunnery range instead of watching Weapons.
+//shared/signal/ship_surrendered
+    default SHIP_ID = 0
+    default SURRENDER_TO_ID = 0
+    ->END if not has_role(SHIP_ID, "target_drone")
+    # Drop the role first: the hulk stays on the map until it is flown home, and without
+    # this a crew could surrender it and then shoot it for a second credit.
+    remove_role(SHIP_ID, "target_drone")
+    if has_role(SURRENDER_TO_ID, "__player__"):
+        quest_credit_signal(SURRENDER_TO_ID, "drone_down")
+    else:
+        signal_emit("quest_signal", {"SIGNAL_NAME": "drone_down"})
+
+
 //damage/destroy if has_role(DESTROYED_ID, "hazard_rock")
     default DAMAGE_PARENT_ID = 0
     default DAMAGE_SOURCE_ID = 0

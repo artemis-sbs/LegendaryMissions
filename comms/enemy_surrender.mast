@@ -152,6 +152,14 @@ shared _surrender_return = task_schedule(take_surrendered_home)
     side_surrender(COMMS_SELECTED_ID)
     fleet_remove_ship(COMMS_SELECTED_ID)
 
+    # Tell the mission a ship struck its colors. A surrender is a real outcome - the
+    # target is out of the fight for good - but nothing outside this label could see it
+    # happen, so a mission that scores neutralized ships could only count DESTROYED ones,
+    # and a talked-down ship silently didn't count. Carries who did the talking, so a
+    # competitive board can credit the right crew.
+    surrender_data = ~~{"SHIP_ID": COMMS_SELECTED_ID, "SURRENDER_TO_ID": COMMS_ORIGIN_ID}~~
+    signal_emit("ship_surrendered", surrender_data)
+
     # a2x: a duplicitous captain (2.8 set_special captain=4) only feigns surrender --
     # schedule a re-engage so it turns on the players after a short lull.
     if get_inventory_value(COMMS_SELECTED_ID, "a2x_captain_trait", None) == "duplicitous":

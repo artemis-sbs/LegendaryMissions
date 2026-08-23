@@ -11,7 +11,7 @@
 | Done when | signal 5 drone_down |
 | Reward | 200 credits |
 
-Weapons drill: destroy all the condemned hulks on the gunnery range.
+Weapons drill: clear all the condemned hulks off the gunnery range. Destroying one qualifies it - so does talking one down: knock a hulk's shields below half and Comms can hail it and demand its surrender, which counts the same.
 
 #### Rock Breakers {: #peacetime-remastered-jobs-job-rocks}
 
