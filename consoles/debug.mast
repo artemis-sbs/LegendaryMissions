@@ -25,6 +25,10 @@ if is_dev_build():
         task_schedule(spawn_test_upgrades)
 
     gui_row()
+    on gui_message(gui_button("Test Items")):
+        task_schedule(spawn_test_items)
+
+    gui_row()
     on gui_message(gui_button("Test Wreck")):
         task_schedule(spawn_test_wreck)
 
@@ -161,6 +165,36 @@ if is_dev_build():
     pickup_spawn(200+_pos.x, _pos.y, _pos.z+600, "lateral_array")
     pickup_spawn(275+_pos.x, _pos.y, _pos.z+600, "haplix_overcharger")
     pickup_spawn(_pos.x, _pos.y, _pos.z+400, "escape-pod")
+
+    ->END
+
+
+===== spawn_test_items =====
+    # Everything in the item registry that Test Upgrades does NOT drop, plus enough
+    # salvage and bio samples to fabricate a few beacons without a scavenging run.
+    #
+    # The list comes from debug_test_item_plan(), which reads the registry - so trade
+    # goods, turret kits, cockpit loadouts and the Fabricator's materials all appear if
+    # (and only if) their addon is loaded. See that docstring for the quantities and
+    # why this one is not a hardcoded list like its neighbour.
+    #
+    # item_spawn, not pickup_spawn: only item_spawn takes the registry's art and
+    # display name, and only it can stamp `qty` so one cache is worth 20 salvage
+    # instead of 20 separate objects to fly through.
+    _ship_id = sbs.get_ship_of_client(client_id)
+    ->END if _ship_id is None
+
+    eo = to_engine_object(_ship_id)
+    _pos_eo = eo.pos
+    _forward = eo.forward_vector()
+    _pos = _pos_eo + (_forward * 300)
+
+    _plan = debug_test_item_plan()
+    ->END if not _plan
+
+    # Same grid as the upgrades above, six across, laid out ahead of the ship.
+    for _i, _drop in enumerate(_plan):
+        item_spawn(_drop["key"], _pos.x + 125 + 75 * (_i % 6), _pos.y, _pos.z + 450 + 75 * (_i // 6), qty=_drop["qty"])
 
     ->END
 
