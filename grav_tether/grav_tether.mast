@@ -77,7 +77,9 @@
 # free ride. //damage/object fires per hit and carries the amount in EVENT.sub_float;
 # only a heavy hit shakes a tether loose, or every skirmish would drop every load.
 //damage/object if grav_tether_involves(DAMAGE_TARGET_ID) or grav_tether_involves(DAMAGE_ORIGIN_ID)
-    default sub_float = 0
+    # Declared in __init__.mast; defaulted again here so a shot arriving before this
+    # addon's top level has run cannot NameError the route out of existence.
+    default LM_TETHER_BREAK_DAMAGE = 15
     lmgt_hit = EVENT.sub_float or 0
     ->END if lmgt_hit < LM_TETHER_BREAK_DAMAGE
     if grav_tether_involves(DAMAGE_TARGET_ID):

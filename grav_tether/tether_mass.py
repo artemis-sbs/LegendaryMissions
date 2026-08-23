@@ -30,9 +30,12 @@ LM_TETHER_GRAB_SPEED = 0.5
 #: about 2.4 energy/second - a real bill on a long haul, survivable on a short one.
 LM_TETHER_TOW_ENERGY = 0.02
 
-#: A single hit above this shakes a tether loose. High enough that a stray shot does not
-#: cost you a haul, low enough that being shot at while towing is a real decision.
-LM_TETHER_BREAK_DAMAGE = 15
+# NOTE: the "a hit this big shakes the tether loose" threshold is NOT here. It is the
+# only one of these numbers a .mast file reads, and a module-level constant is never a
+# MAST global - only functions are exported - so naming it here read fine in Python and
+# raised `NameError: LM_TETHER_BREAK_DAMAGE is not defined` in the //damage/object route
+# the first time anyone shot a ship that was towing. It lives in __init__.mast as
+# `default shared LM_TETHER_BREAK_DAMAGE`, which is also where a mission can retune it.
 
 _LM_MASSES = {}
 _LM_WARNED = set()

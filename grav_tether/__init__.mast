@@ -6,6 +6,15 @@ provides grav_tether
 # is a `default shared` and leaves this True.
 shared LM_HAS_TETHER = True
 
+# How big one hit has to be to shake a tether loose. High enough that a stray shot does
+# not cost you a haul, low enough that being shot at while towing is a real decision.
+#
+# A MAST variable rather than a Python constant, and that is not a style choice: only
+# FUNCTIONS are exported to the MAST namespace, so the same number spelled in
+# tether_mass.py was invisible to the //damage/object route that reads it. `default
+# shared` so a mission can retune it whichever of the two top levels runs first.
+default shared LM_TETHER_BREAK_DAMAGE = 15
+
 # The fighter one-button interaction (lm_tether_press) lives here, and the hangar's
 # cockpit console calls it - so this addon has to announce itself.
 import tether_mass.py
