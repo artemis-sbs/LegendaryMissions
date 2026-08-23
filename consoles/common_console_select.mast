@@ -315,7 +315,12 @@ if CAN_CHANGE_CONSOLE:
     # ship_sec2 = gui_region(style="area: 1,110px,500px,520px")
     gui_section( style="area: 10px,550px,500px,100-60px;")
     if len(player_list_all)>0:
-        ship_list = player_list_all[:PLAYER_COUNT]
+        # player_list_all is a SNAPSHOT of Agent objects taken when this screen was
+        # built. A console that is still sitting here when the game starts watched
+        # the unused slots get culled and deleted underneath it, so the snapshot can
+        # still name ships that are gone - and offering one is how a console ends up
+        # choosing a ship that no longer exists. Filter to what is still alive.
+        ship_list = [s for s in player_list_all[:PLAYER_COUNT] if to_object(s) is not None]
     else:
         ship_list = []
     # reveal keeps a restored selection on screen; hint keeps it in the same slot.
@@ -504,7 +509,8 @@ if CAN_CHANGE_CONSOLE:
             # Just refresh if reduce ship count for now
             # jump select_console if len(lb_ships.items)>PLAYER_COUNT
             # Otherwise can refresh faster if adding ships
-            ship_list = player_list_all[:PLAYER_COUNT]
+            # Same filter as the build above: the snapshot can outlive the ships.
+            ship_list = [s for s in player_list_all[:PLAYER_COUNT] if to_object(s) is not None]
             ship_select_lb.items = ship_list
             # len(ship_list)-1, not len(ship_list): set_selected_index ignores an
             # index that is not < len, so the old clamp silently CLEARED the

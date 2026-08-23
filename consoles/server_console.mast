@@ -262,7 +262,10 @@ gui_reroute_clients("client_main")
         on gui_message(save_ic):
             # Capture the current crew's hulls + names into SHIP_LOADOUT so the
             # saved preset reproduces the same ships for the next crew.
-            player_loadout_capture(to_object_list(role("default_player_ship")))
+            # `& role("__player__")` to match the capture at the start button below:
+            # the cull strips __player__ from unused slots but leaves
+            # default_player_ship, so the bare role can name ships on their way out.
+            player_loadout_capture(to_object_list(role("default_player_ship") & role("__player__")))
             game_code_presets_save_code(game_code_encode(WORLD_SELECT, with_loadout=True), GAME_CODE_NAME)
             jump game_code_reload
         # copy_ic = gui_icon("icon_index: 134; color: white;", "click_tag: gc_copy;")
