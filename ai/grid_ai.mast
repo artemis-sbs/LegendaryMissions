@@ -48,6 +48,30 @@ default shared grid_data = grid_get_grid_data()
 
 
 
+//shared/signal/ship_hull_changed
+    #
+    # THE INTERIOR HAS TO FOLLOW THE HULL.
+    #
+    # The //spawn route above builds a ship's grid once, one sim-second after it spawns.
+    # That grace exists so the SETUP SCREEN's hull choice lands first, and it works for
+    # that. It does nothing for a hull changed later - a mission seating a crew in a
+    # story ship, a refit, a disguise - and the engine re-sizes the internal map when the
+    # hull changes, so the grid left standing in it is at best stale and usually blank.
+    # Nothing logged, nothing to search for; it reads as "engineering is broken".
+    #
+    # //shared, NOT //signal: this deletes and respawns every grid object on the ship, so
+    # it must run ONCE on the server, not once per connected console.
+    #
+    # SHIP_ID / HULL_OLD_KEY / HULL_NEW_KEY arrive as task variables - that is how
+    # signal data reaches a route.
+    _hull_ship = to_object(SHIP_ID)
+    ->END if _hull_ship is None
+    # Players only. NPCs change hull for cloaks and disguises and have no interior to
+    # care about, and a rebuild is 60-100 grid objects.
+    ->END if not has_role(_hull_ship, "__player__")
+    grid_rebuild_grid_objects(_hull_ship)
+
+
 //spawn/grid if has_role(SPAWNED_ID, "damcons")
     set_inventory_value(SPAWNED_ID, "idle", True)
     set_inventory_value(SPAWNED_ID, "idle_state", "start")
