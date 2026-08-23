@@ -270,3 +270,58 @@ class TestBuildFeedback(_Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestTabStripIsReDeclared(unittest.TestCase):
+    """Every build of these tabs must re-declare the WHOLE strip.
+
+    maststorypage clears `console_tabs` and `__back_tab__` the moment it has drawn the
+    strip, so a tab declaration is one-shot per build: whatever a repaint does not
+    declare is missing from the strip it paints. `//gui/normal_engi` enables these two
+    ONCE, when Engineering activates - enough for the first paint and nothing after it.
+
+    That stayed invisible while this panel almost never repainted. It repaints on Build
+    and once a second during a build now, and the buttons went missing.
+
+    Static, deliberately: it is a property of the SOURCE (every repaint entry point
+    declares the same set), and the harness above cannot see the tab strip - that is
+    drawn by the console page, which these tests stand in for.
+    """
+
+    def setUp(self):
+        with open(os.path.join(FAB, "beacon_tabs.mast"), encoding="utf-8") as f:
+            self.src = f.read()
+
+    def _declared_by(self, marker):
+        """Tab names enabled in the block that starts at `marker`.
+
+        A block ends at the next line that starts a label at column 0 (`==`, `//`, `---`).
+        """
+        import re
+        lines = self.src.splitlines()
+        start = next(i for i, ln in enumerate(lines) if ln.startswith(marker))
+        names = set()
+        for ln in lines[start + 1:]:
+            if re.match(r"^(===?|//|---)", ln):
+                break
+            if ln.lstrip().startswith("#"):
+                continue          # a comment may QUOTE another screen's declaration
+            m = re.search(r'gui_tab_enable\("([^"]+)"\)', ln)
+            if m:
+                names.update(n.strip() for n in m.group(1).split(","))
+        return names
+
+    def test_the_activation_hook_and_every_repaint_declare_the_same_tabs(self):
+        activation = self._declared_by("//gui/normal_engi")
+        self.assertTrue(activation, "//gui/normal_engi declares no tabs")
+        for repaint in ("--- fab_repaint", "--- cargo_repaint"):
+            self.assertEqual(
+                self._declared_by(repaint), activation,
+                f"{repaint} does not re-declare {sorted(activation)} - the strip is "
+                f"consumed on every build, so those tabs vanish on the next repaint")
+
+    def test_every_repaint_still_sets_the_back_tab(self):
+        for repaint in ("--- fab_repaint", "--- cargo_repaint"):
+            i = self.src.index(repaint)
+            self.assertIn("gui_tab_back(CONSOLE_SELECT)", self.src[i:i + 400],
+                          f"{repaint} lost its back tab")

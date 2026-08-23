@@ -26,6 +26,17 @@ default CONSOLE_SELECT = ""
 //gui/tab/fabricate
 --- fab_repaint
     gui_tab_back(CONSOLE_SELECT)
+    # RE-DECLARE THE WHOLE STRIP, not just the back tab. The page CONSUMES its tab
+    # declarations: maststorypage clears `console_tabs` and `__back_tab__` as soon as
+    # it has drawn the strip, so whatever a build does not declare is gone from the
+    # next one. //gui/normal_engi enables these two ONCE, when Engineering activates,
+    # which is enough for the first paint and nothing after it.
+    #
+    # It went unnoticed because this panel almost never repainted. Now it repaints on
+    # Build and once a second while a build runs, so the strip was rebuilt with only
+    # what this label declares and the buttons went missing. consoles/debug.mast has
+    # always done it this way (gui_tab_back then gui_tab_enable("brain,mast")).
+    gui_tab_enable("fabricate,cargo")
     gui_activate_console("fabricate")
     ship_id = sbs.get_ship_of_client(client_id)
     default fab_sel_key = None
@@ -167,6 +178,8 @@ default CONSOLE_SELECT = ""
 //gui/tab/cargo
 --- cargo_repaint
     gui_tab_back(CONSOLE_SELECT)
+    # Same as fab_repaint: the strip is consumed on every build. See there.
+    gui_tab_enable("fabricate,cargo")
     gui_activate_console("cargo")
     ship_id = sbs.get_ship_of_client(client_id)
     default cargo_sel_cid = None
