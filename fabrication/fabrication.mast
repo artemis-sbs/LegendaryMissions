@@ -35,13 +35,16 @@ fabrication_load_recipes_amd(document_get_amd_file(None, "Recipes", content=medi
     fr_out = fr_recipe["output"]
     set_timer(ship_id, "fab_" + key, seconds=fr_time)
     task_schedule(fabricate_recipe_done, {"ship_id": ship_id, "output": fr_out, "btime": fr_time})
+    fabrication_last_built_set(ship_id, None)
+    signal_emit("item_changed", {"holder_id": ship_id})
     ->END
 
 == fabricate_recipe_done
     await delay_sim(btime)
     ->END if to_object(ship_id) is None
     set_inventory_value(ship_id, output, get_inventory_value(ship_id, output, 0) + 1)
-    overlay_toast(f"Fabricated: {output}", to=ship_id)
+    overlay_toast(f"{output} built - in Cargo", to=ship_id)
+    fabrication_last_built_set(ship_id, output)
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END
 

@@ -127,8 +127,27 @@ default CONSOLE_SELECT = ""
                 signal_emit("beacon_build", {"ship_id": ship_id, "recipe": rk, "program": fab_prog})
             else:
                 signal_emit("fabricate_recipe", {"ship_id": ship_id, "key": rk})
+            # Repaint, or pressing Build does nothing visible. The page was built with
+            # fab_building False, so it is parked in the plain `await gui()` - not the
+            # 1-second self-tick branch that draws the countdown - and nothing here
+            # would ever wake it. The route ran INLINE inside signal_emit (emit_signal
+            # ticks it in context), so the timer is already set and this repaint sees
+            # the build.
+            fab_sel_hint = fab_box.get_selection_hint()
+            jump fab_repaint
     elif fab_sel is not None:
         """color:#888; justify:center; $text: need materials"""
+
+    # RIGHT (result): what the fabricator last produced, and where it went. The
+    # completion toast is a LOG line - it lands in the ambient strip and the Log tab,
+    # i.e. everywhere except the panel the engineer is watching - so on its own a
+    # finished build looked exactly like nothing happening. This is its durable twin:
+    # it holds until the next build starts, and it survives a repaint, a tab switch
+    # and a reconnect because it lives on the ship.
+    gui_section(style="area: 47, 92, 95, 100;")
+    fab_done = fabrication_last_built(ship_id)
+    if fab_done != "":
+        """color:#6f6; justify:center; $text: Built {fab_done} - now in Cargo"""
 
     on signal item_changed:
         fab_sel_hint = fab_box.get_selection_hint()

@@ -32,6 +32,12 @@
     bw_kind = bw_recipe["program"].get("kind", "bio")
     set_timer(ship_id, "beacon_fab", seconds=bw_time)
     task_schedule(beacon_build_done, {"ship_id": ship_id, "kind": bw_kind, "prog": program, "rprog": bw_recipe["program"], "rkey": recipe, "btime": bw_time})
+    # The previous result is no longer "what just came out"; a new build supersedes it.
+    fabrication_last_built_set(ship_id, None)
+    # The inputs were just consumed, so the manifest really did change - an open Cargo
+    # tab showed stale salvage until the build FINISHED, and the Fabricate panel had no
+    # reason to repaint at all, which is why the countdown never appeared.
+    signal_emit("item_changed", {"holder_id": ship_id})
     ->END
 
 == beacon_build_done
@@ -54,9 +60,12 @@
     bw_built = get_inventory_value(ship_id, "beacon_built", [])
     bw_built.append(bw_entry)
     set_inventory_value(ship_id, "beacon_built", bw_built)
-    bw_mon = prog.get("monster", kind)
-    bw_mode = prog.get("mode", "")
-    overlay_toast(f"Beacon built: {bw_mode} {bw_mon} (ready to deliver)", to=ship_id)
+    bw_name = fabrication_beacon_name(bw_entry)
+    overlay_toast(f"{bw_name} built - in Cargo, ready to deliver", to=ship_id)
+    # The durable twin of that log line: the Fabricate panel shows this until the next
+    # build starts. A toast alone is not an indication - it is a line in a strip on a
+    # tab the engineer is not looking at.
+    fabrication_last_built_set(ship_id, bw_name)
     signal_emit("item_changed", {"holder_id": ship_id})
     ->END
 
