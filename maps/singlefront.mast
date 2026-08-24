@@ -60,7 +60,7 @@ Properties:
 
     # For Single Front and Double Front, one enemy is randomly chosen as the attacker, so all fleets will be chosen from that enemy.
     enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
-    enemy = random.choice(enemyTypeNameList)
+    enemy = fleet_pick_enemy_race(enemyTypeNameList)
     # enemy = enemy_temp[0]
 
     # Pick a random direction for the attacker, 1 = North, 2 = East, 3 = South, 4 = West

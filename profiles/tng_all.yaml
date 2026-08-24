@@ -1,0 +1,77 @@
+# LegendaryMissions, fully converted to TNG - and converted on the CLIENTS too.
+#
+#   sbs run server,science -m LegendaryMissions profile=tng_all
+#   Artemis3-x64-release.exe autostartserver defaultmission=LegendaryMissions profile=tng_all
+#
+# THE UNION OF THE THREE THAT EACH DID A THIRD OF THE JOB. `tng_ships` seats the crew in
+# Trek hulls and nothing else; `tng_art` re-points the NPCs and stations; `tng_total` tried
+# to do the art with `tng_reskin`.
+#
+# `tng_reskin` IS DELIBERATELY NOT INCLUDED, and that is the whole point of this file. It
+# declares TNG art against the GAME'S OWN ship keys, which works on the server and never on
+# a client: a client resolves a key it already knows against its own data/shipData.yaml, so
+# its stock artfileroot wins and the override never crosses the wire. That is why a game run
+# under tng_total came out with a Trek player ship (a `tng_*` key, which the client has no
+# record for, so it renders what the server sends) and stock TSN raiders and starbases.
+#
+# RACE_ART and ART_KEYS instead point the ship-data LOOKUP at the mod's own keys, which the
+# client also has no record for - the same route that already worked for the player ship.
+#
+# NOTHING HERE MOVES A SIDE. shipData `side` is a lookup field; the side a ship spawns on is
+# what relations, comms and contact colour read, and the prefabs keep those apart. LM's
+# raiders are still raiders, flying Cardassian hulls. Measured: stock and converted runs
+# report the same __npc__ sides ['civ','raider','tsn'].
+addons:
+    include:
+        - tng_races
+
+media:
+    include:
+        - Cosmos-TNG-Mod.media
+
+MUSIC_SELECT: "TNG_Music"
+
+# The crew fly Trek hulls. Side stays `tsn` - LM's maps, diplomacy and mission logic are
+# written against its own sides, so only the HULL changes.
+PLAYER_LIST:
+  - { name: "Enterprise", id: null, side: "tsn", ship: "tng_fed_galaxy",          face: "human" }
+  - { name: "Defiant",    id: null, side: "tsn", ship: "tng_fed_defiant",         face: "human" }
+  - { name: "Voyager",    id: null, side: "tsn", ship: "tng_fed_intrepid",        face: "human" }
+  - { name: "Sovereign",  id: null, side: "tsn", ship: "tng_fed_sovereign",       face: "human" }
+  - { name: "Akira",      id: null, side: "tsn", ship: "tng_fed_akira",           face: "human" }
+  - { name: "Nebula",     id: null, side: "tsn", ship: "tng_fed_nebula",          face: "human" }
+  - { name: "Excalibur",  id: null, side: "tsn", ship: "tng_fed_excelsior_refit", face: "human" }
+  - { name: "Titan",      id: null, side: "tsn", ship: "tng_fed_luna",            face: "human" }
+PLAYER_COUNT: 6
+AUTO_START: true
+
+# Auto play is a special mode
+# Typically used for testing
+# But could be useful with
+# attracting attention
+AUTO_PLAY:
+    enable: true
+    # Range (u) the ship holds at to open with its EMP/Nuke volley, clear of the blast.
+    standoff: 5000
+    # Engineering overpower applied to drive + weapons (1.0 = 100%); eased off on low energy.
+    overpower: 1.5
+
+DOCKING: 
+    refuel_amount: 20
+    refuel_delay: 2
+    shield_delay: 2
+    shield_coeff: 25
+    torps_delay: 6
+    interior_delay: 2
+    interior_count: 2
+
+# WHO you fight. A theater rosters the enemy races and carries the Art/Faces maps, so the
+# hull re-skin, the crew portraits and the roster all come from ONE declaration and cannot
+# drift apart - which they did while they were three hand-written blocks here: RACE_ART said
+# kralien -> Cardassian while the generated ART_KEYS said Kazon, so the same race produced
+# different factions depending on which code path spawned it.
+#
+# Declared in Cosmos-TNG-Mod/tng_races/theaters.amd. Others: klingon_war (the most varied -
+# every faction has four hulls), romulan_cold_war, delta_quadrant (the Kazon-heavy mix this
+# profile produced by accident before theaters existed).
+THEATER: dominion_war

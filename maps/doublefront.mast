@@ -63,9 +63,9 @@ Properties:
 
     enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
     enemy_temp = []
-    enemy_temp = random.choices(enemyTypeNameList, weights=(40, 20, 20, 20))
+    enemy_temp = [fleet_pick_enemy_race(enemyTypeNameList, (40, 20, 20, 20))]
     enemy1 = enemy_temp[0]
-    enemy_temp = random.choices(enemyTypeNameList, weights=(40, 20, 20, 20))
+    enemy_temp = [fleet_pick_enemy_race(enemyTypeNameList, (40, 20, 20, 20))]
     enemy2 = enemy_temp[0]
 
     # Pick a random direction for both attackers, 1 = North, 2 = East, 3 = South, 4 = West

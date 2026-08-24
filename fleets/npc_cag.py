@@ -6,6 +6,7 @@ from sbs_utils.procedural.query import to_object, to_id, object_exists, to_objec
 from sbs_utils.procedural.space_objects import target, closest, broad_test_around, target_pos
 from sbs_utils.procedural.roles import role, all_roles, add_role, remove_role, any_role
 from sbs_utils.procedural.spawn import npc_spawn
+from sbs_utils.procedural.ship_data import art_key_for
 from sbs_utils.procedural.links import get_dedicated_link, set_dedicated_link
 from sbs_utils.procedural.sides import side_hostile_members
 from sbs_utils.vec import Vec3
@@ -30,23 +31,28 @@ class NpcCAG(Agent):
 
     #--------------------------------------------------------------------------------------
     def get_fighter_key(self, carrier_race):
-        # TODO: This is not good enough for modding
-        if carrier_race is None:
-            return "arvonian_fighter"
-        
-        if carrier_race=="xim":
+        # The hull is NAMED OUTRIGHT here rather than looked up by side, so a theater's
+        # faction map cannot reach it - the same gap stations and civilians had. One
+        # return point through art_key_for is what makes a conversion mod's fighters
+        # follow its carriers; it is identity unless ART_KEYS (or a theater) is set.
+        #
+        # This is also why the fighter was the LAST stock hull in a converted game:
+        # everything else moved and the carrier kept launching arvonian_fighters.
+        if carrier_race == "xim":
             carrier_race = "ximni"
-
 
         match carrier_race:
             case "tsn":
-                return "tsn_fighter"
+                key = "tsn_fighter"
             case "pirate":
-                return "pirate_fighter"
+                key = "pirate_fighter"
             case "ximni":
-                return "xim_avenger"
+                key = "xim_avenger"
+            case _:
+                # Covers carrier_race None as well as any race with no fighter of its own.
+                key = "arvonian_fighter"
 
-        return "arvonian_fighter"
+        return art_key_for(key)
 
     #--------------------------------------------------------------------------------------
     def find_fighter_target_id(self, fighter_id):

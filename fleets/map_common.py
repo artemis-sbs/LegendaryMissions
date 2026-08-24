@@ -40,6 +40,33 @@ def player_ship_update_friendly(player_id, friends, initial_scan = False):
 
 
 
+def fleet_pick_enemy_race(race_list, weights=None):
+    """This map's enemy race: the active THEATER's roster when one is set, else the map's
+    own list.
+
+    The maps used to call `random.choices(enemyTypeNameList, weights=...)` directly, so who
+    a mission fights was a literal no profile or mod could reach. Under a total conversion
+    that is how the mix ends up being whatever the hull pairing happened to produce.
+
+    THE WEIGHT CURVE STAYS WITH THE MAP. `weights` is still the caller's - siege's
+    `diff_weight[DIFFICULTY]` runs [85,5,5,5] at difficulty 1 and [10,30,30,30] at 11, so
+    the enemy mix DIVERSIFIES as the game gets harder. A theater supplies the order, not the
+    proportions, and that feature survives untouched.
+
+    Returns a race spelled the way `race_list` spells it, because the maps branch on the
+    literal (`if enemy1 == "Kralien":`) to pick an enemy station type. A theater rostering a
+    race this map has no branches for falls back to the map's own list rather than half
+    applying itself.
+    """
+    from sbs_utils.procedural.amd_theater import theater_pick_race
+    pick = theater_pick_race(weights, names=race_list)
+    if pick is not None:
+        return pick
+    if weights:
+        return random.choices(race_list, weights=weights)[0]
+    return random.choice(race_list)
+
+
 def fleet_remove_ship(id_or_obj):
     ship_id = to_id(id_or_obj)
     if ship_id is None:

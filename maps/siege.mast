@@ -233,7 +233,7 @@ GameCode:
         spawn_points = None
         
     for a in range(fleet_count):
-        enemy_temp = random.choices(enemyTypeNameList, weights=diff_weight[fleet_index])
+        enemy_temp = [fleet_pick_enemy_race(enemyTypeNameList, diff_weight[fleet_index])]
         
         enemy = enemy_temp[0]
         if spawn_points is None:

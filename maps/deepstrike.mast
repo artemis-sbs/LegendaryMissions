@@ -43,7 +43,7 @@ Properties:
 
     enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian"]
     enemy_temp = []
-    enemy_temp = random.choices(enemyTypeNameList, weights=(50, 25, 25))
+    enemy_temp = [fleet_pick_enemy_race(enemyTypeNameList, (50, 25, 25))]
     enemy1 = enemy_temp[0]
 
     #------------------------------------------------------------------------------------------------------------
