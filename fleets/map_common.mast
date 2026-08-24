@@ -136,8 +136,18 @@
     # rebuilt "in case art work changed", not just the ones whose hull moved. The panel path
     # calls apply() WITHOUT force, where the diff is what makes a repaint free.
     player_roster_apply(loadout, force=True)
-    # Deferred by a tick, as it always was: delete_object frees the C++ object synchronously.
-    # What is new is that release refuses a slot a console is still crewing.
+    # NOTHING IS DELETED ANY MORE. The unused hulls are pushed to STANDBY, which suspends
+    # them from the physics arena and from network replication without freeing them.
+    #
+    # They used to be deleted here, and `delete_object` frees the C++ object
+    # SYNCHRONOUSLY. A client asking the server for data about one across that window is
+    # the `ObjectDataBlob::Set` use-after-free that kills a server within seconds of a
+    # console connecting - reproduced on stock siege, 15s, with the map's own hulls.
+    # Standby removes the window instead of narrowing it: there is no freed blob for a
+    # late question to land on.
+    #
+    # set_count already parked them a few lines above; this is the backstop for a hull
+    # that was inactive before the roster knew about it.
     task_schedule(player_ships_remove_unused)
     # The server console rides slot 0.
     _first = player_roster_resolve(0)
@@ -220,11 +230,14 @@ players:
     
 ==== player_ships_remove_unused
     # Kept by NAME - it is scheduled from the reconcile route above and the name has been
-    # public surface for a long time - but it no longer takes a ship id. The roster decides
-    # WHICH slots are releasable, and refuses any a console is still bound to; a bare
-    # delete_object on an id handed over a tick earlier is precisely what could not make
-    # that check.
-    player_roster_release_inactive()
+    # public surface for a long time - but it no longer REMOVES anything. Unused player
+    # hulls go to standby rather than being deleted, so nothing is ever freed for a
+    # late-arriving client question to race.
+    #
+    # `player_roster_release_inactive()` still exists in the library for a caller that
+    # deliberately wants the hulls gone. It is not called here, and should not be while
+    # the ObjectDataBlob use-after-free is open.
+    player_roster_park_inactive()
     ->END
 
         

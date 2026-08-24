@@ -7,6 +7,14 @@ default shared SIEGE_TIMEOUT = "Win"
 # the raiders thin out (siege_enemies_low), or None. BOSS_LIST feeds the dropdown.
 default shared BOSS_SELECT = "None"
 default shared BOSS_LIST = siege_boss_list()
+# WHO you fight and how everyone is dressed (map option). Opt-in per map, exactly like
+# Boss above: a mission with no theaters declared gets a list of just "None".
+#
+# THEATER is seeded from the SETTING rather than defaulted to "None", or this `default`
+# would overwrite a profile's `THEATER: dominion_war` with "None" the moment the panel
+# built - the feature would look wired and select nothing.
+default shared THEATER = theater_selected_name()
+default shared THEATER_LIST = theater_name_list()
 
 @map/siege "Siege"
 " In this scenario, bases will be located in the center of the sector, 
@@ -18,6 +26,7 @@ Properties:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
     Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
     Boss: 'gui_drop_down("$text: {BOSS_SELECT};list: {BOSS_LIST}", var="BOSS_SELECT")'
+    Theater: 'gui_drop_down("$text: {THEATER};list: {THEATER_LIST}", var="THEATER")'
   Map:
     Map Size: 'gui_drop_down("$text: {MAP_SIZE};list: Small, Medium, Large", var="MAP_SIZE")'
     Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'
