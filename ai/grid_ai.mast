@@ -10,50 +10,50 @@ default shared grid_data = grid_get_grid_data()
 
 //spawn if has_role(SPAWNED_ID, "__player__")
     #
-    # WAIT FOR THE GAME TO START, then build an interior only for a ship that is actually
-    # going to be flown.
+    # ASK for an interior; do not build one.
     #
-    # This was `await delay_sim(1)` followed by an unconditional build. EVERY hull in the
-    # roster spawns at server start - eight by default - so one sim-second into the server
-    # console it built roughly 500-800 grid objects in a burst, and seven of those ships
-    # are parked at Start and never flown. Their interiors were built, never used, and
-    # then churned again when the hull was blanked, which is where the
-    # `no interior for ship_data_key 'invisible'` lines came from.
+    # Player ships are created long before anyone picks a map - LM builds the whole roster
+    # at server-console start - so building here built one for EVERY slot, eight of them,
+    # on whatever hull the roster happened to name. Then the operator starts a map,
+    # reconcile_player_roster culls to PLAYER_COUNT and parks the rest, applies a game
+    # code's hull, and the map body may re-hull again. Measured on one Trek trial: 110
+    # objects built for a hull nobody flew, then 124 built twice more for the hull they
+    # did - 358 creations plus a full delete, to arrive at 124.
     #
-    # The wait was already trying to say this - "this waits until the game is started" -
-    # but a flat one-second sim delay is not that. The signal is.
+    # A request is recorded and built ONCE, when the hulls have settled, reading the hull
+    # at BUILD time. All that churn collapses into one build of the right interior, with
+    # nothing to delete - and it lands after the window where a console is connecting.
     #
-    # It also moves the whole burst clear of the window where a console is connecting,
-    # which is when the server has been dying.
-    #
-    # GUARDED on GAME_STARTED: a ship that spawns AFTER the start - a respawn, a late
-    # addition, a mission adding a hull mid-game - must not wait forever for a signal that
-    # has already fired. GAME_STARTED is set in start_server before any player ship is
-    # created, so it always exists by the time this route can run.
-    #
-    if not GAME_STARTED:
-        await signal_next("game_started")
-    #
-    # Parked hulls gave up __player__ when the roster reconciled, so this is what skips
-    # them. Checked AFTER the wait, not before - before the start every roster hull is
-    # still a player ship and nothing is decided yet.
-    #
-    ->END if not has_role(SPAWNED_ID, "__player__")
-    #
-    # Create the interior for the ship, defined in grid_ai
-    #
-    still_around = to_object(SPAWNED_ID)
-    ->END if still_around is None
-    grid_rebuild_grid_objects(SPAWNED_ID, grid_data)
-    #
-    # Handle jump vs Warp drive
-    #
-    is_warp = False
-    is_jump = False
-    warp_nodes = to_object_list(grid_objects(SPAWNED_ID) & role("warp"))
-    #
-    _jump_nodes = to_object_list(grid_objects(SPAWNED_ID) & role("jump"))
+    grid_interior_request(SPAWNED_ID)
+    ->END
 
+
+//shared/signal/game_started
+    #
+    # The hulls are final: release every interior that was asked for. Past the roster cull
+    # (which runs in `start`, before the map is scheduled) and past whatever re-hulling the
+    # map does for itself.
+    #
+    # From here on a request builds immediately, so a mid-game refit or a late player ship
+    # needs no one to re-arm anything.
+    #
+    grid_interior_arm()
+
+
+//shared/signal/grid_interior_built
+    #
+    # WARP OR JUMP, decided by what the hull actually has.
+    #
+    # This used to sit on the line after the build, reading the grid it had just created.
+    # A deferred build cannot be read on the next line, so the library says when an
+    # interior exists and this answers. SHIP_ID arrives as a task variable.
+    #
+    # //shared: it writes blob values, so it belongs on the server once, not once per
+    # connected console.
+    #
+    ->END if not object_exists(SHIP_ID)
+    warp_nodes = to_object_list(grid_objects(SHIP_ID) & role("warp"))
+    _jump_nodes = to_object_list(grid_objects(SHIP_ID) & role("jump"))
     is_warp = len(warp_nodes) > 0
     is_jump = len(_jump_nodes) > 0
 
@@ -61,16 +61,11 @@ default shared grid_data = grid_get_grid_data()
     _jump = 1 if is_jump else 0
     _label = "JUMP" if is_jump else "WARP"
 
-    blob = to_blob(SPAWNED_ID)
-    blob.set("warp_drive_active",_warp,0)
-    blob.set("jump_drive_active", _jump,0)
+    blob = to_blob(SHIP_ID)
+    ->END if blob is None
+    blob.set("warp_drive_active", _warp, 0)
+    blob.set("jump_drive_active", _jump, 0)
     blob.set("eng_control_label", _label, 3)
-
-    # prefab_spawn(prefab_lifeform_damcons, {"ship_id": SPAWNED_ID})
-
-
-    ->END
-
 
 
 //shared/signal/ship_hull_changed
