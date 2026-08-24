@@ -717,9 +717,24 @@ $t Waiting for the server to start the mission
     # they had not chosen, and engineering showed one hull's shadows over another's nodes.
     default client_select_ship_id = None
     _ship_id = None
-    if client_select_ship_id is not None and object_exists(client_select_ship_id):
+    #
+    # BY SLOT FIRST. A slot is the one handle that survives the roster reshaping a ship:
+    # a re-hull or a rename keeps the id, but a sim wipe or a respawn does NOT, and an id
+    # captured on the picker is stale from that moment on. The slot resolves to whatever
+    # ship holds it now.
+    #
+    # The id below is kept, not replaced - it is still right for everything that has not
+    # been re-created, and it is what a console with no slot (a launch argument naming a
+    # ship) has to use.
+    #
+    default client_select_slot = None
+    if client_select_slot is not None:
+        _slot_ship = player_roster_resolve(client_select_slot)
+        if _slot_ship is not None:
+            _ship_id = _slot_ship
+    if _ship_id is None and client_select_ship_id is not None and object_exists(client_select_ship_id):
         _ship_id = client_select_ship_id
-    else:
+    elif _ship_id is None:
         # No id: a console launched by argument (`helm;Artemis`) carries only a name, and
         # a renamed or destroyed ship can outlive its id. Still by name, but the FIRST
         # match wins and the loop stops - deterministic, and one assignment rather than N.
@@ -750,6 +765,13 @@ $t Waiting for the server to start the mission
     crew_release(client_id)
 
     sbs.assign_client_to_ship(client_id, _ship_id)
+    # Tell the roster who is aboard. Two things depend on it: release_inactive refuses to
+    # delete a slot a console is crewing, and rebind re-runs this assignment if the engine
+    # hands that slot a new ship. Bind by the ship's OWN slot rather than the picked one,
+    # so a console that arrived by name or by launch argument is registered too.
+    client_select_slot = player_roster_slot_of_ship(_ship_id)
+    if client_select_slot is not None:
+        player_roster_bind(client_select_slot, client_id)
     assign_client_to_alt_ship(client_id, 0)
     #
     # Clear any alt ship e.g. comms give orders
