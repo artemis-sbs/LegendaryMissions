@@ -16,6 +16,17 @@ default shared BOSS_LIST = siege_boss_list()
 default shared THEATER = theater_selected_name()
 default shared THEATER_LIST = theater_name_list()
 
+# Presentation pickers (map options). These are declared HERE, not hardcoded into the
+# server console, so a mission gets a control because its map asked for one - a mission
+# with no music banks, no crew rosters or no theaters shows nothing.
+#
+# Each seed reads the SHARED value first and the setting second, so this `default` cannot
+# overwrite a choice a profile already made with the fallback.
+default shared MUSIC_SELECT = music_selected_name()
+default shared MUSIC_LIST = music_name_list()
+default shared CREW_SELECT = crew_selected_name()
+default shared CREW_LIST = crew_name_list()
+
 @map/siege "Siege"
 " In this scenario, bases will be located in the center of the sector, 
 " with minefields ringing the center, and enemies advancing from every 
@@ -27,6 +38,8 @@ Properties:
     Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
     Boss: 'gui_drop_down("$text: {BOSS_SELECT};list: {BOSS_LIST}", var="BOSS_SELECT")'
     Theater: 'gui_drop_down("$text: {THEATER};list: {THEATER_LIST}", var="THEATER")'
+    Music: 'gui_drop_down("$text: {MUSIC_SELECT};list: {MUSIC_LIST}", var="MUSIC_SELECT")'
+    Crew: 'gui_drop_down("$text: {CREW_SELECT};list: {CREW_LIST}", var="CREW_SELECT")'
   Map:
     Map Size: 'gui_drop_down("$text: {MAP_SIZE};list: Small, Medium, Large", var="MAP_SIZE")'
     Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'

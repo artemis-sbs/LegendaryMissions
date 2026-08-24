@@ -12,6 +12,19 @@
 #
 # The original Peacetime map is untouched and still selectable; this is a new @map.
 
+# Presentation pickers (map options). These are declared HERE, not hardcoded into the
+# server console, so a mission gets a control because its map asked for one - a mission
+# with no music banks, no crew rosters or no theaters shows nothing.
+#
+# Each seed reads the SHARED value first and the setting second, so this `default` cannot
+# overwrite a choice a profile already made with the fallback.
+default shared MUSIC_SELECT = music_selected_name()
+default shared MUSIC_LIST = music_name_list()
+default shared CREW_SELECT = crew_selected_name()
+default shared CREW_LIST = crew_name_list()
+default shared THEATER = theater_selected_name()
+default shared THEATER_LIST = theater_name_list()
+
 @map/peacetime_remastered "Peacetime Remastered"
 " A quiet border patrol shift. Work the quest board: run down the Florbin
 " kidnapping, qualify the gunnery crew, clear hazards, and police the lanes.
@@ -21,6 +34,9 @@ Properties:
   Main:
     Player Ships: 'gui_int_slider("$text:int;low: 1.0;high:8.0;", var= "PLAYER_COUNT")'
     Difficulty: 'gui_int_slider("$text:int;low: 1.0;high:11.0;", var= "DIFFICULTY")'
+    Music: 'gui_drop_down("$text: {MUSIC_SELECT};list: {MUSIC_LIST}", var="MUSIC_SELECT")'
+    Crew: 'gui_drop_down("$text: {CREW_SELECT};list: {CREW_LIST}", var="CREW_SELECT")'
+    Theater: 'gui_drop_down("$text: {THEATER};list: {THEATER_LIST}", var="THEATER")'
   Map:
     Terrain: 'gui_drop_down("$text: {TERRAIN_SELECT};list: none, few, some, lots, max",var="TERRAIN_SELECT")'
     Lethal Terrain: 'gui_drop_down("$text: {LETHAL_SELECT};list: none, few, some, lots, max", var="LETHAL_SELECT")'

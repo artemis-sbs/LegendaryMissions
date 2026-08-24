@@ -297,36 +297,16 @@ gui_reroute_clients("client_main")
         # which is a visible change nobody asked for. The count is still reconciled at Start.
         player_roster_apply()
 
-        # Music. The list comes from music_get_list(), not a fixed one, so a mod that ships
-        # its own banks shows up here without this file knowing about it. It sits AFTER
-        # map_apply_defaults so a map's `Defaults: MUSIC_SELECT` is what reads as the
-        # current pick.
+        # Music, Crew and Theater used to be hardcoded rows here, above the map's own
+        # Properties. They are map properties now - a map declares the ones it wants, the
+        # same way it declares its Difficulty or its Boss - so a mission that has no music
+        # banks, no crew rosters or no theaters does not get a control for them, and a
+        # mission that wants them says so.
         #
-        # Interpolated inline, like the preset dropdown above and for the same reason: a
-        # bare MAST string assignment is re-run through f-string formatting, and a display
-        # name comes from whatever mod declared the label.
-        gui_row("row-height: 30px;")
-        music_choices = music_get_list()
-        # A LABEL, not a blank: the dropdown shows the bank that is selected ("random",
-        # or a mod's display name), which tells the operator nothing about what the
-        # control IS. The 6em here was an empty spacer of the same width.
-        gui_text("$text: Music;justify:right;", "col-width: 6em;")
-        music_dd = gui_drop_down(f"$text: {get_shared_variable('MUSIC_SELECT', SETTINGS.get('MUSIC_SELECT', 'random'))}; list: {','.join(['random'] + [m.display_name for m in music_choices])}")
-        on gui_message(music_dd):
-            shared MUSIC_SELECT = music_dd.value
-
-        # WHICH CREW staffs consoles nobody named. Guarded on there being any: music's row is
-        # unconditional because a "default" bank always exists, and crew genuinely can be
-        # empty - a mission that declares no roster has to get exactly the panel it got
-        # before. Placed AFTER map_apply_defaults above, so a map's `Defaults: CREW_SELECT`
-        # reads back as the current pick rather than being overwritten by a stale one.
-        crew_choices = crew_get_list()
-        if len(crew_choices) > 0:
-            gui_row("row-height: 30px;")
-            gui_text("$text: Crew;justify:right;", "col-width: 6em;")
-            crew_dd = gui_drop_down(f"$text: {get_shared_variable('CREW_SELECT', SETTINGS.get('CREW_SELECT', ''))}; list: {','.join(['none', 'random'] + [c.display_name for c in crew_choices])}")
-            on gui_message(crew_dd):
-                shared CREW_SELECT = crew_dd.value
+        # The helpers a map uses: music_name_list / music_selected_name,
+        # crew_name_list / crew_selected_name, theater_name_list / theater_selected_name.
+        # Each *_selected_name reads the SHARED value first and the setting second, so a
+        # map's `default shared` seed cannot overwrite a choice a profile already made.
 
         gui_row()
         gui_property_list_box(name="Options")
