@@ -1,0 +1,112 @@
+# A SOAK HARNESS for the pre-start window. Inert unless SOAK.enable is set.
+#
+# WHY IT IS A FOLDER IN LM AND NOT A PROFILE-ONLY ADDON. The compiler WALKS the mission
+# folder and imports every `__init__.mast` it finds, applying only the profile's addon
+# EXCLUDE list; `addons: include:` resolves against `__lib__` mastlibs, not source folders
+# (mast.py, _addon_profile_rules and the walk below it). So a folder here always compiles.
+# The guard therefore has to be behavioral: nothing below runs unless a profile turns it on.
+#
+# WHAT IT IS FOR. The server has been dying inside ~15s of a console connecting, in
+# ObjectDataBlob::Set under Simulation::Tick - a use-after-free, ~15% of runs. Four arms
+# changed nothing. Three changes since then may have fixed it, and "seems fixed" is not
+# evidence at that rate: one arm read 0/12 and then 4/12 on its confirmation run.
+#
+# This drives, unattended, the things a person does before Start:
+#   * the Player Ships slider moving
+#   * helm changing the ship type
+#   * a crew renaming their ship
+# while clients connect at staggered times.
+#
+# HONEST ABOUT COVERAGE: it calls the roster functions the picker now calls, NOT the GUI
+# handlers. That is the right target for a crash about ENGINE WRITES - the handlers are thin
+# wrappers over these - but it is not proof the widgets behave.
+
+default shared SOAK = SETTINGS.get("SOAK", {})
+
+if SOAK.get("enable", False):
+    task_schedule(soak_churn)
+
+
+== soak_churn ==
+    #
+    # Wait for a roster to exist. The server console creates the player ships early in
+    # start_server, but this task is scheduled from top-level code, which runs first.
+    #
+    # delay_app, not delay_sim: the sim is not running while the server console sits on its
+    # menu, and a sim delay that never fires would leave the soak silently doing nothing -
+    # which would look exactly like a clean result.
+    #
+    soak_waited = 0
+---soak_wait_roster
+    await delay_app(0.5)
+    soak_waited += 0.5
+    if len(player_roster_slots()) == 0:
+        jump soak_wait_roster if soak_waited < 30
+        log("soak: no player roster after 30s - nothing to churn", "soak", "warning")
+        ->END
+
+    #
+    # The hulls to cycle through are the ones the roster itself names, so every pick is a
+    # hull this mission really has data for. Picking from shipData at large would be a
+    # broader test and a less honest one - it would also exercise missing-interior paths
+    # that no player can reach from the picker.
+    #
+    soak_hulls = ~~[r.get("ship") for r in player_roster() if r.get("ship")]~~
+    ->END if len(soak_hulls) == 0
+
+    soak_window = SOAK.get("window", 25)
+    soak_step = SOAK.get("step", 0.5)
+    soak_min = SOAK.get("min_ships", 1)
+    soak_max = SOAK.get("max_ships", 8)
+    soak_i = 0
+    soak_elapsed = 0
+    # Counted so every run SELF-REPORTS whether it actually churned. A soak that silently
+    # did nothing and a soak that found no crash look identical in the driver's output, and
+    # the second is only meaningful if the first can be ruled out.
+    soak_counts = 0
+    soak_hull_sets = 0
+    soak_applies = 0
+    soak_last_n = -1
+    log(f"soak: churning for {soak_window}s over {len(soak_hulls)} hull(s)", "soak", "warning")
+
+---soak_loop
+    await delay_app(soak_step)
+    soak_elapsed += soak_step
+    soak_i += 1
+
+    # The Player Ships slider, swept up and back down rather than jittered: shrinking the
+    # roster is what parks ships, and growing it again is what wakes them, so a sweep
+    # exercises both transitions every cycle.
+    soak_span = soak_max - soak_min + 1
+    soak_phase = soak_i % (soak_span * 2)
+    soak_n = soak_min + soak_phase if soak_phase < soak_span else soak_min + (soak_span * 2 - soak_phase - 1)
+    if soak_n != soak_last_n:
+        soak_counts += 1
+        soak_last_n = soak_n
+    player_roster_set_count(soak_n)
+
+    # Helm changing the ship type, and a crew renaming their ship. Every ACTIVE slot, so
+    # the churn scales with whatever the slider just did.
+    for soak_slot in player_roster_slots():
+        player_roster_set_hull(soak_slot, soak_hulls[(soak_slot + soak_i) % len(soak_hulls)])
+        player_roster_set_name(soak_slot, f"Soak {soak_slot}-{soak_i}")
+        soak_hull_sets += 1
+
+    # Intermittently, not every step: apply is what actually reaches the engine, and a
+    # player triggers it far less often than they touch the controls.
+    if soak_i % 6 == 0:
+        player_roster_apply()
+        soak_applies += 1
+
+    jump soak_loop if soak_elapsed < soak_window
+
+    #
+    # Press Start. AUTO_START is read by `jump start if AUTO_START` inside show_server_menu
+    # (consoles/server_console.mast), which is re-evaluated on every build of that menu - so
+    # setting it and rerouting the server there uses the intended path rather than jumping
+    # into `start` from outside and skipping whatever the menu does on the way.
+    #
+    log(f"soak: churned {soak_i} step(s) - {soak_counts} count change(s), {soak_hull_sets} hull set(s), {soak_applies} apply(s); starting the mission", "soak", "warning")
+    shared AUTO_START = True
+    gui_reroute_server(show_server_menu)
+    ->END
