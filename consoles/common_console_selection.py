@@ -125,9 +125,23 @@ def console_select_title_template():
     
 
 def console_ship_select_template(item):
+    """One ship row. `item` is a SLOT NUMBER, not a ship.
+
+    Nothing here resolves an engine object. The row is drawn from the roster RECORD, and
+    `gui_ship` already took a hull KEY rather than a ship - it was only ever the SOURCE of
+    that key that needed an object.
+
+    That matters beyond tidiness: this template runs for every visible row, on every
+    console, every rebuild. Reading `.name` and `.art_id` off live Agents here is a
+    per-frame engine read per client, on ships the roster may be reshaping underneath.
+    """
+    from sbs_utils.procedural.player_roster import player_roster_display
+    row = player_roster_display(item)
+    hull = row["hull"]
+
     gui_row("row-height:2em;padding:13px;")
-    gui_ship(f"{item.art_id}", style="col-width:50px;padding:0,0,5px,0;")
-    dat = ship_data.get_ship_data_for(item.art_id)
+    gui_ship(f"{hull}", style="col-width:50px;padding:0,0,5px,0;")
+    dat = ship_data.get_ship_data_for(hull)
     desc = "A fine ship"
     if dat is not None:
         desc = dat.get("name")
@@ -141,11 +155,10 @@ def console_ship_select_template(item):
         gui_row("row-height:1em;")
         # Escape the user-entered ship name so a ':' or ';' in it can't inject
         # style properties or break the justify/font that follow (issue #569).
-        ship_label = gui_text_escape(f"{item.name} - {item.side}")
+        ship_label = gui_text_escape(f"{row['name']} - {row['side']}")
         gui_text(f"$text:{ship_label};justify: left;font:gui-3;")
         gui_row("row-height:1em;")
         gui_text(f"$text:{desc};justify: left;font:gui-2;color:#bbb;")
-    # gui_text(f"$text:Hello;justify: left;font:gui-2;")
     
 
 def console_ship_select_title_template():

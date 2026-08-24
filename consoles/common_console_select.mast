@@ -48,7 +48,8 @@ if CAN_CHANGE_CONSOLE:
 
 #
 # Expects shared data 
-#    PLAYER_LIST that has the list of player ships
+#    the player ROSTER (player_roster_slots / _display / _resolve) - this screen
+#    binds to SLOTS and never holds a ship object
 #    PLAYER_COUNT the number of expected player ships
 #    GAME_STARTED game state
 #
@@ -66,24 +67,26 @@ if CAN_CHANGE_CONSOLE:
     CONSOLE_SELECT = consoles[0].path
 
 
-    # Assuming Id is in creation order
-    PLAYER_LIST = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
-    player_list_all = PLAYER_LIST.copy()
-
+    # SLOTS, not ships. A slot cannot dangle, so none of this needs re-resolving later.
+    player_slots_all = player_roster_slots()
 
     console_ready = False
     console_read_only = False
 
     ship_name = "No Player Ships"
     ship_type = "invisible"
-    if len(PLAYER_LIST)>0:
-        ship_name = PLAYER_LIST[0].name
-        ship_type = PLAYER_LIST[0].art_id
+    client_select_slot = None
+    if len(player_slots_all)>0:
+        client_select_slot = player_slots_all[0]
+        _row = player_roster_display(client_select_slot)
+        ship_name = _row["name"]
+        ship_type = _row["hull"]
 
     client_select_ship = ship_name.lower()
-    # WHICH ship, by identity. The name is kept for display and for the launch-argument
-    # form (which carries only a name), but the assignment reads this - see #443.
-    client_select_ship_id = PLAYER_LIST[0].id if len(PLAYER_LIST)>0 else None
+    # Kept ONLY for the launch-argument path (`helm;Artemis`), which carries a name and no
+    # slot. The slot above is the binding - see #443, where matching on name alone put
+    # crews on the wrong one of two same-named ships.
+    client_select_ship_id = None
     ship_type_def = ship_type
 
     shared ship_list = ""
@@ -198,9 +201,9 @@ if CAN_CHANGE_CONSOLE:
         # own. On an in-game RESTART this task runs while start_server is still building
         # the roster (delay_app(0.1), create_sides, the torpedo prefabs, then
         # create_default_player_ships), and the three client-string round trips above
-        # resolve on their own events, so they finish first. PLAYER_LIST captured at the
-        # top of this label is therefore EMPTY - and console_selected takes its
-        # len(PLAYER_LIST)==0 branch, skips assign_client_to_ship entirely, and the
+        # resolve on their own events, so they finish first. The roster is therefore
+        # still EMPTY here - and console_selected takes its no-slots branch, skips
+        # assign_client_to_ship entirely, and the
         # console label bounces straight back through select_console_clear_ready, which
         # clears the ready flag set one line above. The console shows as selected and
         # never starts.
@@ -208,7 +211,7 @@ if CAN_CHANGE_CONSOLE:
         # console_auto_start_wait is that wait - chosen console, no game yet, holding for
         # the server's start reroute. It is the same place a human with Ready ticked is
         # sitting.
-        if len(PLAYER_LIST) == 0:
+        if len(player_roster_slots()) == 0:
             # The placeholder from the top of this label ("No Player Ships") would be
             # matched by name in console_selected and resolve to nothing. Clear it so the
             # roster-was-empty fallback there picks the ship once the ships exist.
@@ -229,27 +232,26 @@ if CAN_CHANGE_CONSOLE:
 ## So on change, and on signal etc. are cleared while setting up data
     ship_sec = gui_region(style="area: 10px,60px,400px,105px")
 
-    PLAYER_LIST = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
-    player_list_all = PLAYER_LIST.copy()
-    # if GAME_STARTED:
-    #     PLAYER_COUNT = len(PLAYER_LIST)
-    #
-    # players_cleaned should set by spawn_players
-    # It must occur after the 
-    #
+    player_slots_all = player_roster_slots()
     default shared players_cleaned = False
     if players_cleaned:
-        PLAYER_COUNT = len(PLAYER_LIST)
+        PLAYER_COUNT = len(player_slots_all)
 
-    # Clamp selected index
-    client_selected_index = min(PLAYER_COUNT-1, client_selected_index )
+    # Clamp the selected SLOT to one that still exists. This is the last survivor of the
+    # five guards that used to defend the old snapshot - and it is a different thing: it
+    # keeps a selection in range, it is not protecting a pointer from being freed.
+    default client_select_slot = None
+    if client_select_slot not in player_slots_all:
+        client_select_slot = player_slots_all[0] if len(player_slots_all)>0 else None
 
-    if len(PLAYER_LIST) >0:
-        ship_type_def = PLAYER_LIST[client_selected_index].art_id
+    ship_type_def = "invisible"
+    if client_select_slot is not None:
+        client_selected_index = player_slots_all.index(client_select_slot)
+        _row = player_roster_display(client_select_slot)
+        ship_type_def = _row["hull"]
         ship_type = ship_type_def
-        ship_name = PLAYER_LIST[client_selected_index].name
+        ship_name = _row["name"]
         client_select_ship = ship_name.lower()
-        client_select_ship_id = PLAYER_LIST[client_selected_index].id
 
     #gui_activate_console("select_console")
 
@@ -259,14 +261,15 @@ if CAN_CHANGE_CONSOLE:
 
         _input = gui_input("desc:Ship Name", var="ship_name")
         on gui_message(_input):
-            if len(PLAYER_LIST)>0:
-                # PLAYER_LIST is a SNAPSHOT of Agent objects taken when this screen
-                # was built. A slot can be culled out from under it - the unused
-                # player ships are deleted at Start - and a write through a dead
-                # Agent sets a field on freed memory. Re-resolve at the point of use.
-                picked_ship = to_object(PLAYER_LIST[client_selected_index])
-                if picked_ship is not None:
-                    picked_ship.name = ship_name
+            # THE RECORD, NOT THE SHIP. This used to run `picked_ship.name = ship_name`,
+            # which lands in set_name -> blob.set("name_tag") - ObjectDataBlob::Set, the
+            # function in every one of this build's server crash dumps, called on a live
+            # ship while the sim ticks it. Per keystroke, per console.
+            #
+            # The roster carries it to the ship at Start. Every other console still sees
+            # the new name immediately, because they render the same record - that is what
+            # the shared refresh below is for.
+            player_roster_set_name(client_select_slot, ship_name)
             client_select_ship = ship_name
             # Refresh the ship list on EVERY console, not just this one. The local
             # `on change ...name` watcher only fires on a console that has the
@@ -290,15 +293,13 @@ if CAN_CHANGE_CONSOLE:
         spick = ship_picker_control(f"Your Ship", ship_type_def, ship_keys=valid_interiors)
         gui_content(spick, style="tag:sh_ship_picker", var="ship_type")
         on change ship_type:
-            #if not GAME_STARTED:
-            if len(PLAYER_LIST)>0:
-                # PLAYER_LIST is a SNAPSHOT of Agent objects taken when this screen
-                # was built. A slot can be culled out from under it - the unused
-                # player ships are deleted at Start - and a write through a dead
-                # Agent sets a field on freed memory. Re-resolve at the point of use.
-                picked_ship = to_object(PLAYER_LIST[client_selected_index])
-                if picked_ship is not None:
-                    picked_ship.art_id = ship_type
+            # THE RECORD, NOT THE SHIP. Setting art_id on a live object also calls
+            # sim.force_update_to_clients, so a crew flicking through hulls pushed an
+            # engine update per flick, during the window a console is connecting.
+            #
+            # The pick beats every theater layer and loses to a game code - the roster
+            # owns that precedence, not this screen.
+            player_roster_set_hull(client_select_slot, ship_type)
             gui_update_shared("sh_ship_list", None)
 
     if sbs.is_demo() or console_select_item.path != "helm" or GAME_STARTED or SHIP_PICK_READ_ONLY:
@@ -314,15 +315,10 @@ if CAN_CHANGE_CONSOLE:
     # List of available ships
     # ship_sec2 = gui_region(style="area: 1,110px,500px,520px")
     gui_section( style="area: 10px,550px,500px,100-60px;")
-    if len(player_list_all)>0:
-        # player_list_all is a SNAPSHOT of Agent objects taken when this screen was
-        # built. A console that is still sitting here when the game starts watched
-        # the unused slots get culled and deleted underneath it, so the snapshot can
-        # still name ships that are gone - and offering one is how a console ends up
-        # choosing a ship that no longer exists. Filter to what is still alive.
-        ship_list = [s for s in player_list_all[:PLAYER_COUNT] if to_object(s) is not None]
-    else:
-        ship_list = []
+    # Slots, and no filtering. The old line filtered dead Agents out of a snapshot,
+    # because ships were being deleted underneath a live screen. Slots do not die, and
+    # player_roster_slots() already answers with the ACTIVE ones.
+    ship_list = player_slots_all
     # reveal keeps a restored selection on screen; hint keeps it in the same slot.
     #
     # With 8 player ships and a dozen-plus consoles BOTH lists overflow their boxes,
@@ -505,13 +501,16 @@ if CAN_CHANGE_CONSOLE:
 
     on change PLAYER_COUNT:
         if not GAME_STARTED:
-            client_selected_index = min(client_selected_index, int(PLAYER_COUNT)-1)
-            # Just refresh if reduce ship count for now
-            # jump select_console if len(lb_ships.items)>PLAYER_COUNT
-            # Otherwise can refresh faster if adding ships
-            # Same filter as the build above: the snapshot can outlive the ships.
-            ship_list = [s for s in player_list_all[:PLAYER_COUNT] if to_object(s) is not None]
+            # The roster owns what the count MEANS - activate or park, never delete.
+            player_roster_set_count(int(PLAYER_COUNT))
+            ship_list = player_roster_slots()
             ship_select_lb.items = ship_list
+            # Keep the selection on the same SLOT if it is still offered, rather than on
+            # the same list position - the position moves when the list shortens.
+            if client_select_slot in ship_list:
+                client_selected_index = ship_list.index(client_select_slot)
+            else:
+                client_selected_index = min(client_selected_index, len(ship_list)-1)
             # len(ship_list)-1, not len(ship_list): set_selected_index ignores an
             # index that is not < len, so the old clamp silently CLEARED the
             # selection whenever the count shrank past it. The line above already
@@ -558,15 +557,18 @@ if CAN_CHANGE_CONSOLE:
 
     if len(ship_list) >0:
         on change ship_select_lb.get_value():
-            client_select_ship_item = ship_select_lb.get_value()
+            # The list hands back a SLOT NUMBER now, not a ship. A slot cannot dangle, so
+            # the identity question #443 was about - which of two same-named ships was
+            # clicked - is answered without holding anything.
+            client_select_slot = ship_select_lb.get_value()
             client_selected_index = ship_select_lb.get_selected_index()
-            if client_select_ship_item is not None:
-                client_select_ship = client_select_ship_item.name
-                # The list hands back the SHIP, so take its identity here - the one place
-                # that certainly knows which of two same-named ships was clicked (#443).
-                client_select_ship_id = client_select_ship_item.id
+            if client_select_slot is not None:
+                _row = player_roster_display(client_select_slot)
+                client_select_ship = _row["name"]
+                # Kept for the launch-argument path, which carries a name and no slot.
+                client_select_ship_id = None
                 ship_name = client_select_ship
-                ship_type = client_select_ship_item.art_id
+                ship_type = _row["hull"]
                 gui_update("sh_ship_picker", ship_type)
                 _display.value = ship_name
                 # #545: the editable box has to be told too. It is bound with var=
@@ -580,15 +582,21 @@ if CAN_CHANGE_CONSOLE:
                 gui_represent(ship_sec_not)
 
 
-        on change ship_select_lb.get_value().art_id:
-            ship_type = ship_select_lb.get_value().art_id
-            gui_update("sh_ship_picker", ship_type)
-            gui_update("sh_ship_list", None)
-                
-        on change ship_select_lb.get_value().name:
-            ship_name = ship_select_lb.get_value().name
+        # WAS TWO PER-FRAME ENGINE READS. These were `on change
+        # ship_select_lb.get_value().art_id` and `.name` - `on change` evaluates its
+        # expression every frame, so each connected console read two properties off a live
+        # Agent, forever, on ships the roster may be reshaping underneath it.
+        #
+        # The roster says when something changed instead. It emits player_roster_changed
+        # from apply(), which is the only thing that reshapes a slot.
+        on signal player_roster_changed:
+            _row = player_roster_display(client_select_slot)
+            ship_type = _row["hull"]
+            ship_name = _row["name"]
             _input.value = ship_name
             _display.value = ship_name
+            gui_update("sh_ship_picker", ship_type)
+            gui_update("sh_ship_list", None)
             # _display lives in the ship_sec_not absolute gui_region. Setting its
             # .value only marks the child widget dirty, and the dirty pass re-sends
             # the text into the sub-region WITHOUT a clear - so the old name stays
@@ -698,13 +706,13 @@ $t Waiting for the server to start the mission
         jump select_console
 
 ====== console_selected ====
-    # Read the roster LIVE. PLAYER_LIST is a task variable, and every route into this
-    # label - the picker, game_started_console, the //gui/tab routes, console_force_mode -
-    # arrives carrying whatever client_main captured at CONNECT time. On an in-game
-    # restart with AUTO_START that snapshot predates the ships, and a stale empty list
-    # here silently skips the whole assignment below.
-    PLAYER_LIST = sorted(to_object_list(role("__player__")), key=lambda p: p.id)
-    jump show_console_selected if len(PLAYER_LIST) ==0
+    # Ask the ROSTER, not a snapshot. Every route into this label - the picker,
+    # game_started_console, the //gui/tab routes, console_force_mode - used to arrive
+    # carrying whatever client_main captured at CONNECT time, and on an in-game restart
+    # with AUTO_START that predates the ships, so a stale empty list silently skipped the
+    # whole assignment below. The roster is a live question with no snapshot to go stale.
+    _slots = player_roster_slots()
+    jump show_console_selected if len(_slots) ==0
 
     if CONSOLE_SELECT is None or client_select_ship is None:
         jump select_console
@@ -751,8 +759,9 @@ $t Waiting for the server to start the mission
     # which is the right answer for a live player.
     default client_selected_index = 0
     if _ship_id is None and client_select_ship_id is None:
-        _ship_id = PLAYER_LIST[min(client_selected_index, len(PLAYER_LIST)-1)].id
-        client_select_ship = to_object(_ship_id).name.lower()
+        client_select_slot = _slots[min(client_selected_index, len(_slots)-1)]
+        _ship_id = player_roster_resolve(client_select_slot)
+        client_select_ship = player_roster_display(client_select_slot)["name"].lower()
 
     jump select_console if _ship_id is None
 
