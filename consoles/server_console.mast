@@ -283,6 +283,20 @@ gui_reroute_clients("client_main")
         # blank/0. Settings.yaml / story / game-code values already set are left untouched.
         map_apply_defaults(WORLD_SELECT)
 
+        # The map's Defaults may have just named a THEATER, and the operator may have moved
+        # PLAYER_COUNT since the last build. Re-shape the roster to match, right here, while
+        # the panel is the only thing on screen.
+        #
+        # Unconditional on purpose, and cheap: apply is diff-then-write, so a build where
+        # nothing changed touches nothing and returns an empty list. NO force= here - that is
+        # reserved for the reconcile at Start, which deliberately rebuilds every ship.
+        #
+        # Deliberately NOT player_roster_set_count() as well. Parking is what makes a ship
+        # invisible and de-crewed, and today that does not happen until Start; doing it here
+        # would make the unused hulls vanish from the panel the moment the slider moved,
+        # which is a visible change nobody asked for. The count is still reconciled at Start.
+        player_roster_apply()
+
         # Music. The list comes from music_get_list(), not a fixed one, so a mod that ships
         # its own banks shows up here without this file knowing about it. It sits AFTER
         # map_apply_defaults so a map's `Defaults: MUSIC_SELECT` is what reads as the
@@ -669,11 +683,22 @@ Main:
         # 0,0,0 for any roster size, odd or even. Maps move these near a friendly station
         # in spawn_players, so the formation only has to hold up until then.
         _roster = SETTINGS.get("PLAYER_LIST")
+        #
+        # SEED THE ROSTER FIRST. The roster is the indirection a console binds to - a RECORD
+        # keyed by slot, rather than the live object. It owns hull/name/side/face from here
+        # on, so a theater picked later (or a PLAYER_COUNT the operator moves) reshapes these
+        # ships in place instead of leaving every console holding a stale pointer.
+        #
+        player_roster_seed(_roster)
         _slot_gap = 2000
         _slot_mid = (len(_roster)-1)/2.0
         for slot, player_ship_data in enumerate(_roster):
             _slot_x = (slot - _slot_mid) * _slot_gap
-            player_ship = player_ensure(slot, _slot_x, 0, 2000, player_ship_data["ship"], player_ship_data["name"], player_ship_data["side"])
+            # Spawn already WEARING the themed hull rather than swapping it a moment later.
+            # THEATER from settings.yaml or a profile is known by now; only a map's own
+            # `Defaults: THEATER` arrives later, and player_roster_apply() catches that.
+            _slot_hull = ship_data_art_key_for(player_ship_data["ship"])
+            player_ship = player_ensure(slot, _slot_x, 0, 2000, _slot_hull, player_ship_data["name"], player_ship_data["side"])
             player_ship_data["id"] = player_ship
             add_role(player_ship, "default_player_ship")
             set_face(player_ship, random_face(player_ship_data["face"]))

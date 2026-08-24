@@ -114,48 +114,35 @@
     #
     default shared players_cleaned = False
     ->END if players_cleaned
-    c=0
-    first = True
-    # Sorted by id so slot N maps to the same ship the loadout was captured from
-    # (player_loadout_from_ships also sorts by id). loadout is [] unless a game
-    # code carried a SHIP_LOADOUT, so this is a no-op for maps that don't use it.
-    player_ships = sorted(to_object_list(role("default_player_ship") & role("__player__")), key=lambda s: s.id)
+    #
+    # THE ROSTER OWNS THE RESHAPE. This used to walk the live `__player__` list, indexed by
+    # position, culling and re-hulling in one loop. Each step is now a named roster call, and
+    # the roster is keyed by SLOT - so a console that binds to a slot rather than to an
+    # object survives everything below.
+    #
+    # Re-seeded rather than assumed: `start` is not the only path in, and a sim wipe can have
+    # rebuilt the ships since the records were made. Seeding is idempotent by slot and leaves
+    # active-ness and console bindings alone.
+    #
+    player_roster_seed(SETTINGS.get("PLAYER_LIST"))
+    # Park everything past PLAYER_COUNT. Parking is the same de-roled, invisible, side-less
+    # state as before; what is new is that the ship still EXISTS and keeps its slot marker,
+    # so nothing is holding a pointer to something that is about to be freed.
+    player_roster_set_count(PLAYER_COUNT)
+    # loadout is [] unless a game code carried a SHIP_LOADOUT, so this is a no-op for maps
+    # that don't use one. It WINS over a theater - the crew chose those hulls explicitly.
     loadout = player_loadout_active()
-    for player_ship in player_ships:
-        if c>= PLAYER_COUNT:
-            # make sure the id is cleared dry docked ships
-            player_ship.art_id = "invisible"
-            player_ship.remove_role("__player__")
-            # Clear the SIDE rather than stripping a side-named role: membership is by
-            # actual side, so dropping the role alone would leave this ship in
-            # side_members_set("tsn"). "" is the legitimate "no side" value (handled
-            # silently by to_side_id), unlike an invented key -- see the note below.
-            player_ship.side = ""
-            # NOTE: do NOT set an unregistered side here (was side = "unused").
-            # The ship is de-roled and about to be deleted; tagging it with a
-            # side key that isn't a real side made downstream lookups (e.g. the
-            # hangar's hangar_get_ship_data_keys) spam "Side not found: unused".
-            # Delay the delete
-            task_schedule(player_ships_remove_unused, {"_ship_id": player_ship.id})
-            continue
-
-        # Reset to default blob in case art work changed
-        name = player_ship.name
-        # Loadout override (from a game code): swap the hull BEFORE setup_from_data
-        # so the rebuilt stats match the coded hull; override the name after.
-        slot = loadout[c] if c < len(loadout) else None
-        if slot is not None:
-            if slot["hull"]:
-                player_ship.art_id = slot["hull"]
-            if slot["name"]:
-                name = slot["name"]
-        sbs.player_ship_setup_defaults(player_ship.engine_object)
-        sbs.player_ship_setup_from_data(player_ship.engine_object)
-        player_ship.name = name
-        c+=1
-        if first:
-            assign_client_to_ship(0,to_id(player_ship))
-            first = False
+    # force=True keeps this point's old behavior exactly: every surviving ship gets its stats
+    # rebuilt "in case art work changed", not just the ones whose hull moved. The panel path
+    # calls apply() WITHOUT force, where the diff is what makes a repaint free.
+    player_roster_apply(loadout, force=True)
+    # Deferred by a tick, as it always was: delete_object frees the C++ object synchronously.
+    # What is new is that release refuses a slot a console is still crewing.
+    task_schedule(player_ships_remove_unused)
+    # The server console rides slot 0.
+    _first = player_roster_resolve(0)
+    if _first is not None:
+        assign_client_to_ship(0, _first)
 
     # "the roster is final". Nothing waits on it any more - it is kept because missions
     # ask the question, and select_console reads it to sync PLAYER_COUNT.
@@ -232,7 +219,12 @@ players:
     ->END
     
 ==== player_ships_remove_unused
-    delete_object(_ship_id)
+    # Kept by NAME - it is scheduled from the reconcile route above and the name has been
+    # public surface for a long time - but it no longer takes a ship id. The roster decides
+    # WHICH slots are releasable, and refuses any a console is still bound to; a bare
+    # delete_object on an id handed over a tick earlier is precisely what could not make
+    # that check.
+    player_roster_release_inactive()
     ->END
 
         
