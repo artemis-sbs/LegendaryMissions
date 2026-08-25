@@ -1,0 +1,41 @@
+# UNATTENDED SOAK of the pre-start window.
+#
+#   Artemis3-x64-release.exe autostartserver defaultmission=LegendaryMissions \
+#       profile=soak map=siege test=60
+#
+# Drives the things a person does before Start - the Player Ships slider, helm changing the
+# ship type, a crew renaming their ship - while the driver connects clients at staggered
+# times. See soak/__init__.mast for what it does and does not cover.
+#
+# AUTO_START IS OFF ON PURPOSE. The whole point is the window where the server console sits
+# on its menu and the roster is still fluid; the soak presses Start itself when it is done.
+AUTO_START: false
+
+# The map, chosen WITHOUT map= for the reason above.
+WORLD_SELECT: "siege"
+
+# NO TERRAIN. The nebula cluster merge deletes markers during map build - a blob write
+# immediately followed by a free, which is the operation pair in every crash dump. This
+# variant removes the whole terrain path so it can be ruled in or out.
+TERRAIN_SELECT: "none"
+LETHAL_SELECT: "none"
+MONSTER_SELECT: "none"
+
+# Autoplay off: it makes runs non-deterministic and this soak is counting crashes, not
+# playing. (Measured separately today: autoplay is what made --runs soaks diverge.)
+AUTO_PLAY:
+    enable: false
+
+SOAK:
+    enable: true
+    # Sim-seconds-ish of churn before Start. Long enough that a client connecting at t+2,
+    # t+20 and t+40 all land INSIDE it.
+    window: 45
+    # Seconds between churn steps. Smaller is more aggressive; 0.5 is roughly a person
+    # dragging a slider.
+    step: 0.5
+    min_ships: 1
+    max_ships: 8
+
+# A full roster so the slider has somewhere to sweep.
+PLAYER_COUNT: 8
