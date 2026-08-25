@@ -93,6 +93,19 @@ if CAN_CHANGE_CONSOLE:
     client_selected_index = 0
     shared valid_interiors = set()
 
+    # WHAT THE CREW MAY FLY, stated rather than inherited. Three tests, and the race one
+    # is the one that was missing: the picker used to offer every hull with a floor plan,
+    # which let a crew put themselves in a Kralien dreadnought or a luxury liner.
+    #
+    # "Has an interior" only LOOKED like "is playable" because LM's races addon is the one
+    # thing merging floor plans and it already gates each race on this same setting. That
+    # coincidence breaks the moment a mod merges a grid of its own, and it says nothing
+    # here about what the picker's rule actually is.
+    #
+    # shipData `side` IS the race name - 'TSN', 'Ximni', 'Kralien' - the same vocabulary
+    # PLAYABLE_RACES uses, so no key->race mapping is needed. A hull whose side is missing
+    # or spelled differently from its PLAYABLE_RACES entry drops out silently; skipping it
+    # is the right failure, since offering a hull the crew cannot fly is worse.
     for key in grid_data:
         if len(grid_data[key]["grid_objects"])>0:
             sd = ship_data_get_ship_data_for(key)
@@ -100,6 +113,7 @@ if CAN_CHANGE_CONSOLE:
             roles = sd.get("roles")
             continue if roles is None
             continue if "ship" not in roles
+            continue if not settings_race_is_playable(sd.get("side"))
             valid_interiors.add(key)
 
 

@@ -84,6 +84,23 @@ DIFFICULTY: 5
 
 WORLD_SELECT: "siege"
 
+# Which races a player ship may BE. This is what helm's ship picker offers, and it is also
+# what decides which floor plans get parsed at load - an interior is only ever built for a
+# player ship, so a race nobody can fly is dead weight.
+#
+# TSN and Ximni are the two flyable warship factions. Left unset, this inherited the
+# library default, which lists all NINE races that have interiors "so behavior is unchanged
+# out of the box" - and helm could put a crew in a Kralien dreadnought, an Arvonian carrier
+# or a luxury liner (the USFP block is civilians and starbases, not TSN warships).
+#
+# NAMING THIS DOES NOT SHUT MODS OUT. It does close the `settings_set_mod_default` tier,
+# which is refused once a mission names a key - correctly, since that tier means "the
+# library shipped a value and nobody overrode it". A mod that ADDS a race calls
+# `settings_add_playable_races(...)` instead, which widens the list whatever tier set it:
+# listing TSN and Ximni says nothing about the Federation. The TNG pack does exactly this,
+# so a Trek hull is still offered on top of these two.
+PLAYABLE_RACES: "TSN, Ximni"
+
 TERRAIN_SELECT: "some"
 LETHAL_SELECT: "none"
 FRIENDLY_SELECT: "few"
