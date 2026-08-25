@@ -5,7 +5,8 @@
 # throw) instead of dealing damage. As it wanders it belches a TRAIL of purple nebula
 # in its wake. Very tanky - it is meant to be endured or avoided, not farmed.
 #
-# role("monster") umbrella + role("charybdis") scoping; behav_typhon under the hood.
+# role("monster") umbrella + role("charybdis") scoping. NON-TYPHON: it rides the monster1
+# hull on behav_npcship, so MONSTER_NON_TYPHON can switch it off.
 # NOTE: teleport + nebula trail are engine-visible effects - verify in the browser.
 import prefab_helpers.py
 
@@ -13,6 +14,7 @@ import prefab_helpers.py
 metadata: ```
 type: prefab/monster
 side: monster
+name: ""
 health: 20000
 scale: 1.3
 teleport_min: 30000
@@ -27,7 +29,10 @@ brain:
         wander_range: 40000
         arrive_dist: 3000
 ```
-    monster = npc_spawn(START_X, START_Y, START_Z, "Charybdis", side + ",monster,charybdis", "monster1", "behav_npcship")
+    # Non-Typhon species - the host can switch these off (MONSTER_NON_TYPHON,
+    # declared in __init__.mast). Yields 0, never ->END or None; see the note there.
+    yield result 0 if not MONSTER_NON_TYPHON
+    monster = npc_spawn(START_X, START_Y, START_Z, name, side + ",monster,charybdis", "monster1", "behav_npcship")
     monster.blob.set("monster_health_max", health, 0)
     monster.blob.set("monster_health", health, 0)
     monster.blob.set("local_scale_coeff", scale, 0)

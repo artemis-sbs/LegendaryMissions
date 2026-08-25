@@ -97,8 +97,11 @@
     # in damage.mast) - the bestiary Piranha hook, now a salvage trap on the ship that fires. A nest
     # springs instead of dropping an upgrade. Nest chance scales with the map's Monsters option
     # (terrain_to_value: none=0, few=1, some=2, lots=3, max=4), so "none" never nests and higher
-    # settings seed swarms more often: few~20%, some~40%, lots~60%, max~80%.
-    if random.randint(1, 10) <= 2 * terrain_to_value(MONSTER_SELECT):
+    # settings seed swarms more often: few~20%, some~40%, lots~60%, max~80%. Piranhas are a
+    # non-Typhon species, so MONSTER_NON_TYPHON gates the flag too - a nest wreck ->ENDs
+    # before the salvage/upgrade drop, so flagging one the swarm can no longer hatch would
+    # leave the wreck paying out nothing at all.
+    if MONSTER_NON_TYPHON and random.randint(1, 10) <= 2 * terrain_to_value(MONSTER_SELECT):
         set_inventory_value(wr.id, "piranha_nest", 1)
 
     ->END

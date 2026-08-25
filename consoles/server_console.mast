@@ -38,6 +38,7 @@ gui_reroute_clients("client_main")
     shared LETHAL_SELECT  = SETTINGS.get("LETHAL_SELECT")
     shared FRIENDLY_SELECT  = SETTINGS.get("FRIENDLY_SELECT")
     shared MONSTER_SELECT  = SETTINGS.get("MONSTER_SELECT")
+    shared MONSTER_NON_TYPHON  = SETTINGS.get("MONSTER_NON_TYPHON", True)
     shared UPGRADE_SELECT  = SETTINGS.get("UPGRADE_SELECT")
     shared seed_value  = SETTINGS.get("seed_value")
     # Packed hull+name-per-slot loadout carried by a game code (empty = none).

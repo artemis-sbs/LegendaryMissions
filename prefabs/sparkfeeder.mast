@@ -12,6 +12,7 @@
 metadata: ```
 type: prefab/monster
 side: monster
+name: ""
 health: 3000
 scale: 0.6
 brain:
@@ -22,7 +23,7 @@ brain:
         gift_rate: 5
         throttle: 0.6
 ```
-    monster = npc_spawn(START_X, START_Y, START_Z, "Sparkfeeder", side + ",monster,sparkfeeder", "-", "behav_typhon")
+    monster = npc_spawn(START_X, START_Y, START_Z, name, side + ",monster,sparkfeeder", "-", "behav_typhon")
     monster.blob.set("monster_health_max", health, 0)
     monster.blob.set("monster_health", health, 0)
     monster.blob.set("local_scale_coeff", scale, 0)

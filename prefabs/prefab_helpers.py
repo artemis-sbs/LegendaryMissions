@@ -1,5 +1,6 @@
 from sbs_utils.procedural.execution import get_shared_variable
 from sbs_utils.procedural.query import to_space_object
+from sbs_utils.procedural.roles import has_role
 import random
 
 
@@ -21,6 +22,28 @@ def get_defender_name(side="tsn", allow_canuck=True):
     return name
 
 MONSTER_AGE_STAGES = ("young", "mature", "ancient")
+
+
+def monster_age_name(agent_id, species):
+    """Species name prefixed with a creature's rolled life stage: "Mature Shark".
+
+    The stage lives as a ROLE (young/mature/ancient), added at spawn time - creatures
+    carry no display name, so science scans are where a player learns how old one is.
+    A species with no age block just gets the bare species word back.
+    """
+    for stage in MONSTER_AGE_STAGES:
+        if has_role(agent_id, stage):
+            return f"{stage.capitalize()} {species}"
+    return species
+
+
+def monster_age_label(agent_id):
+    """A creature's life stage as a word - "Young"/"Mature"/"Ancient", or "Unknown"
+    for a species that does not age. For scan text that reports maturity on its own."""
+    for stage in MONSTER_AGE_STAGES:
+        if has_role(agent_id, stage):
+            return stage.capitalize()
+    return "Unknown"
 
 
 def monster_roll_age(ages):

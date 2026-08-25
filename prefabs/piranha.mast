@@ -4,11 +4,13 @@
 # is the SWARM (prefab_piranha_swarm) and the fact that swarms erupt from wrecks (see
 # the wreck hook in ../damage/destroy.mast). A lone Piranha is a nuisance; a nest of
 # them chews through shields and hull.
-# role("monster") umbrella + role("piranha") scoping; behav_typhon under the hood.
+# role("monster") umbrella + role("piranha") scoping. NON-TYPHON: it rides the monster2
+# hull on behav_npcship, so MONSTER_NON_TYPHON can switch it off.
 === prefab_piranha
 metadata: ```
 type: prefab/monster
 side: monster
+name: ""
 health: 800
 scale: 0.4
 brain:
@@ -23,7 +25,10 @@ brain:
         throttle: 1.8
         force_shoot: true
 ```
-    monster = npc_spawn(START_X, START_Y, START_Z, "Piranha", side + ",monster,piranha", "monster2", "behav_npcship")
+    # Non-Typhon species - the host can switch these off (MONSTER_NON_TYPHON,
+    # declared in __init__.mast). Yields 0, never ->END or None; see the note there.
+    yield result 0 if not MONSTER_NON_TYPHON
+    monster = npc_spawn(START_X, START_Y, START_Z, name, side + ",monster,piranha", "monster2", "behav_npcship")
     monster.blob.set("monster_health_max", health, 0)
     monster.blob.set("monster_health", health, 0)
     monster.blob.set("local_scale_coeff", scale, 0)
@@ -54,6 +59,9 @@ type: prefab/monster
 swarm_count: 6
 swarm_spread: 800
 ```
+    # Non-Typhon species - the host can switch these off (MONSTER_NON_TYPHON,
+    # declared in __init__.mast). Yields 0, never ->END or None; see the note there.
+    yield result 0 if not MONSTER_NON_TYPHON
     for i in range(int(swarm_count)):
         px = START_X + random.uniform(-swarm_spread, swarm_spread)
         py = START_Y + random.uniform(-swarm_spread, swarm_spread)

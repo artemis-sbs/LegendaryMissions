@@ -89,6 +89,21 @@ none, few, some, lots, many
 ### MONSTER_SELECT
 none, few, some, lots, many
 
+How many creatures a map seeds. It also sets how often a wreck hides a Piranha nest.
+
+### MONSTER_NON_TYPHON
+true or false. Default true.
+
+The bestiary splits into two families. Eight species are built on the classic Typhon
+behavior and geometry: Typhon, Reaver, Grazer, Ravener, Bulwark, Sparkfeeder, Siphon
+Leech and Warden. The other five ride a real ship hull instead: **Piranha, Shark,
+Dragon, Charybdis and Insect**.
+
+Set this to `false` and those five never spawn, from any source - wreck nests stop
+hatching Piranha swarms, and the Game Master bestiary menu stops offering them. The
+eight Typhon-style species are unaffected, and MONSTER_SELECT still controls how many
+of those a map seeds.
+
 ### UPGRADE_SELECT
 none, few, some, lots, many
 

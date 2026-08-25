@@ -19,6 +19,7 @@ shared _monster_ship_data = ship_data_add_extra("prefabs/extraShipData_monsters"
 metadata: ```
 type: prefab/monster
 side: monster
+name: ""
 ages:
     weights: [50, 35, 15]
     young:   { health: 5000,  scale: 0.7, label: Young }
@@ -53,7 +54,7 @@ brain:
     # (age does not change damage). The stage lands as a role (young/mature/ancient)
     # so ai_typhon_seek_death can gate on "ancient". Scoped to THIS prefab only.
     stage, cfg = monster_roll_age(ages)
-    monster = npc_spawn(START_X,START_Y,START_Z, cfg["label"] + " Typhon", "monster,typhon,classic," + stage, "-", "behav_typhon")
+    monster = npc_spawn(START_X,START_Y,START_Z, name, "monster,typhon,classic," + stage, "-", "behav_typhon")
     monster_bake_age(monster, cfg)
 
     monster.blob.set("body_1_color", "purple", 0)

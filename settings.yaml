@@ -88,6 +88,12 @@ TERRAIN_SELECT: "some"
 LETHAL_SELECT: "none"
 FRIENDLY_SELECT: "few"
 MONSTER_SELECT: "few"
+# Non-Typhon creatures - Piranha, Shark, Dragon, Charybdis and Insect, the five that ride
+# a real ship hull instead of the classic Typhon geometry. false = they never spawn, from
+# any source: no wreck nests, and the GM bestiary menu stops offering them. The eight
+# Typhon-style species (Typhon, Reaver, Grazer, Ravener, Bulwark, Sparkfeeder, Siphon
+# Leech, Warden) are unaffected, and MONSTER_SELECT still sets how many a map seeds.
+MONSTER_NON_TYPHON: true
 UPGRADE_SELECT: "lots"
 
 # Music bank. Deliberately COMMENTED OUT, and that is the setting: a key present here is

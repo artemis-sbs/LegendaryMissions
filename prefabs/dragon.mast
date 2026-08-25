@@ -7,7 +7,8 @@
 # Ancients are far tougher and larger - damage is unchanged.
 #
 # Uses the SHARED age system (prefab_helpers) with the biggest tiers.
-# role("monster") umbrella + role("dragon") scoping; behav_typhon under the hood.
+# role("monster") umbrella + role("dragon") scoping. NON-TYPHON: it rides the monster3
+# hull on behav_npcship, so MONSTER_NON_TYPHON can switch it off.
 # NOTE: the lootable "lair" from the wiki is DEFERRED - not implemented in this pass.
 import prefab_helpers.py
 
@@ -15,6 +16,7 @@ import prefab_helpers.py
 metadata: ```
 type: prefab/monster
 side: monster
+name: ""
 ages:
     weights: [45, 35, 20]
     young:   { health: 15000, scale: 1.0, label: Young }
@@ -43,8 +45,11 @@ brain:
         throttle: 1.6
         force_shoot: true
 ```
+    # Non-Typhon species - the host can switch these off (MONSTER_NON_TYPHON,
+    # declared in __init__.mast). Yields 0, never ->END or None; see the note there.
+    yield result 0 if not MONSTER_NON_TYPHON
     stage, cfg = monster_roll_age(ages)
-    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Dragon", side + ",monster,dragon," + stage, "monster3", "behav_npcship")
+    monster = npc_spawn(START_X, START_Y, START_Z, name, side + ",monster,dragon," + stage, "monster3", "behav_npcship")
     monster_bake_age(monster, cfg)
 
     # Look (geometry + colours) comes from the monster3 art now.
@@ -79,7 +84,12 @@ brain:
 //science if has_role(SCIENCE_SELECTED_ID, "dragon")
 
     + "scan":
+        # Creatures carry no display name, so the scan is where a player learns the
+        # age the spawn rolled - it is a role (young/mature/ancient), never a name.
+        # An Ancient is far tougher and larger than a Young one, so this is the
+        # warning that matters most.
+        dragon_title = monster_age_name(SCIENCE_SELECTED_ID, "Dragon")
         <scan>
-            % HOSTILE: Dragon - an apex predator that hoards ships. Extremely dangerous and aggressive on sight.
-            % HOSTILE: Dragon - a rapid regenerator; scattered fire will not kill it. Concentrate fire, or lure it into a black hole.
-            % HOSTILE: Dragon - do not engage alone. It will run down and cripple a lone ship.
+            % HOSTILE: {dragon_title} - an apex predator that hoards ships. Extremely dangerous and aggressive on sight.
+            % HOSTILE: {dragon_title} - a rapid regenerator; scattered fire will not kill it. Concentrate fire, or lure it into a black hole.
+            % HOSTILE: {dragon_title} - do not engage alone. It will run down and cripple a lone ship.

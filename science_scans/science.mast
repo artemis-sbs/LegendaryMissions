@@ -123,8 +123,13 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
 //science if has_role(SCIENCE_SELECTED_ID, "typhon")
 
     + "scan":
+        # Creatures carry no display name, so the scan is where a player learns the
+        # age the spawn rolled - it is a role (young/mature/ancient), never a name.
+        # monster_age_label belongs to the prefabs addon; only that addon creates
+        # role("typhon"), so this route cannot fire where the helper is missing.
+        typhon_age = monster_age_label(SCIENCE_SELECTED_ID)
         <scan>
-            % Space organism class: Typhon.
+            % Space organism class: Typhon. Maturity: {typhon_age}.
     + "status":
         <scan>
             % This extra-dimensional creature cannot be affected by any known weapon.

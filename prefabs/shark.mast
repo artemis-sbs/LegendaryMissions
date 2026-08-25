@@ -7,13 +7,15 @@
 # hunt, fast to strike - exactly the wiki behaviour.
 #
 # Uses the SHARED age system (prefab_helpers): Young/Mature/Ancient vary health and
-# size, never damage. role("monster") umbrella + role("shark") scoping.
+# size, never damage. role("monster") umbrella + role("shark") scoping. NON-TYPHON: it
+# rides the monster4 hull on behav_npcship, so MONSTER_NON_TYPHON can switch it off.
 import prefab_helpers.py
 
 === prefab_shark
 metadata: ```
 type: prefab/monster
 side: monster
+name: ""
 ages:
     weights: [50, 35, 15]
     young:   { health: 4000, scale: 0.8, label: Young }
@@ -28,8 +30,11 @@ brain:
         aggro_range: 12000
         stop_dist: 300
 ```
+    # Non-Typhon species - the host can switch these off (MONSTER_NON_TYPHON,
+    # declared in __init__.mast). Yields 0, never ->END or None; see the note there.
+    yield result 0 if not MONSTER_NON_TYPHON
     stage, cfg = monster_roll_age(ages)
-    monster = npc_spawn(START_X, START_Y, START_Z, cfg["label"] + " Shark", side + ",monster,shark," + stage, "monster4", "behav_npcship")
+    monster = npc_spawn(START_X, START_Y, START_Z, name, side + ",monster,shark," + stage, "monster4", "behav_npcship")
     monster_bake_age(monster, cfg)
 
     # Look (geometry + colours) comes from the monster4 art now.
@@ -74,7 +79,10 @@ stop_dist: 300
 //science if has_role(SCIENCE_SELECTED_ID, "shark")
 
     + "scan":
+        # Creatures carry no display name, so the scan is where a player learns the
+        # age the spawn rolled - it is a role (young/mature/ancient), never a name.
+        shark_title = monster_age_name(SCIENCE_SELECTED_ID, "Shark")
         <scan>
-            % TAME: Shark - a predator that hunts other lifeforms and ignores ships unless provoked.
-            % TAME: Shark - a slow stalker while hunting, but it strikes with alarming speed if fired on. Hold fire and it will pass.
-            % TAME: Shark - non-aggressive toward ships, yet it defends itself hard once attacked. Recommend you do not engage.
+            % TAME: {shark_title} - a predator that hunts other lifeforms and ignores ships unless provoked.
+            % TAME: {shark_title} - a slow stalker while hunting, but it strikes with alarming speed if fired on. Hold fire and it will pass.
+            % TAME: {shark_title} - non-aggressive toward ships, yet it defends itself hard once attacked. Recommend you do not engage.
