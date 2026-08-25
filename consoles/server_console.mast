@@ -691,6 +691,40 @@ Main:
     # branches disagreed: 8 emits when creating defaults, 1 otherwise -- and every
     # handler ran 8 times, seeing a half-built roster on all but the last.
     signal_emit("create_player_ships", None)
+    #
+    # ADOPT WHAT THE MISSION SPAWNED ITSELF. A mission with PLAYER_CREATE_DEFAULT = False
+    # (HereThereBeMonsters is the model - one `player_spawn` in its own
+    # //shared/signal/create_player_ships route) skips the loop above entirely, so it has
+    # player ships and no roster records. Every console binds to RECORDS now, so its
+    # picker offered "No Player Ships" beside a live ship, and the helm's rename and hull
+    # handlers ran against a slot of None.
+    #
+    # After the emit, not before: a //shared/signal route with no await runs synchronously
+    # inside signal_emit, so the mission's ships exist by the time this line runs. Reading
+    # rather than deciding - the record is built from the ship - and idempotent, so the
+    # default path above (already slotted by player_ensure) adopts nothing.
+    #
+    player_roster_adopt()
     ->END
 
 
+#
+# THE SAME SIGNAL, for a mission that spawns its OWN player ships. Its roster came from
+# player_roster_adopt() just above, so the crew's picks on the console picker are sitting
+# in records that nothing else would carry to a ship: the full reconcile
+# (//shared/signal/reconcile_player_roster in fleets/map_common.mast) is gated on
+# PLAYER_CREATE_DEFAULT and never runs for these missions, which is how a rename on the
+# helm picker went nowhere at all.
+#
+# HERE rather than beside that route, because it has to reach missions that do not load
+# the fleets addon - HereThereBeMonsters declares consoles and not fleets. The two routes
+# are mutually exclusive on the same flag, so a mission loading both still reconciles once.
+#
+# APPLY AND NOTHING ELSE. No seed, no set_count, no cull: the count, the parking and the
+# game-code loadout all belong to the roster SETTINGS authored, and a mission that spawns
+# its own ships owns how many there are. Apply diffs before it writes, so on a roster
+# nobody edited this touches no engine object at all.
+#
+//shared/signal/reconcile_player_roster if not PLAYER_CREATE_DEFAULT
+    player_roster_apply()
+    ->END

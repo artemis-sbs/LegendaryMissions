@@ -283,7 +283,12 @@ if CAN_CHANGE_CONSOLE:
             # The roster carries it to the ship at Start. Every other console still sees
             # the new name immediately, because they render the same record - that is what
             # the shared refresh below is for.
-            player_roster_set_name(client_select_slot, ship_name)
+            # Guarded, because a slot is not guaranteed: a mission that spawns its own
+            # player ships late has no records yet, and this box is on screen anyway.
+            # The roster refuses a slot of None on its own now; saying so here keeps the
+            # rest of the handler from running on a write that did not happen.
+            if client_select_slot is not None:
+                player_roster_set_name(client_select_slot, ship_name)
             client_select_ship = ship_name
             # Refresh the ship list on EVERY console, not just this one. The local
             # `on change ...name` watcher only fires on a console that has the
@@ -313,7 +318,8 @@ if CAN_CHANGE_CONSOLE:
             #
             # The pick beats every theater layer and loses to a game code - the roster
             # owns that precedence, not this screen.
-            player_roster_set_hull(client_select_slot, ship_type)
+            if client_select_slot is not None:
+                player_roster_set_hull(client_select_slot, ship_type)
             gui_update_shared("sh_ship_list", None)
 
     if sbs.is_demo() or console_select_item.path != "helm" or GAME_STARTED or SHIP_PICK_READ_ONLY:
