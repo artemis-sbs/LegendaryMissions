@@ -14,9 +14,15 @@ regions with the SAME `area:` string - `manual_beams_area()` for the art and the
 `manual_beams_label_area()` for the text, raised with `layer:` - and every rect lines up
 because it is literally the same string. The areas are all-px so no font is in the path.
 
-Row order is weapons / sensors / engines top to bottom, which is SHPSYS 0, 2, 1 and NOT
-enum order. Sensors is deliberately the middle band: it is where the HIT flash lands, so
-the word reads as vertically centered in the square.
+Row order is engines / sensors / weapons top to bottom, which is SHPSYS 1, 2, 0 and NOT
+enum order. IT MATCHES THE ART: the sprite is drawn with the ship's BACK at the top of
+the square and its NOSE at the bottom, so the engines band sits over the engines and the
+weapons band sits over the bow. Aiming at a system means clicking the part of the ship it
+is in, which is the whole reason this replaced three plain buttons. Reversing these two
+puts every click on the wrong end of the hull while still looking plausible.
+
+Sensors is deliberately the middle band: it is where the HIT flash lands, so the word
+reads as vertically centered in the square.
 """
 
 import random
@@ -42,9 +48,9 @@ MB_LABEL_LAYER = 1500   # over the bars (backdrops paint at 1000)
 
 # (display name, SHPSYS index, click tag). Order is the ROW order - see the module note.
 MB_SYSTEMS = (
-    ("weapons", sbs.SHPSYS.WEAPONS, "mb_weapons"),
-    ("sensors", sbs.SHPSYS.SENSORS, "mb_sensors"),
     ("engines", sbs.SHPSYS.ENGINES, "mb_engines"),
+    ("sensors", sbs.SHPSYS.SENSORS, "mb_sensors"),
+    ("weapons", sbs.SHPSYS.WEAPONS, "mb_weapons"),
 )
 
 # Which band the HIT flash writes into: the MIDDLE one, so the word reads as vertically
