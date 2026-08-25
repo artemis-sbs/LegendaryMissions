@@ -75,8 +75,10 @@ Properties:
     # generate fleets
 
     # For Single Front and Double Front, one enemy is randomly chosen as the attacker, so all fleets will be chosen from that enemy.
-    enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
-    enemy = fleet_pick_enemy_race(enemyTypeNameList)
+    # One draw for the map's single attacker. This passed NO weights, so it was a flat pick
+    # over four names however hard the game was set; it reads the theater's ladder now, so
+    # the enemy this map fields varies with DIFFICULTY like every other map's.
+    enemy = fleet_pick_enemy_race(difficulty=DIFFICULTY)
     # enemy = enemy_temp[0]
 
     # Pick a random direction for the attacker, 1 = North, 2 = East, 3 = South, 4 = West
@@ -85,9 +87,10 @@ Properties:
     fleet_count = 3 + int(DIFFICULTY/2)
     fleet_index = int(DIFFICULTY - 1)
 
-    # Ximni fleets are typically only one ship, so double fleets to balance this out until we code some better Ximni AI.
-    if enemy == "Ximni":
-        fleet_count = fleet_count*2 
+    # "Ximni fleets are typically only one ship, so double fleets to balance this out" - a
+    # fact about the race, so it is declared as `Fleet Scale` in races/races.amd rather than
+    # said again in every map that spawns fleets.
+    fleet_count = int(fleet_count * race_fleet_scale(enemy))
 
     for a in range(fleet_count):
     #    fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)

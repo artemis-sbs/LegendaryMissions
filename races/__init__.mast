@@ -120,3 +120,27 @@ if settings_race_is_playable("Pirate"):
     grid_merge_ascii(media_read_relative_file("pirate_strongbow.grid"), "races")
 if settings_race_is_npc("Pirate"):
     fleet_table_load_yaml(media_read_relative_file("pirate_fleets.yaml"), "races")
+
+
+# ---- Race records --------------------------------------------------
+#
+# The OVERRIDES only: station name prefixes, face races, call-sign letters and the Ximni
+# fleet multiplier. The races themselves come out of the ship table as `origin` values, so
+# this declares nothing into existence - see races.amd and sbs_utils/procedural/races.py.
+#
+# NOT gated on settings_race_is_npc/_is_playable, unlike everything above. Those gates skip
+# LOADING content - interiors and fleet ladders - which is expensive and useless for a race
+# nobody can be. A record is four strings, and gating it would mean a disabled race whose
+# stations still spawned from some other path got a derived prefix instead of its real one.
+#
+# media_read_relative_file, not race_load_amd: it reads from the addon folder OR from inside
+# the packaged .mastlib, and get_mission_dir_filename cannot reach into a zip.
+race_declare_text(media_read_relative_file("races.amd"))
+
+# The STOCK theater - the enemy ladder that used to be two positional arrays in every map.
+#
+# Declared at TOP LEVEL, not from //shared/signal/create_sides where the sides are, because
+# the server console's Theater dropdown seeds from `theater_name_list()` while the story
+# loads - before create_sides ever fires. A theater declared in that route would exist, and
+# be missing from the only control that can pick it.
+theater_declare_text(media_read_relative_file("theaters.amd"))

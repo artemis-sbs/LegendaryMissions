@@ -57,10 +57,9 @@ Properties:
     #------------------------------------------------------------------------------------------------------------
     # Determine Enemy Antagonists
 
-    enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian"]
-    enemy_temp = []
-    enemy_temp = [fleet_pick_enemy_race(enemyTypeNameList, (50, 25, 25))]
-    enemy1 = enemy_temp[0]
+    # The THEATER's ladder, filtered to races that can be built as a station - which is what
+    # the old three-name literal was encoding, since ximni have no starbase hull.
+    enemy1 = fleet_pick_enemy_race(difficulty=DIFFICULTY, eligible=race_has_station)
 
     #------------------------------------------------------------------------------------------------------------
     # Reposition Player Ship, spawn Cargo Tender
@@ -118,15 +117,10 @@ Properties:
         num_enemy_stations = 3
     station_step = 100000/num_enemy_stations
 
-    if enemy1 == "Kralien":
-        station_prefix = "KB"
-        station_type = "starbase_kralien"
-    if enemy1 == "Torgoth": 
-        station_prefix = "TB"
-        station_type = "starbase_torgoth"
-    if enemy1 == "Arvonian":
-        station_prefix = "AB"
-        station_type = "starbase_arvonian"
+    # Derived from the ship table; the prefix is the one part it cannot say and is declared
+    # in races/races.amd.
+    station_prefix = race_station_prefix(enemy1)
+    station_type = race_station_hull(enemy1)
 
     # ART ONLY - resolve the stock station key through ART_KEYS once, here, so both the
     # spawn and the navproxy below draw the same hull. No-op unless a mission or profile
@@ -146,22 +140,16 @@ Properties:
         #make the station ----------------------------------
         name = "{station_prefix} {index+1}"
 
-        if enemy1 == "Kralien":
-            enemy_station_object = npc_spawn(*pos, name, "raider, kralien, enemy, delprox, station", station_type, "behav_station")
-        if enemy1 == "Torgoth":
-            enemy_station_object = npc_spawn(*pos, name, "raider, torgoth, enemy, delprox, station", station_type, "behav_station")
-        if enemy1 == "Arvonian":
-            enemy_station_object = npc_spawn(*pos, name, "raider, arvonian, enemy, delprox, station", station_type, "behav_station")
+        # The roles string only ever differed by the race name, so it composes.
+        station_roles = f"raider, {enemy1.lower()}, enemy, delprox, station"
+        enemy_station_object = npc_spawn(*pos, name, station_roles, station_type, "behav_station")
         eso_id = to_id(enemy_station_object)
         nav_obj = sim.add_navproxy(eso_id, name, station_type, "#A44")
         set_inventory_value(eso_id, "navprox_id", to_id(nav_obj))
 
-        if enemy1 == "Kralien":
-            set_face(to_id(enemy_station_object), random_kralien())
-        if enemy1 == "Torgoth":
-            set_face(to_id(enemy_station_object), random_torgoth())
-        if enemy1 == "Arvonian":
-            set_face(to_id(enemy_station_object), random_arvonian())
+        # random_face dispatches by race and honors a mod's registered faces and the
+        # theater's Faces: map, which the three hardcoded calls could not.
+        set_face(to_id(enemy_station_object), random_face(race_faces(enemy1)))
 
         print(f"{enemy1} Station created: {int(pos.x)}, {int(pos.y)}, {int(pos.z)}")
 

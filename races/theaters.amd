@@ -1,0 +1,53 @@
+// The STOCK theater - who LegendaryMissions fights, as data.
+//
+// This is the ladder that used to be two positional arrays in every map:
+//
+//     enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
+//     diff_weight = [ [85,5,5,5], [82,6,6,6], ... [10,30,30,30] ]
+//
+// zipped together by position. Every row summed to 100, so they were already percentages -
+// they just kept their race names somewhere else. Keyed, the names ARE the keys and nothing
+// is positional, so a roster is no longer four long because a table happens to be four wide.
+//
+// WHAT THE LADDER MEANS. One race dominates at low difficulty and the mix DIVERSIFIES as it
+// hardens: kralien hold 85% at difficulty 1 and 10% at 11. That the nominated race is
+// kralien is an accident of it having been written first; here it is said outright, so a mod
+// theater nominates whoever it likes by writing them at 85.
+//
+// SIX RACES, NOT FOUR. The old table was four columns wide, so the two NPC races it had no
+// column for - skaraan and pirate - could not appear in it however much NPC_RACES said they
+// were enabled. Skaraan were spawned by a separate hardcoded call in siege instead, and
+// pirates not at all. The kralien share is preserved exactly at every tier and the remainder
+// is split evenly, so the CURVE is unchanged and only the number of minors sharing it moves.
+//
+// EVERY MAP READS THIS ONE LADDER. What differs between the maps is not the weights but how
+// many draws they make and what the drawn race has to be able to do:
+//
+//   siege                one draw per fleet
+//   singlefront          one draw, the map's single attacker
+//   doublefront          two draws, independent - the same race may come up twice
+//   borderwar/deepstrike one draw, filtered to races that HAVE a starbase hull
+//
+// That filter is why borderwar and deepstrike used to list three races where the others list
+// four: ximni have no starbase in shipData, and neither do pirates. It is derived now, so
+// those two maps exclude exactly the races that cannot be built as a station - and skaraan,
+// who can, stop being left out by hand.
+//
+// Selected by THEATER; with THEATER unset the maps fall back to this one by name.
+
+# [Legendary](legendary)
+---
+Weights 1:  kralien:85, torgoth:3,    arvonian:3,    skaraan:3,    ximni:3,    pirate:3
+Weights 2:  kralien:82, torgoth:3.6,  arvonian:3.6,  skaraan:3.6,  ximni:3.6,  pirate:3.6
+Weights 3:  kralien:79, torgoth:4.2,  arvonian:4.2,  skaraan:4.2,  ximni:4.2,  pirate:4.2
+Weights 4:  kralien:76, torgoth:4.8,  arvonian:4.8,  skaraan:4.8,  ximni:4.8,  pirate:4.8
+Weights 5:  kralien:70, torgoth:6,    arvonian:6,    skaraan:6,    ximni:6,    pirate:6
+Weights 6:  kralien:64, torgoth:7.2,  arvonian:7.2,  skaraan:7.2,  ximni:7.2,  pirate:7.2
+Weights 7:  kralien:58, torgoth:8.4,  arvonian:8.4,  skaraan:8.4,  ximni:8.4,  pirate:8.4
+Weights 8:  kralien:46, torgoth:10.8, arvonian:10.8, skaraan:10.8, ximni:10.8, pirate:10.8
+Weights 9:  kralien:34, torgoth:13.2, arvonian:13.2, skaraan:13.2, ximni:13.2, pirate:13.2
+Weights 10: kralien:22, torgoth:15.6, arvonian:15.6, skaraan:15.6, ximni:15.6, pirate:15.6
+Weights 11: kralien:10, torgoth:18,   arvonian:18,   skaraan:18,   ximni:18,   pirate:18
+---
+The stock Artemis factions. Kralien are the common enemy early and the mix opens up as the
+difficulty climbs, which is the curve the siege map has always run.

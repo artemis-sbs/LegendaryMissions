@@ -1,0 +1,98 @@
+// The stock races' OVERRIDES - only what the ship table cannot say.
+//
+// A race is a shipData `origin`, so all nine of these already exist without this file: the
+// library derives the race list, each one's hulls, and its station hull from the entries
+// themselves. `sbs_utils/procedural/races.py` has the derivation and why it is a derivation.
+//
+// What is left over is four things no hull carries:
+//
+//   Station Prefix  what a map names this race's starbases (`KB 1`, `TB 2`). These were
+//                   literals in borderwar and deepstrike; they are kept EXACTLY as those
+//                   maps spelled them so station names do not move.
+//   Faces           the FACE race whose portraits crew this one. A different namespace -
+//                   a Federation ship is crewed by `human`, not `federation` - which is why
+//                   it cannot be inferred. Stock races happen to match, and are stated
+//                   anyway so the file reads as a complete record rather than a patch.
+//   Call Sign       the letters NPC call signs are drawn from. `name_random_hostile` used to
+//                   hardcode `KLMNQ` for everyone and `TR` for skaraan alone, so every mod
+//                   faction ever built got Kralien call signs.
+//   Fleet Scale     how many times the normal fleet count this race spawns.
+//
+// Nothing here declares a race INTO existence. Delete this file and the maps still work;
+// stations get a derived prefix (`KRB` instead of `KB`) and crews a derived face race.
+
+# [Kralien](kralien)
+---
+Station Prefix: KB
+Faces: kralien
+Call Sign: KLMNQ
+---
+The Kralien Union. The most numerous raiders, and the low-difficulty enemy the stock siege
+ladder nominates - it is the race that sits at 85% at difficulty 1 and falls to 10% at 11.
+
+# [Torgoth](torgoth)
+---
+Station Prefix: TB
+Faces: torgoth
+Call Sign: KLMNQ
+---
+Torgoth heavies. Xenophobic, and less likely to surrender to what they read as an inferior race.
+
+# [Arvonian](arvonian)
+---
+Station Prefix: AB
+Faces: arvonian
+Call Sign: KLMNQ
+---
+Arvonian carriers. Their nobility prides itself on honor and detests cowardice.
+
+# [Skaraan](skaraan)
+---
+Station Prefix: SB
+Faces: skaraan
+Call Sign: TR
+---
+Skaraan elites - independent contractors who operate better alone, which is why the maps
+spawn them separately from the raiding fleets. `TR` call signs are theirs alone and were the
+one race `name_random_hostile` had ever heard of.
+
+# [Ximni](ximni)
+---
+Faces: ximni
+Call Sign: KLMNQ
+Fleet Scale: 2
+---
+No Station Prefix and no station hull: the Ximni have no starbase in shipData at all, which
+is the real reason borderwar and deepstrike list three races where the other maps list four.
+`race_has_station` is now what those maps ask, so this is a fact about the Ximni rather than
+a shortened literal in two map files.
+
+Fleet Scale doubles their fleet count. singlefront and doublefront both carried
+`if enemy == "Ximni": fleet_count = fleet_count*2` with the comment "Ximni fleets are
+typically only one ship" - a fact about the race, stated once here instead of twice there.
+
+# [Pirate](pirate)
+---
+Faces: pirate
+Call Sign: KLMNQ
+---
+Pirates. Like the Ximni, no starbase hull, so they are excluded from the station maps by the
+same derived filter rather than by being left out of a list.
+
+# [Biomech](biomech)
+---
+Faces: terran
+Call Sign: KLMNQ
+---
+Biomechs have hulls and interiors but no fleet ladder, so `race_npc_list` leaves them out of
+the raiding roster on its own. Listed here so the record is complete, and given terran faces
+because they have no portraits of their own - the fallback `random_face` would reach anyway,
+stated rather than left to chance.
+
+# [Terran](terran)
+---
+Station Prefix: TSN
+Faces: terran
+---
+The players' own race. Never a raider - it has no fleet ladder - but it IS an origin in the
+ship table, so it appears in `race_list()` and wants a sane face race like any other.

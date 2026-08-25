@@ -207,9 +207,11 @@ GameCode:
     # phase 5: enemy fleets
     if seed_value != 0:
         random.seed(seed_value + 5)
-    enemyTypeNameList = ["Kralien", "Torgoth", "Arvonian", "Ximni"]
-
-    diff_weight = [ [85, 5, 5, 5], [82, 6, 6, 6], [79, 7, 7, 7], [76, 8, 8, 8], [70, 10, 10, 10], [64, 12, 12, 12], [58, 14, 14, 14], [46, 18, 18, 18], [34, 22, 22, 22], [22, 26, 26, 26], [10, 30, 30, 30]]
+    # The four-name list and the eleven weight rows that used to sit here are now ONE keyed
+    # ladder in races/theaters.amd. They were always the same thing: every row summed to 100
+    # and was zipped against the list by position, so the names simply lived somewhere else.
+    # Keyed, the roster is not four long because a table is four columns wide - which is what
+    # forced a total conversion to alias its factions onto these four names.
     
     fleet_count = 3 + int(DIFFICULTY/2)
     fleet_index = int(DIFFICULTY - 1)
@@ -255,9 +257,10 @@ GameCode:
         spawn_points = None
         
     for a in range(fleet_count):
-        enemy_temp = [fleet_pick_enemy_race(enemyTypeNameList, diff_weight[fleet_index])]
-        
-        enemy = enemy_temp[0]
+        # One draw per fleet, as before - the map says how many draws, the theater says the
+        # odds. DIFFICULTY is 1-based and picks the ladder tier directly; `fleet_index` was
+        # only ever DIFFICULTY-1 because the table was a 0-based list.
+        enemy = fleet_pick_enemy_race(difficulty=DIFFICULTY)
         if spawn_points is None:
             fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
             debug_print("Wrong spawn")
