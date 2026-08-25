@@ -38,7 +38,10 @@ gui_reroute_clients("client_main")
     shared LETHAL_SELECT  = SETTINGS.get("LETHAL_SELECT")
     shared FRIENDLY_SELECT  = SETTINGS.get("FRIENDLY_SELECT")
     shared MONSTER_SELECT  = SETTINGS.get("MONSTER_SELECT")
-    shared MONSTER_NON_TYPHON  = SETTINGS.get("MONSTER_NON_TYPHON", True)
+    # Opt-in as of 2026-08-25 (fallback was True) - the Piranha render crash; see
+    # settings.yaml. This fallback only applies when the key is ABSENT entirely, so it
+    # matters for a host whose settings.yaml predates the key.
+    shared MONSTER_NON_TYPHON  = SETTINGS.get("MONSTER_NON_TYPHON", False)
     shared UPGRADE_SELECT  = SETTINGS.get("UPGRADE_SELECT")
     shared seed_value  = SETTINGS.get("seed_value")
     # Packed hull+name-per-slot loadout carried by a game code (empty = none).

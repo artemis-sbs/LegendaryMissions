@@ -35,4 +35,10 @@ import torpedo_prefabs.mast
 # (99) to an awaiting caller, which looks like a valid agent id, and `yield result None`
 # never satisfies Promise.done() and would hang the awaiter forever. 0 is falsy, reports
 # done, and matches the to_id() "no object" convention.
-default shared MONSTER_NON_TYPHON = True
+#
+# OPT-IN AS OF 2026-08-25 (was True), pending a real fix for the Piranha render crash -
+# see the note in ../settings.yaml. The three defaults must AGREE: this one, settings.yaml,
+# and the SETTINGS.get fallback in ../consoles/server_console.mast. A mod that loads these
+# prefabs without LM's server console gets this value, so leaving it True here would quietly
+# hand that mod the crashing species back.
+default shared MONSTER_NON_TYPHON = False

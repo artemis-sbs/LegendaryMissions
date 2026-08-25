@@ -93,7 +93,23 @@ MONSTER_SELECT: "few"
 # any source: no wreck nests, and the GM bestiary menu stops offering them. The eight
 # Typhon-style species (Typhon, Reaver, Grazer, Ravener, Bulwark, Sparkfeeder, Siphon
 # Leech, Warden) are unaffected, and MONSTER_SELECT still sets how many a map seeds.
-MONSTER_NON_TYPHON: true
+#
+# OPT-IN AS OF 2026-08-25, pending a real fix. Set false here, and matched in
+# prefabs/__init__.mast and consoles/server_console.mast so all three agree.
+#
+# WHY: a render-side BREAKPOINT (0x80000003 - an assertion, not an access violation) in
+#   RenderManager::GetDrawData -> ObjectTypeDrawData -> MeshSilhouette -> Ribbon3DManager
+# killed a server eight minutes into a siege. The only monster art root anywhere in that
+# dump's memory was `ships/monster2` - the Piranha - beside `behav_monster` and the
+# monster body-bend/wiggle blob documentation strings. monster2 is also the only monster
+# with a .paxmesh and split _body/_jaw geometry, and its body is procedurally deformed
+# while turning, so it exercises a silhouette path the single-mesh species never touch.
+#
+# This is BROADER than the suspect - there is no per-species switch today, and a
+# Piranha-only one would need a new MONSTER_PIRANHA guarded in prefabs/piranha.mast and
+# damage/destroy.mast. Turning the whole family off is the conservative move until the
+# mesh is understood: a host who wants them back sets this true.
+MONSTER_NON_TYPHON: false
 UPGRADE_SELECT: "lots"
 
 # Music bank. Deliberately COMMENTED OUT, and that is the setting: a key present here is

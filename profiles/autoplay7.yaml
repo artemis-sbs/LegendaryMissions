@@ -39,6 +39,10 @@ TERRAIN_SELECT: "some"
 LETHAL_SELECT: "none"
 FRIENDLY_SELECT: "few"
 MONSTER_SELECT: "few"
+# Stated explicitly, though it now MATCHES the default - see settings.yaml for why the
+# non-Typhon family is opt-in. An unattended soak should say what it is running rather
+# than inherit it, and if the default goes back to true this profile stays quiet.
+MONSTER_NON_TYPHON: false
 UPGRADE_SELECT: "lots"
 GAME_TIME_LIMIT: 0
 WAR_TIME_DELAY: 10
