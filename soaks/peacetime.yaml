@@ -1,0 +1,49 @@
+# Peacetime Remastered - the quest-board scenario.
+#
+# This map is the reason the soak framework exists: its content is a job board, and a job
+# only goes ACTIVE when a human presses Accept. Before the pilot, a headless run reached
+# ZERO of 19 jobs and the mission said so itself in a comment beside the unused
+# AUTO_ACCEPT_JOBS hook.
+#
+# Run it with:
+#   python -m cosmos_dev.mission_runner <mission> --soak peacetime --use-working-tree
+#
+# NOTE ON THE LOG: mission_runner opens mast.runtime.log with mode "w" IN THE MISSION DIR,
+# so running this against the live LegendaryMissions folder destroys the log an engine
+# session just produced. Soak against a copy while anyone is playing.
+
+map: peacetime_remastered
+seed: 7
+seconds: 600
+
+settings:
+  JOBS_SELECT: lots
+  QUEST_MODE: Protected
+  # Autoplay is the greedy combat bot. It is what made --runs soaks diverge, and this
+  # mission has no combat to be greedy about - the pilot drives instead.
+  AUTO_PLAY:
+    enable: false
+
+drive:
+  accept_quests: all
+  goals: true
+  consoles: [helm, weapons, engineering, comms, science]
+  # NOT the default of 3. At dwell 3 a console is swapped away in under a sim-second, so
+  # every `on change` watcher keyed to a one-second tick fires exactly zero times - which
+  # is how a NameError in a region watcher reached a real engine session under a green
+  # headless run. Budget dwell x (5 + extras) / 3 seconds of run time, minimum.
+  dwell: 20
+
+expect:
+  # Deliberately EMPTY. The ratchet in soak/peacetime.baseline.json is the real demand,
+  # and it only ever contains things a run has actually achieved. Naming jobs here that
+  # the harness has never reached would make the soak red every morning and then ignored.
+  # Add an entry here only to demand something the baseline cannot express.
+  quests_complete: []
+  routes_covered: []
+  game_end: none
+
+# The engine answers None for a data_set field nobody set; the mock answers a typed
+# default. That gap is how the Florbin cargo-hold watcher and a helm energy crash both
+# shipped green. On by default for scenarios, stated here so it is not a surprise.
+strict_blob: true

@@ -25,3 +25,7 @@ extraShipData.json.bak
 # Rendered documents from `sbs docs` - build output, not source. An embedded
 # edition can run to several MB because it inlines the face atlases.
 /__docs__/
+
+# Soak run artifacts - per-run coverage/junit/logs, regenerated every run.
+# The SCENARIOS and their .baseline.json are committed; the evidence is not.
+soaks/runs/
