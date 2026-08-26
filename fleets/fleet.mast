@@ -33,6 +33,11 @@ brain:
 ```
     _fleet_index = fleet_difficulty -1
     fleet = fleet_create(race, _fleet_index, START_X, START_Y, START_Z, fleet_roles, ship_roles, faction_side)
+    # A race with no registered fleet ladder builds no fleet, and fleet_create has already
+    # named the race and said why. Stop here rather than falling into `fleet.id` below,
+    # which reported the whole thing as an AttributeError against brain_add and named no
+    # race at all - the TNG pack's Breen, rostered by two theaters with no fleets.yaml.
+    ->END if fleet is None
     # Add fleet behavior tree
     brain_add(fleet.id, brain, None, 0, None)
     yield result to_id(fleet)

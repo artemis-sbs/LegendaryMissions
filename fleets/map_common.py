@@ -45,6 +45,24 @@ def player_ship_update_friendly(player_id, friends, initial_scan = False):
 STOCK_THEATER = "legendary"
 
 
+def _fleet_can_raid(eligible=None):
+    """`eligible`, ANDed with "this race has a fleet ladder registered".
+
+    The ladder half is `fleet_table_can_field`, which names a rostered race it cannot
+    field once per mission - a theater naming a race nothing can build is a data error in
+    the theater, and the quiet version of it is a faction written into the roster that
+    simply never turns up.
+    """
+    from sbs_utils.procedural.fleet_tables import fleet_table_can_field
+
+    def test(race):
+        if not fleet_table_can_field(race):
+            return False
+        return eligible is None or eligible(race)
+
+    return test
+
+
 def fleet_pick_enemy_race(race_list=None, weights=None, difficulty=None, eligible=None):
     """This map's enemy race, from the active THEATER's ladder.
 
@@ -65,11 +83,23 @@ def fleet_pick_enemy_race(race_list=None, weights=None, difficulty=None, eligibl
             match rather than a lower-cased roster entry.
         weights: a caller-supplied row, used only if the theater declares none.
         difficulty: which ``Weights <n>:`` tier to read - the 1-based DIFFICULTY.
-        eligible: what the race must be able to DO. borderwar and deepstrike pass
-            `race_has_station`, because they build enemy starbases and not every race has
-            one - which is what their shortened three-name list was really encoding.
+        eligible: what the race must be able to DO, ON TOP of being able to raid at all.
+            borderwar and deepstrike pass `race_has_station`, because they build enemy
+            starbases and not every race has one - which is what their shortened
+            three-name list was really encoding.
+
+    EVERY CALLER OF THIS IS ABOUT TO BUILD A FLEET, so having a registered ladder is not
+    the caller's constraint to remember - it is the floor. A theater may roster a race the
+    ship table knows and no ladder covers: the TNG pack's Breen is a real shipData side
+    with one hull, rostered at 4-20% in two theaters, and it had no `fleets.yaml`. That
+    made `fleet_create` print and return None, and `prefab_fleet_raider` then died on
+    `brain_add(fleet.id, ...)` with `'NoneType' object has no attribute 'id'` - a runtime
+    error for a whole slice of the roster, on a mission that otherwise looked fine. The
+    race is dropped from the pick here instead, so the mission gets one of the theater's
+    other factions rather than an exception.
     """
     from sbs_utils.procedural.amd_theater import theater_pick_race, theater_get
+    eligible = _fleet_can_raid(eligible)
     pick = theater_pick_race(weights, names=race_list, difficulty=difficulty,
                              eligible=eligible)
     if pick is None and theater_get() is None:
@@ -81,7 +111,7 @@ def fleet_pick_enemy_race(race_list=None, weights=None, difficulty=None, eligibl
     # Last resort: whatever the caller knows. Reached when the selected theater rosters
     # nothing this map can use - every race filtered out by `eligible`, say - and returning
     # None here would leave the map with no enemy at all.
-    fallback = list(race_list or []) or fleet_enemy_races(eligible)
+    fallback = [r for r in (race_list or []) if eligible(r)] or fleet_enemy_races(eligible)
     if not fallback:
         return None
     if weights and len(weights) == len(fallback):
