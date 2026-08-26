@@ -145,8 +145,12 @@ class _Base(unittest.TestCase):
         FrameContext.mast = story
 
         self.errors = []
-        self._orig_rte = MastScheduler.runtime_error
-        MastScheduler.runtime_error = lambda s, message: self.errors.append(message)
+        self._orig_rte = MastScheduler.on_runtime_error
+        # StoryScheduler OVERRIDES `runtime_error`, so patching it on MastScheduler
+        # binds a method nothing calls and the assertion below is vacuous. The
+        # class-level `on_runtime_error` seam is what the story scheduler actually
+        # fires (and is what cosmos_dev's verdict uses).
+        MastScheduler.on_runtime_error = self.errors.append
 
         self.page = None
 
@@ -167,7 +171,7 @@ class _Base(unittest.TestCase):
 
     def tearDown(self):
         self.emitted.remove()
-        MastScheduler.runtime_error = self._orig_rte
+        MastScheduler.on_runtime_error = self._orig_rte
         Gui.clients = {}
         Gui.widget_list_sent = {}
         PanelPage.story = None

@@ -141,8 +141,12 @@ class _Base(unittest.TestCase):
         self.story = story
 
         self.rte = []
-        self._orig_rte = MastScheduler.runtime_error
-        MastScheduler.runtime_error = lambda s, message: self.rte.append(message)
+        self._orig_rte = MastScheduler.on_runtime_error
+        # StoryScheduler OVERRIDES `runtime_error`, so patching it on MastScheduler
+        # binds a method nothing calls and the assertion below is vacuous. The
+        # class-level `on_runtime_error` seam is what the story scheduler actually
+        # fires (and is what cosmos_dev's verdict uses).
+        MastScheduler.on_runtime_error = self.rte.append
 
         # The addon loads these from its media pack at story load; here the file is
         # right beside us.
@@ -163,7 +167,7 @@ class _Base(unittest.TestCase):
 
     def tearDown(self):
         self.emitted.remove()
-        MastScheduler.runtime_error = self._orig_rte
+        MastScheduler.on_runtime_error = self._orig_rte
         Gui.clients = {}
         Gui.widget_list_sent = {}
         FabPage.story = None
