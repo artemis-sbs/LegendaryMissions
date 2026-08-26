@@ -90,8 +90,24 @@
     lmgt_hit = EVENT.sub_float or 0
     ->END if lmgt_hit < LM_TETHER_BREAK_DAMAGE
     if grav_tether_involves(DAMAGE_TARGET_ID):
+        # Tell whoever was HAULING, not whatever was hit. Two reasons the old
+        # comms_broadcast(DAMAGE_TARGET_ID, ...) was wrong, and the second one raised:
+        #   * the shot object is usually the LOAD, and a barge is not a player ship - it
+        #     has no waterfall to write to. The haulers are its tether SOURCES. (When the
+        #     towing ship itself is shot it is a source, so it tells itself.)
+        #   * the same hit can DESTROY what it shook loose, and comms_broadcast to a freed
+        #     object raises "invalid space object while calling SendMessageToPlayerShip".
+        #     A failing expression stops the command, so the route ended there - once per
+        #     qualifying hit, for the rest of the mission.
+        # Gather before releasing: grav_tether_release_any drops the very association
+        # these lookups read.
+        lmgt_told = grav_tether_sources_of(DAMAGE_TARGET_ID)
+        if grav_tether_targets_of(DAMAGE_TARGET_ID):
+            lmgt_told = lmgt_told + [DAMAGE_TARGET_ID]
+        lmgt_told = [lmgt_t for lmgt_t in lmgt_told if object_exists(lmgt_t)]
         grav_tether_release_any(DAMAGE_TARGET_ID)
-        comms_broadcast(DAMAGE_TARGET_ID, "Grav-tether shaken loose by the hit.")
+        if lmgt_told:
+            comms_broadcast(lmgt_told, "Grav-tether shaken loose by the hit.")
 
 
 # Ran the reserves dry mid-haul. The library drops the load rather than pinning the ship
