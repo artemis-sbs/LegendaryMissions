@@ -85,6 +85,8 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "brain": False, "standoff"
     task_schedule(automated_player_science_ai, {"_ship_id": _ship_id})
     task_schedule(automated_player_weapons_ai, {"_ship_id": _ship_id})
     set_inventory_value(_ship_id, "MANUAL_BEAMS_ON", True)
+    comms_broadcast(_ship_id, "Autopilot: console loops engaged (AUTO_PLAY.enable)", color="#8cf")
+    set_inventory_value(_ship_id, "ap_driver", "loop")
     task_schedule(automated_player_comms_ai, {"_ship_id": _ship_id})
     task_schedule(automated_player_engineering_ai, {"_ship_id": _ship_id})
     ->END

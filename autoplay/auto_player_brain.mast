@@ -34,9 +34,6 @@
     await delay_sim(2)
     # `brain` WINS over `enable`: an explicit ask for the tree should get the tree. The
     # loop version's own gate stands it down, so the two can never drive at once.
-    if SETTINGS.get("AUTO_PLAY", {}).get("enable"):
-        log("AUTO_PLAY.brain is set, so the behaviour-tree autoplayer is driving and the "
-            "console loop version is standing down", "autoplay")
     task_schedule(ap_brain_attach_all)
 
 
@@ -74,6 +71,13 @@ brain:
             ap_ship.set_inventory_value("AP_BRAIN_HOOKED", True)
             ap_ship.set_inventory_value("MANUAL_BEAMS_ON", True)
             brain_add(ap_ship.id, brain)
+            # SAY WHICH AUTOPLAYER IS DRIVING, somewhere a person will actually see it.
+            # `log(msg, "autoplay")` was the obvious choice and is useless: it goes to a
+            # named logger with no handler configured, so it goes nowhere at all. The only
+            # other tell was the brain_scan tab, which needs a dev build. comms_broadcast
+            # reaches the text waterfall AND the ship's Log panel on any console.
+            comms_broadcast(ap_ship.id, "Autopilot: behaviour tree engaged (AUTO_PLAY.brain)", color="#8cf")
+            ap_ship.set_inventory_value("ap_driver", "brain")
     await delay_sim(5)
     jump apba_loop
 
