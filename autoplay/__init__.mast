@@ -1,1 +1,6 @@
 import auto_player_console.mast
+# A .py needs an explicit import to reach the MAST namespace - the folder walk finds
+# .mast files, not Python.
+import auto_player_helpers.py
+# Inert unless AUTO_PLAY.brain is set; see the file header.
+import auto_player_brain.mast

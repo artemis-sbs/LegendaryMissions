@@ -1,0 +1,372 @@
+# The autoplayer's helm, as a behaviour tree.
+#
+# WHY. `auto_player_console.mast` runs five `await delay_sim(n)` + `jump` loops per ship,
+# hooked per console - so N connected clients hook every ship N times, five labels each
+# start with their own `->END if ship is None`, and a supervisor re-polls every 5 seconds
+# to re-hook respawns. A brain gets one tree per AGENT, automatic unscheduling when the
+# ship dies, `__BRAIN_PAUSED__` while it is parked on the standby list, RollingSlicer
+# pacing instead of a per-ship timer, and a live view of what it decided in the
+# `brain_scan` console tab - none of which a loop gets.
+#
+# THIS FILE IS INERT UNTIL ASKED FOR. `AUTO_PLAY.brain` defaults to false, so the existing
+# console autoplayer is untouched and this can be A/B'd against it by flipping one
+# setting on the same map and seed. That is deliberately reversible: the loop version is
+# a working attract mode and should not be replaced on assertion.
+#
+# HOW A LEAF MUST BEHAVE - the one rule that is not obvious. Each leaf is ONE synchronous
+# pass ending in `yield success` or `yield fail`. It must never `await`: an awaiting leaf
+# is left running while the brain starts another next pass. (The library now ends such a
+# leaf and says so once, rather than leaking a task per pass forever - but the leaf still
+# has to be written this way to mean anything.) Work that takes time goes in a
+# `task_schedule`d label gated by a flag, which is what the weapons opener already does.
+#
+# THE ENERGY REFILL IS GONE, on purpose. The loop version tops the tank up at `energy < 30`
+# so an unattended run would not stall - and that also hides every real energy bug behind
+# it. It is replaced by `ai_player_recover_energy`, which is competence rather than a
+# cheat: the tank drains ONLY while the throttle is up and the auxiliary power unit refills
+# it unconditionally below its ceiling, so stopping always recovers. There is no
+# unrecoverable energy state; a ship that strands is one that never stopped burning.
+
+# Hook every player ship once, when the game starts. //shared/signal, not //signal: this
+# is server-side work and must happen ONCE, not once per connected console - which is the
+# duplication the loop version has to live with.
+//shared/signal/game_started if SETTINGS.get("AUTO_PLAY", {}).get("brain")
+    await delay_sim(2)
+    task_schedule(ap_brain_attach_all)
+
+
+=== ap_brain_attach_all
+" Attach the helm brain to every player ship, and to any that respawn later.
+metadata: ``` yaml
+brain:
+  SEQ:
+    - SEL:
+        - ai_player_flee_black_hole
+        - ai_player_recover_energy
+        - ai_player_dock
+        - ai_player_hold_if_crippled
+        - ai_player_pursue
+        - ai_player_wander
+    - ai_player_science_select
+    - ai_player_comms
+    - ai_player_weapons_doctrine
+    - ai_player_engineer_power
+```
+    # The tree is declared as metadata rather than a MAST dict literal, which is the form
+    # every prefab already uses (see prefabs/basic_enemy.mast). It is also the only safe
+    # one: MAST parses line by line, so a `{...}` spanning lines is an unclosed brace that
+    # desyncs the compiler for the rest of the file - and a story that does not compile
+    # runs zero labels while still reporting PASS. YAML in a metadata block has no such
+    # problem.
+    #
+    # A respawned ship is a NEW id with no `__BRAIN__`, so this still needs a watcher -
+    # the brain system unschedules a dead agent for us but cannot know about its
+    # replacement. Cheaper than the loop version's supervisor, which re-checked five
+    # hooks per ship; here one inventory key answers it.
+---apba_loop
+    for ap_ship in to_object_list(role("__player__")):
+        if not ap_ship.get_inventory_value("AP_BRAIN_HOOKED", False):
+            ap_ship.set_inventory_value("AP_BRAIN_HOOKED", True)
+            ap_ship.set_inventory_value("MANUAL_BEAMS_ON", True)
+            brain_add(ap_ship.id, brain)
+    await delay_sim(5)
+    jump apba_loop
+
+
+# ---- the leaves, in priority order -------------------------------------------------
+# The root is a SEQUENCE, so every console runs each pass. Inside it the HELM is a
+# Select, where the first leaf that succeeds owns the ship - so within the helm, order is
+# the policy. Each leaf opens with the conditions under which it declines.
+#
+# A Select root would have been wrong here and silently so: the helm succeeds on almost
+# every pass, which would starve science, comms, weapons and engineering forever.
+
+=== ai_player_flee_black_hole
+" Fleeing a black hole
+metadata: ``` yaml
+type: brain/player
+margin: 2000
+throttle: 3.0
+```
+    # Highest priority: a hole PULLS, so the danger zone is its gravity_radius rather than
+    # the small kill radius. Mines are NOT fled - they are threaded further down, because
+    # fleeing a ring of them means bouncing off it forever and never docking.
+    ap_hole = to_object(closest(BRAIN_AGENT_ID, role("black_hole"), 15000))
+    yield fail if ap_hole is None
+    ap_gr = ap_hole.data_set.get("gravity_radius", 0) or 5000
+    yield fail if sbs.distance_id(BRAIN_AGENT_ID, to_id(ap_hole)) >= ap_gr + margin
+
+    ap_away = BRAIN_AGENT.pos - ap_hole.pos
+    if ap_away.length() < 1:
+        ap_away = Vec3(1, 0, 0)
+    helm_steer_to_vec(BRAIN_AGENT_ID, ap_away)
+    helm_throttle(BRAIN_AGENT_ID, throttle)
+    BRAIN_AGENT.set_inventory_value("ap_helm_mode", "flee")
+    yield success
+
+
+=== ai_player_recover_energy
+" Recovering energy
+metadata: ``` yaml
+type: brain/player
+reserve: 400
+```
+    # REPLACES THE REFILL CHEAT. Below the reserve, stop burning: the auxiliary power unit
+    # refills the tank unconditionally, so a stopped ship always recovers. Docking is
+    # faster, so prefer it when a friendly station is close enough to be worth the trip -
+    # `helm_energy_reserve` asks whether we can afford to GET there, which a flat "energy
+    # below 300" cannot express (300 says nothing about a station 40,000 units away).
+    yield fail if helm_energy_reserve(BRAIN_AGENT_ID, reserve=reserve)
+
+    ap_base = to_object(closest(BRAIN_AGENT_ID, side_allied_members(BRAIN_AGENT_ID, "station")))
+    if ap_base is not None and helm_energy_reserve(BRAIN_AGENT_ID, ap_base, reserve=0):
+        helm_steer_to_point(BRAIN_AGENT_ID, ap_base)
+        helm_throttle(BRAIN_AGENT_ID, 1.0, allow_warp=False)
+        if sbs.distance_id(BRAIN_AGENT_ID, to_id(ap_base)) < 700:
+            helm_dock_request(BRAIN_AGENT_ID, ap_base)
+        BRAIN_AGENT.set_inventory_value("ap_helm_mode", "refuel")
+        yield success
+
+    # Nothing reachable: hold still and let the APU do it. Slow, certain, and honest -
+    # if this is not enough the run has found something worth knowing.
+    helm_stop(BRAIN_AGENT_ID)
+    BRAIN_AGENT.set_inventory_value("ap_helm_mode", "regen")
+    yield success
+
+
+=== ai_player_dock
+" Docking to repair
+metadata: ``` yaml
+type: brain/player
+shield_low: 0.3
+undock_energy: 1000
+```
+    # Hysteresis, or the ship oscillates on the threshold: once committed we stay docked
+    # until BOTH shields are full and the tank is well past the trigger.
+    ap_docking = BRAIN_AGENT.get_inventory_value("ap_go_dock", False)
+    ap_front = helm_shield_fraction(BRAIN_AGENT_ID, 0)
+    ap_rear = helm_shield_fraction(BRAIN_AGENT_ID, 1)
+
+    if ap_docking:
+        if ap_front >= 1.0 and ap_rear >= 1.0 and helm_energy(BRAIN_AGENT_ID) >= undock_energy:
+            BRAIN_AGENT.set_inventory_value("ap_go_dock", False)
+            helm_undock(BRAIN_AGENT_ID)
+            yield fail
+    else:
+        yield fail if ap_front >= shield_low and ap_rear >= shield_low
+        BRAIN_AGENT.set_inventory_value("ap_go_dock", True)
+
+    ap_base = to_object(closest(BRAIN_AGENT_ID, side_allied_members(BRAIN_AGENT_ID, "station")))
+    yield fail if ap_base is None
+    yield success if helm_is_docked(BRAIN_AGENT_ID)
+
+    helm_steer_to_point(BRAIN_AGENT_ID, ap_base)
+    ap_range = sbs.distance_id(BRAIN_AGENT_ID, to_id(ap_base))
+    if ap_range < 700:
+        helm_dock_request(BRAIN_AGENT_ID, ap_base)
+    else:
+        helm_throttle(BRAIN_AGENT_ID, autoplay_helm_speed_for(ap_range))
+    BRAIN_AGENT.set_inventory_value("ap_helm_mode", "dock")
+    yield success
+
+
+=== ai_player_hold_if_crippled
+" Holding station - cannot steer
+metadata: ``` yaml
+type: brain/player
+```
+    # A straight-line burn with no steering just flies us into deep space chasing
+    # something we cannot aim at. Hold until the maneuver system recovers.
+    yield fail if helm_can_turn(BRAIN_AGENT_ID)
+    helm_stop(BRAIN_AGENT_ID)
+    BRAIN_AGENT.set_inventory_value("ap_helm_mode", "hold")
+    yield success
+
+
+=== ai_player_pursue
+" Pursuing a target
+metadata: ``` yaml
+type: brain/player
+close_range: 10000
+upgrade_range: 5000
+wreck_range: 7500
+```
+    # Priority within pursuit: a close hostile first, then loot, then the far hostile.
+    # `side_hostile_ships` is diplomacy-based, so a ceasefired clan or a surrendered ship
+    # is not chased.
+    ap_foes = side_hostile_ships(BRAIN_AGENT_ID)
+    ap_target = to_object(closest(BRAIN_AGENT_ID, ap_foes, close_range))
+    if ap_target is None:
+        ap_target = to_object(closest(BRAIN_AGENT_ID, all_roles("upgrade"), upgrade_range))
+    if ap_target is None:
+        ap_target = to_object(closest(BRAIN_AGENT_ID, all_roles("wreck"), wreck_range))
+    if ap_target is None:
+        ap_target = to_object(closest(BRAIN_AGENT_ID, ap_foes))
+    yield fail if ap_target is None
+
+    ap_diff = ap_target.pos - BRAIN_AGENT.pos
+    ap_range = ap_diff.length()
+    ap_speed = autoplay_helm_speed_for(ap_range)
+
+    # Standoff: the weapons opener asks us to hold at a range so its EMP/Nuke do not
+    # detonate point-blank.
+    ap_standoff = BRAIN_AGENT.get_inventory_value("weapons_standoff", 0) or 0
+    if ap_standoff > 0 and is_hostile_combatant(BRAIN_AGENT_ID, ap_target):
+        if ap_range <= ap_standoff:
+            ap_speed = 0
+        elif ap_range <= ap_standoff + 2000:
+            ap_speed = 0.5
+
+    # Mines: cap speed early so there is room to steer, then bend the course around them
+    # rather than fleeing - a station ringed by mines has to stay reachable.
+    ap_steer = ap_diff
+    ap_mine = to_object(closest(BRAIN_AGENT_ID, any_role("mine,maelstrom"), 8000))
+    if ap_mine is not None:
+        ap_md = sbs.distance_id(BRAIN_AGENT_ID, to_id(ap_mine))
+        ap_speed = autoplay_helm_mine_cap(ap_speed, ap_md)
+        ap_steer = autoplay_helm_deflect(BRAIN_AGENT.pos, ap_mine.pos, ap_diff, ap_md)
+        BRAIN_AGENT.set_inventory_value("ap_helm_mode", "mine_slow")
+    else:
+        BRAIN_AGENT.set_inventory_value("ap_helm_mode", "pursue")
+
+    helm_steer_to_vec(BRAIN_AGENT_ID, ap_steer)
+    helm_throttle(BRAIN_AGENT_ID, ap_speed)
+    yield success
+
+
+=== ai_player_wander
+" Roaming
+metadata: ``` yaml
+type: brain/player
+repick_within: 2000
+```
+    # Anti-degeneracy: with nothing to chase, roam so attract never looks frozen on a
+    # lobby screen. Last in the Select, so it only runs when everything else declined.
+    ap_wander = BRAIN_AGENT.get_inventory_value("wander_target", None)
+    if ap_wander is None or (ap_wander - BRAIN_AGENT.pos).length() < repick_within:
+        ap_wander = Vec3.rand_in_sphere(8000, 25000, False, True)
+        BRAIN_AGENT.set_inventory_value("wander_target", ap_wander)
+    helm_steer_to_point(BRAIN_AGENT_ID, ap_wander)
+    # Do not wander with no steering - that is a one-way trip into deep space.
+    helm_throttle(BRAIN_AGENT_ID, 1.0 if helm_can_turn(BRAIN_AGENT_ID) else 0)
+    BRAIN_AGENT.set_inventory_value("ap_helm_mode", "wander")
+    yield success
+
+
+# ---- the other consoles ------------------------------------------------------------
+# These sit under a SEQ alongside the helm SEL, so every one runs each pass rather than
+# the first success starving the rest. They were `delay_sim(10)` loops (engineering: 2),
+# so at a 3-second brain pass science, weapons and comms all become MORE responsive than
+# they are today; only engineering slows, and its work is a power/heat trim that does not
+# need a 2-second cadence.
+
+=== ai_player_science_select
+" Selecting a science target
+metadata: ``` yaml
+type: brain/player
+scan_range: 25000
+```
+    ap_foe = closest(BRAIN_AGENT_ID, side_hostile_ships(BRAIN_AGENT_ID), scan_range)
+    yield fail if ap_foe is None
+    yield success if get_science_selection(BRAIN_AGENT_ID) == ap_foe
+    set_science_selection(BRAIN_AGENT_ID, ap_foe)
+    # Fire the real select ROUTE as well, so //select/science runs exactly as it would
+    # for a crew member. That is the difference between exercising the console code and
+    # merely writing the selection key.
+    follow_route_select_science(BRAIN_AGENT_ID, ap_foe)
+    yield success
+
+
+=== ai_player_comms
+" Working the comms console
+metadata: ``` yaml
+type: brain/player
+hail_range: 10000
+```
+    ap_foe = closest(BRAIN_AGENT_ID, side_hostile_ships(BRAIN_AGENT_ID), hail_range)
+    yield fail if ap_foe is None
+    ap_rid = to_id(ap_foe)
+    if get_comms_selection(BRAIN_AGENT_ID) != ap_rid:
+        set_comms_selection(BRAIN_AGENT_ID, ap_rid)
+        follow_route_select_comms(BRAIN_AGENT_ID, ap_rid)
+
+    # Taunt with the line an intel scan reveals, once per target - the wrong line does
+    # not enrage their fleet, which is the point of taunting at all.
+    ap_taunts = get_inventory_value(ap_rid, "taunt_data")
+    ap_done = get_inventory_value(ap_rid, "taunt_attempted", False)
+    ap_taunted = BRAIN_AGENT.get_inventory_value("comms_taunted_target", 0)
+    if ap_taunts is not None and not ap_done and ap_taunted != ap_rid:
+        ap_trait = get_inventory_value(ap_rid, "taunt_trait", 0)
+        if ap_trait < len(ap_taunts):
+            BRAIN_AGENT.set_inventory_value("comms_taunted_target", ap_rid)
+            ap_line = ap_taunts[ap_trait]
+            ap_taunt_data = ~~{"COMMS_ORIGIN_ID": BRAIN_AGENT_ID, "COMMS_SELECTED_ID": ap_rid, "data": ap_line, "select_right": True}~~
+            task_schedule(handle_comms_taunt_raider_select, ap_taunt_data)
+
+    # Shields down: demand surrender. The LM handler rolls the chance and reports it.
+    ap_asked = BRAIN_AGENT.get_inventory_value("comms_surrender_target", 0)
+    if ap_asked != ap_rid and not has_role(ap_rid, "surrendered") and not has_role(ap_rid, "never_surrender"):
+        if autoplay_shields_down(to_blob(ap_rid)):
+            BRAIN_AGENT.set_inventory_value("comms_surrender_target", ap_rid)
+            ap_surr_data = ~~{"COMMS_ORIGIN_ID": BRAIN_AGENT_ID, "COMMS_SELECTED_ID": ap_rid}~~
+            task_schedule(handle_comms_raider_surrender, ap_surr_data)
+    yield success
+
+
+=== ai_player_weapons_doctrine
+" Choosing a weapon
+metadata: ``` yaml
+type: brain/player
+engage_range: 10000
+```
+    # Ammo-aware ladder, unchanged from the loop version: the choice is the interesting
+    # part and retuning it here would make the A/B compare two different bots.
+    ap_foes = side_hostile_ships(BRAIN_AGENT_ID)
+    ap_foe = closest(BRAIN_AGENT_ID, ap_foes, engage_range)
+    if ap_foe is None:
+        # Nothing hostile: beams on a wreck still salvage it.
+        ap_wreck = closest(BRAIN_AGENT_ID, role("wreck"), engage_range)
+        yield fail if ap_wreck is None
+        ap_wid = to_id(ap_wreck)
+        if get_weapons_selection(BRAIN_AGENT_ID) != ap_wid:
+            set_weapons_selection(BRAIN_AGENT_ID, ap_wid)
+        BRAIN_AGENT.set_inventory_value("ap_weapon_choice", "beams_wreck")
+        yield success
+
+    ap_rid = to_id(ap_foe)
+    if get_weapons_selection(BRAIN_AGENT_ID) != ap_rid:
+        set_weapons_selection(BRAIN_AGENT_ID, ap_rid)
+
+    # AOE weapons need a clear field: a friendly inside the blast is the reason to hold.
+    ap_friends = side_allied_members(BRAIN_AGENT_ID) & broad_test_around(ap_rid, 3000, 3000, 0x30)
+    ap_friends = ap_friends - {BRAIN_AGENT_ID}
+    ap_cluster = ap_foes & broad_test_around(ap_rid, 2000, 2000, 0x30)
+    ap_choice = autoplay_weapon_choice(BRAIN_AGENT_ID, ap_rid, ap_foe.distance, len(ap_cluster), len(ap_friends) == 0, autoplay_shields_down(to_blob(ap_rid)), BRAIN_AGENT.get_inventory_value("opener_target", 0), SETTINGS.get("AUTO_PLAY", {}).get("standoff", 5000))
+    BRAIN_AGENT.set_inventory_value("ap_weapon_choice", ap_choice)
+
+    if ap_choice == "opener":
+        # A multi-second scripted volley belongs in a task, not a leaf - a leaf that
+        # awaits is left running while the next pass starts another. The flag is what
+        # stops it being re-launched every pass.
+        BRAIN_AGENT.set_inventory_value("opener_target", ap_rid)
+        ap_open_data = ~~{"_ship_id": BRAIN_AGENT_ID, "target_id": ap_rid}~~
+        task_schedule(automated_player_engage_opener, ap_open_data)
+    elif ap_choice != "none":
+        fire_torpedo(BRAIN_AGENT_ID, ap_choice)
+    yield success
+
+
+=== ai_player_engineer_power
+" Balancing power and coolant
+metadata: ``` yaml
+type: brain/player
+```
+    # Overpower the drive and weapons, back off as the tank drains, and hold anything
+    # that is running hot. Then pour coolant on the hottest systems first.
+    #
+    # NOTE: the mock does not populate `eng_control_label` at all, so this does nothing
+    # headless - the same is true of the loop version it replaces. It is engine-only
+    # behaviour and a headless PASS says nothing about it either way.
+    autoplay_set_power_plan(BRAIN_AGENT_ID, SETTINGS.get("AUTO_PLAY", {}).get("overpower", 1.5))
+    autoplay_spend_coolant(BRAIN_AGENT_ID)
+    yield success
