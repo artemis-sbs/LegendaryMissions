@@ -32,6 +32,11 @@
 # duplication the loop version has to live with.
 //shared/signal/game_started if SETTINGS.get("AUTO_PLAY", {}).get("brain")
     await delay_sim(2)
+    # `brain` WINS over `enable`: an explicit ask for the tree should get the tree. The
+    # loop version's own gate stands it down, so the two can never drive at once.
+    if SETTINGS.get("AUTO_PLAY", {}).get("enable"):
+        log("AUTO_PLAY.brain is set, so the behaviour-tree autoplayer is driving and the "
+            "console loop version is standing down", "autoplay")
     task_schedule(ap_brain_attach_all)
 
 

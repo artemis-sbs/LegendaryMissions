@@ -4,9 +4,14 @@
 #   standoff  - range the ship holds at to open with its EMP/Nuke volley (u)
 #   overpower - engineering boost applied to drive + weapons (1.0 = 100%)
 #
-settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpower": 1.5}})
+settings_add_defaults({"AUTO_PLAY": {"enable": False, "brain": False, "standoff": 5000, "overpower": 1.5}})
 
-//signal/game_started if SETTINGS.get("AUTO_PLAY", {}).get("enable")
+# ONE DRIVER AT A TIME. `brain` selects the behaviour-tree autoplayer in
+# auto_player_brain.mast; this loop version stands down when it is set. Both flags on
+# meant two controllers writing playerThrottle and the steering vector every tick, with
+# the ship taking whichever wrote last - not a crash, and not something you would ever
+# spot from a green run, which is exactly why it is worth refusing.
+//signal/game_started if SETTINGS.get("AUTO_PLAY", {}).get("enable") and not SETTINGS.get("AUTO_PLAY", {}).get("brain")
     await delay_sim(2)
     jump automated_player_ai
 
@@ -15,7 +20,9 @@ settings_add_defaults({"AUTO_PLAY": {"enable": False, "standoff": 5000, "overpow
 # scarce alpha-strike munition (Homing already auto-builds on enable/comms). //shared so
 # it runs a single time on the server, not once per console. docking_build_munition_queue_task
 # no-ops if the station is already on that type, so repeat calls across players are safe.
-//shared/signal/game_started if SETTINGS.get("AUTO_PLAY", {}).get("enable")
+# The munition queue is wanted by EITHER autoplayer - the brain fires the same openers -
+# so this one is not gated on which is driving.
+//shared/signal/game_started if SETTINGS.get("AUTO_PLAY", {}).get("enable") or SETTINGS.get("AUTO_PLAY", {}).get("brain")
     await delay_sim(3)
     for player in role("__player__"):
         for station in side_allied_members(player, "station"):
