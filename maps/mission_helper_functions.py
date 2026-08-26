@@ -1,6 +1,5 @@
 
 import copy
-import sbs
 from sbs_utils.procedural.query import to_object_list
 from sbs_utils.procedural.roles import role
 from sbs_utils.procedural.comms import comms_message
@@ -18,9 +17,11 @@ def send_general_message(nName, textLine, face, srcID):
     third draws over the live view instead of interrupting it, and carries the
     speaker's face. The comms_message below is unchanged - it is where a player
     reads the full line back, so nothing is lost if a card is missed."""
-    # The host/server screen has no "mainscreen" role, so it keeps the dialog.
-    sbs.send_story_dialog(0, nName, textLine, face, "#444")
-
+    # The host/server window is a main screen like any other now - it holds the
+    # `console, mainscreen` roles, so the lower third below reaches it. It used to get a
+    # send_story_dialog here instead, because add_role on client 0 was a silent no-op and
+    # the overlay audience could never include it. Once that was fixed the host got BOTH,
+    # stacked, on every beat.
     overlay_lower_third(announce_headline(nName, 40),
                         announce_headline(textLine, 90),
                         to=role("mainscreen") & role("console"), seconds=10)

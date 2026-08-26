@@ -4,7 +4,6 @@
 # unaffected. The legacy anomaly metadata is kept for any external readers.
 from sbs_utils.procedural.query import to_object
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
-from sbs_utils.procedural.comms import comms_broadcast
 
 
 anom_data = {
@@ -41,7 +40,6 @@ def transfer_upgrades_of_type(giver_id, reciever_id, upgrade):
     if craft_count == 0:
         return False
     hangar_count = get_inventory_value(reciever_id, upgrade, 0)
-    comms_broadcast(0, "{upgrade} in ship: {craft_count}")
     set_inventory_value(reciever_id, upgrade, craft_count + hangar_count)
     set_inventory_value(giver_id, upgrade, 0)
     return True

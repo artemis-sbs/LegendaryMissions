@@ -68,9 +68,11 @@ shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
     yield success if ship_id == 0 or ship_id != DESTROYED_ID
     yield success if PLAYER_SHIP_RESPAWN
 
+    # The `client_id == 0` line that used to sit below this one was a workaround: the
+    # server console could never hold a role, so has_role was permanently False for it.
+    # It can now, so this line catches the host too. Do not re-add the workaround.
     jump reassign_to_main if has_role(client_id, "mainscreen")
 
-    jump reassign_to_main if client_id == 0
     jump reassign_to_hangar if is_hangar_craft 
 
     players = to_object_list(role("__player__") - role("exploded"))

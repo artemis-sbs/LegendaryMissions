@@ -271,8 +271,11 @@ def hangar_objective_complete(CRAFT_ID, OBJECTIVE_ID, objective):
     if origin_o is not None:
         pilot = origin_o.name
 
-    client_id = get_inventory_value(CRAFT_ID, "client_id", 0)
-    if client_id!=0:
+    # `None` is the "no pilot" sentinel, NOT 0 - client id 0 is the SERVER console, and
+    # it can fly a craft. With 0 as the default, a host-flown craft was indistinguishable
+    # from an unpiloted one and silently earned its pilot no credit at all.
+    client_id = get_inventory_value(CRAFT_ID, "client_id", None)
+    if client_id is not None:
         c = get_inventory_value(client_id, "completed_objectives", 0)
         c += 1
         set_inventory_value(client_id, "completed_objectives", c)
@@ -549,8 +552,8 @@ def hangar_credit_kill(parent_id, source_id, victim_id):
     tons = _hangar_victim_tonnage(victim_id)
     _hangar_bump(attacker, "kills", 1)
     _hangar_bump(attacker, "tonnage", tons)
-    pilot = get_inventory_value(attacker, "client_id", 0)
-    if pilot:
+    pilot = get_inventory_value(attacker, "client_id", None)   # None, not 0 - see above
+    if pilot is not None:
         _hangar_bump(pilot, "kills", 1)
         _hangar_bump(pilot, "tonnage", tons)
 
@@ -567,8 +570,8 @@ def hangar_credit_damage(parent_id, source_id, amount):
     if amount <= 0:
         return
     _hangar_bump(attacker, "damage_dealt", amount)
-    pilot = get_inventory_value(attacker, "client_id", 0)
-    if pilot:
+    pilot = get_inventory_value(attacker, "client_id", None)   # None, not 0 - see above
+    if pilot is not None:
         _hangar_bump(pilot, "damage_dealt", amount)
 
 

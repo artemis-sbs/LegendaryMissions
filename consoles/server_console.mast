@@ -448,7 +448,22 @@ Main:
 === show_main_game_screen_server
     ship_id = sbs.get_ship_of_client(client_id)
     link(ship_id,"consoles", client_id)
+    # STRIP FIRST. Every other console path does (common_console_select, and both
+    # director entry points), and show_main_game_screen a few lines below says it is safe
+    # BECAUSE common_console_select strips. The server never goes through that label - it
+    # is rerouted straight here - so nothing ever took a role off client 0. It would keep
+    # `mainscreen` while showing pause_screen, operator_stats or the server menu, and
+    # every viewscreen overlay would draw over the host's own UI.
+    for cv_name in gui_get_console_types():
+        remove_role(client_id, cv_name)
     add_role(client_id, "console, mainscreen")
+    # CONSOLE_TYPE as well as the role. show_main_game_screen sets both; this variant set
+    # only the role, which leaves the host half-registered - it matches role-based
+    # audiences but not value-based ones. maststorypage routes main-screen VIEW changes
+    # (front/left/right, 3d/2d) with `linked_to(ship,"consoles") &
+    # has_inventory_value("CONSOLE_TYPE","mainscreen")`, so without this the host window
+    # never followed a view change.
+    set_inventory_value(client_id, "CONSOLE_TYPE", "mainscreen")
 
 === show_main_game_screen === 
 
