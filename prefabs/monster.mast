@@ -13,7 +13,13 @@ import prefab_helpers.py
 # library then read BACK, so the same hulls arrived twice.
 #
 # `shared` guarantees a single registration across all clients.
-shared _monster_ship_data = ship_data_add_extra("prefabs/extraShipData_monsters", mod="LegendaryMissions")
+# HOT FIX 2026-08-27: NOT declared. Extra ship data is off library-side
+# (sbs_utils ship_data.EXTRA_SHIP_DATA_DISABLED), so this call is already inert -
+# it is commented out as well so the intent is readable here rather than only in
+# the library. The five hulls it declares (monster1-monster5) are the non-Typhon
+# species, which MONSTER_NON_TYPHON already keeps from spawning, so nothing asks
+# the engine for a hull it was not given. Restore both together.
+# shared _monster_ship_data = ship_data_add_extra("prefabs/extraShipData_monsters", mod="LegendaryMissions")
 
 === prefab_typhon_classic
 metadata: ```

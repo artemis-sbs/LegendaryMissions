@@ -26,6 +26,33 @@ from sbs_utils.procedural.spawn import npc_spawn
 from sbs_utils.procedural.mount import mount_ring
 from sbs_utils.procedural.turret import turret_make
 
+# --- HOT FIX 2026-08-27: turrets are OFF ------------------------------------
+# Set True to restore them, together with ship_data.EXTRA_SHIP_DATA_DISABLED = False.
+#
+# Turrets are inseparable from extra ship data: every hull below
+# (lm_turret_beam/heavy/mount/crate) exists ONLY in extraShipData_turrets.yaml, and
+# engine-measurement is why - a behav_station on a STOCK hull never fires. So with the
+# loader off there is no such thing as a working turret, and a spawned one is not a
+# harmless dud: it asks the engine for a ship type it was never given, which dies inside
+# the engine with `bad allocation` well away from the code that asked.
+#
+# Guarded at the CREATION points rather than by unloading the addon, so its comms
+# buttons, GM entries, science text and prefabs all still parse and lint - they just
+# produce nothing. Each guard returns the value that function already returns when it
+# fails, so no caller sees a new shape.
+LM_TURRETS_ENABLED = False
+
+
+def lm_turrets_enabled():
+    """Is the turret system live? MAST-callable, for the prefab guards in turrets.mast.
+
+    A function rather than the bare constant because addon Python lands in one flat
+    MAST namespace shared with every `shared` variable in the story; a call cannot be
+    shadowed by one.
+    """
+    return LM_TURRETS_ENABLED
+
+
 #: Hull every tower uses unless told otherwise. MUST be one of ours - engine-measured, a
 #: behav_station on a STOCK hull never fires (see extraShipData_turrets.yaml).
 LM_TURRET_DEFAULT_HULL = "lm_turret_beam"
@@ -90,6 +117,9 @@ def lm_turret_declare_ships():
         also what a missing file degrades to. Never raises: no turrets is a worse
         mission, a dead mission is a worse outcome.
     """
+    # HOT FIX: turrets are off (LM_TURRETS_ENABLED). False is what a missing hull file already reported.
+    if not LM_TURRETS_ENABLED:
+        return False
     reached = add_extra(LM_TURRET_SHIP_FILE, mod=LM_TURRET_MOD)
     if not reached:
         log("turret hulls not registered with the engine - if the file is missing "
@@ -127,6 +157,10 @@ def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, acquire_range=2500, t
     Returns:
         int | None: The turret's id, or None if the spawn failed.
     """
+    # HOT FIX: turrets are off (LM_TURRETS_ENABLED). 0, not None: a prefab hands this straight to `yield result`, and `yield result None`
+    # never satisfies Promise.done() - it would hang the awaiting task forever.
+    if not LM_TURRETS_ENABLED:
+        return 0
     behave = behave or LM_TURRET_BEHAVE
     side = side or "tsn"
     obj = npc_spawn(x, y, z, prefab_autoname(name), side + ",turret",
@@ -204,6 +238,9 @@ def lm_turret_bolt_ring(host, count=4, hull=None, acquire_range=1200, targets=No
     Returns:
         list[int]: The turret ids fitted.
     """
+    # HOT FIX: turrets are off (LM_TURRETS_ENABLED). Empty ring, the same answer a bad host gives.
+    if not LM_TURRETS_ENABLED:
+        return []
     hid = to_id(host)
     if hid is None:
         return []
@@ -275,6 +312,10 @@ def lm_turret_spawn_crate(x, y, z, side, prefab, name=None, owner=0):
     Returns:
         int | None: The crate's id.
     """
+    # HOT FIX: turrets are off (LM_TURRETS_ENABLED). No crate. 0 rather than None, for the `yield result` reason above; it is
+    # falsy either way, so `if not crate` callers are unaffected.
+    if not LM_TURRETS_ENABLED:
+        return 0
     crate = npc_spawn(x, y, z, name or "Turret Kit", (side or "tsn") + ",turret_crate",
                       LM_TURRET_CRATE_HULL, "behav_station")
     cid = to_id(crate)
