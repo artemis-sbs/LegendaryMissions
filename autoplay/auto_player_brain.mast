@@ -275,8 +275,15 @@ metadata: ``` yaml
 type: brain/player
 scan_range: 25000
 ```
+    # `yield success` when there is nothing to do, NOT `yield fail`. These leaves are
+    # children of the SEQ root, and a Sequence RETURNS AT THE FIRST FAIL - so a failing
+    # science node silently stops comms, weapons and engineering from running at all.
+    # That is what left ships parked at a wreck with no weapons target: away from the
+    # fighting there is no hostile to scan, science failed, and the whole rest of the
+    # pass was skipped. Inside the helm SEL below, `fail` still means "not me, try the
+    # next" - it is only in a Sequence that it aborts siblings.
     ap_foe = closest(BRAIN_AGENT_ID, side_hostile_ships(BRAIN_AGENT_ID), scan_range)
-    yield fail if ap_foe is None
+    yield success if ap_foe is None
     yield success if get_science_selection(BRAIN_AGENT_ID) == ap_foe
     set_science_selection(BRAIN_AGENT_ID, ap_foe)
     # Fire the real select ROUTE as well, so //select/science runs exactly as it would
@@ -293,7 +300,7 @@ type: brain/player
 hail_range: 10000
 ```
     ap_foe = closest(BRAIN_AGENT_ID, side_hostile_ships(BRAIN_AGENT_ID), hail_range)
-    yield fail if ap_foe is None
+    yield success if ap_foe is None      # nothing to hail is not a failure - see science
     ap_rid = to_id(ap_foe)
     if get_comms_selection(BRAIN_AGENT_ID) != ap_rid:
         set_comms_selection(BRAIN_AGENT_ID, ap_rid)
@@ -335,7 +342,7 @@ engage_range: 10000
     if ap_foe is None:
         # Nothing hostile: beams on a wreck still salvage it.
         ap_wreck = closest(BRAIN_AGENT_ID, role("wreck"), engage_range)
-        yield fail if ap_wreck is None
+        yield success if ap_wreck is None    # nothing in range - see science
         ap_wid = to_id(ap_wreck)
         if get_weapons_selection(BRAIN_AGENT_ID) != ap_wid:
             set_weapons_selection(BRAIN_AGENT_ID, ap_wid)
