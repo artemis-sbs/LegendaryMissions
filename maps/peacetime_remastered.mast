@@ -252,7 +252,16 @@ Defaults:
     shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n, "probe": probe_n, "herd": herd_n, "salvage": salvage_n, "picket": picket_n}
     shared PR_LANDMARKS = landmarks_from_section(amd_section(PR_DOC, "landmarks"))
     # The jobs that spawn targets on accept, checked each dispatch tick.
-    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage", "job_lifepod", "job_relay", "job_picket", "job_ghost", "job_sweep", "job_cache", "job_herd_arc"]
+    # HOT FIX 2026-08-27: "job_picket" is OUT of this list. It is the only Peacetime
+    # job built on turrets, and turrets are off with extra ship data
+    # (LM_TURRETS_ENABLED in ../turrets/turrets.py). Dropped from the KEYS rather
+    # than deleted: the AMD goal, the spawner case, pr_picket_watch and the
+    # //shared/signal/lm_turret_deployed route all stay exactly as written, and
+    # none of them can run because the job is never granted, so nothing tows a
+    # crate that would never unfold. Put the key back to restore the job.
+    # (job_ravener and job_herd are NOT affected - grazers and raveners ride stock
+    # hulls, not extra ship data.)
+    shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage", "job_lifepod", "job_relay", "job_ghost", "job_sweep", "job_cache", "job_herd_arc"]
 
     # The job board is the jobs section of PR_DOC (parsed above). Grant it PER PLAYER SHIP so
     # credit rewards pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses

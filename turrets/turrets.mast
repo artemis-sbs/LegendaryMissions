@@ -20,6 +20,10 @@ owner: 0
     # `type: prefab/turret` makes this discoverable via labels_get_type("prefab/turret"),
     # so a GM menu can enumerate turret kinds with no hardcoded list: add a hull to
     # extraShipData_turrets.yaml plus a prefab like this one, and it appears on its own.
+    # HOT FIX 2026-08-27: turrets are off (lm_turrets_enabled() in turrets.py).
+    # Yields 0, never ->END or None - `yield result None` never satisfies
+    # Promise.done() and would hang an awaiting GM/mission task forever.
+    yield result 0 if not lm_turrets_enabled()
     yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, acquire_range, targets, name, owner)
 
 
@@ -38,6 +42,10 @@ owner: 0
     # A separate HULL, not a runtime tweak: beam stats live in the engine's ship table and
     # cannot be read or written on a live object, so "a bigger gun" means a new shipData
     # entry. Keep `acquire_range` here in step with that entry's beam range.
+    # HOT FIX 2026-08-27: turrets are off (lm_turrets_enabled() in turrets.py).
+    # Yields 0, never ->END or None - `yield result None` never satisfies
+    # Promise.done() and would hang an awaiting GM/mission task forever.
+    yield result 0 if not lm_turrets_enabled()
     yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, acquire_range, targets, name, owner)
 
 
@@ -63,6 +71,10 @@ behave: behav_npcship
     # Stock `starbase_torgoth` already carries drone_launch_timer: 30, so a drone tower
     # needs no new shipData and no new art. Deploy pins throttle 0 and target_pos to the
     # spawn point so the npcship helm cannot take it anywhere.
+    # HOT FIX 2026-08-27: turrets are off (lm_turrets_enabled() in turrets.py).
+    # Yields 0, never ->END or None - `yield result None` never satisfies
+    # Promise.done() and would hang an awaiting GM/mission task forever.
+    yield result 0 if not lm_turrets_enabled()
     yield result lm_turret_deploy_tower(START_X, START_Y, START_Z, side_value, hull, acquire_range, targets, name, owner, behave)
 
 
