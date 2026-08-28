@@ -71,8 +71,13 @@ shared manual_beams_version_task = None
         _weap_ship = viewscreen_home_ship(client_id)
         # The list comes from the library so the labels here and the mode names there
         # cannot drift, exactly as the science block does it. VIEWSCREEN_PLAN.md
-        default on_screen = viewscreen_label_for(viewscreen_mode(_weap_ship))
-        on_screen_dd = gui_drop_down(viewscreen_shot_props(on_screen), var="on_screen")
+        # NO `var=` AND NO `default` - see the science console for why. The label is
+        # recomputed from the SHIP on every build, so the dial cannot advertise a shot
+        # that is not running. (`on_screen` was worse here than it looked: the variable
+        # lives on the client's GUI task, so a pick made on Science followed by a switch
+        # to Weapons arrived with the dial already reading that pick.)
+        on_screen_dd = gui_drop_down(
+            viewscreen_shot_props(viewscreen_label_for(viewscreen_mode(_weap_ship))))
         on gui_message(on_screen_dd):
             _ship = viewscreen_home_ship(client_id)
             _tgt = get_weapons_selection(_ship)
@@ -81,7 +86,7 @@ shared manual_beams_version_task = None
             # was the pattern - every subsystem had one, and each one's idea of "before"
             # overwrote the last until nobody held the state the crew started from.
             _owner = viewscreen_owner_token("weapons", client_id)
-            viewscreen_set(_ship, viewscreen_mode_for(on_screen), _tgt, owner=_owner)
+            viewscreen_set(_ship, viewscreen_mode_for(on_screen_dd.value), _tgt, owner=_owner)
 
     on change get_weapons_selection(ship_id):
         # The shot follows the target, but only while it is still showing what weapons
@@ -93,10 +98,13 @@ shared manual_beams_version_task = None
             viewscreen_set(_ship, viewscreen_mode(_ship), _tgt, owner=_owner)
         jump  manual_weapons_show
 
-    # Somebody else took the screen: repaint so the drop-down stops advertising a
-    # shot this console no longer owns.
+    # Somebody else took the screen - weapons is not driving it any more, so the dial
+    # has to say so. Set the WIDGET, not a repaint: `manual_weapons_show` is below the
+    # `with gui_rebuild(on_screen_sec)` block, so jumping there re-runs the panel and
+    # never touches this drop-down at all. That is why the science console corrects
+    # itself today and this one did not.
     on change viewscreen_revision(client_id):
-        jump  manual_weapons_show
+        on_screen_dd.value = viewscreen_label_for(viewscreen_mode(viewscreen_home_ship(client_id)))
 
     # The bars are a gauge, and a 3 second ticker is not a gauge's refresh rate. This
     # repaints the moment the target actually takes damage. The ticker still covers

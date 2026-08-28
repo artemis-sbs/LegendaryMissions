@@ -319,13 +319,16 @@ surface_distance: 1000
     set_weapons_selection(DOCKING_PLAYER_ID, 0)
     start_counter(DOCKING_PLAYER_ID, "giant_shields")
     orbit_capture(DOCKING_PLAYER_ID, DOCKING_NPC_ID, speed=DOCKING_GIANT_ORBIT_SPEED)
-    # A console-tier claim: docking the giant is worth putting on screen, and helm
-    # reaching for the main-screen control is allowed to say no.
-    viewscreen_set(DOCKING_PLAYER_ID, "orbit", DOCKING_NPC_ID, owner="docking")
     # One-shot, like the station brain's ship_docked: the mission decides what orbiting
     # this giant MEANS, since the library deliberately hands out nothing but the orbit.
     if not get_inventory_value(DOCKING_PLAYER_ID, "_giant_orbit_fired", False):
         set_inventory_value(DOCKING_PLAYER_ID, "_giant_orbit_fired", True)
+        # ON ARRIVAL ONLY, and that is why it is inside the latch. This block runs
+        # repeatedly while docked - the latch exists for exactly that reason - and a
+        # console-tier claim re-taken every second would fight helm's own camera
+        # control for the whole orbit: helm presses FRONT, and docking takes the
+        # screen back a second later, forever.
+        viewscreen_set(DOCKING_PLAYER_ID, "orbit", DOCKING_NPC_ID, owner="docking")
         signal_emit("ship_orbiting", {"ORBIT_SHIP_ID": DOCKING_PLAYER_ID, "ORBIT_BODY_ID": DOCKING_NPC_ID})
 
 +++ refit

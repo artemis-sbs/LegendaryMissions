@@ -208,25 +208,35 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # selected, which is the console that already has the thing selected. Same
         # grammar as Follow, one row over. The item list comes from the library so the
         # labels here and the mode names there cannot drift. VIEWSCREEN_PLAN.md
+        # NO `var=` AND NO `default`. The label is a pure function of the SHIP,
+        # recomputed on every build, so the dial cannot show a shot that is not
+        # running - the Director's rundown drop-downs are built the same way.
+        #
+        # `default on_screen = ...` was the trap: `default` skips when the name
+        # already resolves, and a route sub-task's variables live on the client's GUI
+        # TASK, not the sub-task - so after one pick the dial kept reading
+        # "On Screen - Orbit" through every later rebuild, through a console change,
+        # and after helm had taken the screen away. Then one touch of a lying dial
+        # re-applied a shot nobody asked for.
         _sci_ship = viewscreen_home_ship(client_id)
-        default on_screen = viewscreen_label_for(viewscreen_mode(_sci_ship))
-        on_screen_dd = gui_drop_down(viewscreen_shot_props(on_screen), var="on_screen")
+        on_screen_dd = gui_drop_down(
+            viewscreen_shot_props(viewscreen_label_for(viewscreen_mode(_sci_ship))))
         on gui_message(on_screen_dd):
             _ship = viewscreen_home_ship(client_id)
             # NAMED, so the screen knows who is driving it. Two consoles can reach for
             # the same main screen and the last one wins - the token is what lets this
             # console tell "still mine" from "weapons took it", instead of assuming.
             _owner = viewscreen_owner_token("science", client_id)
-            viewscreen_set(_ship, viewscreen_mode_for(on_screen), get_science_selection(_ship), owner=_owner)
+            # The widget's own value, set from the event before this block runs - not
+            # a task variable that outlives the widget.
+            viewscreen_set(_ship, viewscreen_mode_for(on_screen_dd.value), get_science_selection(_ship), owner=_owner)
 
         # The dial must not lie. Somebody else taking the screen - weapons, an incoming
-        # hail, a cutscene - leaves this drop-down still reading "On Screen - Orbit"
-        # for a shot that is no longer ours. `on change`, not `on signal`: a GUI task
-        # sitting in await gui() does not repaint because a signal fired, which is the
-        # same reason hail_console_revision is polled.
+        # hail, a cutscene, helm's own control - has to move it back. `on change`, not
+        # `on signal`: a GUI task sitting in await gui() does not repaint because a
+        # signal fired, which is the same reason hail_console_revision is polled.
         on change viewscreen_revision(client_id):
-            on_screen = viewscreen_label_for(viewscreen_mode(viewscreen_home_ship(client_id)))
-            on_screen_dd.value = on_screen
+            on_screen_dd.value = viewscreen_label_for(viewscreen_mode(viewscreen_home_ship(client_id)))
         # gui_screen_size returns a 1024x768 PLACEHOLDER (z==99) until the client
         # reports its size, which read as a small screen and cramped wide displays.
         # When unknown, assume the LARGER layout - it degrades better.
