@@ -219,8 +219,13 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # and after helm had taken the screen away. Then one touch of a lying dial
         # re-applied a shot nobody asked for.
         _sci_ship = viewscreen_home_ship(client_id)
+        _sci_owner = viewscreen_owner_token("science", client_id)
+        # OURS or "Off". The dial is this console's control, not a status light for
+        # the ship: reading "On Screen - Orbit" because WEAPONS put something up
+        # invites science to think they are driving, and picking Off on it would be
+        # refused - so it would be advertising an action it cannot take.
         on_screen_dd = gui_drop_down(
-            viewscreen_shot_props(viewscreen_label_for(viewscreen_mode(_sci_ship))))
+            viewscreen_shot_props(viewscreen_dial_label(_sci_ship, _sci_owner)))
         on gui_message(on_screen_dd):
             _ship = viewscreen_home_ship(client_id)
             # NAMED, so the screen knows who is driving it. Two consoles can reach for
@@ -236,7 +241,9 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # `on signal`: a GUI task sitting in await gui() does not repaint because a
         # signal fired, which is the same reason hail_console_revision is polled.
         on change viewscreen_revision(client_id):
-            on_screen_dd.value = viewscreen_label_for(viewscreen_mode(viewscreen_home_ship(client_id)))
+            on_screen_dd.value = viewscreen_dial_label(
+                viewscreen_home_ship(client_id),
+                viewscreen_owner_token("science", client_id))
         # gui_screen_size returns a 1024x768 PLACEHOLDER (z==99) until the client
         # reports its size, which read as a small screen and cramped wide displays.
         # When unknown, assume the LARGER layout - it degrades better.

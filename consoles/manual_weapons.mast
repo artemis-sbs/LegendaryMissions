@@ -76,8 +76,11 @@ shared manual_beams_version_task = None
         # that is not running. (`on_screen` was worse here than it looked: the variable
         # lives on the client's GUI task, so a pick made on Science followed by a switch
         # to Weapons arrived with the dial already reading that pick.)
+        # OURS or "Off" - see the science console. A dial that reads back what
+        # ANOTHER console put up is offering an action this one cannot take.
         on_screen_dd = gui_drop_down(
-            viewscreen_shot_props(viewscreen_label_for(viewscreen_mode(_weap_ship))))
+            viewscreen_shot_props(viewscreen_dial_label(
+                _weap_ship, viewscreen_owner_token("weapons", client_id))))
         on gui_message(on_screen_dd):
             _ship = viewscreen_home_ship(client_id)
             _tgt = get_weapons_selection(_ship)
@@ -104,7 +107,9 @@ shared manual_beams_version_task = None
     # never touches this drop-down at all. That is why the science console corrects
     # itself today and this one did not.
     on change viewscreen_revision(client_id):
-        on_screen_dd.value = viewscreen_label_for(viewscreen_mode(viewscreen_home_ship(client_id)))
+        on_screen_dd.value = viewscreen_dial_label(
+            viewscreen_home_ship(client_id),
+            viewscreen_owner_token("weapons", client_id))
 
     # The bars are a gauge, and a 3 second ticker is not a gauge's refresh rate. This
     # repaints the moment the target actually takes damage. The ticker still covers
