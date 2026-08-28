@@ -213,7 +213,20 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         on_screen_dd = gui_drop_down(viewscreen_shot_props(on_screen), var="on_screen")
         on gui_message(on_screen_dd):
             _ship = viewscreen_home_ship(client_id)
-            viewscreen_set(_ship, viewscreen_mode_for(on_screen), get_science_selection(_ship))
+            # NAMED, so the screen knows who is driving it. Two consoles can reach for
+            # the same main screen and the last one wins - the token is what lets this
+            # console tell "still mine" from "weapons took it", instead of assuming.
+            _owner = viewscreen_owner_token("science", client_id)
+            viewscreen_set(_ship, viewscreen_mode_for(on_screen), get_science_selection(_ship), owner=_owner)
+
+        # The dial must not lie. Somebody else taking the screen - weapons, an incoming
+        # hail, a cutscene - leaves this drop-down still reading "On Screen - Orbit"
+        # for a shot that is no longer ours. `on change`, not `on signal`: a GUI task
+        # sitting in await gui() does not repaint because a signal fired, which is the
+        # same reason hail_console_revision is polled.
+        on change viewscreen_revision(client_id):
+            on_screen = viewscreen_label_for(viewscreen_mode(viewscreen_home_ship(client_id)))
+            on_screen_dd.value = on_screen
         # gui_screen_size returns a 1024x768 PLACEHOLDER (z==99) until the client
         # reports its size, which read as a small screen and cramped wide displays.
         # When unknown, assume the LARGER layout - it degrades better.
@@ -247,8 +260,13 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     # If this console is driving the main screen, the shot follows the selection - the
     # crew picked a new contact, they did not ask to go back to a black screen.
     _vs_ship = viewscreen_home_ship(EVENT.client_id)
-    if viewscreen_is_live(_vs_ship):
-        viewscreen_set(_vs_ship, viewscreen_mode(_vs_ship), EVENT.selected_id)
+    # ONLY IF THE SHOT IS OURS. `viewscreen_is_live` asks whether ANYBODY is driving
+    # the screen, so re-pointing on that used to yank a contact weapons had put up
+    # the moment science happened to select something else - weapons kept a private
+    # token to protect itself and science had none, so science always won the race.
+    _vs_owner = viewscreen_owner_token("science", EVENT.client_id)
+    if viewscreen_owns(_vs_ship, _vs_owner):
+        viewscreen_set(_vs_ship, viewscreen_mode(_vs_ship), EVENT.selected_id, owner=_vs_owner)
 
 
 //gui/normal_engi

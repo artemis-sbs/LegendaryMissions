@@ -76,20 +76,26 @@ shared manual_beams_version_task = None
         on gui_message(on_screen_dd):
             _ship = viewscreen_home_ship(client_id)
             _tgt = get_weapons_selection(_ship)
-            viewscreen_set(_ship, viewscreen_mode_for(on_screen), _tgt)
-            # Remember what WE put on screen, so the re-point below can tell a shot this
-            # console started from one science set up.
-            set_inventory_value(client_id, "WEAP_VIEWER_SUBJECT", _tgt)
+            # The claim carries WHO, so this console no longer has to remember what it
+            # put on screen in a private inventory value of its own. That private note
+            # was the pattern - every subsystem had one, and each one's idea of "before"
+            # overwrote the last until nobody held the state the crew started from.
+            _owner = viewscreen_owner_token("weapons", client_id)
+            viewscreen_set(_ship, viewscreen_mode_for(on_screen), _tgt, owner=_owner)
 
     on change get_weapons_selection(ship_id):
         # The shot follows the target, but only while it is still showing what weapons
         # put there - re-targeting must not yank a contact science asked to look at.
         _ship = viewscreen_home_ship(client_id)
         _tgt = get_weapons_selection(_ship)
-        _ours = get_inventory_value(client_id, "WEAP_VIEWER_SUBJECT", 0)
-        if viewscreen_is_live(_ship) and viewscreen_subject(_ship) == _ours:
-            viewscreen_set(_ship, viewscreen_mode(_ship), _tgt)
-            set_inventory_value(client_id, "WEAP_VIEWER_SUBJECT", _tgt)
+        _owner = viewscreen_owner_token("weapons", client_id)
+        if viewscreen_owns(_ship, _owner):
+            viewscreen_set(_ship, viewscreen_mode(_ship), _tgt, owner=_owner)
+        jump  manual_weapons_show
+
+    # Somebody else took the screen: repaint so the drop-down stops advertising a
+    # shot this console no longer owns.
+    on change viewscreen_revision(client_id):
         jump  manual_weapons_show
 
     # The bars are a gauge, and a 3 second ticker is not a gauge's refresh rate. This

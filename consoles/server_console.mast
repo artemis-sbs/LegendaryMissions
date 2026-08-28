@@ -446,7 +446,12 @@ Main:
         gui_reroute_client(client_id, operator_stats)
 
 === show_main_game_screen_server
-    ship_id = sbs.get_ship_of_client(client_id)
+    # NOT sbs.get_ship_of_client: while a console is driving this screen ("on
+    # screen") it is ASSIGNED TO THE SUBJECT, so that call answers with the contact
+    # being filmed and this would link the host window as a console of the ENEMY.
+    # show_main_game_screen a few lines down has said so for a while; this variant
+    # was missed. viewscreen_home_ship answers with our own ship either way.
+    ship_id = viewscreen_home_ship(client_id)
     link(ship_id,"consoles", client_id)
     # STRIP FIRST. Every other console path does (common_console_select, and both
     # director entry points), and show_main_game_screen a few lines below says it is safe
@@ -478,6 +483,12 @@ Main:
     # and avoid seeing some stuff be created 
     # at 0,0,0
     await delay_sim(0)
+    # A main screen taking its post while a shot is ALREADY running has one moment
+    # to record which ship it belongs to, and that is before anything assigns it to
+    # the subject. Miss it and nothing can give the screen back afterwards.
+    # Idempotent, so the repaints cost nothing.
+    viewscreen_console_enter(client_id)
+
     # Find a valid ship. NOT sbs.get_ship_of_client: while science has this screen
     # showing something ("on screen"), the console is ASSIGNED to the subject - the
     # engine only honors a camera change when the console and the lens ride the same
@@ -556,21 +567,16 @@ Main:
 
     # Rework of mainscreen stuff:
 
-    view = get_inventory_value(ship_id, "MAIN_SCREEN_VIEW", "3d_view")
-    facing = get_inventory_value(ship_id, "MAIN_SCREEN_FACING", "front")
-    mode = get_inventory_value(ship_id, "MAIN_SCREEN_MODE", "chase")
-    ###
-    ### TODO: This is a fix for 
-    ### Clients sending THEIR mode, not 
-    ### This client's mode
-    ### So this will ignore cinematic
-
-    default my_mode = "chase"
-
-    if mode == "cinematic":
-        mode = my_mode
-    else:
-        my_mode = mode
+    # The view and facing belong to the SHIP - one bridge, one screen state - but
+    # the camera mode does not, quite: the engine reports "cinematic" while a script
+    # drives one client's camera, and because the three arrive together that value
+    # lands in the ship's record and every other main screen reads it as its own.
+    #
+    # This used to be a `default my_mode = "chase"` right here, which is per GUI TASK
+    # rather than per console: every reroute reset it, so a screen the crew had put
+    # in first_person or tracking silently snapped back to chase and nothing said so.
+    # viewscreen_view_modes remembers it on the CONSOLE, which is where it belongs.
+    view, facing, mode = viewscreen_view_modes(client_id, ship_id)
 
     sbs.set_main_view_modes(client_id, view, facing, mode)
 

@@ -826,7 +826,22 @@ $t Waiting for the server to start the mission
     sbs.set_beam_damages(client_id, 7.0, DIFFICULTY)
     #------------------------------------------------------------------------------------------------------------
 
-
+    # THE FIRST LINE IS THE CLEAR. This is the door every console change in the game
+    # comes through, and it used to hand the new station whatever the last one had
+    # left on this client: a hero card, a hail band, the science data column. An
+    # overlay belongs to the CONSOLE, and this is a jump on the SAME page - the page
+    # object survives it, so present_all re-draws the stale card and the catch-up
+    # ticker puts it back if anyone clears it by hand.
+    #
+    # It also gives back a main screen's camera assignment and any viewscreen claim
+    # this console was holding, so an officer who walks away from Science mid-shot
+    # does not keep the bridge's screen. The role/CONSOLE_TYPE work below is the same
+    # work the library door does, left in place because the crew_assign underneath it
+    # carries THIS player's own name and face, which the door cannot know about.
+    #
+    # Entering the console you already are is a no-op, so re-picking the same station
+    # does not tear down its own screen.
+    gui_console_enter(client_id, CONSOLE_SELECT)
 
     set_inventory_value(client_id, "CONSOLE_TYPE", CONSOLE_SELECT)
     

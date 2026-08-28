@@ -296,7 +296,10 @@ surface_distance: 1000
 
 +++ undocking
     orbit_release(DOCKING_PLAYER_ID)
-    viewscreen_clear(DOCKING_PLAYER_ID)
+    # By name: the release is REFUSED if something else has taken the screen since
+    # we docked - a hail, a cutscene, science putting a contact up - so undocking no
+    # longer snatches the main screen away from whatever is using it now.
+    viewscreen_clear(DOCKING_PLAYER_ID, "docking")
     set_inventory_value(DOCKING_PLAYER_ID, "_giant_orbit_fired", False)
 
 +++ docking
@@ -316,7 +319,9 @@ surface_distance: 1000
     set_weapons_selection(DOCKING_PLAYER_ID, 0)
     start_counter(DOCKING_PLAYER_ID, "giant_shields")
     orbit_capture(DOCKING_PLAYER_ID, DOCKING_NPC_ID, speed=DOCKING_GIANT_ORBIT_SPEED)
-    viewscreen_set(DOCKING_PLAYER_ID, "orbit", DOCKING_NPC_ID)
+    # A console-tier claim: docking the giant is worth putting on screen, and helm
+    # reaching for the main-screen control is allowed to say no.
+    viewscreen_set(DOCKING_PLAYER_ID, "orbit", DOCKING_NPC_ID, owner="docking")
     # One-shot, like the station brain's ship_docked: the mission decides what orbiting
     # this giant MEANS, since the library deliberately hands out nothing but the orbit.
     if not get_inventory_value(DOCKING_PLAYER_ID, "_giant_orbit_fired", False):

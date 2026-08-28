@@ -110,7 +110,16 @@ shared PLAYER_SHIP_RESPAWN = SETTINGS.get("PLAYER_SHIP_RESPAWN", False)
 
     player = random.choice(players)
     if player is not None:
-        old_ship_id = sbs.get_ship_of_client(client_id)
+        # viewscreen_home_ship, not sbs.get_ship_of_client: a main screen driving a
+        # shot is ASSIGNED TO THE SUBJECT, so the raw call answers with the contact it
+        # was filming and the unlink then targeted the wrong object entirely - leaving
+        # this console linked to its own dead ship's console list for the rest of the
+        # mission.
+        old_ship_id = viewscreen_home_ship(client_id)
+        # And hand the screen back BEFORE moving it. The ship is dying; a claim naming
+        # it would leave the next claimant a baseline pointing at a dead hull, and the
+        # console would still be riding whatever the last shot was on.
+        viewscreen_restore(old_ship_id)
         unlink(old_ship_id, "consoles", client_id)
         sbs.assign_client_to_ship(client_id, player.id)
         link(player.id, "consoles", client_id)

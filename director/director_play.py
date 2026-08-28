@@ -87,9 +87,20 @@ def director_screen_enter(client_id):
 
 
 def _director_clear_overlays(client_id):
-    from sbs_utils.procedural.gui.overlay import overlay_clear
-    for slot in _SLOTS.pop(client_id, ()):
-        overlay_clear(slot, to=[client_id])
+    """Everything on this screen, not just what the Director put there.
+
+    The invariant is "a screen cannot arrive anywhere with its previous furniture
+    still running", and iterating _SLOTS only ever made that true of the Director's
+    OWN furniture. A program screen carries console roles - it explicitly adds
+    them - so it can be holding a hail band or the science data column raised by
+    the bridge it is watching, and those survived every transition here.
+
+    _SLOTS is still emptied: it is the record of what WE raised, and leaving stale
+    names in it would have a later clear reach for slots that are already gone.
+    """
+    from sbs_utils.procedural.gui.overlay import overlay_clear_console
+    _SLOTS.pop(client_id, None)
+    overlay_clear_console(client_id)
 
 
 def director_play_reset():
