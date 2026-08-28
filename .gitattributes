@@ -1,3 +1,28 @@
+# LINE ENDINGS: LF in the repo AND on disk. `eol=lf` rather than a bare
+# `text=auto`, because the point is the WORKING TREE - on Windows core.autocrlf
+# would otherwise write CRLF out at checkout, and that is what breaks.
+#
+# This is not cosmetic. An addon travels as a .mastlib ZIP, and MAST reads a
+# zipped entry as BYTES (`f.read().decode()`, mast.py:948) where it reads the
+# same file from a FOLDER in Python text mode (mast.py:966), which silently
+# translates CRLF away. So one committed .mast parses two different ways
+# depending on where it was read from - and the zipped way does not parse at
+# all: on CRLF the label header rule stops matching, `== label ==` becomes an
+# unrecognized line, and a story that compiles to no labels still reports PASS.
+#
+# `sbs lib` builds mastlibs from the working tree, so a Windows clone without
+# this line packages broken addons. The release workflow runs on ubuntu-latest
+# and was never exposed, which is why nothing shipped broken and nobody noticed.
+#
+# Renormalizing an EXISTING clone needs a delete-and-restore of the tracked
+# files: `git checkout-index -a -f` does nothing, because the index caches the
+# checkout's stat - which is also why `git status` calls a CRLF tree clean.
+# `git ls-files --eol` is the honest check (`i/lf w/crlf` = mangled).
+* text=auto eol=lf
+
+# The only binaries in the tree. Declared rather than left to auto-detection.
+*.png binary
+
 *.mast linguist-language=Python
 *.amd linguist-language=markdown
 
@@ -55,3 +80,4 @@ lm_lore/              export-ignore
 director/             export-ignore
 avatar_editor/        export-ignore
 races/                export-ignore
+crew/                 export-ignore
