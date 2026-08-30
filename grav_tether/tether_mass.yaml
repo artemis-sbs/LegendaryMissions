@@ -15,6 +15,13 @@
 # letting the warning repeat.
 
 masses:
+  # ANCHORS. Nothing should ever reach the mass rule with one of these - the library
+  # refuses to pull an ANCHOR_ROLES body at all - but if a mission clears that rule, a
+  # reversal is the behavior you want: grab a black hole and it drags YOU. Listing them
+  # also silences the once-per-hull "no tether mass for hull 'maelstrom'" warning this
+  # bug has been logging since the tether shipped.
+  maelstrom: 100000       # black hole
+  planet: 100000
   arvonian_carrier: 5
   arvonian_destroyer: 2
   arvonian_fighter: 1

@@ -31,6 +31,26 @@ from sbs_utils.tickdispatcher import TickDispatcher
 #: of these; nothing here has to know what the mission called them.
 LM_SALVAGE_ROLES = "derelict,wreck,hulk,salvage_hulk"
 
+#: What a capital ship's Weapons hold-click may get hold of. An ALLOWLIST, and that is
+#: the point: the menu used to choose its mode by a BLACKLIST - "anything that is not a
+#: pickup, a station, a rock or an NPC gets a rigid Grav Lock" - which handed a gunner a
+#: rigid lock on every nebula, mine, marker, GM camera rig, and on every BLACK HOLE. A
+#: lock on a hole makes the hole the LOAD: it reels onto the hull, the library caps the
+#: ship to impulse so it cannot warp away, and the lethal-proximity watch in
+#: collisions/collision.mast explodes anything within 500u. A new terrain type now has
+#: to be added here deliberately instead of falling into a rigid grab by default.
+#:
+#: It lives HERE, beside LM_SALVAGE_ROLES, because towing a hulk home is what the list is
+#: for and an addon .py cannot import a sibling addon .py at runtime - so the salvage
+#: roles are spelled once, in the module that owns them.
+LM_TETHER_HAULABLE = "station,asteroid,__npc__," + LM_SALVAGE_ROLES
+
+
+def lm_tether_haulable(target):
+    """Whether a capital ship may tow or lock this object."""
+    tid = to_id(target)
+    return tid is not None and has_any_role(tid, LM_TETHER_HAULABLE)
+
 #: Salvage units per unit of hull mass. A 12-mass freighter is worth ~18 - a real haul
 #: against the 3-6 a wreck pickup drops.
 LM_SALVAGE_PER_MASS = 1.5

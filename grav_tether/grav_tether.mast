@@ -8,10 +8,23 @@
 # Engine-verified: the hold-click popup shows and toggles tether state in real Cosmos.
 #
 # Role -> mode (confirmed roles; pickups carry item,upgrade):
-#   item / upgrade                -> Reel (draw in for collection)
-#   station / asteroid / __npc__  -> Tow  (rope rest-length 500, stiffness ~5)
-#   anything else                 -> Lock (rigid grab)
-#   already tethered              -> Release
+#   item / upgrade                     -> Reel (draw in for collection)
+#   lm_tether_haulable (LM_TETHER_HAULABLE:
+#     station / asteroid / __npc__ /
+#     derelict / wreck / hulk)         -> Tow (rope 500, stiffness ~5) or Lock (rigid)
+#   black_hole in reach                -> Slingshot (swing, rope clamped clear of the well)
+#   anything else                      -> nothing
+#   already tethered                   -> Release
+#
+# AN ALLOWLIST, NOT A BLACKLIST. This used to read "anything that is not a pickup, a
+# station, a rock or an NPC gets a rigid Grav Lock", which meant a gunner could Grav Lock
+# a BLACK HOLE. That makes the hole the LOAD: the beam reels it onto the hull, the
+# library caps the ship to impulse so it cannot warp away, and black_hole_lethal_watch
+# (collisions/collision.mast) explodes anything within 500u of it - then the hole stays
+# parked wherever it was dropped, killing whatever comes near for the rest of the match.
+# The same branch also offered a rigid lock on every nebula, mine, planet, marker and GM
+# camera rig. The library now refuses to PULL an anchor at all (grav_tether ANCHOR_ROLES);
+# this menu is the other half - it stops offering it.
 #
 # Impulse-only is canonical (old-game Arena a28): the primitive caps the source back to
 # impulse by default (grav_tether_set_overspeed_default to change to snap/off).
@@ -36,12 +49,19 @@
     if not gt_has and has_any_role(WEAPONS_POPUP_ID, "item,upgrade"):
         + "Grav Reel":
             grav_tether_reel(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
-    if not gt_has and has_any_role(WEAPONS_POPUP_ID, "station,asteroid,__npc__"):
+    # Tow AND Lock on the same set: dragging a derelict behind you and grabbing it
+    # rigidly are both reasonable and only the gunner knows which is wanted - it is the
+    # same pair of verbs the fighter popup below already offers.
+    if not gt_has and lm_tether_haulable(WEAPONS_POPUP_ID):
         + "Grav Tow":
             grav_tether_tow(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID, 500)
-    if not gt_has and not has_any_role(WEAPONS_POPUP_ID, "item,upgrade,station,asteroid,__npc__"):
         + "Grav Lock":
             grav_tether_lock(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
+    # A hole is an ANCHOR, never a load. The slingshot is the one thing a tether may do
+    # with one, and lm_tether_swing_hole clamps the rope clear of the gravity well.
+    if not gt_has and lm_tether_hole_in_reach(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID):
+        + "Slingshot":
+            lm_tether_swing_hole(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
 
 
 # ---------------------------------------------------------------------------------------

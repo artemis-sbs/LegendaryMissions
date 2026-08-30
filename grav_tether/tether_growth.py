@@ -72,7 +72,29 @@ def lm_tether_swing_hole(ship, hole, rope=0):
     return con
 
 
-def lm_tether_nearest_hole(ship, max_dist=12000):
+#: How far a ship may be from a hole and still be offered the slingshot.
+LM_HOLE_SWING_REACH = 12000
+
+
+def lm_tether_hole_in_reach(ship, hole, max_dist=LM_HOLE_SWING_REACH):
+    """Whether this ship could slingshot on THIS hole right now.
+
+    The range gate is not decoration: `_tick_swing` pulls a ship onto the rope circle from
+    any distance at all, so an ungated button would yank a cruiser 40 000u away in to the
+    8 000u safe rope. Same reach as `lm_tether_nearest_hole`, so the Weapons menu and the
+    cockpit button agree about what is close enough.
+    """
+    sid, hid = to_id(ship), to_id(hole)
+    if sid is None or hid is None or not has_any_role(hid, "black_hole"):
+        return False
+    so, ho = to_object(sid), to_object(hid)
+    if so is None or ho is None:
+        return False
+    dx, dy, dz = so.pos.x - ho.pos.x, so.pos.y - ho.pos.y, so.pos.z - ho.pos.z
+    return (dx * dx + dy * dy + dz * dz) <= float(max_dist) * float(max_dist)
+
+
+def lm_tether_nearest_hole(ship, max_dist=LM_HOLE_SWING_REACH):
     """The nearest black hole a ship could anchor on."""
     sid = to_id(ship)
     if sid is None:
