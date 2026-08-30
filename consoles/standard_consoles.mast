@@ -26,8 +26,12 @@ default CINEMATIC_CONSOLE_ENABLED = True
     #
     # Handle jump vs Warp drive
     #
-    blob = to_blob(_ship_id)
-    is_jump = blob.get("jump_drive_active", 0) == 1
+    # THE HULL, NOT THE BLOB. `jump_drive_active` is written by
+    # //shared/signal/grid_interior_built, and an interior is built late and
+    # asynchronously - so a console opening before that landed declared a widget list
+    # with no jump controls in it, and the crew had to switch console and come back.
+    # The hull's own floor plan answers immediately and never changes.
+    is_jump = grid_hull_has_role(_ship_id, "jump")
 
     #gui_add_console_tab(_ship_id, CONSOLE_SELECT, CONSOLE_SELECT, None)
     

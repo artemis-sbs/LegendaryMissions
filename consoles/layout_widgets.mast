@@ -384,6 +384,82 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row()
         gui_layout_widget("2dview")
 
+    # THE ENGINE'S WIDGETS, NOW OWNED BY THIS CONSOLE - IN PIXELS.
+    #
+    # Everything above this line was already placed here; everything below was left to
+    # the engine's default layout, which meant NOTHING EVER SENT IT A RECT - so nothing
+    # could put one back either. The library parks a widget offscreen when it falls off
+    # the console's widget list (an engine widget cannot be un-declared, and one left
+    # declared draws against whatever the console last pointed at, which is how a client
+    # died in ViewGridObjectListDraw). Coming back it could only guess, and guessing the
+    # full console stacked every control on this screen on top of each other: click the
+    # Upgrades tab, click back, console hosed.
+    #
+    # PIXELS, NOT PERCENT. The arrangement is the engine's own (data/guiboxdata.txt,
+    # normal_helm) measured at 1272x962, but held in pixels and anchored to an EDGE, so
+    # every control is the same size and in the same place on every screen. The engine's
+    # percentages grew and shrank with the display, which is what put the shield button
+    # somewhere different on each one. Same reason as //gui/normal_weap below.
+    #
+    # ANCHORS: the right-hand stack hangs off the right edge, the drive controls off the
+    # bottom, so widening a screen adds space in the middle rather than stretching them.
+
+    # Right-hand stack: the camera dial, then shields and dock beneath it. One section,
+    # its own spacers, exactly as the weapons column is built. The two buttons are
+    # narrower than the dial, so a blank holds their left margin - a blank draws nothing,
+    # which is why it is safe to share an engine widget's row when a real control is not.
+    gui_section(style="area:100-356px,48px,100,404px;")
+
+    gui_row("row-height:231px;")
+    gui_layout_widget("main_screen_control")
+
+    gui_row("row-height:19px;")
+    gui_blank()
+    gui_row("row-height:48px;")
+    gui_blank(1,"col-width:127px")
+    gui_layout_widget("shield_control")
+
+    gui_row("row-height:10px;")
+    gui_blank()
+    gui_row("row-height:48px;")
+    gui_blank(1,"col-width:127px")
+    gui_layout_widget("request_dock")
+
+    # The two drive controls, bottom-left, anchored to the bottom edge.
+    gui_section(style="area:0,100-366px,127px,100;")
+    gui_layout_widget("throttle")
+
+    gui_section(style="area:127px,100-269px,509px,100;")
+    gui_layout_widget("helm_movement")
+
+    # Only when the ship HAS a jump drive: gui_console(CONSOLE_SELECT, is_jump) declares
+    # these two only then, and gui_layout_widget ADDS to the widget list - so placing
+    # them unconditionally would put a jump drive on a warp ship.
+    #
+    # THE HULL, NOT THE BLOB. This used to read `jump_drive_active`, which
+    # //shared/signal/grid_interior_built writes after the interior is BUILT - and an
+    # interior is built late and asynchronously, so a console that opened first asked
+    # too early, got "no", and drew itself without the jump controls. Nothing told it
+    # to look again, so the crew had to switch console and come back before the drive
+    # appeared. Reported on a xim_dreadnought, whose hull plainly has one.
+    # grid_hull_has_role reads the hull's own floor plan, which is true from the moment
+    # the ship exists.
+    if grid_hull_has_role(sbs.get_ship_of_client(client_id), "jump"):
+        # The jump bar, along the bottom, anchored bottom-right.
+        gui_section(style="area:100-840px,100-77px,100,100;")
+        gui_layout_widget("helm_jump")
+
+        # The jump selector, moved over to the right edge with a 30px gap. It used to
+        # sit a third of the way in, adrift between the 2D view and the right-hand
+        # stack; it belongs with the other controls, not in the middle of the radar.
+        #
+        # Anchored to the BOTTOM, not the top, so it keeps station above the jump bar
+        # instead of descending onto it: 30px of clear air over an 77px bar. That lands
+        # it in exactly the place it occupies today on a 962-tall screen, and keeps it
+        # off the bar on a short one, where a fixed 606px from the top would overlap.
+        gui_section(style="area:100-94px,100-356px,100-30px,100-202px;")
+        gui_layout_widget("quick_jump")
+
 //gui/normal_weap
     default tab = 1
     # Ship Data, 
@@ -424,6 +500,62 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row()
         gui_layout_widget("weapon_2d_view")
 
+    # THE ENGINE'S WIDGETS, NOW OWNED BY THIS CONSOLE - ONE COLUMN, IN PIXELS.
+    #
+    # These used to be left to the engine's own layout (data/guiboxdata.txt), which
+    # meant nothing ever sent them a rect - so nothing could put one back either. The
+    # library parks a widget offscreen when it falls off the console's widget list (an
+    # engine widget cannot be un-declared, and one left declared draws against whatever
+    # the console last pointed at, which is how a client died in ViewGridObjectListDraw).
+    # Coming back it could only guess, and guessing the full console stacked every
+    # control on this screen on top of each other: click the Upgrades tab, click back,
+    # console hosed.
+    #
+    # PIXELS, NOT PERCENT, and one section rather than six. The engine's own numbers
+    # are percentages with a 200px hole in the middle of them, so the shield button
+    # sat somewhere different on every screen size and the column read as two halves.
+    # A pixel column is the same column at every resolution - which is the whole point
+    # of owning it - and the rows below are a single stack with a spacer between each.
+    #
+    # THE CAMERA DIAL KEEPS ITS SHAPE: 280x180 is its aspect, so it is round rather
+    # than squashed. If it ever looks wrong, that pair is the one thing to change here -
+    # the rest of the column just follows it down.
+    #
+    # manual_weapons rides this same widget list, so it inherits this column too.
+    gui_section(style="area:100-280px,45px,100,485px;")
+
+    gui_row("row-height:180px;")
+    gui_layout_widget("main_screen_control")
+
+    # A wider spacer here than between the rows below it: the dial is a different
+    # KIND of control from the four that follow, and butting it up against SHIELDS
+    # read as one block. 16px separates the two groups; 8px separates rows within
+    # the lower one.
+    gui_row("row-height:16px;")
+    gui_blank()
+    gui_row("row-height:45px;")
+    gui_layout_widget("shield_control")
+
+    gui_row("row-height:8px;")
+    gui_blank()
+    gui_row("row-height:58px;")
+    gui_layout_widget("weap_beam_freq")
+
+    gui_row("row-height:8px;")
+    gui_blank()
+    gui_row("row-height:55px;")
+    gui_layout_widget("weap_beam_speed")
+
+    gui_row("row-height:8px;")
+    gui_blank()
+    gui_row("row-height:62px;")
+    gui_layout_widget("weap_torp_conversion")
+
+    # The fire controls keep the engine's own corner - they are the one widget on this
+    # console that is not part of the right-hand column.
+    gui_section(style="area:65,78,100,100;")
+    gui_layout_widget("weapon_control", alt="75,77,100,100")
+
 //gui/normal_main
     default tab = 1
     # Ship Data, 
@@ -454,7 +586,21 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         gui_row("row-height: 4em;")
         gui_log_tail()
 
-
+    # THE ENGINE'S OWN PLACEMENT, NOW OWNED BY THIS CONSOLE.
+    # data/guiboxdata.txt gives normal_main's 3dview 0,0,100,100 in BOTH rects - the
+    # full bleed this screen already had, with the data column an overlay on top of
+    # it. See //gui/normal_helm for why it stopped being the engine's business; this
+    # screen is the one that toggles its view constantly, every time the crew goes
+    # Tactical and back, so it is the one that met the un-park most often.
+    #
+    # Guarded by the SAME test gui_console("mainscreen") uses to pick the widget list,
+    # because gui_layout_widget ADDS to that list: on an lrs/tactical/data screen
+    # 3dview is not declared, and placing it here would declare it. The 2D shot places
+    # its own view in show_main_game_screen, which owns that condition.
+    _msv = get_inventory_value(viewscreen_home_ship(client_id), "MAIN_SCREEN_VIEW", "3d_view")
+    if _msv != "lrs" and _msv != "tactical" and _msv != "data":
+        gui_section(style="area:0,0,100,100;")
+        gui_layout_widget("3dview")
 
 
 ####################################################################################
