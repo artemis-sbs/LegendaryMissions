@@ -2,7 +2,6 @@
 
 
 //enable/comms if has_role(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "__player__") and COMMS_ORIGIN_ID != COMMS_SELECTED_ID
-    print("ENABLED")
 //comms if has_role(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "__player__") and COMMS_ORIGIN_ID != COMMS_SELECTED_ID
     + "Ship to Ship" //comms/ship_to_ship
 
@@ -19,10 +18,12 @@
     + "Send":
         prop_message = gui_get_variable("prop_message", "")
         if prop_message != "":
-            with comms_override(COMMS_SELECTED_ID, COMMS_ORIGIN_ID):
-                comms_transmit(prop_message)
-            with comms_override(COMMS_ORIGIN_ID, COMMS_SELECTED_ID):
-                comms_receive(prop_message)
+            # One transmit reaches both bridges: comms_message sends the sender's
+            # "> >" copy and the receiving crew's "< <" copy when both ends are
+            # player ships. This used to be two calls with the ids swapped inside
+            # comms_override, which landed the incoming copy on the SENDER's ship
+            # under the sender's own name.
+            comms_transmit(prop_message)
     
 
 
