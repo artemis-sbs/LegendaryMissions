@@ -37,15 +37,19 @@
 # clicked, and offered nothing at all when the console had no lock. It is 0 for a
 # hold-click on empty space, so the guard is required, not defensive.
 //popup/weapons if has_any_role(WEAPONS_ORIGIN_ID, "__player__") and WEAPONS_POPUP_ID != 0 and WEAPONS_POPUP_ID != WEAPONS_ORIGIN_ID
-    # grav_tether_HAS (the registry), not grav_tether_get (the live engine connection).
-    # A Tow is a rope-TOGGLE: it deletes the connection whenever the load is inside the
-    # rope length and re-adds it when the load drifts out - so `get` reads None for most
-    # of a perfectly normal tow. Gated on that, this menu offered "Grav Tow" to something
-    # already under tow and never offered "Release", so a crew could not let go.
-    gt_has = grav_tether_has(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
+    # grav_tether_BETWEEN (the registry, either way round), not grav_tether_get (the live
+    # engine connection) and not grav_tether_has (directional). Two ways this goes wrong,
+    # and both end the same: the menu re-offers the grab and never offers Release, so a
+    # crew cannot let go.
+    #   * `get` reads None for most of a perfectly normal tow, because a Tow is a rope
+    #     TOGGLE - it drops the connection whenever the load is inside the rope length.
+    #   * `has` is directional, and a SWING is registered the other way up: the anchor is
+    #     the source and the ship is the load. So has(me, that) is False for the very
+    #     slingshot this menu just opened.
+    gt_has = grav_tether_between(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
     if gt_has:
         + "Release":
-            grav_tether_release(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
+            grav_tether_release_between(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
     if not gt_has and has_any_role(WEAPONS_POPUP_ID, "item,upgrade"):
         + "Grav Reel":
             grav_tether_reel(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)

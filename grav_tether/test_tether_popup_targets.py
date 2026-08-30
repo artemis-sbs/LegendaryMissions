@@ -195,6 +195,31 @@ class TestWeaponsPopupTargets(unittest.TestCase):
         self.assertEqual((self.hole.pos.x, self.hole.pos.z), before,
                          "nothing may drag a black hole")
 
+    def test_a_ship_already_slinging_is_offered_Release(self):
+        """The trap this file's own comment warns about, in its OTHER form.
+
+        A swing is registered (anchor, ship) - the hole is the SOURCE. So the directional
+        `grav_tether_has(me, that)` the menu used to ask is False for the slingshot the
+        menu itself just opened: it re-offered "Slingshot" and never "Release", and a
+        crew could not let go.
+        """
+        tether_growth.lm_tether_swing_hole(self.ship.id, self.hole.id)
+        menu = self._menu_for(self.hole)
+        self.assertIn("Release", menu, f"menu was: {menu!r}")
+        self.assertNotIn("Slingshot", menu, f"menu was: {menu!r}")
+
+    def test_Release_really_lets_go_of_a_slingshot(self):
+        tether_growth.lm_tether_swing_hole(self.ship.id, self.hole.id)
+        self.assertTrue(gt.grav_tether_involves(self.ship.id))
+        gt.grav_tether_release_between(self.ship.id, self.hole.id)
+        self.assertFalse(gt.grav_tether_involves(self.ship.id))
+
+    def test_a_ship_already_towing_is_offered_Release(self):
+        gt.grav_tether_tow(self.ship.id, self.hulk.id, 500)
+        menu = self._menu_for(self.hulk)
+        self.assertIn("Release", menu, f"menu was: {menu!r}")
+        self.assertNotIn("Grav Tow", menu, f"menu was: {menu!r}")
+
     # --- what must still work ------------------------------------------------
 
     def test_an_npc_can_still_be_towed_and_locked(self):
