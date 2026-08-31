@@ -13,6 +13,7 @@ from sbs_utils.fs import load_yaml_string
 from sbs_utils.procedural.execution import log
 from sbs_utils.procedural.grav_tether import (grav_tether_set_grab_speed_limit,
                                               grav_tether_set_mass_fn,
+                                              grav_tether_set_range_limit,
                                               grav_tether_set_tow_energy_cost)
 from sbs_utils.procedural.media import media_read_relative_file
 from sbs_utils.procedural.query import to_id, to_object
@@ -25,6 +26,19 @@ LM_TETHER_MASS_DEFAULT = 3.0
 #: impulse shrugs you off, so in combat you cripple engines FIRST and then tether -
 #: which is what ties this to the rest of the Weapons console.
 LM_TETHER_GRAB_SPEED = 0.5
+
+#: How far a capital ship's tether can reach to open, and the distance past which a live
+#: one snaps (1.5x, the library default).
+#:
+#: TWICE a fighter's 4000u nose cone, and about five times beam range - a tether is a
+#: utility beam, so you can get hold of something well before you could shoot it. It is
+#: also exactly a standard hole's gravity_radius * LM_HOLE_SAFE_MARGIN, i.e. the radius of
+#: a wide slingshot arc, so "you can catch a gravity well from anywhere on or inside the
+#: arc you would ride" needs no second number.
+#:
+#: Before this there was NO reach at all on the Weapons hold-click: a gunner could tow
+#: something 30,000u off the tactical picture.
+LM_TETHER_REACH = 8000
 
 #: Energy per tick per unit of towed mass. At ~10Hz, towing a 12-mass freighter costs
 #: about 2.4 energy/second - a real bill on a long haul, survivable on a short one.
@@ -53,6 +67,7 @@ def lm_tether_load_masses():
         _LM_MASSES = {}
     grav_tether_set_mass_fn(lm_tether_mass)
     grav_tether_set_grab_speed_limit(LM_TETHER_GRAB_SPEED)
+    grav_tether_set_range_limit(LM_TETHER_REACH)
     grav_tether_set_tow_energy_cost(LM_TETHER_TOW_ENERGY)
     return len(_LM_MASSES)
 

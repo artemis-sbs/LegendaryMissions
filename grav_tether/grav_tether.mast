@@ -36,7 +36,10 @@
 # the selection, this menu offered to tether the WEAPONS TARGET no matter what was
 # clicked, and offered nothing at all when the console had no lock. It is 0 for a
 # hold-click on empty space, so the guard is required, not defensive.
-//popup/weapons if has_any_role(WEAPONS_ORIGIN_ID, "__player__") and WEAPONS_POPUP_ID != 0 and WEAPONS_POPUP_ID != WEAPONS_ORIGIN_ID
+# Nothing is on offer mid-slingshot. The arc is a few seconds long and the helm is
+# commandeered for the duration; letting go half way round would drop the ship on an
+# arbitrary bearing, which is not an abort anyone wants.
+//popup/weapons if has_any_role(WEAPONS_ORIGIN_ID, "__player__") and WEAPONS_POPUP_ID != 0 and WEAPONS_POPUP_ID != WEAPONS_ORIGIN_ID and not lm_tether_sling_is(WEAPONS_ORIGIN_ID)
     # grav_tether_BETWEEN (the registry, either way round), not grav_tether_get (the live
     # engine connection) and not grav_tether_has (directional). Two ways this goes wrong,
     # and both end the same: the menu re-offers the grab and never offers Release, so a
@@ -61,11 +64,19 @@
             grav_tether_tow(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID, 500)
         + "Grav Lock":
             grav_tether_lock(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
-    # A hole is an ANCHOR, never a load. The slingshot is the one thing a tether may do
-    # with one, and lm_tether_swing_hole clamps the rope clear of the gravity well.
-    if not gt_has and lm_tether_hole_in_reach(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID):
-        + "Slingshot":
-            lm_tether_swing_hole(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
+    # A hole is an ANCHOR, never a load. A slingshot is the one thing a tether may do with
+    # one - and it is not a tether at all underneath: an invisible carrier flies the arc
+    # and the engine holds the ship welded to it, so the curve is engine motion rather
+    # than something re-pointed ten times a second. See lm_tether_slingshot_hole.
+    #
+    # WIDE is clamped clear of the gravity well. CLOSE is inside it: faster, because the
+    # arc is shorter, and the hole's own pull is fighting the carrier the whole way.
+    if not gt_has and lm_tether_hole_in_reach(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID) and lm_tether_sling_ready(WEAPONS_ORIGIN_ID):
+        + "Slingshot (wide)":
+            lm_tether_slingshot_hole(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID)
+        + "Slingshot (close)":
+            lmgt_tight = lm_tether_hole_close_rope(WEAPONS_POPUP_ID)
+            lm_tether_slingshot_hole(WEAPONS_ORIGIN_ID, WEAPONS_POPUP_ID, lmgt_tight)
 
 
 # ---------------------------------------------------------------------------------------
@@ -159,11 +170,11 @@
 
 # --- phase 5 -------------------------------------------------------------------------
 # A black hole is the anchor the swing was invented for. Offered only when one is
-# actually in reach, and the rope is clamped clear of the gravity well by
-# lm_tether_swing_hole - the tether must never be the thing that drops someone in.
-//popup/tether if has_any_role(TETHER_ORIGIN_ID, "__player__,cockpit") and lm_tether_nearest_hole(TETHER_ORIGIN_ID) is not None
+# actually in reach and the throw has recharged; the arc is clamped clear of the gravity
+# well - the tether must never be the thing that drops someone in.
+//popup/tether if has_any_role(TETHER_ORIGIN_ID, "__player__,cockpit") and lm_tether_nearest_hole(TETHER_ORIGIN_ID) is not None and lm_tether_sling_ready(TETHER_ORIGIN_ID)
     + "Slingshot the black hole":
-        lm_tether_swing_hole(TETHER_ORIGIN_ID, lm_tether_nearest_hole(TETHER_ORIGIN_ID))
+        lm_tether_slingshot_hole(TETHER_ORIGIN_ID, lm_tether_nearest_hole(TETHER_ORIGIN_ID))
 
 
 # Pinned by a hostile beam. Says what to do about it, because a ship that is suddenly
@@ -177,3 +188,33 @@
     default SHIP_ID = 0
     ->END if SHIP_ID == 0
     comms_broadcast(SHIP_ID, "Tether snapped - you are free.")
+
+
+# Thrown. Says which pass it was, because the crew chose.
+//shared/signal/lm_tether_sling_start
+    default SHIP_ID = 0
+    default CLOSE = False
+    ->END if SHIP_ID == 0
+    if CLOSE:
+        comms_broadcast(SHIP_ID, "Slingshot - close pass. Hold on.")
+    if not CLOSE:
+        comms_broadcast(SHIP_ID, "Slingshot - coming round the far side.")
+
+
+# Out the other side. A close pass costs a system, so say so rather than let the crew
+# find the damage on the grid and wonder what hit them.
+//shared/signal/lm_tether_sling_done
+    default SHIP_ID = 0
+    default CLOSE = False
+    ->END if SHIP_ID == 0
+    if CLOSE:
+        comms_broadcast(SHIP_ID, "Clear of the well - that pass strained a system.")
+    if not CLOSE:
+        comms_broadcast(SHIP_ID, "Clear of the well. Helm is yours.")
+
+
+# The cooldown timer emits this itself (set_timer signal=), so nothing has to poll it.
+//shared/signal/lm_tether_sling_ready
+    default TIMER_AGENT_ID = 0
+    ->END if TIMER_AGENT_ID == 0
+    comms_broadcast(TIMER_AGENT_ID, "Slingshot recharged.")

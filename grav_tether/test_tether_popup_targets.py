@@ -34,6 +34,7 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
 from sbs_utils.agent import clear_shared
+from sbs_utils.delete_queue import DeleteQueue
 from sbs_utils.helpers import Context, FakeEvent, FrameContext
 from sbs_utils.mast.mast_globals import MastGlobals
 from sbs_utils.mast.mastscheduler import MastScheduler
@@ -43,8 +44,10 @@ from sbs_utils.mast_sbs.maststorypage import StoryPage
 from sbs_utils.gui import Gui
 from sbs_utils.mast.maststory import MastStory
 from sbs_utils.procedural import grav_tether as gt
+from sbs_utils.procedural.inventory import get_inventory_value
 from sbs_utils.procedural.popup import PopupPromise, start_popup_selected
 from sbs_utils.procedural.spawn import npc_spawn, player_spawn
+from sbs_utils.procedural.orbit import orbit_release_all
 from sbs_utils.procedural.terrain import terrain_spawn_black_hole
 from sbs_utils.spaceobject import SpaceObject
 
@@ -131,6 +134,14 @@ class TestWeaponsPopupTargets(unittest.TestCase):
         self.page.present(FakeEvent(0, "gui_present"))
 
     def tearDown(self):
+        # A live carrier outlives the mock reset - and so does its TOMBSTONE. delete_object
+        # only queues; DeleteQueue._pending is a module global that create_new_sim does not
+        # touch, and the mock hands out the same ids to the next sim. Left undrained, the
+        # next test's freshly spawned carrier is born with a dead id and object_exists says
+        # it was never there. (Production is covered: handlerhooks drains per event and
+        # registers the queue in the reset ledger.)
+        orbit_release_all()
+        DeleteQueue.drain()
         MastScheduler.on_runtime_error = self._orig_seam
         logging.getLogger("mast.runtime").removeHandler(self._sink)
         Gui.clients = {}
@@ -195,24 +206,42 @@ class TestWeaponsPopupTargets(unittest.TestCase):
         self.assertEqual((self.hole.pos.x, self.hole.pos.z), before,
                          "nothing may drag a black hole")
 
-    def test_a_ship_already_slinging_is_offered_Release(self):
-        """The trap this file's own comment warns about, in its OTHER form.
-
-        A swing is registered (anchor, ship) - the hole is the SOURCE. So the directional
-        `grav_tether_has(me, that)` the menu used to ask is False for the slingshot the
-        menu itself just opened: it re-offered "Slingshot" and never "Release", and a
-        crew could not let go.
-        """
-        tether_growth.lm_tether_swing_hole(self.ship.id, self.hole.id)
+    def test_both_passes_are_offered(self):
+        # The crew picks the radius: wide is clamped clear of the well, close is inside it.
         menu = self._menu_for(self.hole)
-        self.assertIn("Release", menu, f"menu was: {menu!r}")
-        self.assertNotIn("Slingshot", menu, f"menu was: {menu!r}")
+        self.assertIn("Slingshot (wide)", menu, f"menu was: {menu!r}")
+        self.assertIn("Slingshot (close)", menu, f"menu was: {menu!r}")
 
-    def test_Release_really_lets_go_of_a_slingshot(self):
-        tether_growth.lm_tether_swing_hole(self.ship.id, self.hole.id)
-        self.assertTrue(gt.grav_tether_involves(self.ship.id))
-        gt.grav_tether_release_between(self.ship.id, self.hole.id)
-        self.assertFalse(gt.grav_tether_involves(self.ship.id))
+    def test_a_ship_mid_slingshot_is_offered_nothing(self):
+        # The arc commandeers the helm for a few seconds. Letting go half way round would
+        # drop the ship on an arbitrary bearing, so the whole menu stands down.
+        tether_growth.lm_tether_slingshot_hole(self.ship.id, self.hole.id)
+        self.assertTrue(tether_growth.lm_tether_sling_is(self.ship.id))
+        self.assertEqual(self._menu_for(self.hole).strip(), "")
+
+    def test_a_cooling_ship_is_not_offered_the_slingshot(self):
+        tether_growth.lm_tether_slingshot_hole(self.ship.id, self.hole.id)
+        tether_growth.lm_tether_sling_finish(self.ship.id)      # out the far side
+        self.assertFalse(tether_growth.lm_tether_sling_ready(self.ship.id))
+        self.assertNotIn("Slingshot", self._menu_for(self.hole))
+
+    def test_the_slingshot_will_not_start_twice(self):
+        self.assertIsNotNone(tether_growth.lm_tether_slingshot_hole(self.ship.id, self.hole.id))
+        self.assertIsNone(tether_growth.lm_tether_slingshot_hole(self.ship.id, self.hole.id))
+
+    def test_a_close_pass_is_inside_the_well_and_clear_of_the_kill_radius(self):
+        # The two numbers that make "close" a real decision rather than a label.
+        close = tether_growth.lm_tether_hole_close_rope(self.hole.id)
+        gravity = tether_growth.lm_tether_hole_gravity(self.hole.id)
+        self.assertLess(close, gravity, "a close pass must be INSIDE the gravity well")
+        self.assertGreater(close, 500 * 4, "but nowhere near the 500u lethal radius")
+
+    def test_a_close_pass_costs_a_system_and_a_wide_one_does_not(self):
+        # The engine's own pull is the real danger and the mock does not simulate it, so
+        # the deterministic half is what a headless test can actually hold.
+        tether_growth.lm_tether_slingshot_hole(
+            self.ship.id, self.hole.id, tether_growth.lm_tether_hole_close_rope(self.hole.id))
+        self.assertTrue(get_inventory_value(self.ship.id, "sling:close", False))
 
     def test_a_ship_already_towing_is_offered_Release(self):
         gt.grav_tether_tow(self.ship.id, self.hulk.id, 500)
