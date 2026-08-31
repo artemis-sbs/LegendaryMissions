@@ -56,6 +56,16 @@ masses:
   torgoth_goliath: 4
   torgoth_leviathan: 5
   transport_ship: 6
+  # Turret hardware. Not ships - a crate is a payload and a tower is a gun on a mount, so
+  # this is bulk rather than hullpoints. All four are npc_spawn'd, so LM_TETHER_HAULABLE
+  # covers them through __npc__ and all four were falling to the corvette default and
+  # warning about it. The crate is the point: it exists to be towed into position, and at
+  # 2 against a light cruiser's 3 it moves without the beam flipping and dragging the
+  # cruiser to the crate instead.
+  lm_turret_crate: 2
+  lm_turret_mount: 1
+  lm_turret_beam: 2
+  lm_turret_heavy: 3
   tsn_battle_cruiser: 4
   tsn_battleship: 5
   tsn_bomber: 1

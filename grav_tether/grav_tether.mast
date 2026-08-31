@@ -153,6 +153,27 @@
     comms_broadcast(SOURCE_ID, "Grav-tether offline - not enough power to hold the load.")
 
 
+# The haul changed weight class, or a hull joined it. Every cost this beam charges used
+# to be invisible: a crew towing a starbase was capped to impulse, cut to a quarter
+# throttle and burning its reserves, and the ship simply felt broken. The only two signals
+# that existed both fired after the haul had already failed.
+#
+# Addressed to SOURCE_ID, not the load. The library emits one of these PER SHIP on the
+# beam - which is what a per-console readout wants - so broadcasting to the target would
+# print four identical lines into one waterfall the moment a fourth tug joined.
+//shared/signal/grav_tether_strain
+    default SOURCE_ID = 0
+    default STRAIN = ""
+    default PULLERS = 1
+    ->END if SOURCE_ID == 0
+    if PULLERS > 1:
+        comms_broadcast(SOURCE_ID, f"Grav-tether: {PULLERS} hulls on the beam - load is {STRAIN}.")
+    if PULLERS <= 1 and STRAIN == "overloaded":
+        comms_broadcast(SOURCE_ID, "Grav-tether overloaded - this needs another ship on it.")
+    if PULLERS <= 1 and STRAIN != "overloaded":
+        comms_broadcast(SOURCE_ID, f"Grav-tether under {STRAIN} load - engines are paying for it.")
+
+
 # Too fast to get hold of. Says WHY, or the button just looks broken.
 //shared/signal/grav_tether_too_fast
     default SOURCE_ID = 0

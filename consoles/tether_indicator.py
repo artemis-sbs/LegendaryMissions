@@ -83,11 +83,18 @@ def manual_tether_partner(ship):
 
 
 def manual_tether_word(ship):
-    """TOW / REEL / LOCK / ANCHOR, or the pulled end's TOWED / SWING. "" when free."""
+    """TOW / REEL / LOCK / ANCHOR, or the pulled end's TOWED / SWING. "" when free.
+
+    A shared haul gets its crew size appended - "TOW x4". That is the legible team signal:
+    the strain BAND barely moves across a four-ship span, while the count changes the
+    instant a hull joins or lets go, which is the thing the gunner acted on.
+    """
     st = _mt_state(ship)
     if st is None:
         return ""
-    return _MT_WORDS.get((st.get("mode"), st.get("role")), "TETHER")
+    word = _MT_WORDS.get((st.get("mode"), st.get("role")), "TETHER")
+    crew = st.get("pullers") or 1
+    return f"{word} x{crew}" if crew > 1 else word
 
 
 def manual_tether_name(ship):
@@ -126,11 +133,17 @@ def manual_tether_signature(ship):
     Deliberately excludes range: distance changes every tick, and repainting the panel
     every tick would tear it down under the gunner's hands. The panel's existing 3 second
     ticker refreshes the number; this is what makes grabbing and letting go show at once.
+
+    Strain and crew size ARE in it, because both change only when someone attaches or
+    releases - about once a haul - and both change what the square says.
     """
     st = _mt_state(ship)
     if st is None:
         return ""
-    return f"{st['partner']}:{st.get('mode')}:{st.get('role')}"
+    # Strain BAND and crew count, never the ratio. The ratio is a float that moves with
+    # the fleet, and a float in a repaint key is the same mistake as putting range in it.
+    return (f"{st['partner']}:{st.get('mode')}:{st.get('role')}"
+            f":{st.get('strain')}:{st.get('pullers')}")
 
 
 def manual_tether_suffix(ship):

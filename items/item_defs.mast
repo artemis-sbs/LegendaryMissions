@@ -190,6 +190,52 @@ desc: Overcharges beams (3x) for a time.
     modifier_add(UPGRADE_AGENT_ID, "all_beam_upgrade_coeff", 2.0, key, duration=duration)
     ->END
 
+=== prefab_item_grav_tug_rig
+metadata:``` yaml
+type: item/upgrade/engineering
+key: grav_tug_rig
+display_text: Heavy Tug Rig
+art: container_1a
+mode: install
+targets: ship
+consoles: engineering
+tier: 3
+price: 600
+desc: Reinforced grav emitters - the ship hauls as if it were four.
+```
+    # BOUGHT, NEVER FOUND - and `mode: install` is what says so. _item_spawn_pool skips
+    # every install item, because a permanent fitting lying loose in a debris field is odd
+    # for all of them, not just this one. Before that this scattered at about one drop in
+    # fourteen in every map calling terrain_spawn_pickups: a PERMANENT 4x hauling
+    # multiplier in a pool that is otherwise five-minute buffs and ore.
+    #
+    # The type deliberately STAYS `item/upgrade/...`. Retyping it is the obvious way to
+    # dodge the scatter and it backfires: consoles/debug.py builds its "Test Items" skip
+    # set from items_of_category("upgrade") and drops everything else as a floating
+    # pickup, so a retype would have the debug console spawning the very thing this is
+    # meant to stop - in the one place you would be standing while testing it.
+    #
+    # Tug Rig Mk I at the end of this file is the found, expiring, weaker half.
+    #
+    # NOT a modifier. The library asks a mission how much a ship counts for when it is
+    # PULLING (grav_tether_set_pull_bonus_fn -> lm_tether_pull_bonus), which reads the
+    # FITTED flag below, so the rig feeds the beam lag, the tow drag, the power share and
+    # the strain readout at once and stays out of what the ship WEIGHS - a rig must not
+    # make you harder to grav-lock or make your own wreck pay more salvage.
+    #
+    # THE FLAG IS NOT THE ITEM KEY, and that distinction is load-bearing. `market_buy`
+    # credits the purchase as `set_inventory_value(ship, "grav_tug_rig", n)`, so a flag
+    # sharing that name would be raised by CARRYING the crate: the rig would work before
+    # anyone activated it, and selling the crate would rip it back out of a fitted hull.
+    #
+    # And `mode: install` does not consume, so the crate survives the fitting. Left in the
+    # hold a station buys it back for half of what it cost while the rig stays bolted on,
+    # which quietly made a 600 credit permanent upgrade cost 300. It is fitted now, not
+    # cargo, so the crate is spent here.
+    set_inventory_value(UPGRADE_AGENT_ID, "grav_tug_rig_fitted", 1)
+    set_inventory_value(UPGRADE_AGENT_ID, "grav_tug_rig", 0)
+    ->END
+
 === prefab_item_hacking_virus
 metadata:``` yaml
 type: item/trap/hack
@@ -229,4 +275,41 @@ desc: A life-support capsule. Carry it home - dock it to deliver whoever is insi
     # The art matters: escape-pod carries interactionradius 603 in shipData, which is what
     # makes //collision/interactive fire. Without a registered art item_spawn falls back to
     # a mesh with NO interaction radius, and the pod becomes uncollectable - see PRM-1.
+    ->END
+
+=== prefab_item_tug_rig_mk1
+metadata:``` yaml
+type: item/upgrade/engineering
+key: tug_rig_mk1
+display_text: Tug Rig Mk I
+art: container_small_6a
+mode: consumable
+duration: 600
+targets: ship
+consoles: engineering
+tier: 2
+desc: An early-pattern grav rig - hauls as if the ship were two and a half, for a time.
+```
+    # The found half of the tug rig pair. `item/upgrade/...` on purpose here: this one IS
+    # meant to be scattered, at tier 2, the same weight as the other tier-2 consumables.
+    # No `price`, so it never reaches a station market - the Heavy Tug Rig is the thing
+    # you buy, this is the thing you find. Half the pull (2x, not 4x) and it burns out.
+    #
+    # THE EFFECT IS THE TIMER. Nothing in this library undoes a consumable whose effect is
+    # not a modifier: upgrade_add takes no duration, Upgrade has no expiry and no
+    # deactivate hook, and the only self-expiring path is modifier_add(duration=) swept by
+    # the modifier handler - which a pull bonus cannot use, because it is not a blob key.
+    # prefab_item_secret_codecase above is what that looks like when it goes unnoticed: it
+    # sets a flag with `duration: 300` and nothing ever clears it. So rather than set a
+    # flag and hope something chases it, the window itself is the state, and
+    # lm_tether_pull_bonus reads it.
+    #
+    # An `await delay_sim(duration)` here would also work - an upgrade body is a real
+    # suspendable server task - but nothing binds that task to the holder, so a destroyed
+    # ship would leave it running, and a mission reload rebuilds the scheduler and the
+    # flag would never be cleared at all. A timer has no task and dies with the agent.
+    #
+    # is_timer_finished answers True for a timer that was never set, so a ship that never
+    # fitted one reads as expired: the guard fails closed.
+    set_timer(UPGRADE_AGENT_ID, "tug_rig_mk1", seconds=duration)
     ->END
