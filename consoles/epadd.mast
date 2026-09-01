@@ -34,7 +34,7 @@ if EPADD_ENABLED:
         "epadd.library", "epadd.help", "epadd.airwing", "epadd.casino",
         "epadd.damage", "epadd.hangar", "epadd.comms_log", "epadd.standings",
         "epadd.debug", "epadd.mast", "epadd.brain", "epadd.coverage",
-        "epadd.messages", "epadd.status"])
+        "epadd.messages", "epadd.status", "epadd.away"])
 
     # Presentation for the tabs LM ships. An unknown icon name draws nothing and says
     # so once, so an app can be registered before anyone has drawn its glyph.
@@ -52,6 +52,12 @@ if EPADD_ENABLED:
     # The board: the same badges the tiles show, gathered and larger. An app with
     # nothing to report is left out, so this stays a board rather than a second
     # launcher.
+    # The way down and the way back. An app rather than a console, which is what lets
+    # the PADD replace the away screen: the crew carry it with them, and whatever job
+    # apps a mission adds sit beside this one.
+    gui_app_register("away_team", title="Away Team", icon="epadd.away", group="Ship",
+                     sort=1, description="Join a landing party, or come back",
+                     status=lm_epadd_away, away=True)
     gui_app_register("status", title="Status", icon="epadd.status", group="Mission",
                      sort=1, description="What the ship is telling you",
                      status=lm_epadd_reporting)
@@ -88,6 +94,20 @@ if EPADD_ENABLED:
     await delay_sim(15)
     lm_epadd_deliver_mail()
     jump pump
+
+
+//gui/tab/away_team
+    jump epadd_away_screen
+
+=== epadd_away_screen
+    gui_tab_back(CONSOLE_SELECT)
+    gui_away_screen()
+    # Beaming down or up changes who this console is, which changes every other app -
+    # so the same polled counter the inbox uses drives this one.
+    on change message_revision():
+        jump epadd_away_screen
+    await gui()
+    ->END
 
 
 //gui/tab/status

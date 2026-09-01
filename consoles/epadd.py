@@ -37,3 +37,21 @@ def lm_epadd_reporting():
     if not n:
         return ""
     return f"{n} reporting"
+
+
+def lm_epadd_away():
+    """The Away Team tile's badge: whether a party is forming, or where you are.
+
+    Says nothing on a bridge console with no party open, so the tile stays quiet.
+    """
+    from sbs_utils.procedural.away import (away_invitation, away_open_roster,
+                                           away_invite_title)
+    from sbs_utils.procedural.gui.away_gui import away_who
+    if away_who() is not None:
+        return away_invite_title()
+    if away_invitation() is None:
+        return ""
+    free = len(away_open_roster())
+    if not free:
+        return "full"
+    return f"{free} place" if free == 1 else f"{free} places"
