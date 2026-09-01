@@ -1,0 +1,150 @@
+# [Personal Messages](messages)
+
+Mail the crew get while they fly. One heading per message.
+
+**This file is meant to be added to.** You do not need to read any code to write one -
+copy a message below, change the words. The rules are short:
+
+- `From:` is who it is from, and a message without one is ignored. Write it the way it
+  would show on a phone: `Your sister, Mira`, not `mira_01`.
+- `To:` is a console - `helm`, `weapons`, `engineering`, `science`, `comms`, `hangar` -
+  or a comma list, or `*` for the whole crew. Leave it out and everyone gets it.
+- A line like `- [Say this](anything) ; signal something_happened` is a REPLY the crew
+  can send back. Up to four per message; leave them out for a message that is just
+  telling them something. The `; signal name` part is optional and lets the mission
+  react - ask whoever wired the mission what to put there, or leave it off.
+- `After:` is how many seconds into the mission it arrives. Leave it out and it is
+  waiting when they sit down. Spread them out; mail that all lands at once is a
+  document, not a message.
+- The heading is the subject line. The paragraph under the fence is the message.
+- Keep it under about 600 characters and keep it ASCII - the engine draws no curly
+  quotes, no em-dashes and no emoji, and a `^` is a line break to it.
+
+Do NOT add a `Kind:` field. It means something else in AMD and will quietly break the
+records under it.
+
+
+## [Did you take the good pan](mail_pan)
+---
+From: Your flatmate, Devi
+To: engineering
+---
+The good pan is missing. Your bunk is missing. I have connected these two facts. If
+the pan is on a starship somewhere past Jupiter I would like it noted that I have not
+called anybody about it, which I think makes me a very good flatmate. Bring it back.
+
+
+## [Nan says hello](mail_nan)
+---
+From: Mum
+After: 90
+---
+Your nan has learned what a subspace relay is and now believes she can be heard by
+everyone on the ship at once, so she has started saying hello to all of them. Hello to
+the pilot. Hello to whoever does the guns. She has been at this for an hour. Please eat
+something green.
+
+
+## [The cat has opinions](mail_cat)
+---
+From: Sam
+To: helm
+After: 200
+---
+Update on the cat: still furious. Sits on your chair. Not near your chair, ON it, in
+the exact middle, staring at the door like a small landlord waiting on rent. I told her
+you were saving the frontier. She was unmoved. Fly safe. Come home.
+
+
+## [Re: your expenses claim](mail_expenses)
+---
+From: Fleet Accounts (do not reply)
+After: 320
+---
+Claim TSN-4471 has been returned. Line item "one (1) planet, incidental" has been
+queried. Accounts understands that the planet was already there and that you did not
+purchase it. Accounts requires a receipt regardless. Please resubmit within thirty
+days.
+
+
+## [I have your plant](mail_plant)
+---
+From: Your neighbour, Ade
+To: science
+After: 420
+---
+The plant is alive. I want that on record first because of what comes next. It has
+grown a second thing. Not a leaf. A THING. It is facing the window. It was not facing
+the window on Tuesday. You said it was a fern. Ade.
+
+
+## [From the yard](mail_yard)
+---
+From: Chief Petty Officer Anwar, TSN Dockyard
+To: engineering
+After: 540
+---
+Whoever signed off the coolant loop on your hull did it at 0400 and it shows. The
+second manifold is a repair, not a part. She will hold. She will also make a noise
+about it and you will think something has gone wrong, and nothing will have gone wrong.
+That is just her telling you she remembers.
+
+
+## [Small emergency, resolved](mail_kid)
+---
+From: Jo
+After: 700
+---
+Your godson told his whole class that you fight space monsters for a living. His
+teacher rang to check. I said yes. I did not know what else to say and, on reflection,
+it is not even a lie, is it. He would like a photograph of a monster. Not a scary one.
+
+
+## [You left this on](mail_oven)
+---
+From: Your flatmate, Devi
+After: 880
+---
+Second message because I have found the pan. It was in the oven. The oven was on. It
+has been on since you left. I am no longer a very good flatmate, I am a person who
+lives alone in a warm flat with one ruined pan, and I would like you to know that the
+frontier is not the only place where things are difficult.
+
+
+## [Are you eating](mail_eating)
+---
+From: Mum
+After: 150
+---
+Do not just say yes. Your nan wants to know what, specifically, and she will be able to
+tell if you are making it up.
+
+- [Tell her the truth](truth) ; signal mail_ate_badly
+- [Make something up](lie) ; signal mail_lied_to_nan
+- [Say the replicator is broken](dodge)
+
+
+## [The pan, a negotiation](mail_pan_deal)
+---
+From: Your flatmate, Devi
+To: engineering
+After: 620
+---
+I have priced a replacement pan. I am prepared to be reasonable about this, which is
+more than you deserve, and I would like you to notice that I am being reasonable.
+
+- [Offer to pay for it](pay) ; signal mail_pan_paid
+- [Point out it was in the oven](blame) ; signal mail_pan_blamed
+- [Send a photograph of a nebula instead](deflect)
+
+
+## [Sector control, routine](mail_control)
+---
+From: TSN Sector Control
+After: 480
+---
+Routine check. Your transponder has been reading intermittently for six hours. Confirm
+your status so we can close the log, or declare and we will send somebody.
+
+- [All well, closing the log](fine) ; signal mail_control_fine
+- [Declare a fault](fault) ; signal mail_control_fault

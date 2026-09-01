@@ -1,0 +1,155 @@
+#
+# ePADD - one console tab that holds the apps.
+#
+# The library owns the registry and the home screen; this is the route that reaches
+# it, because sbs_utils ships no .mast of its own. Four lines of it are the stub every
+# mission needs; the rest is the switch and the app registrations.
+#
+# OFF BY DEFAULT. Set EPADD_ENABLED in settings.yaml (or a profile) to try it. With it
+# off, nothing here does anything and every console draws the strip it always has.
+#
+# NOTHING DISAPPEARS WHEN IT IS ON. A tab no one registered as an app is adopted from
+# what the console enabled, and shows under "Other" - so an addon that has never heard
+# of ePADD keeps working, and the registrations below are presentation, not plumbing.
+#
+shared EPADD_ENABLED = SETTINGS.get("EPADD_ENABLED", False)
+
+if EPADD_ENABLED:
+    gui_app_mode_default(True)
+
+    # Claim the app icon NAMES for our own sheet - 4 x 4 cells of 128px, white on
+    # transparent like the engine's own, so `color:` still does all the tinting. The
+    # built-in sheet was tried first and is game-icons.net art: Help is a pointing
+    # hand, Airwing an unreadable blob, and `wanted` has the word baked into the
+    # glyph. Nothing that DRAWS an icon knows where it came from, so a mod can
+    # re-point any of these names at its own art and every tile follows.
+    #
+    # NAMESPACED, deliberately. The icon registry is one flat namespace and these are
+    # claims on it: a bare `brain` would take over the built-in glyph (index 5) for
+    # everything else that draws it, and a bare `cargo`/`help`/`debug` would be an
+    # addon claiming a word every other addon might want. Dotted names are the
+    # convention the registry already uses for meanings (`quest.job`, `list.expand`).
+    gui_icon_add_atlas_grid(media_shared("epadd/icons"), 4, 5, cell=128, names=[
+        "epadd.cargo", "epadd.fabricate", "epadd.upgrades", "epadd.quests",
+        "epadd.library", "epadd.help", "epadd.airwing", "epadd.casino",
+        "epadd.damage", "epadd.hangar", "epadd.comms_log", "epadd.standings",
+        "epadd.debug", "epadd.mast", "epadd.brain", "epadd.coverage",
+        "epadd.messages", "epadd.status", "epadd.away"])
+
+    # Presentation for the tabs LM ships. An unknown icon name draws nothing and says
+    # so once, so an app can be registered before anyone has drawn its glyph.
+    # The badge is what a crew reads WITHOUT opening anything - the whole reason the
+    # apps that carry live state do not each need a panel on the bridge.
+    # Load this addon's mail once. A top-level `shared` assignment runs once (the
+    # server runs the top level first), but the statements around it run for EVERY
+    # client - so the pump is guarded rather than merely placed here.
+    default shared EPADD_MAIL_LOADED = False
+    if not EPADD_MAIL_LOADED:
+        shared EPADD_MAIL_LOADED = True
+        message_load_amd(document_get_amd_file(None, "Messages", content=media_read_relative_file("messages.amd")))
+        task_schedule(epadd_mail_pump)
+
+    # The board: the same badges the tiles show, gathered and larger. An app with
+    # nothing to report is left out, so this stays a board rather than a second
+    # launcher.
+    # The way down and the way back. An app rather than a console, which is what lets
+    # the PADD replace the away screen: the crew carry it with them, and whatever job
+    # apps a mission adds sit beside this one.
+    gui_app_register("away_team", title="Away Team", icon="epadd.away", group="Ship",
+                     sort=1, description="Join a landing party, or come back",
+                     status=lm_epadd_away, away=True)
+    gui_app_register("status", title="Status", icon="epadd.status", group="Mission",
+                     sort=1, description="What the ship is telling you",
+                     status=lm_epadd_reporting)
+    gui_app_register("messages", title="Messages", icon="epadd.messages",
+                     group="Mission", sort=5, description="From the crew, and from home",
+                     status=lm_epadd_unread, away=True)
+    gui_app_register("help", title="Help", icon="epadd.help", group="Mission", sort=90,
+                     description="How this console works", away=True)
+    gui_app_register("library", title="Library", icon="epadd.library", group="Mission",
+                     sort=80, description="Codex, lore and ship records", away=True)
+    gui_app_register("quest", title="Quests", icon="epadd.quests", group="Mission", sort=10,
+                     description="Jobs offered, taken and running", away=True)
+    gui_app_register("upgrade", title="Upgrades", icon="epadd.upgrades", group="Ship",
+                     sort=30, description="Installed and available refits")
+    gui_app_register("cargo", title="Cargo", icon="epadd.cargo", group="Ship", sort=10,
+                     consoles="engineering", description="Hold manifest")
+    gui_app_register("fabricate", title="Fabricate", icon="epadd.fabricate", group="Ship",
+                     sort=20, consoles="engineering",
+                     description="Beacons, parts, build queue")
+    gui_app_register("airwing", title="Airwing", icon="epadd.airwing", group="Ship", sort=40,
+                     consoles="hangar", description="Craft, pilots, sortie board")
+    gui_app_register("casino", title="Casino", icon="epadd.casino", group="Ship", sort=50,
+                     consoles="hangar", description="Table games and the bar tab")
+    gui_app_register("debug", title="Debug", icon="epadd.debug", group="Systems", sort=10,
+                     description="Dev build only")
+    gui_app_register("brain", title="Brain scan", icon="epadd.brain", group="Systems",
+                     sort=20, description="NPC state")
+    gui_app_register("mast", title="MAST", icon="epadd.mast", group="Systems", sort=30,
+                     description="Task list")
+
+
+== epadd_mail_pump ==
+--- pump
+    await delay_sim(15)
+    lm_epadd_deliver_mail()
+    jump pump
+
+
+//gui/tab/away_team
+    jump epadd_away_screen
+
+=== epadd_away_screen
+    gui_tab_back(CONSOLE_SELECT)
+    gui_away_screen()
+    # Beaming down or up changes who this console is, which changes every other app -
+    # so the same polled counter the inbox uses drives this one.
+    on change message_revision():
+        jump epadd_away_screen
+    await gui()
+    ->END
+
+
+//gui/tab/status
+    jump epadd_status_screen
+
+=== epadd_status_screen
+    gui_tab_back(CONSOLE_SELECT)
+    gui_status_screen()
+    # Same reason: a board of live readings that never repaints is a photograph.
+    on change message_revision():
+        jump epadd_status_screen
+    await gui()
+    ->END
+
+
+//gui/tab/messages
+    jump epadd_messages_screen
+
+=== epadd_messages_screen
+    gui_tab_back(CONSOLE_SELECT)
+    gui_messages_screen()
+    # A SIGNAL DOES NOT WAKE `await gui()`. The inbox is a live panel - mail arrives
+    # while it is open, and picking a different message has to redraw the pane beside
+    # the list - so it watches a counter, exactly as the away console watches
+    # away_seq(). message_revision() moves on new mail, an answer, a read mark and
+    # this console's own selection.
+    on change message_revision():
+        jump epadd_messages_screen
+    await gui()
+    ->END
+
+
+//gui/tab/epadd
+    jump epadd_home_screen
+
+=== epadd_home_screen
+    # The back button is how you leave the PADD, and the strip consumes the
+    # declaration every build - so this is re-declared here, like every tab screen.
+    gui_tab_back(CONSOLE_SELECT)
+    # Held as an OBJECT, never as an intermediate string: a string assignment is
+    # re-run through f-string formatting, so a brace in a name would raise here.
+    _epadd_ship = to_object(sbs.get_ship_of_client(client_id))
+    gui_app_home(ship_name=_epadd_ship.name if _epadd_ship is not None else "")
+    await gui()
+    ->END

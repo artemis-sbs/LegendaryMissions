@@ -1,0 +1,531 @@
+# [DETOCS](detocs)
+
+Mail from the Damcons Training and Officer Corps School. They want you to enroll.
+They have wanted this for some time. They will not be discouraged by anything that
+happens to you, and several of the things that happen to you will end up in the
+brochure.
+
+**This file is meant to be added to.** You do not need to read any code to write
+one - copy a message below and change the words. The rules are short:
+
+- `From:` is who it is from, and a message without one is ignored. Three senders
+  carry the whole pack: `DETOCS Admissions` (marketing, cheerful, knows too much
+  about you), `DETOCS Alumni Quarterly` (deadpan incident reports) and
+  `DETOCS Enrollment (do not reply)` (the ones with reply buttons, which is the
+  joke).
+- `To:` is a console - `helm`, `weapons`, `engineering`, `science`, `comms`,
+  `hangar` - or a comma list, or `*` for the whole crew. Leave it out and everyone
+  gets it.
+- A line like `- [Say this](a_key)` is a REPLY the crew can send back. Up to four
+  per message. Leave them out for a message that is only telling them something.
+  The `(a_key)` part names a heading in the Replies section below - that is what
+  DETOCS writes back. Add `; signal something_happened` on the end as well if the
+  mission needs to react to the press; DETOCS itself does not need one.
+- `After:` is how many seconds into the mission it arrives. Spread them out.
+- The heading is the subject line. The paragraph under the fence is the message.
+- **Land on the tagline.** Every message ends on "You should have gone to DETOCS"
+  or a conjugation of it. Do not vary it so far that it stops being the tagline.
+- Keep it under about 600 characters and keep it ASCII - the engine draws no curly
+  quotes, no em-dashes and no emoji, and a `^` is a line break to it.
+
+Do NOT add a `Kind:` field. It means something else in AMD and will quietly break
+the records under it.
+
+
+## [Mail](detocs_mail)
+
+The scheduled pack. Twenty-four messages spread across roughly twenty minutes of
+mission time.
+
+
+### [Your future is not currently guaranteed](detocs_welcome)
+---
+From: DETOCS Admissions
+After: 60
+---
+Our records show that you are, at this moment, aboard a starship in open space.
+Our records do not show a DETOCS certificate under your name. We are not saying
+that these two facts are related. We are saying that we have noticed them, and
+that we have a brochure.
+
+Damcons Training and Officer Corps School. Enrollment is open. It always is.
+
+You should have gone to DETOCS.
+
+
+### [Case study 41: an olfactory matter](detocs_case_smell)
+---
+From: DETOCS Alumni Quarterly
+After: 150
+---
+Crewman Vosk asked the bridge, twice, what that smell was. On the second asking he
+was informed that it was his hair.
+
+Records indicate a further nine seconds elapsed before Crewman Vosk connected this
+information to the sensation on his head, and four more before he connected either
+of those to the plasma conduit he had opened.
+
+Our Situational Awareness module covers all three connections in the first hour.
+
+He should have gone to DETOCS.
+
+
+### [Ninety percent of piloting](detocs_helm)
+---
+From: DETOCS Admissions
+To: helm
+After: 180
+---
+Piloting a starship is ninety percent not hitting things. Most pilots are self
+taught in that ninety percent and have never once thought about the other ten,
+which is the part where something has already gone wrong and the ship is still
+yours to fly.
+
+DETOCS teaches the ten percent. We do not teach the ninety. You appear to have
+that one covered.
+
+You should have gone to DETOCS.
+
+
+### [Case study 12: correct equipment, incorrect distribution](detocs_case_suit)
+---
+From: DETOCS Alumni Quarterly
+To: science
+After: 230
+---
+The compartment was flagged for radiation. One radiation suit was issued. The suit
+went, correctly, to the crew member performing the scan.
+
+The scan took nine minutes. Four other crew members waited in the compartment for
+the result. Our investigators were unable to establish what any of the four
+believed the suit was for.
+
+The scanner is fine. The scanner is our keynote speaker this year.
+
+The other four should have gone to DETOCS.
+
+
+### [Module 4 is now enrolling](detocs_engineering)
+---
+From: DETOCS Admissions
+To: engineering
+After: 260
+---
+Module 4: Which Warning Light Is The Important One. Eleven weeks. Students
+frequently ask why it takes eleven weeks. Students who have completed it do not
+ask.
+
+Also offered, as a separate evening course and for reasons our alumni understand
+immediately: Which Warning Light Was The Important One.
+
+Somebody on your ship should have gone to DETOCS.
+
+
+### [Case study 88: transit](detocs_case_ohcrap)
+---
+From: DETOCS Alumni Quarterly
+After: 300
+---
+Crewman Ost was observed crossing the length of the ship at a run, reading his
+ePADD, saying "oh crap" at intervals of roughly one second. He was passed by
+eleven colleagues. None of the eleven asked what was on the ePADD.
+
+We have the ePADD. It was open on this page.
+
+Eleven people should have gone to DETOCS.
+
+
+### [At what](detocs_weapons)
+---
+From: DETOCS Admissions
+To: weapons
+After: 340
+---
+Anyone can fire. Firing is a button and the button is clearly marked. DETOCS
+teaches you at what, in what order, and the one case on the syllabus where the
+correct answer is nothing at all.
+
+Graduates report a marked reduction in incidents later described in the record as
+"friendly".
+
+You should have gone to DETOCS.
+
+
+### [Case study 7: recovery of property](detocs_case_hand)
+---
+From: DETOCS Alumni Quarterly
+To: engineering
+After: 380
+---
+A crew member walked past the maintenance bay missing a hand. A second crew
+member, some moments later, looked down, picked up a hand, and announced "I found
+it."
+
+At no point in the recorded audio does anyone ask whose it is, how it got there,
+or what is still running in the maintenance bay.
+
+The hand was reattached. The bay was not addressed. Two weeks later the bay
+addressed itself.
+
+They should have gone to DETOCS.
+
+
+### [Every scan was fine](detocs_science)
+---
+From: DETOCS Admissions
+To: science
+After: 430
+---
+Every scan you have ever run came back fine. That is not a compliment, it is a
+sample size.
+
+One of them will not come back fine, and the entire value of a DETOCS certificate
+is the four seconds between you reading it and everybody else finding out.
+
+Four seconds is our most quoted figure. It is on the mug.
+
+You should have gone to DETOCS.
+
+
+### [Case study 63: a moment of clarity](detocs_case_movies)
+---
+From: DETOCS Alumni Quarterly
+To: comms
+After: 460
+---
+Ensign Rell remarked to a colleague that it was strange how, in films, a character
+who says something bad out loud immediately causes it. The colleague agreed. Rell
+elaborated. The colleague agreed again, less warmly.
+
+Two minutes later Ensign Rell looked at their ePADD and said, quote, "hmm, that's
+weird."
+
+We have no further records for the Ensign, the colleague, or the vessel.
+
+They should have gone to DETOCS.
+
+
+### [Saying the bad thing out loud](detocs_comms)
+---
+From: DETOCS Admissions
+To: comms
+After: 520
+---
+Module 9: Saying The Bad Thing Out Loud. Our most requested module and our least
+completed, which we mention in the interest of transparency and not at all as a
+warning.
+
+It covers when to say it, how to say it, and the considerable body of evidence
+regarding what happens to people who say it casually.
+
+You should have gone to DETOCS.
+
+
+### [Case study 29: an unstable coil, and a confession](detocs_case_yogurt)
+---
+From: DETOCS Alumni Quarterly
+To: engineering
+After: 560
+---
+Crewman Deel reported that a warning light had come on. Crewman Barra asked what
+it said. Crewman Deel read it aloud: the energy coils are unstable.
+
+Crewman Barra's next recorded statement, delivered at speed, was "I was the one
+who ate your last yogurt."
+
+Our reviewers note that this is technically correct prioritization given the
+circumstances, and that neither crewman took any action regarding the coils.
+
+They should have gone to DETOCS.
+
+
+### [Case study 3: brevity](detocs_case_spacesucks)
+---
+From: DETOCS Alumni Quarterly
+After: 640
+---
+The report from engineering was complete, accurate and timely: the core was
+melting down and would collapse in under a minute.
+
+The captain's response, entered in the log as that vessel's final command
+decision, was "space sucks."
+
+We do not disagree with the assessment. We would observe that it is not a
+procedure.
+
+He should have gone to DETOCS.
+
+
+### [You have been selected](detocs_unsubscribe)
+---
+From: DETOCS Enrollment (do not reply)
+After: 700
+---
+You have been selected for a place on our accelerated program. Selection was made
+on the basis of your service record, your current posting, and one further
+criterion we are not at liberty to discuss but which we would describe as recent.
+
+- [Send me the prospectus](detocs_opted_in)
+- [Unsubscribe](detocs_unsubscribed)
+- [How did you get this address](detocs_asked_how)
+
+
+### [Case study 55: a message for Steve](detocs_case_steve)
+---
+From: DETOCS Alumni Quarterly
+After: 720
+---
+With the energy core failing and seconds remaining, Crewman Idi turned to a
+colleague and asked her to do him a favor: tell Steve he always loved him.
+
+The colleague did not survive to tell Steve. Steve was, at the time, four meters
+away, and has since been very clear that he would have preferred to hear it
+directly.
+
+Our Communication Under Load module is two afternoons.
+
+He should have gone to DETOCS.
+
+
+### [Case study 19: an alternative career](detocs_case_lawyer)
+---
+From: DETOCS Alumni Quarterly
+After: 800
+---
+Engines gone, radiation across three decks, and Crewman Halle used the interval to
+observe aloud that she should have become a lawyer, as her mother had wanted.
+
+Her mother has since been contacted and wishes it noted that she did want that.
+
+DETOCS does not offer law. DETOCS offers the four minutes in which the engines are
+gone and the ship is not.
+
+She should have gone to DETOCS.
+
+
+### [One question, one minute](detocs_survey)
+---
+From: DETOCS Enrollment (do not reply)
+After: 830
+---
+A short survey. It takes under a minute, and your answers will be used to improve
+our services, by which we mean our targeting.
+
+Question one of one: has your vessel exploded in the last thirty days?
+
+- [No](detocs_survey_no)
+- [Yes](detocs_survey_yes)
+- [Not yet](detocs_survey_soon)
+
+
+### [Case study 71: the shirt](detocs_case_redshirt)
+---
+From: DETOCS Alumni Quarterly
+After: 890
+---
+Crewman Prek was asked, incredulously, whether he was serious. He confirmed that
+he was. He then stated, and we quote in full, that his shirt was not going to
+cause the plasma coils to overheat and cause the ship to explode.
+
+The ship's automated system began announcing that the plasma coils were
+overheating and that an explosion was imminent approximately four seconds later.
+
+We take no position on the shirt.
+
+He should have gone to DETOCS.
+
+
+### [Final notice, or the next one is](detocs_prospectus)
+---
+From: DETOCS Admissions
+After: 960
+---
+This is your final courtesy notice. There will be others.
+
+Our campus is entirely underground. This is for reasons connected to our teaching
+methods and unconnected to our safety record, which is available on request and is
+a matter of interpretation.
+
+Enrollment is open. Enrollment has never closed. Enrollment cannot close.
+
+You should have gone to DETOCS.
+
+
+### [Case study 34: percussive maintenance](detocs_case_percussive)
+---
+From: DETOCS Alumni Quarterly
+To: engineering
+After: 1000
+---
+Chief Ubali struck the panel. This is a recognized technique, it is on our
+syllabus, and it works.
+
+It was the wrong panel. It was three along from the right panel, and it had been
+the wrong panel for the entire eleven years of Chief Ubali's career, during which
+nothing had ever gone wrong badly enough for it to matter.
+
+Something eventually went wrong badly enough.
+
+He should have gone to DETOCS.
+
+
+### [Case study 22: a question asked once](detocs_case_airlock)
+---
+From: DETOCS Alumni Quarterly
+After: 1080
+---
+"Which one of these is the outside one" is a reasonable question. It is a question
+DETOCS actively encourages. It is on our posters.
+
+It is best asked before rather than during, and best asked of somebody who is
+listening.
+
+Crewman Vey asked it twice. Only the first one counted.
+
+She should have gone to DETOCS.
+
+
+### [Refer a colleague, receive a discount](detocs_referral)
+---
+From: DETOCS Enrollment (do not reply)
+To: engineering
+After: 1100
+---
+Refer a colleague and receive a discount on any module, redeemable at our campus,
+which you would first need to reach.
+
+Name one member of this crew you would not trust with a coolant loop. We will
+handle the rest, tactfully, in a letter that does not mention you.
+
+- [Name them](detocs_referred)
+- [I would trust all of them](detocs_refused)
+- [Name myself](detocs_self_referred)
+
+
+### [Case study 47: from memory](detocs_case_override)
+---
+From: DETOCS Alumni Quarterly
+After: 1160
+---
+Lieutenant Corr entered the emergency override from memory, under pressure,
+without hesitation, which our instructors would ordinarily hold up as an example.
+
+It was a locker combination. It was not even his locker.
+
+The system accepted six attempts before it stopped accepting attempts, and the
+record shows he was still confident on the fifth.
+
+He should have gone to DETOCS.
+
+
+### [Case study 66: the coffee](detocs_case_holdmy)
+---
+From: DETOCS Alumni Quarterly
+After: 1240
+---
+The last thing Crewman Adeyemi said to a colleague was "hold my coffee."
+
+The colleague held the coffee. The colleague is our student of the year. She did
+nothing else, touched nothing else, and returned the coffee, still at temperature,
+to an empty compartment.
+
+The coffee survived. We mention the coffee because the alternative is mentioning
+what did not.
+
+He should have gone to DETOCS.
+
+
+## [Taunts](detocs_taunts)
+
+Unscheduled mail, sent when something actually goes wrong on the ship. One heading
+per event, one line picked at random from the body. The heading is the subject
+line the crew sees.
+
+These are rate limited hard in code - a DETOCS ad after every hull hit is spam,
+one that arrives ninety seconds after you nearly died is the joke. Write them
+short; they are a punchline, not a case study.
+
+`{system}` is filled in for you where it appears.
+
+
+### [Our condolences, and our prospectus](destroyed)
+We saw. Everyone saw. Enrollment is open.
+This message was triggered automatically by a specific and very public event.
+There is nothing anyone can say at a time like this, except the following brochure.
+We are sorry for your loss. We are also, and we want to be honest with you, vindicated.
+
+
+### [A word while you still have hull](hull_low)
+Statistically, this is the point at which people start remembering our name.
+No pressure. Some pressure.
+We are not going to say anything. We are simply going to be here, in your inbox.
+
+
+### [Regarding your shields](shields_down)
+Module 2 covers this. Module 2 has a waiting list.
+Our records show your shields are down. Our records run a few seconds behind, so.
+This is exactly the sort of thing that comes up in the admissions interview.
+
+
+### [Your {system} is a teaching example now](system_damaged)
+We would like to use your {system} in next year's brochure.
+Somebody was trained on a {system} exactly like yours. Not on this ship, evidently.
+The {system} is repairable. The pattern of decisions that reached it is what we teach.
+
+
+### [Regarding the outcome](game_over)
+Whatever that was, there is a module about it.
+We would like it noted that this outcome is also entirely consistent with having gone to DETOCS.
+Debriefs are free. Enrollment is not.
+## [Replies](detocs_replies)
+
+What DETOCS writes back when the crew presses a reply button. One heading per
+signal name emitted by a reply line above; the heading is the subject, the body
+lines are the pool. These are not rate limited - the crew asked for them.
+
+
+### [Your prospectus is on its way](detocs_opted_in)
+Excellent. It is a large document and it is already in transit toward your vessel.
+Thank you. Your file has been moved from "prospect" to "committed", which is a one way move.
+
+
+### [Your preferences have been updated](detocs_unsubscribed)
+Your request has been received, logged, and filed. Filing is not the same as acting.
+You have been unsubscribed from this list and subscribed to the list of people who unsubscribe.
+Confirmed. You will receive no further messages, other than the ones we send.
+
+
+### [Regarding how we got this address](detocs_asked_how)
+From your posting record, which is public, and from your service history, which is not.
+That is a matter between DETOCS and the party who gave it to us, and we protect our sources.
+We would rather focus on you, and on your future, which is currently unaccredited.
+
+
+### [Thank you for your response](detocs_survey_no)
+Noted. We will ask again.
+"No" is the most common answer we receive, and the least durable.
+
+
+### [Thank you for your response](detocs_survey_yes)
+Noted, with sympathy, and with a brochure.
+Thank you for your candor. Candor is the first module.
+
+
+### [Thank you for your response](detocs_survey_soon)
+That is the most honest answer we have ever received and we would like to put it on a poster.
+Noted. We have moved you to the top of the list.
+
+
+### [Your referral has been received](detocs_referred)
+Thank you. They will hear from us, and they will not hear about you.
+Received. Our approach will be tactful, persistent, and impossible to trace back to you.
+
+
+### [Regarding your confidence in this crew](detocs_refused)
+That is a lovely thing to believe and we hope it survives the shift.
+Noted. We will keep the discount open for when it stops being true.
+
+
+### [Regarding your self referral](detocs_self_referred)
+Self awareness is the single strongest predictor of completion. Welcome.
+That is the correct answer, and you are the first person on this vessel to give it.

@@ -1,0 +1,79 @@
+#
+# DETOCS - Damcons Training and Officer Corps School.
+#
+# A mail pack for the ePADD. All of the words are in detocs.amd; a writer can add
+# to it without reading any of this. What is here is the loading, one pump, and
+# four routes that let the school notice when something goes wrong.
+#
+# Self-contained on purpose: it runs its own pump rather than relying on the one
+# in the `consoles` addon, so a mission can take DETOCS without taking LM's whole
+# console set. Two pumps draining the same pile is harmless - message_deliver_due
+# removes what it delivers, so nothing double-sends.
+#
+# It does NOT gate on EPADD_ENABLED. Addon load order is non-deterministic and
+# consoles/epadd.mast assigns that flag at ITS top level too, so a read from here
+# during top level is a race. With the ePADD off the mail simply accumulates
+# unread, which costs nothing.
+#
+provides detocs
+
+import detocs.py
+
+# Load once. A top-level `shared` assignment runs once (the server runs the top
+# level first), but the statements AROUND it run for every client - so the load
+# and the pump are guarded rather than merely placed here.
+default shared DETOCS_LOADED = False
+if not DETOCS_LOADED:
+    shared DETOCS_LOADED = True
+    # Read from the .mast, never from Python: media_read_relative_file resolves
+    # against the addon the calling label came from, an addon ships as its own
+    # zip, and __file__ does not exist in a MAST-loaded module. The text goes
+    # straight into the call with no intermediate variable - a MAST string
+    # assignment is re-run through f-string formatting and a `{` in the content
+    # would be a syntax error.
+    shared DETOCS_DOC = document_get_amd_file(None, "DETOCS", content=media_read_relative_file("detocs.amd"))
+    message_load_amd(DETOCS_DOC)
+    detocs_configure(DETOCS_DOC)
+    task_schedule(detocs_pump)
+
+
+== detocs_pump ==
+--- pump
+    await delay_sim(20)
+    message_deliver_due()
+    jump pump
+
+
+# The school notices. All of these are arbitrated in detocs.py - a cooldown, a
+# mission cap of four, and one shot each for the events that only happen once.
+# `//shared/signal` because sending mail is work, not display: a `//signal` route
+# would run it once per connected console.
+
+//shared/signal/player_ship_destroyed
+    detocs_taunt("destroyed")
+
+//shared/signal/show_game_results
+    detocs_taunt("game_over")
+
+//damage/object
+    detocs_taunt_damage(DAMAGE_TARGET_ID)
+
+//damage/internal
+    detocs_taunt_internal(DAMAGE_ORIGIN_ID, EVENT.sub_tag)
+
+
+# And the school writes back. Every reply button in detocs.amd points at a heading
+# in the `detocs_replies` section, and that heading is what DETOCS sends back - so
+# a writer changes what the school says without touching this file.
+#
+# ONE route, on the library's own reply signal, because that is the only signal
+# that carries who pressed the button. A choice's own `; signal name` outcome is
+# emitted with NO data (amd_dialogue.dialogue_apply), so MESSAGE_CONSOLE would not
+# exist in a route named after one - and a failing expression stops the command,
+# which would take the whole handler with it.
+#
+# detocs_reply ignores a target it does not recognize, so LM's own mail replies
+# pass through it untouched. Unsubscribing does not work. That is the joke.
+
+//shared/signal/message_reply
+    detocs_reply(MESSAGE_TARGET, MESSAGE_CONSOLE, MESSAGE_FROM)

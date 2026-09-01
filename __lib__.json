@@ -37,7 +37,8 @@
         "director",
         "avatar_editor",
         "crew",
-        "races"
+        "races",
+        "detocs"
     ],
     "zip": [
         "media"

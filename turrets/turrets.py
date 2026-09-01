@@ -27,7 +27,8 @@ from sbs_utils.procedural.mount import mount_ring
 from sbs_utils.procedural.turret import turret_make
 
 # --- HOT FIX 2026-08-27: turrets are OFF ------------------------------------
-# Set True to restore them, together with ship_data.EXTRA_SHIP_DATA_DISABLED = False.
+# Set True to restore them, together with `EXTRA_SHIP_DATA: true` in the mission's
+# settings or profile - the loader must be on FIRST or a spawn crashes the engine.
 #
 # Turrets are inseparable from extra ship data: every hull below
 # (lm_turret_beam/heavy/mount/crate) exists ONLY in extraShipData_turrets.yaml, and
