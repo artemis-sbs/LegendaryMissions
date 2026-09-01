@@ -39,7 +39,8 @@
         "artemis-sbs.LegendaryMissions.director.v1.4.0.mastlib",
         "artemis-sbs.LegendaryMissions.avatar_editor.v1.4.0.mastlib",
         "artemis-sbs.LegendaryMissions.crew.v1.4.0.mastlib",
-        "artemis-sbs.LegendaryMissions.races.v1.4.0.mastlib"
+        "artemis-sbs.LegendaryMissions.races.v1.4.0.mastlib",
+        "artemis-sbs.LegendaryMissions.detocs.v1.4.0.mastlib"
     ],
     "shared_media": [
         "artemis-sbs.LegendaryMissions.media.v1.4.0.zip"

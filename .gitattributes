@@ -82,3 +82,4 @@ director/             export-ignore
 avatar_editor/        export-ignore
 races/                export-ignore
 crew/                 export-ignore
+detocs/               export-ignore
