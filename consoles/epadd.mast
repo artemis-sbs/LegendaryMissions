@@ -17,30 +17,48 @@ shared EPADD_ENABLED = SETTINGS.get("EPADD_ENABLED", False)
 if EPADD_ENABLED:
     gui_app_mode_default(True)
 
-    # Presentation for the tabs LM ships. Each one names an icon; an unknown icon
-    # name draws nothing and says so once, so these are safe before the sheet ships.
-    gui_app_register("help", title="Help", icon="help", group="Mission", sort=90,
+    # Claim the app icon NAMES for our own sheet - 4 x 4 cells of 128px, white on
+    # transparent like the engine's own, so `color:` still does all the tinting. The
+    # built-in sheet was tried first and is game-icons.net art: Help is a pointing
+    # hand, Airwing an unreadable blob, and `wanted` has the word baked into the
+    # glyph. Nothing that DRAWS an icon knows where it came from, so a mod can
+    # re-point any of these names at its own art and every tile follows.
+    #
+    # NAMESPACED, deliberately. The icon registry is one flat namespace and these are
+    # claims on it: a bare `brain` would take over the built-in glyph (index 5) for
+    # everything else that draws it, and a bare `cargo`/`help`/`debug` would be an
+    # addon claiming a word every other addon might want. Dotted names are the
+    # convention the registry already uses for meanings (`quest.job`, `list.expand`).
+    gui_icon_add_atlas_grid(media_shared("epadd/icons"), 4, 4, cell=128, names=[
+        "epadd.cargo", "epadd.fabricate", "epadd.upgrades", "epadd.quests",
+        "epadd.library", "epadd.help", "epadd.airwing", "epadd.casino",
+        "epadd.damage", "epadd.hangar", "epadd.comms_log", "epadd.standings",
+        "epadd.debug", "epadd.mast", "epadd.brain", "epadd.coverage"])
+
+    # Presentation for the tabs LM ships. An unknown icon name draws nothing and says
+    # so once, so an app can be registered before anyone has drawn its glyph.
+    gui_app_register("help", title="Help", icon="epadd.help", group="Mission", sort=90,
                      description="How this console works")
-    gui_app_register("library", title="Library", icon="library", group="Mission",
+    gui_app_register("library", title="Library", icon="epadd.library", group="Mission",
                      sort=80, description="Codex, lore and ship records")
-    gui_app_register("quest", title="Quests", icon="quests", group="Mission", sort=10,
+    gui_app_register("quest", title="Quests", icon="epadd.quests", group="Mission", sort=10,
                      description="Jobs offered, taken and running")
-    gui_app_register("upgrade", title="Upgrades", icon="upgrades", group="Ship",
+    gui_app_register("upgrade", title="Upgrades", icon="epadd.upgrades", group="Ship",
                      sort=30, description="Installed and available refits")
-    gui_app_register("cargo", title="Cargo", icon="cargo", group="Ship", sort=10,
+    gui_app_register("cargo", title="Cargo", icon="epadd.cargo", group="Ship", sort=10,
                      consoles="engineering", description="Hold manifest")
-    gui_app_register("fabricate", title="Fabricate", icon="fabricate", group="Ship",
+    gui_app_register("fabricate", title="Fabricate", icon="epadd.fabricate", group="Ship",
                      sort=20, consoles="engineering",
                      description="Beacons, parts, build queue")
-    gui_app_register("airwing", title="Airwing", icon="airwing", group="Ship", sort=40,
+    gui_app_register("airwing", title="Airwing", icon="epadd.airwing", group="Ship", sort=40,
                      consoles="hangar", description="Craft, pilots, sortie board")
-    gui_app_register("casino", title="Casino", icon="casino", group="Ship", sort=50,
+    gui_app_register("casino", title="Casino", icon="epadd.casino", group="Ship", sort=50,
                      consoles="hangar", description="Table games and the bar tab")
-    gui_app_register("debug", title="Debug", icon="debug", group="Systems", sort=10,
+    gui_app_register("debug", title="Debug", icon="epadd.debug", group="Systems", sort=10,
                      description="Dev build only")
-    gui_app_register("brain", title="Brain scan", icon="brain", group="Systems",
+    gui_app_register("brain", title="Brain scan", icon="epadd.brain", group="Systems",
                      sort=20, description="NPC state")
-    gui_app_register("mast", title="MAST", icon="mast", group="Systems", sort=30,
+    gui_app_register("mast", title="MAST", icon="epadd.mast", group="Systems", sort=30,
                      description="Task list")
 
 
