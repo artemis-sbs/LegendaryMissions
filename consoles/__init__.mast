@@ -16,3 +16,7 @@ import layout_widgets.mast
 
 import debug.mast #want debug tabs left of upgrade
 import brain_scan.mast
+
+# Last: it only adds a route and registrations, so it cannot move the classic
+# strip's order, which is load order.
+import epadd.mast

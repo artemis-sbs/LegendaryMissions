@@ -1,0 +1,59 @@
+#
+# ePADD - one console tab that holds the apps.
+#
+# The library owns the registry and the home screen; this is the route that reaches
+# it, because sbs_utils ships no .mast of its own. Four lines of it are the stub every
+# mission needs; the rest is the switch and the app registrations.
+#
+# OFF BY DEFAULT. Set EPADD_ENABLED in settings.yaml (or a profile) to try it. With it
+# off, nothing here does anything and every console draws the strip it always has.
+#
+# NOTHING DISAPPEARS WHEN IT IS ON. A tab no one registered as an app is adopted from
+# what the console enabled, and shows under "Other" - so an addon that has never heard
+# of ePADD keeps working, and the registrations below are presentation, not plumbing.
+#
+shared EPADD_ENABLED = SETTINGS.get("EPADD_ENABLED", False)
+
+if EPADD_ENABLED:
+    gui_app_mode_default(True)
+
+    # Presentation for the tabs LM ships. Each one names an icon; an unknown icon
+    # name draws nothing and says so once, so these are safe before the sheet ships.
+    gui_app_register("help", title="Help", icon="help", group="Mission", sort=90,
+                     description="How this console works")
+    gui_app_register("library", title="Library", icon="library", group="Mission",
+                     sort=80, description="Codex, lore and ship records")
+    gui_app_register("quest", title="Quests", icon="quests", group="Mission", sort=10,
+                     description="Jobs offered, taken and running")
+    gui_app_register("upgrade", title="Upgrades", icon="upgrades", group="Ship",
+                     sort=30, description="Installed and available refits")
+    gui_app_register("cargo", title="Cargo", icon="cargo", group="Ship", sort=10,
+                     consoles="engineering", description="Hold manifest")
+    gui_app_register("fabricate", title="Fabricate", icon="fabricate", group="Ship",
+                     sort=20, consoles="engineering",
+                     description="Beacons, parts, build queue")
+    gui_app_register("airwing", title="Airwing", icon="airwing", group="Ship", sort=40,
+                     consoles="hangar", description="Craft, pilots, sortie board")
+    gui_app_register("casino", title="Casino", icon="casino", group="Ship", sort=50,
+                     consoles="hangar", description="Table games and the bar tab")
+    gui_app_register("debug", title="Debug", icon="debug", group="Systems", sort=10,
+                     description="Dev build only")
+    gui_app_register("brain", title="Brain scan", icon="brain", group="Systems",
+                     sort=20, description="NPC state")
+    gui_app_register("mast", title="MAST", icon="mast", group="Systems", sort=30,
+                     description="Task list")
+
+
+//gui/tab/epadd
+    jump epadd_home_screen
+
+=== epadd_home_screen
+    # The back button is how you leave the PADD, and the strip consumes the
+    # declaration every build - so this is re-declared here, like every tab screen.
+    gui_tab_back(CONSOLE_SELECT)
+    # Held as an OBJECT, never as an intermediate string: a string assignment is
+    # re-run through f-string formatting, so a brace in a name would raise here.
+    _epadd_ship = to_object(sbs.get_ship_of_client(client_id))
+    gui_app_home(ship_name=_epadd_ship.name if _epadd_ship is not None else "")
+    await gui()
+    ->END
