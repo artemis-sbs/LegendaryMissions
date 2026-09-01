@@ -96,6 +96,9 @@ if EPADD_ENABLED:
 === epadd_status_screen
     gui_tab_back(CONSOLE_SELECT)
     gui_status_screen()
+    # Same reason: a board of live readings that never repaints is a photograph.
+    on change message_revision():
+        jump epadd_status_screen
     await gui()
     ->END
 
@@ -106,6 +109,13 @@ if EPADD_ENABLED:
 === epadd_messages_screen
     gui_tab_back(CONSOLE_SELECT)
     gui_messages_screen()
+    # A SIGNAL DOES NOT WAKE `await gui()`. The inbox is a live panel - mail arrives
+    # while it is open, and picking a different message has to redraw the pane beside
+    # the list - so it watches a counter, exactly as the away console watches
+    # away_seq(). message_revision() moves on new mail, an answer, a read mark and
+    # this console's own selection.
+    on change message_revision():
+        jump epadd_messages_screen
     await gui()
     ->END
 
