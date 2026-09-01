@@ -19,4 +19,5 @@ import brain_scan.mast
 
 # Last: it only adds a route and registrations, so it cannot move the classic
 # strip's order, which is load order.
+import epadd.py
 import epadd.mast

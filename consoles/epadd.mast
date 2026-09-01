@@ -29,14 +29,35 @@ if EPADD_ENABLED:
     # everything else that draws it, and a bare `cargo`/`help`/`debug` would be an
     # addon claiming a word every other addon might want. Dotted names are the
     # convention the registry already uses for meanings (`quest.job`, `list.expand`).
-    gui_icon_add_atlas_grid(media_shared("epadd/icons"), 4, 4, cell=128, names=[
+    gui_icon_add_atlas_grid(media_shared("epadd/icons"), 4, 5, cell=128, names=[
         "epadd.cargo", "epadd.fabricate", "epadd.upgrades", "epadd.quests",
         "epadd.library", "epadd.help", "epadd.airwing", "epadd.casino",
         "epadd.damage", "epadd.hangar", "epadd.comms_log", "epadd.standings",
-        "epadd.debug", "epadd.mast", "epadd.brain", "epadd.coverage"])
+        "epadd.debug", "epadd.mast", "epadd.brain", "epadd.coverage",
+        "epadd.messages", "epadd.status"])
 
     # Presentation for the tabs LM ships. An unknown icon name draws nothing and says
     # so once, so an app can be registered before anyone has drawn its glyph.
+    # The badge is what a crew reads WITHOUT opening anything - the whole reason the
+    # apps that carry live state do not each need a panel on the bridge.
+    # Load this addon's mail once. A top-level `shared` assignment runs once (the
+    # server runs the top level first), but the statements around it run for EVERY
+    # client - so the pump is guarded rather than merely placed here.
+    default shared EPADD_MAIL_LOADED = False
+    if not EPADD_MAIL_LOADED:
+        shared EPADD_MAIL_LOADED = True
+        message_load_amd(document_get_amd_file(None, "Messages", content=media_read_relative_file("messages.amd")))
+        task_schedule(epadd_mail_pump)
+
+    # The board: the same badges the tiles show, gathered and larger. An app with
+    # nothing to report is left out, so this stays a board rather than a second
+    # launcher.
+    gui_app_register("status", title="Status", icon="epadd.status", group="Mission",
+                     sort=1, description="What the ship is telling you",
+                     status=lm_epadd_reporting)
+    gui_app_register("messages", title="Messages", icon="epadd.messages",
+                     group="Mission", sort=5, description="From the crew, and from home",
+                     status=lm_epadd_unread)
     gui_app_register("help", title="Help", icon="epadd.help", group="Mission", sort=90,
                      description="How this console works")
     gui_app_register("library", title="Library", icon="epadd.library", group="Mission",
@@ -60,6 +81,33 @@ if EPADD_ENABLED:
                      sort=20, description="NPC state")
     gui_app_register("mast", title="MAST", icon="epadd.mast", group="Systems", sort=30,
                      description="Task list")
+
+
+== epadd_mail_pump ==
+--- pump
+    await delay_sim(15)
+    lm_epadd_deliver_mail()
+    jump pump
+
+
+//gui/tab/status
+    jump epadd_status_screen
+
+=== epadd_status_screen
+    gui_tab_back(CONSOLE_SELECT)
+    gui_status_screen()
+    await gui()
+    ->END
+
+
+//gui/tab/messages
+    jump epadd_messages_screen
+
+=== epadd_messages_screen
+    gui_tab_back(CONSOLE_SELECT)
+    gui_messages_screen()
+    await gui()
+    ->END
 
 
 //gui/tab/epadd
