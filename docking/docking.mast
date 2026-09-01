@@ -328,7 +328,11 @@ surface_distance: 1000
         # console-tier claim re-taken every second would fight helm's own camera
         # control for the whole orbit: helm presses FRONT, and docking takes the
         # screen back a second later, forever.
-        viewscreen_set(DOCKING_PLAYER_ID, "orbit", DOCKING_NPC_ID, owner="docking")
+        # "establishing", not "orbit". `orbit` swings the lens around the BODY, so the
+        # ship taking orbit is not in its own orbit shot; this frames the ship WITH the
+        # world behind it, beside it, or below it, cutting between those angles the way
+        # the reference shots do.
+        viewscreen_set(DOCKING_PLAYER_ID, "establishing", DOCKING_NPC_ID, owner="docking")
         signal_emit("ship_orbiting", {"ORBIT_SHIP_ID": DOCKING_PLAYER_ID, "ORBIT_BODY_ID": DOCKING_NPC_ID})
 
 +++ refit
