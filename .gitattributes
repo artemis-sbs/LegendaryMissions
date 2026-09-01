@@ -45,6 +45,7 @@ mkdocs/         export-ignore
 # __lib__.json - it is the single source of truth for what gets packaged.
 #
 # maps/ is deliberately NOT here: it is the mission's own content and is not packaged.
+away/                 export-ignore
 autoplay/             export-ignore
 ai/                   export-ignore
 comms/                export-ignore

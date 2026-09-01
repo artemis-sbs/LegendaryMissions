@@ -3,6 +3,7 @@
         "artemis-sbs.sbs_utils.v1.4.0.sbslib"
     ],
     "mastlib": [
+        "artemis-sbs.LegendaryMissions.away.v1.4.0.mastlib",
         "artemis-sbs.LegendaryMissions.autoplay.v1.4.0.mastlib",
         "artemis-sbs.LegendaryMissions.ai.v1.4.0.mastlib",
         "artemis-sbs.LegendaryMissions.comms.v1.4.0.mastlib",

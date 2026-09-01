@@ -1,6 +1,7 @@
 {
     "version": "v1.4.0",
     "mastlib": [
+        "away",
         "autoplay",
         "ai",
         "comms",
