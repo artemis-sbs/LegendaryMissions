@@ -57,13 +57,13 @@ if EPADD_ENABLED:
                      status=lm_epadd_reporting)
     gui_app_register("messages", title="Messages", icon="epadd.messages",
                      group="Mission", sort=5, description="From the crew, and from home",
-                     status=lm_epadd_unread)
+                     status=lm_epadd_unread, away=True)
     gui_app_register("help", title="Help", icon="epadd.help", group="Mission", sort=90,
-                     description="How this console works")
+                     description="How this console works", away=True)
     gui_app_register("library", title="Library", icon="epadd.library", group="Mission",
-                     sort=80, description="Codex, lore and ship records")
+                     sort=80, description="Codex, lore and ship records", away=True)
     gui_app_register("quest", title="Quests", icon="epadd.quests", group="Mission", sort=10,
-                     description="Jobs offered, taken and running")
+                     description="Jobs offered, taken and running", away=True)
     gui_app_register("upgrade", title="Upgrades", icon="epadd.upgrades", group="Ship",
                      sort=30, description="Installed and available refits")
     gui_app_register("cargo", title="Cargo", icon="epadd.cargo", group="Ship", sort=10,

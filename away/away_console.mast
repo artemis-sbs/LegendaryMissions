@@ -36,6 +36,16 @@
     # on every scene change.
     gui_console_enter(client_id, "away")
 
+    # The way back from the PADD. In ePADD mode the strip is the back button plus
+    # ePADD, and the back button is whatever __back_tab__ names - so without this the
+    # away team could open the PADD and not get out of it.
+    #
+    # Only in that mode: on the classic strip this screen has always had no tabs at
+    # all, and declaring one would put a lone "away" button on it that returns to the
+    # screen it is already on.
+    if gui_app_mode_is_on():
+        gui_tab_back("away")
+
     # WHO THIS CONSOLE IS SHOWING. One at a time, even when it speaks for several: four
     # characters' readings side by side is a dozen buttons and no sense of who is doing
     # what. The roster listbox picks; this is the detail panel acting on that selection.
@@ -325,3 +335,12 @@
             gui_reroute_client(away_ui_late, away_ui_screen)
         log(f"away: console {away_ui_late} joined late", "away")
     jump away_ui_watch_loop
+
+
+#############################################################################
+# The away console as a tab, so ePADD's strip has somewhere to go back to.
+# Not an @console/away: it must not appear in the console picker - a player
+# does not choose to be on the surface, a mission puts them there.
+#############################################################################
+//gui/tab/away
+    jump away_ui_screen
