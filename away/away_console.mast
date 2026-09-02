@@ -2,15 +2,21 @@
 #
 # RETIRED FOR ePADD MISSIONS. The PADD is the away UI now: you carry it down with you,
 # the Away Team app is the way there and back, and the beat plus its replies arrive in
-# Messages. Everything below runs only when `EPADD_ENABLED` is off, so a mission that
-# predates the PADD - or one that deliberately turns it off - keeps exactly the away
-# play it always had.
+# Messages.
 #
-# The retirement is a CONDITION, not a deletion, for two reasons. ePADD is opt-in and a
-# mission with it off would otherwise have no away UI at all; and this file is the only
-# implementation of the shared main-screen view (`away_ui_main_screen`), which the PADD
-# model has no answer for - the main screen is the room's, not one person's, so it is
-# the one surface a personal device cannot replace.
+# GATED ON `AWAY_LEGACY_CONSOLE`, default off. This used to read
+# `if not gui_app_mode_is_on()` - "run only when ePADD is off" - and there is no such
+# state any more: apps are `//gui/app` routes, so the PADD is always on and that
+# condition would be permanently false. A switch of its own keeps the path REACHABLE
+# for a mission that wants the old away play, instead of leaving dead code behind a
+# condition nothing can satisfy.
+#
+# STILL OPEN, and worth knowing: this file is the only implementation of the shared
+# main-screen away view (`away_ui_main_screen`), and the PADD model has no answer for
+# it - the main screen is the room's, not one person's, so a personal device cannot
+# replace it. It is reached only from the `away_begin` route below, so in an ePADD
+# mission the main screen has no away view at all. That gap predates this change; the
+# change only makes it permanent unless a mission turns the legacy path back on.
 #
 # What replaced what:
 #
@@ -229,7 +235,7 @@
 #
 # The mission opens the beat FIRST (`away_scene_begin`) and then emits this, so the very
 # first build already has a line to draw.
-//shared/signal/away_begin if not gui_app_mode_is_on()
+//shared/signal/away_begin if SETTINGS.get("AWAY_LEGACY_CONSOLE", False)
     # `default`, because these arrive as task variables from the caller's data dict and
     # the optional ones are simply ABSENT when nobody passed them - not None. Reading an
     # absent name is a NameError, and a failing expression stops the command, so the
@@ -356,5 +362,5 @@
 # Not an @console/away either way: it must not appear in the console picker - a
 # player does not choose to be on the surface, a mission puts them there.
 #############################################################################
-//gui/tab/away if not gui_app_mode_is_on()
+//gui/tab/away if SETTINGS.get("AWAY_LEGACY_CONSOLE", False)
     jump away_ui_screen

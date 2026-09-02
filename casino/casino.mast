@@ -14,7 +14,7 @@ default shared CASINO_ENABLED = True
 # from a `//gui/hangar` route (the hangar console's activation hook) - LegendaryMissions
 # does this in maps/hangar_tabs.mast. See GUI.md "Adding a console tab". (This replaces
 # the old gui_tab_add_top + `CONSOLE_SELECT == "hangar"` gate.)
-//gui/tab/casino if CASINO_ENABLED
+//gui/app/casino if CASINO_ENABLED
     jump show_casino
 
 === show_casino ==

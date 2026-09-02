@@ -12,9 +12,10 @@
 default CONSOLE_SELECT = ""   # exists at startup
 gui_tab_add_top("upgrade")
 
-//gui/tab/upgrade
+//gui/app/upgrade
 --- repaint
-    gui_tab_back(CONSOLE_SELECT)
+    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
+    # one Back to the tab you came from, and the status area goes home.
     gui_activate_console("upgrade")
     ship_id = sbs.get_ship_of_client(client_id)
     ctype = get_inventory_value(client_id, "CONSOLE_TYPE", "")

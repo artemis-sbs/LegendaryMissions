@@ -1,14 +1,14 @@
 gui_tab_add_top("help")
 
 
-//gui/tab/help
+//gui/app/help
     # This way the file in an addon will work
     document_content = amd_read_content("help_docs.amd")
     document_root = document_get_amd_file(None, "Overview", content=document_content)
     document = document_flatten(document_root)
     document_type = "help"
     document_topic = CONSOLE_SELECT.lower()
-    document_back_tab = CONSOLE_SELECT
+    # No back tab: this is an ePADD app, and the PADD's strip owns the one Back.
 
     jump document_screen
 

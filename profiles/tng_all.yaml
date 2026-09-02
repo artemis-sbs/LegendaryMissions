@@ -30,7 +30,6 @@ media:
         - Cosmos-TNG-Mod.media
 
 MUSIC_SELECT: "TNG_Music"
-EPADD_ENABLED: true
 # The TNG hulls are declared with ship_data add_extra, which is OFF by default
 # because a v1.3.4 engine has no working path for it. The party runs v1.3.7.
 EXTRA_SHIP_DATA: true

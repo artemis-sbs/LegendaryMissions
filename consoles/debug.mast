@@ -8,7 +8,7 @@ if is_dev_build():
 #  gui_active_path("console/helm, console/comms, console/engineering, console/science, console/weapons" )
 
 
-//gui/tab/debug
+//gui/app/debug
     jump debug_screen
 
 //gui/tab/mast
@@ -16,7 +16,8 @@ if is_dev_build():
 
 
 === debug_screen
-    gui_tab_back(CONSOLE_SELECT)
+    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
+    # one Back to the tab you came from, and the status area goes home.
     gui_tab_enable("brain,mast")
 
     gui_section(style="area:10,15,35,100;row-height:35px;")

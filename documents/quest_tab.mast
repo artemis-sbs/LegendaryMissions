@@ -30,9 +30,10 @@ if QUEST_TAB_ENABLED:
         gui_image_add_atlas("test2", media_shared("operator"), 645, 570, 950, 820)
 
 
-//gui/tab/quest if QUEST_TAB_ENABLED and quest_is_console_enabled(CONSOLE_SELECT)
+//gui/app/quest if QUEST_TAB_ENABLED and quest_is_console_enabled(CONSOLE_SELECT)
 --- repaint
-    gui_tab_back(CONSOLE_SELECT)
+    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
+    # one Back to the tab you came from, and the status area goes home.
     gui_activate_console("quest")
 
     ship_id = sbs.get_ship_of_client(client_id)

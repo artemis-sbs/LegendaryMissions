@@ -10,11 +10,11 @@ default CONSOLE_SELECT = "" # Make sure variable exist at startup
 # the RENDERER and the quest log does not inherit anybody's fiction - and gets no empty
 # Library either.
 
-//gui/tab/library
+//gui/app/library
     document_root = lore_document("Library")
     document = document_flatten(document_root)
     document_type = "Library"
     document_topic = CONSOLE_SELECT.lower()
-    document_back_tab = CONSOLE_SELECT
+    # No back tab: this is an ePADD app, and the PADD's strip owns the one Back.
 
     jump document_screen

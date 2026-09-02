@@ -196,7 +196,8 @@ hangar_get_craft_data("terran")
     gui_activate_console("hangar")
     gui_tab_enable_top()
 
-    gui_tab_back(CONSOLE_SELECT)
+    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
+    # one Back to the tab you came from, and the status area goes home.
     # Live Air Wing roster as a top tab next to the hangar (see //gui/tab/airwing).
     gui_tab_enable("airwing")
 
@@ -387,13 +388,14 @@ hangar_get_craft_data("terran")
 
 # Air Wing roster as a hangar top tab (the alternate to the cockpit info-panel
 # page). Reuses the same live roster data/template as the end screen.
-//gui/tab/airwing
+//gui/app/airwing
     jump show_airwing
 
 === show_airwing ==
     gui_activate_console("hangar")
     gui_tab_enable_top()
-    gui_tab_back(CONSOLE_SELECT)
+    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
+    # one Back to the tab you came from, and the status area goes home.
     gui_tab_enable("airwing")
 
     gui_section(style="area: 10, 6, 90, 16;")

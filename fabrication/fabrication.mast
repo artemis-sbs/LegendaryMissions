@@ -51,11 +51,12 @@ fabrication_load_recipes_amd(document_get_amd_file(None, "Recipes", content=medi
 # The tab CONTENT. Registered by existing as a //gui/tab route; a mission ENABLES it
 # per console (gui_tab_add_top is intentionally NOT used - it adds the tab globally and
 # is fragile). Lists craftable items; Fabricate spends salvage and starts the build.
-//gui/tab/fabrication
+//gui/app/fabrication
     jump fabrication_screen
 
 === fabrication_screen
-    gui_tab_back(CONSOLE_SELECT)
+    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
+    # one Back to the tab you came from, and the status area goes home.
     ship_id = sbs.get_ship_of_client(client_id)
     gui_section(style="area: 5, 12, 95, 100; row-height: 2.2em;")
     _sal = get_inventory_value(ship_id, "salvage", 0)
