@@ -1,4 +1,24 @@
-# The away team's consoles.
+# The away team's consoles - THE LEGACY PATH.
+#
+# RETIRED FOR ePADD MISSIONS. The PADD is the away UI now: you carry it down with you,
+# the Away Team app is the way there and back, and the beat plus its replies arrive in
+# Messages. Everything below runs only when `EPADD_ENABLED` is off, so a mission that
+# predates the PADD - or one that deliberately turns it off - keeps exactly the away
+# play it always had.
+#
+# The retirement is a CONDITION, not a deletion, for two reasons. ePADD is opt-in and a
+# mission with it off would otherwise have no away UI at all; and this file is the only
+# implementation of the shared main-screen view (`away_ui_main_screen`), which the PADD
+# model has no answer for - the main screen is the room's, not one person's, so it is
+# the one surface a personal device cannot replace.
+#
+# What replaced what:
+#
+#     away_ui_screen        -> the ePADD Away Team app + Messages
+#     away_ui_beam_up       -> away_go_up (library)
+#     //shared/signal/away_begin -> away_invite / away_invite_crew
+#     away_ui_watch         -> not needed: a late console opens Away Team and joins
+#
 #
 # Beaming down turns the bridge into a landing party: every console except the main
 # screen becomes ONE character, with that character's face, job and - the whole point -
@@ -36,15 +56,6 @@
     # on every scene change.
     gui_console_enter(client_id, "away")
 
-    # The way back from the PADD. In ePADD mode the strip is the back button plus
-    # ePADD, and the back button is whatever __back_tab__ names - so without this the
-    # away team could open the PADD and not get out of it.
-    #
-    # Only in that mode: on the classic strip this screen has always had no tabs at
-    # all, and declaring one would put a lone "away" button on it that returns to the
-    # screen it is already on.
-    if gui_app_mode_is_on():
-        gui_tab_back("away")
 
     # WHO THIS CONSOLE IS SHOWING. One at a time, even when it speaks for several: four
     # characters' readings side by side is a dozen buttons and no sense of who is doing
@@ -218,7 +229,7 @@
 #
 # The mission opens the beat FIRST (`away_scene_begin`) and then emits this, so the very
 # first build already has a line to draw.
-//shared/signal/away_begin
+//shared/signal/away_begin if not gui_app_mode_is_on()
     # `default`, because these arrive as task variables from the caller's data dict and
     # the optional ones are simply ABSENT when nobody passed them - not None. Reading an
     # absent name is a NameError, and a failing expression stops the command, so the
@@ -338,9 +349,12 @@
 
 
 #############################################################################
-# The away console as a tab, so ePADD's strip has somewhere to go back to.
-# Not an @console/away: it must not appear in the console picker - a player
-# does not choose to be on the surface, a mission puts them there.
+# The legacy away console as a tab. Gone in ePADD mode - the PADD is the away
+# UI there, and leaving this registered put a second, competing away screen one
+# button away from the one the crew are actually using.
+#
+# Not an @console/away either way: it must not appear in the console picker - a
+# player does not choose to be on the surface, a mission puts them there.
 #############################################################################
-//gui/tab/away
+//gui/tab/away if not gui_app_mode_is_on()
     jump away_ui_screen
