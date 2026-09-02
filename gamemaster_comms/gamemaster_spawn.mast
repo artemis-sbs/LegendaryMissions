@@ -121,7 +121,14 @@
 
 
 //comms/gamemaster/spawn/fleet if has_role(COMMS_ORIGIN_ID, "gamemaster")
-    races = sorted(["Kralien", "Torgoth","Arvonian", "Skaraan", "Ximni", "Pirate"])
+    # Was a literal list of the six stock races, which is wrong in both directions in a
+    # total conversion: it offered Skaraan in a game whose NPC_RACES excludes them, and
+    # never offered the factions a mod added. `race_npc_list` is three gates at once - in
+    # the ship table, enabled in NPC_RACES, and carrying a fleet ladder - so every entry
+    # it returns can actually be spawned, where a race with no ladder would just make
+    # fleet_create print and return None. Reported from the Gamma with a Q playtest,
+    # 2026-09-01: "Skaraan show up even when they aren't NPC races".
+    races = sorted(race_npc_list())
     +^1[$gamemaster]"Back" //comms/gamemaster/spawn
     for race in races:
         +[$gamemaster]"{race}" {"race": race}:
@@ -149,8 +156,12 @@
 
 //comms/gamemaster/spawn/ship if has_roles(COMMS_ORIGIN_ID, 'gamemaster')
     # gui_sub_task_schedule(properties_gm_filter_ships)
-    # TODO use ship_data info instead of this list
-    races = ["Arvonian", "Kralien", "Torgoth","Skaraan","Ximni", "Pirate", "TSN", "USFP" ]
+    # Same fix as the fleet menu above, and the file's own TODO ("use ship_data info
+    # instead of this list"). A single ship needs a hull, not a fleet ladder, so this is
+    # the wider roster: every race the loaded ship table knows that the mission enabled
+    # either as playable or as an NPC. A mod joins it by EXISTING - ship a hull with
+    # `origin: Klingon` and klingon is a race here, with no registration call.
+    races = sorted([r for r in race_list() if settings_race_is_playable(r) or settings_race_is_npc(r)])
     +^1[$gamemaster]"Back" //comms
     
     for race in races:
