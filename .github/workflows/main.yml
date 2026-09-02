@@ -95,11 +95,23 @@ jobs:
       #- name: Display structure of downloaded files
       #  run: ls -R artifacts
 
+      # `sbs release -u` re-points the rolling v1.4.0 tag by DELETING it and pushing it
+      # again, and GitHub demotes a published Release whose tag disappears to a DRAFT.
+      # svenstaro/upload-release-action looked the release up with getReleaseByTag, which
+      # the API answers for published releases only - so it 404'd on that draft and
+      # created a brand new Release every single time, orphaning the previous one. That
+      # is where 92 stale drafts came from, each carrying a full set of 38 assets.
+      # ncipollo finds the draft by tag, and `draft: false` re-publishes THAT release
+      # instead of making another. Same action and settings sbs_utils releases with.
       - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
+        uses: ncipollo/release-action@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: artifacts/*/*
-          tag: ${{ github.ref }}
-          overwrite: true
-          file_glob: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: "artifacts/*/*"
+          tag: ${{ github.ref_name }}
+          allowUpdates: true
+          replacesArtifacts: true
+          draft: false
+          makeLatest: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
