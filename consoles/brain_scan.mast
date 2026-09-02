@@ -35,7 +35,7 @@ brain_to_watch = None
     gui_activate_console("brain")
 
     # Whole screen
-    gui_section(style="area:0,45px,100,100;")
+    gui_section(style="area:0,100px,100,100;")
 
     with gui_sub_section("col-width:75;"):
         #   with t:
