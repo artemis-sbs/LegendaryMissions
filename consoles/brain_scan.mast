@@ -27,8 +27,7 @@ brain_to_watch = None
     if brain_scan_task is None:
         sub_task_schedule(brain_scan_update)
     
-    # No gui_tab_back: the PADD's chrome owns Back, and its history already knows
-    # Debug opened this.
+    gui_app_chrome("Brain scan", apps=["debug", "mast"])
     gui_activate_console("brain")
 
     # Whole screen

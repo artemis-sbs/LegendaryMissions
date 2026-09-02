@@ -16,12 +16,12 @@ if is_dev_build():
 
 
 === debug_screen
-    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
-    # one Back to the tab you came from, and the status area goes home.
-    # No gui_tab_enable: `brain` and `mast` are ePADD screens reached from here, not
-    # tabs on the console's bar. They are app routes NOBODY REGISTERED, which is what
-    # keeps them off the home grid while leaving them reachable - and the PADD's own
-    # Back walks the history back out through Debug.
+    # THE NAV BAR IS HOW BRAIN AND MAST ARE REACHED. They are app routes nobody
+    # registered - reachable, never tiles on the home grid - and they used to be reached
+    # because Debug enabled them as TABS on the console's bar, which is the coupling the
+    # PADD spent this whole change getting out of. Debug says where it leads in its own
+    # chrome instead, and the PADD's Back walks the history back out through here.
+    gui_app_chrome("Debug", apps=["brain", "mast"])
 
     gui_section(style="area:10,15,35,100;row-height:35px;")
     gui_row()
@@ -280,8 +280,7 @@ if is_dev_build():
     jump debug_screen
 
 ===== mast_debug_screen ======
-    # No gui_tab_back: the PADD's chrome owns Back, and its history already knows
-    # Debug opened this.
+    gui_app_chrome("MAST", apps=["debug", "brain"])
 
     gui_section(style="area: 10,10,90,90;")
 
