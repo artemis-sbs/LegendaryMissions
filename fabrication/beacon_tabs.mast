@@ -25,8 +25,12 @@ default CONSOLE_SELECT = ""
 # just build their Output into inventory via fabricate_recipe. ---
 //gui/app/fabricate
 --- fab_repaint
-    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
-    # one Back to the tab you came from, and the status area goes home.
+    # ONE GUI TAB, and it is the way back to the console. The PADD adds nothing to
+    # the strip and changes nothing about it - it declares a back tab like any
+    # other screen and the bar draws it the way it always has. Removing this line
+    # is what forced the strip to synthesise a back entry, which is what kept
+    # breaking the bar's own back button.
+    gui_tab_back(CONSOLE_SELECT)
     # RE-DECLARE THE WHOLE STRIP, not just the back tab. The page CONSUMES its tab
     # declarations: maststorypage clears `console_tabs` and `__back_tab__` as soon as
     # it has drawn the strip, so whatever a build does not declare is gone from the
@@ -178,8 +182,12 @@ default CONSOLE_SELECT = ""
 # Deliver to Weapons + Eject; items/materials offer Eject. ---
 //gui/app/cargo
 --- cargo_repaint
-    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
-    # one Back to the tab you came from, and the status area goes home.
+    # ONE GUI TAB, and it is the way back to the console. The PADD adds nothing to
+    # the strip and changes nothing about it - it declares a back tab like any
+    # other screen and the bar draws it the way it always has. Removing this line
+    # is what forced the strip to synthesise a back entry, which is what kept
+    # breaking the bar's own back button.
+    gui_tab_back(CONSOLE_SELECT)
     # Same as fab_repaint: the strip is consumed on every build. See there.
     gui_tab_enable("fabricate,cargo")
     gui_activate_console("cargo")

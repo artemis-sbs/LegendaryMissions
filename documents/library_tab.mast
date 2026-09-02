@@ -15,6 +15,6 @@ default CONSOLE_SELECT = "" # Make sure variable exist at startup
     document = document_flatten(document_root)
     document_type = "Library"
     document_topic = CONSOLE_SELECT.lower()
-    # No back tab: this is an ePADD app, and the PADD's strip owns the one Back.
+    document_back_tab = CONSOLE_SELECT
 
     jump document_screen

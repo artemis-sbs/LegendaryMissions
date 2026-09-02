@@ -8,7 +8,7 @@ gui_tab_add_top("help")
     document = document_flatten(document_root)
     document_type = "help"
     document_topic = CONSOLE_SELECT.lower()
-    # No back tab: this is an ePADD app, and the PADD's strip owns the one Back.
+    document_back_tab = CONSOLE_SELECT
 
     jump document_screen
 

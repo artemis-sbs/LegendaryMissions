@@ -112,8 +112,12 @@ if is_dev_build():
     jump epadd_away_screen
 
 === epadd_away_screen
-    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
-    # one Back to the tab you came from, and the status area goes home.
+    # ONE GUI TAB, and it is the way back to the console. The PADD adds nothing to
+    # the strip and changes nothing about it - it declares a back tab like any
+    # other screen and the bar draws it the way it always has. Removing this line
+    # is what forced the strip to synthesise a back entry, which is what kept
+    # breaking the bar's own back button.
+    gui_tab_back(CONSOLE_SELECT)
     gui_away_screen()
     # Beaming down or up changes who this console is, which changes every other app -
     # so the same polled counter the inbox uses drives this one.
@@ -127,8 +131,12 @@ if is_dev_build():
     jump epadd_status_screen
 
 === epadd_status_screen
-    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
-    # one Back to the tab you came from, and the status area goes home.
+    # ONE GUI TAB, and it is the way back to the console. The PADD adds nothing to
+    # the strip and changes nothing about it - it declares a back tab like any
+    # other screen and the bar draws it the way it always has. Removing this line
+    # is what forced the strip to synthesise a back entry, which is what kept
+    # breaking the bar's own back button.
+    gui_tab_back(CONSOLE_SELECT)
     gui_status_screen()
     # Same reason: a board of live readings that never repaints is a photograph.
     on change message_revision():
@@ -141,8 +149,12 @@ if is_dev_build():
     jump epadd_messages_screen
 
 === epadd_messages_screen
-    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
-    # one Back to the tab you came from, and the status area goes home.
+    # ONE GUI TAB, and it is the way back to the console. The PADD adds nothing to
+    # the strip and changes nothing about it - it declares a back tab like any
+    # other screen and the bar draws it the way it always has. Removing this line
+    # is what forced the strip to synthesise a back entry, which is what kept
+    # breaking the bar's own back button.
+    gui_tab_back(CONSOLE_SELECT)
     gui_messages_screen()
     # A SIGNAL DOES NOT WAKE `await gui()`. The inbox is a live panel - mail arrives
     # while it is open, and picking a different message has to redraw the pane beside
@@ -161,8 +173,12 @@ if is_dev_build():
 === epadd_home_screen
     # The back button is how you leave the PADD, and the strip consumes the
     # declaration every build - so this is re-declared here, like every tab screen.
-    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
-    # one Back to the tab you came from, and the status area goes home.
+    # ONE GUI TAB, and it is the way back to the console. The PADD adds nothing to
+    # the strip and changes nothing about it - it declares a back tab like any
+    # other screen and the bar draws it the way it always has. Removing this line
+    # is what forced the strip to synthesise a back entry, which is what kept
+    # breaking the bar's own back button.
+    gui_tab_back(CONSOLE_SELECT)
     # Held as an OBJECT, never as an intermediate string: a string assignment is
     # re-run through f-string formatting, so a brace in a name would raise here.
     _epadd_ship = to_object(sbs.get_ship_of_client(client_id))

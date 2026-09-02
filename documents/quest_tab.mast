@@ -32,8 +32,12 @@ if QUEST_TAB_ENABLED:
 
 //gui/app/quest if QUEST_TAB_ENABLED and quest_is_console_enabled(CONSOLE_SELECT)
 --- repaint
-    # No gui_tab_back: an app has no Back of its own. The PADD's strip supplies
-    # one Back to the tab you came from, and the status area goes home.
+    # ONE GUI TAB, and it is the way back to the console. The PADD adds nothing to
+    # the strip and changes nothing about it - it declares a back tab like any
+    # other screen and the bar draws it the way it always has. Removing this line
+    # is what forced the strip to synthesise a back entry, which is what kept
+    # breaking the bar's own back button.
+    gui_tab_back(CONSOLE_SELECT)
     gui_activate_console("quest")
 
     ship_id = sbs.get_ship_of_client(client_id)

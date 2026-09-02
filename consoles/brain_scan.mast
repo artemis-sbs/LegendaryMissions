@@ -27,7 +27,11 @@ brain_to_watch = None
     if brain_scan_task is None:
         sub_task_schedule(brain_scan_update)
     
-    gui_app_chrome("Brain scan", apps=["debug", "mast"])
+    # ONE GUI TAB, and it is the way back to the console - the same line every
+    # other PADD screen declares.
+    gui_tab_back(CONSOLE_SELECT)
+    gui_app_chrome("Brain scan")
+    gui_app_subnav(["debug", "mast"])
     gui_activate_console("brain")
 
     # Whole screen
