@@ -52,11 +52,14 @@ if not EPADD_MAIL_LOADED:
 gui_app_register("away_team", title="Away Team", icon="epadd.away", group="Ship",
                  sort=1, description="Join a landing party, or come back",
                  status=lm_epadd_away, away=True)
-gui_app_register("status", title="Status", icon="epadd.status", group="Mission",
-                 sort=1, description="What the ship is telling you",
+# SHIP, not Mission. Status reports what the SHIP is telling you - its own description
+# says so - and Messages is mostly the crew talking to each other. Mission is for the
+# things that outlive this hull: the jobs, the lore, the help.
+gui_app_register("status", title="Status", icon="epadd.status", group="Ship",
+                 sort=2, description="What the ship is telling you",
                  status=lm_epadd_reporting)
 gui_app_register("messages", title="Messages", icon="epadd.messages",
-                 group="Mission", sort=5, description="From the crew, and from home",
+                 group="Ship", sort=3, description="From the crew, and from home",
                  status=lm_epadd_unread, away=True)
 gui_app_register("help", title="Help", icon="epadd.help", group="Mission", sort=90,
                  description="How this console works", away=True)
