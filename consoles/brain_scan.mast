@@ -3,7 +3,7 @@ brain_scan_tick = 0
 brain_scan_task = None
 brain_to_watch = None
 
-//gui/tab/brain if is_dev_build()
+//gui/app/brain if is_dev_build()
     jump brain_screen
 
 === brain_scan_update
@@ -27,7 +27,8 @@ brain_to_watch = None
     if brain_scan_task is None:
         sub_task_schedule(brain_scan_update)
     
-    gui_tab_back("debug")
+    # No gui_tab_back: the PADD's chrome owns Back, and its history already knows
+    # Debug opened this.
     gui_activate_console("brain")
 
     # Whole screen
