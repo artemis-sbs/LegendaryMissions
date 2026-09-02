@@ -102,7 +102,11 @@ if EPADD_ENABLED:
     jump pump
 
 
-//gui/tab/away_team
+# The condition is the whole gating. A mission with no landing parties in it put a
+# button reading "No landing party" on all six consoles, which a playtest called what
+# it was - noise. A route's own `if` is what ePADD tests when it builds the app list,
+# the same way casino and brain gate themselves, so no new mechanism is needed.
+//gui/tab/away_team if away_relevant()
     jump epadd_away_screen
 
 === epadd_away_screen
@@ -157,5 +161,10 @@ if EPADD_ENABLED:
     # re-run through f-string formatting, so a brace in a name would raise here.
     _epadd_ship = to_object(sbs.get_ship_of_client(client_id))
     gui_app_home(ship_name=_epadd_ship.name if _epadd_ship is not None else "")
+    # A signal does not wake await gui(). Without this the home screen was frozen at
+    # whatever it said when it was opened: mail arriving never moved the Messages
+    # badge, and an app whose route condition turned on never appeared.
+    on change gui_app_revision():
+        jump epadd_home_screen
     await gui()
     ->END
