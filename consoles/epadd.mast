@@ -81,12 +81,18 @@ if EPADD_ENABLED:
                      consoles="hangar", description="Craft, pilots, sortie board")
     gui_app_register("casino", title="Casino", icon="epadd.casino", group="Ship", sort=50,
                      consoles="hangar", description="Table games and the bar tab")
-    gui_app_register("debug", title="Debug", icon="epadd.debug", group="Systems", sort=10,
-                     description="Dev build only")
-    gui_app_register("brain", title="Brain scan", icon="epadd.brain", group="Systems",
-                     sort=20, description="NPC state")
-    gui_app_register("mast", title="MAST", icon="epadd.mast", group="Systems", sort=30,
-                     description="Task list")
+    # GATED HERE, because the ROUTES are not. Only //gui/tab/brain carries an
+    # `if is_dev_build()`; debug and mast have no condition at all - the classic strip
+    # kept them out of a shipped build by other means, putting gui_tab_add_top("debug")
+    # inside `if is_dev_build()` and only enabling mast from inside the debug screen.
+    # A registration replaces that gating, so it has to carry it.
+    if is_dev_build():
+        gui_app_register("debug", title="Debug", icon="epadd.debug", group="Systems",
+                         sort=10, description="Dev build only")
+        gui_app_register("brain", title="Brain scan", icon="epadd.brain",
+                         group="Systems", sort=20, description="NPC state")
+        gui_app_register("mast", title="MAST", icon="epadd.mast", group="Systems",
+                         sort=30, description="Task list")
 
 
 == epadd_mail_pump ==
