@@ -127,13 +127,29 @@ build_times:
     for torp_sort, key, tr in sorted(torp_defs):
         torp_keys.append(key)
         times = get_inventory_value(tr, "build_times")
+        # THE MATCH IS A SUBSTRING OF THE ART ID, and that only ever worked for stock art.
+        # `starbase_command` contains "command"; a mod's `tng_fed_ds9` contains none of
+        # these class names, so NOTHING matched and the station was left with no
+        # {key}_BUILD_SPEED at all - which station_torp_building.py reads as its 1000
+        # MINUTE default - and no seed stock, while torpedo_types_available below is set
+        # regardless. The station then looks stocked, advertises every type, and transfers
+        # nothing, forever. Reported from the Gamma with a Q playtest, 2026-09-01.
+        #
+        # Every prefab already declares a `default:` time for exactly this case and it has
+        # never once been reachable: no art id contains the word "default", so the loop
+        # walked past it like any other class. Honor it when no class matched, and skip it
+        # while matching so an art id that happens to contain "default" is not read as one.
+        time = None
         for station_type in times:
-            if station_type in artid:
+            if station_type != "default" and station_type in artid:
                 time = times[station_type]
-                set_inventory_value(s, f"{key}_BUILD_SPEED", time)
-                if get_data_set_value(s, f"{key}_NUM") is None: # If it's not already set, set it.
-                    set_data_set_value(s, f"{key}_NUM", random.randrange(0,3)) 
                 break
+        if time is None:
+            time = times.get("default")
+        if time is not None:
+            set_inventory_value(s, f"{key}_BUILD_SPEED", time)
+            if get_data_set_value(s, f"{key}_NUM") is None: # If it's not already set, set it.
+                set_data_set_value(s, f"{key}_NUM", random.randrange(0,3))
     # @inventory torpedo_production_keys A list of all the keys of torpedoes this station could produce
     set_inventory_value(s, "torpedo_production_keys", torp_keys)
     set_data_set_value(s, "torpedo_types_available", ",".join(torp_keys))
