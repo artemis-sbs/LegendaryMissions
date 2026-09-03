@@ -116,12 +116,21 @@ if is_dev_build():
     jump epadd_away_screen
 
 === epadd_away_screen
-    # ONE GUI TAB, and it is the way back to the console. The PADD adds nothing to
-    # the strip and changes nothing about it - it declares a back tab like any
-    # other screen and the bar draws it the way it always has. Removing this line
-    # is what forced the strip to synthesise a back entry, which is what kept
-    # breaking the bar's own back button.
-    gui_tab_back(CONSOLE_SELECT)
+    # ONE GUI TAB, and it is the way back to the console - BUT NOT WHILE THIS CONSOLE
+    # IS ON THE SURFACE.
+    #
+    # CONSOLE_SELECT names the bridge post this client picked at console select, and it
+    # is still naming it after they beam down. Pressing Back therefore walked them to
+    # Helm while their character was standing on a planet - and it did it by jumping
+    # the tab route, which is not the way up: `away_go_up` releases the character and
+    # restores CONSOLE_TYPE, and none of that ran. The party went on believing that
+    # person was still down there, held by a console that had left.
+    #
+    # So while this console is playing somebody, it declares no back tab. The way back
+    # is BEAM UP, on this same screen, which does it properly. Nobody is trapped: the
+    # status region still opens the PADD home and every other app from there.
+    if not away_who(client_id):
+        gui_tab_back(CONSOLE_SELECT)
     gui_away_screen()
     # Beaming down or up changes who this console is, which changes every other app -
     # so the same polled counter the inbox uses drives this one.
