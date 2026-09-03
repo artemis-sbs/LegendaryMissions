@@ -12,6 +12,20 @@
 # profile does not rot on the next release of the pack. The media line is not optional -
 # the mod's 51 hulls are declared from a ship-data file the ENGINE opens itself, and it
 # lives in the media pack. Without it the hulls have no stats and no art.
+# ---------------------------------------------------------------------------
+# BALANCE (2026-09-03). This is the MIXED roster - TNG hulls for the crew, stock hulls
+# for everyone else - and it only works because the TNG rebalance normalised the mod
+# onto the base game's own curve rather than inflating the base game to meet it.
+#
+# Before that, a TNG Galaxy (1500 forward shields) against a stock Kralien Battleship
+# (100) killed in 7 s and died in 405 s. It was not a difficulty setting, it was a
+# tour. Measured now: stock Battle Cruiser vs TNG Galor is 41 s / 33 s, stock
+# Dreadnought vs TNG D'Deridex is 52 s / 33 s.
+#
+# If you edit the mod's ship stats, run its checkers before flying this:
+#   python _tools/balance_report.py && python _tools/duel_report.py
+# ---------------------------------------------------------------------------
+
 addons:
     include:
         - tng_races

@@ -19,6 +19,28 @@
 # the prefabs keep as a separate variable and this does not touch. LM's raiders are still
 # raiders, they just fly Cardassian hulls. Faces are unaffected too: they come from `crew`,
 # which is resolved before the art mapping.
+# ---------------------------------------------------------------------------
+# BALANCE (2026-09-03). Two things, and the second is a defect, not a design note.
+#
+# 1. When ART_KEYS DOES fire it re-points NPC and station spawns at TNG keys, which
+#    brings TNG STATS along with the art. That used to make this profile unwinnable:
+#    a stock Battle Cruiser (160 forward shields) against a TNG Galor (1280) needed
+#    249 s to kill and died in 46 s. Since the TNG rebalance put every mod hull back
+#    on the base game's curve, the same matchup is 41 s / 33 s - both inside the
+#    engine's own 15-110 s band. So the mix is safe now.
+#
+# 2. MEASURED 2026-09-03, THIS PROFILE IS CURRENTLY INERT and this is pre-existing,
+#    not a consequence of the rebalance. A headless run reports:
+#        __player__ hulls: [tsn_light_cruiser]
+#        __npc__ hulls:    [arvonian_destroyer, kralien_battleship, starbase_command, ...]
+#    - every one of them stock. The ART_KEYS map below is not reaching the spawns.
+#    `tng_all` converts correctly and differs by setting `EXTRA_SHIP_DATA: true`,
+#    which is off by default, so that gate is the first thing to check. Until this is
+#    fixed the profile changes nothing; use `tng_all`.
+#
+#   PYTHONPATH=../sbs_utils python -m cosmos_dev.mission_runner . #       --test 25 --map 0 --seed 7 --profile tng_art --use-working-tree
+# ---------------------------------------------------------------------------
+
 addons:
     include:
         - tng_races
