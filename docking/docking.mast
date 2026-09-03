@@ -157,9 +157,26 @@ distance: 600
         for torps in _torp_types:
             tLeft = npc_blob.get(f"{torps}_NUM", 0)
             if tLeft is not None and tLeft > 0:
+                # A TYPE THIS HULL CANNOT CARRY HAS NO `_MAX`, and that is the whole
+                # answer - not a missing number to guess at.
+                #
+                # This used to read `if torp_max is None: torp_max = 10`, so docking
+                # at a station stocking a round the ship was never given handed it TEN
+                # of them. Reported from the TNG playtest as a Galaxy sitting at
+                # Photon 16/16 - its real capacity - beside Homing, Nuke, EMP, Mine and
+                # PShock all at 10/10, which is not any prefab's count. It is this
+                # literal.
+                #
+                # `torpedo_make_available` is the only thing that grants a type and it
+                # always writes the capacity, so `_MAX` unset means exactly one thing:
+                # this ship does not carry this round. Skip it.
+                #
+                # Same shape as the `energy` guard above, and invisible for the same
+                # reason: the ENGINE answers None for a field never set, the mock
+                # answers 0 - and `torp_now < 0` is false, so headless it did the right
+                # thing for the wrong reason. `--strict-blob` reproduces it.
                 torp_max = player_blob.get(f"{torps}_MAX", 0)
-                if torp_max is None:
-                    torp_max = 10
+                continue if torp_max is None
                 torp_now = player_blob.get(f"{torps}_NUM", 0) or 0
                 if torp_now < torp_max:
                     torp_now = torp_now + 1
@@ -266,9 +283,26 @@ match_side: True
         for torps in _torp_types:
             tLeft = npc_blob.get(f"{torps}_NUM", 0)
             if tLeft is not None and tLeft > 0:
+                # A TYPE THIS HULL CANNOT CARRY HAS NO `_MAX`, and that is the whole
+                # answer - not a missing number to guess at.
+                #
+                # This used to read `if torp_max is None: torp_max = 10`, so docking
+                # at a station stocking a round the ship was never given handed it TEN
+                # of them. Reported from the TNG playtest as a Galaxy sitting at
+                # Photon 16/16 - its real capacity - beside Homing, Nuke, EMP, Mine and
+                # PShock all at 10/10, which is not any prefab's count. It is this
+                # literal.
+                #
+                # `torpedo_make_available` is the only thing that grants a type and it
+                # always writes the capacity, so `_MAX` unset means exactly one thing:
+                # this ship does not carry this round. Skip it.
+                #
+                # Same shape as the `energy` guard above, and invisible for the same
+                # reason: the ENGINE answers None for a field never set, the mock
+                # answers 0 - and `torp_now < 0` is false, so headless it did the right
+                # thing for the wrong reason. `--strict-blob` reproduces it.
                 torp_max = player_blob.get(f"{torps}_MAX", 0)
-                if torp_max is None:
-                    torp_max = 10
+                continue if torp_max is None
                 torp_now = player_blob.get(f"{torps}_NUM", 0) or 0
                 if torp_now < torp_max:
                     torp_now = torp_now + 1
