@@ -37,9 +37,20 @@
 # --- firing: a launch wears the tubes ------------------------------------
 # Launching is the tube's own work, so this is charged on the shot rather than on
 # the hit - a torpedo that misses wore the tube just the same.
+#
+# LAUNCH_ORIGIN_ID is the TORPEDO. The SHIP is LAUNCH_PARENT_ID. Measured in engine
+# 1.3.6 and recorded in LM_TestRange/damage_route_probe.txt:
+#
+#   launch/missile  origin=...916 (GONE)  parent=...915 (THE PLAYER SHIP, player)
+#
+# Reading origin here is not a wrong ship, it is NO ship - `has_role` is False and
+# the route becomes a silent no-op, which is how a whole wear source can look wired
+# and never fire. Falls back to origin so a mission or engine build that names the
+# ship there still works.
 //launch/missile
-    ->END if not has_role(LAUNCH_ORIGIN_ID, "__player__")
-    grid_wear_system(LAUNCH_ORIGIN_ID, "torpedo", WEAR_PER_TUBE_SHOT)
+    wear_shooter = LAUNCH_PARENT_ID or LAUNCH_ORIGIN_ID
+    ->END if not has_role(wear_shooter, "__player__")
+    grid_wear_system(wear_shooter, "torpedo", WEAR_PER_TUBE_SHOT)
     ->END
 
 
@@ -48,6 +59,12 @@
 # two guards: the engine can deliver a damage event with no source point (a mine, a
 # scripted hit), and the target can already be gone.
 //damage/object if has_role(DAMAGE_TARGET_ID, "__player__")
+    # The engine fires damage/object for the FATAL hit too, with sub_tag 'destroyed'
+    # rather than a weapon kind (measured in engine 1.3.6 - LM_TestRange's
+    # damage_route_probe.txt records both 'beam' and 'destroyed' arriving here). Wearing
+    # the shields of a ship that has just been destroyed is meaningless, and the grid is
+    # being torn down underneath it.
+    ->END if EVENT.sub_tag == "destroyed"
     ->END if EVENT.source_point is None
     hit_ship = to_object(DAMAGE_TARGET_ID)
     ->END if hit_ship is None
