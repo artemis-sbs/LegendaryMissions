@@ -4,6 +4,22 @@
 =$xmas green,red
 
 
+# WHO CAN BE GIVEN ORDERS.
+#
+# It used to be one role, `prefab_npc_defender`, added in exactly two places - the
+# defender prefab and the enemy-surrender route. So a SURRENDERED ENEMY got the orders
+# menu and a genuine ally did not: a fleet ship, an allied-faction escort, anything not
+# spawned by that one prefab got nothing, whatever the diplomacy said. Reported as
+# "Comms cannot give orders to allied NPCs. It should be able to."
+#
+# Now it is: that role, OR an NPC your side is allied with. `side_are_allies` was already
+# being used INSIDE the popup to decide which orders to offer, so the gate and the
+# contents finally agree with each other.
+#
+# AND AN OPT-OUT, because a story ship is not a unit. A mission marks anything that has
+# somewhere to be with `no_orders` and it stays out of the menu - the Enterprise-C flying
+# for the rift in Gamma with a Q is exactly that: allied, orderable by this rule, and a
+# crew sending her to attack something would break the trial she is the subject of.
 # Hailing a civilian means you have IDENTIFIED it, the same rule the right-click order
 # menu follows below (issue #694). Enable and body are gated together on purpose - an
 # //enable/comms without a matching //comms body opens an empty comms panel.
@@ -36,10 +52,10 @@
 
 
 
-//enable/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "prefab_npc_defender")
+//enable/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and lm_can_take_orders(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
 
 
-//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "prefab_npc_defender") 
+//comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and lm_can_take_orders(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) 
     + "Hail":
         obj_ids = linked_to(COMMS_SELECTED_ID, "OBJECTIVE")
         yield success if len(obj_ids) == 0
@@ -56,9 +72,9 @@
 
 
 
-//popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "prefab_npc_defender") and COMMS_POPUP_ID == COMMS_SELECTED_ID
+//popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and lm_can_take_orders(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and COMMS_POPUP_ID == COMMS_SELECTED_ID
     
-    label_type = get_inventory_value(COMMS_SELECTED_ID, "give_orders_type")
+    label_type = lm_orders_type(COMMS_SELECTED_ID)
 
     orders = labels_get_type(label_type)
     for order in orders:
@@ -75,8 +91,8 @@
 
 
 
-//popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and has_roles(COMMS_SELECTED_ID, "prefab_npc_defender") and COMMS_POPUP_ID != COMMS_SELECTED_ID
-    label_type = get_inventory_value(COMMS_SELECTED_ID, "give_orders_type")
+//popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and lm_can_take_orders(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and COMMS_POPUP_ID != COMMS_SELECTED_ID
+    label_type = lm_orders_type(COMMS_SELECTED_ID)
 
     orders = labels_get_type(label_type)
     ally = side_are_allies(COMMS_SELECTED_ID, COMMS_POPUP_ID)
