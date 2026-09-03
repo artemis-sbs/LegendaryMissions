@@ -11,6 +11,9 @@ import server_console.py
 import server_console.mast
 import media_music.mast
 
+# Engineering's right column. Before layout_widgets, which calls eng_grid_panel().
+import eng_grid_panel.py
+
 import layout_widgets.mast
 
 

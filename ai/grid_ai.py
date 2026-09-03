@@ -5,7 +5,14 @@ from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_va
 from sbs_utils.procedural.roles import has_role, role
 from sbs_utils.procedural.timers import is_timer_set, set_timer, is_timer_finished, clear_timer, format_time_remaining, get_time_remaining
 from sbs_utils.procedural.comms import comms_broadcast
-from sbs_utils.procedural.internal_damage import grid_get_max_hp
+from sbs_utils.procedural.internal_damage import grid_get_max_hp, grid_node_state
+from sbs_utils.procedural.grid import grid_objects
+from sbs_utils.procedural.work_orders import (work_orders_for, work_order_kind,
+                                             work_order_priority, work_order_workers,
+                                             KIND_REPAIR, PRIORITY_LOW, PRIORITY_NORMAL,
+                                             PRIORITY_HIGH, PRIORITY_CRITICAL)
+from sbs_utils.procedural.query import to_object_list
+from sbs_utils.agent import Agent
 import random
 import sbs
 
@@ -237,3 +244,149 @@ def grid_damcons_detailed_status_update(id_or_obj, short_status=None, short_colo
         
     detailed_status = f"{short_status}^{work_item_status}^{health_status}^{boost}"
     grid_detailed_status(_go_id, detailed_status, color)
+
+
+# --- the Selected tab's body -------------------------------------------------
+# Engineering's grid_face used to be an engine widget fed one `^`-separated string
+# on the node's `info_text` blob key (grid_damcons_detailed_status_update, above).
+# The console owns that rectangle now, so the long form is authored markdown in a
+# text area that wraps and scrolls, and `info_text` goes on serving the grid item
+# list's tooltip unchanged.
+
+# Characters gui_text_area's mini-markdown consumes. A node NAME is engine-supplied
+# (it is "roomname:x,y") and a damcon name is mission-supplied, so neither can be
+# trusted to be free of them: '[' makes the line a link reference and REPLACES it,
+# '^' is the newline escape, a backtick ends the $text: quoting on the send path,
+# and a leading '-' or '#' turns the line into a bullet or a heading.
+_MD_STRIP = "[]^`"
+
+
+def _md_safe(text):
+    """Make an engine- or mission-supplied string safe to drop into markdown.
+
+    Args:
+        text: anything; None becomes "".
+
+    Returns:
+        str: ASCII-safe, with the markdown-significant characters removed and any
+        leading list/heading marker defused.
+    """
+    if text is None:
+        return ""
+    out = "".join(c for c in str(text) if c not in _MD_STRIP)
+    out = out.replace("{", "(").replace("}", ")")
+    return out.lstrip("-#> \t")
+
+
+_PRIORITY_WORDS = ((PRIORITY_CRITICAL, "critical"), (PRIORITY_HIGH, "high"),
+                   (PRIORITY_NORMAL, "normal"), (PRIORITY_LOW, "low"))
+
+
+def _order_words(node_id):
+    """An order as "repair - high".
+
+    The nearest rung's NAME, not the number: a number would make the engineer do
+    arithmetic to compare two jobs, and going by nearest means a mission's own
+    custom priority still reads as something.
+    """
+    kind = work_order_kind(node_id) or KIND_REPAIR
+    verb = "repair" if kind == KIND_REPAIR else "tune"
+    word = min(_PRIORITY_WORDS,
+               key=lambda p: abs(p[0] - work_order_priority(node_id)))[1]
+    return f"{verb} - {word}"
+
+
+def _grid_node_condition_line(node_id):
+    """One bullet describing the node's condition, or None for a plain nominal one."""
+    state = grid_node_state(node_id)
+    if state == "damaged":
+        return "DAMAGED"
+    if state == "worn":
+        return "Worn - needs maintenance"
+    if state == "tuned":
+        return "Tuned"
+    return None
+
+
+def _grid_node_roles(node_id):
+    """The node's own roles, minus the bookkeeping ones, as display text."""
+    agent = Agent.get(node_id)
+    if agent is None:
+        return ""
+    # get_roles(), not `.roles` - that is the class-level Stuff registry keyed by
+    # role name, not this agent's own list, and iterating it is a TypeError. It
+    # would have surfaced as a silently BLANK panel tab, never as an error.
+    names = sorted(r for r in agent.get_roles() if not r.startswith("__"))
+    return ", ".join(names)
+
+
+def grid_selected_markdown(ship_id, node_id):
+    """The Engineering panel's Selected tab, as gui_text_area markdown.
+
+    Authored markdown, not prose that got lucky - every dynamic value goes through
+    `_md_safe` first. ASCII only: this reaches an engine-rendered surface.
+
+    Args:
+        ship_id: the ship the node belongs to.
+        node_id: the selected grid node, or None/0 when nothing is selected.
+
+    Returns:
+        str: markdown for gui_text_area, or an empty-state line.
+    """
+    node = to_object(node_id) if node_id else None
+    if node is None:
+        return "$text:(nothing selected);color:#888;"
+
+    lines = [f"## {_md_safe(node.name)}"]
+
+    if has_role(node_id, "damcons"):
+        lines.append(f"- {_md_safe(get_inventory_value(node_id, 'last_status', 'idle'))}")
+
+        max_hp = grid_get_max_hp()
+        hp = get_inventory_value(node_id, "HP", max_hp)
+        hp_line = f"- HP {hp} of {max_hp}"
+        if hp < max_hp:
+            hp_line += " - visit sickbay"
+        lines.append(hp_line)
+
+        # Live speed boosts, same source the tooltip reads. Expired ones are dropped
+        # by grid_damcons_detailed_status_update, which runs every tick on the brain;
+        # this only READS, so a stale entry is skipped rather than pruned here.
+        for name, mod in (get_inventory_value(node_id, "speed_modifiers", {}) or {}).items():
+            if mod is not None and not mod.expired():
+                lines.append(f"- {_md_safe(name)} for {mod.format_time_remaining()}")
+
+        boost_time = get_time_remaining(node_id, "idle_boost_timer")
+        if boost_time > 0:
+            lines.append(f"- boost in {format_time_remaining(node_id, 'idle_boost_timer')}")
+        else:
+            lines.append("- idle in gym, mess or quarters to boost")
+
+        # work_orders_for, not linked_to: it drops orders whose node was deleted,
+        # repaired by somebody else, or replaced by a grid rebuild. The count on this
+        # panel used to include every one of those, forever.
+        orders = to_object_list(work_orders_for(node_id))
+        lines.append("")
+        lines.append(f"## Orders {len(orders)}")
+        if not orders:
+            lines.append("- none assigned")
+        for target in sorted(orders, key=lambda t: -work_order_priority(t.id)):
+            lines.append(f"- {_md_safe(target.name)} - {_order_words(target.id)}")
+        return "\n".join(lines)
+
+    # A room, a system node, or anything else selectable on the interior view.
+    condition = _grid_node_condition_line(node_id)
+    lines.append(f"- {condition}" if condition else "- Nominal")
+
+    roles = _grid_node_roles(node_id)
+    if roles:
+        lines.append(f"- {_md_safe(roles)}")
+
+    workers = to_object_list(work_order_workers(node_id))
+    if workers:
+        names = ", ".join(_md_safe(w.name) for w in sorted(workers, key=lambda d: d.name))
+        lines.append(f"- {_order_words(node_id)}")
+        lines.append(f"- assigned {names}")
+    elif condition:
+        lines.append("- no team assigned")
+    return "\n".join(lines)

@@ -4,8 +4,10 @@
     ->END if any_damage is None
     grid_repair_grid_objects(UPGRADE_AGENT.host_id, any_damage.id, UPGRADE_AGENT_ID)
     # grid_damcons_handle_idling_boost_finish(UPGRADE_AGENT)
-    # Remove work order
-    unlink(UPGRADE_AGENT_ID, "work-order", any_damage.id)
+    # Remove work order. grid_repair_grid_objects on the line above already closed
+    # the order for EVERY team on it; this covers the case where the node was not
+    # actually damaged any more and the repair was a no-op.
+    work_order_cancel(UPGRADE_AGENT_ID, any_damage.id)
     set_inventory_value(UPGRADE_AGENT_ID, "blackboard:prev_target_pos", None)
     # Release the committed target so we re-pick next damage/order
     set_inventory_value(UPGRADE_AGENT_ID, "blackboard:damage_target", None)
@@ -91,6 +93,14 @@ brain:
         idle_time: 60
         upgrade: ai_fix_damage
         hp_speed_up: True
+      # AFTER __damaged__, so repair always outranks maintenance at the same spot.
+      # A team only ever WALKS to a worn node because a work order sent it there -
+      # ai_lifeform_move_to_damage still looks only at __damaged__, so idle teams do
+      # not wander off tuning things nobody asked for. A team that happens to rally
+      # on a worn node will tune it, which is a nice accident rather than a bug.
+      - room: __worn__
+        idle_time: 90
+        upgrade: ai_tune_node
       - room: sickbay
         idle_time: 120
         upgrade: upgrade_damcon_inc_hp
@@ -179,22 +189,23 @@ dataset: move_speed
 
 === ai_lifeform_move_to_work_order
 metadata: ``` yaml
-room: __damaged__
+room: ""
 ```
     yield fail if not grid_object_valid(BRAIN_AGENT_ID)
-    # The set of still-valid work orders for this ship
-    orders = linked_to(BRAIN_AGENT_ID, "work-order") & role(room) & role("__damaged__") & grid_objects(BRAIN_AGENT.host_id)
     #
-    # Stay committed to the order we already chose while it is still valid;
-    # only re-pick the closest when it is repaired or the player cancels it.
-    # Recomputing grid_closest every tick makes the straight-line closest flip
-    # as we walk the corridor between two orders -> oscillation.
+    # work_order_best purges stale orders as it reads, picks the closest order in the
+    # highest live priority band, and KEEPS the commit we already made unless
+    # something strictly outranks it. That commit is the anti-oscillation property:
+    # recomputing grid_closest every tick makes the straight-line closest flip as we
+    # walk the corridor between two orders. With every order at the default priority
+    # this is exactly the behavior it replaced.
+    #
+    # `room` defaults to "" - no filter - where it used to be `__damaged__`. That
+    # filter would exclude every maintenance order there will ever be. A brain tree
+    # that sets `room:` explicitly still gets its filter.
     #
     committed = BRAIN_AGENT.get_inventory_value("blackboard:damage_target")
-    if committed is not None and committed in orders:
-        the_target = to_object(committed)
-    else:
-        the_target = to_object(grid_closest(BRAIN_AGENT_ID, orders))
+    the_target = to_object(work_order_best(BRAIN_AGENT_ID, committed, room))
     yield fail if the_target is None
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:damage_target", the_target.id)
     x = the_target.data_set.get("curx",0)
@@ -405,3 +416,19 @@ hp_speed_up: False
         upgrade_add(COMMS_SELECTED_ID, upgrade_damcon_speed_idle, {"message": " I feel rested.", "name": "rested", "time":0.5}, True)
     + "Eat":
         upgrade_add(COMMS_SELECTED_ID, upgrade_damcon_speed_idle, {"message": "I ate good.", "name": "fed", "time":0.5}, True)
+
+
+# At the END of the file, after every route. A top-level label falls through into
+# whatever follows it, so inserting one mid-file silently reroutes its neighbour -
+# nothing fails, nothing logs, and a headless --test still says PASS.
+=== ai_tune_node
+    # The maintenance twin of ai_fix_damage. Reached the same way: a work order sent
+    # the team here, it arrived, and ai_idle_at_room fired this upgrade after the
+    # __worn__ entry's idle_time.
+    any_worn = to_grid_object(grid_closest(UPGRADE_AGENT_ID, role("__worn__") & grid_objects(UPGRADE_AGENT.host_id)))
+    ->END if any_worn is None
+    grid_tune_grid_object(UPGRADE_AGENT.host_id, any_worn.id, UPGRADE_AGENT_ID)
+    set_inventory_value(UPGRADE_AGENT_ID, "blackboard:prev_target_pos", None)
+    # Release the committed target so we re-pick next order
+    set_inventory_value(UPGRADE_AGENT_ID, "blackboard:damage_target", None)
+    ->END

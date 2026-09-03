@@ -12,21 +12,29 @@
 
 
 //comms/grid/dc/work/order
-    orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
+    # work_orders_for, not linked_to: it drops orders whose node was deleted,
+    # repaired by somebody else, or replaced by a grid rebuild. Those used to be
+    # listed here forever, as buttons that did nothing.
+    orders = to_object_list(work_orders_for(COMMS_SELECTED_ID))
     + "Back" //comms
 
     for d in orders:
+        # This button used to set `target_room`, which ONLY the legacy damcon loop
+        # read - and that loop has been disabled since NEW_DAMCONS, so "do it now"
+        # has quietly done nothing. Raising the order to CRITICAL is the same
+        # instruction in terms the brain honors: the priority pick preempts whatever
+        # the team is committed to, once, and it turns around.
         + "Fix now {d.name}" {"target_room": d.id}:
-            set_inventory_value(COMMS_SELECTED_ID, "target_room", target_room)
+            work_order_set_priority(target_room, 100)
 
 
 //comms/grid/dc/work/cancel
-    orders = to_object_list(linked_to(COMMS_SELECTED_ID, "work-order"))
+    orders = to_object_list(work_orders_for(COMMS_SELECTED_ID))
     + "Back" //comms/grid
 
     for d in orders:
         + "Cancel {d.name}" {"target_room": d.id}:
-            unlink(COMMS_SELECTED_ID, "work-order", target_room)
+            work_order_cancel(COMMS_SELECTED_ID, target_room)
 
 
 ===== comms_damcons_goto_work =======

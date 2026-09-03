@@ -1,0 +1,90 @@
+# =========================================================================
+# Where wear COMES FROM.
+#
+# A worn node is `__worn__` on top of `__undamaged__` - it still works, just not as
+# well, and it wants a maintenance work order to be itself again. Nothing here
+# invents that work: it arrives from what the crew actually did.
+#
+# Three sources, in the order they matter to a player:
+#
+#   FIRING     a beam hit wears the beam pool; a launch wears the tubes.
+#   TAKING IT  a hit wears the shield facing that ate it.
+#   TIME       a per-minute beat ages every node, plus drive wear from throttle.
+#
+# The rates all live in the library beside the thresholds
+# (`WEAR_PER_BEAM_HIT` and friends) so `grid_set_wear_tuning(beam_hit=...)` moves
+# them at runtime. `grid_set_wear_tuning(upkeep_rate=0)` turns the time source off
+# entirely for a mission that only wants combat to cost something.
+#
+# A NEW FILE on purpose: a top-level label appended to an existing .mast falls
+# through from whatever preceded it, silently.
+# =========================================================================
+
+
+# --- firing: a beam hit wears the beam that fired it ---------------------
+# DAMAGE_ORIGIN_ID is what DEALT the damage. Measured raw in engine 1.3.5 (see the
+# note in cosmos_dev/mock/sbs.py): a BEAM hit carries origin = the shooter with
+# parent 0, while a TORPEDO hit carries origin = the TORPEDO and parent = the
+# launching ship. So origin is a ship only on the beam branch - which is the only
+# branch that reads it. Torpedo wear comes from the launch route below instead,
+# where the shooter is unambiguous.
+//damage/object if EVENT.sub_tag == "beam"
+    ->END if not has_role(DAMAGE_ORIGIN_ID, "__player__")
+    grid_wear_system(DAMAGE_ORIGIN_ID, "beam", WEAR_PER_BEAM_HIT)
+    ->END
+
+
+# --- firing: a launch wears the tubes ------------------------------------
+# Launching is the tube's own work, so this is charged on the shot rather than on
+# the hit - a torpedo that misses wore the tube just the same.
+//launch/missile
+    ->END if not has_role(LAUNCH_ORIGIN_ID, "__player__")
+    grid_wear_system(LAUNCH_ORIGIN_ID, "torpedo", WEAR_PER_TUBE_SHOT)
+    ->END
+
+
+# --- taking it: a hit wears the shield facing that ate it ----------------
+# The same call damage/destroy.mast makes to find the struck facing, with the same
+# two guards: the engine can deliver a damage event with no source point (a mine, a
+# scripted hit), and the target can already be gone.
+//damage/object if has_role(DAMAGE_TARGET_ID, "__player__")
+    ->END if EVENT.source_point is None
+    hit_ship = to_object(DAMAGE_TARGET_ID)
+    ->END if hit_ship is None
+    wear_face = sim.get_shield_hit_index_source(EVENT.source_point, to_engine_object(DAMAGE_TARGET_ID))
+    grid_wear_shield_hit(DAMAGE_TARGET_ID, wear_face)
+    ->END
+
+
+# --- time and travel: one beat per ship ----------------------------------
+# Started when the interior exists, because that is when there are nodes to wear.
+# set_interval is the right driver here rather than a Python tick callback: it stops
+# on its own when the ship is deleted, a paused sim does not advance it, and it
+# cannot take the sim down - a raising TickDispatcher body puts the engine on an
+# ErrorPage whose Resume re-raises.
+//shared/signal/grid_interior_built
+    ->END if not has_role(SHIP_ID, "__player__")
+    set_interval(SHIP_ID, "wear_upkeep", "wear_upkeep_beat", seconds=60)
+    ->END
+
+
+# //shared/signal, not //signal: this SPAWNS wear. A plain //signal route runs once
+# per connected console, so a five-console bridge would age its ship five times a
+# minute and a solo player once. SIGNAL_ROUTING.md.
+//shared/signal/wear_upkeep_beat
+    wear_ship = to_object(TIMER_AGENT_ID)
+    ->END if wear_ship is None
+    # The interval stops itself when the agent is deleted, but an exploded ship is
+    # still an agent - and its grid is being torn down.
+    if has_role(TIMER_AGENT_ID, "exploded"):
+        clear_interval(TIMER_AGENT_ID, "wear_upkeep")
+        ->END
+
+    # TIME: every working node ages a little.
+    grid_wear_upkeep(TIMER_AGENT_ID)
+    # TRAVEL: impulse or warp, whichever the ship is actually using. The throttle
+    # read and the warp split live in the library so they are unit-testable - the
+    # engine answers None for a blob nothing has set, and a failing expression stops
+    # the command, so an unguarded compare here would silently end this route.
+    grid_wear_travel(TIMER_AGENT_ID)
+    ->END

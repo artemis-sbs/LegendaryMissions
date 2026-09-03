@@ -21,7 +21,10 @@ from sbs_utils.procedural.comms import comms_broadcast
 from sbs_utils.procedural.log_panel import TAB_MISSION
 import random
 
-from sbs_utils.procedural.internal_damage import grid_rebuild_grid_objects
+from sbs_utils.procedural.internal_damage import (grid_rebuild_grid_objects,
+                                                  GRID_SYSTEM_ICONS,
+                                                  grid_system_states,
+                                                  grid_system_signature)
 from sbs_utils.procedural.grid import grid_delete_objects, grid_objects, grid_get_grid_current_theme
 from sbs_utils.fs import load_yaml_string
 import sbs
@@ -629,48 +632,21 @@ def hangar_airwing_panel(cid, left, top, width, height):
 # and those colors rather than inventing a second notion of "hurt". Nothing here
 # writes: an indicator that could disagree with the grid would be worse than none.
 #
-# Icons are asked for BY NAME (icon_sheet), so a mission that re-skins the sheet
-# moves these with it and the cockpit never carries a bare sheet index.
-HANGAR_SYSTEM_ICONS = (
-    ("weapon", "turret"),
-    ("engine", "turbine"),
-    ("sensor", "radar"),
-    ("shield", "shield"),
-)
+# The MODEL moved to the library (procedural/internal_damage) when Engineering
+# needed the same answer with the wear tiers in it - two copies of "which nodes
+# count as weapons" is one too many. These stay as the cockpit's names for it,
+# because consumer missions import THESE; the drawing half below is still ours.
+HANGAR_SYSTEM_ICONS = GRID_SYSTEM_ICONS
 
 
 def hangar_system_states(craft_id):
     """What each of the craft's system pools is worth right now.
 
-    Only pools the craft actually HAS are returned - a fighter with no shield rooms
-    gets no shield light, rather than a permanently-green one for a system it cannot
-    lose. Order is fixed by HANGAR_SYSTEM_ICONS so the row never reshuffles under the
-    pilot between repaints.
-
-    Returns:
-        list[dict]: one per pool, with ``role``, ``icon``, ``hurt``, ``total`` and the
-        theme ``color`` to draw it in.
+    The library's `grid_system_states` under the cockpit's name. Its dicts carry
+    `worn`, `tuned` and `state` on top of the `role`/`icon`/`hurt`/`total`/`color`
+    the cockpit reads, so nothing here has to change to gain the wear tiers.
     """
-    out = []
-    ship_id = to_id(craft_id)
-    if not ship_id:
-        return out
-    nodes = grid_objects(ship_id)
-    if not nodes:
-        return out
-    theme = grid_get_grid_current_theme()
-    ok_color = (theme.get("colors") or {}).get("system", "springgreen")
-    hurt_color = (theme.get("damage_colors") or {}).get("default", "Crimson")
-    damaged = nodes & role("__damaged__")
-    for role_name, icon_name in HANGAR_SYSTEM_ICONS:
-        pool = nodes & role(role_name)
-        total = len(pool)
-        if total == 0:
-            continue
-        hurt = len(pool & damaged)
-        out.append({"role": role_name, "icon": icon_name, "hurt": hurt, "total": total,
-                    "color": ok_color if hurt == 0 else hurt_color})
-    return out
+    return grid_system_states(craft_id)
 
 
 def hangar_system_signature(craft_id):
@@ -680,11 +656,8 @@ def hangar_system_signature(craft_id):
     a console layout can actually use. A `//damage/internal` route fires on the SERVER
     and would not repaint a client's cockpit; `on change` re-evaluates each tick on the
     console itself and so cannot miss a hit.
-
-    Cheap by construction (four set intersections, no allocation beyond the string)
-    because it runs per cockpit per tick.
     """
-    return ",".join(f"{s['role']}{s['hurt']}/{s['total']}" for s in hangar_system_states(craft_id))
+    return grid_system_signature(craft_id)
 
 
 def hangar_system_row(craft_id, style=None):

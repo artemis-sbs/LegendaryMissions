@@ -5,33 +5,27 @@
     + "set rally point" //comms/grid/room/rally
     + "damage" if is_dev_build():
         grid_damage_grid_object(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, "yellow")
+    # Dev only: push a node over the wear threshold so the maintenance loop can be
+    # exercised without waiting for upkeep or firing a hundred beam shots.
+    + "wear" if is_dev_build():
+        grid_add_node_wear(COMMS_SELECTED_ID, 0.5, COMMS_ORIGIN_ID)
 
         
 
-    yield success if not has_role(COMMS_SELECTED_ID, "__damaged__")
+    # What this node needs: "repair" when damaged, "maintain" when worn, None when it
+    # is fine. Replaces the bare `__damaged__` test, which would never have offered a
+    # maintenance order.
+    wo_kind = work_order_kind_wanted(COMMS_SELECTED_ID)
+    yield success if wo_kind is None
 
-    all_dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
-    dcs = []
-    workers = []
-    for dc in all_dcs:
-        if has_link_to(dc.id, "work-order", COMMS_SELECTED_ID):
-            workers.append(dc)
-        else:
-            dcs.append(dc)
-
-    #  Need to figure out colors 
-    #  color=f"{get_inventory_value(d.id, 'color')}", data=
-    #
-    sorted_dcs = sorted(dcs, key=lambda d: d.name)
-    for d in sorted_dcs:
-        color = d.get_inventory_value("color")
-        + [{color}] "assign {d.name}" {"d": d, "dcs": dcs, "workers": workers, "color":color}:
-            link(d.id, "work-order", COMMS_SELECTED_ID)
-    sorted_workers = sorted(workers, key=lambda d: d.name)
-    for d in sorted_workers:
-        color = d.get_inventory_value("color")
-        + [{color}] "cancel {d.name}" {"d": d, "dcs": dcs, "workers": workers, "color":color}:
-            unlink(d.id, "work-order", COMMS_SELECTED_ID)
+    # ONE verb button into a submenu, not a flat list. The root used to grow two
+    # buttons per damage-control team plus two priority buttons - eight or more on a
+    # three-team ship, on the same menu as "set rally point", with the thing you
+    # actually wanted buried in it.
+    wo_workers = to_object_list(work_order_workers(COMMS_SELECTED_ID))
+    wo_verb = "Repair" if wo_kind == "repair" else "Tune"
+    wo_label = wo_verb if len(wo_workers) == 0 else f"{wo_verb} - {len(wo_workers)} assigned"
+    + "{wo_label}" //comms/grid/room/work
 
 
 //comms/grid/room/rally
@@ -72,3 +66,46 @@
 
 
     
+
+# The work submenu for a room or system node: who is on it, who could be, and how
+# urgent it is. A route, so it never falls through into whatever follows.
+//comms/grid/room/work
+    + "Back" //comms/grid
+
+    wo_kind = work_order_kind_wanted(COMMS_SELECTED_ID)
+    # Somebody repaired it while this menu sat open. Offer Back and nothing else,
+    # rather than assign buttons that would file an order for work that no longer
+    # needs doing - `wo_verb` below would fall through to "tune" on a healthy node.
+    yield success if wo_kind is None
+
+    wo_verb = "repair" if wo_kind == "repair" else "tune"
+
+    all_dcs = to_object_list(grid_objects(COMMS_ORIGIN_ID) & role("damcons"))
+    dcs = []
+    workers = []
+    for dc in all_dcs:
+        if has_link_to(dc.id, "work-order", COMMS_SELECTED_ID):
+            workers.append(dc)
+        else:
+            dcs.append(dc)
+
+    sorted_workers = sorted(workers, key=lambda d: d.name)
+    for d in sorted_workers:
+        color = d.get_inventory_value("color")
+        + [{color}] "cancel {d.name}" {"d": d, "color": color}:
+            work_order_cancel(d.id, COMMS_SELECTED_ID)
+
+    sorted_dcs = sorted(dcs, key=lambda d: d.name)
+    for d in sorted_dcs:
+        color = d.get_inventory_value("color")
+        + [{color}] "{d.name} {wo_verb}" {"d": d, "wo_kind": wo_kind, "color": color}:
+            work_order_add(d.id, COMMS_SELECTED_ID, wo_kind)
+
+    # Priority, once somebody is actually on the job. Buttons stay CONDITION-FREE -
+    # the engine evaluates a `+ "x" if cond:` OUT of task, where these locals do not
+    # exist - so the plain `if` here is what gates them.
+    if len(workers) > 0:
+        + "raise priority":
+            work_order_bump(COMMS_SELECTED_ID, 1)
+        + "lower priority":
+            work_order_bump(COMMS_SELECTED_ID, -1)

@@ -74,10 +74,10 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         hail_choice_strip(_hail_ship, client_id)
 
 
-
+    _comms_text_height = "30"
     # Middle
     with gui_sub_section():
-        gui_row("row-height:30;")
+        gui_row(f"row-height:{_comms_text_height};")
         gui_layout_widget("comms_waterfall")
         # The zoom control belongs to the view it zooms: a 45px band directly above it,
         # spanning the same width, which is what the cockpit does (hangar.mast). It used
@@ -103,14 +103,16 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     #if select_2d:
     #    _widget = "comms_2d_view"
     with gui_sub_section("col-width:25;"):
+
+        # Put this next to the waterfall, same height
+        gui_row(f"row-height:{_comms_text_height};")
+        gui_layout_widget("comms_control")
         gui_row("row-height:100px;")
         gui_layout_widget("comms_face")
 
         gui_row("row-height:15;")
         gui_property_list_box("Options")
 
-        gui_row()
-        gui_layout_widget("comms_control")
 
 
 
@@ -333,11 +335,26 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     # Right
     with gui_sub_section("col-width:max(200px,14);"):
     # with gui_sub_section():
-        gui_row("row-height:200px;margin:0,0,0,10px;")
-        gui_layout_widget("grid_face")
+        # We own this rectangle now. grid_face is retired - it drew one oversized crew
+        # glyph plus a `^`-separated status string, on the only FLEX row in this column,
+        # so it was also the thing that collapsed at low resolution.
+        #
+        # Dropping gui_layout_widget is NOT enough: gui_console("engineering") declares
+        # grid_face in the widget list, and an engine widget that is declared but never
+        # given a rect draws at its own default position. So drop it from the list this
+        # build declares, and park the one a console was already showing off screen.
+        gui_update_widgets("", "grid_face")
+        gui_widget_offscreen("grid_face")
         gui_row()
+        # Selected / Orders / Systems. Tabs, so each gets the WHOLE of a row that is
+        # 587px tall at 1920 and 227 at 1280x720. Built with gui_tabbed_panel, never
+        # gui_info_panel: pending_info_panel is a singleton and the left column owns it.
+        eng_grid_panel()
+        gui_row("row-height:200px;")
         gui_layout_widget("grid_control")
-        gui_row()
+        gui_row("row-height:2em;")
+        gui_blank(1)
+        gui_row("row-height:200px;")
         gui_layout_widget("grid_object_list")
 
 
