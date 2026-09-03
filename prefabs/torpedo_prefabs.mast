@@ -178,12 +178,43 @@ build_times:
     torp_defs = []
     for tr in role("torpedo_definition"):
         torp_defs.append((get_inventory_value(tr, "sort_order", 100), get_inventory_value(tr, "key"), tr))
+    #
+    # A HULL THAT DECLARES ITS LOADOUT IS BELIEVED.
+    #
+    # `torpedostart` in shipData is a per-hull declaration and the stock data means it
+    # precisely - a tsn_fighter is Homing 5 and zero of everything else, a tsn_shuttle is
+    # zero of everything - and `ship_data.py` writes the available-types list from exactly
+    # that. So a non-empty list here means the hull has already answered the question this
+    # loop is about to ask, and adding to it overrules the answer.
+    #
+    # Reported from the TNG playtest: a Galaxy declaring `{Photon: 16}` spawned correctly
+    # and then, a second later, came back carrying PShock 10/10 and Tag 5/5 - rounds no
+    # TNG hull lists. This route is the "second later". The ship's SIDE was tsn, every
+    # stock type is gated `tsn`, and a hull that simply does not mention PShock was read
+    # as one that had not been given it yet rather than one that does not carry it.
+    #
+    # AN EMPTY LIST STILL GETS EVERYTHING, which is the back-compatible half: a hull with
+    # no `torpedostart` at all has declared nothing, so there is nothing to overrule and
+    # the old behaviour is exactly right.
+    _declared = get_data_set_value(ship, "torpedo_types_available")
+    if _declared is None:
+        _declared = ""
+    _declared = [t.strip() for t in _declared.split(",") if t.strip()]
     for torp_sort, key, tr in sorted(torp_defs):
         player_ship_roles = get_inventory_value(tr, "player_ship_roles")
         count = get_inventory_value(tr, "default_max_count")
         # A fabricate-only type (fill_on_spawn False, e.g. the Beacon) gets its CAPACITY
         # here but no loaded rounds - the only way to a round is to build one.
         fill_on_spawn = get_inventory_value(tr, "fill_on_spawn", True)
+        # A FABRICATE-ONLY TYPE IS THE ONE EXCEPTION, and the flag that marks it already
+        # exists. No stock hull declares a Beacon - it is a LegendaryMissions type and
+        # this route is what gives every ship its tube - so a blanket "the hull is
+        # complete" rule would quietly remove it and take fabrication with it.
+        # `fill_on_spawn: false` means "capacity, no rounds", which is exactly the shape of
+        # a type a hull is not expected to list. Tag and PShock are both `true`.
+        _hull_spoke = len(_declared) > 0 and key not in _declared
+        if _hull_spoke and fill_on_spawn:
+            continue
         if player_ship_roles is not None:
             roles = player_ship_roles.split(",")
             for r in roles:
