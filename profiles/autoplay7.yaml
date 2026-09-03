@@ -8,6 +8,7 @@ AUTO_START: true
 # attracting attention
 AUTO_PLAY:
     enable: true
+    brain: true
     # Range (u) the ship holds at to open with its EMP/Nuke volley, clear of the blast.
     standoff: 5000
     # Engineering overpower applied to drive + weapons (1.0 = 100%); eased off on low energy.

@@ -63,7 +63,7 @@ DOCKING:
     refuel_amount: 20
     refuel_delay: 2
     shield_delay: 2
-    shield_coeff: 25
+    shield_coeff: 2
     torps_delay: 6
     interior_delay: 2
     interior_count: 2
