@@ -292,8 +292,33 @@ room: ""
         yield fail
     
     yield success if _pos == prev_pos
-    # Already been here
-    yield fail if _pos == idle_pos
+    # ALREADY STANDING ON THE NEW TARGET - and this is where a team used to get stuck
+    # for the rest of the mission.
+    #
+    # `ai_idle_at_room` latches `idle_state = "done"` when it finishes a job and then
+    # refuses to run again while it reads "done". In this brain's tree the ONLY other
+    # writer is this label - `ai_grid_moving` is commented out of
+    # `prefab_lifeform_damcons`, so it never runs and cannot clear anything. This branch
+    # bailed without touching `idle_state`, so a team whose NEXT target resolved to the
+    # cell it was already on stayed "done" forever: standing on damage, doing nothing,
+    # holding a work order. That is the "competing work orders" report - two teams, two
+    # orders, and one of them silently retired.
+    #
+    # Being at the target is ARRIVED, not "still doing the last thing". So clear the
+    # latch, and clear the boost bookkeeping with it: `new_location` is
+    # `idle_pos != boost_pos`, and leaving boost_pos where it is would send
+    # `ai_idle_at_room` back to the `idle_room` it just FINISHED rather than re-scanning
+    # the cell underfoot. Forcing a re-scan is what makes it service the new job.
+    #
+    # Guarded on "done" so this only fires on the latch. A team that is merely idle here
+    # is behaving correctly and is left alone.
+    if _pos == idle_pos:
+        if BRAIN_AGENT.get_inventory_value("idle_state") == "done":
+            BRAIN_AGENT.set_inventory_value("idle_state", "stopped")
+            BRAIN_AGENT.set_inventory_value("idle_room", None)
+            BRAIN_AGENT.set_inventory_value("idle_room_data", None)
+            set_inventory_value(BRAIN_AGENT_ID, "blackboard:boost_pos", (-1,-1))
+        yield fail
     # speed = grid_calc_speed(BRAIN_AGENT_ID)
     BRAIN_AGENT.set_inventory_value("idle_room", None)
     set_inventory_value(BRAIN_AGENT_ID, "blackboard:prev_target_pos", _pos)
