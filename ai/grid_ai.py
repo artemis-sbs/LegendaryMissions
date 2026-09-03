@@ -316,8 +316,65 @@ def _grid_node_roles(node_id):
     # get_roles(), not `.roles` - that is the class-level Stuff registry keyed by
     # role name, not this agent's own list, and iterating it is a TypeError. It
     # would have surfaced as a silently BLANK panel tab, never as an error.
-    names = sorted(r for r in agent.get_roles() if not r.startswith("__"))
+    # Not just the `__` bookkeeping roles. `#` (the "no default roles" marker) leaves
+    # an EMPTY entry, which rendered as a leading comma, and `gridobject` is on every
+    # node so it says nothing about this one. Both were noise in a line that exists
+    # to answer "what is this room FOR".
+    hidden = ("", "#", "gridobject", "room")
+    names = sorted(r for r in agent.get_roles()
+                   if r and r not in hidden and not r.startswith("__"))
     return ", ".join(names)
+
+
+# The four tier colors, plus the two neutrals the panel uses for text that is not
+# reporting a condition. Same values the glyph row and the grid draw with, so a line
+# and the node it describes can never disagree.
+_MD_OK = "springgreen"
+_MD_TUNED = "#40E0E0"
+_MD_WORN = "Gold"
+_MD_BAD = "Crimson"
+_MD_TEXT = "#E6E6F0"
+_MD_DIM = "#8B85A8"
+
+
+def _md_line(text, color=_MD_TEXT):
+    """One colored bullet.
+
+    `$$<style>; <text>` sets a one-off style and BYPASSES the markdown pass, which is
+    why the dash is literal here - a real `-` bullet is restyled by the built-in `ul`
+    style and comes back the same color as every other line, which is the whole thing
+    this is fixing.
+    """
+    return f"$$color:{color};font:gui-2;  - {text}"
+
+
+def _md_state_color(node_id):
+    """The tier color for a node, for a line that is reporting its condition."""
+    state = grid_node_state(node_id)
+    if state == "damaged":
+        return _MD_BAD
+    if state == "worn":
+        return _MD_WORN
+    if state == "tuned":
+        return _MD_TUNED
+    return _MD_OK
+
+
+# What a team standing still is actually waiting to DO. ai_idle_at_room parks a
+# damcon on a room and fires the room's upgrade once its timer elapses, so "idle" and
+# "part way through a job" look identical from outside - which is exactly how a tune
+# in progress reads as a team ignoring its orders.
+_WORK_WORDS = {"ai_tune_node": "tuning", "ai_fix_damage": "repairing"}
+
+
+def _pending_work_word(node_id):
+    """The verb for whatever this team is parked to do, or None if just resting."""
+    room_data = get_inventory_value(node_id, "idle_room_data", None) or {}
+    upgrade = room_data.get("upgrade")
+    # An upgrade entry is a bare label name or a dict carrying one.
+    if isinstance(upgrade, dict):
+        upgrade = upgrade.get("label")
+    return _WORK_WORDS.get(str(upgrade))
 
 
 def grid_selected_markdown(ship_id, node_id):
@@ -340,27 +397,46 @@ def grid_selected_markdown(ship_id, node_id):
     lines = [f"## {_md_safe(node.name)}"]
 
     if has_role(node_id, "damcons"):
-        lines.append(f"- {_md_safe(get_inventory_value(node_id, 'last_status', 'idle'))}")
+        lines.append(_md_line(_md_safe(get_inventory_value(node_id, 'last_status', 'idle'))))
 
         max_hp = grid_get_max_hp()
         hp = get_inventory_value(node_id, "HP", max_hp)
-        hp_line = f"- HP {hp} of {max_hp}"
+        # Green at full, gold once it slips, crimson when the team is nearly out -
+        # the same reading as a system pool, so one glance covers crew and hull.
+        if hp >= max_hp:
+            hp_color = _MD_OK
+        elif hp * 2 > max_hp:
+            hp_color = _MD_WORN
+        else:
+            hp_color = _MD_BAD
+        hp_text = f"HP {hp} of {max_hp}"
         if hp < max_hp:
-            hp_line += " - visit sickbay"
-        lines.append(hp_line)
+            hp_text += " - visit sickbay"
+        lines.append(_md_line(hp_text, hp_color))
 
         # Live speed boosts, same source the tooltip reads. Expired ones are dropped
         # by grid_damcons_detailed_status_update, which runs every tick on the brain;
         # this only READS, so a stale entry is skipped rather than pruned here.
         for name, mod in (get_inventory_value(node_id, "speed_modifiers", {}) or {}).items():
             if mod is not None and not mod.expired():
-                lines.append(f"- {_md_safe(name)} for {mod.format_time_remaining()}")
+                lines.append(_md_line(f"{_md_safe(name)} for {mod.format_time_remaining()}",
+                                      _MD_TUNED))
 
+        # A team parked on a job counts down the SAME timer as one parked in the gym,
+        # so saying "boost" for both is what made a tune in progress read as a team
+        # sitting on its hands. Name the job when there is one.
         boost_time = get_time_remaining(node_id, "idle_boost_timer")
-        if boost_time > 0:
-            lines.append(f"- boost in {format_time_remaining(node_id, 'idle_boost_timer')}")
+        work_word = _pending_work_word(node_id)
+        if boost_time > 0 and work_word:
+            lines.append(_md_line(f"{work_word} - {format_time_remaining(node_id, 'idle_boost_timer')} to go",
+                                  _MD_WORN))
+        elif boost_time > 0:
+            lines.append(_md_line(f"boost in {format_time_remaining(node_id, 'idle_boost_timer')}",
+                                  _MD_TUNED))
+        elif work_word:
+            lines.append(_md_line(f"{work_word} here", _MD_WORN))
         else:
-            lines.append("- idle in gym, mess or quarters to boost")
+            lines.append(_md_line("idle in gym, mess or quarters to boost", _MD_DIM))
 
         # work_orders_for, not linked_to: it drops orders whose node was deleted,
         # repaired by somebody else, or replaced by a grid rebuild. The count on this
@@ -369,24 +445,25 @@ def grid_selected_markdown(ship_id, node_id):
         lines.append("")
         lines.append(f"## Orders {len(orders)}")
         if not orders:
-            lines.append("- none assigned")
+            lines.append(_md_line("none assigned", _MD_DIM))
         for target in sorted(orders, key=lambda t: -work_order_priority(t.id)):
-            lines.append(f"- {_md_safe(target.name)} - {_order_words(target.id)}")
+            lines.append(_md_line(f"{_md_safe(target.name)} - {_order_words(target.id)}",
+                                  _md_state_color(target.id)))
         return "\n".join(lines)
 
     # A room, a system node, or anything else selectable on the interior view.
     condition = _grid_node_condition_line(node_id)
-    lines.append(f"- {condition}" if condition else "- Nominal")
+    lines.append(_md_line(condition or "Nominal", _md_state_color(node_id)))
 
     roles = _grid_node_roles(node_id)
     if roles:
-        lines.append(f"- {_md_safe(roles)}")
+        lines.append(_md_line(_md_safe(roles), _MD_DIM))
 
     workers = to_object_list(work_order_workers(node_id))
     if workers:
         names = ", ".join(_md_safe(w.name) for w in sorted(workers, key=lambda d: d.name))
-        lines.append(f"- {_order_words(node_id)}")
-        lines.append(f"- assigned {names}")
+        lines.append(_md_line(_order_words(node_id), _md_state_color(node_id)))
+        lines.append(_md_line(f"assigned {names}"))
     elif condition:
-        lines.append("- no team assigned")
+        lines.append(_md_line("no team assigned", _MD_DIM))
     return "\n".join(lines)

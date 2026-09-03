@@ -102,8 +102,12 @@ brain:
       #
       # It also means a team only ever tunes what it was SENT to tune, rather than
       # anything worn it happens to be standing on.
+      # idle_time here is DEAD - `idle_time = room_data.get(...)` in ai_idle_at_room is
+      # commented out, so every room uses the label's own metadata default of 60s
+      # (10 on a dev build). Left at 60 so it does not read as a promise the code does
+      # not keep; the same is true of the 120 on sickbay and every other entry here.
       - room: __maintenance__
-        idle_time: 90
+        idle_time: 60
         upgrade: ai_tune_node
       - room: sickbay
         idle_time: 120
