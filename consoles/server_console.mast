@@ -286,6 +286,11 @@ gui_reroute_clients("client_main")
         # so a map-local property var (e.g. JOBS_SELECT) shows its starting value instead of
         # blank/0. Settings.yaml / story / game-code values already set are left untouched.
         map_apply_defaults(WORLD_SELECT)
+        # ...and what the crew FLIES, if this map says so. Overwrites rather than
+        # defaulting: browsing the picker must not pin whichever map was looked at
+        # first. player_roster_apply() below is what puts it on the ships, so the
+        # crew is already in the right hull before anyone reaches console-select.
+        map_apply_crew(WORLD_SELECT)
 
         # The map's Defaults may have just named a THEATER, and the operator may have moved
         # PLAYER_COUNT since the last build. Re-shape the roster to match, right here, while
@@ -380,6 +385,11 @@ Main:
         # ever presenting the panel, so this guarantees the map body's vars exist (set-if-absent,
         # so anything the operator changed on the panel is preserved).
         map_apply_defaults(WORLD_SELECT)
+        # ...and what the crew FLIES, if this map says so. Overwrites rather than
+        # defaulting: browsing the picker must not pin whichever map was looked at
+        # first. player_roster_apply() below is what puts it on the ships, so the
+        # crew is already in the right hull before anyone reaches console-select.
+        map_apply_crew(WORLD_SELECT)
         #
         # The operator's dropdown or the map's `Defaults: MUSIC_SELECT` outranks the lobby
         # pick. Absent both, the lobby's choice STANDS rather than re-rolling - re-rolling
