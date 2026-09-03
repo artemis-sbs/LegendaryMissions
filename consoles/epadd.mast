@@ -74,12 +74,13 @@ gui_app_register("cargo", title="Cargo", icon="epadd.cargo", group="Ship", sort=
 gui_app_register("fabricate", title="Fabricate", icon="epadd.fabricate", group="Ship",
                  sort=20, consoles="engineering",
                  description="Beacons, parts, build queue")
-# NEVER REGISTERED until now. `//gui/app/fabrication` is the older, separate
-# fabrication screen; it reached the PADD only through the adoption bridge, so
-# deleting that bridge would have made it silently disappear.
-gui_app_register("fabrication", title="Fabrication", icon="epadd.fabricate",
-                 group="Ship", sort=25, consoles="engineering",
-                 description="The full fabrication console")
+# NO SECOND FABRICATION TILE. `//gui/app/fabrication` is the older screen, and it read
+# item-def `craft_cost` metadata directly while Fabricate read the AMD recipe registry -
+# two tiles for one idea, and in LegendaryMissions and the TNG missions the second was
+# EMPTY, because nothing there declares craft_cost. StormsBeacon does, so the path could
+# not just be deleted: `fabrication_recipes()` folds those item craftables into the list
+# Fabricate already shows (`craft_cost: 8` is `Inputs: salvage x8`), and the route stays
+# reachable for a mission that jumps to it by name.
 gui_app_register("airwing", title="Airwing", icon="epadd.airwing", group="Ship", sort=40,
                  consoles="hangar", description="Craft, pilots, sortie board")
 gui_app_register("casino", title="Casino", icon="epadd.casino", group="Ship", sort=50,

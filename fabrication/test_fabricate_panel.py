@@ -156,7 +156,10 @@ class _Base(unittest.TestCase):
         self.ship = player_spawn(0, 0, 0, "Engineer", "tsn", "tsn_light_cruiser")
         mock_sbs.assign_client_to_ship(CID, self.ship.id)
 
-        self.tab = [k for k in story.labels if k.startswith("gui/tab/fabricate")][0]
+        # `gui/app/`, not `gui/tab/`: the PADD's screens became their own route kind
+        # (2026-09-02) and this looked for the old prefix, so every test in this class
+        # errored on setUp rather than running.
+        self.tab = [k for k in story.labels if k.startswith("gui/app/fabricate")][0]
 
         self.server = FabPage()
         Gui.push(0, self.server)
@@ -327,5 +330,8 @@ class TestTabStripIsReDeclared(unittest.TestCase):
     def test_every_repaint_still_sets_the_back_tab(self):
         for repaint in ("--- fab_repaint", "--- cargo_repaint"):
             i = self.src.index(repaint)
-            self.assertIn("gui_tab_back(CONSOLE_SELECT)", self.src[i:i + 400],
+            # A WIDE ENOUGH WINDOW. 400 characters stopped reaching the call once the
+            # label grew a comment explaining why the line is there - the test failed
+            # while the code was right, which is the worst way for a guard to break.
+            self.assertIn("gui_tab_back(CONSOLE_SELECT)", self.src[i:i + 1200],
                           f"{repaint} lost its back tab")

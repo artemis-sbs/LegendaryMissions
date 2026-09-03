@@ -136,8 +136,67 @@ def fabrication_add_recipe(key, output, inputs=None, time=30, build_at="", progr
 
 
 def fabrication_recipes():
-    """Every registered recipe (list of dicts)."""
-    return list(_RECIPES.values())
+    """Every recipe the Fabricate panel should list - AMD recipes AND item craftables.
+
+    ONE PANEL, TWO SOURCES. There used to be two: this registry behind `//gui/app/fabricate`,
+    and a second screen behind `//gui/app/fabrication` that read item-def `craft_cost`
+    metadata directly. Both appeared on the ePADD, so a mission got two Fabrication tiles -
+    and in LegendaryMissions and the TNG missions the second one was EMPTY, because nothing
+    there declares craft_cost. StormsBeacon does, which is why the path cannot simply be
+    deleted.
+
+    So the item craftables are folded in here instead, and the second screen is no longer
+    offered. `craft_cost: 8` says exactly what `Inputs: salvage x8` says, which is what
+    makes this a translation rather than a reinterpretation.
+
+    MERGED AT READ TIME, not at load. Items are registered by a MISSION's top level, which
+    may run after this addon's, so a one-shot import at load would see nothing. An AMD
+    recipe of the same key wins - a mission that has written a real recipe has said more
+    about it than its item def can.
+    """
+    out = list(_RECIPES.values())
+    have = {r.get("key") for r in out}
+    for extra in _item_craftables():
+        if extra["key"] not in have:
+            out.append(extra)
+    return out
+
+
+def _item_craftables():
+    """Item defs carrying `craft_cost`, as recipes. Empty when the item system is absent."""
+    try:
+        from sbs_utils.procedural.items import items_get_list
+    except Exception:                                   # noqa: BLE001
+        return []
+    out = []
+    try:
+        labels = list(items_get_list() or [])
+    except Exception:                                   # noqa: BLE001
+        # No story loaded (a unit test, or a panel asking before the labels exist), or
+        # something that is not a list came back. `list()` is INSIDE the guard for the
+        # second case: the iteration used to sit outside it, so a non-iterable answer
+        # raised past this and took the panel down with it.
+        return []
+    for lbl in labels:
+        try:
+            key = lbl.get_inventory_value("key")
+            cost = int(lbl.get_inventory_value("craft_cost", 0) or 0)
+        except Exception:                               # noqa: BLE001
+            continue
+        if not key or cost <= 0:
+            continue
+        out.append({
+            "key": key,
+            "name": lbl.get_inventory_value("display_text", key),
+            # The item IS the output - that was the whole shape of the old screen:
+            # "THE RECIPES ARE THE ITEM DEFS".
+            "output": key,
+            "inputs": {"salvage": cost},
+            "time": int(lbl.get_inventory_value("craft_time", 30) or 30),
+            "build_at": "", "program": {}, "properties": {}, "defaults": {},
+            "desc": lbl.get_inventory_value("description", "") or "",
+        })
+    return out
 
 
 def fabrication_get_recipe(key):
