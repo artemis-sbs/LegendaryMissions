@@ -1,6 +1,23 @@
 
 === ai_fix_damage
-    any_damage = to_grid_object(grid_closest(UPGRADE_AGENT_ID,role("__damaged__")& grid_objects(UPGRADE_AGENT.host_id)))
+    # REPAIR WHAT WE WERE SENT TO, not what happens to be nearest on arrival.
+    #
+    # Movement already commits: `ai_lifeform_move_to_damage` and its work-order twin both
+    # keep `blackboard:damage_target` while it is still damaged, which is what stopped the
+    # brain oscillating between two rooms. This half never read it - it recomputed
+    # `grid_closest` at the moment of repair - so a team ordered to one room could walk
+    # there, arrive next to a different damaged node, and repair THAT: closing an order it
+    # never held and leaving its own room untouched. Reported as damcons getting stuck
+    # with competing work orders.
+    #
+    # Same rule as the movement half, for the same reason: hold the commit while it is
+    # real, and only fall back to the closest when it is repaired or gone.
+    damaged_here = role("__damaged__") & grid_objects(UPGRADE_AGENT.host_id)
+    committed = get_inventory_value(UPGRADE_AGENT_ID, "blackboard:damage_target")
+    if committed is not None and committed in damaged_here:
+        any_damage = to_grid_object(committed)
+    else:
+        any_damage = to_grid_object(grid_closest(UPGRADE_AGENT_ID, damaged_here))
     ->END if any_damage is None
     grid_repair_grid_objects(UPGRADE_AGENT.host_id, any_damage.id, UPGRADE_AGENT_ID)
     # grid_damcons_handle_idling_boost_finish(UPGRADE_AGENT)
