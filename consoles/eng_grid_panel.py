@@ -128,9 +128,15 @@ def _eng_header(title, icon_name=None, color=None, note=None):
             gui_icon_name(icon_name, color=color or "white")
     # gui_text_escape on every dynamic value: a grid node is named "<name>:<x>,<y>",
     # so its name CONTAINS a colon and would be read as a style property.
-    gui_text(f"$text:{gui_text_escape(title)};font:gui-3;")
+    #
+    # overflow:ellipsis because the row is a FIXED 1.5em and `spill` is the default -
+    # a title one character too wide for the column wrapped to two lines and drew
+    # straight through whatever the tab put underneath it. A clipped title is a
+    # cosmetic loss; a title painted over the body is an unreadable panel.
+    gui_text(f"$text:{gui_text_escape(title)};font:gui-3;overflow:ellipsis;")
     if note:
-        gui_text(f"$text:{gui_text_escape(note)};font:gui-1;color:#8B85A8;justify:right;")
+        gui_text(f"$text:{gui_text_escape(note)};font:gui-1;color:#8B85A8;justify:right;overflow:ellipsis;",
+                 "col-width: content;")
 
 
 # --- tab 1: Selected ---------------------------------------------------------
@@ -142,7 +148,7 @@ def eng_panel_selected_show(cid, left, top, width, height):
     if node is None:
         _eng_header("Selected")
         gui_row()
-        gui_text_area("$text:(click a room or a team on the interior view);color:#888;")
+        gui_text_area("$text:(pick a room or a team on the interior view);color:#888;")
         return
     is_crew = has_role(node_id, "damcons")
     _eng_header(node.name, "person" if is_crew else "gear",
@@ -263,16 +269,16 @@ def _eng_order_item(item, **kwargs):
 
 
 def _eng_order_title(items=None, **kwargs):
-    _eng_header("Work orders", note=str(len(items or [])))
+    _eng_header("Orders", note=str(len(items or [])))
 
 
 def eng_panel_orders_show(cid, left, top, width, height):
     """Every work order on the ship, whoever it is assigned to."""
     rows = eng_order_rows(_eng_ship(cid))
     if not rows:
-        _eng_header("Work orders", note="0")
+        _eng_header("Orders", note="0")
         gui_row()
-        gui_text_area("$text:(no work orders - select a damaged room to assign one);color:#888;")
+        gui_text_area("$text:(nothing assigned - pick a room to repair or tune);color:#888;")
         return
     gui_row()
     gui_list_box(rows, "item-gap: 0.2em;", item_template=_eng_order_item,
@@ -331,7 +337,7 @@ def eng_panel_systems_show(cid, left, top, width, height):
     states = grid_system_states(ship_id) if ship_id else []
     if not states:
         gui_row()
-        gui_text_area("$text:(no interior data for this ship);color:#888;")
+        gui_text_area("$text:(this ship has no interior);color:#888;")
         return
     # The glyph row and the per-pool lines are FIXED height and come first; the
     # coefficient block takes whatever is left. At 1280x720 that block is what gets

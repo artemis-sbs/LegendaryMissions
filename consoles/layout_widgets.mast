@@ -333,7 +333,13 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     with gui_sub_section():
         gui_layout_widget("ship_internal_view")
     # Right
-    with gui_sub_section("col-width:max(200px,14);"):
+    # 18 percent, not 14. col-width is in the same units as the enclosing `area:` -
+    # SCREEN percent - so 14 stayed pinned to its own 200px floor all the way to a
+    # ~1430px-wide screen, i.e. the column never actually grew across the range most
+    # people play at. 18 starts growing just above 1024 (1280 -> 230px, 1600 -> 288,
+    # 1920 -> 346) while the 200px floor still protects the interior view on a small
+    # screen, where the section it shares is only ~460px wide in total.
+    with gui_sub_section("col-width:max(200px,18);"):
     # with gui_sub_section():
         # We own this rectangle now. grid_face is retired - it drew one oversized crew
         # glyph plus a `^`-separated status string, on the only FLEX row in this column,
