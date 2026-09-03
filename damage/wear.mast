@@ -35,7 +35,11 @@
 # launching ship. So origin is a ship only on the beam branch - which is the only
 # branch that reads it. Torpedo wear comes from the launch route below instead,
 # where the shooter is unambiguous.
-//damage/object if EVENT.sub_tag == "beam"
+#
+# str().lower() because the engine mixes conventions in this one field: measured, it
+# sends 'beam' and 'destroyed' lower case and a torpedo TYPE capitalised ('Homing').
+# Matching case-exactly is a comparison that silently never fires.
+//damage/object if str(EVENT.sub_tag or "").lower() == "beam"
     ->END if not has_role(DAMAGE_ORIGIN_ID, "__player__")
     grid_wear_beam_hit(DAMAGE_ORIGIN_ID)
     ->END
@@ -71,7 +75,7 @@
     # damage_route_probe.txt records both 'beam' and 'destroyed' arriving here). Wearing
     # the shields of a ship that has just been destroyed is meaningless, and the grid is
     # being torn down underneath it.
-    ->END if EVENT.sub_tag == "destroyed"
+    ->END if str(EVENT.sub_tag or "").lower() == "destroyed"
     ->END if EVENT.source_point is None
     hit_ship = to_object(DAMAGE_TARGET_ID)
     ->END if hit_ship is None
