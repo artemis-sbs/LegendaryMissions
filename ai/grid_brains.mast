@@ -94,11 +94,15 @@ brain:
         upgrade: ai_fix_damage
         hp_speed_up: True
       # AFTER __damaged__, so repair always outranks maintenance at the same spot.
-      # A team only ever WALKS to a worn node because a work order sent it there -
-      # ai_lifeform_move_to_damage still looks only at __damaged__, so idle teams do
-      # not wander off tuning things nobody asked for. A team that happens to rally
-      # on a worn node will tune it, which is a nice accident rather than a bug.
-      - room: __worn__
+      #
+      # __maintenance__, not __worn__: the marker a maintenance ORDER puts on its
+      # target. A worn node is not the only thing worth tuning - a NOMINAL one is how
+      # a crew earns the tuned tier at all - and a nominal node is not `__worn__`, so
+      # matching on wear would have made "tune a healthy system" unreachable.
+      #
+      # It also means a team only ever tunes what it was SENT to tune, rather than
+      # anything worn it happens to be standing on.
+      - room: __maintenance__
         idle_time: 90
         upgrade: ai_tune_node
       - room: sickbay
@@ -425,7 +429,7 @@ hp_speed_up: False
     # The maintenance twin of ai_fix_damage. Reached the same way: a work order sent
     # the team here, it arrived, and ai_idle_at_room fired this upgrade after the
     # __worn__ entry's idle_time.
-    any_worn = to_grid_object(grid_closest(UPGRADE_AGENT_ID, role("__worn__") & grid_objects(UPGRADE_AGENT.host_id)))
+    any_worn = to_grid_object(grid_closest(UPGRADE_AGENT_ID, role("__maintenance__") & grid_objects(UPGRADE_AGENT.host_id)))
     ->END if any_worn is None
     grid_tune_grid_object(UPGRADE_AGENT.host_id, any_worn.id, UPGRADE_AGENT_ID)
     set_inventory_value(UPGRADE_AGENT_ID, "blackboard:prev_target_pos", None)
