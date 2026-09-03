@@ -155,11 +155,33 @@ def eng_panel_selected_show(cid, left, top, width, height):
                 _eng_node_color(node_id), "crew" if is_crew else None)
     gui_row()
     # grid_selected_markdown lives in ai/grid_ai.py, next to the damcon status it
-    # reads. It is called by BARE NAME on purpose: the loader execs every .py of a
-    # mission's addons into ONE shared namespace keyed by the mission dir
-    # (mast/mast.py), so siblings cross-call directly - there is no `ai.grid_ai`
-    # module to import, and no other LM addon .py imports one.
-    gui_text_area(grid_selected_markdown(ship_id, node_id))
+    # reads, and that is a DIFFERENT MASTLIB from this one.
+    #
+    # The shared namespace is keyed by `lib_name` (mast.py), so every .py inside
+    # `consoles` cross-calls by bare name and `ai` is a separate namespace entirely. A
+    # bare name reached across that boundary is a NameError - measured, 81 of them in one
+    # 90-second run, every time a node was selected. It only reads as working locally,
+    # where an unpacked mission folder puts every addon in ONE namespace; packaged as
+    # mastlibs, which is how LM ships, it cannot resolve.
+    #
+    # MastGlobals is the one table both mastlibs DO share: `register_mission_functions`
+    # puts every top-level def from every addon into it. Looked up at call time, so it
+    # does not care which mastlib loaded first.
+    gui_text_area(_grid_selected_markdown(ship_id, node_id))
+
+
+def _grid_selected_markdown(ship_id, node_id):
+    """`grid_selected_markdown` from the `ai` mastlib, via the shared MAST table.
+
+    Returns a plain line rather than raising if the ai addon is not loaded: an
+    Engineering panel that cannot describe a node should say so, not take the console
+    down.
+    """
+    from sbs_utils.mast.mast_globals import MastGlobals
+    fn = MastGlobals.globals.get("grid_selected_markdown")
+    if fn is None:
+        return "(node detail needs the `ai` addon)"
+    return fn(ship_id, node_id)
 
 
 def eng_selected_signature(cid):

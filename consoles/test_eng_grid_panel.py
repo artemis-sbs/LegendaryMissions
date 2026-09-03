@@ -45,11 +45,13 @@ from sbs_utils.procedural import work_orders as W
 from consoles import eng_grid_panel as P
 from ai import grid_ai as G
 
-# The loader execs every addon .py into ONE shared namespace, so eng_grid_panel calls
-# grid_selected_markdown by bare name. A unit test imports the two as ordinary
-# modules, so wire the same reachability by hand rather than changing the module to
-# suit the test.
-P.grid_selected_markdown = G.grid_selected_markdown
+# The shared namespace is keyed by LIB_NAME, so `consoles` and `ai` are two separate
+# namespaces and a bare-name call between them is a NameError once LM is packaged as
+# mastlibs - which is how it ships. eng_grid_panel reaches it through MastGlobals, the
+# one table both mastlibs share, so the test registers it there rather than assigning a
+# module attribute nothing reads any more.
+from sbs_utils.mast.mast_globals import MastGlobals
+MastGlobals.globals["grid_selected_markdown"] = G.grid_selected_markdown
 
 CID = 1234
 
