@@ -12,6 +12,13 @@
 #   TIME       a per-minute beat ages every node, plus drive wear from throttle.
 #
 # The rates all live in the library beside the thresholds
+# THE AMOUNTS ARE NOT NAMED HERE. `WEAR_PER_BEAM_HIT` and `WEAR_PER_TUBE_SHOT` are
+# module-level constants in internal_damage, and only FUNCTIONS become MAST globals - so
+# naming one in a route reads perfectly and raises NameError the first time the route
+# fires. Both routes below did, which meant firing a beam or a torpedo threw a runtime
+# error on the bridge. `grid_wear_beam_hit` / `grid_wear_tube_shot` look the amount up on
+# the library side, the way `grid_wear_shield_hit` and `grid_wear_travel` already did.
+#
 # (`WEAR_PER_BEAM_HIT` and friends) so `grid_set_wear_tuning(beam_hit=...)` moves
 # them at runtime. `grid_set_wear_tuning(upkeep_rate=0)` turns the time source off
 # entirely for a mission that only wants combat to cost something.
@@ -30,7 +37,7 @@
 # where the shooter is unambiguous.
 //damage/object if EVENT.sub_tag == "beam"
     ->END if not has_role(DAMAGE_ORIGIN_ID, "__player__")
-    grid_wear_system(DAMAGE_ORIGIN_ID, "beam", WEAR_PER_BEAM_HIT)
+    grid_wear_beam_hit(DAMAGE_ORIGIN_ID)
     ->END
 
 
@@ -50,7 +57,7 @@
 //launch/missile
     wear_shooter = LAUNCH_PARENT_ID or LAUNCH_ORIGIN_ID
     ->END if not has_role(wear_shooter, "__player__")
-    grid_wear_system(wear_shooter, "torpedo", WEAR_PER_TUBE_SHOT)
+    grid_wear_tube_shot(wear_shooter)
     ->END
 
 
