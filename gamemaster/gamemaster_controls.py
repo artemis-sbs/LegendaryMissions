@@ -96,16 +96,15 @@ def buildButtons(parent_category, items):
         # gui_row()
     gui_row()
 
-spawn_sides = list((
-    "TSN",
-    "USFP",
-    "Kralien",
-    "Arvonian",
-    "Torgoth",
-    "Skaraan",
-    "Ximni",
-    "Pirate"
-))
+# `spawn_sides` WAS A LITERAL HERE - the eight stock sides, Skaraan among them - and it
+# was already dead: the only function that mentions it rebinds it from `get_sides()` on
+# its first line, and every `buildButtons(..., spawn_sides)` call is commented out.
+#
+# Deleted rather than left, because it reads like the live roster. GWQ-12 ("Skaraan show
+# up even when they aren't NPC races") sent two people to exactly this list, and a stock
+# list sitting in a total conversion is a lie whether or not anything calls it.
+# `get_sides()` below derives from the live `__side__` agents, which is what the panel
+# actually uses.
 
 spawn_terrain = list((
     "asteroids",

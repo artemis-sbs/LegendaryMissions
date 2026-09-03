@@ -91,5 +91,61 @@ class FleetRaceGateTest(unittest.TestCase):
         self.assertFalse(map_common._fleet_can_raid()("breen"))
 
 
+class OffRosterAuditTest(unittest.TestCase):
+    """An explicitly named race is still built - and now says so.
+
+    The gate filters the random/theater PICK only. A map that names a faction outright
+    means it (siege's Skaraan "independent contractors"), so this cannot refuse - but an
+    unreproducible "why is that here" is what made GWQ-12 cost a day, so the one path
+    that can still do it names itself.
+    """
+
+    def setUp(self):
+        self.settings = settings_get_defaults()
+        self._npc = self.settings.get("NPC_RACES")
+        map_common._OFF_ROSTER_NOTED.clear()
+
+    def tearDown(self):
+        map_common._OFF_ROSTER_NOTED.clear()
+        if self._npc is None:
+            self.settings.pop("NPC_RACES", None)
+        else:
+            self.settings["NPC_RACES"] = self._npc
+
+    def _notes(self, race):
+        import io as _io
+        import contextlib
+        buf = _io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            map_common._fleet_note_off_roster(race)
+        return buf.getvalue()
+
+    def test_a_race_off_the_roster_is_named(self):
+        self.settings["NPC_RACES"] = "Kralien, Torgoth"
+        out = self._notes("skaraan")
+        self.assertIn("skaraan", out)
+        self.assertIn("NPC_RACES", out)
+
+    def test_a_race_ON_the_roster_says_nothing(self):
+        self.settings["NPC_RACES"] = "Kralien, Skaraan"
+        self.assertEqual(self._notes("skaraan"), "")
+
+    def test_it_is_said_once_not_per_fleet(self):
+        """A wave spawner would otherwise fill the log with the same line."""
+        self.settings["NPC_RACES"] = "Kralien"
+        self.assertNotEqual(self._notes("skaraan"), "")
+        self.assertEqual(self._notes("skaraan"), "")
+
+    def test_an_empty_setting_says_nothing(self):
+        """Empty NPC_RACES means no restriction, so nothing is off the roster."""
+        self.settings["NPC_RACES"] = ""
+        self.assertEqual(self._notes("skaraan"), "")
+
+    def test_an_empty_race_says_nothing(self):
+        self.settings["NPC_RACES"] = "Kralien"
+        self.assertEqual(self._notes(""), "")
+        self.assertEqual(self._notes(None), "")
+
+
 if __name__ == "__main__":
     unittest.main()
