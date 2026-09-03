@@ -46,16 +46,36 @@ STOCK_THEATER = "legendary"
 
 
 def _fleet_can_raid(eligible=None):
-    """`eligible`, ANDed with "this race has a fleet ladder registered".
+    """`eligible`, ANDed with "this race is an enabled NPC race with a fleet ladder".
 
     The ladder half is `fleet_table_can_field`, which names a rostered race it cannot
     field once per mission - a theater naming a race nothing can build is a data error in
     the theater, and the quiet version of it is a faction written into the roster that
     simply never turns up.
+
+    THE NPC_RACES HALF IS THE ANSWER TO "Skaraan show up even when they aren't NPC
+    races" (GWQ-12), and it is here rather than anywhere else because a THEATER roster is
+    not the NPC_RACES setting and never has been. The stock `legendary` theater rosters
+    skaraan; a TNG game excludes skaraan from NPC_RACES; and the only thing standing
+    between the two was that the ladder happens to be registered behind the same setting,
+    over in `races/__init__.mast`. That is a second gate in another addon's top-level
+    code, and addon load order is not deterministic - so "is the ladder registered yet"
+    was doing duty for "is this race allowed", which it only resembles.
+
+    Asking the setting directly makes the rule the rule: a race the operator has turned
+    off cannot be PICKED, whatever any theater rosters and whoever loaded first. Note
+    this gates the random/theater pick only - `fleet_create` uses an explicitly named
+    race as given, so a map that deliberately spawns one faction (siege's Skaraan
+    "independent contractors") is untouched.
     """
     from sbs_utils.procedural.fleet_tables import fleet_table_can_field
+    from sbs_utils.procedural.settings import settings_race_is_npc
 
     def test(race):
+        # An EMPTY NPC_RACES means "no restriction", not "no races" - that is the
+        # setting's own contract, so this cannot empty a mission that never set it.
+        if not settings_race_is_npc(race):
+            return False
         if not fleet_table_can_field(race):
             return False
         return eligible is None or eligible(race)
