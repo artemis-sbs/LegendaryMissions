@@ -351,7 +351,12 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
         # build declares, and park the one a console was already showing off screen.
         gui_update_widgets("", "grid_face")
         gui_widget_offscreen("grid_face")
-        gui_row()
+        # A backing for the panel. The hull plating behind this column is a tiled
+        # light-on-dark pattern, and text drawn straight onto it competes with the
+        # tile edges wherever a line happens to cross one - which is most lines. A
+        # near-opaque dark ground gives every tab one predictable surface to sit on
+        # instead of a different one per row.
+        gui_row("background:#011C;")
         # Selected / Orders / Systems. Tabs, so each gets the WHOLE of a row that is
         # 587px tall at 1920 and 227 at 1280x720. Built with gui_tabbed_panel, never
         # gui_info_panel: pending_info_panel is a singleton and the left column owns it.
