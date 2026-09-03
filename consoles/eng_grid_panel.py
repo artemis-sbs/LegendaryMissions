@@ -330,6 +330,26 @@ def eng_coefficient_values(ship_id):
     return out
 
 
+def _eng_coefficient_color(pct):
+    """What tier a derived coefficient reads as.
+
+    The same four colors the glyph row and the grid itself use, so a number and the
+    nodes it came from cannot disagree:
+
+    * over 100 - something in this pool is TUNED
+    * exactly 100 - every node nominal
+    * 75 and up - degraded, whether worn or partly shot away
+    * under 75 - most of the pool is gone
+    """
+    if pct > 100:
+        return GRID_TUNED_COLOR_DEFAULT
+    if pct >= 100:
+        return "springgreen"
+    if pct >= 75:
+        return GRID_WORN_COLOR_DEFAULT
+    return "Crimson"
+
+
 def eng_panel_systems_show(cid, left, top, width, height):
     """The four system pools as glyphs, their counts, then the coefficients."""
     ship_id = _eng_ship(cid)
@@ -354,8 +374,15 @@ def eng_panel_systems_show(cid, left, top, width, height):
     if not values:
         return
     gui_row()
-    body = "\n".join(f"- {label} {pct}%" for label, pct in values)
-    gui_text_area("## Effectiveness\n" + body)
+    # Colored PER LINE by tier, so the pool that is hurting is findable without
+    # reading eight numbers. `$$<style>; <text>` sets a one-off style for a line and
+    # bypasses the markdown pass for it - which is also why the dash is literal text
+    # rather than a `-` bullet: a bullet is re-styled by the built-in `ul` style and
+    # would come back the same blue as everything else.
+    lines = ["## Effectiveness"]
+    for label, pct in values:
+        lines.append(f"$$color:{_eng_coefficient_color(pct)};font:gui-2;  - {label} {pct}%")
+    gui_text_area("\n".join(lines))
 
 
 def _eng_pool_text(state):

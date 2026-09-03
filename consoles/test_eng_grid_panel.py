@@ -456,5 +456,50 @@ class TestOrderRowButtons(PanelBase):
         P._eng_order_drop(None, _Sender())
 
 
+class TestCoefficientColors(PanelBase):
+    """The Effectiveness numbers are colored by tier so the pool that is hurting is
+    findable without reading eight of them. They must use the SAME four colors the
+    glyph row and the grid use - a number that disagrees with the node it came from
+    is worse than an uncolored one."""
+
+    def test_the_four_bands(self):
+        from sbs_utils.procedural.internal_damage import (GRID_TUNED_COLOR_DEFAULT,
+                                                          GRID_WORN_COLOR_DEFAULT)
+        self.assertEqual(P._eng_coefficient_color(110), GRID_TUNED_COLOR_DEFAULT)
+        self.assertEqual(P._eng_coefficient_color(100), "springgreen")
+        self.assertEqual(P._eng_coefficient_color(83), GRID_WORN_COLOR_DEFAULT)
+        self.assertEqual(P._eng_coefficient_color(67), "Crimson")
+        self.assertEqual(P._eng_coefficient_color(0), "Crimson")
+
+    def test_each_line_carries_its_own_style(self):
+        """`$$<style>; <text>` is per-line and bypasses markdown. If the prefix is
+        ever malformed the whole area drops to plain text reading "Document syntax
+        issue" - a silent, total loss of the colors."""
+        from sbs_utils.pages.layout.text_area import TextArea
+        area = TextArea("probe", "x")
+        for pct in (110, 100, 83, 67):
+            line = f"$$color:{P._eng_coefficient_color(pct)};font:gui-2;  - beam {pct}%"
+            style, text = area.get_line_style(line, "_")
+            self.assertIsInstance(style, dict, f"{line!r} did not parse as a style")
+            self.assertIn(P._eng_coefficient_color(pct), style["style"])
+            self.assertIn(f"beam {pct}%", text)
+            self.assertIn("-", text, "the dash must survive as literal text")
+
+    def test_the_systems_tab_emits_one_styled_line_per_coefficient(self):
+        for i, r in enumerate(("weapon", "engine", "sensor", "shield")):
+            self.node(i, r, "__undamaged__")
+        drawn = []
+        original = P.gui_text_area
+        P.gui_text_area = lambda props, style=None, **kw: drawn.append(props)
+        try:
+            P.eng_panel_systems_show(CID, 0, 0, 200, 227)
+        finally:
+            P.gui_text_area = original
+        body = next((d for d in drawn if "Effectiveness" in d), None)
+        self.assertIsNotNone(body, "the Effectiveness block was not drawn")
+        styled = [ln for ln in body.split("\n") if ln.startswith("$$")]
+        self.assertEqual(len(styled), len(P.eng_coefficient_values(self.ship)))
+
+
 if __name__ == "__main__":
     unittest.main()
