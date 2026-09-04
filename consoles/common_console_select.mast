@@ -239,6 +239,48 @@ if CAN_CHANGE_CONSOLE:
 
 
 ========== select_console ==========
+    # `console_select_item` IS SET IN client_main, WHICH IS A DIFFERENT LABEL.
+    #
+    # MAST variables are task-scoped, so that only reaches here when the task flowed
+    # through client_main first. Entering select_console any other way left it undefined,
+    # and line ~340 reads `console_select_item.path` unguarded - a NameError there does
+    # not just skip a line: a failing expression ENDS THE COMMAND, so the console-select
+    # page stops building half way and the guest is left with a partial screen.
+    #
+    # Seen with --exercise driving the console cycle after GAME_STARTED. Re-derive it
+    # rather than assume: gui_get_console_type_list() is the same source client_main uses,
+    # and an empty list is survivable here where an exception is not.
+    default console_select_item = None
+    if console_select_item is None:
+        _cs_list = gui_get_console_type_list()
+        if len(_cs_list) > 0:
+            console_select_item = _cs_list[0]
+
+    # AND THE REST OF WHAT client_main LEAVES BEHIND. Same reason, same failure: every
+    # one of these is set in client_main and read here, so entering select_console any
+    # other way ends the command at the first of them. The engine found the next one
+    # along on client 0 (the SERVER, which never runs client_main):
+    #
+    #   NameError: name 'client_select_ship_id' is not defined
+    #   crew_choices_for(client_select_ship_id, None, client_id)   line 406
+    #
+    # and behind it `consoles` (the list this page IS) and `console_read_only`. Guarded
+    # as a set rather than one at a time, because fixing the first only moves the error
+    # to the second - which is exactly how this one was found.
+    #
+    # `consoles` is re-derived rather than defaulted to empty: it is the whole content of
+    # the picker, and gui_get_console_type_list() is the same source client_main reads.
+    # CONSOLE_SELECT is in the same boat despite the CAPS - client_main sets it from
+    # the console list, and the comment further down ("CONSOLE_SELECT survives, so match
+    # on it") is true only of a task that came through there. An empty string matches no
+    # console, which leaves the fallback above standing.
+    default CONSOLE_SELECT = ""
+    default client_select_ship_id = None
+    default console_read_only = False
+    default console_ready = False
+    default crew_name = ""
+    default consoles = gui_get_console_type_list()
+
     # default CONSOLE_SELECT = "helm"
     # default client_select_ship = "artemis"
 
@@ -322,7 +364,7 @@ if CAN_CHANGE_CONSOLE:
                 player_roster_set_hull(client_select_slot, ship_type)
             gui_update_shared("sh_ship_list", None)
 
-    if sbs.is_demo() or console_select_item.path != "helm" or GAME_STARTED or SHIP_PICK_READ_ONLY:
+    if sbs.is_demo() or console_select_item is None or console_select_item.path != "helm" or GAME_STARTED or SHIP_PICK_READ_ONLY:
         gui_hide(ship_sec)
         gui_show(ship_sec_not)
         spick.read_only = True
@@ -474,7 +516,7 @@ if CAN_CHANGE_CONSOLE:
             # `console_ready` stays True either way, which is what stops the server's start
             # reroute (game_started_console) reading it as False and sending the console back
             # to this picker with its choice thrown away.
-            jump console_selected if console_ready and console_select_item.label.get_inventory_value("pre_game")
+            jump console_selected if console_ready and console_select_item is not None and console_select_item.label.get_inventory_value("pre_game")
     else:
         on gui_message(gui_button("ready")):
             console_ready = True
