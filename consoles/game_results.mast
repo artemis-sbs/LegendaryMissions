@@ -64,6 +64,24 @@ shared game_stats = ~~{
 
     sim_pause()
 
+    # THE TRANSITION. This console is about to become the results screen, and an
+    # overlay belongs to the CONSOLE, not to the page: the page object survives the
+    # gui_task_jump below, so `present_all` re-draws whatever the slots still hold
+    # and the catch-up ticker re-delivers any live record it finds an empty slot
+    # for. So the last quest's hero card, a sticky HUD, the letterbox bars and any
+    # toast all arrive on top of the results.
+    #
+    # A transient card is the worst of them: it dismisses on a TickDispatcher timer,
+    # and `sim_pause()` above stops the ticks - so one raised in the last seconds of
+    # the game would sit there for as long as the results are up.
+    #
+    # FIRST in the route, before anything that could raise: a failing expression ends
+    # the task where it stands, and a console left carrying the mission's furniture is
+    # worse than a console that missed a stat. And in the ROUTE, never in
+    # `show_game_results_gui` - that label is re-entered on every tab click, which
+    # would tear down an overlay the results screen itself raised.
+    overlay_clear_console(client_id)
+
     GAME_ENDED = True
     START_TEXT = START_TEXT.strip()
     if START_TEXT == "":
