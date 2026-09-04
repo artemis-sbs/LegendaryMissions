@@ -454,7 +454,7 @@ shared COMMS_PROTOTYPE  = SETTINGS.get("COMMS_PROTOTYPE", False)
     gui_layout_widget("request_dock")
 
     # The two drive controls, bottom-left, anchored to the bottom edge.
-    gui_section(style="area:0,100-366px,127px,100;")
+    gui_section(style="area:0,max(100-366px,100-40) ,127px,100;")
     gui_layout_widget("throttle")
 
     gui_section(style="area:127px,100-269px,509px,100;")

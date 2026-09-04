@@ -45,25 +45,12 @@ PLAYER_LIST:
   - { name: "Nebula",     id: null, side: "tsn", ship: "tng_fed_nebula",          face: "human" }
   - { name: "Excalibur",  id: null, side: "tsn", ship: "tng_fed_excelsior_refit", face: "human" }
   - { name: "Titan",      id: null, side: "tsn", ship: "tng_fed_luna",            face: "human" }
-PLAYER_COUNT: 6
-AUTO_START: true
-
-# Auto play is a special mode
-# Typically used for testing
-# But could be useful with
-# attracting attention
-AUTO_PLAY:
-    enable: true
-    # Range (u) the ship holds at to open with its EMP/Nuke volley, clear of the blast.
-    standoff: 5000
-    # Engineering overpower applied to drive + weapons (1.0 = 100%); eased off on low energy.
-    overpower: 1.5
 
 DOCKING: 
     refuel_amount: 20
     refuel_delay: 2
     shield_delay: 2
-    shield_coeff: 2
+    shield_coeff: 4
     torps_delay: 6
     interior_delay: 2
     interior_count: 2
