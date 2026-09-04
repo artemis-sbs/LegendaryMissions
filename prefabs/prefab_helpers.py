@@ -15,8 +15,18 @@ def get_defender_name(side="tsn", allow_canuck=True):
     tsnname_list = shipname_data.get(side)
     canuck_list = shipname_data.get("canadian")
 
+    # A SIDE WITH NO NAME LIST FALLS BACK, it does not crash. `shipnames.json` carries
+    # the stock sides and an `unknown` list that was clearly meant for exactly this and
+    # had never been reached - so any mod faction (a TNG Klingon defender was the one
+    # that found it) died on `'NoneType' object has no attribute 'pop'`, inside a
+    # `default name =` the caller had already overridden by passing its own name.
+    if not tsnname_list:
+        tsnname_list = shipname_data.get("unknown")
+    if not tsnname_list:
+        return "Unnamed"
+
     name = f"TSN {tsnname_list.pop(random.randrange(len(tsnname_list)))}"
-    if allow_canuck and random.randint(1,1867) == 1867: ### This is an inside joke for our Canadian players. 
+    if allow_canuck and canuck_list and random.randint(1,1867) == 1867: ### This is an inside joke for our Canadian players. 
         name = f"TSN {canuck_list.pop(random.randrange(len(canuck_list)))}"
 
     return name
