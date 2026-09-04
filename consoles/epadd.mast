@@ -154,11 +154,6 @@ if is_dev_build():
     # Same reason: a board of live readings that never repaints is a photograph.
     on change message_revision():
         jump epadd_status_screen
-    # The mission clock is the one reading that changes every second, and a page
-    # repaint a second is every widget on the screen over the wire, per console,
-    # forever. So this one moves the WIDGET on and touches nothing else.
-    on change mission_elapsed_text():
-        gui_status_tick()
     await gui()
     ->END
 
@@ -212,5 +207,10 @@ if is_dev_build():
     # badge, and an app whose route condition turned on never appeared.
     on change gui_app_revision():
         jump epadd_home_screen
+    # The mission clock is the one reading that changes every second, and a page
+    # repaint a second is every tile on the sheet over the wire, per console,
+    # forever. So this one moves the WIDGET on and touches nothing else.
+    on change mission_elapsed_text():
+        gui_app_home_tick()
     await gui()
     ->END
