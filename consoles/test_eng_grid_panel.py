@@ -154,12 +154,12 @@ class TestEveryTabDraws(PanelBase):
         self.draw_all()
 
     def test_a_selected_room_draws_every_tab(self):
-        room = self.node(0, "room", "system", "weapon", "__undamaged__")
+        room = self.node(0, "system", "weapon", "__undamaged__")
         self.select(room)
         self.draw_all()
 
     def test_a_selected_damaged_room_draws_every_tab(self):
-        room = self.node(0, "room", "weapon", "__damaged__")
+        room = self.node(0, "system", "weapon", "__damaged__")
         self.select(room)
         self.draw_all()
 
@@ -169,7 +169,7 @@ class TestEveryTabDraws(PanelBase):
         self.draw_all()
 
     def test_a_damcon_with_orders_draws_every_tab(self):
-        room = self.node(0, "room", "weapon", "__damaged__")
+        room = self.node(0, "system", "weapon", "__damaged__")
         dc = self.damcon(1)
         link(dc, "work-order", room)
         self.select(dc)
@@ -195,7 +195,7 @@ class TestTickNeverReturnsZero(PanelBase):
         self.assert_never_zero()
 
     def test_with_a_selection(self):
-        self.select(self.node(0, "room", "weapon", "__damaged__"))
+        self.select(self.node(0, "system", "weapon", "__damaged__"))
         self.assert_never_zero()
 
     def test_with_no_ship_at_all(self):
@@ -205,7 +205,7 @@ class TestTickNeverReturnsZero(PanelBase):
 
 class TestTickRedrawsOnlyWhenSomethingMoved(PanelBase):
     def test_a_settled_tab_asks_to_stay(self):
-        self.select(self.node(0, "room", "weapon", "__damaged__"))
+        self.select(self.node(0, "system", "weapon", "__damaged__"))
         panel = _FakePanel(CID)
         for tick in self.ticks():
             tick(panel)                                    # first call primes it
@@ -213,8 +213,8 @@ class TestTickRedrawsOnlyWhenSomethingMoved(PanelBase):
             self.assertEqual(tick(panel), P.TICK_STAY)
 
     def test_a_new_selection_asks_for_a_redraw(self):
-        first = self.node(0, "room", "weapon", "__damaged__")
-        second = self.node(1, "room", "engine", "__undamaged__")
+        first = self.node(0, "system", "weapon", "__damaged__")
+        second = self.node(1, "system", "engine", "__undamaged__")
         panel = _FakePanel(CID)
         self.select(first)
         P.eng_panel_selected_tick(panel)
@@ -223,7 +223,7 @@ class TestTickRedrawsOnlyWhenSomethingMoved(PanelBase):
         self.assertEqual(P.eng_panel_selected_tick(panel), P.TICK_REDRAW)
 
     def test_a_new_work_order_asks_the_orders_tab_to_redraw(self):
-        room = self.node(0, "room", "weapon", "__damaged__")
+        room = self.node(0, "system", "weapon", "__damaged__")
         dc = self.damcon(1)
         panel = _FakePanel(CID)
         P.eng_panel_orders_tick(panel)
@@ -249,7 +249,7 @@ class TestOrderRows(PanelBase):
     def test_two_teams_on_one_node_are_ONE_row(self):
         """The row is the ORDER, not the assignment - otherwise a node two teams
         were sent to reads as two jobs."""
-        room = self.node(0, "room", "weapon", "__damaged__")
+        room = self.node(0, "system", "weapon", "__damaged__")
         link(self.damcon(1, "DC1"), "work-order", room)
         link(self.damcon(2, "DC2"), "work-order", room)
         rows = P.eng_order_rows(self.ship)
@@ -257,8 +257,8 @@ class TestOrderRows(PanelBase):
         self.assertEqual(rows[0]["workers"], ["DC1", "DC2"])
 
     def test_a_damaged_node_is_a_repair_and_a_worn_one_is_maintenance(self):
-        broken = self.node(0, "room", "weapon", "__damaged__")
-        worn = self.node(1, "room", "engine", "__undamaged__", "__worn__")
+        broken = self.node(0, "system", "weapon", "__damaged__")
+        worn = self.node(1, "system", "engine", "__undamaged__", "__worn__")
         set_inventory_value(worn, "wear", 0.8)
         dc = self.damcon(2)
         W.work_order_add(dc, broken)
@@ -270,8 +270,8 @@ class TestOrderRows(PanelBase):
     def test_repairs_sort_above_maintenance_by_default_priority(self):
         """Not a special case in the sort - a repair defaults to NORMAL and
         maintenance to LOW, so the ordinary priority order puts it there."""
-        broken = self.node(0, "room", "weapon", "__damaged__")
-        worn = self.node(1, "room", "engine", "__undamaged__", "__worn__")
+        broken = self.node(0, "system", "weapon", "__damaged__")
+        worn = self.node(1, "system", "engine", "__undamaged__", "__worn__")
         set_inventory_value(worn, "wear", 0.8)
         dc = self.damcon(2)
         W.work_order_add(dc, worn)
@@ -280,8 +280,8 @@ class TestOrderRows(PanelBase):
                          [W.KIND_REPAIR, W.KIND_MAINTAIN])
 
     def test_a_raised_maintenance_order_sorts_above_a_repair(self):
-        broken = self.node(0, "room", "weapon", "__damaged__")
-        worn = self.node(1, "room", "engine", "__undamaged__", "__worn__")
+        broken = self.node(0, "system", "weapon", "__damaged__")
+        worn = self.node(1, "system", "engine", "__undamaged__", "__worn__")
         set_inventory_value(worn, "wear", 0.8)
         dc = self.damcon(2)
         W.work_order_add(dc, broken)
@@ -293,7 +293,7 @@ class TestOrderRows(PanelBase):
         """The Orders tab was built to make the leak visible; now the model closes
         it, so a button that does nothing must not survive on screen."""
         from sbs_utils.procedural.grid import grid_delete_object
-        room = self.node(0, "room", "weapon", "__damaged__")
+        room = self.node(0, "system", "weapon", "__damaged__")
         W.work_order_add(self.damcon(1), room)
         self.assertEqual(len(P.eng_order_rows(self.ship)), 1)
         grid_delete_object(self.ship, room)
@@ -320,7 +320,7 @@ class TestSelectedMarkdown(PanelBase):
             self.assertFalse(safe.startswith(("-", "#")), safe)
 
     def test_a_damcon_body_reports_hp_and_orders(self):
-        room = self.node(0, "room", "weapon", "__damaged__")
+        room = self.node(0, "system", "weapon", "__damaged__")
         dc = self.damcon(1)
         link(dc, "work-order", room)
         body = G.grid_selected_markdown(self.ship, dc)
@@ -328,11 +328,11 @@ class TestSelectedMarkdown(PanelBase):
         self.assertIn("Orders 1", body)
 
     def test_a_damaged_room_says_so(self):
-        room = self.node(0, "room", "weapon", "__damaged__")
+        room = self.node(0, "system", "weapon", "__damaged__")
         self.assertIn("DAMAGED", G.grid_selected_markdown(self.ship, room))
 
     def test_an_assigned_room_names_its_teams(self):
-        room = self.node(0, "room", "weapon", "__damaged__")
+        room = self.node(0, "system", "weapon", "__damaged__")
         link(self.damcon(1, "DC2"), "work-order", room)
         self.assertIn("DC2", G.grid_selected_markdown(self.ship, room))
 
@@ -370,7 +370,7 @@ class TestStyleStringSafety(PanelBase):
 
     def test_a_node_name_with_a_colon_survives_into_the_widget(self):
         from sbs_utils.procedural.query import to_object
-        room = self.node(0, "room", "weapon", "__damaged__")
+        room = self.node(0, "system", "weapon", "__damaged__")
         node = to_object(room)
         node.name = "impulse:3,4"
         self.select(room)
@@ -418,8 +418,8 @@ class TestOrderRowButtons(PanelBase):
         button["press"](None, _Sender())
 
     def test_each_row_gets_its_OWN_target(self):
-        a = self.node(0, "room", "weapon", "__damaged__")
-        b = self.node(1, "room", "engine", "__damaged__")
+        a = self.node(0, "system", "weapon", "__damaged__")
+        b = self.node(1, "system", "engine", "__damaged__")
         dc = self.damcon(2)
         W.work_order_add(dc, a)
         W.work_order_add(dc, b)
@@ -428,8 +428,8 @@ class TestOrderRowButtons(PanelBase):
                          "every button must not point at the last row drawn")
 
     def test_raise_bumps_only_that_order(self):
-        a = self.node(0, "room", "weapon", "__damaged__")
-        b = self.node(1, "room", "engine", "__damaged__")
+        a = self.node(0, "system", "weapon", "__damaged__")
+        b = self.node(1, "system", "engine", "__damaged__")
         dc = self.damcon(2)
         W.work_order_add(dc, a)
         W.work_order_add(dc, b)
@@ -442,7 +442,7 @@ class TestOrderRowButtons(PanelBase):
         self.assertEqual(W.work_order_priority(b), before_b)
 
     def test_the_minus_closes_the_order_for_EVERY_team(self):
-        room = self.node(0, "room", "weapon", "__damaged__")
+        room = self.node(0, "system", "weapon", "__damaged__")
         dc1, dc2 = self.damcon(1, "DC1"), self.damcon(2, "DC2")
         W.work_order_add(dc1, room)
         W.work_order_add(dc2, room)
