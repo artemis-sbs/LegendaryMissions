@@ -154,6 +154,11 @@ if is_dev_build():
     # Same reason: a board of live readings that never repaints is a photograph.
     on change message_revision():
         jump epadd_status_screen
+    # The mission clock is the one reading that changes every second, and a page
+    # repaint a second is every widget on the screen over the wire, per console,
+    # forever. So this one moves the WIDGET on and touches nothing else.
+    on change mission_elapsed_text():
+        gui_status_tick()
     await gui()
     ->END
 
