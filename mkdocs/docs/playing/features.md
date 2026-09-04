@@ -41,6 +41,44 @@ panel, plus the ships.
 Optional **bonus objectives** give skilled crews extra goals to chase beyond simply
 surviving.
 
+## Engineering: wear, tuning and work orders
+
+Systems are no longer just broken or fine. Every room and system on the interior view
+now has a **condition** as well as a state, and Engineering can see it and change it.
+
+| Tier | On the grid | Effectiveness |
+|---|---|---|
+| **Damaged** | crimson | nothing |
+| **Worn** | gold | 75% |
+| **Nominal** | its own color | 100% |
+| **Tuned** | cyan | 110% |
+
+**A damage-control team patches a room; it does not rebuild it.** Anything your teams
+repair in flight comes back **worn** &mdash; working, but not what it was. Only a
+dockyard repair makes it new. Wear also builds from use: firing a beam wears the beam,
+launching a torpedo wears the tube, a hit wears the shield facing that took it, and
+everything ages slowly with the clock &mdash; faster at warp than at impulse.
+
+**Tuning is the reward for looking after the ship.** Send a team to a system that is
+perfectly healthy and they will bring it *above* spec &mdash; a tuned beam pool fires at
+110 percent. Nobody tunes anything on their own initiative: it has to be ordered.
+
+**Giving the order.** Select a room or system on the interior view and open comms on
+it. There is one button &mdash; **Repair** or **Tune** &mdash; showing how many teams are
+already on the job. It opens a short menu: who to send, who to call off, and raise or
+lower the priority. A job raised above the others turns the nearest team around; teams
+finish what they were sent to do rather than wandering onto whatever they pass.
+
+**The Engineering panel** on the right of the console has three tabs:
+
+| Tab | Shows |
+|---|---|
+| **Selected** | The room or team you picked on the interior view, in full. |
+| **Orders** | Every work order on the ship, most urgent first, with raise and cancel on each row. |
+| **Systems** | The four system pools, and the eight effectiveness numbers &mdash; beam, tube, impulse, warp, turn, sensor, and both shield facings &mdash; each colored by how healthy it is. |
+
+The cockpit's system lights show the same tiers.
+
 ## The Director console
 
 The **Director** console (formerly Console View) lets you pair and rotate multiple
