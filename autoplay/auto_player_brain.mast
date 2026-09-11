@@ -22,10 +22,12 @@
 #
 # THE ENERGY REFILL IS GONE, on purpose. The loop version tops the tank up at `energy < 30`
 # so an unattended run would not stall - and that also hides every real energy bug behind
-# it. It is replaced by `ai_player_recover_energy`, which is competence rather than a
-# cheat: the tank drains ONLY while the throttle is up and the auxiliary power unit refills
-# it unconditionally below its ceiling, so stopping always recovers. There is no
-# unrecoverable energy state; a ship that strands is one that never stopped burning.
+# it. It is replaced by `ai_player_recover_energy`, which docks for fuel instead.
+#
+# DOCKING IS THE ONLY REAL RECOVERY. The engine's auxiliary power unit refills only up to
+# 200 (preferences.json `ship_apu_assistance_ceiling`), and sliders and shields draw even
+# on a stopped ship. This file once assumed "stopping always recovers" - true of the mock,
+# not the engine - and parked ships below 400 to wait for 400. They waited forever.
 
 # Hook every player ship once, when the game starts. //shared/signal, not //signal: this
 # is server-side work and must happen ONCE, not once per connected console - which is the
@@ -118,26 +120,45 @@ throttle: 3.0
 " Recovering energy
 metadata: ``` yaml
 type: brain/player
-reserve: 400
+dock_below: 400
+regen_below: 150
 ```
-    # REPLACES THE REFILL CHEAT. Below the reserve, stop burning: the auxiliary power unit
-    # refills the tank unconditionally, so a stopped ship always recovers. Docking is
-    # faster, so prefer it when a friendly station is close enough to be worth the trip -
-    # `helm_energy_reserve` asks whether we can afford to GET there, which a flat "energy
-    # below 300" cannot express (300 says nothing about a station 40,000 units away).
-    yield fail if helm_energy_reserve(BRAIN_AGENT_ID, reserve=reserve)
-
+    # With a friendly station anywhere, hand the ship to `ai_player_dock` - the next leaf -
+    # by raising its flag and declining. It already flies there, docks, and UNDOCKS once
+    # shields are full and the tank is at 1000. This leaf used to dock the ship itself and
+    # nothing ever undocked it.
+    #
+    # No "can I afford the trip" test any more. An empty tank still flies at 10%
+    # (`player-no_energy-speed-coeff`), so heading home always gets there, while waiting
+    # never gets past the APU ceiling. The old test sent far-away ships to wait - forever.
+    ap_energy = helm_energy(BRAIN_AGENT_ID)
+    if ap_energy >= regen_below:
+        BRAIN_AGENT.set_inventory_value("ap_regen_futile", False)
     ap_base = to_object(closest(BRAIN_AGENT_ID, side_allied_members(BRAIN_AGENT_ID, "station")))
-    if ap_base is not None and helm_energy_reserve(BRAIN_AGENT_ID, ap_base, reserve=0):
-        helm_steer_to_point(BRAIN_AGENT_ID, ap_base)
-        helm_throttle(BRAIN_AGENT_ID, 1.0, allow_warp=False)
-        if sbs.distance_id(BRAIN_AGENT_ID, to_id(ap_base)) < 700:
-            helm_dock_request(BRAIN_AGENT_ID, ap_base)
-        BRAIN_AGENT.set_inventory_value("ap_helm_mode", "refuel")
-        yield success
+    if ap_base is not None:
+        BRAIN_AGENT.set_inventory_value("ap_regen", False)
+        BRAIN_AGENT.set_inventory_value("ap_regen_futile", False)
+        if ap_energy < dock_below:
+            BRAIN_AGENT.set_inventory_value("ap_go_dock", True)
+        yield fail
 
-    # Nothing reachable: hold still and let the APU do it. Slow, certain, and honest -
-    # if this is not enough the run has found something worth knowing.
+    # No station at all: park for the APU trickle. Enter BELOW its ceiling so this can end,
+    # and leave at 90% of the ceiling or on the first pass that gains nothing - sliders and
+    # shields draw on a stopped ship, so the tank can settle short. Once parking has proven
+    # futile, stop trying until energy climbs back: an empty ship still flies, just slowly.
+    ap_regen = BRAIN_AGENT.get_inventory_value("ap_regen", False)
+    if not ap_regen:
+        yield fail if ap_energy >= regen_below
+        yield fail if BRAIN_AGENT.get_inventory_value("ap_regen_futile", False)
+        BRAIN_AGENT.set_inventory_value("ap_regen", True)
+    else:
+        ap_last = BRAIN_AGENT.get_inventory_value("ap_regen_last", 0)
+        if ap_energy >= helm_apu_ceiling(BRAIN_AGENT_ID) * 0.9 or ap_energy <= ap_last:
+            BRAIN_AGENT.set_inventory_value("ap_regen", False)
+            if ap_energy <= ap_last:
+                BRAIN_AGENT.set_inventory_value("ap_regen_futile", True)
+            yield fail
+    BRAIN_AGENT.set_inventory_value("ap_regen_last", ap_energy)
     helm_stop(BRAIN_AGENT_ID)
     BRAIN_AGENT.set_inventory_value("ap_helm_mode", "regen")
     yield success
