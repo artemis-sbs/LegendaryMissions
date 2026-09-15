@@ -40,3 +40,12 @@ media:
 # own choice stands. A bank name, not a display name; on an engine where set_music_folder
 # still hangs on a path this resolves, it declines and plays `default` with a warning.
 MUSIC_SELECT: "TNG_Music"
+
+# trial_kobayashi	I – The Kobayashi Maru
+# trial_ds9	II – The Siege of Deep Space Nine
+# trial_neutral_zone	III – The Neutral Zone
+# trial_delta	IV – The Long Way Home
+# trial_yesterdays	V – Yesterday's Enterprise
+# trial_wolf359	VI – Wolf 359
+# trial_chintoka	VII – The Second Battle of Chin'toka
+# trial_chintoka_klingon	VII – Chin'toka (Klingon)

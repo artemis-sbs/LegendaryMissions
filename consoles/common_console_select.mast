@@ -295,6 +295,25 @@ if CAN_CHANGE_CONSOLE:
     default shared players_cleaned = False
     if players_cleaned:
         PLAYER_COUNT = len(player_slots_all)
+    else:
+        # HONOR THE COUNT BEFORE THE CULL HAS HAPPENED. The roster is seeded with EVERY
+        # authored slot active (create_default_player_ships) and is not reconciled with
+        # PLAYER_COUNT until Start (//shared/signal/reconcile_player_roster), so on the
+        # first build of this screen player_roster_slots() answers with all eight
+        # regardless of a PLAYER_COUNT of 1 - and the crew could pick a ship that was
+        # about to be parked out from under their console.
+        #
+        # Clamped here rather than by calling player_roster_set_count(): parking is what
+        # makes a hull invisible and de-crewed, and the panel deliberately leaves the
+        # staging formation standing until Start (see the comment beside
+        # player_roster_apply in server_console.mast). This screen only has to stop
+        # OFFERING them.
+        #
+        # Guarded rather than int(PLAYER_COUNT) bare: a mission that does not load the
+        # server console never sets it, and `int(None)` raises - which would not just
+        # skip this line, it would END THE COMMAND and leave the picker half built.
+        if PLAYER_COUNT is not None:
+            player_slots_all = player_slots_all[:max(1, int(PLAYER_COUNT))]
 
     # Clamp the selected SLOT to one that still exists. This is the last survivor of the
     # five guards that used to defend the old snapshot - and it is a different thing: it
@@ -380,9 +399,10 @@ if CAN_CHANGE_CONSOLE:
     # List of available ships
     # ship_sec2 = gui_region(style="area: 1,110px,500px,520px")
     gui_section( style="area: 10px,550px,500px,100-60px;")
-    # Slots, and no filtering. The old line filtered dead Agents out of a snapshot,
+    # Slots, and no filtering HERE. The old line filtered dead Agents out of a snapshot,
     # because ships were being deleted underneath a live screen. Slots do not die, and
-    # player_roster_slots() already answers with the ACTIVE ones.
+    # player_slots_all is already the offered set - active slots, clamped to PLAYER_COUNT
+    # while the roster is still fluid (top of this label).
     ship_list = player_slots_all
     # reveal keeps a restored selection on screen; hint keeps it in the same slot.
     #
@@ -544,9 +564,16 @@ if CAN_CHANGE_CONSOLE:
 
     on change PLAYER_COUNT:
         if not GAME_STARTED:
-            # The roster owns what the count MEANS - activate or park, never delete.
-            player_roster_set_count(int(PLAYER_COUNT))
+            # OFFER FEWER, PARK NOTHING. This used to call player_roster_set_count(),
+            # which parks every slot past the count - invisible hull, no side, no
+            # __player__ - the moment the operator nudged the slider, which is a visible
+            # change to the staging formation that the panel deliberately defers to Start.
+            # The count is reconciled there (//shared/signal/reconcile_player_roster);
+            # all this screen owes is a list of the ships that will actually fly.
             ship_list = player_roster_slots()
+            if PLAYER_COUNT is not None:
+                ship_list = ship_list[:max(1, int(PLAYER_COUNT))]
+            player_slots_all = ship_list
             ship_select_lb.items = ship_list
             # Keep the selection on the same SLOT if it is still offered, rather than on
             # the same list position - the position moves when the list shortens.
