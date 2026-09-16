@@ -1,4 +1,5 @@
-provides away
+provides boarding
 
 import boarding_ui.py
 import boarding_console.mast
+import boarding_crew_console.mast

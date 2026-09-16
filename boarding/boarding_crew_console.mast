@@ -1,0 +1,73 @@
+# THE CREW CONSOLE - what a console BECOMES when it boards something.
+#
+# The missing half of beaming down. `boarding_go_down` changes what the console IS -
+# CONSOLE_TYPE, the roles, the crew seat, and which ship the client is assigned to, so
+# the interior view would draw the boarded station - but it does not send the GUI task
+# anywhere. Nothing in the library can: a reroute needs a LABEL, and labels are MAST.
+#
+# So the console stayed on whatever screen pressed the button, which is the ePADD
+# Boarding Party app. Reported exactly that way: "there is no crew console, it does show
+# I am on the outpost and I can beam up". The morph had worked; nobody had opened the map.
+#
+# This is the addon's job rather than the mission's, so every boarding mission gets a
+# console without writing one. A mission that wants its own simply routes
+# `boarding_went_down` itself - the signal carries the client and the host.
+
+
+# One console, one character, one interior.
+#
+# `gui_boarding_console()` is the library's builder: the map in its own section, and
+# beside it who you are, where you are standing, and what you can do there.
+=== boarding_crew_console
+    gui_boarding_console()
+    # A FUNCTION, not a jump back to this label. Repainting re-sends every widget on the
+    # screen to this console over the network, and a watcher would do it forever.
+    on change boarding_console_revision():
+        gui_boarding_console_tick()
+    await gui()
+    ->END
+
+
+# Going down opens the map. `//shared/signal` because the signal is emitted once per
+# console that boards, and `gui_reroute_client` takes that one client - running this
+# per-console as well would reroute everybody every time anybody boarded.
+#
+# ONLY when there is somewhere to walk. A dialogue-only party (no `site=` on the
+# invitation) has no interior, and sending it to a map of nothing would replace a screen
+# that works with an empty one.
+//shared/signal/boarding_went_down
+    ->END if BOARDING_HOST is None or BOARDING_HOST == 0
+    gui_reroute_client(BOARDING_CLIENT, boarding_crew_console)
+    ->END
+
+
+# And coming back takes the map away again. `boarding_go_up` has already restored
+# CONSOLE_TYPE and put the client back on its own ship; this is the screen half. Without
+# it a returning console would sit on the crew console still, drawing the interior of a
+# station it has left.
+//shared/signal/boarding_came_back
+    ->END if BOARDING_CONSOLE is None
+    gui_reroute_client(BOARDING_CLIENT, boarding_crew_home)
+    ->END
+
+
+# The way home, run ON the returning console so `client_id` is that console.
+#
+# NOT EVERYONE GOES HOME THE SAME WAY, and this is the legacy console's recipe rather
+# than a new one, because it was paid for: `common_console_show` opens with
+# `jump select_console_clear_ready if _ship_id == 0 or not has_role(..., "__player__")`,
+# and the main screen is usually client 0 - the SERVER console, which has no ship. That
+# drops it into the CLIENT console picker, whose `select_console` reads
+# `console_select_item`, a task variable set in `client_main` that the server's GUI task
+# never ran. A NameError and a dead screen.
+=== boarding_crew_home
+    # `bcc_` PREFIXED, and that is not style. `boarding_home_ship` is a LIBRARY FUNCTION
+    # (procedural/gui/boarding_gui.py, re-exported through gui/__init__.py), so it is a
+    # MAST global - and assigning to one is `Variable assignment to a keyword`, a COMPILE
+    # error that takes the whole story to 0 labels. I named a local after the accessor I
+    # had just added, which is the easiest version of this mistake to make.
+    bcc_back = get_inventory_value(client_id, "CONSOLE_TYPE", "helm")
+    jump show_main_game_screen if bcc_back == "mainscreen"
+    bcc_ship = sbs.get_ship_of_client(client_id)
+    jump show_main_game_screen if bcc_ship == 0 or not has_role(bcc_ship, "__player__")
+    jump common_console_show

@@ -136,6 +136,22 @@ if is_dev_build():
     # so the same polled counter the inbox uses drives this one.
     on change message_revision():
         jump epadd_boarding_screen
+    # AND THE BOARDING STATE ITSELF, which that counter cannot see. `message_revision()`
+    # moves on mail; taking a character, a scene beat, or somebody else joining the party
+    # moves none of it - so the panel sat there showing the roster it was built with, and
+    # only caught up when something unrelated happened to repaint it. Reported as "it may
+    # not update properly until I repaint the app".
+    on change boarding_seq():
+        jump epadd_boarding_screen
+    on change len(boarding_team()):
+        jump epadd_boarding_screen
+    # NOT `on change boarding_who(client_id)`, which is the obvious one and is wrong.
+    # That value changes at the exact moment this console beams down - and beaming down
+    # ALSO reroutes it to the crew console. Both fire in the same frame, so the app jumps
+    # back into itself while the reroute is taking it somewhere else, and the tab strip is
+    # built by whichever wins. Reported as "the tabbing is confused, the Console Back
+    # button is not there sometimes". Leaving is the reroute's business, not this panel's;
+    # `len(boarding_team())` still covers somebody else taking a character.
     await gui()
     ->END
 
