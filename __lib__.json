@@ -1,7 +1,7 @@
 {
     "version": "v1.4.0",
     "mastlib": [
-        "away",
+        "boarding",
         "autoplay",
         "ai",
         "comms",

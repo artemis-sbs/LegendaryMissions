@@ -1,4 +1,0 @@
-provides away
-
-import away_ui.py
-import away_console.mast

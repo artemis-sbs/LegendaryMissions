@@ -1,18 +1,18 @@
-"""Row templates for the away console's roster listbox.
+"""Row templates for the crew console's roster listbox.
 
 Templates are PYTHON functions taking the item, not MAST labels - the listbox calls them
 during its layout pass.
 
-Named `away_ui_*`, not `away_*`. An addon's module-level functions land in one flat,
-mission-wide MAST namespace, and `away_*` is the LIBRARY's
-(`away_choices`, `away_answer`, `away_job_text`...). A helper called `away_row` here would
+Named `boarding_ui_*`, not `boarding_*`. An addon's module-level functions land in one flat,
+mission-wide MAST namespace, and `boarding_*` is the LIBRARY's
+(`boarding_choices`, `boarding_answer`, `boarding_job_text`...). A helper called `boarding_row` here would
 overwrite whichever the loader reached second, silently, with load order deciding which.
 """
-from sbs_utils.procedural.away import away_job_text
+from sbs_utils.procedural.boarding import boarding_job_text
 from sbs_utils.procedural.gui import gui_row, gui_text, gui_text_escape
 
 
-def away_ui_roster_row(item):
+def boarding_ui_roster_row(item):
     """One character on the roster: who they are, and what they are for.
 
     The job line is not decoration - the scene's guards read exactly those words, so it
@@ -26,10 +26,10 @@ def away_ui_roster_row(item):
     gui_row("row-height: 1.6em;")
     gui_text(f"$text:{gui_text_escape(name)};font:gui-3")
     gui_row("row-height: 1.4em;")
-    gui_text(f"$text:{gui_text_escape(away_job_text(item, default='watching'))};font:gui-1;color:#8cf")
+    gui_text(f"$text:{gui_text_escape(boarding_job_text(item, default='watching'))};font:gui-1;color:#8cf")
 
 
-def away_ui_roster_title():
+def boarding_ui_roster_title():
     """The list's own heading, so the box gets the whole section rather than sharing it
     with a label row above."""
     gui_row("row-height: 1.8em; background:#2348;")

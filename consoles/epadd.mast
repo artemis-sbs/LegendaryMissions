@@ -28,7 +28,7 @@ gui_icon_add_atlas_grid(media_shared("epadd/icons"), 4, 5, cell=128, names=[
     "epadd.library", "epadd.help", "epadd.airwing", "epadd.casino",
     "epadd.damage", "epadd.hangar", "epadd.comms_log", "epadd.standings",
     "epadd.debug", "epadd.mast", "epadd.brain", "epadd.coverage",
-    "epadd.messages", "epadd.status", "epadd.away"])
+    "epadd.messages", "epadd.status", "epadd.boarding"])
 
 # Presentation for the tabs LM ships. An unknown icon name draws nothing and says
 # so once, so an app can be registered before anyone has drawn its glyph.
@@ -47,11 +47,11 @@ if not EPADD_MAIL_LOADED:
 # nothing to report is left out, so this stays a board rather than a second
 # launcher.
 # The way down and the way back. An app rather than a console, which is what lets
-# the PADD replace the away screen: the crew carry it with them, and whatever job
+# the PADD replace the crew console: the crew carry it with them, and whatever job
 # apps a mission adds sit beside this one.
-gui_app_register("away_team", title="Away Team", icon="epadd.away", group="Ship",
-                 sort=1, description="Join a landing party, or come back",
-                 status=lm_epadd_away, away=True)
+gui_app_register("boarding_party", title="Boarding Party", icon="epadd.boarding", group="Ship",
+                 sort=1, description="Join the boarding party, or come back",
+                 status=lm_epadd_boarding, boarding=True)
 # SHIP, not Mission. Status reports what the SHIP is telling you - its own description
 # says so - and Messages is mostly the crew talking to each other. Mission is for the
 # things that outlive this hull: the jobs, the lore, the help.
@@ -60,13 +60,13 @@ gui_app_register("status", title="Status", icon="epadd.status", group="Ship",
                  status=lm_epadd_reporting)
 gui_app_register("messages", title="Messages", icon="epadd.messages",
                  group="Ship", sort=3, description="From the crew, and from home",
-                 status=lm_epadd_unread, away=True)
+                 status=lm_epadd_unread, boarding=True)
 gui_app_register("help", title="Help", icon="epadd.help", group="Mission", sort=90,
-                 description="How this console works", away=True)
+                 description="How this console works", boarding=True)
 gui_app_register("library", title="Library", icon="epadd.library", group="Mission",
-                 sort=80, description="Codex, lore and ship records", away=True)
+                 sort=80, description="Codex, lore and ship records", boarding=True)
 gui_app_register("quest", title="Quests", icon="epadd.quests", group="Mission", sort=10,
-                 description="Jobs offered, taken and running", away=True)
+                 description="Jobs offered, taken and running", boarding=True)
 gui_app_register("upgrade", title="Upgrades", icon="epadd.upgrades", group="Ship",
                  sort=30, description="Installed and available refits")
 gui_app_register("cargo", title="Cargo", icon="epadd.cargo", group="Ship", sort=10,
@@ -112,30 +112,30 @@ if is_dev_build():
 # button reading "No landing party" on all six consoles, which a playtest called what
 # it was - noise. A route's own `if` is what ePADD tests when it builds the app list,
 # the same way casino and brain gate themselves, so no new mechanism is needed.
-//gui/app/away_team if away_relevant()
-    jump epadd_away_screen
+//gui/app/boarding_party if boarding_relevant()
+    jump epadd_boarding_screen
 
-=== epadd_away_screen
+=== epadd_boarding_screen
     # ONE GUI TAB, and it is the way back to the console - BUT NOT WHILE THIS CONSOLE
     # IS ON THE SURFACE.
     #
     # CONSOLE_SELECT names the bridge post this client picked at console select, and it
     # is still naming it after they beam down. Pressing Back therefore walked them to
     # Helm while their character was standing on a planet - and it did it by jumping
-    # the tab route, which is not the way up: `away_go_up` releases the character and
+    # the tab route, which is not the way up: `boarding_go_up` releases the character and
     # restores CONSOLE_TYPE, and none of that ran. The party went on believing that
     # person was still down there, held by a console that had left.
     #
     # So while this console is playing somebody, it declares no back tab. The way back
     # is BEAM UP, on this same screen, which does it properly. Nobody is trapped: the
     # status region still opens the PADD home and every other app from there.
-    if not away_who(client_id):
+    if not boarding_who(client_id):
         gui_tab_back(CONSOLE_SELECT)
-    gui_away_screen()
+    gui_boarding_screen()
     # Beaming down or up changes who this console is, which changes every other app -
     # so the same polled counter the inbox uses drives this one.
     on change message_revision():
-        jump epadd_away_screen
+        jump epadd_boarding_screen
     await gui()
     ->END
 
@@ -171,8 +171,8 @@ if is_dev_build():
     gui_messages_screen()
     # A SIGNAL DOES NOT WAKE `await gui()`. The inbox is a live panel - mail arrives
     # while it is open, and picking a different message has to redraw the pane beside
-    # the list - so it watches a counter, exactly as the away console watches
-    # away_seq(). message_revision() moves on new mail, an answer, a read mark and
+    # the list - so it watches a counter, exactly as the crew console watches
+    # boarding_seq(). message_revision() moves on new mail, an answer, a read mark and
     # this console's own selection.
     #
     # AND IT UPDATES, RATHER THAN REBUILDS. This used to `jump` back to this label,

@@ -6,7 +6,23 @@ import marker.mast
 import epad.mast
 
 
-//point/grid
+# BOTH of these step aside on a BOARDING SITE, and neither used to.
+#
+# These routes are Engineering's, and they assume the interior belongs to the ship the
+# console is flying: one marker, one shared selection, one engineer. A boarding party is
+# the opposite - several consoles walking one interior at once, each driving its own
+# figure and reading no selection at all.
+#
+# Left ungated, every boarding click ran this too: `grid_selected_UID` cleared, and the
+# ship's ONE marker dragged to whatever cell was clicked. With four consoles boarding,
+# that is four marker jumps a second and a marker nobody asked to move. `//focus/grid`
+# below is worse in its own way - it HALVES the old selection's icon_scale and DOUBLES
+# the new one, so the figures would visibly pulse as people clicked past each other.
+#
+# Both catch-alls really do run: GridDispatcher keeps a set of any-point handlers and
+# HandleConsoleSelect.just_once is keyed by LABEL, so a boarding addon's route does not
+# replace this one - it joins it. Gating here is the only place this can be fixed.
+//point/grid if not has_role(GRID_PARENT_ID, "boarding_site")
     #
     # Move Marker
     # 
@@ -60,7 +76,7 @@ import epad.mast
     ->END
 
 
-//focus/grid
+//focus/grid if not has_role(GRID_PARENT_ID, "boarding_site")
 
     cur_select = get_inventory_value(GRID_ORIGIN_ID, "click_select", 0)
     if cur_select is not None and cur_select > 0:
