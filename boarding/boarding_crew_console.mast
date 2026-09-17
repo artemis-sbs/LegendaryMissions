@@ -14,6 +14,20 @@
 # `boarding_went_down` itself - the signal carries the client and the host.
 
 
+# THE WAY BACK FROM THE ePADD, installed once, at the top level.
+#
+# The crew console is reached by a reroute, not by a tab, so there was no name for
+# `gui_tab_back` to point at - which is why the ePADD used to declare NO back tab at all
+# while boarded, leaving a console with no Back on it. The route at the foot of this file
+# gives the crew console a tab of its own; this tells the library to substitute it for
+# whatever any screen asks for while that console is on the surface.
+#
+# INSTALLED FROM HERE rather than assumed by the library, because the library cannot
+# declare a route: an uninstalled substitution would send Back to a tab with nothing
+# behind it, which is no better than sending it to Helm.
+gui_tab_back_while_boarded("boarding_crew")
+
+
 # One console, one character, one interior.
 #
 # `gui_boarding_console()` is the library's builder: the map in its own section, and
@@ -71,3 +85,10 @@
     bcc_ship = sbs.get_ship_of_client(client_id)
     jump show_main_game_screen if bcc_ship == 0 or not has_role(bcc_ship, "__player__")
     jump common_console_show
+
+
+# The crew console as a TAB, so Back has a name to land on. At the END of the file, after
+# every other label: labels fall through, so inserting one between two existing labels is
+# never a safe append.
+//gui/tab/boarding_crew
+    jump boarding_crew_console

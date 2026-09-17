@@ -116,21 +116,19 @@ if is_dev_build():
     jump epadd_boarding_screen
 
 === epadd_boarding_screen
-    # ONE GUI TAB, and it is the way back to the console - BUT NOT WHILE THIS CONSOLE
-    # IS ON THE SURFACE.
+    # ONE GUI TAB, and it is the way back to the console. No condition on it any more.
     #
     # CONSOLE_SELECT names the bridge post this client picked at console select, and it
-    # is still naming it after they beam down. Pressing Back therefore walked them to
-    # Helm while their character was standing on a planet - and it did it by jumping
-    # the tab route, which is not the way up: `boarding_go_up` releases the character and
-    # restores CONSOLE_TYPE, and none of that ran. The party went on believing that
-    # person was still down there, held by a console that had left.
+    # goes on naming it after they beam down - so pressing Back walked them to Helm with
+    # their character standing on a planet, and did it by jumping the tab route, which is
+    # not the way up: `boarding_go_up` releases the character and restores CONSOLE_TYPE,
+    # and none of that ran.
     #
-    # So while this console is playing somebody, it declares no back tab. The way back
-    # is BEAM UP, on this same screen, which does it properly. Nobody is trapped: the
-    # status region still opens the PADD home and every other app from there.
-    if not boarding_who(client_id):
-        gui_tab_back(CONSOLE_SELECT)
+    # This screen used to answer that by declaring NO back tab while boarded, which left
+    # a console with no Back at all. `gui_tab_back` now substitutes the crew console for
+    # any boarded client, at the one place `__back_tab__` is written - so the guard is
+    # gone from here and from the thirteen other call sites that never had one.
+    gui_tab_back(CONSOLE_SELECT)
     gui_boarding_screen()
     # Beaming down or up changes who this console is, which changes every other app -
     # so the same polled counter the inbox uses drives this one.
