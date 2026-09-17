@@ -144,9 +144,29 @@ bpy.ops.object.select_all(action='DESELECT')
 obj.select_set(True)
 bpy.context.view_layer.objects.active = obj
 objpath = os.path.join(OUT, ART + ".obj")
+# EXPORT THE MATERIAL, and write the .mtl beside the mesh.
+#
+# Measured against a hull that works in engine 1.3.11 (Cosmos-TNG-Mod's CRD_Damar): it
+# carries `mtllib` and `usemtl`, and this exporter was writing NEITHER. A mesh with no
+# material gives the engine nothing to bind its textures to, and what it draws instead is
+# the UNKNOWN PLACEHOLDER - silently, with nothing in any log.
+# FORWARD IS +Z IN COSMOS, and the exporter's default sends this mesh out facing the
+# other way - so the suit flew BACKWARDS in engine, visor to the stern.
+#
+# Measured, not assumed, because every step of it is easy to get wrong:
+#   * Cosmos forward is +Z - `forward_vector()` is (0,0,1) at identity, and TNG's
+#     FED_Galaxy.obj puts the SAUCER (565 wide) at +Z with the nacelles trailing to -Z.
+#   * this suit faces +Y in BLENDER. Renders settle it; the material centroids do NOT -
+#     the `face` material sits at Y=-0.246, on the far side from the visor, because the
+#     head was grafted from another model and its skin material is inside the helmet.
+#     Do not re-derive the facing from material positions.
+#   * the default `forward_axis="NEGATIVE_Z"` therefore lands the chest at OBJ -Z.
+# `forward_axis="Z"` is a 180-degree turn about up, not a mirror - the exporter builds a
+# proper rotation from the forward/up pair, so winding and normals stay right-handed.
 bpy.ops.wm.obj_export(filepath=objpath, export_selected_objects=True,
-                      export_materials=False, export_triangulated_mesh=True,
-                      export_normals=True, export_uv=True)
+                      export_materials=True, export_triangulated_mesh=True,
+                      export_normals=True, export_uv=True,
+                      forward_axis="Z", up_axis="Y")
 
 # Verify the export has geometry: Blender's OBJ exporter writes a SHARED mesh once
 # per instance group, so "selected only" on an instanced mesh can produce a header

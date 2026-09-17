@@ -1,5 +1,17 @@
 provides boarding
 
+# THE EVA SUIT HULL, declared once for every mission that loads boarding.
+#
+# `ship_data_add_extra` searches the mission folder and then each pinned media pack, and
+# prefers the unpacked `__lib__/media` copy - the only one the engine can open. An addon
+# cannot hand the engine a file itself (a mastlib is a zip), so the hull rides in the media
+# pack and is merely NAMED here.
+#
+# Needs `EXTRA_SHIP_DATA: true`. Off is the library default, and when it is off this logs
+# once and the suit simply falls back to whatever `eva_suit_hull()` says.
+ship_data_add_extra("lm_eva_ships")
+
 import boarding_ui.py
 import boarding_console.mast
 import boarding_crew_console.mast
+import eva_console.mast

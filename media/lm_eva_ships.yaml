@@ -1,0 +1,121 @@
+# The EVA boarding suit, as a hull.
+#
+# A boarding party inside a relic wears these: the suit is a PLAYER ship so the console can
+# be assigned to it and get a 3D view, but `eva_suit_spawn` removes `__player__` so it is
+# not a player - see procedural/eva.py.
+#
+# HJSON, NOT YAML, whatever the extension says. The engine parses ship data as HJSON -
+# JSON with comments - so a `- key:` block sequence or a `"beam Primary Beams":` block
+# mapping is a PARSE ERROR, and one reported to nobody: `add_extra_ship_data` raises, the
+# library still merges the file with PyYAML, and the hull then exists everywhere except
+# the engine. The suit drew the `unknown` placeholder for exactly this reason - the file
+# was authored as real YAML. `media/turrets/extraShipData_turrets.yaml` is the shape that
+# works. (The making-a-mod doc's example is block-sequence YAML and is wrong.)
+#
+# `artfileroot` IS THE WHOLE PATH, pointing into this addon's own media pack - the shape
+# Cosmos-TNG-Mod uses, which is confirmed working on engine 1.3.11. A media pack is
+# unpacked to disk once, which is how an addon ships art at all: a mastlib is a zip and
+# the engine cannot read a mesh out of one.
+#
+# The mesh ships with a `.mtl` and all FOUR textures - `_diffuse`, `_emissive`, `_normal`
+# and `_specular`. The `.paxmesh` / `.pointcube` / `1024.png` / `256.png` beside a working
+# hull are DERIVED art the engine bakes on demand; they are never authored and never
+# packaged (`sbs lib` drops them deliberately).
+#
+# THE ENTRY IS COMPLETE ON PURPOSE. A hull missing `hull_port_sets` or `torpedostart` has
+# crashed the engine at load. This is not a place to be minimal.
+#
+# THIS FILE MUST END WITH A NEWLINE. The engine's reader is line-oriented and never
+# consumes the last line without one: the failure is `RuntimeError: End of input while
+# parsing an object` on a file that is perfectly valid.
+
+{
+  "#ship-list": [
+    {
+      "key": "lm_eva_suit",
+      "name": "EVA Suit",
+      "origin": "TSN",
+      "side": "tsn",
+      "artfileroot": "data/missions/__lib__/media/artemis-sbs.LegendaryMissions.media.v1.4.0/ships/LM_CrewExosuitSeated",
+
+      # World size is RAW MESH EXTENT x meshscale - calibrated against stock art, where
+      # `tsn_light_cruiser` is 583 raw at meshscale 0.1717 and so 100 units long. This mesh
+      # is a person, 1.42 raw tall, so 10.0 puts the suit at about 14 units - a quarter of
+      # that cruiser: enough to read as a figure in a chamber hundreds of units across.
+      "meshscale": 10.0,
+      "radarscale": 1.0,
+
+      # SMALL, and it matters twice: `volume_tier` uses a ship's exclusion radius as its
+      # hull sphere when deciding how close to a relic wall counts as a scrape, and the
+      # engine separates objects on the summed radii.
+      "exclusionradius": 6.0,
+      "meshrotate": 0,
+
+      # A SUIT TURNS FAST, and this is not flavour. The autopilot holds station until the
+      # nose is on the waypoint, so the turn rate is most of how long a route takes - and a
+      # sluggish hull spends minutes coming round inside a passage.
+      "turn_rate": 2.0,
+      "speed_coeff": 1.0,
+      "shields": [
+        10,
+        10
+      ],
+      "hullpoints": 2,
+      "scan_strength_coeff": 1,
+      "ship_energy_cost": 0.1,
+      "warp_energy_cost": 1.0,
+      "jump_energy_cost": 1.0,
+      "tubecount": 0,
+      "baycount": 0,
+      "torpedostart": [
+        {
+          "Homing": 0
+        },
+        {
+          "Nuke": 0
+        },
+        {
+          "EMP": 0
+        },
+        {
+          "Mine": 0
+        }
+      ],
+
+      # A CUTTING TORCH, not armament. Present because an entry without `hull_port_sets`
+      # has crashed the engine at load; kept short, narrow and weak so a suit that somehow
+      # acquires a target is not a warship.
+      "hull_port_sets": {
+        "beam Primary Beams": [
+          {
+            "position": [
+              0,
+              0,
+              7.0
+            ],
+            "color": "white",
+            "arccolor": "#099",
+            "cycle_time": 8,
+            "damage_coeff": 0.1,
+            "range": 400,
+            "arcwidth": 60,
+            "barrel_angle": 0
+          }
+        ]
+      },
+
+      # NO INTERIOR. A suit is not a ship you walk around inside, and a hull map on one is
+      # an engineering grid nobody can reach.
+      "internalmapscale": 1.0,
+      "internalmapw": 1,
+      "internalmaph": 1,
+      "internalsymmetry": 0,
+
+      # DELIBERATELY BARE. Roles on a hull are added to whatever spawns with it, so a
+      # `station` or `cockpit` here would quietly opt every suit into docking and hangar
+      # routes that were never meant for it.
+      "roles": "eva_hull",
+      "long_desc": "A hard suit with thruster packs, flown by one crew member inside a ruin."
+    }
+  ]
+}

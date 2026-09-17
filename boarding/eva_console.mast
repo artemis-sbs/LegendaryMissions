@@ -1,0 +1,74 @@
+# THE EVA CONSOLE - what a console BECOMES when what it boarded has no floor.
+#
+# The sibling of `boarding_crew_console.mast`, and the same job: `eva_go_out` changes what
+# the console IS - CONSOLE_TYPE, the crew seat, and the ship it is assigned to, which is
+# now the SUIT - but it cannot send the GUI task anywhere, because a reroute needs a LABEL
+# and labels are MAST.
+#
+# Grid boarding watches `ship_internal_view`, a deck seen from above. A relic has no deck,
+# so this watches `3dview`: the suit, in the ruin, from outside it. Everything right of the
+# view is the same xESS, and the Nav app on it is the only flight control there is.
+
+
+# THE WAY BACK FROM THE ePADD, installed once, at the top level - the same substitution
+# `boarding_crew_console.mast` installs for the grid console, for the same reason: this
+# console is reached by a reroute rather than a tab, so without it Back has no name to
+# land on and the ePADD declares no back tab at all.
+gui_tab_back_while_boarded("eva_crew")
+
+
+# One console, one crew member, one suit.
+#
+# `gui_eva_console()` is the library's builder: the 3D view in its own section - an engine
+# widget draws at its own size over anything sharing its row - and beside it who you are,
+# which chamber you are in, and where you can go.
+=== eva_crew_console
+    gui_eva_console()
+    # A FUNCTION, not a jump back to this label. Repainting re-sends every widget on the
+    # screen to this console over the network, and a watcher would do it forever.
+    on change eva_console_revision():
+        gui_eva_console_tick()
+    await gui()
+    ->END
+
+
+# Suiting up opens the view. `//shared/signal` because the signal is emitted once per
+# console that goes out, and `gui_reroute_client` takes that one client - running this
+# per-console as well would reroute everybody every time anybody suited up.
+//shared/signal/eva_went_out
+    ->END if EVA_SUIT is None or EVA_SUIT == 0
+    gui_reroute_client(EVA_CLIENT, eva_crew_console)
+    ->END
+
+
+# And coming back takes it away again. `eva_go_in` has already restored CONSOLE_TYPE, put
+# the client back on its own ship and deleted the suit; this is the screen half. Without
+# it a returning console would sit here still, pointed at a ship that no longer exists.
+//shared/signal/eva_came_back
+    ->END if EVA_CONSOLE is None
+    gui_reroute_client(EVA_CLIENT, eva_crew_home)
+    ->END
+
+
+# The way home, run ON the returning console so `client_id` is that console.
+#
+# The recipe is `boarding_crew_home`'s, not a new one, and it was paid for there:
+# `common_console_show` drops a console with no player ship into the CLIENT console picker,
+# whose `select_console` reads a task variable the server's GUI task never ran - a
+# NameError and a dead screen. The main screen is usually client 0, which has no ship.
+=== eva_crew_home
+    # `ecc_` PREFIXED, and that is not style. `eva_home_ship` is a LIBRARY FUNCTION and so
+    # a MAST global; assigning to one is `Variable assignment to a keyword`, a COMPILE
+    # error that takes the whole story to 0 labels.
+    ecc_back = get_inventory_value(client_id, "CONSOLE_TYPE", "helm")
+    jump show_main_game_screen if ecc_back == "mainscreen"
+    ecc_ship = sbs.get_ship_of_client(client_id)
+    jump show_main_game_screen if ecc_ship == 0 or not has_role(ecc_ship, "__player__")
+    jump common_console_show
+
+
+# The EVA console as a TAB, so Back has a name to land on. At the END of the file, after
+# every other label: labels fall through, so inserting one between two existing labels is
+# never a safe append.
+//gui/tab/eva_crew
+    jump eva_crew_console

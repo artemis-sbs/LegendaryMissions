@@ -29,3 +29,7 @@ extraShipData.json.bak
 # Soak run artifacts - per-run coverage/junit/logs, regenerated every run.
 # The SCENARIOS and their .baseline.json are committed; the evidence is not.
 soaks/runs/
+
+# The crew exosuit art set, rebuilt from the .blend by build_artset.py. The shipped
+# copy is media/ships/; this is the intermediate, and the _artset.blend beside it.
+_art/crew_exosuit/artset/
