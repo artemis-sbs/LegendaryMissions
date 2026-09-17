@@ -38,7 +38,7 @@ gallery is standing by before the server presses Start.
 no addon:
 
 ```
-@console/director !0 ^94 "Director" if DIRECTOR_enabled
+@console/director !0 ^104 "Director" if DIRECTOR_enabled
 metadata: ``` yaml
 pre_game: true
 ```

@@ -29,7 +29,7 @@
 # MAST_CLAUDE.md's `@map` example has them the other way round and does not compile. A story
 # that does not compile schedules NO task at all, so this is a whole-mission failure, not a
 # local one.
-@console/director !0 ^94 "Director" if DIRECTOR_enabled
+@console/director !0 ^104 "Director" if DIRECTOR_enabled
 metadata: ``` yaml
 pre_game: true
 ```
