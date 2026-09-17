@@ -20,6 +20,24 @@ def lm_epadd_unread():
     return f"{n} new"
 
 
+def lm_epadd_offers():
+    """The Quests tile's badge: how many jobs are on offer that nobody has taken.
+
+    Empty at zero, so the tile stays quiet rather than saying "0 available" - the same
+    rule the Messages badge follows.
+
+    Counts OFFERS, not quests: an accepted job is work in hand and does not belong in a
+    number whose whole promise is "there is something here you have not done". POSTING
+    jobs are excluded by offer_count for the same reason - they are listed so you know
+    they exist, but something else has to hand them to you.
+    """
+    from sbs_utils.procedural.offer import offer_count_here
+    n = offer_count_here()
+    if not n:
+        return ""
+    return f"{n} available"
+
+
 def lm_epadd_deliver_mail():
     """Send whatever is due. Called on a slow tick - mail that arrives while the crew
     is flying is the point; a pile that all landed at t=0 would be a document."""

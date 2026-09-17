@@ -28,6 +28,10 @@
 
 === comm_handle_comms_badge
     if COMMS_SELECTED_ID == 0:
+        # They found it. An advisor who exists to say "hail me on the Ultra-Beam" should
+        # stop saying it now - see urge_taught / the `taught` urge condition. Stamped on
+        # USE, never on being told, so a nudge nobody acted on keeps its turn.
+        urge_teach_note("ultra_beam")
         comms_badges = role("comms_badge") & role("ultra_beam")
     else:
         comms_badges = role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")

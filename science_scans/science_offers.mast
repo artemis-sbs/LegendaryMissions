@@ -1,0 +1,26 @@
+# Keeping the OFFER line on a scan roughly true.
+#
+# A science tab is a stored string: the scan writes it once and re-selecting the contact
+# never runs that block again. So something has to push - the same arrangement
+# science_status.mast documents, and for the same reason.
+#
+# SLOW on purpose. The status line tracks a shield coming back and ticks every second;
+# work on offer changes when a job is granted or taken, which is minutes apart. A fast
+# walk here would cost the sim a great deal to write the same string over and over.
+#
+# //shared/signal, not //signal: the write is indexed by the SCANNING SIDE, so one
+# console doing it is the whole side done. Five consoles each starting a watcher is five
+# tickers writing the same blob. SIGNAL_ROUTING.md.
+
+default shared OFFER_SCAN_LINE = True
+
+//shared/signal/game_started if OFFER_SCAN_LINE
+    task_schedule(science_offers_watch)
+
+
+=== science_offers_watch
+" Refresh the offer line on contacts this side has already scanned.
+--- science_offers_beat
+    await delay_sim(20)
+    lm_science_offers_tick()
+    jump science_offers_beat

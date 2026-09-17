@@ -76,7 +76,14 @@ gui_app_register("help", title="Help", icon="epadd.help", group="Mission", sort=
 gui_app_register("library", title="Library", icon="epadd.library", group="Mission",
                  sort=80, description="Codex, lore and ship records", boarding=True)
 gui_app_register("quest", title="Quests", icon="epadd.quests", group="Mission", sort=10,
-                 description="Jobs offered, taken and running", boarding=True)
+                 description="Jobs offered, taken and running", status=lm_epadd_offers,
+                 boarding=True)
+# The Offers board sits directly ABOVE Quests (sort 9 vs 10): "what is there" is the
+# question you ask first, and the two read as a pair. Its route condition means the tile
+# is simply absent when nothing is on offer, so it costs a quiet bridge nothing.
+gui_app_register("offers", title="Offers", icon="epadd.quests", group="Mission", sort=9,
+                 description="Work the world has for you, untaken",
+                 status=lm_epadd_offers, boarding=True)
 gui_app_register("upgrade", title="Upgrades", icon="epadd.upgrades", group="Ship",
                  sort=30, description="Installed and available refits")
 gui_app_register("cargo", title="Cargo", icon="epadd.cargo", group="Ship", sort=10,

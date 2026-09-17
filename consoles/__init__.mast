@@ -24,3 +24,5 @@ import brain_scan.mast
 # strip's order, which is load order.
 import epadd.py
 import epadd.mast
+import offer_digest.py
+import offers.mast
