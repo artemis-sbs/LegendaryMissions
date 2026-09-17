@@ -61,6 +61,16 @@ gui_app_register("status", title="Status", icon="epadd.status", group="Ship",
 gui_app_register("messages", title="Messages", icon="epadd.messages",
                  group="Ship", sort=3, description="From the crew, and from home",
                  status=lm_epadd_unread, boarding=True)
+# THE SURVEY LOG - what the boarding party has read, in full.
+#
+# The xESS shows the LAST reading and a count; this is the other half, and the reason a
+# crew member ever stops and opens the tablet. `boarding=True` because it is most wanted
+# while standing on the thing being surveyed, and its route condition hides the tile
+# entirely until something has actually been filed - an app that opens an empty page on
+# every console is the noise the Boarding Party app's own condition exists to prevent.
+gui_app_register("survey", title="Survey", icon="epadd.status", group="Mission",
+                 sort=12, description="Everything the party has scanned",
+                 status=survey_badge, boarding=True)
 gui_app_register("help", title="Help", icon="epadd.help", group="Mission", sort=90,
                  description="How this console works", boarding=True)
 gui_app_register("library", title="Library", icon="epadd.library", group="Mission",
@@ -226,5 +236,22 @@ if is_dev_build():
     # forever. So this one moves the WIDGET on and touches nothing else.
     on change mission_elapsed_text():
         gui_app_home_tick()
+    await gui()
+    ->END
+
+
+# THE SURVEY LOG. Hidden until the party has read something: `survey_relevant()` is
+# false on a mission with no boarding in it, and the route's own `if` is what the PADD
+# tests when it builds the app list.
+//gui/app/survey if survey_relevant()
+    jump epadd_survey_screen
+
+=== epadd_survey_screen
+    gui_tab_back(CONSOLE_SELECT)
+    gui_survey_screen()
+    # A FUNCTION, not a jump back to this label. Repainting re-sends every widget on the
+    # sheet to this console over the network, and a watcher would do it forever.
+    on change xess_log_revision():
+        gui_survey_screen_tick()
     await gui()
     ->END
