@@ -116,8 +116,6 @@ shared game_stats = ~~{
     end_time = int((sim.time_tick_counter - game_stats["start_time"]) / 30  /60)
     totals = results_summary()
 
-    # Tab strip (key, label) for this screen.
-    results_tabs = [["summary","Summary"], ["fleet","Fleet"], ["airwing","Air Wing"], ["quests","Quests"], ["enemies","Enemies"]]
 
     # Top tab strip (styled like the console top tabs).
     #
@@ -131,14 +129,22 @@ shared game_stats = ~~{
     # a helper that does not exist anywhere in sbs_utils or LegendaryMissions - it
     # raised NameError on TAB_KEY (see results_set_tab), which killed the results
     # page's GUI task and left the replay button with no main GUI task to return to.
+    #
+    # Now CHIPS: a single-select horizontal listbox, the same control as the comms filter
+    # chips (consoles/comms_chips.py), with a count on each list tab. Changing tab changes
+    # the panel's STRUCTURE, so a rebuild is the right response here - unlike the comms
+    # chips, which only update their own rows.
     gui_section(style="area: 28, 0, 99, 5;")
-    gui_row("row-height:35px;")
-    for _tab_key, _tab_label in results_tabs:
-        if _tab_key == RESULTS_TAB:
-            _tab_style = f"$text:{_tab_label};justify:center;color:white;"
-        else:
-            _tab_style = f"$text:{_tab_label};justify:center;color:#8aa;"
-        gui_button(_tab_style, data={"results_tab_key": _tab_key}, on_press="results_set_tab")
+    gui_row("row-height:1fr;")
+    _tab_items = results_tab_items()
+    results_tab_chips = gui_list_box(_tab_items, "col-width:5.5em;background:#0E151D80;", item_template=results_tab_template, section_style="padding:3px,4px,3px,4px;", select=True)
+    results_tab_chips.horizontal = True
+    results_tab_chips.selected = [results_tab_selected(_tab_items, RESULTS_TAB)]
+    on change results_tab_chips.get_value():
+        _picked = results_tab_chips.get_value()
+        if _picked is not None and _picked["key"] != RESULTS_TAB:
+            RESULTS_TAB = _picked["key"]
+            jump show_game_results_gui
 
     # LEFT RAIL: what happened. RIGHT: the numbers.
     #

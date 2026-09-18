@@ -93,8 +93,8 @@ class TestTheLenses(ChipsBase):
 
     def test_side_chips_follow_the_fixed_ones(self):
         items = C.lm_comms_chips_items(CID)
-        self.assertEqual(["all", "threats", "friends", "stations", "jobs", "orders"], items[:6])
-        self.assertEqual({"side:tsn", "side:kralien"}, set(items[6:]))
+        self.assertEqual(["all", "threats", "friends", "stations", "jobs", "orders", "favorites"], items[:7])
+        self.assertEqual({"side:tsn", "side:kralien"}, set(items[7:]))
 
     def test_a_side_with_nothing_in_view_has_no_chip(self):
         side_ensure("arvonian")
@@ -176,6 +176,58 @@ class TestWhatWouldBeShown(ChipsBase):
         sbs.set_comms_list_filter = lambda ship, mode, ids: calls.append((ship, mode, ids))
         C.lm_comms_chips_normalize(CID, _FakeListbox(["all", "threats"]))
         self.assertEqual((self.ship, "show", sorted([self.foe, self.ghost])), calls[-1])
+
+
+class TestFavorites(ChipsBase):
+    """The star toggles the console's comms selection as a favorite; the Favorites chip
+    shows them. Favorites live on the SHIP, so every console on it shares them."""
+
+    def select(self, target):
+        from sbs_utils.procedural.query import set_comms_selection
+        set_comms_selection(self.ship, target)
+
+    def test_STARRING_THE_SELECTION_MAKES_IT_A_FAVORITE(self):
+        self.select(self.foe)
+        self.assertTrue(C.lm_comms_chips_toggle_favorite(CID))
+        self.assertEqual({self.foe}, C.lm_comms_chips_sets(CID)["favorites"])
+
+    def test_starring_again_removes_it(self):
+        self.select(self.foe)
+        C.lm_comms_chips_toggle_favorite(CID)
+        self.assertFalse(C.lm_comms_chips_toggle_favorite(CID))
+        self.assertEqual(set(), C.lm_comms_chips_sets(CID)["favorites"])
+
+    def test_nothing_selected_stars_nothing(self):
+        self.select(0)
+        self.assertFalse(C.lm_comms_chips_toggle_favorite(CID))
+        self.assertEqual(set(), C.lm_comms_chips_favorites(self.ship))
+
+    def test_your_own_ship_is_not_starrable(self):
+        self.select(self.ship)
+        self.assertFalse(C.lm_comms_chips_toggle_favorite(CID))
+
+    def test_the_star_shows_the_state(self):
+        self.select(self.foe)
+        dim = C.lm_comms_chips_star_props(CID)
+        C.lm_comms_chips_toggle_favorite(CID)
+        gold = C.lm_comms_chips_star_props(CID)
+        self.assertNotEqual(dim, gold)
+        self.assertIn("F2C14E", gold)
+        self.select(0)
+        self.assertNotIn("F2C14E", C.lm_comms_chips_star_props(CID))
+
+    def test_a_deleted_favorite_is_not_in_the_chip(self):
+        from sbs_utils.procedural.space_objects import delete_object
+        self.select(self.foe)
+        C.lm_comms_chips_toggle_favorite(CID)
+        delete_object(self.foe)
+        self.assertEqual(set(), C.lm_comms_chips_sets(CID, force=True)["favorites"])
+
+    def test_the_favorites_chip_is_a_lens(self):
+        self.select(self.base)
+        C.lm_comms_chips_toggle_favorite(CID)
+        C.lm_comms_chips_normalize(CID, _FakeListbox(["all", "favorites"]))
+        self.assertEqual(("show", {self.base}), C.lm_comms_chips_ids(CID))
 
 
 if __name__ == "__main__":

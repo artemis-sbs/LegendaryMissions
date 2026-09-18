@@ -1,7 +1,7 @@
 """The comms filter chips - one horizontal row above the comms 2D view.
 
-A chip is a LENS on the contact list: Threats, Friends, Stations, Jobs, Can order, then
-one chip per SIDE that has contacts in view. Each one is a set of ids the SCRIPT computes
+A chip is a LENS on the contact list: Threats, Friends, Stations, Jobs, Can order,
+Favorites, then one chip per SIDE that has contacts in view. Each one is a set of ids the SCRIPT computes
 from data the engine never sees (sides, roles, offers, who takes orders), with a live
 count on the chip.
 
@@ -21,7 +21,7 @@ from sbs_utils.helpers import FrameContext
 from sbs_utils.mast.mast_globals import MastGlobals
 from sbs_utils.procedural.gui.viewscreen import viewscreen_home_ship
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
-from sbs_utils.procedural.query import object_exists, to_object
+from sbs_utils.procedural.query import object_exists, to_object, get_comms_selection
 from sbs_utils.procedural.roles import role, has_role
 from sbs_utils.procedural.sides import (side_are_allies, side_are_enemies, to_side_id,
                                         side_get_display_name)
@@ -35,6 +35,7 @@ _CHIPS = [
     ("stations", "Stations"),
     ("jobs", "Jobs"),
     ("orders", "Can order"),
+    ("favorites", "Favorites"),
 ]
 _LABELS = dict(_CHIPS)
 _SIDE = "side:"
@@ -80,6 +81,7 @@ def _compute(client_id, ship_id):
     contacts = [i for i in (role("__npc__") | role("__player__"))
                 if i != ship_id and object_exists(i)]
     my_side = to_side_id(ship_id, warn=False)
+    favorites = lm_comms_chips_favorites(ship_id)
     sets = {k: set() for k, _ in _CHIPS}
     for i in contacts:
         sets["all"].add(i)
@@ -95,6 +97,8 @@ def _compute(client_id, ship_id):
             sets["stations"].add(i)
         if _can_order(ship_id, i):
             sets["orders"].add(i)
+        if i in favorites:
+            sets["favorites"].add(i)
         try:
             if offer_count(client_id=client_id, ship_id=ship_id, object_id=i) > 0:
                 sets["jobs"].add(i)
@@ -206,6 +210,64 @@ def lm_comms_chips_refresh(client_id, lb):
     since the ids behind a lens change with them."""
     lb.items = lm_comms_chips_items(client_id)
     lm_comms_chips_apply(client_id)
+
+
+# FAVORITES are kept on the SHIP, so the whole crew shares one list - whoever starred a
+# contact, every comms console on that ship sees it in the Favorites chip.
+_FAV_KEY = "lm_comms_favorites"
+
+#: The star is the icon sheet's `rank-star` glyph, tinted by state.
+_STAR = "icon_index:91;color:{};"
+
+
+def lm_comms_chips_favorites(ship_id):
+    """The contact ids this ship has starred."""
+    return set(get_inventory_value(ship_id, _FAV_KEY, None) or ())
+
+
+def lm_comms_chips_star_target(client_id):
+    """What the star acts on: the console's comms selection, when it is another object."""
+    ship_id = viewscreen_home_ship(client_id)
+    sel = get_comms_selection(ship_id) if ship_id else 0
+    if not sel or sel == ship_id or not object_exists(sel):
+        return ship_id, 0
+    return ship_id, sel
+
+
+def lm_comms_chips_toggle_favorite(client_id):
+    """Star or unstar the console's comms selection. Returns the new state (False when
+    there is nothing to star)."""
+    ship_id, sel = lm_comms_chips_star_target(client_id)
+    if not sel:
+        return False
+    favs = lm_comms_chips_favorites(ship_id)
+    if sel in favs:
+        favs.discard(sel)
+    else:
+        favs.add(sel)
+    set_inventory_value(ship_id, _FAV_KEY, sorted(favs))
+    # Every console on the ship recounts now rather than in a couple of seconds.
+    for cid in list(_SETS):
+        if _SETS[cid][1] == ship_id:
+            del _SETS[cid]
+    return sel in favs
+
+
+def lm_comms_chips_star_props(client_id):
+    """The star's look: gold when the selection is a favorite, dim when it is not, and
+    near-invisible when nothing starrable is selected."""
+    ship_id, sel = lm_comms_chips_star_target(client_id)
+    if not sel:
+        return _STAR.format("#3A4552")
+    if sel in lm_comms_chips_favorites(ship_id):
+        return _STAR.format("#F2C14E")
+    return _STAR.format("#8A9AAB")
+
+
+def lm_comms_chips_star_revision(client_id):
+    """What an `on change` watches to repaint the star: the selection and its state."""
+    ship_id, sel = lm_comms_chips_star_target(client_id)
+    return (sel, sel in lm_comms_chips_favorites(ship_id) if sel else False)
 
 
 def lm_comms_chips_clear():

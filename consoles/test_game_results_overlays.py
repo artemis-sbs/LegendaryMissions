@@ -190,5 +190,65 @@ class TestTheResultsScreenArrivesClean(_Base):
         self.assertEqual(self.rte, [], f"MAST runtime errors: {self.rte}")
 
 
+class TestTheTabChips(_Base):
+    """The results tabs are a single-select horizontal listbox of chips."""
+
+    def chips(self):
+        from sbs_utils.pages.widgets.layout_listbox import LayoutListbox
+        found = []
+
+        def walk(n):
+            if isinstance(n, LayoutListbox) and n.horizontal:
+                found.append(n)
+            for a in ("rows", "columns", "children", "layouts"):
+                for c in getattr(n, a, []) or []:
+                    walk(c)
+        for lay in self.page.layouts:
+            walk(lay)
+        self.assertEqual(1, len(found), "expected one chip strip")
+        return found[0]
+
+    def tap(self, key):
+        lb = self.chips()
+        slot = [s.item_index for s in lb.sections if lb.items[s.item_index]["key"] == key][0]
+        slot = [i for i, s in enumerate(lb.sections) if s.item_index == slot][0]
+        ev = FakeEvent(client_id=CID, tag="gui_message", sub_tag=f"{lb.tag_prefix}:{slot}:__click")
+        FrameContext.context = Context(mock_sbs.sim, mock_sbs, ev)
+        Gui.on_message(ev)
+        self.present(3)
+
+    def test_THE_TABS_ARE_CHIPS_AND_SUMMARY_IS_SELECTED(self):
+        self.end_the_game()
+        lb = self.chips()
+        self.assertEqual(["summary", "fleet", "airwing", "quests", "enemies"],
+                         [it["key"] for it in lb.items])
+        self.assertEqual("summary", lb.get_value()["key"])
+        self.assertEqual(self.rte, [], f"MAST runtime errors: {self.rte}")
+
+    def test_TAPPING_A_CHIP_SWITCHES_THE_TAB(self):
+        self.end_the_game()
+        self.tap("fleet")
+        lb = self.chips()                  # rebuilt: a new strip, the new tab selected
+        self.assertEqual("fleet", lb.get_value()["key"])
+        self.tap("summary")
+        self.assertEqual("summary", self.chips().get_value()["key"])
+        self.assertEqual(self.rte, [], f"MAST runtime errors: {self.rte}")
+
+    def test_ALL_FIVE_FIT_WITHOUT_A_SLIDER_AT_1024(self):
+        """The band is only 5% of the screen tall; an overflowing horizontal list draws a
+        slider that would take most of that height."""
+        self.end_the_game()
+        lb = self.chips()
+        self.assertEqual(5, len(lb.sections))
+        self.assertEqual(0, lb.extra_slot_count)
+
+    def test_list_tabs_carry_a_count(self):
+        self.end_the_game()
+        by_key = {it["key"]: it["count"] for it in self.chips().items}
+        self.assertEqual(1, by_key["fleet"])          # the one player ship
+        self.assertIsNone(by_key["summary"])
+        self.assertIsNone(by_key["enemies"])
+
+
 if __name__ == "__main__":
     unittest.main()

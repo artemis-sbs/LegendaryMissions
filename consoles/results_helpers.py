@@ -253,6 +253,43 @@ def results_pilot_title_template():
     gui_text("$text:Air Wing;justify: left;")
 
 
+# The results tab strip, as CHIPS: a single-select horizontal listbox (the comms filter
+# chips are the model - consoles/comms_chips.py). Each chip carries a count where the tab
+# is a list, so the crew can see there is something behind it before clicking.
+_RESULTS_TABS = [("summary", "Summary"), ("fleet", "Fleet"), ("airwing", "Air Wing"),
+                 ("quests", "Quests"), ("enemies", "Enemies")]
+
+
+def results_tab_items():
+    """One dict per results tab: key, label and a count (None where a count means
+    nothing). Built fresh each time the screen is built - the tabs rebuild the page.
+
+    No count on Enemies: the stats carry two key shapes for the same kills
+    (`<side>_destroyed` and `<race>_ships_destroyed`), so a total would double count.
+    """
+    counts = {
+        "fleet": len(results_ship_items()),
+        "airwing": len(results_pilot_items()),
+        "quests": len([q for q in results_quest_items() if not gui_list_box_is_header(q)]),
+    }
+    return [{"key": k, "label": label, "count": counts.get(k)} for k, label in _RESULTS_TABS]
+
+
+def results_tab_selected(items, key):
+    """The item for `key` (to select it), else the first."""
+    for it in items:
+        if it["key"] == key:
+            return it
+    return items[0] if items else None
+
+
+def results_tab_template(item):
+    """One chip: its label, and its count when it has one."""
+    gui_row("row-height: 1fr;")
+    label = item["label"] if item["count"] is None else f"{item['label']} {item['count']}"
+    gui_text(f"$text:{gui_text_escape(label)};justify:center;font:gui-2;")
+
+
 # Quest rows/headers + the tab title are rendered by the SHARED sbs_utils
 # quest_log_template / quest_log_title (used by the in-game log too) - see
 # game_results.mast. There is intentionally no results-specific quest template.
