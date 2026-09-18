@@ -1,8 +1,8 @@
 """The comms filter chips: what each lens holds, and how taps combine.
 
-The engine hook (`set_comms_list_filter`) does not exist yet, so what can be pinned
-today is the SCRIPT half: the id set behind every chip, the side chips, the All/lens
-rules, and that the result is handed to the hook the moment the engine has one.
+The id set behind every chip, the side chips, the All/lens rules, that an UNSCANNED
+contact leaks into nothing (no count, no side chip, no filter), and that the selection
+lands in the ship's `comms_map_filter` engine data set.
 
     PYTHONPATH=../../sbs_utils python -m unittest test_comms_chips
 """
@@ -66,8 +66,6 @@ class ChipsBase(unittest.TestCase):
 
     def tearDown(self):
         FrameContext.context = None
-        if hasattr(sbs, "set_comms_list_filter"):
-            del sbs.set_comms_list_filter
 
     def sets(self):
         return C.lm_comms_chips_sets(CID, force=True)
@@ -75,12 +73,12 @@ class ChipsBase(unittest.TestCase):
 
 class TestTheLenses(ChipsBase):
 
-    def test_all_is_every_contact_but_your_own_ship(self):
-        self.assertEqual({self.ally, self.base, self.foe, self.ghost}, self.sets()["all"])
+    def test_all_is_every_known_contact_but_your_own_ship(self):
+        self.assertEqual({self.ally, self.base, self.foe}, self.sets()["all"])
 
     def test_threats_and_friends_come_from_the_sides(self):
         s = self.sets()
-        self.assertEqual({self.foe, self.ghost}, s["threats"])
+        self.assertEqual({self.foe}, s["threats"])
         self.assertEqual({self.ally, self.base}, s["friends"])
 
     def test_stations_by_role(self):
@@ -89,7 +87,7 @@ class TestTheLenses(ChipsBase):
     def test_EACH_SIDE_IN_VIEW_GETS_A_CHIP(self):
         s = self.sets()
         self.assertEqual({self.ally, self.base}, s["side:tsn"])
-        self.assertEqual({self.foe, self.ghost}, s["side:kralien"])
+        self.assertEqual({self.foe}, s["side:kralien"])
 
     def test_side_chips_follow_the_fixed_ones(self):
         items = C.lm_comms_chips_items(CID)
@@ -166,16 +164,67 @@ class TestWhatWouldBeShown(ChipsBase):
 
     def test_lenses_are_a_union(self):
         C.lm_comms_chips_normalize(CID, _FakeListbox(["all", "stations", "side:kralien"]))
-        self.assertEqual(("show", {self.base, self.foe, self.ghost}), C.lm_comms_chips_ids(CID))
+        self.assertEqual(("show", {self.base, self.foe}), C.lm_comms_chips_ids(CID))
 
-    def test_no_engine_hook_is_not_an_error(self):
-        self.assertFalse(C.lm_comms_chips_apply(CID))
 
-    def test_THE_ENGINE_HOOK_GETS_THE_LENS_WHEN_IT_EXISTS(self):
-        calls = []
-        sbs.set_comms_list_filter = lambda ship, mode, ids: calls.append((ship, mode, ids))
+class TestTheEngineFilter(ChipsBase):
+    """The selection is written to the SHIP's `comms_map_filter` data set."""
+
+    def written(self):
+        ds = sbs.sim.get_space_object(self.ship).data_set
+        n = ds.num_elements("comms_map_filter")
+        return [ds.get("comms_map_filter", i) for i in range(n)]
+
+    def test_A_LENS_WRITES_EXACTLY_ITS_IDS(self):
         C.lm_comms_chips_normalize(CID, _FakeListbox(["all", "threats"]))
-        self.assertEqual((self.ship, "show", sorted([self.foe, self.ghost])), calls[-1])
+        self.assertEqual([self.foe], self.written())
+
+    def test_all_clears_the_filter(self):
+        C.lm_comms_chips_normalize(CID, _FakeListbox(["all", "threats"]))
+        C.lm_comms_chips_normalize(CID, _FakeListbox(["threats", "all"]))
+        self.assertEqual([], self.written())
+
+    def test_an_empty_lens_shows_nothing_rather_than_everything(self):
+        """Empty means "no filter" to the engine, so an empty lens writes the ship."""
+        C.lm_comms_chips_normalize(CID, _FakeListbox(["all", "orders"]))
+        self.assertEqual([self.ship], self.written())
+
+
+class TestUnknownsLeakNothing(ChipsBase):
+    """`ghost` (kralien) has not been scanned. Nothing on the chip bar may reveal it."""
+
+    def test_AN_UNSCANNED_CONTACT_IS_IN_NO_LENS(self):
+        for key, ids in self.sets().items():
+            self.assertNotIn(self.ghost, ids, key)
+
+    def test_an_unscanned_contact_is_not_in_the_filter(self):
+        C.lm_comms_chips_normalize(CID, _FakeListbox(["all", "threats"]))
+        mode, ids = C.lm_comms_chips_ids(CID)
+        self.assertNotIn(self.ghost, ids)
+
+    def test_A_SIDE_HAS_NO_CHIP_UNTIL_ONE_OF_ITS_SHIPS_IS_SCANNED(self):
+        side_ensure("arvonian")
+        spy = to_id(npc_spawn(5000, 0, 0, "Blip", "arvonian", "tsn_light_cruiser", "behav_npcship"))
+        C.lm_comms_chips_sets(CID, force=True)
+        self.assertNotIn("side:arvonian", C.lm_comms_chips_items(CID))
+        science_set_scan_data(self.ship, spy, "identified")
+        C.lm_comms_chips_sets(CID, force=True)
+        self.assertIn("side:arvonian", C.lm_comms_chips_items(CID))
+
+    def test_THE_ALL_CHIP_SHOWS_NO_COUNT(self):
+        texts = []
+        import sbs_utils.procedural.gui.text as T
+        import sbs_utils.procedural.gui.row as R
+        orig_t, orig_r = T.gui_text, R.gui_row
+        T.gui_text = lambda props, *a, **k: texts.append(props)
+        R.gui_row = lambda *a, **k: None
+        try:
+            C.lm_comms_chips_template("all")
+            C.lm_comms_chips_template("threats")
+        finally:
+            T.gui_text, R.gui_row = orig_t, orig_r
+        self.assertTrue(texts[0].startswith("$text:All;"), texts[0])
+        self.assertTrue(texts[1].startswith("$text:Threats 1;"), texts[1])
 
 
 class TestFavorites(ChipsBase):
@@ -208,13 +257,12 @@ class TestFavorites(ChipsBase):
 
     def test_the_star_shows_the_state(self):
         self.select(self.foe)
-        dim = C.lm_comms_chips_star_props(CID)
+        self.assertEqual("lm.star_outline", C.lm_comms_chips_star_look(CID)[0])
         C.lm_comms_chips_toggle_favorite(CID)
-        gold = C.lm_comms_chips_star_props(CID)
-        self.assertNotEqual(dim, gold)
-        self.assertIn("F2C14E", gold)
+        self.assertEqual(("lm.star", "#F2C14E"), C.lm_comms_chips_star_look(CID))
         self.select(0)
-        self.assertNotIn("F2C14E", C.lm_comms_chips_star_props(CID))
+        self.assertEqual("lm.star_outline", C.lm_comms_chips_star_look(CID)[0])
+        self.assertNotEqual("#F2C14E", C.lm_comms_chips_star_look(CID)[1])
 
     def test_a_deleted_favorite_is_not_in_the_chip(self):
         from sbs_utils.procedural.space_objects import delete_object

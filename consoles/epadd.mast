@@ -23,12 +23,15 @@
 # everything else that draws it, and a bare `cargo`/`help`/`debug` would be an
 # addon claiming a word every other addon might want. Dotted names are the
 # convention the registry already uses for meanings (`quest.job`, `list.expand`).
-gui_icon_add_atlas_grid(media_shared("epadd/icons"), 4, 5, cell=128, names=[
+# The last two are the comms Favorites star (filled = a favorite, outline = not):
+# the built-in sheet has no plain star, only a rank badge.
+gui_icon_add_atlas_grid(media_shared("epadd/icons"), 4, 6, cell=128, names=[
     "epadd.cargo", "epadd.fabricate", "epadd.upgrades", "epadd.quests",
     "epadd.library", "epadd.help", "epadd.airwing", "epadd.casino",
     "epadd.damage", "epadd.hangar", "epadd.comms_log", "epadd.standings",
     "epadd.debug", "epadd.mast", "epadd.brain", "epadd.coverage",
-    "epadd.messages", "epadd.status", "epadd.boarding"])
+    "epadd.messages", "epadd.status", "epadd.boarding", "lm.star",
+    "lm.star_outline"])
 
 # Presentation for the tabs LM ships. An unknown icon name draws nothing and says
 # so once, so an app can be registered before anyone has drawn its glyph.

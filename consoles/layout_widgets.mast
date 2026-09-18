@@ -112,8 +112,8 @@
         # selection highlight, and an opaque one hides which chips are selected.
         gui_row("row-height:56px;")
         # The star: toggles the comms selection as a FAVORITE (kept on the ship, shared by
-        # the crew), shown by the Favorites chip. Gold = a favorite, dim = not.
-        comms_star = gui_icon_button(lm_comms_chips_star_props(client_id), "col-width:48px;padding:6px,10px,6px,10px;")
+        # the crew), shown by the Favorites chip. Gold filled = a favorite, outline = not.
+        comms_star = lm_comms_chips_star_button(client_id, "col-width:48px;padding:6px,10px,6px,10px;")
         comms_chips = gui_list_box(lm_comms_chips_items(client_id), "col-width:6em;background:#0E151D80;", item_template=lm_comms_chips_template, section_style="padding:3px,4px,3px,4px;", select=True, multi=True)
         comms_chips.horizontal = True
         comms_chips.selected = lm_comms_chips_selected(client_id)
@@ -123,10 +123,10 @@
             lm_comms_chips_refresh(client_id, comms_chips)
         on gui_message(comms_star):
             lm_comms_chips_toggle_favorite(client_id)
-            comms_star.update(lm_comms_chips_star_props(client_id))
+            lm_comms_chips_star_show(client_id, comms_star)
             lm_comms_chips_refresh(client_id, comms_chips)
         on change lm_comms_chips_star_revision(client_id):
-            comms_star.update(lm_comms_chips_star_props(client_id))
+            lm_comms_chips_star_show(client_id, comms_star)
         gui_row()
         # A hail placed on THIS console takes the radar's space. gui_widget_offscreen
         # is the only reliable way to be rid of an engine widget - gui_hide does not

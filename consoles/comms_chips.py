@@ -6,13 +6,15 @@ from data the engine never sees (sides, roles, offers, who takes orders), with a
 count on the chip.
 
 Tap chips to combine them (a contact shows if ANY selected lens has it). All resets.
-No chip for unscanned contacts: the 2D view does not show unknowns, so there is nothing
-to hide.
 
-THE ENGINE CANNOT FILTER THE LIST YET. `lm_comms_chips_apply` computes the id set and
-hands it to `sbs.set_comms_list_filter(ship, mode, ids)` IF the engine has it - a
-placeholder name for a hook that does not exist today. Until it does, the chips choose
-and count but the engine's list is unchanged.
+UNKNOWN CONTACTS ARE NEVER COUNTED. A contact this ship has not scanned is in no lens,
+so no count, side chip or filter can tell the crew it is there or what it is. All has
+NO count for the same reason: All clears the filter, so the map shows unknowns too, and
+any number on it would either disagree with the map or give them away.
+
+`lm_comms_chips_apply` writes the selection to the ship's `comms_map_filter` engine data
+set (`comms_map_filter_set` / `_clear`), so the comms 2D map shows only the lens. It is
+per SHIP: every comms console on it shares one filter, and the last tap wins.
 
 Prefixed `lm_comms_chips_` because every top-level function here is a MAST global in
 one flat, mission-wide namespace.
@@ -23,6 +25,8 @@ from sbs_utils.procedural.gui.viewscreen import viewscreen_home_ship
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.query import object_exists, to_object, get_comms_selection
 from sbs_utils.procedural.roles import role, has_role
+from sbs_utils.procedural.science import science_is_unknown
+from sbs_utils.procedural.comms import comms_map_filter_set, comms_map_filter_clear
 from sbs_utils.procedural.sides import (side_are_allies, side_are_enemies, to_side_id,
                                         side_get_display_name)
 
@@ -84,6 +88,10 @@ def _compute(client_id, ship_id):
     favorites = lm_comms_chips_favorites(ship_id)
     sets = {k: set() for k, _ in _CHIPS}
     for i in contacts:
+        # An unscanned contact joins no lens - its side, role and count are exactly what
+        # the crew does not know yet.
+        if science_is_unknown(ship_id, i):
+            continue
         sets["all"].add(i)
         side = getattr(to_object(i), "side", None)
         if side:
@@ -127,20 +135,27 @@ def lm_comms_chips_sets(client_id, force=False):
 
 def lm_comms_chips_revision(client_id):
     """What an `on change` watches: which chips there are and their counts. Changes
-    only when a count does, or a side comes into or leaves view."""
+    only when a count does, or a side comes into or leaves view.
+
+    Tracks the lens MEMBERS, not just counts: a contact swapped for another keeps every
+    count the same but must still re-apply the filter."""
     sets = lm_comms_chips_sets(client_id)
-    return tuple(sorted((k, len(v)) for k, v in sets.items()))
+    return tuple(sorted((k, tuple(sorted(v))) for k, v in sets.items() if k != "all"))
 
 
 def lm_comms_chips_template(item):
     """One chip: its label and live count, centered."""
     from sbs_utils.procedural.gui.row import gui_row
     from sbs_utils.procedural.gui.text import gui_text
-    sets = lm_comms_chips_sets(FrameContext.client_id)
-    n = len(sets.get(item, ()))
     # The chip's WIDTH is the listbox's `col-width` (layout_widgets.mast); this row just
     # fills it.
     gui_row("row-height: 1fr;")
+    if item == "all":
+        # No count on All: see the module docstring.
+        gui_text(f"$text:{_chip_label(item)};justify:center;font:gui-2;")
+        return
+    sets = lm_comms_chips_sets(FrameContext.client_id)
+    n = len(sets.get(item, ()))
     gui_text(f"$text:{_chip_label(item)} {n};justify:center;font:gui-2;")
 
 
@@ -186,22 +201,17 @@ def lm_comms_chips_ids(client_id):
 
 
 def lm_comms_chips_apply(client_id):
-    """Push this console's lens to the engine - IF the engine can take it.
-
-    `set_comms_list_filter` is a PLACEHOLDER for an engine hook that does not exist yet;
-    without it this only records what would be shown.
-    """
+    """Write this console's lens to its ship's `comms_map_filter`: cleared for All, the
+    lens's ids otherwise. Unchanged sets are not re-sent (the library skips them)."""
     mode, ids = lm_comms_chips_ids(client_id)
     set_inventory_value(client_id, "lm_comms_chips_filter", (mode, sorted(ids) if ids else []))
-    sbs = FrameContext.context.sbs if FrameContext.context else None
-    hook = getattr(sbs, "set_comms_list_filter", None)
-    if hook is None:
-        return False
     ship_id = viewscreen_home_ship(client_id)
+    if not ship_id or not object_exists(ship_id):
+        return False
     if mode == "all":
-        hook(ship_id, "all", [])
+        comms_map_filter_clear(ship_id)
     else:
-        hook(ship_id, mode, sorted(ids))
+        comms_map_filter_set(ship_id, ids)
     return True
 
 
@@ -216,8 +226,10 @@ def lm_comms_chips_refresh(client_id, lb):
 # contact, every comms console on that ship sees it in the Favorites chip.
 _FAV_KEY = "lm_comms_favorites"
 
-#: The star is the icon sheet's `rank-star` glyph, tinted by state.
-_STAR = "icon_index:91;color:{};"
+#: The star is LM's own art (media/epadd/icons.png, registered in epadd.mast): the
+#: built-in sheet has only a rank badge. Filled = a favorite, outline = not.
+_STAR_ON = "lm.star"
+_STAR_OFF = "lm.star_outline"
 
 
 def lm_comms_chips_favorites(ship_id):
@@ -253,15 +265,30 @@ def lm_comms_chips_toggle_favorite(client_id):
     return sel in favs
 
 
-def lm_comms_chips_star_props(client_id):
-    """The star's look: gold when the selection is a favorite, dim when it is not, and
-    near-invisible when nothing starrable is selected."""
+def lm_comms_chips_star_look(client_id):
+    """(icon name, color) for the star: a gold filled star when the selection is a
+    favorite, an outline when it is not, a near-invisible outline when nothing
+    starrable is selected."""
     ship_id, sel = lm_comms_chips_star_target(client_id)
     if not sel:
-        return _STAR.format("#3A4552")
+        return _STAR_OFF, "#3A4552"
     if sel in lm_comms_chips_favorites(ship_id):
-        return _STAR.format("#F2C14E")
-    return _STAR.format("#8A9AAB")
+        return _STAR_ON, "#F2C14E"
+    return _STAR_OFF, "#8A9AAB"
+
+
+def lm_comms_chips_star_button(client_id, style):
+    """Build the star: an image button showing the current look."""
+    from sbs_utils.procedural.gui.icon import gui_icon_name_button
+    name, color = lm_comms_chips_star_look(client_id)
+    return gui_icon_name_button(name, color=color, style=style)
+
+
+def lm_comms_chips_star_show(client_id, star):
+    """Bring a built star up to date - in place, only that one image is re-sent."""
+    from sbs_utils.procedural.gui.icon import gui_icon_rename
+    name, color = lm_comms_chips_star_look(client_id)
+    return gui_icon_rename(star, name, color)
 
 
 def lm_comms_chips_star_revision(client_id):
