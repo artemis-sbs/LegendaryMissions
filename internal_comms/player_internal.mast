@@ -5,14 +5,18 @@
 //enable/comms if has_roles(COMMS_ORIGIN_ID, "__player__") and COMMS_ORIGIN_ID == COMMS_SELECTED_ID
 
 //comms 
-    if COMMS_SELECTED_ID == 0:
-        comms_badges = role("comms_badge") & role("ultra_beam")
-        yield fail if len(comms_badges)==0
-        + "Ultra-Beam" //comms/ultra_beam
-    else:
-        comms_badges = role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")
-        yield fail if len(comms_badges)==0
-        + "Comms Badge" //comms/comms_badge
+    # The Ultra-Beam is offered with nothing selected AND on the player's own ship, beside
+    # its Comms Badge - so the ship can hold both buttons, and neither may `yield fail`
+    # the route before the other is added.
+    if COMMS_SELECTED_ID == COMMS_ORIGIN_ID:
+        # Back at the ship's root: the badge list starts from the crew aboard again.
+        set_inventory_value(COMMS_ORIGIN_ID, "comms_badge_list", "onboard")
+    if COMMS_SELECTED_ID == 0 or COMMS_SELECTED_ID == COMMS_ORIGIN_ID:
+        if len(role("comms_badge") & role("ultra_beam")) > 0:
+            + "Ultra-Beam" //comms/ultra_beam
+    if COMMS_SELECTED_ID != 0:
+        if len(role("comms_badge") & linked_to(COMMS_SELECTED_ID, "onboard")) > 0:
+            + "Comms Badge" //comms/comms_badge
     # Used to limit to allies but why do so
     # The Comms should handle that themselves
     # You may want a spy etc.
@@ -20,14 +24,24 @@
 #
 # Handle Comms comms badges
 #
+# Which list a contact's "Back" returns to. A contact's menu goes Back to
+# //comms/comms_badge whichever list it was opened from, so on the ship - where both lists
+# live - the list last opened is remembered. With nothing selected it is always the
+# Ultra-Beam, as it always was.
 //comms/comms_badge if has_roles(COMMS_ORIGIN_ID, "__player__")
+    if COMMS_SELECTED_ID == 0:
+        comms_badge_list = "ultra_beam"
+    else:
+        comms_badge_list = get_inventory_value(COMMS_ORIGIN_ID, "comms_badge_list", "onboard")
     jump comm_handle_comms_badge
 
 //comms/ultra_beam if has_roles(COMMS_ORIGIN_ID, "__player__")
+    set_inventory_value(COMMS_ORIGIN_ID, "comms_badge_list", "ultra_beam")
+    comms_badge_list = "ultra_beam"
     jump comm_handle_comms_badge
 
 === comm_handle_comms_badge
-    if COMMS_SELECTED_ID == 0:
+    if comms_badge_list == "ultra_beam":
         # They found it. An advisor who exists to say "hail me on the Ultra-Beam" should
         # stop saying it now - see urge_taught / the `taught` urge condition. Stamped on
         # USE, never on being told, so a nudge nobody acted on keeps its turn.

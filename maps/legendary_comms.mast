@@ -11,7 +11,7 @@ default shared SIMPLE_INTERNAL = True
 prefab_spawn(prefab_lifeform_generic, {"name": "TSNN", "path": "//comms/tsnn"})
 
 
-//comms/tsnn  if has_role(COMMS_ORIGIN_ID, '__player__') and COMMS_SELECTED_ID == 0
+//comms/tsnn  if has_role(COMMS_ORIGIN_ID, '__player__') and COMMS_SELECTED_ID in (0, COMMS_ORIGIN_ID)
     +"Back" //comms/comms_badge
     +"News Report":
         with comms_override(COMMS_ORIGIN_ID, COMMS_LIFEFORM_ID):
@@ -25,7 +25,7 @@ prefab_spawn(prefab_lifeform_generic, {"name": "TSNN", "path": "//comms/tsnn"})
 //enable/comms if has_role(COMMS_ORIGIN_ID, '__player__') and COMMS_SELECTED_ID == 0
     tsn_command = lifeform_spawn("TSN Command", random_terran(civilian=True), "tsn",0, path="//comms/tsn_command")
 
-//comms/tsn_command if has_role(COMMS_ORIGIN_ID, '__player__') and COMMS_SELECTED_ID == 0
+//comms/tsn_command if has_role(COMMS_ORIGIN_ID, '__player__') and COMMS_SELECTED_ID in (0, COMMS_ORIGIN_ID)
     +"Back" //comms/comms_badge
     +"Request reinforcements" tsn_command_reinforcements
         
