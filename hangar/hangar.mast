@@ -161,6 +161,11 @@ hangar_get_craft_data("terran")
     # Persist the (possibly reset) selection back as ids for the next rebuild.
     ride_choice_id = to_id(ride_choice)
     dock_choice_id = to_id(dock_choice)
+    # PUBLISH THE PICK. `ride_choice_id` is a task variable and the Offers provider is
+    # Python, so without this the flight deck - the one console where a sortie is
+    # actually chosen - reports no craft, offers no sorties, and the app's own route
+    # condition then hides the tile entirely.
+    set_inventory_value(client_id, "hangar_ride_id", ride_choice_id)
 
     # THE BOARD'S BAND, GIVEN TO THE THINGS THAT WERE SQUEEZED. The sortie list and its
     # briefing used to own everything from y=60 down, so the craft pickers and the 2D
@@ -267,6 +272,7 @@ hangar_get_craft_data("terran")
             # different orders than a fighter. Nothing to repaint here any more - the
             # Offers app reads the craft itself - but the type still drives what the
             # launch assigns.
+            set_inventory_value(client_id, "hangar_ride_id", ride_choice_id)
             if HANGAR_QUEST_DOC is not None:
                 cockpit_type = hangar_cockpit_type(ride_choice)
                 quest_choice = None

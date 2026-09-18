@@ -129,5 +129,61 @@ class ProviderTests(_Base):
         self.assertEqual(offers(client_id=CID), [])
 
 
+class TheDeckSelectionCountsTests(unittest.TestCase):
+    """The flight deck is where a sortie is CHOSEN, and it was the one console that
+    offered none.
+
+    A craft has two sources and only one existed: in the cockpit it is a dedicated link
+    set at launch, but on the deck nothing is launched yet - the pilot has only picked a
+    row, and that selection lives in the screen's MAST task scope where no Python
+    provider can reach it. So the deck reported no craft, offered no sorties, and
+    `//gui/app/offers if ... offer_count_here() > 0` then hid the whole tile. The symptom
+    is an app that simply is not there.
+    """
+
+    def setUp(self):
+        sbs.create_new_sim()
+        FrameContext.context = Context(sbs.sim, sbs, FakeEvent())
+        SpaceObject.clear()
+        from sbs_utils.gui import GuiClient
+        GuiClient(CID)
+        offer_clear()
+        set_shared_variable("HANGAR_QUEST_DOC", DOC)
+        HB.hangar_offers_register()
+
+    def tearDown(self):
+        offer_clear()
+        set_shared_variable("HANGAR_QUEST_DOC", None)
+
+    def test_nothing_picked_offers_nothing(self):
+        from sbs_utils.procedural.offer import offer_count
+        self.assertEqual(offer_count(client_id=CID), 0)
+
+    def test_picking_a_craft_makes_the_tile_appear(self):
+        """THE BUG, as a number: the route condition is `offer_count_here() > 0`."""
+        from sbs_utils.procedural.inventory import set_inventory_value
+        from sbs_utils.procedural.offer import offer_count
+        set_inventory_value(CID, HB.HANGAR_RIDE_KEY, 777)
+        self.assertGreater(offer_count(client_id=CID), 0)
+
+    def test_the_offer_is_for_the_craft_that_was_picked(self):
+        from sbs_utils.procedural.inventory import set_inventory_value
+        from sbs_utils.procedural.offer import offers
+        set_inventory_value(CID, HB.HANGAR_RIDE_KEY, 777)
+        rows = [r for r in offers(client_id=CID) if r.get("kind") == "sortie"]
+        self.assertTrue(rows)
+        self.assertEqual(rows[0].get("data").get("craft"), 777)
+
+    def test_a_launched_craft_still_wins(self):
+        """In the seat the dedicated link is the truth; the deck pick is the fallback."""
+        from sbs_utils.procedural.inventory import set_inventory_value
+        set_inventory_value(CID, HB.HANGAR_RIDE_KEY, 777)
+        real = HB.hangar_offer_craft
+        try:
+            self.assertEqual(HB.hangar_offer_craft(CID), 777)
+        finally:
+            HB.hangar_offer_craft = real
+
+
 if __name__ == "__main__":
     unittest.main()

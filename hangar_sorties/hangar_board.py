@@ -97,16 +97,35 @@ def hangar_quest_title_template():
 HANGAR_CRAFT_LINK = "craft_id"
 
 
+#: Where the flight deck leaves the craft the pilot has SELECTED but not yet launched.
+#: The screen holds that in a MAST task variable (`ride_choice_id`), which no Python can
+#: read - so the deck publishes it here for anything that needs it.
+HANGAR_RIDE_KEY = "hangar_ride_id"
+
+
 def hangar_offer_craft(client_id):
     """The craft this console is flying, or about to fly. None when it is neither.
 
-    A sortie is offered for a SPECIFIC cockpit - a shuttle and a fighter are handed
-    different work - so without a craft there is nothing to offer, and the tile stays
-    off rather than listing sorties nobody can take.
+    TWO SOURCES, and missing the second one is why the Offers tile never appeared on the
+    flight deck. In the COCKPIT the craft is a dedicated link, set at launch. On the DECK
+    nothing is launched yet - the pilot has only picked a row - and that selection lives
+    in the screen's own task scope where no provider can see it, so the deck publishes it
+    to inventory and this reads it.
+
+    Without the deck half, the one console where a sortie is chosen offered none: no
+    craft, so no sorties, so `offer_count_here()` is zero and the route's own condition
+    hides the whole app.
     """
+    from sbs_utils.procedural.inventory import get_inventory_value
     from sbs_utils.procedural.links import get_dedicated_link
     try:
-        return to_id(get_dedicated_link(client_id, HANGAR_CRAFT_LINK))
+        flying = to_id(get_dedicated_link(client_id, HANGAR_CRAFT_LINK))
+    except Exception:                                    # noqa: BLE001
+        flying = None
+    if flying:
+        return flying
+    try:
+        return to_id(get_inventory_value(client_id, HANGAR_RIDE_KEY, None)) or None
     except Exception:                                    # noqa: BLE001
         return None
 
