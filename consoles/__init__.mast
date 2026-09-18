@@ -13,6 +13,8 @@ import media_music.mast
 
 # Engineering's right column. Before layout_widgets, which calls eng_grid_panel().
 import eng_grid_panel.py
+# The comms filter chips above the 2D view. Before layout_widgets, which builds them.
+import comms_chips.py
 
 import layout_widgets.mast
 

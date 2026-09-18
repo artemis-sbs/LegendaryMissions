@@ -105,6 +105,19 @@
         # 45px because the control is small and fixed - it does not want stretching.
 #        gui_row("row-height:45px;")
 #        gui_layout_widget("radar_zoom_ctrl")
+        # The filter chips take that band (comms_chips.py): a horizontal listbox, so
+        # when the chips outrun the view it draws a slider under them and scrolls.
+        # `col-width` is each chip's width, sized for a label like "Stations 12".
+        # The background must stay SEE-THROUGH: it is drawn on the same layer as the
+        # selection highlight, and an opaque one hides which chips are selected.
+        gui_row("row-height:56px;")
+        comms_chips = gui_list_box(lm_comms_chips_items(client_id), "col-width:6em;background:#0E151D80;", item_template=lm_comms_chips_template, section_style="padding:3px,4px,3px,4px;", select=True, multi=True)
+        comms_chips.horizontal = True
+        comms_chips.selected = lm_comms_chips_selected(client_id)
+        on change comms_chips.get_selected():
+            lm_comms_chips_normalize(client_id, comms_chips)
+        on change lm_comms_chips_revision(client_id):
+            lm_comms_chips_refresh(client_id, comms_chips)
         gui_row()
         # A hail placed on THIS console takes the radar's space. gui_widget_offscreen
         # is the only reliable way to be rid of an engine widget - gui_hide does not
