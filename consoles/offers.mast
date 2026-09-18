@@ -51,19 +51,14 @@ if OFFER_DIGEST_ENABLED:
 # same thing the Survey app does. A board that is always present but usually empty is one
 # more button to learn; a board that appears exactly when it has something is an answer.
 //gui/app/offers if OFFERS_TAB_ENABLED and offer_count_here() > 0
---- offers_repaint
     gui_tab_back(CONSOLE_SELECT)
     gui_activate_console("offers")
     gui_offers_screen()
-    # A TAKEN JOB HAS TO LEAVE THE BOARD. Without this the row a pilot just took was
-    # still sitting there, which is indistinguishable from the press not having worked -
-    # and it is the same complaint whichever way an offer disappears, so the watcher is
-    # on the generation rather than on the button.
-    #
-    # `offer_generation()` folds in `quest_generation()`, so granting the quest is itself
-    # what moves it. Same shape the Quests tab uses with `quest_tab_state_sig`.
-    on change offer_generation():
-        jump offers_repaint
+    # NO `on change ... jump`. That is the named anti-pattern: a repaint re-sends every
+    # widget on the screen over the wire per change, and two builds landing at once is
+    # what makes a board look scrambled - which it did, and the mangled rows were blamed
+    # on the row layout. The board updates its own list and its own two widgets when a
+    # job is taken, because it is the thing that took it.
     await gui()
 
 
