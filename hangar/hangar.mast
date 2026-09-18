@@ -373,8 +373,12 @@ hangar_get_craft_data("terran")
             old_ship_id = sbs.get_ship_of_client(client_id)
             unlink(old_ship_id, "consoles", client_id)
             link(ride_select , "consoles", client_id)
-            if quest_choice is not None and HANGAR_QUEST_DOC is not None:
-                hangar_assign_quest(to_id(ride_select), HANGAR_QUEST_DOC, cockpit_type, quest_choice)
+            # NOTHING TO ASSIGN AT LAUNCH ANY MORE. A sortie is taken when the pilot
+            # picks it in the Offers app (`hangar_take_sortie`), which assigns it to the
+            # craft there and then - so by the time anyone launches, the order is already
+            # a quest on that craft. This used to be the only place an order was applied,
+            # and it read the board's selection; removing the board without moving the
+            # assignment would have meant no sortie was ever assigned at all.
             jump launch_to_cockpit
         jump show_hangar
 

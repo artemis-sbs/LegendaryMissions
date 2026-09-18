@@ -88,7 +88,10 @@ class ProviderTests(_Base):
         self.assertTrue(rows)
         for r in rows:
             self.assertEqual(r.get("kind"), "sortie")
-            self.assertEqual(r.get("app"), "quest")
+            # NOT app="quest": a sortie is not a quest until it is assigned, so
+            # that click went to a list which could not contain it.
+            self.assertIsNone(r.get("app"))
+            self.assertTrue(callable(r.get("take")))
             self.assertTrue(str(r.get("key")).startswith("sortie:"))
 
     def test_the_key_names_the_craft_AND_the_order(self):
@@ -187,3 +190,67 @@ class TheDeckSelectionCountsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TakingASortieTests(unittest.TestCase):
+    """Clicking a sortie has to DO something, and it used to do the one wrong thing.
+
+    The offer carried `app="quest"`, so the click opened the Quests app - where a sortie
+    is not listed, because it is not a quest until it is assigned. A pilot clicked an
+    order and arrived at a list that could not contain it.
+
+    Worse, removing the old board removed the only place `quest_choice` was ever set, so
+    the launch that used to apply the order applied nothing. The order is taken at the
+    moment it is picked now, which is earlier and clearer, and the launch carries nothing.
+    """
+
+    def setUp(self):
+        sbs.create_new_sim()
+        FrameContext.context = Context(sbs.sim, sbs, FakeEvent())
+        SpaceObject.clear()
+        from sbs_utils.gui import GuiClient
+        GuiClient(CID)
+        offer_clear()
+        set_shared_variable("HANGAR_QUEST_DOC", DOC)
+        HB.hangar_offers_register()
+        from sbs_utils.procedural.a2x.spawn import create_enemy
+        from sbs_utils.procedural.query import to_id
+        from sbs_utils.procedural.inventory import set_inventory_value
+        self.craft = to_id(create_enemy(0, 0, 0, "kralien_cruiser", name="F1"))
+        set_inventory_value(CID, HB.HANGAR_RIDE_KEY, self.craft)
+
+    def tearDown(self):
+        offer_clear()
+        set_shared_variable("HANGAR_QUEST_DOC", None)
+
+    def _sortie(self, key="patrol"):
+        """A SPECIFIC order. `offers()` sorts by title, so taking rows[0] takes whichever
+        one happens to sort first - which is not the one an assertion names."""
+        for r in offers(client_id=CID):
+            if r.get("kind") == "sortie" and (r.get("data") or {}).get("sortie") == key:
+                return r
+        return None
+
+    def test_it_does_not_send_you_to_the_quests_app(self):
+        """THE BUG. The Quests app cannot show a sortie that is not a quest yet."""
+        self.assertIsNone(self._sortie().get("app"))
+
+    def test_it_carries_the_means_to_take_itself(self):
+        self.assertTrue(callable(self._sortie().get("take")))
+
+    def test_taking_it_makes_it_a_real_quest_on_the_craft(self):
+        from sbs_utils.procedural.quest import quest_get_state
+        self.assertEqual(quest_get_state(self.craft, "patrol"), 0)
+        self.assertTrue(HB.hangar_take_sortie(CID, self._sortie()))
+        self.assertEqual(int(quest_get_state(self.craft, "patrol")), 1)
+
+    def test_a_taken_sortie_leaves_the_board(self):
+        """Already flying it is not an offer - and the OTHERS stay."""
+        HB.hangar_take_sortie(CID, self._sortie("patrol"))
+        self.assertIsNone(self._sortie("patrol"))
+        self.assertIsNotNone(self._sortie("any_job"),
+                             "taking one order removed the rest")
+
+    def test_taking_nonsense_is_false_not_a_crash(self):
+        self.assertFalse(HB.hangar_take_sortie(CID, None))
+        self.assertFalse(HB.hangar_take_sortie(CID, {"data": {}}))

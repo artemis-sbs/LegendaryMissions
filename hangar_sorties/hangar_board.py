@@ -164,12 +164,36 @@ def hangar_offer_provider(ctx):
             detail=str(item.get("objective") or ""),
             kind="sortie",
             source="Flight Hangar",
-            where="Hangar - launch to take it",
-            app="quest",
+            where="Hangar - pick a craft first",
+            # NO `app="quest"`. That is where a quest is accepted, and a sortie is not a
+            # quest until it is ASSIGNED - so sending a pilot there to take one showed
+            # them a list that could not contain the thing they had just clicked. It is
+            # taken HERE instead.
+            take=hangar_take_sortie,
             sort=15,
             data={"sortie": key, "craft": craft, "cockpit": kind},
         ))
     return out
+
+
+def hangar_take_sortie(client_id, record):
+    """Take a sortie order: assign it to the craft the offer was built for.
+
+    This is what the board's old selection did at LAUNCH, moved to the moment the pilot
+    actually chooses - which is both earlier and clearer, and it means the order is a
+    real quest on the craft from then on. So it leaves the Offers list (the provider
+    skips anything already active), appears in the Quests app like every other job, and
+    the launch needs to carry nothing.
+    """
+    from sbs_utils.procedural.execution import get_shared_variable
+    data = (record or {}).get("data") or {}
+    craft = data.get("craft")
+    sortie = data.get("sortie")
+    doc = get_shared_variable("HANGAR_QUEST_DOC", None)
+    if not craft or not sortie or doc is None:
+        return False
+    node = hangar_assign_quest(craft, doc, data.get("cockpit"), sortie)
+    return node is not None
 
 
 def hangar_offers_register():
