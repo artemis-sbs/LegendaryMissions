@@ -94,13 +94,20 @@ class ProviderTests(_Base):
             self.assertTrue(callable(r.get("take")))
             self.assertTrue(str(r.get("key")).startswith("sortie:"))
 
-    def test_the_key_names_the_craft_AND_the_order(self):
-        """Two pilots are offered the same order; their offers must not collide."""
+    def test_the_key_names_the_CLIENT_and_the_order(self):
+        """Keyed on the CLIENT, like the ownership.
+
+        Two pilots offered the same order must not collide - but ONE pilot swapping
+        fighters must not mint a second key for an order they already hold, which is
+        what keying on the craft did.
+        """
         self._craft = 5
         a = {r.get("key") for r in HB.hangar_offer_provider(_ctx())}
         self._craft = 6
         b = {r.get("key") for r in HB.hangar_offer_provider(_ctx())}
-        self.assertFalse(a & b, "two craft produced the same offer key")
+        self.assertEqual(a, b, "changing craft minted new keys for the same orders")
+        other = {r.get("key") for r in HB.hangar_offer_provider(_ctx(client_id=CID + 1))}
+        self.assertFalse(a & other, "two clients produced the same offer key")
 
     def test_it_carries_what_the_launch_needs(self):
         self._craft = 5
@@ -188,20 +195,18 @@ class TheDeckSelectionCountsTests(unittest.TestCase):
             HB.hangar_offer_craft = real
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TakingASortieTests(unittest.TestCase):
-    """Clicking a sortie has to DO something, and it used to do the one wrong thing.
+    """A JOB BELONGS TO THE CLIENT, and getting that wrong made the feature look broken.
 
-    The offer carried `app="quest"`, so the click opened the Quests app - where a sortie
-    is not listed, because it is not a quest until it is assigned. A pilot clicked an
-    order and arrived at a list that could not contain it.
+    `quest_tab_items` reads exactly three agents - the shared story agent, the CLIENT and
+    the console's SHIP. A sortie granted to the CRAFT is displayed by nothing at all
+    while the pilot is on the flight deck, because there the console is assigned to the
+    dock rather than to the fighter. The order existed, it ticked, and no screen showed
+    it. The old code survived only because it granted at LAUNCH, when the craft IS the
+    console's ship.
 
-    Worse, removing the old board removed the only place `quest_choice` was ever set, so
-    the launch that used to apply the order applied nothing. The order is taken at the
-    moment it is picked now, which is earlier and clearer, and the launch carries nothing.
+    So: take it as the client, and check it from the DECK - `ship_id` set to the dock,
+    which is the case that was broken.
     """
 
     def setUp(self):
@@ -217,6 +222,7 @@ class TakingASortieTests(unittest.TestCase):
         from sbs_utils.procedural.query import to_id
         from sbs_utils.procedural.inventory import set_inventory_value
         self.craft = to_id(create_enemy(0, 0, 0, "kralien_cruiser", name="F1"))
+        self.dock = to_id(create_enemy(500, 0, 0, "kralien_cruiser", name="Carrier"))
         set_inventory_value(CID, HB.HANGAR_RIDE_KEY, self.craft)
 
     def tearDown(self):
@@ -224,33 +230,67 @@ class TakingASortieTests(unittest.TestCase):
         set_shared_variable("HANGAR_QUEST_DOC", None)
 
     def _sortie(self, key="patrol"):
-        """A SPECIFIC order. `offers()` sorts by title, so taking rows[0] takes whichever
-        one happens to sort first - which is not the one an assertion names."""
+        """A SPECIFIC order. `offers()` sorts by title, so rows[0] is whichever sorts
+        first rather than the one an assertion names."""
         for r in offers(client_id=CID):
             if r.get("kind") == "sortie" and (r.get("data") or {}).get("sortie") == key:
                 return r
         return None
 
-    def test_it_does_not_send_you_to_the_quests_app(self):
-        """THE BUG. The Quests app cannot show a sortie that is not a quest yet."""
-        self.assertIsNone(self._sortie().get("app"))
+    def _tab_rows(self, ship_id):
+        from sbs_utils.procedural.gui import gui_list_box_is_header
+        from sbs_utils.procedural.quest_driver import quest_tab_items
+        return [(i.get("group"), i.get("title"))
+                for i in quest_tab_items(CID, ship_id)
+                if not gui_list_box_is_header(i)]
 
-    def test_it_carries_the_means_to_take_itself(self):
-        self.assertTrue(callable(self._sortie().get("take")))
+    def test_a_taken_sortie_SHOWS_UP_on_the_flight_deck(self):
+        """THE BUG, and the whole point of the feature. The console's ship here is the
+        DOCK - the craft has not launched - which is exactly where it used to vanish."""
+        HB.hangar_take_sortie(CID, self._sortie())
+        rows = self._tab_rows(self.dock)
+        self.assertIn(("You", "Picket Patrol"), rows,
+                      "the order is held by nobody the Quests tab reads: %s" % rows)
 
-    def test_taking_it_makes_it_a_real_quest_on_the_craft(self):
+    def test_it_is_held_by_the_client_not_the_craft(self):
         from sbs_utils.procedural.quest import quest_get_state
-        self.assertEqual(quest_get_state(self.craft, "patrol"), 0)
-        self.assertTrue(HB.hangar_take_sortie(CID, self._sortie()))
-        self.assertEqual(int(quest_get_state(self.craft, "patrol")), 1)
+        HB.hangar_take_sortie(CID, self._sortie())
+        self.assertEqual(int(quest_get_state(CID, "patrol")), 1)
+        self.assertEqual(int(quest_get_state(self.craft, "patrol")), 0)
+
+    def test_it_follows_the_pilot_into_the_cockpit(self):
+        """Held by the client, so it is still there once they are flying the craft."""
+        HB.hangar_take_sortie(CID, self._sortie())
+        self.assertIn(("You", "Picket Patrol"), self._tab_rows(self.craft))
 
     def test_a_taken_sortie_leaves_the_board(self):
-        """Already flying it is not an offer - and the OTHERS stay."""
         HB.hangar_take_sortie(CID, self._sortie("patrol"))
         self.assertIsNone(self._sortie("patrol"))
         self.assertIsNotNone(self._sortie("any_job"),
                              "taking one order removed the rest")
 
+    def test_taking_moves_the_generation_so_the_board_repaints(self):
+        """The row used to stay on screen, which reads as the press not having worked."""
+        from sbs_utils.procedural.offer import offer_generation
+        before = offer_generation()
+        HB.hangar_take_sortie(CID, self._sortie())
+        self.assertNotEqual(before, offer_generation())
+
+    def test_changing_craft_does_not_re_offer_a_taken_order(self):
+        """The key is the CLIENT's, like the ownership - keyed on the craft, a pilot who
+        swapped fighters was offered the same order again under a second key."""
+        from sbs_utils.procedural.inventory import set_inventory_value
+        HB.hangar_take_sortie(CID, self._sortie())
+        set_inventory_value(CID, HB.HANGAR_RIDE_KEY, self.dock)
+        self.assertIsNone(self._sortie("patrol"))
+
     def test_taking_nonsense_is_false_not_a_crash(self):
         self.assertFalse(HB.hangar_take_sortie(CID, None))
         self.assertFalse(HB.hangar_take_sortie(CID, {"data": {}}))
+
+    def test_no_client_takes_nothing(self):
+        self.assertFalse(HB.hangar_take_sortie(None, self._sortie()))
+
+
+if __name__ == "__main__":
+    unittest.main()

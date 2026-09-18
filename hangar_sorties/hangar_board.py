@@ -155,11 +155,16 @@ def hangar_offer_provider(ctx):
     out = []
     for item in hangar_quest_items(doc, kind):
         key = item.get("key")
-        # Already flying it is not an offer.
-        if quest_get_state(craft, key) != 0:
+        # ALREADY TAKEN IS NOT AN OFFER, and "taken" is asked of the CLIENT, because the
+        # client is who holds it. Asking the craft left a taken order on the board for
+        # good: nothing would ever answer non-zero there.
+        if quest_get_state(cid, key) != 0:
             continue
         out.append(offer_record(
-            key="sortie:%s:%s" % (craft, key),
+            # Keyed on the CLIENT, like the ownership. Keying on the craft meant a
+            # pilot who changed their mind about which fighter to fly was offered the
+            # same order again under a second key.
+            key="sortie:%s:%s" % (cid, key),
             title=str(item.get("title") or key),
             detail=str(item.get("objective") or ""),
             kind="sortie",
@@ -177,22 +182,29 @@ def hangar_offer_provider(ctx):
 
 
 def hangar_take_sortie(client_id, record):
-    """Take a sortie order: assign it to the craft the offer was built for.
+    """Take a sortie order. THE PILOT HOLDS IT, NOT THE CRAFT.
 
-    This is what the board's old selection did at LAUNCH, moved to the moment the pilot
-    actually chooses - which is both earlier and clearer, and it means the order is a
-    real quest on the craft from then on. So it leaves the Offers list (the provider
-    skips anything already active), appears in the Quests app like every other job, and
-    the launch needs to carry nothing.
+    A JOB BELONGS TO THE CLIENT, and getting this wrong made the whole feature look
+    broken. `quest_tab_items` reads exactly three agents - the shared story agent, the
+    CLIENT, and the console's SHIP - so a quest granted to the craft is displayed by
+    nothing at all while the pilot is still on the flight deck, because there the console
+    is assigned to the dock, not to the fighter. The order existed, it ticked, and no
+    screen in the game would show it.
+
+    The old code got away with granting to the craft only because it did so at LAUNCH, by
+    which point the pilot IS flying it and it is the console's `ship_id`. Moving the
+    moment of taking earlier without moving the owner is what broke it.
+
+    The craft still decides WHICH orders are offered - a shuttle and a fighter are handed
+    different work - so it stays in the record. It is the owner that changes.
     """
     from sbs_utils.procedural.execution import get_shared_variable
     data = (record or {}).get("data") or {}
-    craft = data.get("craft")
     sortie = data.get("sortie")
     doc = get_shared_variable("HANGAR_QUEST_DOC", None)
-    if not craft or not sortie or doc is None:
+    if client_id is None or not sortie or doc is None:
         return False
-    node = hangar_assign_quest(craft, doc, data.get("cockpit"), sortie)
+    node = hangar_assign_quest(client_id, doc, data.get("cockpit"), sortie)
     return node is not None
 
 
