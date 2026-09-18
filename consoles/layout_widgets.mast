@@ -69,12 +69,11 @@
 ## Options/Face
         gui_row("row-height:100px;")
         gui_layout_widget("comms_face")
+        # Options only exists while a comms route fills it (ship to ship, today) -
+        # every comms navigation clears it. Empty, its row folds away and the hail
+        # list below gets the room.
         gui_row("row-height:5em;")
-        gui_property_list_box("Options")
-
-
-        gui_row()
-        gui_blank()
+        gui_property_list_box("Options", hide_when_empty=True)
 
         # NOT sbs.get_ship_of_client: while an orbit hail runs, this console is
         # ASSIGNED to the hailer, so the engine would answer with the raider.
@@ -92,7 +91,7 @@
         # "Incoming Hails" - the waiting hails, or the open conversation's replies. One
         # call, and the library owns which of its three states applies. A listbox, so a
         # queue longer than the space still scrolls rather than being dropped.
-        hail_choice_strip(_hail_ship, client_id)
+        hail_choice_strip(_hail_ship, client_id, row_style="row-height:1fr;")
 
 
     _comms_text_height = "30"
