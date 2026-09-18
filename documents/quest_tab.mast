@@ -23,7 +23,14 @@ default shared QUEST_ENGAGE_CONSOLES = "helm"           # who may Engage (when e
 if QUEST_TAB_ENABLED:
     gui_tab_add_top("quest")
     # Show the quest log on the standard bridge consoles.
-    quest_console_enable("helm,weapons,science,engineering,comms,mainscreen")
+    # HANGAR AND COCKPIT TOO. The app is REGISTERED for every ship console, but
+    # `gui_app_list` honours a route's own `if` above the registration - so this list was
+    # the real gate, and a pilot on the flight deck or in the seat had no Quests tile at
+    # all. That is the one place a sortie is taken, which made it the one place the
+    # Quests app was missing. Nothing else about the gating changes: WHO may accept is
+    # still QUEST_ACCEPT_CONSOLES, and that is a separate question from who may LOOK.
+    quest_console_enable("helm,weapons,science,engineering,comms,mainscreen,"
+                         "hangar,cockpit")
     if is_dev_build():
         # Dev-only sample art for the quest test data.
         gui_image_add_atlas("test", media_shared("operator"))

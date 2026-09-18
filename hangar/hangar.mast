@@ -162,7 +162,12 @@ hangar_get_craft_data("terran")
     ride_choice_id = to_id(ride_choice)
     dock_choice_id = to_id(dock_choice)
 
-    gui_section(style="area: 0,0, 41,60;x-background: #fff1;")
+    # THE BOARD'S BAND, GIVEN TO THE THINGS THAT WERE SQUEEZED. The sortie list and its
+    # briefing used to own everything from y=60 down, so the craft pickers and the 2D
+    # view both stopped at 60 with a third of the screen below them. The orders live in
+    # the PADD now, so both grow to 100-90px - the top of the bottom control band, which
+    # is the highest thing under here (`area: 0,100-90px, 35,100`).
+    gui_section(style="area: 0,0, 41,100-90px;x-background: #fff1;")
 
     call_sign = get_inventory_value(client_id, "call_sign", "Selene")
     gui_section(style="area: 20px,6,40,6+40px;")
@@ -170,7 +175,7 @@ hangar_get_craft_data("terran")
     on change call_sign:
         set_inventory_value(client_id, "call_sign", call_sign)
 
-    gui_section(style="area: 20px,6+50px, 40, 60;")
+    gui_section(style="area: 20px,6+50px, 40, 100-90px;")
     
     # reveal keeps a restored selection ON SCREEN; hint keeps it in the same SLOT.
     # This page is a loop -- await gui() falls through to `jump show_hangar` -- so
@@ -218,7 +223,10 @@ hangar_get_craft_data("terran")
     gui_section(style="area: 41+1em,45px, 100,90px;")
     gui_layout_widget("radar_zoom_ctrl")
 
-    gui_section(style="area: 41+1em,90px, 100,60;")
+    # Down to the pointer line rather than to 60 - the same band the pickers took, on
+    # this side of the screen. A flight deck's radar is the thing a pilot reads before
+    # choosing a craft, and it was the smallest panel on the console.
+    gui_section(style="area: 41+1em,90px, 100,100-132px;")
     gui_layout_widget("2dview")
 
     # SORTIE ORDERS LIVE IN THE PADD NOW, not here. The board used to be a list and a
@@ -237,7 +245,8 @@ hangar_get_craft_data("terran")
     quest_box = None
     if HANGAR_QUEST_DOC is not None:
         cockpit_type = hangar_cockpit_type(ride_choice)
-        gui_section(style="area: 20px,60, 100,60+3em;")
+        # Under the 2D view, in the strip left between it and the bottom controls.
+        gui_section(style="area: 41+1em,100-132px, 100,100-90px;")
         gui_text("$text:Sortie orders - see Offers in the ePADD.;font:gui-2;color:#9ab;")
 
     fighter_change = 0

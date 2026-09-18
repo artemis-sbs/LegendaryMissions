@@ -79,3 +79,55 @@ def _rows(n):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class QuestAppReachesTheFlightDeck(unittest.TestCase):
+    """The Quests app must be available where a sortie is actually taken.
+
+    THE REGISTRATION WAS NEVER THE GATE. The app is registered for every ship console
+    (`consoles=None`), which looks like it covers the hangar - but `gui_app_list` honours
+    a route's own `if` above the registration, and `//gui/app/quest` tests
+    `quest_is_console_enabled(CONSOLE_SELECT)`. That list named six bridge consoles and
+    neither the hangar nor the cockpit, so the one place a pilot takes a job was the one
+    place the Quests tile did not exist.
+
+    Pinned because it fails in complete silence: no tile, no log line, and the app list
+    looks correct from the registration alone.
+    """
+
+    def setUp(self):
+        sbs.create_new_sim()
+        FrameContext.context = Context(sbs.sim, sbs, FakeEvent())
+        SpaceObject.clear()
+        from sbs_utils.procedural.quest import quest_consoles_clear
+        quest_consoles_clear()
+
+    def _enable_as_lm_does(self):
+        from sbs_utils.procedural.quest import quest_console_enable
+        quest_console_enable("helm,weapons,science,engineering,comms,mainscreen,"
+                             "hangar,cockpit")
+
+    def test_the_flight_deck_can_see_quests(self):
+        from sbs_utils.procedural.quest import quest_is_console_enabled
+        self._enable_as_lm_does()
+        self.assertTrue(quest_is_console_enabled("hangar"))
+
+    def test_the_cockpit_can_too(self):
+        """A pilot in the seat reaches the PADD by its one button; the app still has to
+        be willing to appear there."""
+        from sbs_utils.procedural.quest import quest_is_console_enabled
+        self._enable_as_lm_does()
+        self.assertTrue(quest_is_console_enabled("cockpit"))
+
+    def test_the_bridge_consoles_are_unchanged(self):
+        from sbs_utils.procedural.quest import quest_is_console_enabled
+        self._enable_as_lm_does()
+        for c in ("helm", "weapons", "science", "engineering", "comms", "mainscreen"):
+            self.assertTrue(quest_is_console_enabled(c), c)
+
+    def test_it_is_still_a_list_not_everything(self):
+        """Enabling the hangar must not turn the gate off - a console nobody named still
+        gets no tile."""
+        from sbs_utils.procedural.quest import quest_is_console_enabled
+        self._enable_as_lm_does()
+        self.assertFalse(quest_is_console_enabled("nav"))
