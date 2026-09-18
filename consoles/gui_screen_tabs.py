@@ -23,9 +23,9 @@ def gui_screen_tabs(tabs, active_key, on_press, active_bg="#999", tab_bg="#333")
             tab's key arrives as the variable TAB_KEY; the label should store it
             in the screen's tab var and re-jump to the screen, e.g.:
 
-                === results_set_tab
-                    RESULTS_TAB = TAB_KEY
-                    jump show_game_results_gui
+                === my_screen_set_tab
+                    MY_SCREEN_TAB = TAB_KEY
+                    jump my_screen
 
         active_bg / tab_bg: background colors for the active / inactive tabs
             (defaults mirror the console top tabs).

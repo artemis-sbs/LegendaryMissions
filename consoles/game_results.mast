@@ -127,7 +127,7 @@ shared game_stats = ~~{
     # a handler registered inside a `for` loop is flaky and an inline block captures
     # the loop variable at its LAST value. This replaces a call to `gui_screen_tabs`,
     # a helper that does not exist anywhere in sbs_utils or LegendaryMissions - it
-    # raised NameError on TAB_KEY (see results_set_tab), which killed the results
+    # raised NameError on an undefined TAB_KEY, which killed the results
     # page's GUI task and left the replay button with no main GUI task to return to.
     #
     # Now CHIPS: a single-select horizontal listbox, the same control as the comms filter
@@ -295,21 +295,10 @@ shared game_stats = ~~{
             sbs.run_next_mission(start_mission)
 
     # Kind of need to restart, which is good for now since cleanup is not guaranteed
-
-
-=== results_set_tab
-    # A results tab was clicked. The key arrives as task data from the button's
-    # data={} dict (see the strip in show_game_results_gui) - it used to come from
-    # a TAB_KEY global that nothing ever defined.
     #
-    # The `default` is load-bearing, and copying the button call without it is what
-    # kept this label raising NameError: this runs as its own task, so if the data
-    # dict does not seed the scope the bare name is simply undefined. `default` sets
-    # it only when it is missing, so passed-in data still wins. Same guard the casino
-    # market handler uses (`default mkey = ""`). A literal fallback, not RESULTS_TAB -
-    # that is task-scoped to show_game_results_gui and is not defined here either.
-    default results_tab_key = "summary"
-    RESULTS_TAB = results_tab_key
+    # EXPLICIT, not fallthrough: the next label saves the game's stats, so running on
+    # into it would append a second record. (This used to fall into a results_set_tab
+    # label that happened to jump back here; the chips replaced its buttons.)
     jump show_game_results_gui
 
 

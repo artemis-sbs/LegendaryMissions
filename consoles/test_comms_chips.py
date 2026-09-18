@@ -175,17 +175,17 @@ class TestTheEngineFilter(ChipsBase):
         n = ds.num_elements("comms_map_filter")
         return [ds.get("comms_map_filter", i) for i in range(n)]
 
-    def test_A_LENS_WRITES_EXACTLY_ITS_IDS(self):
+    def test_A_LENS_WRITES_ITS_IDS_AND_THE_SHIP(self):
         C.lm_comms_chips_normalize(CID, _FakeListbox(["all", "threats"]))
-        self.assertEqual([self.foe], self.written())
+        self.assertEqual(sorted([self.ship, self.foe]), self.written())
 
     def test_all_clears_the_filter(self):
         C.lm_comms_chips_normalize(CID, _FakeListbox(["all", "threats"]))
         C.lm_comms_chips_normalize(CID, _FakeListbox(["threats", "all"]))
         self.assertEqual([], self.written())
 
-    def test_an_empty_lens_shows_nothing_rather_than_everything(self):
-        """Empty means "no filter" to the engine, so an empty lens writes the ship."""
+    def test_an_empty_lens_shows_only_the_ship(self):
+        """Empty means "no filter" to the engine; the ship is always listed anyway."""
         C.lm_comms_chips_normalize(CID, _FakeListbox(["all", "orders"]))
         self.assertEqual([self.ship], self.written())
 
