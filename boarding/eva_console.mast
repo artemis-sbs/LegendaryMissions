@@ -14,7 +14,12 @@
 # `boarding_crew_console.mast` installs for the grid console, for the same reason: this
 # console is reached by a reroute rather than a tab, so without it Back has no name to
 # land on and the ePADD declares no back tab at all.
-gui_tab_back_while_boarded("eva_crew")
+#
+# `kind="eva"` IS LOAD-BEARING. Both files call this, both at their top level, and while
+# the library kept ONE name the last file loaded simply won - so adding this file sent a
+# GRID boarder's Back to the EVA console in every mission that loads the boarding addon,
+# relics or no relics. Keyed by body model, the two coexist and load order stops mattering.
+gui_tab_back_while_boarded("eva_crew", kind="eva")
 
 
 # One console, one crew member, one suit.
