@@ -31,6 +31,11 @@ from sbs_utils.spaceobject import SpaceObject
 class OrdersBase(unittest.TestCase):
     def setUp(self):
         mock.create_new_sim()
+        # A delete is deferred to the end of the handler, which a test never reaches - so
+        # a deleted id stays "pending" and, once the fresh sim hands the same id out again,
+        # object_exists says the NEW object is gone.
+        from sbs_utils.delete_queue import DeleteQueue
+        DeleteQueue.clear()
         Agent.clear()
         clear_shared()
         SpaceObject.clear()
@@ -104,6 +109,51 @@ class TestTheOrderList(OrdersBase):
         from sbs_utils.procedural.inventory import get_inventory_value
         self.assertEqual(get_inventory_value(ally.id, "give_orders_type", None),
                          O.DEFAULT_ORDERS)
+
+
+class TestDragOrderRecord(OrdersBase):
+    """Drag to order: the target has to survive from the drag to the menu, and must never
+    come back once it is stale."""
+
+    def setUp(self):
+        super().setUp()
+        self.unit = self.npc("tsn", "Unit")
+        self.foe = self.npc("klingon", "Foe")
+
+    def test_the_target_is_remembered_for_that_unit(self):
+        O.lm_drag_orders_set(self.hero.id, self.unit.id, self.foe.id)
+        self.assertEqual(self.foe.id, O.lm_drag_orders_target(self.hero.id, self.unit.id))
+
+    def test_not_for_a_different_unit(self):
+        """A record is for ONE unit - comms on another ally must not inherit it."""
+        other = self.npc("tsn", "Other")
+        O.lm_drag_orders_set(self.hero.id, self.unit.id, self.foe.id)
+        self.assertEqual(0, O.lm_drag_orders_target(self.hero.id, other.id))
+
+    def test_A_DELETED_TARGET_IS_NO_TARGET(self):
+        from sbs_utils.procedural.space_objects import delete_object
+        O.lm_drag_orders_set(self.hero.id, self.unit.id, self.foe.id)
+        delete_object(self.foe.id)
+        self.assertEqual(0, O.lm_drag_orders_target(self.hero.id, self.unit.id))
+
+    def test_a_deleted_unit_is_no_target(self):
+        from sbs_utils.procedural.space_objects import delete_object
+        O.lm_drag_orders_set(self.hero.id, self.unit.id, self.foe.id)
+        delete_object(self.unit.id)
+        self.assertEqual(0, O.lm_drag_orders_target(self.hero.id, self.unit.id))
+
+    def test_clear_forgets_it(self):
+        O.lm_drag_orders_set(self.hero.id, self.unit.id, self.foe.id)
+        O.lm_drag_orders_clear(self.hero.id)
+        self.assertEqual(0, O.lm_drag_orders_target(self.hero.id, self.unit.id))
+
+    def test_two_bridges_do_not_overwrite_each_other(self):
+        other_bridge = to_object(player_spawn(5000, 0, 0, "Other", "tsn", "behav_playership"))
+        foe2 = self.npc("klingon", "Foe2")
+        O.lm_drag_orders_set(self.hero.id, self.unit.id, self.foe.id)
+        O.lm_drag_orders_set(other_bridge.id, self.unit.id, foe2.id)
+        self.assertEqual(self.foe.id, O.lm_drag_orders_target(self.hero.id, self.unit.id))
+        self.assertEqual(foe2.id, O.lm_drag_orders_target(other_bridge.id, self.unit.id))
 
 
 if __name__ == "__main__":

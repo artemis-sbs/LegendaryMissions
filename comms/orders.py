@@ -13,7 +13,7 @@ Prefixed `lm_` because every top-level function here becomes a MAST global in on
 mission-wide namespace and the last one loaded wins, silently.
 """
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
-from sbs_utils.procedural.query import to_object
+from sbs_utils.procedural.query import to_object, object_exists
 from sbs_utils.procedural.roles import has_roles
 from sbs_utils.procedural.sides import side_are_allies
 
@@ -78,3 +78,41 @@ def lm_orders_block(obj):
         return False
     add_role(target, NO_ORDERS_ROLE)
     return True
+
+
+# DRAG TO ORDER. Dragging a unit onto something on the comms console opens //comms/orders
+# for that unit (see drag_orders.mast). Three objects take part - the ship giving the order,
+# the unit being ordered, the thing the order is about - and comms only carries two, so the
+# third is remembered here until the menu is built.
+#
+# Kept on the PLAYER SHIP, one per ship: two bridges dragging the same unit must not
+# overwrite each other's target. Ids only - an object reference would outlive a delete.
+_DRAG_ORDERS_KEY = "lm_drag_orders"
+
+
+def lm_drag_orders_set(ship_id, source_id, target_id):
+    """Remember that `ship` dragged `source` onto `target`."""
+    set_inventory_value(ship_id, _DRAG_ORDERS_KEY, {"source": source_id, "target": target_id})
+
+
+def lm_drag_orders_target(ship_id, source_id):
+    """The pending drag target for `ship` ordering `source`, or 0.
+
+    0 unless the record is for THIS unit and the ship, the unit and the target all still
+    exist - a stale record must never produce an order.
+    """
+    record = get_inventory_value(ship_id, _DRAG_ORDERS_KEY, None)
+    if not record or record.get("source") != source_id:
+        return 0
+    target_id = record.get("target", 0)
+    if not target_id:
+        return 0
+    for an_id in (ship_id, source_id, target_id):
+        if not object_exists(an_id):
+            return 0
+    return target_id
+
+
+def lm_drag_orders_clear(ship_id):
+    """Forget `ship`'s pending drag order."""
+    set_inventory_value(ship_id, _DRAG_ORDERS_KEY, None)

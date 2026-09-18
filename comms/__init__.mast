@@ -5,6 +5,7 @@
 import orders.py
 import offer_hints.py
 import friendly_give_orders.mast
+import drag_orders.mast
 import station_weapon_building.mast
 import enemy_taunt.mast
 import enemy_surrender.mast

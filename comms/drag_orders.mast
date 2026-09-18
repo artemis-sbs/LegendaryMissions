@@ -1,0 +1,73 @@
+
+# DRAG TO ORDER.
+#
+# On the comms console, drag a unit you can give orders to (the SOURCE) onto something
+# (the TARGET). Comms then selects the unit and opens //comms/orders with the orders that
+# make sense for that target - Attack for a hostile, the ally orders for a friend, the
+# "self" orders (Full Stop) when it is dropped on itself.
+#
+# Same gate and same order list as the right-click //popup/comms menu in
+# friendly_give_orders.mast: lm_can_take_orders decides who, lm_orders_type + valid_for
+# decide what. The //enable/comms there already covers this (ship, unit) pair.
+#
+# Three objects, and comms only carries two (ship -> unit), so the target is remembered on
+# the ship (lm_drag_orders_set) until the menu is built, then carried in the BUTTON's data -
+# so a later drag cannot change what an already-shown button does. Every object is checked
+# again when the order is actually given.
+
+//drag/comms if has_any_role(DRAG_SHIP_ID, "__player__,admiral") and lm_can_take_orders(DRAG_SHIP_ID, DRAG_SOURCE_ID)
+    ->END if not object_exists(DRAG_SHIP_ID)
+    ->END if not object_exists(DRAG_SOURCE_ID)
+    ->END if not object_exists(DRAG_TARGET_ID)
+    lm_drag_orders_set(DRAG_SHIP_ID, DRAG_SOURCE_ID, DRAG_TARGET_ID)
+    # Comms buttons only show for the pair the console has selected
+    set_comms_selection(DRAG_SHIP_ID, DRAG_SOURCE_ID)
+    follow_route_select_comms(DRAG_SHIP_ID, DRAG_SOURCE_ID)
+    comms_navigate_override(DRAG_SHIP_ID, DRAG_SOURCE_ID, "orders", path_must_match=False)
+    ->END
+
+
+//comms/orders if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and lm_can_take_orders(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
+    + !0 "Back" //comms
+    # 0 when nothing is pending, or anything involved has gone - then only Back shows
+    drag_target_id = lm_drag_orders_target(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
+    if drag_target_id != 0:
+        drag_target = to_object(drag_target_id)
+        drag_is_self = drag_target_id == COMMS_SELECTED_ID
+        drag_ally = side_are_allies(COMMS_SELECTED_ID, drag_target_id)
+        orders = labels_get_type(lm_orders_type(COMMS_SELECTED_ID))
+        for order in orders:
+            valid_for = order.get_inventory_value("valid_for", "any")
+            continue if drag_is_self and valid_for != "self"
+            continue if not drag_is_self and valid_for == "self"
+            continue if not drag_is_self and valid_for == "allies" and not drag_ally
+            continue if not drag_is_self and valid_for == "hostile" and drag_ally
+            display_name = order.get_inventory_value("display_name", order.name)
+            if drag_is_self:
+                + "{display_name}" lm_carry_out_drag_orders {"cur_objective": order, "order_target_id": drag_target_id}
+            else:
+                + "{display_name}: {drag_target.name}" lm_carry_out_drag_orders {"cur_objective": order, "order_target_id": drag_target_id}
+
+
+=== lm_carry_out_drag_orders
+    # The unit being ordered is gone
+    ->END if not object_exists(COMMS_SELECTED_ID)
+    # The target is gone - refuse rather than send the unit somewhere it no longer is
+    if not object_exists(order_target_id):
+        lm_drag_orders_clear(COMMS_ORIGIN_ID)
+        comms_receive("The target is no longer there. Awaiting new orders.", "Orders cancelled", color="white", title_color="cyan")
+        comms_navigate("//comms")
+        ->END
+
+    lm_drag_orders_clear(COMMS_ORIGIN_ID)
+    objective_clear(COMMS_SELECTED_ID)
+    objective_add(COMMS_SELECTED_ID, cur_objective, {"objective_target_point": None, "objective_target": order_target_id})
+
+    order_name = cur_objective.get_inventory_value("display_name", cur_objective.name)
+    if order_target_id == COMMS_SELECTED_ID:
+        comms_receive(f"{order_name}, awaiting further orders", "Orders accepted", color="white", title_color="cyan")
+    else:
+        order_target_name = to_object(order_target_id).name
+        comms_receive(f"{order_name}: {order_target_name}", "Orders accepted", color="white", title_color="cyan")
+    comms_navigate("//comms")
+    yield success
