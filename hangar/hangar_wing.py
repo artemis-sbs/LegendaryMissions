@@ -299,9 +299,14 @@ def hangar_wing_lost(host, wing=None):
     return lost
 
 
-def hangar_wing_scan_text(host):
+def hangar_wing_scan_text(host, exact=True):
     """What a science scan of the host's hangar shows - one line per wing. Empty when it
-    has no wings. ASCII, and never a brace (MAST f-string formats the assignment)."""
+    has no wings. ASCII, and never a brace (MAST f-string formats the assignment).
+
+    `exact` - your own or an allied base - gives the counts. An ENEMY base is an estimate:
+    how strong each wing is and what it is doing, never the exact refit state, so a scan
+    tells a crew a base is weakened without timing its next launch for them.
+    """
     hid = to_id(host)
     lines = []
     for w in hangar_wing_names(hid):
@@ -310,9 +315,26 @@ def hangar_wing_scan_text(host):
         out, lost = len(hangar_wing_out(hid, w)), hangar_wing_lost(hid, w)
         name = hangar_wing_display(w)
         if size and lost >= size:
-            lines.append(f"{name}: lost - all {size} fighters destroyed.")
-        else:
+            lines.append(f"{name}: destroyed." if not exact
+                         else f"{name}: lost - all {size} fighters destroyed.")
+        elif exact:
             lines.append(f"{name}: {ready} ready, {out} out, {refit} refitting, {lost} lost.")
+        else:
+            if lost == 0:
+                strength = "full strength"
+            elif lost * 2 < size:
+                strength = "under strength"
+            else:
+                strength = "badly depleted"
+            if out and ready:
+                state = "partly airborne"
+            elif out:
+                state = "airborne"
+            elif refit and not ready:
+                state = "rearming"
+            else:
+                state = "in the bay"
+            lines.append(f"{name}: {strength}, {state}.")
     return "\n".join(lines)
 
 

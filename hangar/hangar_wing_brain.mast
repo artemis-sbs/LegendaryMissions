@@ -84,6 +84,7 @@ ack: Standing by for orders
 # //science route merge: an allied station keeps its scan / status / intel / bio tabs.
 //science if has_role(SCIENCE_SELECTED_ID, "station") and len(hangar_wing_names(SCIENCE_SELECTED_ID)) > 0
     + "hangar":
-        wing_scan = hangar_wing_scan_text(SCIENCE_SELECTED_ID)
+        # Exact counts for your own side and allies; an enemy base is an estimate.
+        wing_scan = hangar_wing_scan_text(SCIENCE_SELECTED_ID, not side_are_enemies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID))
         <scan>
             " {wing_scan}

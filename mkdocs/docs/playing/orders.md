@@ -65,7 +65,10 @@ gone, and a wing that has lost every fighter disappears from the menu.
   home on their own, whatever they were doing, and a Reassign leaves them alone.
 - **Refit.** A fighter that lands spends a minute refueling and rearming before it is
   ready to launch again.
-- **Scan a station** and the *hangar* tab shows each wing: ready, out, refitting and lost.
+- **Scan a station** and the *hangar* tab shows each wing: ready, out, refitting and lost for
+  your own side and allies. An **enemy** base only gives an estimate - "Red wing: under
+  strength, airborne", "Gold wing: destroyed" - so you know it is weakened, not exactly
+  when its next wing is ready.
 
 ### Starbases that run themselves
 

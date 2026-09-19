@@ -386,6 +386,37 @@ class TestLosses(WingBase):
         self.assertNotIn("{", text)
         self.assertEqual("", W.hangar_wing_scan_text(self.cruiser))
 
+class TestEnemyScanIsAnEstimate(WingBase):
+    """An enemy base's hangar reads as strength and state, never exact refit counts."""
+
+    def test_A_FULL_WING_IN_THE_BAY(self):
+        self.assertEqual(["Red wing: full strength, in the bay.", "Gold wing: full strength, in the bay."],
+                         W.hangar_wing_scan_text(self.base, exact=False).splitlines())
+
+    def test_LOSSES_AND_STATE(self):
+        red = W.hangar_wing_launch(self.base, 2, "red")
+        delete_object(red[0])                       # 1 of 4 lost, 1 out, 2 ready
+        for fid in W.hangar_wing_launch(self.base, wing="gold"):
+            delete_object(fid)                      # all of Gold lost
+        self.assertEqual(["Red wing: under strength, partly airborne.", "Gold wing: destroyed."],
+                         W.hangar_wing_scan_text(self.base, exact=False).splitlines())
+
+    def test_rearming_and_badly_depleted(self):
+        ids = W.hangar_wing_launch(self.base, wing="red")
+        delete_object(ids[0])
+        delete_object(ids[1])                       # half lost
+        set_pos(ids[2], 5100, 0, 0)
+        self.assertTrue(W.hangar_wing_land(ids[2]))
+        set_pos(ids[3], 5100, 0, 0)
+        self.assertTrue(W.hangar_wing_land(ids[3]))  # both survivors refitting, none ready
+        self.assertEqual("Red wing: badly depleted, rearming.",
+                         W.hangar_wing_scan_text(self.base, exact=False).splitlines()[0])
+
+    def test_no_numbers_leak(self):
+        W.hangar_wing_launch(self.base, 1, "red")
+        text = W.hangar_wing_scan_text(self.base, exact=False)
+        self.assertFalse(any(ch.isdigit() for ch in text), text)
+
 
 if __name__ == "__main__":
     unittest.main()

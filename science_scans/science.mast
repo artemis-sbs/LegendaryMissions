@@ -220,7 +220,51 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
     + "bio" {"bio_intel": bio_intel}:
         <scan>
             " {bio_intel}
-            
+
+
+
+# ENEMY STATIONS. The route above is ships only, so a hostile base scanned to nothing but
+# the hangar tab (and not even that when it has no bays). The kind comes from the
+# station_<kind> role station_kinds.py adds; a base spawned any other way reads as a base.
+//science if side_are_enemies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_role(SCIENCE_SELECTED_ID, "station")
+    # A station's `race` is only set by some spawners; its hull's ship-data origin always
+    # says it - and a scaled station kind keeps its race's origin.
+    st_race = get_race(SCIENCE_SELECTED_ID)
+    if not st_race:
+        st_hull = ship_data_get_ship_data_for(to_object(SCIENCE_SELECTED_ID).art_id) or {}
+        st_race = st_hull.get("origin", "")
+    st_race = str(st_race).capitalize() if st_race else "Unidentified"
+    st_kind = "starbase"
+    st_intel = "A fortified enemy starbase. Its loss would weaken this sector."
+    if has_role(SCIENCE_SELECTED_ID, "station_command"):
+        st_kind = "command base"
+        st_intel = "Command base. It coordinates this sector's forces and keeps a reserve of fighters. The priority target."
+    elif has_role(SCIENCE_SELECTED_ID, "station_industrial"):
+        st_kind = "industrial base"
+        st_intel = "Industrial base. It builds and refits for the fleet, and keeps a fighter wing on station."
+    elif has_role(SCIENCE_SELECTED_ID, "station_science"):
+        st_kind = "research base"
+        st_intel = "Research base. Lightly defended - a small fighter wing at most."
+    elif has_role(SCIENCE_SELECTED_ID, "station_civil"):
+        st_kind = "civilian base"
+        st_intel = "Civilian base. No fighters aboard. A soft target, and a costly one for the enemy to lose."
+    st_scan = f"Enemy {st_race} {st_kind}. Exercise caution."
+    st_bio = f"{st_race} crew, several hundred aboard."
+
+    + "scan" {"st_scan": st_scan}:
+        <scan>
+            " {st_scan}
+    + "status":
+        science_status_track(SCIENCE_SELECTED_ID, SCIENCE_ORIGIN_ID)
+        sci_status = science_status_text(SCIENCE_SELECTED_ID)
+        <scan>
+            " {sci_status}
+    + "intel" {"st_intel": st_intel}:
+        <scan>
+            " {st_intel}
+    + "bio" {"st_bio": st_bio}:
+        <scan>
+            " {st_bio}
 
 
 
