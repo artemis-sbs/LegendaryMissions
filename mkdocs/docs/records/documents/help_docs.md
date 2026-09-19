@@ -94,9 +94,9 @@ Four steps, and each one happens at a different console - fabrication is a crew 
 
 1. DEPLOY it. Weapons fires the beacon where it is wanted.
 
-!!! warning "A beacon deployed with nothing delivered"
+!!! warning "The beacon tube holds ONE"
 
-    Firing a beacon tube with no delivered program launches a default bio beacon, not the one you meant. If a job wants a SENSOR beacon, it has to be fabricated and delivered first - a recovered probe puts a round in the tube but carries no program.
+    Weapons carries a single beacon at a time, and only Engineering's DELIVER loads it. A second delivery is refused while one is loaded - fire it first, or the engineer is holding a beacon that cannot go anywhere. If a job wants a SENSOR beacon, it has to be fabricated and delivered; flying over a beacon does NOT load one, it scraps the beacon back into materials.
 
 ### Where materials come from {: #fabrication-fabrication-materials}
 

@@ -14,7 +14,7 @@ The Terran Stellar Navy.
 | Fact | Value |
 |---|---|
 | Color | `#F00` |
-| Enemies | tsn, civ |
+| Enemies | players, civilians |
 
 Hostile Aliens.
 
@@ -23,6 +23,7 @@ Hostile Aliens.
 | Fact | Value |
 |---|---|
 | Color | `white` |
-| Neutral | tsn |
+| Neutral | players |
+| Civilian | true |
 
 Civilians. Protect them from attack.

@@ -6,6 +6,9 @@ Every record Legendary Missions ships, generated from its `.amd` files by `sbs s
 |---|---|---|
 | [The casino bar](casino/bar.md) | 11 | `casino/bar.amd` |
 | [Raider hails](comms/raider_hails.md) | 7 | `comms/raider_hails.amd` |
+| [Personal Messages](consoles/messages.md) | 12 | `consoles/messages.amd` |
+| [Crew Rosters](crew/crew_rosters.md) | 52 | `crew/crew_rosters.amd` |
+| [DETOCS](detocs/detocs.md) | 42 | `detocs/detocs.amd` |
 | [Console help](documents/help_docs.md) | 10 | `documents/help_docs.amd` |
 | [Fabricator Recipes](fabrication/recipes.md) | 5 | `fabrication/recipes.amd` |
 | [Hangar Quests](hangar_sorties/hangar_quests.md) | 4 | `hangar_sorties/hangar_quests.amd` |
@@ -28,3 +31,5 @@ Every record Legendary Missions ships, generated from its `.amd` files by `sbs s
 | [The three sides](maps/sides.md) | 3 | `maps/sides.amd` |
 | [Siege Quests](maps/siege_quests.md) | 4 | `maps/siege_quests.amd` |
 | [Bridge Stories](quests/bridge_stories.md) | 3 | `quests/bridge_stories.amd` |
+| [Races](races/races.md) | 8 | `races/races.amd` |
+| [Legendary](races/theaters.md) | 1 | `races/theaters.amd` |

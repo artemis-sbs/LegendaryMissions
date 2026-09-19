@@ -251,6 +251,17 @@ class TestFavorites(ChipsBase):
         self.assertFalse(C.lm_comms_chips_toggle_favorite(CID))
         self.assertEqual(set(), C.lm_comms_chips_favorites(self.ship))
 
+    def test_AN_UNSCANNED_CONTACT_IS_NOT_STARRABLE(self):
+        self.select(self.ghost)                     # kralien, never scanned
+        self.assertFalse(C.lm_comms_chips_toggle_favorite(CID))
+        self.assertEqual(set(), C.lm_comms_chips_favorites(self.ship))
+        self.assertEqual("#3A4552", C.lm_comms_chips_star_look(CID)[1])   # the dim, idle star
+
+    def test_a_contact_becomes_starrable_once_scanned(self):
+        self.select(self.ghost)
+        science_set_scan_data(self.ship, self.ghost, "identified")
+        self.assertTrue(C.lm_comms_chips_toggle_favorite(CID))
+
     def test_your_own_ship_is_not_starrable(self):
         self.select(self.ship)
         self.assertFalse(C.lm_comms_chips_toggle_favorite(CID))

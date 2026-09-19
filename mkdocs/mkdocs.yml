@@ -79,6 +79,12 @@ nav:
       - "The casino bar": records/casino/bar.md
     - Comms:
       - "Raider hails": records/comms/raider_hails.md
+    - Consoles:
+      - "Personal Messages": records/consoles/messages.md
+    - Crew:
+      - "Crew Rosters": records/crew/crew_rosters.md
+    - Detocs:
+      - "DETOCS": records/detocs/detocs.md
     - Documents:
       - "Console help": records/documents/help_docs.md
     - Fabrication:
@@ -109,6 +115,9 @@ nav:
       - "Florbin Clues": records/maps/peacetime_remastered/florbin-clues.md
     - Quests:
       - "Bridge Stories": records/quests/bridge_stories.md
+    - Races:
+      - "Races": records/races/races.md
+      - "Legendary": records/races/theaters.md
   # END generated records nav
 
   - About:

@@ -129,7 +129,7 @@ Output: Beacon
 Inputs: salvage x8
 Time: 20
 Build at: engineering
-Program: kind=sensor, range=medium
+Program: kind=sensor, beacon_range=medium
 ---
 A passive relay that brightens sensor returns around its position - a future kind; drops and
 scans like any beacon. The standard (medium-range) build. Replaces the 2.8 Probe.

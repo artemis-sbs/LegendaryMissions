@@ -238,10 +238,15 @@ def lm_comms_chips_favorites(ship_id):
 
 
 def lm_comms_chips_star_target(client_id):
-    """What the star acts on: the console's comms selection, when it is another object."""
+    """What the star acts on: the console's comms selection, when it is another object
+    this ship has SCANNED. An unknown contact is not starrable - the star would be a
+    lens on something the crew cannot identify, and it could never show in the
+    Favorites chip anyway (unknowns are in no lens)."""
     ship_id = viewscreen_home_ship(client_id)
     sel = get_comms_selection(ship_id) if ship_id else 0
     if not sel or sel == ship_id or not object_exists(sel):
+        return ship_id, 0
+    if science_is_unknown(ship_id, sel):
         return ship_id, 0
     return ship_id, sel
 
