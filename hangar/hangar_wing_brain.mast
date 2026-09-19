@@ -1,0 +1,79 @@
+# AUTONOMOUS STATIONS - a starbase that runs its own wings.
+#
+# When nobody is there to give it orders - no crew on its side or an allied one - or it is
+# marked `autonomous`, or a crew said "Act on your own", a station flies its wings itself.
+# The POLICY is hangar_wing_think() in hangar_wing.py (one place, unit-tested); this file
+# only carries its decisions out with the SAME objective labels a crew's orders use, so an
+# autonomous wing and an ordered one fly identical code.
+#
+# A brain rather than a ticker, like the turrets: brains get the rolling slicer and die
+# with their agent. The brain asks hangar_wing_is_autonomous every pass, so a station
+# changes hands the moment a crew joins its side, or delegates it.
+
+
+# Every station gets the brain; one with no bays (civil, skaraan, torgoth...) is skipped.
+# The wait lets the players and sides exist first - the same reason hangar.mast waits.
+//spawn if has_role(SPAWNED_ID, "station")
+    await delay_sim(1)
+    ->END if not object_exists(SPAWNED_ID)
+    ->END if len(hangar_wing_names(SPAWNED_ID)) == 0
+    brain_add(SPAWNED_ID, hangar_wing_command)
+
+
+# A hit on a station is what launches its reserve wing.
+//damage/object if has_role(DAMAGE_TARGET_ID, "station") and len(hangar_wing_names(DAMAGE_TARGET_ID)) > 0
+    hangar_wing_note_attacked(DAMAGE_TARGET_ID, DAMAGE_PARENT_ID if DAMAGE_PARENT_ID else DAMAGE_ORIGIN_ID)
+
+
+=== hangar_wing_command
+" Station running its own fighter wings
+metadata: ``` yaml
+type: brain/station
+```
+    yield fail if not hangar_wing_is_autonomous(BRAIN_AGENT_ID)
+    for wing_act, wing_key, wing_target in hangar_wing_think(BRAIN_AGENT_ID):
+        if wing_act == "attack":
+            for wing_id in hangar_wing_launch(BRAIN_AGENT_ID, None, wing_key):
+                objective_add(wing_id, objective_attack_target, {"objective_target": wing_target, "objective_target_point": None})
+        elif wing_act == "protect":
+            for wing_id in hangar_wing_launch(BRAIN_AGENT_ID, None, wing_key):
+                objective_add(wing_id, objective_escort, {"objective_target": wing_target, "objective_target_point": None})
+        elif wing_act == "reassign":
+            for wing_id in hangar_wing_reassign(BRAIN_AGENT_ID, wing_key):
+                objective_clear(wing_id)
+                objective_add(wing_id, objective_attack_target, {"objective_target": wing_target, "objective_target_point": None})
+        elif wing_act == "recall":
+            for wing_id in hangar_wing_out(BRAIN_AGENT_ID, wing_key):
+                objective_clear(wing_id)
+                objective_add(wing_id, hangar_wing_return)
+    yield success
+
+
+# DELEGATION - a crew hands a station to its own AI, or takes it back. `keeps_objective`:
+# neither is a new job for the station, so carry_out_orders leaves its objective alone.
+=== objective_wing_delegate
+metadata: ```
+display_name: Act on your own
+type: objective/orders/launch/delegate
+valid_for: self
+requires: wing_delegable
+keeps_objective: true
+ack: Understood, running our own wings
+```
+    " Hand the station's wings to its own AI until a bridge gives it an order
+    hangar_wing_delegate(OBJECTIVE_AGENT_ID, True)
+    yield success
+
+
+=== objective_wing_undelegate
+metadata: ```
+display_name: Await orders
+type: objective/orders/launch/undelegate
+valid_for: self
+requires: wing_delegated
+keeps_objective: true
+ack: Standing by for orders
+```
+    " Take the station's wings back under the bridge's orders
+    hangar_wing_delegate(OBJECTIVE_AGENT_ID, False)
+    yield success

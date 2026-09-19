@@ -35,6 +35,8 @@ ack: Launching fighters against
 ```
     " Send the ready fighters after a target
 +++ enter
+    # A bridge's order takes the station back from its own AI.
+    hangar_wing_delegate(OBJECTIVE_AGENT_ID, False)
     for wing_id in hangar_wing_launch(OBJECTIVE_AGENT_ID, None, order_instance):
         objective_add(wing_id, objective_attack_target, {"objective_target": objective_target, "objective_target_point": None})
 
@@ -57,6 +59,8 @@ ack: Launching fighters to cover
 ```
     " Send the ready fighters to escort a friendly ship
 +++ enter
+    # A bridge's order takes the station back from its own AI.
+    hangar_wing_delegate(OBJECTIVE_AGENT_ID, False)
     for wing_id in hangar_wing_launch(OBJECTIVE_AGENT_ID, None, order_instance):
         objective_add(wing_id, objective_escort, {"objective_target": objective_target, "objective_target_point": None})
 
@@ -79,6 +83,8 @@ ack: Wing, new target
 ```
     " Turn the fighters still out - and any ready in the bay - onto a new target
 +++ enter
+    # A bridge's order takes the station back from its own AI.
+    hangar_wing_delegate(OBJECTIVE_AGENT_ID, False)
     for wing_id in hangar_wing_reassign(OBJECTIVE_AGENT_ID, order_instance):
         objective_clear(wing_id)
         objective_add(wing_id, objective_attack_target, {"objective_target": objective_target, "objective_target_point": None})
@@ -102,6 +108,8 @@ ack: Wing, cover
 ```
     " Send the fighters still out - and any ready in the bay - to escort a friendly ship
 +++ enter
+    # A bridge's order takes the station back from its own AI.
+    hangar_wing_delegate(OBJECTIVE_AGENT_ID, False)
     for wing_id in hangar_wing_reassign(OBJECTIVE_AGENT_ID, order_instance):
         objective_clear(wing_id)
         objective_add(wing_id, objective_escort, {"objective_target": objective_target, "objective_target_point": None})
@@ -123,6 +131,8 @@ ack: Recalling fighters
 ```
     " Bring every fighter home to land and refit
 +++ enter
+    # A bridge's order takes the station back from its own AI.
+    hangar_wing_delegate(OBJECTIVE_AGENT_ID, False)
     for wing_id in hangar_wing_out(OBJECTIVE_AGENT_ID, order_instance):
         objective_clear(wing_id)
         objective_add(wing_id, hangar_wing_return)

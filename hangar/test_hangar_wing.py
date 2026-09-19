@@ -73,23 +73,35 @@ class WingBase(unittest.TestCase):
 
 
 class TestHowMany(WingBase):
+    """Bays come from the hull's interior grid (fighter + shuttle slots), else baycount."""
 
-    def test_A_COMMAND_STARBASE_HAS_TWO_WINGS(self):
+    def spawn(self, hull, side="tsn"):
+        return to_id(npc_spawn(0, 0, 7000, "Base", f"{side},station", hull, "behav_station"))
+
+    def test_A_COMMAND_STARBASE_HAS_TWO_WINGS_FROM_ITS_GRID(self):
+        self.assertEqual(8, W.hangar_wing_bays(self.base))
         self.assertEqual(["red", "gold"], W.hangar_wing_names(self.base))
-        self.assertEqual(SIZE, W.hangar_wing_size(self.base))
         self.assertEqual(2 * SIZE, W.hangar_wing_ready(self.base))
         self.assertEqual(SIZE, W.hangar_wing_ready(self.base, "gold"))
 
-    def test_other_stations_have_one(self):
-        self.assertEqual(["red"], W.hangar_wing_names(self.depot))
+    def test_THE_STOCK_LOADOUTS(self):
+        """The table in the plan: bays -> wings of up to 4, the last takes the rest."""
+        expect = {"starbase_command": [4, 4], "starbase_industry": [4, 4],
+                  "starbase_science": [4], "starbase_kralien": [4],
+                  "starbase_arvonian": [4, 4, 4, 2], "starbase_civil": [],
+                  "starbase_skaraan": [], "starbase_torgoth": []}
+        for hull, sizes in expect.items():
+            sid = self.spawn(hull)
+            got = [W.hangar_wing_size(sid, w) for w in W.hangar_wing_names(sid)]
+            self.assertEqual(sizes, got, hull)
 
     def test_a_ship_without_bays_has_none(self):
         self.assertEqual([], W.hangar_wing_names(self.cruiser))
 
-    def test_a_carrier_uses_its_bays(self):
+    def test_a_carrier_uses_its_baycount(self):
         carrier = to_id(npc_spawn(0, 0, 3000, "Carrier", "tsn", "arvonian_light_carrier", "behav_npcship"))
-        self.assertEqual(SIZE, W.hangar_wing_size(carrier))            # 8 bays, capped
-        self.assertEqual(["red"], W.hangar_wing_names(carrier))
+        self.assertEqual(8, W.hangar_wing_bays(carrier))
+        self.assertEqual(["red", "gold"], W.hangar_wing_names(carrier))
 
     def test_a_mission_sets_wings_and_size(self):
         W.hangar_wing_set_size(self.depot, 2, count=3)
@@ -98,9 +110,13 @@ class TestHowMany(WingBase):
         W.hangar_wing_set_size(self.depot, 0)
         self.assertEqual([], W.hangar_wing_names(self.depot))
 
+    def test_FIGHTERS_BY_ORIGIN(self):
+        self.assertEqual("tsn_fighter", W.hangar_wing_hull(self.base))                # Terran
+        self.assertEqual("arvonian_fighter", W.hangar_wing_hull(self.spawn("starbase_arvonian")))
+        self.assertEqual(W.HANGAR_WING_FALLBACK_HULL, W.hangar_wing_hull(self.spawn("starbase_kralien")))
+
     def test_display_names(self):
         self.assertEqual("Red wing", W.hangar_wing_display("red"))
-        self.assertEqual("Gold 2 wing", W.hangar_wing_display("gold2"))
 
 
 class TestLaunchAndLand(WingBase):
@@ -176,27 +192,27 @@ class TestTheMenu(WingBase):
     def test_BOTH_WINGS_OFFER_LAUNCH(self):
         self.assertEqual([("red", "Red wing"), ("gold", "Gold wing")], self.inst(READY))
         self.assertEqual([], self.inst(OUT))
-        self.assertEqual({"launch"}, O.orders_caps(self.base))
+        self.assertEqual({"launch", "wing_delegable"}, O.orders_caps(self.base))
 
     def test_A_WING_OUT_OFFERS_REASSIGN_THE_OTHER_STILL_LAUNCH(self):
         W.hangar_wing_launch(self.base, 1, "red")
         self.assertEqual([("gold", "Gold wing")], self.inst(READY))
         self.assertEqual([("red", "Red wing")], self.inst(OUT))
-        self.assertEqual({"launch", "wing_out"}, O.orders_caps(self.base))
+        self.assertEqual({"launch", "wing_out", "wing_delegable"}, O.orders_caps(self.base))
 
     def test_every_wing_out(self):
         W.hangar_wing_launch(self.base)
         self.assertEqual([], self.inst(READY))
-        self.assertEqual({"wing_out"}, O.orders_caps(self.base))
+        self.assertEqual({"wing_out", "wing_delegable"}, O.orders_caps(self.base))
 
     def test_a_wing_all_in_refit_offers_nothing(self):
-        W.hangar_wing_set_size(self.depot, 1)
+        W.hangar_wing_set_size(self.depot, 1, count=1)
         fid = W.hangar_wing_launch(self.depot, wing="red")[0]
         set_pos(fid, 9100, 0, 0)
         self.assertTrue(W.hangar_wing_land(fid))
-        self.assertEqual(set(), O.orders_caps(self.depot))
+        self.assertEqual({"wing_delegable"}, O.orders_caps(self.depot))
         self.now += W.HANGAR_WING_DEFAULT_REFIT
-        self.assertEqual({"launch"}, O.orders_caps(self.depot))
+        self.assertEqual({"launch", "wing_delegable"}, O.orders_caps(self.depot))
 
     def test_ONE_MENU_ENTRY_PER_WING(self):
         """Through the library's orders_items, the way the comms popup builds it."""
@@ -213,6 +229,120 @@ class TestTheMenu(WingBase):
     def test_no_wing_no_orders(self):
         W.hangar_wing_set_size(self.depot, 0)
         self.assertEqual(set(), O.orders_caps(self.depot))
+
+class TestAutonomy(WingBase):
+    """Who runs a station's wings: its crew, or itself."""
+
+    def enemy_base(self):
+        side_set_relations(side_ensure("tsn"), side_ensure("kralien"), mock_sbs.DIPLOMACY.HOSTILE)
+        return to_id(npc_spawn(0, 0, 20000, "Enemy Base", "kralien,station", "starbase_command", "behav_station"))
+
+    def test_A_STATION_ON_A_CREWED_SIDE_WAITS_FOR_ORDERS(self):
+        self.assertFalse(W.hangar_wing_is_autonomous(self.base))
+
+    def test_A_STATION_WITH_NO_CREW_RUNS_ITSELF(self):
+        self.assertTrue(W.hangar_wing_is_autonomous(self.enemy_base()))
+
+    def test_an_allied_crew_counts(self):
+        side_set_relations(side_ensure("tsn"), side_ensure("usfp"), mock_sbs.DIPLOMACY.ALLIED)
+        ally_base = to_id(npc_spawn(0, 0, 20000, "Ally", "usfp,station", "starbase_command", "behav_station"))
+        self.assertFalse(W.hangar_wing_is_autonomous(ally_base))
+
+    def test_no_wings_never_autonomous(self):
+        civ = to_id(npc_spawn(0, 0, 20000, "Civ", "kralien,station", "starbase_civil", "behav_station"))
+        self.assertFalse(W.hangar_wing_is_autonomous(civ))
+
+    def test_the_marks(self):
+        from sbs_utils.procedural.roles import add_role
+        add_role(self.base, W.HANGAR_WING_AUTONOMOUS_ROLE)
+        self.assertTrue(W.hangar_wing_is_autonomous(self.base))
+        enemy = self.enemy_base()
+        add_role(enemy, W.HANGAR_WING_MANUAL_ROLE)
+        self.assertFalse(W.hangar_wing_is_autonomous(enemy))
+
+    def test_A_CREW_DELEGATES_AND_TAKES_IT_BACK(self):
+        self.assertEqual({"launch", "wing_delegable"}, O.orders_caps(self.base))
+        W.hangar_wing_delegate(self.base, True)
+        self.assertTrue(W.hangar_wing_is_autonomous(self.base))
+        self.assertEqual({"launch", "wing_delegated"}, O.orders_caps(self.base))
+        W.hangar_wing_delegate(self.base, False)
+        self.assertFalse(W.hangar_wing_is_autonomous(self.base))
+
+
+class TestThink(WingBase):
+    """The autonomous doctrine: defend, keep a reserve, cover allies, recall when clear."""
+
+    def setUp(self):
+        super().setUp()
+        side_set_relations(side_ensure("tsn"), side_ensure("kralien"), mock_sbs.DIPLOMACY.HOSTILE)
+        # An enemy base with no crew on its side, far from everything else.
+        self.host = to_id(npc_spawn(0, 0, 50000, "Kralien Command", "kralien,station", "starbase_command", "behav_station"))
+
+    def think(self):
+        acts = W.hangar_wing_think(self.host)
+        self.now += 60                       # always past the reaction delay for the next call
+        return acts
+
+    def intruder(self, z=47000, name="Intruder"):
+        return to_id(npc_spawn(0, 0, z, name, "tsn", "tsn_light_cruiser", "behav_npcship"))
+
+    def test_NOTHING_IN_RANGE_NOTHING_HAPPENS(self):
+        self.assertEqual([], self.think())
+
+    def test_A_HOSTILE_IN_RANGE_LAUNCHES_ONE_WING_AND_KEEPS_THE_RESERVE(self):
+        a = self.intruder()
+        self.assertEqual([("attack", "red", a)], self.think())
+
+    def test_the_reaction_delay_paces_it(self):
+        self.intruder()
+        self.assertTrue(W.hangar_wing_think(self.host))
+        self.assertEqual([], W.hangar_wing_think(self.host))       # same instant
+
+    def test_A_HIT_ON_THE_STATION_SENDS_THE_RESERVE(self):
+        a = self.intruder()
+        W.hangar_wing_note_attacked(self.host, a)
+        self.assertEqual([("attack", "red", a), ("attack", "gold", a)], self.think())
+
+    def test_A_WING_WHOSE_TARGET_IS_GONE_IS_REASSIGNED(self):
+        a = self.intruder()
+        self.think()
+        W.hangar_wing_launch(self.host, None, "red")               # the brain carries it out
+        b = self.intruder(46000, "B")
+        delete_object(a)                     # pending delete: object_exists is already False
+        self.assertEqual([("reassign", "red", b)], self.think())
+
+    def test_AN_ALLY_UNDER_THREAT_IS_COVERED_FIRST(self):
+        friend = to_id(npc_spawn(0, 0, 45000, "Kralien Freighter", "kralien", "transport_ship", "behav_npcship"))
+        self.intruder(44000, "Raider")
+        self.assertEqual([("protect", "red", friend)], self.think())
+
+    def test_ALL_CLEAR_FOR_A_WHILE_RECALLS_THE_WING(self):
+        a = self.intruder()
+        self.think()
+        W.hangar_wing_launch(self.host, None, "red")
+        delete_object(a)                     # pending delete: object_exists is already False
+        self.assertEqual([], self.think())                         # clear starts counting
+        self.assertEqual([("recall", "red", None)], self.think())  # 60s later: clear long enough
+
+    def test_DIFFICULTY_WIDENS_AND_QUICKENS(self):
+        from sbs_utils.procedural.execution import set_shared_variable
+        set_shared_variable("DIFFICULTY", 1)
+        r1, t1 = W.hangar_wing_radius(), W.hangar_wing_reaction()
+        set_shared_variable("DIFFICULTY", 11)
+        r11, t11 = W.hangar_wing_radius(), W.hangar_wing_reaction()
+        self.assertGreater(r11, r1)
+        self.assertLess(t11, t1)
+
+    def test_TURRET_MOUNTS_FOLLOW_THE_THREAT(self):
+        from sbs_utils.procedural.mount import mount_spawn
+        from sbs_utils.procedural import turret as tr
+        m = to_id(mount_spawn(self.host, "starbase_command", name="Mount", side="kralien"))
+        tr.turret_make(m, range=1000)
+        self.think()
+        self.assertEqual("hold", O.orders_stance(m))
+        self.intruder()
+        self.think()
+        self.assertEqual("free", O.orders_stance(m))
 
 
 if __name__ == "__main__":

@@ -61,7 +61,8 @@
         comms_receive("Understood, " + order_title.lower(), order_title, color="white", title_color="cyan")
         comms_navigate("//comms")
         yield success
-    objective_clear(COMMS_SELECTED_ID)
+    if not cur_objective.get_inventory_value("keeps_objective", False):
+        objective_clear(COMMS_SELECTED_ID)
     objective_add(COMMS_SELECTED_ID, cur_objective, {"objective_target_point": None, "objective_target": order_target_id, "order_instance": order_instance})
 
     order_name = cur_objective.get_inventory_value("display_name", cur_objective.name)
