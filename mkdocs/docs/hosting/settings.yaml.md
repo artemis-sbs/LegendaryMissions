@@ -116,6 +116,27 @@ Peacetime's patrol quests are offered between waves. Default `none`. See
 none, few, some, max. The starting value of Peacetime Remastered's **Quests Offered** option:
 which of its patrol quests are offered. Default `some`; `max` offers all of them.
 
+### EXTRA_SHIP_DATA
+`false` by default. Turn it on (`true`) only on an engine that loads extra ship data. It
+switches on the deployable **turrets** and the Peacetime job built on them, and lets the
+smaller enemy base kinds draw as scaled copies of the race's starbase. Off, turrets stay
+off and every base kind uses the race's plain starbase - nothing breaks either way.
+
+### HANGAR_WING_SIZE, HANGAR_WING_COUNTS
+Fighters per starbase wing (default 4), and optionally how many wings a hull gets, e.g.
+`HANGAR_WING_COUNTS: {starbase_command: 1}`. Without a count, a station's hangar bays
+decide it. See [fighter wings](../playing/orders.md#starbase-fighter-wings).
+
+### HANGAR_WING_ENDURANCE, HANGAR_WING_REFIT
+Seconds of fuel a wing fighter launches with before it must return (default 180), and
+seconds a landed fighter spends refitting (default 60).
+
+### HANGAR_WING_AUTONOMOUS
+`true` by default: a starbase whose side has no crew runs its own fighter wings, enemy
+bases included. `false` leaves every base waiting for orders unless a mission marks it
+`autonomous` or a crew hands it over. `HANGAR_WING_RADIUS` and `HANGAR_WING_REACTION`
+fix the threat radius and reaction time, which otherwise scale with DIFFICULTY.
+
 ### GAME_TIME_LIMIT
 0 is unlimited any other values is the number of minutes the mission will last.
 Pausing the mission will also pause this timer.

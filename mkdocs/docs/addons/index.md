@@ -35,14 +35,16 @@ Load only the addons you use &mdash; each one adds labels to the global namespac
 | `races` | Per-race content the other addons look up: the **fleet composition ladders** `fleets` reads (gated on `NPC_RACES`) and the **ship interiors** for hulls the base game ships without one (gated on `PLAYABLE_RACES`) |
 | `docking` | player/station docking logic (`docking_standard_player_station`) |
 | `prefabs` | sides (`prefab_side_generic`), station/terrain prefabs |
-| `comms` | enemy taunt/surrender comms, player comms menus |
+| `comms` | enemy taunt/surrender comms, player comms menus, the **orders** menus (right-click and drag), and science **order markers** ([Giving orders](../playing/orders.md)) |
 | `ai` | brain behaviors (chase, patrol, station, civilian) |
 | `consoles` | standard helm/weapons/science/engineering/comms/main-screen consoles |
 | `damage` | destroy handlers for ships/stations, wrecks |
 | `upgrades` | pickup/upgrade collection handlers |
 | `science_scans` | science scan response handlers |
 | `gamemaster` / `gamemaster_comms` | GM console + spawn/message/map tools |
-| `hangar` | landing bay, bar, hangar comms, sorties |
+| `hangar` | landing bay, bar, hangar comms, sorties, and starbase **fighter wings** - launch / reassign / recall per wing, bingo fuel, refit, permanent losses, and stations with no crew that run their own wings ([Giving orders](../playing/orders.md#starbase-fighter-wings)) |
+| `station_kinds` | Command / Industrial / Science / Civil enemy bases for any race: `station_kind_spawn(x, y, z, race, kind, name, roles)` and `station_kind_composition(n)`. Deep Strike and Border War use it. Smaller kinds are scaled copies of the race's starbase when `EXTRA_SHIP_DATA` is on, else the plain base |
+| `turrets` | deployable defense towers and turret mounts. Live only where their hulls reach the engine (`EXTRA_SHIP_DATA` on) |
 | `biomech` | [BioMech](biomech.md) creatures — a passive/collective/evolving swarm |
 | `fabrication` | [Fabrication & Beacons](fabrication.md) — Engineering build tab + fabricate-only Sensor/Bio beacons |
 | `avatar_editor` | [Avatar Editor](avatar.md) — in-game WYSIWYG face customizer |
