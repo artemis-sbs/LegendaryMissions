@@ -117,16 +117,14 @@ Properties:
         num_enemy_stations = 3
     station_step = 100000/num_enemy_stations
 
-    # Derived from the ship table; the prefix is the one part it cannot say and is declared
-    # in races/races.amd.
+    # KINDS, not N copies of one base. station_kinds addon: a quarter command, a fifth
+    # civil, the rest industrial / science - each with its own fighter wings, and on a
+    # non-Terran race a scaled copy of its starbase when EXTRA_SHIP_DATA is on (else the
+    # plain race starbase). The hull rule, including ART_KEYS reskins, is
+    # station_kind_hull; the prefix is the one part the ship table cannot say.
     station_prefix = race_station_prefix(enemy1)
-    station_type = race_station_hull(enemy1)
-
-    # ART ONLY - resolve the stock station key through ART_KEYS once, here, so both the
-    # spawn and the navproxy below draw the same hull. No-op unless a mission or profile
-    # sets it. The roles string keeps naming the mission's own faction, so diplomacy is
-    # unchanged; only the art moves.
-    station_type = ship_data_art_key_for(station_type)
+    station_kind_order = station_kind_composition(num_enemy_stations)
+    station_kind_numbers = {}
 
     # for each station
     for index in range(num_enemy_stations):
@@ -138,20 +136,25 @@ Properties:
         startZ += station_step
 
         #make the station ----------------------------------
-        name = "{station_prefix} {index+1}"
+        station_kind = station_kind_order[index]
+        station_kind_numbers[station_kind] = station_kind_numbers.get(station_kind, 0) + 1
+        station_kind_name = station_kind_label(station_kind)
+        name = "{station_prefix} {station_kind_name} {station_kind_numbers[station_kind]}"
 
         # The roles string only ever differed by the race name, so it composes.
         station_roles = f"raider, {enemy1.lower()}, enemy, delprox, station"
-        enemy_station_object = npc_spawn(*pos, name, station_roles, station_type, "behav_station")
-        eso_id = to_id(enemy_station_object)
+        eso_id = station_kind_spawn(pos.x, pos.y, pos.z, enemy1, station_kind, name, station_roles)
+        continue if eso_id is None
+        # The navproxy draws the hull that was actually spawned (a kind hull or a reskin).
+        station_type = to_object(eso_id).art_id
         nav_obj = sim.add_navproxy(eso_id, name, station_type, "#A44")
         set_inventory_value(eso_id, "navprox_id", to_id(nav_obj))
 
         # random_face dispatches by race and honors a mod's registered faces and the
         # theater's Faces: map, which the three hardcoded calls could not.
-        set_face(to_id(enemy_station_object), random_face(race_faces(enemy1)))
+        set_face(eso_id, random_face(race_faces(enemy1)))
 
-        print(f"{enemy1} Station created: {int(pos.x)}, {int(pos.y)}, {int(pos.z)}")
+        print(f"{enemy1} {station_kind} station created: {int(pos.x)}, {int(pos.y)}, {int(pos.z)}")
 
         apos = Vec3()
         apos.x = pos.x + 50.0

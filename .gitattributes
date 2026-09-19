@@ -75,6 +75,7 @@ collisions/           export-ignore
 fabrication/          export-ignore
 grav_tether/          export-ignore
 turrets/              export-ignore
+station_kinds/              export-ignore
 data_panels/          export-ignore
 documents/            export-ignore
 lm_lore/              export-ignore

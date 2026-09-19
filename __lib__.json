@@ -31,6 +31,7 @@
         "fabrication",
         "grav_tether",
         "turrets",
+        "station_kinds",
         "data_panels",
         "documents",
         "lm_lore",

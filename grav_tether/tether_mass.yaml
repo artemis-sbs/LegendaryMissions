@@ -51,6 +51,19 @@ masses:
   starbase_science: 100
   starbase_skaraan: 100
   starbase_torgoth: 200
+  # Station kinds (station_kinds addon): the race base's mass x the kind's scale.
+  starbase_kralien_industrial: 80
+  starbase_kralien_science: 60
+  starbase_kralien_civil: 50
+  starbase_arvonian_industrial: 80
+  starbase_arvonian_science: 60
+  starbase_arvonian_civil: 50
+  starbase_skaraan_industrial: 80
+  starbase_skaraan_science: 60
+  starbase_skaraan_civil: 50
+  starbase_torgoth_industrial: 160
+  starbase_torgoth_science: 120
+  starbase_torgoth_civil: 100
   torgoth_behemoth: 6
   torgoth_destroyer: 3
   torgoth_goliath: 4
