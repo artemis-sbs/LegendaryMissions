@@ -285,6 +285,37 @@ def hangar_wing_refit_remaining(host, wing=None):
     return max(0, int(min(times) - _hangar_wing_now())) if times else 0
 
 
+def hangar_wing_lost(host, wing=None):
+    """Fighters destroyed for good: the wing's full size less what is ready, refitting and
+    out. Losses are permanent - nothing rebuilds a fighter - so this only ever grows."""
+    hid = to_id(host)
+    if hid is None:
+        return 0
+    lost = 0
+    for w in _wings(hid, wing):
+        have = _ready_one(hid, w) + len(get_inventory_value(hid, _refit_key(w), None) or []) \
+            + len(hangar_wing_out(hid, w))
+        lost += max(0, hangar_wing_size(hid, w) - have)
+    return lost
+
+
+def hangar_wing_scan_text(host):
+    """What a science scan of the host's hangar shows - one line per wing. Empty when it
+    has no wings. ASCII, and never a brace (MAST f-string formats the assignment)."""
+    hid = to_id(host)
+    lines = []
+    for w in hangar_wing_names(hid):
+        size = hangar_wing_size(hid, w)
+        ready, refit = _ready_one(hid, w), hangar_wing_refitting(hid, w)
+        out, lost = len(hangar_wing_out(hid, w)), hangar_wing_lost(hid, w)
+        name = hangar_wing_display(w)
+        if size and lost >= size:
+            lines.append(f"{name}: lost - all {size} fighters destroyed.")
+        else:
+            lines.append(f"{name}: {ready} ready, {out} out, {refit} refitting, {lost} lost.")
+    return "\n".join(lines)
+
+
 def hangar_wing_out(host, wing=None):
     """Ids of the live fighters flying for `host` - for one wing, or all of them."""
     hid = to_id(host)
@@ -656,12 +687,15 @@ def hangar_wing_instances(host, label=None):
     state = label.get_inventory_value("wing_state", "ready") if label is not None else "ready"
     out = []
     for wing in hangar_wing_names(hid):
+        # The counts ride in the entry's text, so a crew sees a wing wear down:
+        # "Launch Red wing (3/4)", "Recall Red wing (2 out)". Losses are permanent.
         if state == "out":
-            ok = bool(hangar_wing_out(hid, wing))
-        else:
-            ok = _wing_can_launch(hid, wing)
-        if ok:
-            out.append((wing, hangar_wing_display(wing)))
+            flying = len(hangar_wing_out(hid, wing))
+            if flying:
+                out.append((wing, f"{hangar_wing_display(wing)} ({flying} out)"))
+        elif _wing_can_launch(hid, wing):
+            out.append((wing, f"{hangar_wing_display(wing)} "
+                              f"({_ready_one(hid, wing)}/{hangar_wing_size(hid, wing)})"))
     return out
 
 

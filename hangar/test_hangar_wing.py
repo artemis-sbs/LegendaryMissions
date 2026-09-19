@@ -190,14 +190,14 @@ class TestTheMenu(WingBase):
         return W.hangar_wing_instances(self.base, label)
 
     def test_BOTH_WINGS_OFFER_LAUNCH(self):
-        self.assertEqual([("red", "Red wing"), ("gold", "Gold wing")], self.inst(READY))
+        self.assertEqual([("red", "Red wing (4/4)"), ("gold", "Gold wing (4/4)")], self.inst(READY))
         self.assertEqual([], self.inst(OUT))
         self.assertEqual({"launch", "wing_delegable"}, O.orders_caps(self.base))
 
     def test_A_WING_OUT_OFFERS_REASSIGN_THE_OTHER_STILL_LAUNCH(self):
         W.hangar_wing_launch(self.base, 1, "red")
-        self.assertEqual([("gold", "Gold wing")], self.inst(READY))
-        self.assertEqual([("red", "Red wing")], self.inst(OUT))
+        self.assertEqual([("gold", "Gold wing (4/4)")], self.inst(READY))
+        self.assertEqual([("red", "Red wing (1 out)")], self.inst(OUT))
         self.assertEqual({"launch", "wing_out", "wing_delegable"}, O.orders_caps(self.base))
 
     def test_every_wing_out(self):
@@ -222,7 +222,7 @@ class TestTheMenu(WingBase):
                         valid_for="hostile", requires="launch",
                         instances=W.hangar_wing_instances, wing_state="ready")
         texts = [t for _, _, t in O.orders_items(self.hero, self.base, foe, labels=[launch])]
-        self.assertEqual(["Launch Red wing", "Launch Gold wing"], texts)
+        self.assertEqual(["Launch Red wing (4/4)", "Launch Gold wing (4/4)"], texts)
         keys = [k for _, k, _ in O.orders_items(self.hero, self.base, foe, labels=[launch])]
         self.assertEqual(["red", "gold"], keys)
 
@@ -343,6 +343,48 @@ class TestThink(WingBase):
         self.intruder()
         self.think()
         self.assertEqual("free", O.orders_stance(m))
+
+class TestLosses(WingBase):
+    """Losses are permanent - and the crew can see them, in the menu and on a scan."""
+
+    def test_A_DESTROYED_FIGHTER_IS_LOST_FOR_GOOD(self):
+        ids = W.hangar_wing_launch(self.base, 2, "red")
+        delete_object(ids[0])                        # pending delete: object_exists is False
+        self.assertEqual(1, W.hangar_wing_lost(self.base, "red"))
+        self.assertEqual(0, W.hangar_wing_lost(self.base, "gold"))
+        self.now += 10 * W.HANGAR_WING_DEFAULT_REFIT
+        self.assertEqual(1, W.hangar_wing_lost(self.base, "red"))      # never rebuilt
+
+    def test_a_landed_fighter_is_not_lost(self):
+        fid = W.hangar_wing_launch(self.base, 1, "red")[0]
+        set_pos(fid, 5100, 0, 0)
+        self.assertTrue(W.hangar_wing_land(fid))
+        self.assertEqual(0, W.hangar_wing_lost(self.base, "red"))
+
+    def test_THE_MENU_SHOWS_WHAT_IS_LEFT(self):
+        ids = W.hangar_wing_launch(self.base, 1, "red")
+        self.assertEqual([("red", "Red wing (1 out)")], W.hangar_wing_instances(self.base, OUT))
+        self.assertEqual([("gold", "Gold wing (4/4)")], W.hangar_wing_instances(self.base, READY))
+        delete_object(ids[0])
+        self.assertEqual([("red", "Red wing (3/4)"), ("gold", "Gold wing (4/4)")],
+                         W.hangar_wing_instances(self.base, READY))
+
+    def test_A_WING_WITH_NOTHING_LEFT_OFFERS_NOTHING(self):
+        for fid in W.hangar_wing_launch(self.base, wing="red"):
+            delete_object(fid)
+        self.assertEqual(SIZE, W.hangar_wing_lost(self.base, "red"))
+        self.assertEqual([("gold", "Gold wing (4/4)")], W.hangar_wing_instances(self.base, READY))
+        self.assertEqual([], W.hangar_wing_instances(self.base, OUT))
+
+    def test_THE_SCAN_TEXT(self):
+        for fid in W.hangar_wing_launch(self.base, wing="red"):
+            delete_object(fid)
+        W.hangar_wing_launch(self.base, 1, "gold")
+        text = W.hangar_wing_scan_text(self.base)
+        self.assertEqual(["Red wing: lost - all 4 fighters destroyed.",
+                          "Gold wing: 3 ready, 1 out, 0 refitting, 0 lost."], text.splitlines())
+        self.assertNotIn("{", text)
+        self.assertEqual("", W.hangar_wing_scan_text(self.cruiser))
 
 
 if __name__ == "__main__":

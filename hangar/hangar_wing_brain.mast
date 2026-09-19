@@ -77,3 +77,13 @@ ack: Standing by for orders
     " Take the station's wings back under the bridge's orders
     hangar_wing_delegate(OBJECTIVE_AGENT_ID, False)
     yield success
+
+
+# THE HANGAR ON A SCAN - any station with wings, friend or foe. Losses are permanent, so
+# this is how a crew learns a base has run out of fighters. Buttons from every matching
+# //science route merge: an allied station keeps its scan / status / intel / bio tabs.
+//science if has_role(SCIENCE_SELECTED_ID, "station") and len(hangar_wing_names(SCIENCE_SELECTED_ID)) > 0
+    + "hangar":
+        wing_scan = hangar_wing_scan_text(SCIENCE_SELECTED_ID)
+        <scan>
+            " {wing_scan}
