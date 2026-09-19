@@ -34,16 +34,15 @@
     if drag_target_id != 0:
         drag_target = to_object(drag_target_id)
         drag_is_self = drag_target_id == COMMS_SELECTED_ID
-        orders = lm_orders_for(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, drag_target_id)
-        for order in orders:
-            display_name = order.get_inventory_value("display_name", order.name)
+        for order, order_instance, display_name in lm_order_items(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, drag_target_id):
             if drag_is_self:
-                + "{display_name}" lm_carry_out_drag_orders {"cur_objective": order, "order_target_id": drag_target_id}
+                + "{display_name}" lm_carry_out_drag_orders {"cur_objective": order, "order_target_id": drag_target_id, "order_instance": order_instance}
             else:
-                + "{display_name}: {drag_target.name}" lm_carry_out_drag_orders {"cur_objective": order, "order_target_id": drag_target_id}
+                + "{display_name}: {drag_target.name}" lm_carry_out_drag_orders {"cur_objective": order, "order_target_id": drag_target_id, "order_instance": order_instance}
 
 
 === lm_carry_out_drag_orders
+    default order_instance = None
     # The unit being ordered is gone
     ->END if not object_exists(COMMS_SELECTED_ID)
     # The target is gone - refuse rather than send the unit somewhere it no longer is
@@ -63,7 +62,7 @@
         comms_navigate("//comms")
         yield success
     objective_clear(COMMS_SELECTED_ID)
-    objective_add(COMMS_SELECTED_ID, cur_objective, {"objective_target_point": None, "objective_target": order_target_id})
+    objective_add(COMMS_SELECTED_ID, cur_objective, {"objective_target_point": None, "objective_target": order_target_id, "order_instance": order_instance})
 
     order_name = cur_objective.get_inventory_value("display_name", cur_objective.name)
     order_ack = cur_objective.get_inventory_value("ack", None)

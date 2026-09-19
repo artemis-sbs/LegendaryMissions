@@ -75,13 +75,11 @@
 //popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and lm_can_take_orders(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and COMMS_POPUP_ID == COMMS_SELECTED_ID
     # The orders it gives ITSELF (Full Stop, Hold Fire...) - lm_orders_for filters by
     # valid_for AND by what this unit can do (sbs_utils procedural/orders.py).
-    orders = lm_orders_for(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, 0)
-    for order in orders:
+    # One entry per order - or per INSTANCE of one, e.g. each of a station's wings.
+    for order, order_instance, display_name in lm_order_items(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, 0):
         set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", COMMS_POPUP_POINT)
         set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", COMMS_POPUP_ID)
-
-        display_name = order.get_inventory_value("display_name", order.name)
-        + "Have {COMMS_SELECTED.name} {display_name}" carry_out_orders {"cur_objective": order}
+        + "Have {COMMS_SELECTED.name} {display_name}" carry_out_orders {"cur_objective": order, "order_instance": order_instance}
      
 
 
@@ -90,13 +88,10 @@
     # Orders aimed at what was clicked: an ally, a hostile, a marker - or an empty spot,
     # which only `point`/`any` orders accept. Filtered by what this unit can do, so a
     # turret is never offered "Head to location".
-    orders = lm_orders_for(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, COMMS_POPUP_ID, COMMS_POPUP_ID == 0)
-    for order in orders:
+    for order, order_instance, display_name in lm_order_items(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, COMMS_POPUP_ID, COMMS_POPUP_ID == 0):
         set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", COMMS_POPUP_POINT)
         set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", COMMS_POPUP_ID)
-
-        display_name = order.get_inventory_value("display_name", order.name)
-        + "Have {COMMS_SELECTED.name} {display_name}" carry_out_orders {"cur_objective": order}
+        + "Have {COMMS_SELECTED.name} {display_name}" carry_out_orders {"cur_objective": order, "order_instance": order_instance}
 
 
 # Ordering a civilian around means you have IDENTIFIED it. An unscanned contact is just a
@@ -167,6 +162,8 @@
 
 
 === carry_out_orders 
+    # Which instance of the order was picked (a wing), when the order has instances.
+    default order_instance = None
     ->END if COMMS_SELECTED_ID == 0
     ->END if to_object(COMMS_SELECTED_ID) is None
 
@@ -197,7 +194,7 @@
     objective_clear(COMMS_SELECTED_ID)
     
     #print("give orders on alt ship {cur_objective}")
-    objective_add(COMMS_SELECTED_ID, cur_objective, {"objective_target_point": target_point, "objective_target": to_id(target_object)})
+    objective_add(COMMS_SELECTED_ID, cur_objective, {"objective_target_point": target_point, "objective_target": to_id(target_object), "order_instance": order_instance})
     
     ######## The rest of this should be in the cur_objective
     ORDER = cur_objective.get_inventory_value("display_name", cur_objective.name)

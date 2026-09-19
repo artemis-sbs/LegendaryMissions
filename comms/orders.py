@@ -14,7 +14,7 @@ mission-wide namespace and the last one loaded wins, silently.
 """
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.query import to_object, object_exists
-from sbs_utils.procedural.orders import orders_available, orders_can_take
+from sbs_utils.procedural.orders import orders_available, orders_can_take, orders_items
 
 
 #: A ship carrying this role never appears in the orders menu, whatever its side.
@@ -57,6 +57,15 @@ def lm_orders_for(origin_id, selected_id, target_id=0, at_point=False):
     lm_orders_type(selected_id)
     target = target_id if target_id else None
     return orders_available(origin_id, selected_id, target, at_point=at_point)
+
+
+def lm_order_items(origin_id, selected_id, target_id=0, at_point=False):
+    """The menu entries for `selected` aimed at `target`: `[(label, instance, text)]` -
+    one per order, or one per INSTANCE of an order that has them (a station's wings).
+    What the right-click popup and drag build their buttons from."""
+    lm_orders_type(selected_id)
+    target = target_id if target_id else None
+    return orders_items(origin_id, selected_id, target, at_point=at_point)
 
 
 def lm_orders_type(selected_id):
