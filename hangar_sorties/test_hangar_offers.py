@@ -110,6 +110,16 @@ class SortiesAreQuestsTests(unittest.TestCase):
         self.assertIn("Picket Patrol", self._taken(self.dock), "seen from the deck")
         self.assertIn("Picket Patrol", self._taken(self.fighter), "and from the cockpit")
 
+    def test_a_pilot_can_accept_a_sortie_on_the_deck_and_in_the_seat(self):
+        """Without its own Accept consoles a sortie took the mission default (comms,
+        admiral), and the pilot it was offered to could not accept it."""
+        HB.hangar_offer_sorties(CID, self.fighter)
+        row = next(r for r in QD.quest_offers_tab_items(CID, self.dock, "hangar")
+                   if QD._quest_offer_row(r) is not None and r.get("title") == "Picket Patrol")
+        for console, expected in (("hangar", True), ("cockpit", True), ("helm", False)):
+            gate = QD.quest_tab_controls_gate(console, row, "comms,admiral", False, "helm")
+            self.assertEqual(gate.get("show_accept"), expected, console)
+
     # --- changing craft --------------------------------------------------------------
     def test_switching_craft_swaps_the_untaken_orders(self):
         HB.hangar_offer_sorties(CID, self.fighter)

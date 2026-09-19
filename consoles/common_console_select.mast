@@ -794,6 +794,11 @@ $t Waiting for the server to start the mission
         jump select_console
 
 ====== console_selected ====
+    # A console chosen here is its own again: the quest screens use its ship, and Back is
+    # the console's - undoing what the flight deck set (hangar.mast), for a pilot who
+    # walks back onto the bridge. The hangar sets both again when it is entered.
+    quest_holder_clear(client_id)
+    gui_tab_back_override_clear(client_id)
     # Ask the ROSTER, not a snapshot. Every route into this label - the picker,
     # game_started_console, the //gui/tab routes, console_force_mode - used to arrive
     # carrying whatever client_main captured at CONNECT time, and on an in-game restart

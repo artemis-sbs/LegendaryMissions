@@ -36,6 +36,14 @@ so updating the mission keeps them. A map chooses which options its code carries
 `GameCode:` list in its metadata; leave that out and it carries everything on the Options
 panel, plus the ships.
 
+## The Flight Wing
+
+Pilots have quests of their own. On the flight deck and in the cockpit, the quest
+screens list your own quests, the game's, and your side's **Flight Wing** &mdash; the
+quests every pilot of your side shares &mdash; rather than the carrier's. Pick a fighter
+or a shuttle and its sorties appear under **Available Quests**; accept them right there,
+on the flight deck or in the seat.
+
 ## Bonus objectives
 
 Optional **bonus objectives** give skilled crews extra goals to chase beyond simply

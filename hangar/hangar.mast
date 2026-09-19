@@ -99,6 +99,12 @@ hangar_get_craft_data("terran")
 
     sbs.assign_client_to_ship(client_id, 0)
 
+    # ON THE FLIGHT DECK: the quest screens list this side's Flight Wing, not the carrier
+    # the console is about to be assigned to, and Back is the hangar's own again (a
+    # landing pilot's cockpit override is cleared).
+    hangar_use_flight_wing(client_id, side)
+    gui_tab_back_override_clear(client_id)
+
     # Hand back the comms role the cockpit borrowed (launch_to_cockpit). Only if THIS
     # is what granted it: a client that was already a comms console before it walked
     # into the hangar keeps what it came with.
@@ -452,6 +458,12 @@ hangar_get_craft_data("terran")
     set_inventory_value(ride_select, "client_id", client_id)
     set_dedicated_link(client_id, "craft_id", ride_select)
     sbs.send_grid_selection_info(ride_select.id, "", "white", "")
+
+    # IN THE SEAT: every ePADD screen declares Back as CONSOLE_SELECT, which is still the
+    # hangar - so Back pulled the pilot out of the craft mid-flight. Send it to the
+    # cockpit until they land (show_hangar clears it). The quest screens keep the wing.
+    gui_tab_back_override(client_id, "cockpit")
+    hangar_use_flight_wing(client_id, ride_select)
 
     mission_objective = get_inventory_value(ride_select, "current_objective")
     if mission_objective:
@@ -817,6 +829,8 @@ hangar_get_craft_data("terran")
 " Back goes to the COCKPIT rather than to CONSOLE_SELECT, which is still the hangar - the
 " pilot chose that console on the flight deck and then launched out of it. Sending them
 " back to the flight deck from a screen they opened while flying would be a teleport.
+" (launch_to_cockpit also sets gui_tab_back_override, so every app opened from here
+" does the same.)
     gui_tab_back("cockpit")
     _cp_ship = to_object(sbs.get_ship_of_client(client_id))
     gui_app_home(ship_name=_cp_ship.name if _cp_ship is not None else "")

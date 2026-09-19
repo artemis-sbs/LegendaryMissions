@@ -868,3 +868,47 @@ def hangar_hint(hints, name):
     if not hints:
         return None
     return hints.get(name)
+
+
+# --- The Flight Wing --------------------------------------------------------------
+#
+# ONE quest holder per side that every flight-deck and cockpit console of that side
+# shares. A pilot's console is assigned to the CARRIER while on the deck, so the quest
+# screens listed the carrier's patrol quests as "Ship"; the hangar names the wing
+# instead (quest_holder_set), and the screens list it as "Flight Wing". A mission can
+# grant wing-wide quests to it (`hangar_flight_wing(side)`); a pilot's own sorties stay
+# on the pilot.
+
+HANGAR_FLIGHT_WING_KEY = "flight_wing_id"
+
+
+def hangar_flight_wing(side):
+    """The Flight Wing agent for `side` (a side key, side id or space object), created on
+    first use. Kept on the side agent, so it goes with the mission. None without a side."""
+    from sbs_utils.procedural.sides import to_side_id
+    from sbs_utils.agent import get_story_id
+    side_id = to_side_id(side)
+    if side_id is None:
+        return None
+    wing_id = get_inventory_value(side_id, HANGAR_FLIGHT_WING_KEY, None)
+    if wing_id is not None and Agent.get(wing_id) is not None:
+        return wing_id
+    wing = Agent()
+    wing.id = get_story_id()
+    wing.add()
+    wing.add_role("__flight_wing__")
+    wing.set_inventory_value("side_key", get_inventory_value(side_id, "side_key", None))
+    set_inventory_value(side_id, HANGAR_FLIGHT_WING_KEY, wing.id)
+    return wing.id
+
+
+def hangar_use_flight_wing(client_id, side):
+    """Make this console's quest screens list `side`'s Flight Wing in place of the ship
+    it is assigned to (the carrier, on the flight deck)."""
+    from sbs_utils.procedural.quest_driver import quest_holder_set, quest_holder_clear
+    wing = hangar_flight_wing(side)
+    if wing is None:
+        quest_holder_clear(client_id)
+        return None
+    quest_holder_set(client_id, wing, "Flight Wing")
+    return wing

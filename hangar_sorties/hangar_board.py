@@ -96,6 +96,10 @@ def hangar_quest_title_template():
 # assigned to the dock, not the fighter - a quest on the craft would be shown by nothing.
 
 
+#: Consoles a pilot accepts a sortie on: the flight deck and the seat.
+HANGAR_SORTIE_CONSOLES = "hangar,cockpit"
+
+
 def hangar_sortie_keys(doc):
     """Every sortie key in the doc, whatever craft it is for."""
     if doc is None:
@@ -125,5 +129,15 @@ def hangar_offer_sorties(client_id, craft):
         if quest_get(client_id, key) is not None and \
                 int(quest_get_state(client_id, key) or 0) == int(QuestState.IDLE):
             quest_remove(client_id, key)
-    quest_grant_amd(client_id, {"children": wanted})
+    # ACCEPTED BY THE PILOT. A sortie is an ordinary quest, so without this it took the
+    # mission default (QUEST_ACCEPT_CONSOLES, comms + admiral) and the pilot it was
+    # offered to could not accept it. An AMD `Accept On:` still wins.
+    granted = []
+    for n in wanted:
+        data = dict(n.get("data") or {})
+        data.setdefault("accept_consoles", HANGAR_SORTIE_CONSOLES)
+        node = dict(n)
+        node["data"] = data
+        granted.append(node)
+    quest_grant_amd(client_id, {"children": granted})
     return len(wanted)
