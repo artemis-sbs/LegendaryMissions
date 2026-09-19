@@ -82,134 +82,48 @@ def hangar_quest_title_template():
     gui_text("$text:Sortie Orders;justify: left;")
 
 
-# --- The sortie board, as OFFERS --------------------------------------------
+# --- Sorties are ordinary quests ----------------------------------------------------
 #
-# The board used to be a panel on the flight deck, which made a sortie the one kind of
-# work you could only see from one screen - and only after walking to it. It is an OFFER
-# like any other now: something the world has for you that you have not taken. That puts
-# it in the PADD, where it is reachable from any console and from the cockpit, and gives
-# the flight deck back the lower third of its screen.
+# A sortie is a quest for a pilot. It used to be a separate kind of thing - not a quest
+# until taken, published through its own offer provider with its own "take" - which gave
+# players a second name and a second path for the same idea. Now the moment a pilot picks
+# a craft, that craft's sorties are granted to the PILOT as untaken quests, exactly like a
+# mission's job board: they appear under Available Quests, are accepted there, and then
+# sit on the Quests tab.
 #
-# The board is still the authority on WHICH sorties suit a craft; this only publishes it.
-
-#: The role a console carries while it is flying a craft, and the key the hangar stores
-#: the craft on. Both already exist - this reads them rather than inventing state.
-HANGAR_CRAFT_LINK = "craft_id"
+# The pilot (the CLIENT) holds them, not the craft: `quest_tab_items` reads the shared
+# agent, the client and the console's ship, and on the flight deck the console is
+# assigned to the dock, not the fighter - a quest on the craft would be shown by nothing.
 
 
-#: Where the flight deck leaves the craft the pilot has SELECTED but not yet launched.
-#: The screen holds that in a MAST task variable (`ride_choice_id`), which no Python can
-#: read - so the deck publishes it here for anything that needs it.
-HANGAR_RIDE_KEY = "hangar_ride_id"
-
-
-def hangar_offer_craft(client_id):
-    """The craft this console is flying, or about to fly. None when it is neither.
-
-    TWO SOURCES, and missing the second one is why the Offers tile never appeared on the
-    flight deck. In the COCKPIT the craft is a dedicated link, set at launch. On the DECK
-    nothing is launched yet - the pilot has only picked a row - and that selection lives
-    in the screen's own task scope where no provider can see it, so the deck publishes it
-    to inventory and this reads it.
-
-    Without the deck half, the one console where a sortie is chosen offered none: no
-    craft, so no sorties, so `offer_count_here()` is zero and the route's own condition
-    hides the whole app.
-    """
-    from sbs_utils.procedural.inventory import get_inventory_value
-    from sbs_utils.procedural.links import get_dedicated_link
-    try:
-        flying = to_id(get_dedicated_link(client_id, HANGAR_CRAFT_LINK))
-    except Exception:                                    # noqa: BLE001
-        flying = None
-    if flying:
-        return flying
-    try:
-        return to_id(get_inventory_value(client_id, HANGAR_RIDE_KEY, None)) or None
-    except Exception:                                    # noqa: BLE001
-        return None
-
-
-def hangar_offer_provider(ctx):
-    """The `hangar` offer provider: this craft's sortie orders, as offer records.
-
-    Registered from hangar_board.mast. Quiet when the sortie addon's doc never loaded,
-    which is the ordinary state of a mission that does not use sorties at all.
-    """
-    from sbs_utils.procedural.execution import get_shared_variable
-    from sbs_utils.procedural.offer import offer_record
-    from sbs_utils.procedural.quest import quest_get_state
-
-    # A per-OBJECT question has no sortie answer: an order is held by a cockpit, not by
-    # the thing you clicked on.
-    if ctx.get("object_id") is not None:
-        return []
-    doc = get_shared_variable("HANGAR_QUEST_DOC", None)
+def hangar_sortie_keys(doc):
+    """Every sortie key in the doc, whatever craft it is for."""
     if doc is None:
         return []
-    cid = ctx.get("client_id")
-    craft = hangar_offer_craft(cid)
-    if not craft:
-        return []
-    kind = hangar_cockpit_type(craft)
-    out = []
-    for item in hangar_quest_items(doc, kind):
-        key = item.get("key")
-        # ALREADY TAKEN IS NOT AN OFFER, and "taken" is asked of the CLIENT, because the
-        # client is who holds it. Asking the craft left a taken order on the board for
-        # good: nothing would ever answer non-zero there.
-        if quest_get_state(cid, key) != 0:
-            continue
-        out.append(offer_record(
-            # Keyed on the CLIENT, like the ownership. Keying on the craft meant a
-            # pilot who changed their mind about which fighter to fly was offered the
-            # same order again under a second key.
-            key="sortie:%s:%s" % (cid, key),
-            title=str(item.get("title") or key),
-            detail=str(item.get("objective") or ""),
-            kind="sortie",
-            source="Flight Hangar",
-            where="Hangar - pick a craft first",
-            # NO `app="quest"`. That is where a quest is accepted, and a sortie is not a
-            # quest until it is ASSIGNED - so sending a pilot there to take one showed
-            # them a list that could not contain the thing they had just clicked. It is
-            # taken HERE instead.
-            take=hangar_take_sortie,
-            sort=15,
-            data={"sortie": key, "craft": craft, "cockpit": kind},
-        ))
-    return out
+    return [n.get("key") for n in doc.get("children", []) if n.get("key")]
 
 
-def hangar_take_sortie(client_id, record):
-    """Take a sortie order. THE PILOT HOLDS IT, NOT THE CRAFT.
+def hangar_offer_sorties(client_id, craft):
+    """Put `craft`'s sortie orders on this pilot's list as untaken quests.
 
-    A JOB BELONGS TO THE CLIENT, and getting this wrong made the whole feature look
-    broken. `quest_tab_items` reads exactly three agents - the shared story agent, the
-    CLIENT, and the console's SHIP - so a quest granted to the craft is displayed by
-    nothing at all while the pilot is still on the flight deck, because there the console
-    is assigned to the dock, not to the fighter. The order existed, it ticked, and no
-    screen in the game would show it.
-
-    The old code got away with granting to the craft only because it did so at LAUNCH, by
-    which point the pilot IS flying it and it is the console's `ship_id`. Moving the
-    moment of taking earlier without moving the owner is what broke it.
-
-    The craft still decides WHICH orders are offered - a shuttle and a fighter are handed
-    different work - so it stays in the record. It is the owner that changes.
+    Called whenever the pilot picks a craft. A shuttle and a fighter are handed different
+    work, so an UNTAKEN order for the other kind of craft is withdrawn; an order already
+    accepted (or finished) is the pilot's and is never touched. Idempotent: an order
+    already on the list is left as it is.
     """
     from sbs_utils.procedural.execution import get_shared_variable
-    data = (record or {}).get("data") or {}
-    sortie = data.get("sortie")
+    from sbs_utils.procedural.quest import quest_get, quest_get_state, quest_remove, QuestState
+    from sbs_utils.procedural.quest_driver import quest_grant_amd
     doc = get_shared_variable("HANGAR_QUEST_DOC", None)
-    if client_id is None or not sortie or doc is None:
-        return False
-    node = hangar_assign_quest(client_id, doc, data.get("cockpit"), sortie)
-    return node is not None
-
-
-def hangar_offers_register():
-    """Install the provider. Called once from hangar_board.mast."""
-    from sbs_utils.procedural.offer import offer_register
-    offer_register("hangar", hangar_offer_provider, domain="hangar")
-    return True
+    if doc is None or client_id is None or craft is None:
+        return 0
+    wanted = hangar_quests_for(doc, hangar_cockpit_type(craft))
+    wanted_keys = {n.get("key") for n in wanted}
+    for key in hangar_sortie_keys(doc):
+        if key in wanted_keys:
+            continue
+        if quest_get(client_id, key) is not None and \
+                int(quest_get_state(client_id, key) or 0) == int(QuestState.IDLE):
+            quest_remove(client_id, key)
+    quest_grant_amd(client_id, {"children": wanted})
+    return len(wanted)

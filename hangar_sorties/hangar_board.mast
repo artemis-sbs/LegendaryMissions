@@ -4,7 +4,6 @@
 #
 shared HANGAR_QUEST_DOC = document_get_amd_file(None, "Hangar", content=media_read_relative_file("hangar_quests.amd"))
 
-# The board is an OFFER source now, so a sortie is reachable from any console's PADD -
-# and from the cockpit - rather than only from the flight deck's own screen. The panel
-# there has become a pointer; this is where the work actually lives.
-hangar_offers_register()
+# Sorties are ordinary quests: the flight deck grants a craft's orders to the pilot when
+# the craft is picked (hangar_offer_sorties), and they are accepted under Available
+# Quests like any other.

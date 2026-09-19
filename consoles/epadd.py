@@ -21,7 +21,10 @@ def lm_epadd_unread():
 
 
 def lm_epadd_offers():
-    """The Quests tile's badge: how many jobs are on offer that nobody has taken.
+    """The Offers tile's badge: how many jobs are on offer that nobody has taken.
+
+    Only on Offers. It used to sit on the Quests tile too, but the Quests tab lists only
+    work already taken, so "3 available" there advertised something it does not show.
 
     Empty at zero, so the tile stays quiet rather than saying "0 available" - the same
     rule the Messages badge follows.

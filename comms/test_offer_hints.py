@@ -52,17 +52,17 @@ class OfferHintTests(unittest.TestCase):
     # --- counting -------------------------------------------------------------
     def test_one_job_is_singular(self):
         self._install(offer_record("a", "Job"))
-        self.assertEqual(lm_comms_offer_title(1, STATION, "DS 1"), "DS 1 - 1 job")
+        self.assertEqual(lm_comms_offer_title(1, STATION, "DS 1"), "DS 1 - 1 quest")
 
     def test_several_jobs_are_counted(self):
         self._install(offer_record("a", "A"), offer_record("b", "B"))
-        self.assertEqual(lm_comms_offer_title(1, STATION, "DS 1"), "DS 1 - 2 jobs")
+        self.assertEqual(lm_comms_offer_title(1, STATION, "DS 1"), "DS 1 - 2 quests")
 
     def test_pending_offers_do_not_inflate_the_count(self):
         """A POSTING job is listed on the board so the crew know it exists, but it is
         not a reason to hail anybody - and this number answers exactly that question."""
         self._install(offer_record("a", "A"), offer_record("b", "B", pending=True))
-        self.assertEqual(lm_offer_hint_text(STATION), "1 job")
+        self.assertEqual(lm_offer_hint_text(STATION), "1 quest")
 
     # --- the engine's rules ---------------------------------------------------
     def test_it_never_emits_a_character_the_engine_parses(self):

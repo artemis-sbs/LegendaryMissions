@@ -36,7 +36,7 @@ def lm_offer_hint_text(selected_id, origin_id=None):
     if not rows:
         return ""
     n = len(rows)
-    return "1 job" if n == 1 else f"{n} jobs"
+    return "1 quest" if n == 1 else f"{n} quests"
 
 
 def lm_comms_offer_title(origin_id, selected_id, title):

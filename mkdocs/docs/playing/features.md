@@ -41,6 +41,38 @@ panel, plus the ships.
 Optional **bonus objectives** give skilled crews extra goals to chase beyond simply
 surviving.
 
+## Quests offered { #side-jobs }
+
+Peacetime's patrol quests &mdash; gunnery drills, hazard rocks, poachers, rescues, tows and
+the multi-console arcs &mdash; are no longer tied to one map. A **Quests Offered** option on
+the setup panel deals a random hand of them under **Available Quests**:
+
+| Quests Offered | What is offered |
+|---|---|
+| **none** | nothing |
+| **few** | about a quarter of them |
+| **some** | about half |
+| **max** | all of them |
+
+Each quest waits under Available Quests until somebody **Accepts** it &mdash; select one to
+read what it asks and what it pays. Its targets only appear once it is taken on, and from
+then on it is on the **Quests** tab.
+
+**A seed deals the same hand.** Set the map's Seed and the same quests come up every time,
+so a shared game code gives everyone the same set. Seed 0 deals a fresh hand each game.
+
+Where you will find it:
+
+- **Peacetime Remastered** &mdash; Quests Offered defaults to **some**. It sits beside the
+  map's **Quest Size** option: *Quests Offered* picks **which** quests are offered, *Quest
+  Size* sets **how big** each one is (how many drones, rocks or hulks it takes).
+- **Siege** &mdash; Quests Offered defaults to **none**, so a siege plays as it always has
+  until you ask for work between waves. The gunnery hulks are target practice, not part of
+  the assault: you do not have to clear them to win.
+
+A host can change either default in [settings.yaml](../hosting/settings.yaml.md#siege_jobs)
+(`SIEGE_JOBS`, `PR_SIDE_JOBS`).
+
 ## Engineering: wear, tuning and work orders
 
 Systems are no longer just broken or fine. Every room and system on the interior view

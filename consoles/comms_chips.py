@@ -37,7 +37,7 @@ _CHIPS = [
     ("threats", "Threats"),
     ("friends", "Friends"),
     ("stations", "Stations"),
-    ("jobs", "Jobs"),
+    ("jobs", "Quests"),
     ("orders", "Can order"),
     ("favorites", "Favorites"),
 ]

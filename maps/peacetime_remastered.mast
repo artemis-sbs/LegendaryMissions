@@ -24,6 +24,9 @@ default shared CREW_SELECT = crew_selected_name()
 default shared CREW_LIST = crew_name_list()
 default shared THEATER = theater_selected_name()
 default shared THEATER_LIST = theater_name_list()
+# Quests Offered (map option): which jobs the board offers - a random subset, repeatable with a
+# seed. Seeded from the setting, so a profile or soak can ask for the whole board (max).
+default shared PR_SIDE_JOBS = settings_get_defaults().get("PR_SIDE_JOBS", "some")
 
 @map/peacetime_remastered "Peacetime Remastered"
 " A quiet border patrol shift. Work the quest board: run down the Florbin
@@ -43,7 +46,8 @@ Properties:
     Friendly Ships: 'gui_drop_down("$text: {FRIENDLY_SELECT};list: none, few, some, lots, max", var="FRIENDLY_SELECT")'
     Monsters: 'gui_drop_down("$text: {MONSTER_SELECT};list: none, few, some, lots, max", var="MONSTER_SELECT")'
     Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
-    Jobs: 'gui_drop_down("$text: {JOBS_SELECT};list: none, few, some, lots, max", var= "JOBS_SELECT")'
+    Quest Size: 'gui_drop_down("$text: {JOBS_SELECT};list: few, some, lots, max", var= "JOBS_SELECT")'
+    Quests Offered: 'gui_drop_down("$text: {PR_SIDE_JOBS};list: none, few, some, max", var="PR_SIDE_JOBS")'
     Quest Mode: 'gui_drop_down("$text: {QUEST_MODE};list: Co-op, Protected, Claim-jump", var="QUEST_MODE")'
     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
     Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
@@ -136,7 +140,13 @@ Defaults:
     amd_drops(amd_section(PR_DOC, "drops"))
 
     # The peacekeeping side-jobs (the quest board) and the all-ships-lost loss watch.
-    task_schedule(pr_jobs_setup)
+    # Quest Size (JOBS_SELECT) sizes each job (count scale); Quests Offered (PR_SIDE_JOBS) picks
+    # WHICH jobs are offered (a random subset, repeatable with a seed). JOBS_SELECT = none is
+    # no longer on the dropdown, but an old preset or game code holding it still turns the
+    # board off.
+    jobs_value = terrain_to_value(JOBS_SELECT)
+    if jobs_value >= 1:
+        task_schedule(pr_side_jobs, {"side_jobs_level": PR_SIDE_JOBS, "side_jobs_seed": seed_value, "side_jobs_scale": jobs_value * 0.5})
     task_schedule(pr_lose_watch)
 
     # No enemy fleets in Peacetime. The headline case is the Florbin kidnapping, which
@@ -201,19 +211,14 @@ Defaults:
 # Each is a per-ship quest so its credit reward pays to the side.
 
 ===== pr_jobs_setup =====
-    # A map that offers only PART of the board (Siege's Side Jobs) passes PR_JOB_PICK as task
-    # data: the job keys to grant, at their authored (1x) counts. Peacetime passes nothing and
-    # gets the whole board, scaled by JOBS_SELECT.
+    # Two task-data inputs, both chosen by the calling map (pr_side_jobs):
+    #   PR_JOB_PICK  - the job keys to offer (a Quests Offered subset); None = the whole board.
+    #   PR_JOB_SCALE - multiplier on the authored goal counts (Peacetime's Quest Size option);
+    #                  1.0 = as authored.
     default PR_JOB_PICK = None
-    if PR_JOB_PICK is None:
-        # JOBS_SELECT is seeded by the map's Defaults metadata (set-if-absent shared) at panel
-        # present + map-task start, so it is always defined here - no local default needed.
-        jobs_value = terrain_to_value(JOBS_SELECT)
-        ->END if jobs_value < 1
-    else:
-        ->END if len(PR_JOB_PICK) < 1
-        # 2 = "some", the 1x scale below.
-        jobs_value = 2
+    default PR_JOB_SCALE = 1.0
+    ->END if PR_JOB_PICK is not None and len(PR_JOB_PICK) < 1
+    ->END if PR_JOB_SCALE <= 0
 
     # Job target counts come straight from the granted quest Goals (the jobs section of
     # PR_DOC), so the spawn loops below can never drift from the quest completion targets -
@@ -230,12 +235,12 @@ Defaults:
         jscan = jd.get("on_scan")
         if jscan is not None:
             job_counts["scan:" + str(jscan.get("role"))] = jscan.get("count", 1)
-    # The Jobs density SCALES the board: few = 0.5x, some = 1x (base), lots = 1.5x, max = 2x
-    # of the AMD Goal counts (jobs_value is 1..4 here). The SAME factor scales the spawn counts
-    # below AND the granted quest Goals (count_scale on the grant), so the two can never
-    # diverge. Singleton jobs (one poacher, one shuttle) carry no authored count, so they never
-    # scale. int(x + 0.5) rounds (round() is not in the MAST eval globals); min 1.
-    job_scale = jobs_value * 0.5
+    # PR_JOB_SCALE sizes the board (Peacetime's Quest Size: few = 0.5x, some = 1x, lots = 1.5x,
+    # max = 2x of the AMD Goal counts). The SAME factor scales the spawn counts below AND the
+    # granted quest Goals (count_scale on the grant), so the two can never diverge. Singleton
+    # jobs (one poacher, one shuttle) carry no authored count, so they never scale.
+    # int(x + 0.5) rounds (round() is not in the MAST eval globals); min 1.
+    job_scale = PR_JOB_SCALE
     drone_n = max(1, int(job_counts.get("drone_down", 5) * job_scale + 0.5))
     rock_n = max(1, int(job_counts.get("rock_cleared", 4) * job_scale + 0.5))
     traffic_n = max(1, int(job_counts.get("customs_cleared", 4) * job_scale + 0.5))
@@ -295,6 +300,35 @@ Defaults:
     # Server watcher that credits the Sensor Net job as Sensor Beacons are deployed.
     task_schedule(pr_beacon_watch)
     task_schedule(pr_job_dispatch)
+    ->END
+
+
+#-----------------------------------------------------------------------------------------------------------------------------
+# Quests Offered: a random subset of this board, run by pr_jobs_setup - idle on the Quests tab
+# until a crew accepts one, targets spawned on accept. Used by Peacetime Remastered and Siege.
+#   side_jobs_level - none / few / some / max (the map's Quests Offered option)
+#   side_jobs_seed  - the map's seed_value; the pick uses seed + 6 on its OWN RNG, so a seeded
+#                     game offers the same jobs and no other phase of the map shifts. 0 = random.
+#   side_jobs_scale - multiplier on each job's target counts (Peacetime's Quest Size option); 1.0.
+# job_picket stays out of the pool: turrets are off with extra ship data (see PR_JOB_KEYS).
+# Gunnery hulks are raider-side - a map that ends on "no raiders left" must leave role
+# target_drone out of its count (siege_watch does).
+===== pr_side_jobs =====
+    default side_jobs_level = "none"
+    default side_jobs_seed = 0
+    default side_jobs_scale = 1.0
+    ->END if str(side_jobs_level).strip().lower() == "none"
+    # PR_DOC is what pr_jobs_setup and the job routes read (its scans and landmarks too).
+    # Peacetime has already loaded it; Siege loads it here.
+    default shared PR_DOC = None
+    if PR_DOC is None:
+        shared PR_DOC = document_get_amd_file(get_mission_dir_filename("maps/peacetime_remastered.amd"), data_parser=amd_mission_data)
+    side_seed = safe_int(side_jobs_seed)
+    side_seed = side_seed + 6 if side_seed != 0 else 0
+    side_pick = pr_jobs_pick(amd_section(PR_DOC, "jobs"), side_jobs_level, side_seed, exclude=["job_picket"])
+    ->END if len(side_pick) < 1
+    log(f"Jobs offered ({side_jobs_level}): {side_pick}", "side_jobs")
+    await task_schedule(pr_jobs_setup, {"PR_JOB_PICK": side_pick, "PR_JOB_SCALE": side_jobs_scale})
     ->END
 
 

@@ -107,6 +107,15 @@ of those a map seeds.
 ### UPGRADE_SELECT
 none, few, some, lots, many
 
+### SIEGE_JOBS
+none, few, some, max. The starting value of Siege's **Quests Offered** option: how many of
+Peacetime's patrol quests are offered between waves. Default `none`. See
+[Quests offered](../playing/features.md#side-jobs).
+
+### PR_SIDE_JOBS
+none, few, some, max. The starting value of Peacetime Remastered's **Quests Offered** option:
+which of its patrol quests are offered. Default `some`; `max` offers all of them.
+
 ### GAME_TIME_LIMIT
 0 is unlimited any other values is the number of minutes the mission will last.
 Pausing the mission will also pause this timer.

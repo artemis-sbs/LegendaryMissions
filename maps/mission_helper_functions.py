@@ -284,7 +284,7 @@ def fb_generate_case(pools, clue0, clues, templates, rng,
 # ---------------------------------------------------------------------------------------------------
 # Peacetime job board - spawn-on-accept helpers (peacetime_remastered.mast).
 
-# How much of the board a map that offers only PART of it gets (Siege's Side Jobs option).
+# How much of the board a map that offers only PART of it gets (the Quests Offered option).
 # A fraction of the pool, never less than one job once the option is on.
 _PR_JOBS_PICK_FRACTION = {"none": 0.0, "few": 0.25, "some": 0.5, "max": 1.0}
 

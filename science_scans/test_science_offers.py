@@ -51,17 +51,17 @@ class OfferLineTests(unittest.TestCase):
 
     def test_one_job_is_singular(self):
         self._install(offer_record("a", "A"))
-        self.assertIn("1 job.", lm_science_offer_line(STATION))
+        self.assertIn("1 quest.", lm_science_offer_line(STATION))
 
     def test_several_are_counted(self):
         self._install(offer_record("a", "A"), offer_record("b", "B"))
-        self.assertIn("2 jobs.", lm_science_offer_line(STATION))
+        self.assertIn("2 quests.", lm_science_offer_line(STATION))
 
     def test_pending_offers_are_not_counted(self):
         """Something else has to hand you a POSTING job, so it is not a reason to fly
         over and hail anybody - which is exactly what this line is telling you to do."""
         self._install(offer_record("a", "A"), offer_record("b", "B", pending=True))
-        self.assertIn("1 job.", lm_science_offer_line(STATION))
+        self.assertIn("1 quest.", lm_science_offer_line(STATION))
 
     def test_it_admits_it_may_be_stale(self):
         """THE POINT. A tab is written once at scan time and never re-rendered, so a

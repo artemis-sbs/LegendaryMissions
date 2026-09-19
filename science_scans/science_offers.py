@@ -6,7 +6,7 @@ there in the first place, so a contact with open work should say so on a scan.
 
 One line, on the INTEL tab:
 
-    Open work at last scan - 2 jobs. Hail to take.
+    Quests at last scan - 2 quests. Hail to take one on.
 
 **A tab is a STORED string, not a live render.** `science_update_scan_data` writes it and
 nothing re-runs it - re-selecting a contact does not rebuild the tab. That is why the
@@ -44,8 +44,8 @@ def lm_science_offer_line(target_id, origin_id=None):
     if not rows:
         return ""
     n = len(rows)
-    what = "1 job" if n == 1 else f"{n} jobs"
-    return f"Open work at last scan - {what}. Hail to take."
+    what = "1 quest" if n == 1 else f"{n} quests"
+    return f"Quests at last scan - {what}. Hail to take one on."
 
 
 def lm_science_offers_push(origin_id, target_id):

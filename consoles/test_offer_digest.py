@@ -34,12 +34,15 @@ def _rows(*titles, kind="job"):
 
 
 class DigestTextTests(unittest.TestCase):
-    def test_it_names_the_kinds_not_just_a_total(self):
+    def test_every_kind_is_a_quest_to_the_player(self):
+        """One word for players: a job, a sortie and a contact are all quests."""
         t = D.lm_offer_digest_text(_rows("A", "B") + _rows("C", kind="contact"), [])
-        self.assertIn("2 jobs and 1 contact", t)
+        self.assertIn("3 quests", t)
+        self.assertNotIn("job", t)
+        self.assertNotIn("contact", t)
 
-    def test_one_of_a_kind_is_singular(self):
-        self.assertIn("1 job", D.lm_offer_digest_text(_rows("A"), []))
+    def test_one_is_singular(self):
+        self.assertIn("1 quest.", D.lm_offer_digest_text(_rows("A"), []))
 
     def test_it_names_what_is_new(self):
         t = D.lm_offer_digest_text(_rows("A", "B"), _rows("B"))

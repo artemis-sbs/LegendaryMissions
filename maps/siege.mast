@@ -7,7 +7,7 @@ default shared SIEGE_TIMEOUT = "Win"
 # the raiders thin out (siege_enemies_low), or None. BOSS_LIST feeds the dropdown.
 default shared BOSS_SELECT = "None"
 default shared BOSS_LIST = siege_boss_list()
-# Side Jobs (map option): a random subset of Peacetime Remastered's job board, offered on
+# Quests Offered (map option): a random subset of Peacetime Remastered's job board, offered on
 # the Quests tab between waves. A seed picks the same set every time. Seeded from the
 # setting, so a profile (or settings.yaml) can turn it on.
 default shared SIEGE_JOBS = settings_get_defaults().get("SIEGE_JOBS", "none")
@@ -53,7 +53,7 @@ Properties:
     Upgrades: 'gui_drop_down("$text: {UPGRADE_SELECT};list: none, few, some, lots, max", var= "UPGRADE_SELECT")'
     Time Limit: 'gui_input("desc: Minutes;", var="GAME_TIME_LIMIT")'
     Survive Clock: 'gui_drop_down("$text: {SIEGE_TIMEOUT};list: Win, Loss", var="SIEGE_TIMEOUT")'
-    Side Jobs: 'gui_drop_down("$text: {SIEGE_JOBS};list: none, few, some, max", var="SIEGE_JOBS")'
+    Quests Offered: 'gui_drop_down("$text: {SIEGE_JOBS};list: none, few, some, max", var="SIEGE_JOBS")'
     Seed: 'gui_input("desc: Integer (0 = random);", var="seed_value")'
 # GameCode (optional): which property vars a game code includes. Omitting this
 # whole block defaults to ALL the properties above (same as listing them all, as
@@ -325,7 +325,7 @@ GameCode:
         quest_set_key(SHARED, "beat_clock", "description", "Hold the line. If the clock runs out with the siege unbroken, you have still held - and the siege ends in your favor.")
     task_schedule(siege_watch)
     task_schedule(siege_bonus_objectives)
-    task_schedule(siege_side_jobs, {"siege_seed": seed_value})
+    task_schedule(pr_side_jobs, {"side_jobs_level": SIEGE_JOBS, "side_jobs_seed": seed_value})
     # A "continuous" boss (Trigger: continuous) keeps respawning waves from the start
     # until the clock runs out (convention play). A one-shot boss (Trigger:
     # enemies_low) instead arrives via siege_watch's siege_enemies_low.
@@ -351,28 +351,6 @@ GameCode:
     ->END
 
 
-# Side Jobs: a random subset of Peacetime Remastered's job board (maps/peacetime_remastered.amd),
-# run by the same pr_jobs_setup - idle on the Quests tab until a crew accepts one, targets spawned
-# on accept. Drawn from its own RNG (seed + 6 when a seed is set), so the pick is repeatable and
-# does not move any other phase of the map.
-#
-# job_gunnery's hulks are raider-side; siege_watch leaves them out of the raider count (role
-# target_drone), so they never hold up the win. They do count toward Ace - they are kills.
-# Left out of the pool:
-#  - job_picket: turrets are off with extra ship data (the same hot fix Peacetime carries).
-=== siege_side_jobs
-    default siege_seed = 0
-    ->END if str(SIEGE_JOBS).strip().lower() == "none"
-    # PR_DOC is what pr_jobs_setup and the job routes read (its scans and landmarks too).
-    shared PR_DOC = document_get_amd_file(get_mission_dir_filename("maps/peacetime_remastered.amd"), data_parser=amd_mission_data)
-    job_seed = siege_seed + 6 if siege_seed != 0 else 0
-    job_pick = pr_jobs_pick(amd_section(PR_DOC, "jobs"), SIEGE_JOBS, job_seed, exclude=["job_picket"])
-    ->END if len(job_pick) < 1
-    log(f"Siege side jobs ({SIEGE_JOBS}): {job_pick}", "siege")
-    await task_schedule(pr_jobs_setup, {"PR_JOB_PICK": job_pick})
-    ->END
-
-
 # Lifecycle watcher: translate live board state into the siege_mission signals.
 # It no longer ends the game itself - the quest system does (game_over route),
 # so the outcome + its reason text come from the mission quest.
@@ -386,8 +364,9 @@ GameCode:
 --- loop
     await delay_sim(4)
     ->END if GAME_ENDED
-    # Side Jobs' gunnery hulks are raider-side so Weapons can lock them, but they are
+    # The job board's gunnery hulks are raider-side so Weapons can lock them, but they are
     # targets, not the siege - they must not hold up the win or the boss trigger.
+    # (They do count toward Ace - they are kills.)
     raider_count = len(players_hostile_ships() - role("target_drone"))
     if raider_count > peak_raiders:
         peak_raiders = raider_count

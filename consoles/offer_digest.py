@@ -1,6 +1,6 @@
 """One quiet line when the work on offer CHANGES.
 
-The badge and the Offers board are pull surfaces: they answer a question the crew thought
+The badge and Available Quests are pull surfaces: they answer a question the crew thought
 to ask. This is the one push, and it is deliberately the smallest push available - a line
 filed in the log and shown in the ambient strip, on the consoles that can actually accept
 a job. It never raises a panel, never speaks, never takes the screen.
@@ -42,21 +42,10 @@ LM_OFFER_DIGEST_FLOOR = 180
 
 
 def _kinds_phrase(rows):
-    """`2 jobs and a contact` - what is out there, not merely how much of it."""
-    order, counts = [], {}
-    for r in rows:
-        k = str(r.get("kind") or "job")
-        if k not in counts:
-            order.append(k)
-            counts[k] = 0
-        counts[k] += 1
-    parts = []
-    for k in order:
-        n = counts[k]
-        parts.append(f"{n} {k}" if n == 1 else f"{n} {k}s")
-    if len(parts) == 1:
-        return parts[0]
-    return ", ".join(parts[:-1]) + " and " + parts[-1]
+    """`2 quests` - one word for everything a crew can take on. The kinds (job, sortie,
+    contact) are an author's vocabulary; a player sees quests."""
+    n = len(rows)
+    return "1 quest" if n == 1 else f"{n} quests"
 
 
 def lm_offer_digest_text(rows, fresh):
@@ -64,11 +53,11 @@ def lm_offer_digest_text(rows, fresh):
 
     `fresh` are the offers this console has not been told about yet.
     """
-    head = f"Open work - {_kinds_phrase(rows)}."
+    head = f"Quests available - {_kinds_phrase(rows)}."
     names = [str(r.get("title")) for r in fresh][:2]
     if names:
         head += " New: " + ", ".join(names) + "."
-    return head + " Offers app lists them."
+    return head + " See Available Quests."
 
 
 def _ship_of(cid):

@@ -1,10 +1,10 @@
 
-# The Offers board - what the world has for you that you have not taken.
+# Available Quests (app key "offers") - the quests you could take on, on the same screen as Quests.
 #
-# The Quests tab answers "what am I doing?". This answers "what is there?", which is the
-# question a crew could not ask before: an Open Universe station job and a hangar sortie
-# are not quests until AFTER you accept them, so neither appeared anywhere until you had
-# already found it by hailing the right object.
+# The Quests tab answers "what have we taken on?". This answers "what could we?" - every
+# untaken quest (a mission's patrol quests, the sorties for the craft a pilot picked),
+# plus Open Universe station work, which is priced when you hail and only becomes a quest
+# then. Players see one word for all of it: quest.
 #
 # NOTHING HERE INTERRUPTS. The tile appears when there is something and is absent when
 # there is not; it never raises a panel, never speaks, and never takes the screen.
@@ -50,16 +50,16 @@ if OFFER_DIGEST_ENABLED:
 # The route's own condition hides the tile entirely when there is nothing on offer - the
 # same thing the Survey app does. A board that is always present but usually empty is one
 # more button to learn; a board that appears exactly when it has something is an answer.
-//gui/app/offers if OFFERS_TAB_ENABLED and offer_count_here() > 0
-    gui_tab_back(CONSOLE_SELECT)
-    gui_activate_console("offers")
-    gui_offers_screen()
-    # NO `on change ... jump`. That is the named anti-pattern: a repaint re-sends every
-    # widget on the screen over the wire per change, and two builds landing at once is
-    # what makes a board look scrambled - which it did, and the mangled rows were blamed
-    # on the row layout. The board updates its own list and its own two widgets when a
-    # job is taken, because it is the thing that took it.
-    await gui()
+# offer_board_count_here counts what this screen actually lists (untaken jobs, sorties,
+# station work), so the tile never opens onto an empty list.
+//gui/app/offers if OFFERS_TAB_ENABLED and offer_board_count_here() > 0
+    # THE QUEST SCREEN, listing what could be taken. Not a screen of its own: the list,
+    # the description pane and the gated Accept button are the Quests tab's, so the two
+    # read alike and a fix to one is a fix to both (documents/quest_tab.mast).
+    quest_tab_mode = "offers"
+    quest_sel_index = -1
+    quest_sel_hint = None
+    jump quest_tab_screen
 
 
 # A slow pump, jittered. An exact metronome reads as a machine even in a log line, and

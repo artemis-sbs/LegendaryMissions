@@ -161,11 +161,11 @@ hangar_get_craft_data("terran")
     # Persist the (possibly reset) selection back as ids for the next rebuild.
     ride_choice_id = to_id(ride_choice)
     dock_choice_id = to_id(dock_choice)
-    # PUBLISH THE PICK. `ride_choice_id` is a task variable and the Offers provider is
-    # Python, so without this the flight deck - the one console where a sortie is
-    # actually chosen - reports no craft, offers no sorties, and the app's own route
-    # condition then hides the tile entirely.
-    set_inventory_value(client_id, "hangar_ride_id", ride_choice_id)
+    # THIS CRAFT'S SORTIES, as quests on the pilot's list. A sortie is an ordinary quest:
+    # picking a craft puts that craft's orders under Available Quests, where they are
+    # accepted like any other. Guarded because the sorties addon is optional.
+    if HANGAR_QUEST_DOC is not None:
+        hangar_offer_sorties(client_id, ride_choice_id)
 
     # THE BOARD'S BAND, GIVEN TO THE THINGS THAT WERE SQUEEZED. The sortie list and its
     # briefing used to own everything from y=60 down, so the craft pickers and the 2D
@@ -252,7 +252,7 @@ hangar_get_craft_data("terran")
         cockpit_type = hangar_cockpit_type(ride_choice)
         # Under the 2D view, in the strip left between it and the bottom controls.
         gui_section(style="area: 41+1em,100-132px, 100,100-90px;")
-        gui_text("$text:Sortie orders - see Offers in the ePADD.;font:gui-2;color:#9ab;")
+        gui_text("$text:Sortie orders - see Available Quests in the ePADD.;font:gui-2;color:#9ab;")
 
     fighter_change = 0
     ship_change_count = 0
@@ -269,13 +269,12 @@ hangar_get_craft_data("terran")
                 sbs.assign_client_to_ship(client_id, dock.id)
 
             # Cockpit type can change (fighter <-> shuttle), and a shuttle is offered
-            # different orders than a fighter. Nothing to repaint here any more - the
-            # Offers app reads the craft itself - but the type still drives what the
-            # launch assigns.
-            set_inventory_value(client_id, "hangar_ride_id", ride_choice_id)
+            # different orders than a fighter - so the pilot's untaken orders are
+            # swapped for this craft's.
             if HANGAR_QUEST_DOC is not None:
                 cockpit_type = hangar_cockpit_type(ride_choice)
                 quest_choice = None
+                hangar_offer_sorties(client_id, ride_choice_id)
 
             stats = hangar_get_stats(client_id, fighter)
             gui_update("stats-1", "$text: {stats[0]}")
@@ -373,12 +372,9 @@ hangar_get_craft_data("terran")
             old_ship_id = sbs.get_ship_of_client(client_id)
             unlink(old_ship_id, "consoles", client_id)
             link(ride_select , "consoles", client_id)
-            # NOTHING TO ASSIGN AT LAUNCH ANY MORE. A sortie is taken when the pilot
-            # picks it in the Offers app (`hangar_take_sortie`), which assigns it to the
-            # craft there and then - so by the time anyone launches, the order is already
-            # a quest on that craft. This used to be the only place an order was applied,
-            # and it read the board's selection; removing the board without moving the
-            # assignment would have meant no sortie was ever assigned at all.
+            # NOTHING TO ASSIGN AT LAUNCH. A sortie is a quest the pilot already
+            # accepted under Available Quests, held by the pilot, so it goes with them
+            # into the cockpit.
             jump launch_to_cockpit
         jump show_hangar
 

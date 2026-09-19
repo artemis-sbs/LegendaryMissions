@@ -18,6 +18,8 @@ seconds: 600
 
 settings:
   JOBS_SELECT: lots
+  # The whole board, not the "some" subset a real game defaults to.
+  PR_SIDE_JOBS: max
   QUEST_MODE: Protected
   # Autoplay is the greedy combat bot. It is what made --runs soaks diverge, and this
   # mission has no combat to be greedy about - the pilot drives instead.
