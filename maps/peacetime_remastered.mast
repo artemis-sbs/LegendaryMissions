@@ -415,7 +415,7 @@ Defaults:
             # Scatter inert survey probes (old sensor beacons) for the crew to recover by fly-over.
             comms_info_card(all_roles("console, comms"), "Three survey probes have gone adrift. Recover them - fly your ship over each to bring it aboard.", title="Recovery Order", color="#0cf", notify=True)
             for v in scatter.box(PR_JOB_COUNTS.get("probe", 3), -14000, 0, -2000, 4000, 400, 4000, centered=True):
-                probe = terrain_spawn(v.x, v.y, v.z, "Survey Probe", "#, beacon, lost_probe", "danger_4a", "behav_pickup")
+                probe = terrain_spawn(v.x, v.y, v.z, "Survey Probe", "#, beacon, lost_probe", "alien_1b", "behav_pickup")
                 set_inventory_value(probe.id, "beacon_kind", "sensor")
                 # Empty mode so a recovered-then-refired probe stays a passive sensor (the
                 # fabrication recover route defaults an unset mode to "attract").

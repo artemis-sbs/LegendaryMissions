@@ -25,7 +25,7 @@ metadata:``` yaml
 type: item/upgrade/defense
 key: carapaction_coil
 display_text: Carapaction Coil
-art: alien_2a
+art: alien_2b
 mode: consumable
 targets: ship, cockpit
 consoles: weapons, engineering
@@ -42,7 +42,7 @@ metadata:``` yaml
 type: item/upgrade/helm
 key: infusion_pcoils
 display_text: Infusion P-Coils
-art: danger_4a
+art: alien_4b
 mode: consumable
 targets: ship, cockpit
 consoles: helm
@@ -96,7 +96,7 @@ metadata:``` yaml
 type: item/resource/energy
 key: hidens_powercell
 display_text: HiDens Power Cell
-art: container_2a
+art: container_2b
 mode: resource
 targets: ship, cockpit
 price: 150
@@ -113,7 +113,7 @@ metadata:``` yaml
 type: item/upgrade/engineering
 key: vigoranium_nodule
 display_text: Vigoranium Nodule
-art: container_4a
+art: container_2c
 mode: consumable
 targets: ship, cockpit
 consoles: engineering
@@ -144,7 +144,7 @@ metadata:``` yaml
 type: item/upgrade/engineering
 key: cetrocite_crystal
 display_text: Cetrocite Crystal
-art: container_small_6a
+art: container_3c
 mode: consumable
 targets: ship, cockpit
 consoles: engineering
@@ -161,7 +161,7 @@ metadata:``` yaml
 type: item/upgrade/science
 key: lateral_array
 display_text: Lateral Array
-art: danger_5a
+art: alien_3c
 mode: consumable
 targets: ship, cockpit
 consoles: science
@@ -178,7 +178,7 @@ metadata:``` yaml
 type: item/upgrade/weapons
 key: haplix_overcharger
 display_text: Haplix Overcharger
-art: alien_5a
+art: alien_5c
 mode: consumable
 targets: ship, cockpit
 consoles: engineering, weapons
@@ -195,7 +195,7 @@ metadata:``` yaml
 type: item/upgrade/engineering
 key: grav_tug_rig
 display_text: Heavy Tug Rig
-art: container_1a
+art: container_3a
 mode: install
 targets: ship
 consoles: engineering
@@ -241,7 +241,7 @@ metadata:``` yaml
 type: item/trap/hack
 key: hacking_virus
 display_text: Hacking Virus
-art: alien_5a
+art: alien_3b
 mode: consumable
 targets: ship, cockpit
 desc: A cyber weapon. Whoever trips it takes weapons and engine system damage.
@@ -282,7 +282,7 @@ metadata:``` yaml
 type: item/upgrade/engineering
 key: tug_rig_mk1
 display_text: Tug Rig Mk I
-art: container_small_6a
+art: container_3b
 mode: consumable
 duration: 600
 targets: ship

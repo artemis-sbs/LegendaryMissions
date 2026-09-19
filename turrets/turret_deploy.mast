@@ -40,7 +40,7 @@ metadata:``` yaml
 type: item/deployable/turret
 key: turret_kit_heavy
 display_text: Heavy Turret Kit
-art: container_4a
+art: container_4b
 mode: consumable
 targets: ship, cockpit
 consoles: weapons, engineering
@@ -57,7 +57,7 @@ metadata:``` yaml
 type: item/deployable/turret
 key: turret_kit_drone
 display_text: Drone Turret Kit
-art: container_4a
+art: container_4c
 mode: consumable
 targets: ship, cockpit
 consoles: weapons, engineering

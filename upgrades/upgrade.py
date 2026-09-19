@@ -7,15 +7,15 @@ from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_va
 
 
 anom_data = {
-    "carapaction_coil": {"art_id":"alien_2a", "name":"Carapaction Coil"},
-    "infusion_pcoils": {"art_id":"danger_4a", "name":"Infusion PCoil"},
+    "carapaction_coil": {"art_id":"alien_2b", "name":"Carapaction Coil"},
+    "infusion_pcoils": {"art_id":"alien_4b", "name":"Infusion PCoil"},
     "tauron_focuser": {"art_id":"alien_4a", "name": "Tauron Focuser"},
     "secret_codecase": {"art_id":"container_1a", "name": "Secret Code Case"},
-    "hidens_powercell": {"art_id":"container_2a", "name": "HiDens Power Cell"},
-    "vigoranium_nodule": {"art_id":"container_4a", "name": "Vigoranium Nodule"},
-    "cetrocite_crystal": {"art_id":"container_small_6a", "name": "Cetrocite Crystal"},
-    "lateral_array": {"art_id":"danger_5a", "name": "Lateral Array"},
-    "haplix_overcharger": {"art_id":"alien_5a", "name": "Haplix Overcharger"},
+    "hidens_powercell": {"art_id":"container_2b", "name": "HiDens Power Cell"},
+    "vigoranium_nodule": {"art_id":"container_2c", "name": "Vigoranium Nodule"},
+    "cetrocite_crystal": {"art_id":"container_3c", "name": "Cetrocite Crystal"},
+    "lateral_array": {"art_id":"alien_3c", "name": "Lateral Array"},
+    "haplix_overcharger": {"art_id":"alien_5c", "name": "Haplix Overcharger"},
     "escape-pod": {"art_id":"escape-pod", "name": "Escape Pod"}
 }
 

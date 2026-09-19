@@ -63,7 +63,7 @@
     sp_kind = sp_prog.get("kind", "bio")
     sp_monster = sp_prog.get("monster", "any")
     sp_mode = sp_prog.get("mode", "")
-    sp_obj = terrain_spawn(sp_x, sp_y, sp_z, "Beacon", "#,beacon", "danger_4a", "behav_pickup")
+    sp_obj = terrain_spawn(sp_x, sp_y, sp_z, "Beacon", "#,beacon", "alien_1a", "behav_pickup")
     sp_id = sp_obj.id
     set_inventory_value(sp_id, "beacon_kind", sp_kind)
     set_inventory_value(sp_id, "beacon_monster", sp_monster)

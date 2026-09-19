@@ -10,7 +10,7 @@ metadata:``` yaml
 type: item/trade/ore
 key: ore
 display_text: Raw Ore
-art: container_small_6a
+art: container_5c
 mode: resource
 price: 40
 desc: Common mineral ore. A bulk trade commodity.
@@ -22,7 +22,7 @@ metadata:``` yaml
 type: item/trade/gas
 key: gas
 display_text: Volatile Gas
-art: container_4a
+art: container_5a
 mode: resource
 price: 60
 desc: Compressed industrial gas. Trade commodity.
@@ -34,7 +34,7 @@ metadata:``` yaml
 type: item/trade/provisions
 key: provisions
 display_text: Provisions
-art: container_1a
+art: container_1c
 mode: resource
 price: 30
 desc: Food and supplies. Always in demand somewhere.
@@ -58,7 +58,7 @@ metadata:``` yaml
 type: item/trade/contraband
 key: contraband
 display_text: Contraband
-art: container_small_6a
+art: container_5b
 mode: resource
 price: 200
 desc: Illicit cargo. Lucrative where there is demand.
