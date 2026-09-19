@@ -18,7 +18,7 @@ from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_va
 from sbs_utils.procedural.prefab import prefab_autoname
 from sbs_utils.procedural.query import to_id, to_object
 from sbs_utils.procedural.roles import remove_role
-from sbs_utils.procedural.ship_data import add_extra
+from sbs_utils.procedural.ship_data import add_extra, extra_loaded, extra_ship_data_enabled
 from sbs_utils.procedural.signal import signal_emit
 from sbs_utils.procedural.timers import set_timer
 from sbs_utils.procedural.space_objects import clear_target
@@ -26,10 +26,7 @@ from sbs_utils.procedural.spawn import npc_spawn
 from sbs_utils.procedural.mount import mount_ring
 from sbs_utils.procedural.turret import turret_make
 
-# --- HOT FIX 2026-08-27: turrets are OFF ------------------------------------
-# Set True to restore them, together with `EXTRA_SHIP_DATA: true` in the mission's
-# settings or profile - the loader must be on FIRST or a spawn crashes the engine.
-#
+# --- Turrets are live exactly where their hulls reached the engine ----------
 # Turrets are inseparable from extra ship data: every hull below
 # (lm_turret_beam/heavy/mount/crate) exists ONLY in extraShipData_turrets.yaml, and
 # engine-measurement is why - a behav_station on a STOCK hull never fires. So with the
@@ -37,21 +34,38 @@ from sbs_utils.procedural.turret import turret_make
 # harmless dud: it asks the engine for a ship type it was never given, which dies inside
 # the engine with `bad allocation` well away from the code that asked.
 #
+# The 2026-08-27 hot fix switched them off with a constant, because at the time the
+# library had no way to say whether extra ship data was on. It does now - the
+# per-install `EXTRA_SHIP_DATA` setting - so the answer is no longer a guess: turrets
+# are on when `lm_turret_declare_ships()` actually told the engine about the hulls this
+# mission, and off otherwise (setting off, engine too old, file missing from the media
+# pack). The "consumers on, loader off" crash cannot happen, because the consumers ask
+# the loader.
+#
 # Guarded at the CREATION points rather than by unloading the addon, so its comms
 # buttons, GM entries, science text and prefabs all still parse and lint - they just
 # produce nothing. Each guard returns the value that function already returns when it
 # fails, so no caller sees a new shape.
-LM_TURRETS_ENABLED = False
+#
+# LM_TURRETS_ENABLED is now only a kill switch: False forces turrets off everywhere.
+LM_TURRETS_ENABLED = True
 
 
 def lm_turrets_enabled():
     """Is the turret system live? MAST-callable, for the prefab guards in turrets.mast.
 
-    A function rather than the bare constant because addon Python lands in one flat
+    True only when the turret hull file was handed to the engine this mission. Read from
+    the library's own load record (`extra_loaded`), which the per-mission reset clears,
+    so there is no latch here to go stale on a second run.
+
+    A function rather than a bare constant because addon Python lands in one flat
     MAST namespace shared with every `shared` variable in the story; a call cannot be
     shadowed by one.
     """
-    return LM_TURRETS_ENABLED
+    if not LM_TURRETS_ENABLED or not extra_ship_data_enabled():
+        return False
+    stem = LM_TURRET_SHIP_FILE.rpartition("/")[2]
+    return any(rec[0] == stem and rec[2] for rec in extra_loaded())
 
 
 #: Hull every tower uses unless told otherwise. MUST be one of ours - engine-measured, a
@@ -118,13 +132,15 @@ def lm_turret_declare_ships():
         also what a missing file degrades to. Never raises: no turrets is a worse
         mission, a dead mission is a worse outcome.
     """
-    # HOT FIX: turrets are off (LM_TURRETS_ENABLED). False is what a missing hull file already reported.
+    # Kill switch. False is what a missing hull file already reported.
     if not LM_TURRETS_ENABLED:
         return False
+    # add_extra is itself gated on EXTRA_SHIP_DATA and already logs once when it is off.
     reached = add_extra(LM_TURRET_SHIP_FILE, mod=LM_TURRET_MOD)
-    if not reached:
-        log("turret hulls not registered with the engine - if the file is missing "
-            "from the media pack, turrets will not fire", "turrets", "warning")
+    if not reached and extra_ship_data_enabled():
+        log("turret hulls not registered with the engine - turrets are OFF this "
+            "mission. If the file is missing from the media pack, add it.",
+            "turrets", "warning")
     return reached
 
 
@@ -158,9 +174,9 @@ def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, acquire_range=2500, t
     Returns:
         int | None: The turret's id, or None if the spawn failed.
     """
-    # HOT FIX: turrets are off (LM_TURRETS_ENABLED). 0, not None: a prefab hands this straight to `yield result`, and `yield result None`
+    # Turrets off this mission (lm_turrets_enabled). 0, not None: a prefab hands this straight to `yield result`, and `yield result None`
     # never satisfies Promise.done() - it would hang the awaiting task forever.
-    if not LM_TURRETS_ENABLED:
+    if not lm_turrets_enabled():
         return 0
     behave = behave or LM_TURRET_BEHAVE
     side = side or "tsn"
@@ -239,8 +255,8 @@ def lm_turret_bolt_ring(host, count=4, hull=None, acquire_range=1200, targets=No
     Returns:
         list[int]: The turret ids fitted.
     """
-    # HOT FIX: turrets are off (LM_TURRETS_ENABLED). Empty ring, the same answer a bad host gives.
-    if not LM_TURRETS_ENABLED:
+    # Turrets off this mission (lm_turrets_enabled). Empty ring, the same answer a bad host gives.
+    if not lm_turrets_enabled():
         return []
     hid = to_id(host)
     if hid is None:
@@ -313,9 +329,9 @@ def lm_turret_spawn_crate(x, y, z, side, prefab, name=None, owner=0):
     Returns:
         int | None: The crate's id.
     """
-    # HOT FIX: turrets are off (LM_TURRETS_ENABLED). No crate. 0 rather than None, for the `yield result` reason above; it is
+    # Turrets off this mission (lm_turrets_enabled). No crate. 0 rather than None, for the `yield result` reason above; it is
     # falsy either way, so `if not crate` callers are unaffected.
-    if not LM_TURRETS_ENABLED:
+    if not lm_turrets_enabled():
         return 0
     crate = npc_spawn(x, y, z, name or "Turret Kit", (side or "tsn") + ",turret_crate",
                       LM_TURRET_CRATE_HULL, "behav_station")

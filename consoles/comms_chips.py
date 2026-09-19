@@ -1,7 +1,7 @@
 """The comms filter chips - one horizontal row above the comms 2D view.
 
 A chip is a LENS on the contact list: Threats, Friends, Stations, Jobs, Can order,
-Favorites, then one chip per SIDE that has contacts in view. Each one is a set of ids the SCRIPT computes
+Markers, Favorites, then one chip per SIDE that has contacts in view. Each one is a set of ids the SCRIPT computes
 from data the engine never sees (sides, roles, offers, who takes orders), with a live
 count on the chip.
 
@@ -20,6 +20,10 @@ Prefixed `lm_comms_chips_` because every top-level function here is a MAST globa
 one flat, mission-wide namespace.
 """
 from sbs_utils.helpers import FrameContext
+try:
+    from sbs_utils.spaceobject import SELECTION_ROLE
+except ImportError:                                     # an sbslib older than the role
+    SELECTION_ROLE = "__selection__"
 from sbs_utils.mast.mast_globals import MastGlobals
 from sbs_utils.procedural.gui.viewscreen import viewscreen_home_ship
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
@@ -39,6 +43,7 @@ _CHIPS = [
     ("stations", "Stations"),
     ("jobs", "Quests"),
     ("orders", "Can order"),
+    ("markers", "Markers"),
     ("favorites", "Favorites"),
 ]
 _LABELS = dict(_CHIPS)
@@ -112,6 +117,21 @@ def _compute(client_id, ship_id):
                 sets["jobs"].add(i)
         except Exception:                               # noqa: BLE001
             pass
+    # MARKERS are every behav_selection object - map, nebula, relic and order markers.
+    # They are map furniture, not contacts: drawn on radar for everyone, so they skip the
+    # unscanned rule and join no other lens. A marker that is still DARK (a relic marker
+    # nobody has reached, `unselectable` set) is hidden, so it is not counted either.
+    for i in role(SELECTION_ROLE):
+        obj = to_object(i)
+        if obj is None or i == ship_id:
+            continue
+        if obj.data_set.get("unselectable", 0):
+            continue
+        # Only NAMED markers: a nameless one (a boundary helper, a relic barrier) is
+        # nothing a crew could pick out of a list.
+        if not str(getattr(obj, "name", "") or "").strip():
+            continue
+        sets["markers"].add(i)
     return sets
 
 

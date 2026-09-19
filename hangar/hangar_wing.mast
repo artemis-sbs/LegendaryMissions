@@ -1,0 +1,91 @@
+# WING ORDERS - a station (or carrier) launches its AI fighters on a bridge's say-so.
+#
+# These are ordinary order labels (see comms/order_labels.mast): `requires: launch` puts
+# them on the comms menu of anything hangar_wing.py says has a wing. The fighters then fly
+# the SAME orders a bridge gives any ship - objective_attack_target (prefabs/defender.mast)
+# and objective_escort (comms/order_labels.mast) - so a launched fighter can also be
+# ordered individually afterwards, like any ally.
+#
+# `ack:` is what the unit answers on comms, since "Heading to <target>" (the carry-out
+# default) is wrong for a station that is not going anywhere.
+
+
+=== objective_wing_launch
+metadata: ```
+display_name: Launch wing
+type: objective/orders/launch/attack
+objective_target: null
+objective_target_point: null
+valid_for: hostile
+requires: launch
+ack: Launching fighters against
+```
+    " Send the ready fighters after a target
++++ enter
+    wing_ids = hangar_wing_launch(OBJECTIVE_AGENT_ID)
+    for wing_id in wing_ids:
+        objective_add(wing_id, objective_attack_target, {"objective_target": objective_target, "objective_target_point": None})
+    OBJECTIVE.set_inventory_value("wing_launched", len(wing_ids))
+
++++ test
+    yield success
+
+
+=== objective_wing_protect
+metadata: ```
+display_name: Launch wing to protect
+type: objective/orders/launch/protect
+objective_target: null
+objective_target_point: null
+valid_for: allies, marker
+requires: launch
+ack: Launching fighters to cover
+```
+    " Send the ready fighters to escort a friendly ship
++++ enter
+    wing_ids = hangar_wing_launch(OBJECTIVE_AGENT_ID)
+    for wing_id in wing_ids:
+        objective_add(wing_id, objective_escort, {"objective_target": objective_target, "objective_target_point": None})
+
++++ test
+    yield success
+
+
+=== objective_wing_recall
+metadata: ```
+display_name: Recall wing
+type: objective/orders/launch/recall
+valid_for: self
+requires: launch
+ack: Recalling fighters
+```
+    " Bring every fighter home to land
++++ enter
+    for wing_id in hangar_wing_out(OBJECTIVE_AGENT_ID):
+        objective_clear(wing_id)
+        objective_add(wing_id, hangar_wing_return)
+
++++ test
+    yield success
+
+
+# NOT an order - no `objective/orders/` type, so it never shows on a menu. What a recalled
+# fighter flies: straight home, and it lands (leaves the map, back in the bay) on arrival.
+=== hangar_wing_return
+metadata: ```
+type: objective/hangar_wing/return
+```
++++ enter
+    wing_home = hangar_wing_home(OBJECTIVE_AGENT_ID)
+    brain_clear(OBJECTIVE_AGENT_ID)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
+    orders_stance_set(OBJECTIVE_AGENT_ID, "hold")
+    if wing_home is not None:
+        brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": wing_home, "clear_when_reached": False, "stop_dist": 400})
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+
++++ test
+    OBJECTIVE.set_inventory_value("desc", "Returning to land")
+    yield success if hangar_wing_land(OBJECTIVE_AGENT_ID)
+    yield idle

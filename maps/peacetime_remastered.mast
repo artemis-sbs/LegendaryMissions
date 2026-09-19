@@ -266,16 +266,15 @@ Defaults:
     shared PR_JOB_COUNTS = {"drone": drone_n, "rock": rock_n, "traffic": traffic_n, "survey": survey_n, "probe": probe_n, "herd": herd_n, "salvage": salvage_n, "picket": picket_n}
     shared PR_LANDMARKS = landmarks_from_section(amd_section(PR_DOC, "landmarks"))
     # The jobs that spawn targets on accept, checked each dispatch tick.
-    # HOT FIX 2026-08-27: "job_picket" is OUT of this list. It is the only Peacetime
-    # job built on turrets, and turrets are off with extra ship data
-    # (LM_TURRETS_ENABLED in ../turrets/turrets.py). Dropped from the KEYS rather
-    # than deleted: the AMD goal, the spawner case, pr_picket_watch and the
-    # //shared/signal/lm_turret_deployed route all stay exactly as written, and
-    # none of them can run because the job is never granted, so nothing tows a
-    # crate that would never unfold. Put the key back to restore the job.
+    # "job_picket" is the only Peacetime job built on turrets, so it is in this list
+    # only when turrets are live this mission (lm_turrets_enabled in
+    # ../turrets/turrets.py - EXTRA_SHIP_DATA on and the turret hulls reached the
+    # engine). Without them nothing tows a crate that would never unfold.
     # (job_ravener and job_herd are NOT affected - grazers and raveners ride stock
     # hulls, not extra ship data.)
     shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage", "job_lifepod", "job_relay", "job_ghost", "job_sweep", "job_cache", "job_herd_arc"]
+    if lm_turrets_enabled():
+        PR_JOB_KEYS.append("job_picket")
     shared PR_JOB_KEYS = pr_jobs_keep(PR_JOB_KEYS, PR_JOB_PICK)
 
     # The job board is the jobs section of PR_DOC (parsed above). Grant it PER PLAYER SHIP so
@@ -310,7 +309,7 @@ Defaults:
 #   side_jobs_seed  - the map's seed_value; the pick uses seed + 6 on its OWN RNG, so a seeded
 #                     game offers the same jobs and no other phase of the map shifts. 0 = random.
 #   side_jobs_scale - multiplier on each job's target counts (Peacetime's Quest Size option); 1.0.
-# job_picket stays out of the pool: turrets are off with extra ship data (see PR_JOB_KEYS).
+# job_picket is in the pool only when turrets are live (see PR_JOB_KEYS).
 # Gunnery hulks are raider-side - a map that ends on "no raiders left" must leave role
 # target_drone out of its count (siege_watch does).
 ===== pr_side_jobs =====
@@ -325,7 +324,8 @@ Defaults:
         shared PR_DOC = document_get_amd_file(get_mission_dir_filename("maps/peacetime_remastered.amd"), data_parser=amd_mission_data)
     side_seed = safe_int(side_jobs_seed)
     side_seed = side_seed + 6 if side_seed != 0 else 0
-    side_pick = pr_jobs_pick(amd_section(PR_DOC, "jobs"), side_jobs_level, side_seed, exclude=["job_picket"])
+    side_exclude = [] if lm_turrets_enabled() else ["job_picket"]
+    side_pick = pr_jobs_pick(amd_section(PR_DOC, "jobs"), side_jobs_level, side_seed, exclude=side_exclude)
     ->END if len(side_pick) < 1
     log(f"Jobs offered ({side_jobs_level}): {side_pick}", "side_jobs")
     await task_schedule(pr_jobs_setup, {"PR_JOB_PICK": side_pick, "PR_JOB_SCALE": side_jobs_scale})

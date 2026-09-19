@@ -1,0 +1,260 @@
+# ORDERS BY CAPABILITY.
+#
+# Every order is an objective label under `objective/orders/`. The comms popup and drag
+# build their buttons from lm_orders_for (orders.py), which keeps a label only when:
+#
+#   requires:   every capability listed is one the unit has (sbs_utils procedural/orders.py:
+#               move / weapons / launch)
+#   valid_for:  the target fits - self, allies, hostile, marker, point, any
+#
+# So a turret is offered Fire On and Hold Fire and nothing that moves, a freighter is never
+# offered Attack, and a stock station (no engine, no working guns) is offered nothing at all
+# and drops out of the Can order chip.
+#
+# `stance:` marks an order that changes how a unit fights rather than what it does -
+# carry_out_orders sets it and leaves the current objective running.
+#
+# The first four orders (goto, attack, guard, full stop) live in prefabs/defender.mast.
+
+
+=== objective_fire_on
+metadata: ```
+display_name: Fire on
+type: objective/orders/weapons/fire_on
+objective_target: null
+objective_target_point: null
+valid_for: hostile
+requires: weapons
+```
+    " Hold position and fire on one target
++++ enter
+    # Fixed guns (a turret, a station's turret mounts) take a designation, which beats
+    # anything they would pick for themselves - hold fire included.
+    fire_on_guns = lm_orders_designate(OBJECTIVE_AGENT_ID, objective_target)
+    # Each block (enter / test / leave) runs as its own task, so state is kept on the
+    # objective, not in a variable.
+    OBJECTIVE.set_inventory_value("fire_on_guns", fire_on_guns)
+    if fire_on_guns == 0:
+        # A ship: stop where it is and let the engine's weapons work the target.
+        brain_clear(OBJECTIVE_AGENT_ID)
+        brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+
++++ test
+    yield success if objective_target is None or not object_exists(objective_target)
+    if OBJECTIVE.get_inventory_value("fire_on_guns", 0) == 0:
+        target_shoot(OBJECTIVE_AGENT_ID, objective_target)
+    t_name = to_object(objective_target).name
+    OBJECTIVE.set_inventory_value("desc", f"Firing on {t_name}")
+    yield idle
+
++++ leave
+    lm_orders_designate(OBJECTIVE_AGENT_ID, 0)
+
+
+=== objective_hold_fire
+metadata: ```
+display_name: Hold fire
+type: objective/orders/weapons/hold_fire
+valid_for: self
+requires: weapons
+stance: hold
+```
+    " Stop choosing targets - an explicit Fire On still stands
+    yield success
+
+
+=== objective_weapons_free
+metadata: ```
+display_name: Weapons free
+type: objective/orders/weapons/weapons_free
+valid_for: self
+requires: weapons
+stance: free
+```
+    " Engage whatever comes in range
+    yield success
+
+
+=== objective_escort
+metadata: ```
+display_name: Escort
+type: objective/orders/move/escort
+objective_target: null
+objective_target_point: null
+valid_for: allies
+requires: move
+escort_distance: 800
+defend_radius: 4000
+```
+    " Stay with a ship and fight off anything that comes near it
++++ enter
+    brain_clear(OBJECTIVE_AGENT_ID)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+    # Fight only what is close; otherwise fall back into formation on the escortee.
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X": defend_radius, "enemies_only": True})
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": objective_target, "clear_when_reached": False, "stop_dist": escort_distance})
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+
++++ test
+    yield success if objective_target is None or not object_exists(objective_target)
+    e_name = to_object(objective_target).name
+    OBJECTIVE.set_inventory_value("desc", f"Escorting {e_name}")
+    yield idle
+
+
+=== objective_patrol
+metadata: ```
+display_name: Patrol
+type: objective/orders/move/patrol
+objective_target: null
+objective_target_point: null
+valid_for: marker
+requires: move
+line_of_sight: 6000
+```
+    " Fly between here and a marker, engaging hostiles on the way
++++ enter
+    patrol_home = to_object(OBJECTIVE_AGENT_ID).pos
+    patrol_far = to_object(objective_target).pos if object_exists(objective_target) else patrol_home
+    OBJECTIVE.set_inventory_value("patrol_home", patrol_home)
+    OBJECTIVE.set_inventory_value("patrol_far", patrol_far)
+    OBJECTIVE.set_inventory_value("patrol_out", True)
+    brain_clear(OBJECTIVE_AGENT_ID)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", patrol_far)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "patrol_arrived", False)
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X": line_of_sight, "enemies_only": True})
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"clear_when_reached": False, "set_when_reached": "patrol_arrived"})
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+
++++ test
+    if get_inventory_value(OBJECTIVE_AGENT_ID, "patrol_arrived", False):
+        # Turn around: swap to the other end of the leg.
+        patrol_out = not OBJECTIVE.get_inventory_value("patrol_out", True)
+        OBJECTIVE.set_inventory_value("patrol_out", patrol_out)
+        patrol_next = OBJECTIVE.get_inventory_value("patrol_far") if patrol_out else OBJECTIVE.get_inventory_value("patrol_home")
+        set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+        set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", patrol_next)
+        set_inventory_value(OBJECTIVE_AGENT_ID, "patrol_arrived", False)
+    # The marker can be removed mid-patrol; the leg it gave stays valid.
+    OBJECTIVE.set_inventory_value("desc", "Patrolling")
+    yield idle
+
+
+=== objective_guard_here
+metadata: ```
+display_name: Guard here
+type: objective/orders/move/guard_here
+valid_for: self
+requires: move
+line_of_sight: 6000
+```
+    " Hold this position and engage anything hostile that comes near
++++ enter
+    guard_point = to_object(OBJECTIVE_AGENT_ID).pos
+    brain_clear(OBJECTIVE_AGENT_ID)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
+    brain_add(OBJECTIVE_AGENT_ID, ai_chase_npc, {"SIZE_X": line_of_sight, "enemies_only": True})
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target_point": guard_point, "clear_when_reached": False})
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+
++++ test
+    OBJECTIVE.set_inventory_value("desc", "Guarding this position")
+    yield idle
+
+
+=== objective_return_to_base
+metadata: ```
+display_name: Return to base
+type: objective/orders/move/return_to_base
+valid_for: self
+requires: move
+dock_distance: 1200
+```
+    " Head to the nearest friendly station and recharge there
++++ enter
+    base_id = lm_orders_nearest_base(OBJECTIVE_AGENT_ID)
+    OBJECTIVE.set_inventory_value("base_id", base_id)
+    brain_clear(OBJECTIVE_AGENT_ID)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
+    if base_id is not None:
+        brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": base_id, "clear_when_reached": False, "stop_dist": dock_distance})
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+
++++ test
+    base_id = OBJECTIVE.get_inventory_value("base_id", None)
+    if base_id is None or not object_exists(base_id):
+        OBJECTIVE.set_inventory_value("desc", "No friendly base in range")
+        yield idle
+    b_name = to_object(base_id).name
+    if sbs.distance_id(OBJECTIVE_AGENT_ID, base_id) > dock_distance * 1.5:
+        OBJECTIVE.set_inventory_value("desc", f"Returning to {b_name}")
+        yield idle
+    if lm_orders_repair_step(OBJECTIVE_AGENT_ID):
+        OBJECTIVE.set_inventory_value("desc", f"At {b_name}, fully recharged")
+    else:
+        OBJECTIVE.set_inventory_value("desc", f"Recharging at {b_name}")
+    yield idle
+
+
+=== objective_retreat
+metadata: ```
+display_name: Retreat
+type: objective/orders/move/retreat
+valid_for: self
+requires: move
+retreat_distance: 8000
+```
+    " Break off, hold fire and get clear of the nearest threats
++++ enter
+    OBJECTIVE.set_inventory_value("retreat_stance", orders_stance(OBJECTIVE_AGENT_ID))
+    orders_stance_set(OBJECTIVE_AGENT_ID, "hold")
+    retreat_point = lm_orders_retreat_point(OBJECTIVE_AGENT_ID, retreat_distance)
+    brain_clear(OBJECTIVE_AGENT_ID)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
+    if retreat_point is not None:
+        brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target_point": retreat_point, "clear_when_reached": False})
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+
++++ test
+    OBJECTIVE.set_inventory_value("desc", "Retreating")
+    yield idle
+
++++ leave
+    # Whatever ends the retreat - a new order, or the objective being cleared - puts the
+    # guns back the way they were.
+    orders_stance_set(OBJECTIVE_AGENT_ID, OBJECTIVE.get_inventory_value("retreat_stance", "free"))
+
+
+=== objective_investigate
+metadata: ```
+display_name: Investigate
+type: objective/orders/move/investigate
+objective_target: null
+objective_target_point: null
+valid_for: allies, hostile
+requires: move
+scan_distance: 3000
+```
+    " Fly out to a contact and scan it for the side
++++ enter
+    brain_clear(OBJECTIVE_AGENT_ID)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target", None)
+    set_inventory_value(OBJECTIVE_AGENT_ID, "blackboard:target_point", None)
+    brain_add(OBJECTIVE_AGENT_ID, goto_object_or_location, {"force_target": objective_target, "clear_when_reached": False, "stop_dist": scan_distance * 0.8})
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+
++++ test
+    yield success if objective_target is None or not object_exists(objective_target)
+    if sbs.distance_id(OBJECTIVE_AGENT_ID, objective_target) > scan_distance:
+        OBJECTIVE.set_inventory_value("desc", "Closing to scan")
+        yield idle
+    scan_line = lm_orders_scan_report(OBJECTIVE_AGENT_ID, objective_target)
+    OBJECTIVE.set_inventory_value("desc", scan_line)
+    brain_clear(OBJECTIVE_AGENT_ID)
+    brain_add(OBJECTIVE_AGENT_ID, ai_full_stop)
+    yield success

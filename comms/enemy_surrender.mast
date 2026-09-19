@@ -30,7 +30,7 @@ shared _surrender_return = task_schedule(take_surrendered_home)
     + "Take as prize":
         side_capture(COMMS_SELECTED_ID, COMMS_ORIGIN_ID)
         add_role(COMMS_SELECTED_ID, "prefab_npc_defender")
-        set_inventory_value(COMMS_SELECTED_ID, "give_orders_type", "objective/orders/defender")
+        set_inventory_value(COMMS_SELECTED_ID, "give_orders_type", "objective/orders/")
         objective_add(COMMS_SELECTED_ID, objective_protect_area)
         comms_receive("The crew stands down and joins your command.", title="Prize taken", title_color=surrender_color)
 

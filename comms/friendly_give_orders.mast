@@ -73,15 +73,10 @@
 
 
 //popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and lm_can_take_orders(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and COMMS_POPUP_ID == COMMS_SELECTED_ID
-    
-    label_type = lm_orders_type(COMMS_SELECTED_ID)
-
-    orders = labels_get_type(label_type)
+    # The orders it gives ITSELF (Full Stop, Hold Fire...) - lm_orders_for filters by
+    # valid_for AND by what this unit can do (sbs_utils procedural/orders.py).
+    orders = lm_orders_for(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, 0)
     for order in orders:
-        valid_for = order.get_inventory_value("valid_for", "any")
-        if "self" != valid_for:
-            continue
-
         set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", COMMS_POPUP_POINT)
         set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", COMMS_POPUP_ID)
 
@@ -92,19 +87,11 @@
 
 
 //popup/comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and lm_can_take_orders(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and COMMS_POPUP_ID != COMMS_SELECTED_ID
-    label_type = lm_orders_type(COMMS_SELECTED_ID)
-
-    orders = labels_get_type(label_type)
-    ally = side_are_allies(COMMS_SELECTED_ID, COMMS_POPUP_ID)
+    # Orders aimed at what was clicked: an ally, a hostile, a marker - or an empty spot,
+    # which only `point`/`any` orders accept. Filtered by what this unit can do, so a
+    # turret is never offered "Head to location".
+    orders = lm_orders_for(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, COMMS_POPUP_ID, COMMS_POPUP_ID == 0)
     for order in orders:
-        valid_for = order.get_inventory_value("valid_for", "any")
-        if valid_for == "allies" and not ally:
-            continue
-        if valid_for == "hostile" and ally:
-            continue
-        if valid_for == "self":
-            continue
-
         set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", COMMS_POPUP_POINT)
         set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", COMMS_POPUP_ID)
 
@@ -197,6 +184,15 @@
     set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
     set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_OBJECT", None)
 
+    # A STANCE order (Hold fire / Weapons free) changes how the unit fights, not what it
+    # is doing - so it keeps its current objective.
+    order_stance = cur_objective.get_inventory_value("stance", None)
+    if order_stance is not None:
+        orders_stance_set(COMMS_SELECTED_ID, order_stance)
+        order_title = cur_objective.get_inventory_value("display_name", cur_objective.name)
+        comms_receive("Understood, " + order_title.lower(), order_title, color="white", title_color="cyan")
+        yield success
+
     # set_inventory_value(COMMS_SELECTED_ID, "ORDERS_SELECTED_POINT", None)
     objective_clear(COMMS_SELECTED_ID)
     
@@ -215,6 +211,14 @@
     elif ORDER == "Full Stop":
         message = "awaiting further orders"
         title = ORDER
+    # An order can say what the unit answers (`ack:`) - a station launching its wing is
+    # not "heading to" anything.
+    order_ack = cur_objective.get_inventory_value("ack", None)
+    if order_ack is not None:
+        title = "Orders accepted"
+        message = order_ack
+        if target_object is not None:
+            message = order_ack + " " + target_object.name
     
         
     if message is not None:

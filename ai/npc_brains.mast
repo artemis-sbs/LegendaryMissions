@@ -28,6 +28,8 @@ force_shoot: false
 
     # Do we want them to be able to target other non-allies? Neutrals and unknowns?
     shoot = side_are_enemies(BRAIN_AGENT_ID, current_target) or force_shoot
+    # Hold fire (orders_stance_set) still steers, but never shoots.
+    shoot = shoot and not orders_holding_fire(BRAIN_AGENT_ID)
     target(BRAIN_AGENT_ID, current_target, shoot, throttle, stop_dist=stop_dist)
     yield success
 
@@ -74,6 +76,8 @@ enemies_only: false
         _target_id = to_id(_target)
         BRAIN_AGENT.set_inventory_value("blackboard:target", _target_id)
         shoot = side_are_enemies(BRAIN_AGENT_ID, _target)  or force_shoot
+        # Hold fire (orders_stance_set) still steers, but never shoots.
+        shoot = shoot and not orders_holding_fire(BRAIN_AGENT_ID)
         target(BRAIN_AGENT_ID, _target_id, shoot, throttle, stop_dist=stop_dist)
         yield success
     BRAIN_AGENT.set_inventory_value("blackboard:target", None)
@@ -108,6 +112,8 @@ enemies_only: false
         _target_id = to_id(_target)
         BRAIN_AGENT.set_inventory_value("blackboard:target", _target_id)
         shoot = side_are_enemies(BRAIN_AGENT_ID, _target)  or force_shoot
+        # Hold fire (orders_stance_set) still steers, but never shoots.
+        shoot = shoot and not orders_holding_fire(BRAIN_AGENT_ID)
         target(BRAIN_AGENT_ID, _target_id, shoot, throttle, stop_dist=stop_dist)
         yield success
     BRAIN_AGENT.set_inventory_value("blackboard:target", None)
@@ -144,6 +150,8 @@ enemies_only: false
         _target_id = to_id(_target)
         BRAIN_AGENT.set_inventory_value("blackboard:target", _target_id)
         shoot = side_are_enemies(BRAIN_AGENT_ID, _target)  or force_shoot
+        # Hold fire (orders_stance_set) still steers, but never shoots.
+        shoot = shoot and not orders_holding_fire(BRAIN_AGENT_ID)
         target(BRAIN_AGENT_ID, _target_id, shoot, throttle, stop_dist=stop_dist)
         yield success
     BRAIN_AGENT.set_inventory_value("blackboard:target", None)
@@ -189,7 +197,10 @@ force_target_point: null
             BRAIN_AGENT.set_inventory_value("blackboard:target", None)
             yield fail
         yield fail if _target.data_set.get("surrender_flag",0) == 1
-        target(BRAIN_AGENT_ID, _target, shoot, throttle, stop_dist)
+        # A local, not `shoot` itself: that is this label's metadata default, and writing
+        # it would stick for the task after hold fire is lifted.
+        goto_fire = shoot and not orders_holding_fire(BRAIN_AGENT_ID)
+        target(BRAIN_AGENT_ID, _target, goto_fire, throttle, stop_dist)
         _target_point = _target.pos
     elif _target_point is not None:
         target_pos(BRAIN_AGENT_ID, _target_point.x, _target_point.y, _target_point.z,throttle, stop_dist=stop_dist)

@@ -91,8 +91,8 @@ class TestTheLenses(ChipsBase):
 
     def test_side_chips_follow_the_fixed_ones(self):
         items = C.lm_comms_chips_items(CID)
-        self.assertEqual(["all", "threats", "friends", "stations", "jobs", "orders", "favorites"], items[:7])
-        self.assertEqual({"side:tsn", "side:kralien"}, set(items[7:]))
+        self.assertEqual(["all", "threats", "friends", "stations", "jobs", "orders", "markers", "favorites"], items[:8])
+        self.assertEqual({"side:tsn", "side:kralien"}, set(items[8:]))
 
     def test_a_side_with_nothing_in_view_has_no_chip(self):
         side_ensure("arvonian")
@@ -225,6 +225,46 @@ class TestUnknownsLeakNothing(ChipsBase):
             T.gui_text, R.gui_row = orig_t, orig_r
         self.assertTrue(texts[0].startswith("$text:All;"), texts[0])
         self.assertTrue(texts[1].startswith("$text:Threats 1;"), texts[1])
+
+
+class TestMarkers(ChipsBase):
+    """Every behav_selection object is a marker: map furniture, drawn for everyone."""
+
+    def test_A_SELECTION_OBJECT_IS_A_MARKER(self):
+        from sbs_utils.procedural.markers import marker_object
+        m = to_id(marker_object(500, 0, 500, "Alpha"))
+        s = self.sets()
+        self.assertEqual({m}, s["markers"])
+        self.assertNotIn(m, s["all"])               # not a contact
+        self.assertNotIn(m, s["orders"])
+
+    def test_a_nebula_marker_is_a_marker_too(self):
+        from sbs_utils.procedural.spawn import terrain_spawn
+        m = to_id(terrain_spawn(0, 0, 0, "Cluster", "map,nebula_marker", "generic-sphere", "behav_selection"))
+        self.assertIn(m, self.sets()["markers"])
+
+    def test_plain_terrain_is_not(self):
+        from sbs_utils.procedural.spawn import terrain_spawn
+        rock = to_id(terrain_spawn(0, 0, 0, "Rock", "#", "asteroid_crystal_blue", "behav_asteroid"))
+        self.assertNotIn(rock, self.sets()["markers"])
+
+    def test_A_DARK_MARKER_IS_NOT_COUNTED(self):
+        from sbs_utils.procedural.markers import marker_object
+        m = marker_object(500, 0, 500, "Vault")
+        m.data_set.set("unselectable", 1, 0)
+        self.assertEqual(set(), self.sets()["markers"])
+
+    def test_AN_UNNAMED_MARKER_IS_NOT_LISTED(self):
+        from sbs_utils.procedural.markers import marker_object
+        marker_object(500, 0, 500, "")
+        marker_object(600, 0, 500, "   ")
+        self.assertEqual(set(), self.sets()["markers"])
+
+    def test_the_markers_chip_is_a_lens(self):
+        from sbs_utils.procedural.markers import marker_object
+        m = to_id(marker_object(500, 0, 500, "Alpha"))
+        C.lm_comms_chips_normalize(CID, _FakeListbox(["all", "markers"]))
+        self.assertEqual(("show", {m}), C.lm_comms_chips_ids(CID))
 
 
 class TestFavorites(ChipsBase):

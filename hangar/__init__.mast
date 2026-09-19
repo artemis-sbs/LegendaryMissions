@@ -13,6 +13,9 @@ import hangar_loadout.mast
 import hangar.mast
 import missions.mast
 import hangar_comms.mast
+# A station's AI wing: Launch / Recall on the comms order menu (hangar_wing.py).
+import hangar_wing.py
+import hangar_wing.mast
 # The bar + casino are a separate, optional addon (sibling casino/ folder). The
 # hangar does NOT import it - the loader auto-discovers casino/__init__.mast on
 # its own, and the casino self-registers its top tab (gui_tab_add_top) only when

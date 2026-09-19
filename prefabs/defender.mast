@@ -8,7 +8,7 @@ metadata: ```
 type: prefab/npc/defender
 side_value: tsn
 objective: objective_protect_area
-give_orders_type: objective/orders/defender
+give_orders_type: objective/orders/
 allies: civ,surrendered
 ```
     default name = get_defender_name(side_value)
@@ -54,6 +54,7 @@ type: objective/orders/defender
 objective_target: null
 objective_target_point: null
 valid_for: any
+requires: move
 ```
     
 +++ enter
@@ -90,6 +91,7 @@ type: objective/orders/defender
 objective_target: null
 objective_target_point: null
 valid_for: hostile
+requires: move, weapons
 line_of_sight: 10000
 cut_off_distance: 20000
 ```
@@ -140,11 +142,12 @@ cut_off_distance: 20000
 
 === objective_protect_area
 metadata: ```
-display_name: Protect
+display_name: Guard
 type: objective/orders/defender
 objective_target: null
 objective_target_point: null
-valid_for: allies
+valid_for: allies, marker
+requires: move
 line_of_sight: 10000
 ```
 +++ enter
@@ -195,6 +198,7 @@ type: objective/orders/defender
 objective_target: null
 objective_target_point: null
 valid_for: self
+requires: move
 ```
 +++ enter
     # This objective assumes it has control of the brain

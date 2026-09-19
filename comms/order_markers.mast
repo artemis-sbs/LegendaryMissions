@@ -1,0 +1,28 @@
+# ORDER MARKERS - science names a place so comms can give orders about it.
+#
+# The comms 2D view cannot pick a point in space, so an order that means "go THERE"
+# (Head to location, Guard, Patrol) needs an object to aim at. Science right-clicks empty
+# space and drops a marker - Alpha, Bravo, Charlie... - one set per side. Comms then drags
+# a unit onto the marker, or right-clicks it, exactly as it would any contact.
+#
+# The markers themselves are sbs_utils procedural/markers.py (marker_order_*): selectable,
+# invisible on the main screen, and already scanned for the side, so comms opens on them.
+
+//popup/science if has_role(SCIENCE_ORIGIN_ID, "__player__") and not has_role(SCIENCE_ORIGIN_ID, "gamemaster")
+    default SCIENCE_POPUP_POINT = None
+    on_marker = marker_order_is(SCIENCE_POPUP_ID)
+    next_marker = marker_order_next_name(SCIENCE_ORIGIN_ID)
+    markers_placed = len(marker_order_list(SCIENCE_ORIGIN_ID))
+    # Named here, not in the button text: a button's text is built even when its
+    # condition hides it, and SCIENCE_POPUP is None on empty space.
+    marker_name = SCIENCE_POPUP.name if on_marker else ""
+
+    + "Drop marker {next_marker}" if SCIENCE_POPUP_ID == 0 and SCIENCE_POPUP_POINT is not None:
+        drop_at = Vec3(SCIENCE_POPUP_POINT)
+        marker_order_drop(SCIENCE_ORIGIN_ID, drop_at.x, drop_at.y, drop_at.z)
+
+    + "Remove marker {marker_name}" if on_marker:
+        marker_order_remove(SCIENCE_POPUP_ID)
+
+    + "Clear all markers" if markers_placed > 0:
+        marker_order_clear(SCIENCE_ORIGIN_ID)

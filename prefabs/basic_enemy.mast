@@ -3,7 +3,7 @@
 metadata: ```
 type: prefab/npc/ship
 side_value: kralien
-give_orders_type: objective/orders/defender
+give_orders_type: objective/orders/
 ship_role: light
 fleet_roles: ship_fleet
 ship_art: 

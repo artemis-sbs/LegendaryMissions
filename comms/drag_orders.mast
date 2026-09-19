@@ -7,8 +7,8 @@
 # "self" orders (Full Stop) when it is dropped on itself.
 #
 # Same gate and same order list as the right-click //popup/comms menu in
-# friendly_give_orders.mast: lm_can_take_orders decides who, lm_orders_type + valid_for
-# decide what. The //enable/comms there already covers this (ship, unit) pair.
+# friendly_give_orders.mast: lm_can_take_orders decides who, lm_orders_for decides what
+# (valid_for plus the unit's capabilities). The //enable/comms there already covers this (ship, unit) pair.
 #
 # Three objects, and comms only carries two (ship -> unit), so the target is remembered on
 # the ship (lm_drag_orders_set) until the menu is built, then carried in the BUTTON's data -
@@ -34,14 +34,8 @@
     if drag_target_id != 0:
         drag_target = to_object(drag_target_id)
         drag_is_self = drag_target_id == COMMS_SELECTED_ID
-        drag_ally = side_are_allies(COMMS_SELECTED_ID, drag_target_id)
-        orders = labels_get_type(lm_orders_type(COMMS_SELECTED_ID))
+        orders = lm_orders_for(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, drag_target_id)
         for order in orders:
-            valid_for = order.get_inventory_value("valid_for", "any")
-            continue if drag_is_self and valid_for != "self"
-            continue if not drag_is_self and valid_for == "self"
-            continue if not drag_is_self and valid_for == "allies" and not drag_ally
-            continue if not drag_is_self and valid_for == "hostile" and drag_ally
             display_name = order.get_inventory_value("display_name", order.name)
             if drag_is_self:
                 + "{display_name}" lm_carry_out_drag_orders {"cur_objective": order, "order_target_id": drag_target_id}
@@ -60,11 +54,25 @@
         ->END
 
     lm_drag_orders_clear(COMMS_ORIGIN_ID)
+    # A stance order keeps the current objective (see carry_out_orders).
+    order_stance = cur_objective.get_inventory_value("stance", None)
+    if order_stance is not None:
+        orders_stance_set(COMMS_SELECTED_ID, order_stance)
+        order_title = cur_objective.get_inventory_value("display_name", cur_objective.name)
+        comms_receive("Understood, " + order_title.lower(), order_title, color="white", title_color="cyan")
+        comms_navigate("//comms")
+        yield success
     objective_clear(COMMS_SELECTED_ID)
     objective_add(COMMS_SELECTED_ID, cur_objective, {"objective_target_point": None, "objective_target": order_target_id})
 
     order_name = cur_objective.get_inventory_value("display_name", cur_objective.name)
-    if order_target_id == COMMS_SELECTED_ID:
+    order_ack = cur_objective.get_inventory_value("ack", None)
+    if order_ack is not None:
+        order_ack_msg = order_ack
+        if order_target_id != COMMS_SELECTED_ID:
+            order_ack_msg = order_ack + " " + to_object(order_target_id).name
+        comms_receive(order_ack_msg, "Orders accepted", color="white", title_color="cyan")
+    elif order_target_id == COMMS_SELECTED_ID:
         comms_receive(f"{order_name}, awaiting further orders", "Orders accepted", color="white", title_color="cyan")
     else:
         order_target_name = to_object(order_target_id).name
