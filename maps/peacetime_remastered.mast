@@ -201,17 +201,26 @@ Defaults:
 # Each is a per-ship quest so its credit reward pays to the side.
 
 ===== pr_jobs_setup =====
-    # JOBS_SELECT is seeded by the map's Defaults metadata (set-if-absent shared) at panel
-    # present + map-task start, so it is always defined here - no local default needed.
-    jobs_value = terrain_to_value(JOBS_SELECT)
-    ->END if jobs_value < 1
+    # A map that offers only PART of the board (Siege's Side Jobs) passes PR_JOB_PICK as task
+    # data: the job keys to grant, at their authored (1x) counts. Peacetime passes nothing and
+    # gets the whole board, scaled by JOBS_SELECT.
+    default PR_JOB_PICK = None
+    if PR_JOB_PICK is None:
+        # JOBS_SELECT is seeded by the map's Defaults metadata (set-if-absent shared) at panel
+        # present + map-task start, so it is always defined here - no local default needed.
+        jobs_value = terrain_to_value(JOBS_SELECT)
+        ->END if jobs_value < 1
+    else:
+        ->END if len(PR_JOB_PICK) < 1
+        # 2 = "some", the 1x scale below.
+        jobs_value = 2
 
     # Job target counts come straight from the granted quest Goals (the jobs section of
     # PR_DOC), so the spawn loops below can never drift from the quest completion targets -
     # the AMD is the single source of truth. Each Goal parses to on_signal/on_scan with a
     # count; index them by signal name (and scan role) so a spawn loop reads its own target.
     # (Defaults guard a renamed/removed goal.)
-    jobs_section = amd_section(PR_DOC, "jobs")
+    jobs_section = pr_jobs_filter(amd_section(PR_DOC, "jobs"), PR_JOB_PICK)
     job_counts = {}
     for jn in jobs_section.get("children", []):
         jd = jn.get("data") or {}
@@ -262,6 +271,7 @@ Defaults:
     # (job_ravener and job_herd are NOT affected - grazers and raveners ride stock
     # hulls, not extra ship data.)
     shared PR_JOB_KEYS = ["job_gunnery", "job_rocks", "job_customs", "job_survey", "job_poacher", "job_mercy", "job_sensor_net", "job_probes", "job_herd", "job_ravener", "job_barge", "job_salvage", "job_lifepod", "job_relay", "job_ghost", "job_sweep", "job_cache", "job_herd_arc"]
+    shared PR_JOB_KEYS = pr_jobs_keep(PR_JOB_KEYS, PR_JOB_PICK)
 
     # The job board is the jobs section of PR_DOC (parsed above). Grant it PER PLAYER SHIP so
     # credit rewards pay to the side (a Scope: shared quest gets no credit). Anomaly Survey uses

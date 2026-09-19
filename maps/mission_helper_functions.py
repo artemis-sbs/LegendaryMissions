@@ -284,6 +284,46 @@ def fb_generate_case(pools, clue0, clues, templates, rng,
 # ---------------------------------------------------------------------------------------------------
 # Peacetime job board - spawn-on-accept helpers (peacetime_remastered.mast).
 
+# How much of the board a map that offers only PART of it gets (Siege's Side Jobs option).
+# A fraction of the pool, never less than one job once the option is on.
+_PR_JOBS_PICK_FRACTION = {"none": 0.0, "few": 0.25, "some": 0.5, "max": 1.0}
+
+
+def pr_jobs_pick(section, level, seed=0, exclude=None):
+    """A random subset of the job keys in an AMD jobs `section`, sized by `level`
+    (none / few / some / max). `exclude` keys never make the pool.
+
+    Draws from its OWN Random, never the global one, so turning the option on does not
+    shift any other phase of the map. A non-zero `seed` gives the same set every time;
+    0 gives a fresh set each game. The result keeps authored order, so the quest tab
+    lists the jobs the same way Peacetime does."""
+    import random
+    exclude = set(exclude or [])
+    pool = [n.get("key") for n in section.get("children", []) if n.get("key") and n.get("key") not in exclude]
+    frac = _PR_JOBS_PICK_FRACTION.get(str(level).strip().lower(), 0.0)
+    if frac <= 0 or not pool:
+        return []
+    count = min(len(pool), max(1, int(len(pool) * frac + 0.5)))
+    rng = random.Random(seed) if seed else random.Random()
+    chosen = set(rng.sample(pool, count))
+    return [k for k in pool if k in chosen]
+
+
+def pr_jobs_filter(section, pick):
+    """`section` with only the jobs named in `pick` (None = the whole board, unchanged)."""
+    if pick is None:
+        return section
+    keep = set(pick)
+    return {"children": [n for n in section.get("children", []) if n.get("key") in keep]}
+
+
+def pr_jobs_keep(keys, pick):
+    """`keys` narrowed to the ones in `pick`, in order (None = all of them)."""
+    if pick is None:
+        return keys
+    keep = set(pick)
+    return [k for k in keys if k in keep]
+
 def pr_job_active(key):
     """True if any player ship has the named job quest ACTIVE - i.e. a player has ACCEPTED it from
     the quest tab. Drives spawn-on-accept: pr_job_dispatch spawns a job's targets the first tick
