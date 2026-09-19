@@ -92,7 +92,7 @@ none, few, some, lots, many
 How many creatures a map seeds. It also sets how often a wreck hides a Piranha nest.
 
 ### MONSTER_NON_TYPHON
-true or false. Default true.
+true or false. Default false.
 
 The bestiary splits into two families. Eight species are built on the classic Typhon
 behavior and geometry: Typhon, Reaver, Grazer, Ravener, Bulwark, Sparkfeeder, Siphon
