@@ -1113,11 +1113,16 @@ $t on ship {client_select_ship}
     # and crew_avatar_race takes a bare key for exactly that reason.
     av_race = crew_avatar_race(ship_type_def)
     av_title = "YOUR AVATAR"
-    # A CREW MEMBER WEARS A UNIFORM. The editor treats it as an optional feature, which is
-    # right in general - the game is full of civilians - and wrong for a bridge officer:
-    # switching it off does not make a variation of the person, it makes a stranger at the
-    # helm. The slider stays, so which uniform is still theirs to pick.
-    av_required = "Uniform"
+    # A CREW MEMBER WEARS A UNIFORM. The editor treats clothing as optional in general -
+    # the game is full of civilians - and that is wrong for a bridge officer: switching it
+    # off does not make a variation of the person, it makes a stranger at the helm. Which
+    # garment is still theirs to pick.
+    #
+    # "Clothes", not "Uniform": the redrawn Terran sheet holds dress uniforms, flight
+    # jackets, a lab coat and a suit in ONE row of 24, so there is no separate uniform
+    # feature any more. A stale name here would not fail - it would just match nothing and
+    # quietly stop protecting anything.
+    av_required = "Clothes"
     av_return = "crew_edit_done"
     jump avatar_editor_show
 

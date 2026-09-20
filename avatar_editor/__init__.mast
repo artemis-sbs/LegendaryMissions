@@ -9,4 +9,5 @@
 provides crew.avatar_editor
 shared CREW_AVATAR_EDITOR = True
 
+import avatar_helper.py
 import avatar_editor.mast

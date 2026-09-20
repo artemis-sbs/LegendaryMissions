@@ -1,10 +1,14 @@
 """A required feature cannot be switched off in the editor.
 
-`FACE_FEATURES` calls the uniform optional, which is right in general - the game is full of
+`FACE_FEATURES` calls clothing optional, which is right in general - the game is full of
 civilians, and the modding tool this was ported from builds them. It is wrong for a bridge
 officer: switching the uniform off does not make a variation of that person, it makes a
 stranger at the helm. So the CALLER says which features are not optional here
-(`av_required: Uniform`), and the editor turns them on and draws no checkbox for them.
+(`av_required: Clothes`), and the editor turns them on and draws no checkbox for them.
+
+The label is "Clothes" because the redrawn sheets dropped the separate Uniform feature.
+A stale label would not fail anywhere - it would match nothing and silently protect
+nothing, which is exactly what this test exists to catch.
 
 Static: it reads the .mast. The editor is a GUI page and its behavior on screen needs the
 real thing, but the two halves of this rule are both single lines that are easy to lose in
@@ -64,7 +68,7 @@ class TestRequiredFeatures(unittest.TestCase):
 class TestTheCrewFlowAsksForIt(unittest.TestCase):
     def test_the_console_picker_requires_a_uniform(self):
         picker = _read(PICKER)
-        self.assertIn('av_required = "Uniform"', picker)
+        self.assertIn('av_required = "Clothes"', picker)
 
     def test_coming_back_changes_only_the_face(self):
         """`crew_edit_done` used to clear the picked person too, and with them the name and

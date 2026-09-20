@@ -62,13 +62,13 @@ av_required: ""
         av_values = av_start["values"]
         av_enables = av_start["enables"]
     else:
-        av_values = [f.get("min", 0) for f in av_features]
+        av_values = avatar_editor_defaults(av_features, av_race)
         av_enables = [True] * len(av_features)
 
 --- avatar_editor_required
-    # FEATURES THE CALLER SAYS ARE NOT OPTIONAL HERE, by label: `av_required: Uniform`.
+    # FEATURES THE CALLER SAYS ARE NOT OPTIONAL HERE, by label: `av_required: Clothes`.
     #
-    # `FACE_FEATURES` is the general recipe and is right to call a uniform optional - the
+    # `FACE_FEATURES` is the general recipe and is right to call clothing optional - the
     # game is full of civilians, and the modding tool this was ported from builds them. But
     # a BRIDGE OFFICER out of uniform is not a variation on a crew member, it is a stranger
     # at the helm, so the screen that edits one must not offer to take it off.
@@ -105,18 +105,24 @@ av_required: ""
     on gui_message(race_pick):
         av_race = str(av_race).lower()
         av_features = faces.FACE_FEATURES.get(av_race)
-        av_values = [f.get("min", 0) for f in av_features]
+        av_values = avatar_editor_defaults(av_features, av_race)
         av_enables = [True] * len(av_features)
         jump avatar_editor_required
 
     # Per-feature controls
     gui_section(style="area: 100-400px, 20, 100, 92;row-height:2em;")
     ctrl_style = "padding:10px,5px,5px,10px;"
+    # A feature with NAMES gets a real control rather than a bare 0..N slider: the
+    # redrawn sheets carry actual choices - "Worried", "Blue", "Gritted", "Respirator".
+    # SHORT list -> dropdown. LONG list -> slider with the name written beside it,
+    # because a dropdown stops being usable in the engine somewhere around ten entries
+    # and the skin palette is 39 tones. avatar_editor_use_slider() owns the threshold.
     for i, widget in enumerate(av_features):
         gui_row(style="padding: 1px;")
         label = widget["label"]
         wmax = widget["max"]
         wmin = widget.get("min", 0)
+        wnames = widget.get("names")
         if "optional" in widget and str(label).lower() not in av_required_list:
             cb = gui_checkbox("text: {label};state:{av_enables[i]}", ctrl_style, data={"windex": i})
             cb.value = av_enables[i]
@@ -124,7 +130,13 @@ av_required: ""
                 av_enables[windex] = not av_enables[windex]
                 the_face.value = faces.build_face(av_race, av_values, av_enables)
                 gui_clipboard_copy(the_face.value)
-            if wmax > 0:
+            if wnames:
+                dd = gui_drop_down(avatar_editor_choice_style(wnames, av_values[i]), ctrl_style, data={"windex": i, "wpick": wnames})
+                on gui_message(dd):
+                    av_values[windex] = avatar_editor_choice_index(wpick, __ITEM__.value)
+                    the_face.value = faces.build_face(av_race, av_values, av_enables)
+                    gui_clipboard_copy(the_face.value)
+            elif wmax > 0:
                 sl = gui_int_slider("low: {wmin}; high: {wmax};", ctrl_style, data={"windex": i})
                 sl.value = av_values[i]
                 on gui_message(sl):
@@ -132,16 +144,49 @@ av_required: ""
                     the_face.value = faces.build_face(av_race, av_values, av_enables)
                     gui_clipboard_copy(the_face.value)
         else:
-            """text:{label}"""
-            sl = gui_int_slider("low: {wmin}; high: {wmax}; show_number: no", ctrl_style, data={"windex": i})
-            sl.value = av_values[i]
-            on gui_message(sl):
-                av_values[windex] = __ITEM__.value
-                the_face.value = faces.build_face(av_race, av_values, av_enables)
-                gui_clipboard_copy(the_face.value)
+            # A LONG named list is a slider with its name written beside it, not a
+            # dropdown - 39 skin tones in a dropdown is unusable in the engine. The label
+            # widget carries "Feature: Name" so the row still has only two controls, and
+            # it is passed through `data` rather than referenced directly: every row's
+            # handler is compiled in the same loop, so a bare `nm` would resolve to the
+            # LAST row's widget and every slider would rename the bottom one.
+            if wnames and avatar_editor_use_slider(wnames):
+                nm = gui_text(avatar_editor_choice_label(label, wnames, av_values[i]))
+                sl = gui_int_slider("low: {wmin}; high: {wmax}; show_number: no", ctrl_style, data={"windex": i, "wpick": wnames, "wlabel": nm, "wtitle": label})
+                sl.value = av_values[i]
+                on gui_message(sl):
+                    av_values[windex] = __ITEM__.value
+                    wlabel.value = avatar_editor_choice_label(wtitle, wpick, __ITEM__.value)
+                    the_face.value = faces.build_face(av_race, av_values, av_enables)
+                    gui_clipboard_copy(the_face.value)
+            else:
+                """text:{label}"""
+                if wnames:
+                    dd = gui_drop_down(avatar_editor_choice_style(wnames, av_values[i]), ctrl_style, data={"windex": i, "wpick": wnames})
+                    on gui_message(dd):
+                        av_values[windex] = avatar_editor_choice_index(wpick, __ITEM__.value)
+                        the_face.value = faces.build_face(av_race, av_values, av_enables)
+                        gui_clipboard_copy(the_face.value)
+                else:
+                    sl = gui_int_slider("low: {wmin}; high: {wmax}; show_number: no", ctrl_style, data={"windex": i})
+                    sl.value = av_values[i]
+                    on gui_message(sl):
+                        av_values[windex] = __ITEM__.value
+                        the_face.value = faces.build_face(av_race, av_values, av_enables)
+                        gui_clipboard_copy(the_face.value)
 
-    # Done
+    # Randomize and Done, sharing the bottom row.
     gui_section(style="area: 100-400px, 92, 100, 100;row-height:2em;")
+    gui_row()
+    # RANDOMIZE KEEPS THE RACE and rolls everything else. It goes through the library's
+    # own randomiser rather than picking a number per control, so it inherits what that
+    # already knows: no closed eyes or mid-word mouths on a resting face, no green humans,
+    # and sensible odds on a hat. Then it jumps back through avatar_editor_required, the
+    # same path the race picker takes, so a feature the CALLER marked required cannot be
+    # switched off by a roll.
+    on gui_message(gui_button("Randomize")):
+        av_values, av_enables = avatar_editor_randomize(av_features, av_race, av_required_list)
+        jump avatar_editor_required
     on gui_message(gui_button("Done")):
         jump avatar_editor_done
 
