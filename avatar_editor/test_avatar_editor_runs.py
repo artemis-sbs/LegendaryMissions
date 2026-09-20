@@ -220,12 +220,12 @@ class TestEditorRuns(unittest.TestCase):
         bottom one. The reference travels through `data` instead; this checks the rows
         really do carry distinct labels rather than all showing the same feature."""
         self._run("terran")
-        labelled = [str(t) for t in self.emitted.by_kind["send_gui_text"]
+        labeled = [str(t) for t in self.emitted.by_kind["send_gui_text"]
                     if ": " in str(t) and "$text" in str(t)]
         features = {s.split(":")[0] for s in
-                    [x.split("`")[1] for x in labelled if "`" in x]}
+                    [x.split("`")[1] for x in labeled if "`" in x]}
         self.assertGreaterEqual(len(features), 3,
-                                f"rows are not carrying their own labels: {labelled}")
+                                f"rows are not carrying their own labels: {labeled}")
 
     def test_moving_the_slider_renames_the_label(self):
         """The whole point of the slider-plus-name: drag it and the NAME keeps up.
@@ -310,7 +310,7 @@ class TestEditorRuns(unittest.TestCase):
 
 class TestChoiceHelpers(unittest.TestCase):
     """The two helpers the dropdown branch leans on, including what they do when asked
-    something they do not recognise - the editor must not die on a stale label."""
+    something they do not recognize - the editor must not die on a stale label."""
 
     def test_style_shows_the_current_pick(self):
         style = avatar_helper.avatar_editor_choice_style(["Angry", "Open", "Soft"], 1)

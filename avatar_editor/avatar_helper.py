@@ -97,7 +97,7 @@ def avatar_editor_randomize(features, race, required=None):
     """(values, enables) for a fresh random face of the SAME race.
 
     Built by rolling a real `random_face` and reading it back through `parse_face`, not by
-    picking a number per control. That is the whole point: the randomiser already knows
+    picking a number per control. That is the whole point: the randomizer already knows
     not to hand somebody closed eyes or a mid-word mouth as a resting portrait, not to
     give a human green skin, and roughly how often a face should have a hat - and none of
     that would survive being reimplemented here.

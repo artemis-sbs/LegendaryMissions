@@ -179,7 +179,7 @@ av_required: ""
     gui_section(style="area: 100-400px, 92, 100, 100;row-height:2em;")
     gui_row()
     # RANDOMIZE KEEPS THE RACE and rolls everything else. It goes through the library's
-    # own randomiser rather than picking a number per control, so it inherits what that
+    # own randomizer rather than picking a number per control, so it inherits what that
     # already knows: no closed eyes or mid-word mouths on a resting face, no green humans,
     # and sensible odds on a hat. Then it jumps back through avatar_editor_required, the
     # same path the race picker takes, so a feature the CALLER marked required cannot be
