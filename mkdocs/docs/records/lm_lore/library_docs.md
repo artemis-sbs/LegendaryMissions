@@ -4,7 +4,7 @@
 
 ### Arvonians {: #zunok-races-arvonians}
 
-![face](../media/faces/c97ebecec506.png)
+![face](../media/faces/5cb92c4cc784.png)
 
 If you've ever met a snob who literally believes his feces doesn't stink, he was probably an Arvonian. Also, he may have been a she. Adult Arvonians are the size and shape of pre-pubescent humans, so we outsiders struggle to tell Arvonian males and females apart. This has given the galaxy many hilarious "an Arvonian walks into a bar. . ." jokes.
 
@@ -18,7 +18,7 @@ Arvonian culture is dominated by the scandalous dramas of their Royal family, wh
 
 ### Kralians {: #zunok-races-kralians}
 
-![face](../media/faces/d31e39136313.png)
+![face](../media/faces/cac441717266.png)
 
 If you see a Kralien who looks like a man-sized cockroach with a face of a Sirian swamp-snake, get his autograph because he is probably a movie star. Repulsive as he is, you will undoubtedly be pleased with his soothing body aroma. You see, hygiene is to the Kralien religion what salt is to human cooking, so brushing his mandibles is literally a sacrament, and if you sneeze on his thorax sanitizer it will be his sacred duty to sacrifice your reproductive organs to The Gods.
 
@@ -28,7 +28,7 @@ Any random Kralien you meet probably will identify as 'he' because for every Kra
 
 ### Skaraans {: #zunok-races-skaraans}
 
-![face](../media/faces/07d355b75226.png)
+![face](../media/faces/8a73502acb90.png)
 
 The next time you're on a golf course, look for a group of horse-faced duffers in expensive suits who move their balls while no one is looking. Those smooth-talking rascals are Skaraans. For every minute they spend concentrating on the next drive or putt, they spend ten minutes scheming to acquire your golf clubs, your lunch money, and the title to your starship.
 
@@ -40,7 +40,7 @@ Instead of treaties or trade agreements, each Skaraan corporation handles their 
 
 ### Terrans {: #zunok-races-terrans}
 
-![face](../media/faces/5e8fc8858309.png)
+![face](../media/faces/d24d3c879885.png)
 
 Galactic consensus is that Terrans, also called humans, resemble oversized, clumsy sea otters. Sea otters, on the other hand, regard humans as tail-less monkeys who are prone to drowning.
 
@@ -50,7 +50,7 @@ Despite their profuse failures, whenever you throw a party you should always inv
 
 ### Torgoth {: #zunok-races-torgoth}
 
-![face](../media/faces/8b32d2941e69.png)
+![face](../media/faces/99953e0f6131.png)
 
 Torgoth are proud to have the biggest booties in this side of Bootes. You can call a Torgoth huge, enormous, or gargantuan but don't call him mammoth because that's too close to home. Their twin proboscides are great at smelling, mixing cocktails, and even intimate touching, but they have an unfortunate resemblance to the trunks of elephants. Under no circumstances should you ever offer a Torgoth a peanut.
 
@@ -66,14 +66,14 @@ Ximni society follows a strange honor code called "xim." This makes them terribl
 
 Striving for xim makes Ximni insufferably competitive, and they will happily tell you that they are better than you at everything.
 
-![face](../media/faces/43f9a3d322da.png)
+![face](../media/faces/dc1b91225cc5.png)
 
 You may be fearless, but you'll never be "Tungsten" Tuginar test piloting the first jump drive starship while holding his breath fearless.
 
-![face](../media/faces/284f88a6204f.png)
+![face](../media/faces/cf014cf46387.png)
 
 You may be cool, but you'll never be "Muscles" Gahnic wrangling a herd of Sirian hoofsters with her bare hands cool.
 
-![face](../media/faces/dfb3e050409e.png)
+![face](../media/faces/2dc284a85102.png)
 
 You may be smart, but you'll never be "Isomorphius" Kabrid solving ten-dimensional topological invariants in a swarm of Draconian blood flies smart.

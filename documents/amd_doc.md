@@ -101,7 +101,7 @@ Optional properties:
 - height: in pixels
 
 ``` md
-![](face:ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=left)
+![](face:ter #e4cdbf 0 0;ter #fff 16 6;ter #e4cdbf 8 1;ter #e4cdbf 0 2;ter #fff 4 4;ter #fff 0 3;?align=left)
 ```
 
 ### Ship links
@@ -166,7 +166,7 @@ A style link without the key value will try to load styles Referencing a file or
 
 ``` md
 [logo]: image:operator
-[captain]: face:ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=left
+[captain]: face:ter #e4cdbf 0 0;ter #fff 16 6;ter #e4cdbf 8 1;ter #e4cdbf 0 2;ter #fff 4 4;ter #fff 0 3;?align=left
 ```
 
 
@@ -238,7 +238,7 @@ Track the number of quest2
 
 ## Face
 
-![](face:ter #964b00 8 1;ter #968b00 3 0;ter #968b00 4 0;ter #968b00 5 2;ter #fff 3 5;ter #964b00 8 4;?align=left)
+![](face:ter #e4cdbf 0 0;ter #fff 16 6;ter #e4cdbf 8 1;ter #e4cdbf 0 2;ter #fff 4 4;ter #fff 0 3;?align=left)
 
 ### This is H3
 
