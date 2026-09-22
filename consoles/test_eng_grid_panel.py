@@ -43,6 +43,7 @@ from sbs_utils.procedural.inventory import set_inventory_value
 from sbs_utils.procedural import work_orders as W
 
 from consoles import eng_grid_panel as P
+from consoles import eng_view as V
 from ai import grid_ai as G
 
 # The shared namespace is keyed by LIB_NAME, so `consoles` and `ai` are two separate
@@ -62,6 +63,16 @@ class _FakeMain:
 
 
 class _FakeGuiTask:
+    """Stands in for the GUI task a widget builder runs on.
+
+    Every method here mirrors the real `MastAsyncTask`'s behavior for a plain string,
+    because a stand-in that is missing a method the real task has fails the console
+    for a reason the console does not have: `format_string` was absent, so any style
+    carrying `background:` raised inside `apply_control_styles` - which a tabbed panel
+    swallows and draws as an EMPTY TAB. The View tab's chip rails were the first
+    widgets here to use one.
+    """
+
     def __init__(self, page):
         self.main = _FakeMain(page)
 
@@ -73,6 +84,36 @@ class _FakeGuiTask:
 
     def compile_and_format_string(self, s):
         return s
+
+    def format_string(self, message):
+        # MastAsyncTask.format_string returns a str unchanged and only interpolates
+        # non-str values; every style string reaching it here is already a str.
+        return "" if message is None else message
+
+    def get_symbols(self):
+        return {}
+
+    def get_id(self):
+        return id(self)
+
+    # What MessageHandler.on_message asks before running an on_press handler: was
+    # the owning task already finished before this click (button.py:147). A fake
+    # missing these does not fail the console - it fails the TEST, with an
+    # AttributeError that looks like a product bug until you read the traceback.
+    def done(self):
+        return False
+
+    class _Ticker:
+        done = False
+
+    active_ticker = _Ticker()
+
+    def start_sub_task(self, *a, **k):
+        # An INERT MessageHandler - one built with no on_press, which gui_button and
+        # gui_cycle_button both do - still falls through to start_sub_task(None, ...)
+        # by design (button.py is_inert). So the fake needs it even for a widget
+        # whose handler is attached with gui_message_callback instead.
+        return None
 
 
 class _FakePanel:
@@ -124,12 +165,15 @@ class PanelBase(unittest.TestCase):
             "grid_selected_UID", node_id or 0, 0)
 
     def shows(self):
+        # EVERY tab, the View one included. A tab that raises renders as an empty tab
+        # on the console - see the module docstring - so one left out of this tuple is
+        # a tab nothing is watching.
         return (P.eng_panel_selected_show, P.eng_panel_orders_show,
-                P.eng_panel_systems_show)
+                P.eng_panel_systems_show, V.lm_eng_view_show)
 
     def ticks(self):
         return (P.eng_panel_selected_tick, P.eng_panel_orders_tick,
-                P.eng_panel_systems_tick)
+                P.eng_panel_systems_tick, V.lm_eng_view_tick)
 
     def draw_all(self):
         for show in self.shows():
@@ -505,3 +549,23 @@ class TestCoefficientColors(PanelBase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class TestEveryTabIconResolves(PanelBase):
+    """An unknown icon name draws NOTHING and logs a warning nobody reads - the tab
+    looks dead, or falls back to index 0 and wears another tab's picture.
+
+    The View tab shipped with `eye`, which is not in the sheet.
+    """
+
+    def test_every_tab_has_a_real_icon(self):
+        from sbs_utils.procedural.gui.icon_sheet import icon_resolve
+        missing = [name for _path, name, _s, _t in P.ENG_PANEL_TABS
+                   if icon_resolve(name)[0] is None]
+        self.assertEqual(missing, [], f"not in the icon sheet: {missing}")
+
+    def test_no_two_tabs_share_an_icon(self):
+        from sbs_utils.procedural.gui.icon_sheet import icon_resolve
+        indexes = [icon_resolve(name)[0] for _p, name, _s, _t in P.ENG_PANEL_TABS]
+        self.assertEqual(len(set(indexes)), len(indexes),
+                         f"two tabs wear the same icon: {indexes}")
+

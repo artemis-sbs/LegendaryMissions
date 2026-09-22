@@ -11,10 +11,14 @@ import server_console.py
 import server_console.mast
 import media_music.mast
 
+# Engineering's View tab. Before eng_grid_panel.py, which mounts it as a tab.
+import eng_view.py
 # Engineering's right column. Before layout_widgets, which calls eng_grid_panel().
 import eng_grid_panel.py
 # The comms filter chips above the 2D view. Before layout_widgets, which builds them.
 import comms_chips.py
+# Engineering's crew rail above the interior view. Before layout_widgets too.
+import eng_crew_chips.py
 
 import layout_widgets.mast
 

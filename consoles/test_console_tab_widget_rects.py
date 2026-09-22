@@ -58,6 +58,14 @@ def harness_story(console):
         "shared SETTINGS = {}",
         "import manual_beams_helpers.py",
         "import tether_indicator.py",
+        # Same order as consoles/__init__.mast: layout_widgets calls into both of
+        # these, and a MAST global is only defined once its module has loaded. Leave
+        # one out and the console builds with a NameError where a widget should be -
+        # which is what this harness quietly did to Engineering and Comms once they
+        # grew their panels.
+        "import eng_grid_panel.py",
+        "import comms_chips.py",
+        "import eng_crew_chips.py",
         "import layout_widgets.mast",
         "jump harness_console",
         "",
@@ -357,6 +365,159 @@ class TestMainScreenTabRoundTrip(TestWeaponsTabRoundTrip):
     also the screen that meets the un-park most often - it toggles 3dview <-> 2dview
     every time the crew goes Tactical and back."""
     CONSOLE = "mainscreen"
+
+
+class TestEngineeringFitsEveryScreen(_Base):
+    """Engineering is laid out for a FINGER, at every resolution it ships at.
+
+    Two defects this pins, both measured rather than argued:
+
+    * `ship_data` comes back 247x328 at 720p AND at 1440p - it never scales. It used
+      to sit on a fixed `400px-3em` row inside a section that is only 50%-53px tall,
+      so the column asked for 424px of a 265px box at 1280x720 and `gui_log_tail`
+      drew down onto the power sliders. Fixed rows are never scaled and the engine
+      does not clip, so nothing anywhere said so.
+    * The left half ended at `min(55,900px)` and the right began at `min(55,850px)`.
+      Absolute sections are the one thing here that CAN overlap, and from 1600x900 up
+      a 50px strip of `ship_internal_view` sat under the sliders and the presets.
+
+    A parked widget is excluded: `gui_widget_offscreen` deliberately sends it to
+    100,100, and two parked widgets share that spot.
+    """
+
+    CONSOLE = "engineering"
+    SIZES = [(1280, 720), (1600, 900), (1920, 1080), (2560, 1440)]
+
+    #: Header plus up to six buttons is what the //comms/grid routes offer for a
+    #: damcon, a room and a marker - so grid_control's height has to divide by this
+    #: and still leave a touch target.
+    GRID_CONTROL_ROWS = 7
+
+    #: The smallest target a finger hits reliably.
+    TOUCH = 44
+
+    def _rects(self, w, h):
+        """{widget: (x, y, width, height)} in PIXELS, parked widgets dropped."""
+        from sbs_utils.helpers import FrameContext
+        from sbs_utils.vec import Vec3
+        FrameContext.aspect_ratios[CID] = Vec3(w, h, 1)
+        self.rects.clear()
+        self.enter("harness_console")
+        out = {}
+        for name, r in self.rects.latest().items():
+            left, top, right, bottom = r[0], r[1], r[2], r[3]
+            if left >= 100 or top >= 100:
+                continue                      # parked by gui_widget_offscreen
+            out[name] = (left * w / 100, top * h / 100,
+                         (right - left) * w / 100, (bottom - top) * h / 100)
+        return out
+
+    def test_every_widget_is_on_the_screen(self):
+        for w, h in self.SIZES:
+            for name, (x, y, wide, tall) in self._rects(w, h).items():
+                with self.subTest(size=(w, h), widget=name):
+                    self.assertGreaterEqual(round(x), 0)
+                    self.assertGreaterEqual(round(y), 0)
+                    self.assertLessEqual(round(x + wide), w)
+                    self.assertLessEqual(round(y + tall), h)
+
+    def test_no_two_widgets_overlap(self):
+        for w, h in self.SIZES:
+            rects = self._rects(w, h)
+            names = sorted(rects)
+            for i, a in enumerate(names):
+                for b in names[i + 1:]:
+                    ax, ay, aw, ah = rects[a]
+                    bx, by, bw, bh = rects[b]
+                    ox = min(ax + aw, bx + bw) - max(ax, bx)
+                    oy = min(ay + ah, by + bh) - max(ay, by)
+                    with self.subTest(size=(w, h), pair=(a, b)):
+                        self.assertFalse(ox > 0.5 and oy > 0.5,
+                                         f"{a} and {b} overlap "
+                                         f"{ox:.0f}x{oy:.0f}px at {w}x{h}")
+
+    def test_the_grid_buttons_are_a_touch_target(self):
+        """grid_control is the only surface on this console that DOES anything. At a
+        hard 200px it was 33px a button at every resolution, including 2560x1440."""
+        for w, h in self.SIZES:
+            tall = self._rects(w, h)["grid_control"][3]
+            with self.subTest(size=(w, h)):
+                self.assertGreaterEqual(tall / self.GRID_CONTROL_ROWS, self.TOUCH,
+                                        f"{tall / self.GRID_CONTROL_ROWS:.0f}px a button")
+
+    def test_the_presets_are_a_touch_target_clear_of_the_screen_edge(self):
+        """Eleven buttons the engineer hits mid-fight. 35px on the bottom edge was
+        the least forgiving control on the console."""
+        for w, h in self.SIZES:
+            _x, y, _wide, tall = self._rects(w, h)["eng_presets"]
+            with self.subTest(size=(w, h)):
+                self.assertGreaterEqual(tall, self.TOUCH)
+                self.assertLess(y + tall, h, "flush against the bottom edge")
+
+    def test_the_left_column_holds_its_own_content(self):
+        """ship_data plus the log tail, inside the section that has to hold them.
+
+        ship_data is fixed-size in PIXELS, so this is the check that was impossible
+        to fail by eye at the one resolution anybody develops at.
+        """
+        log_tail = 4 * 24                              # gui_log_tail, 4em nominal
+        for w, h in self.SIZES:
+            rects = self._rects(w, h)
+            _x, y, _wide, tall = rects["ship_data"]
+            # Measured against the widget it USED to land on, not against the
+            # section constant - so this keeps testing the reported failure even if
+            # the section is retuned.
+            sliders_top = rects["eng_power_controls"][1]
+            with self.subTest(size=(w, h)):
+                self.assertLessEqual(y + tall + log_tail, sliders_top + 1,
+                                     "the log tail draws onto the power sliders")
+
+    #: The crew rail's chip pitch and row, from layout_widgets.mast. A horizontal
+    #: listbox that overflows draws a slider along its bottom and takes that height
+    #: OUT of the item area, so a rail that scrolls squeezes its own two-line chips.
+    EM_PX = 24                                     # nominal, layout.py _FONT_SIZES
+    RAIL_ROWS = 4                                  # DC1 DC2 DC3, plus headroom
+
+    def test_the_crew_rail_does_not_scroll_at_any_resolution(self):
+        """FIELD REPORT: "smaller screen resolution doesn't account well for the
+        scroll bar of the chips".
+
+        The rail spans the WHOLE right half, so its width is the section's. It used
+        to sit over the interior view alone - 346px at 1280x720 - where four 7em
+        chips could never fit and the slider was permanent.
+        """
+        # Imported, never copied: a test that hardcodes the pitch passes whatever
+        # the layout actually asks for, which is exactly how this one first went
+        # green against the 7em chips it was written to reject.
+        from eng_crew_chips import LM_ENG_CREW_CHIP_EM
+        chip = LM_ENG_CREW_CHIP_EM * self.EM_PX
+        for w, h in self.SIZES:
+            rects = self._rects(w, h)
+            # The rail is script-drawn, so measure the section it spans: from the
+            # split to the right edge, which is where ship_internal_view starts.
+            rail_width = w - rects["ship_internal_view"][0]
+            with self.subTest(size=(w, h)):
+                self.assertGreaterEqual(rail_width, chip * self.RAIL_ROWS,
+                                        f"{rail_width:.0f}px holds "
+                                        f"{rail_width / chip:.1f} chips, not "
+                                        f"{self.RAIL_ROWS}")
+
+    def test_the_retired_widgets_are_parked_not_drawn(self):
+        """grid_face and grid_object_list are dropped from the declared list AND sent
+        offscreen - dropping alone leaves the engine drawing them wherever it last
+        had them."""
+        for w, h in self.SIZES:
+            from sbs_utils.helpers import FrameContext
+            from sbs_utils.vec import Vec3
+            FrameContext.aspect_ratios[CID] = Vec3(w, h, 1)
+            self.rects.clear()
+            self.enter("harness_console")
+            declared = {x for x in self.page.widgets.split("^") if x}
+            sent = self.rects.latest()
+            for name in ("grid_face", "grid_object_list"):
+                with self.subTest(size=(w, h), widget=name):
+                    self.assertNotIn(name, declared)
+                    self.assertGreaterEqual(sent[name][0], 100, "not parked")
 
 
 class TestConsolesThatAlreadyPlacedEverything(_Base):

@@ -6,10 +6,15 @@ resolution, and it spent most of what space it had on the icon. The console owns
 that rectangle now.
 
 It is a `gui_tabbed_panel` with three tabs - Selected, Orders, Systems - so each one
-gets the WHOLE height of a row that is 587px tall at 1920 and only 227 at 1280x720,
-instead of three things sharing it badly. The tab strip is on the LEFT edge on
-purpose: 26px out of a 200-268px width costs ~10 percent of the axis that has room,
-where a top strip would cost 29px of the axis that collapses.
+gets the WHOLE height of the row, instead of three things sharing it badly.
+
+The tab strip is on TOP at 44px. It used to be 26px on the LEFT edge, argued for on
+the grounds that 26px out of a 200-268px width costs ~10 percent of the axis with room
+to spare while a top strip costs it from the axis that collapses. Two things changed
+that. A 26px tab is not a touch target - a finger wants 44 - and this column no longer
+collapses: retiring `grid_object_list` gave it back 200px plus a 2em spacer, so the
+panel's row is 337px at 1280x720 where it was 227. 48px off that is affordable; an
+unhittable tab never was.
 
 REVIEW NOTE: build this with `gui_tabbed_panel`, never `gui_info_panel`. Only the
 latter writes `page.pending_info_panel`, which is a singleton the left column's info
@@ -41,6 +46,8 @@ from sbs_utils.procedural.internal_damage import (grid_node_state, grid_system_s
                                                   GRID_TUNED_COLOR_DEFAULT)
 from sbs_utils.procedural.execution import log
 
+from eng_view import lm_eng_view_show, lm_eng_view_tick
+
 # --- tab bookkeeping ---------------------------------------------------------
 # Paths must not collide with the info panel's own (message / messages / log / ship /
 # mission / hails): $INFO_PATH is a single shared task variable and the standard tab
@@ -48,12 +55,14 @@ from sbs_utils.procedural.execution import log
 ENG_TAB_SELECTED = "eng_sel"
 ENG_TAB_ORDERS = "eng_orders"
 ENG_TAB_SYSTEMS = "eng_systems"
+ENG_TAB_VIEW = "eng_view"
 
 # Where each tab caches the signature it last drew, on the PANEL - so it dies with
 # the panel and nothing has to be reset at a mission boundary.
 _SIG_ATTR = {ENG_TAB_SELECTED: "_eng_sig_sel",
              ENG_TAB_ORDERS: "_eng_sig_ord",
-             ENG_TAB_SYSTEMS: "_eng_sig_sys"}
+             ENG_TAB_SYSTEMS: "_eng_sig_sys",
+             ENG_TAB_VIEW: "_eng_sig_view"}
 
 # The panel's tick contract is 0 = done, 1 = stay, 2 = redraw. NEVER 0 here: 0 sends
 # the panel back to its default tab, which would yank the engineer off Orders once a
@@ -266,7 +275,7 @@ def _eng_order_item(item, **kwargs):
     Sizes the ROWS and returns None, so the listbox calls resize_to_content().
     """
     color = "Crimson" if item["kind"] == KIND_REPAIR else GRID_WORN_COLOR_DEFAULT
-    gui_row("row-height: 1.2em;")
+    gui_row("row-height: 1.8em;")
     with gui_sub_section("col-width: 1.2em;"):
         gui_row()
         gui_icon_name("wrench" if item["kind"] == KIND_REPAIR else "gear", color=color)
@@ -274,12 +283,12 @@ def _eng_order_item(item, **kwargs):
     # data= on the button, never an `on gui_message` block in the loop: an inline
     # block captures the loop variable at its LAST value, so every row would act on
     # the last order drawn.
-    with gui_sub_section("col-width: 1.1em;"):
+    with gui_sub_section("col-width: 2em;"):
         gui_row()
         gui_icon_name_button("arrow-up", color="#9C92E8",
                              data={"target": item["target"]},
                              on_press=_eng_order_raise)
-    with gui_sub_section("col-width: 1.1em;"):
+    with gui_sub_section("col-width: 2em;"):
         gui_row()
         gui_icon_name_button("minus", color="#9C92E8",
                              data={"target": item["target"]},
@@ -431,21 +440,34 @@ def eng_panel_systems_tick(info_panel):
 
 
 # --- the panel ---------------------------------------------------------------
-# gear / wrench / gears. Raw sheet indices, because a tab icon is an index in the
-# TabbedPanel's own contract - not a name it resolves.
+# person / wrench / sitemap / gears. Resolved by NAME here and handed to TabbedPanel
+# as a sheet index, which is what its contract takes.
+#
+# Chosen from the strip as drawn, not from what the words suggest: `sitemap` reads as
+# a system diagram so it belongs to Systems, the small cogs read as settings so they
+# belong to View, and Selected gets `person` - the same glyph `_eng_header` already
+# draws for a damcon, so the tab and its contents agree.
 ENG_PANEL_TABS = (
-    (ENG_TAB_SELECTED, "gear", eng_panel_selected_show, eng_panel_selected_tick),
+    (ENG_TAB_SELECTED, "person", eng_panel_selected_show, eng_panel_selected_tick),
     (ENG_TAB_ORDERS, "wrench", eng_panel_orders_show, eng_panel_orders_tick),
-    (ENG_TAB_SYSTEMS, "gears", eng_panel_systems_show, eng_panel_systems_tick),
+    (ENG_TAB_SYSTEMS, "sitemap", eng_panel_systems_show, eng_panel_systems_tick),
+    # How the interior view draws rooms and systems. These four settings used to be
+    # comms buttons on the EPad - a grid object at icon_scale 0.01 that existed only
+    # to carry them. They belong beside the view they change, not on an object the
+    # engineer has to find.
+    (ENG_TAB_VIEW, "gears", lm_eng_view_show, lm_eng_view_tick),
 )
 
 
-def eng_grid_panel(tab=0, icon_size=26):
+def eng_grid_panel(tab=0, tab_location=2, icon_size=44):
     """Build Engineering's right-column panel into the CURRENT layout row.
 
     Args:
         tab (int, optional): which tab opens. Defaults to 0 (Selected).
-        icon_size (int, optional): tab strip width in px. Defaults to 26.
+        tab_location (int, optional): which edge the strip sits on. Defaults to 2
+            (top); 0 is left, 1 right, 3 bottom.
+        icon_size (int, optional): tab size in px. Defaults to 44, the smallest
+            reliable touch target.
 
     Returns:
         TabbedPanel | None
@@ -459,4 +481,5 @@ def eng_grid_panel(tab=0, icon_size=26):
             index = 0
         items.append({"path": path, "icon": index, "show": show, "hide": None,
                       "tick": tick})
-    return gui_tabbed_panel(items, tab=tab, tab_location=0, icon_size=icon_size)
+    return gui_tabbed_panel(items, tab=tab, tab_location=tab_location,
+                            icon_size=icon_size)

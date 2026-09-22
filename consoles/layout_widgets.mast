@@ -284,10 +284,26 @@
 
 //gui/normal_engi
     default tab = 1
-    # Ship Data, 
-    gui_section(style="area:0,45px,min(55,900px),50-50px;")
+    # ONE expression owns the split between the left half and the right, because two
+    # that only look the same DO drift: the left half ended at min(55,900px) and the
+    # right began at min(55,850px), so from 1600x900 up a 50px-wide strip of
+    # ship_internal_view sat UNDER the heat sliders, the power sliders and the presets.
+    # Measured 50px x 445px at 1920x1080. Absolute sections are the one thing in this
+    # layout that CAN overlap, and overlapping hit targets are how a touch goes to the
+    # wrong widget.
+    eng_split = "min(55,900px)"
+    # Ship Data,
+    gui_section(style=f"area:0,45px,{eng_split},50-8px;")
     with gui_sub_section("col-width:280px;"):
-        gui_row("row-height: 400px-3em;")
+        # FLEX, not `row-height: 400px-3em`. That row is a FIXED 328px and fixed rows
+        # are never scaled (layout.py), while THIS section is only 50%-53px tall - so
+        # the column asked for 424px of a box that is 265px at 1280x720, and the log
+        # tail below it drew ~59px down onto the power sliders. Helm and weapons use
+        # the same 400px row inside a FULL-HEIGHT section, which is why only
+        # Engineering showed it. Measured: ship_data comes back 247x328 at every
+        # resolution from 720p to 1440p - it never scales, so it can only be given a
+        # box, not asked to fit one.
+        gui_row()
         gui_info_panel(tab=tab)
         gui_info_panel_add("message", 83, gui_panel_console_message,None, gui_panel_console_message_tick)
         # The log/replay tab: every card ever filed, re-readable. Cards only take
@@ -315,15 +331,49 @@
         # gui_section(style="area:285px,90px,800px,390px;")
         gui_layout_widget("eng_heat_controls")
 
-    gui_section(style="area:0,50+50px,min(55,900px),100;")
-    
+    # 50+8px, not 50+50px. The two halves used to leave a 100px x 900px band of
+    # nothing between them - a spacer an order of magnitude bigger than the 8px this
+    # layout uses everywhere else. That 100px now goes to the four widgets that were
+    # shortest, and 100-12px lifts the presets off the screen edge.
+    gui_section(style=f"area:0,50+8px,{eng_split},100-12px;")
+
     gui_layout_widget("eng_power_controls")
-    gui_row("row-height: 35px")
+    # 56px, not 35. Eleven buttons, the control an engineer hits mid-fight, and 35px
+    # is under half the 44px a finger needs - on the bottom edge of the screen, the
+    # least forgiving place to put one.
+    gui_row("row-height: 56px;")
     #gui_section(style="area:285px,45px,45,85px;")
     gui_layout_widget("eng_presets")
     # gui_row("row-height:100-100px;")
 
-    gui_section(style="area:min(55,850px),45px,100,100;")
+    gui_section(style=f"area:{eng_split},45px,100,100;")
+    # The crew rail - the damage-control teams as chips. This is what grid_object_list
+    # showed; 
+    # see eng_crew_chips.py for why it is no longer that widget. Same recipe as the
+    # comms filter bar above: horizontal listbox, `col-width` is the chip pitch, and
+    # the background must stay SEE-THROUGH or it hides the selection bar.
+    #
+    # It spans the WHOLE right half, above both columns, rather than sitting over the
+    # interior view alone. Over the view it had 346px at 1280x720, so four 7em chips
+    # never fit and the rail was permanently scrolled - and a horizontal listbox that
+    # overflows draws a slider along its bottom and takes that height OUT of the item
+    # area (layout_listbox: `bottom -= em2`), so the two-line chips were squeezed into
+    # what was left. Full width it is 576px at 720p and 1020px at 1080p, so four 5.5em
+    # chips fit with room to spare. SIZED SO THE SLIDER IS NOT THE NORMAL CASE rather
+    # than budgeting height for one: a 4.5em chip is 108px, so 5 fit at 720p and 9 at
+    # 1080p, and a hull needs six crew objects before a rail scrolls at all. Paying
+    # 20px of permanent height for a slider almost nobody sees costs grid_control its
+    # touch target - the whole column is only 619px at 720p.
+    gui_row("row-height:56px;")
+    eng_crew = gui_list_box(lm_eng_crew_items(client_id), lm_eng_crew_chip_style(), item_template=lm_eng_crew_template, section_style="padding:3px,4px,3px,4px;", select=True)
+    eng_crew.horizontal = True
+    eng_crew.selected = lm_eng_crew_selected(client_id)
+    on change eng_crew.get_selected():
+        lm_eng_crew_pick(client_id, eng_crew)
+    on change lm_eng_crew_revision(client_id):
+        lm_eng_crew_refresh(client_id, eng_crew)
+
+    gui_row()
     with gui_sub_section():
         gui_layout_widget("ship_internal_view")
     # Right
@@ -343,24 +393,37 @@
         # grid_face in the widget list, and an engine widget that is declared but never
         # given a rect draws at its own default position. So drop it from the list this
         # build declares, and park the one a console was already showing off screen.
-        gui_update_widgets("", "grid_face")
+        # grid_object_list joins it. It listed four rows - DC1, DC2, DC3 and the EPad - in a
+        # 200px box that measured roughly 60% empty, in the one column on this console
+        # that had no room to spare. The crew rail over the interior view is the same
+        # four objects and carries what each one is DOING, which the engine list could
+        # not. Its 200px, and the 2em spacer under it, go to grid_control.
+        #
+        # Same two steps either widget needs: gui_layout_widget alone is not enough,
+        # because gui_console("engineering") declares both in the widget list and a
+        # declared widget nothing places draws at its own default position.
+        gui_update_widgets("", "grid_face^grid_object_list")
         gui_widget_offscreen("grid_face")
+        gui_widget_offscreen("grid_object_list")
         # A backing for the panel. The hull plating behind this column is a tiled
         # light-on-dark pattern, and text drawn straight onto it competes with the
         # tile edges wherever a line happens to cross one - which is most lines. A
         # near-opaque dark ground gives every tab one predictable surface to sit on
         # instead of a different one per row.
         gui_row("background:#011C;")
-        # Selected / Orders / Systems. Tabs, so each gets the WHOLE of a row that is
-        # 587px tall at 1920 and 227 at 1280x720. Built with gui_tabbed_panel, never
-        # gui_info_panel: pending_info_panel is a singleton and the left column owns it.
+        # Selected / Orders / Systems. Tabs, so each gets the WHOLE of the row -
+        # measured 517px at 1920x1080 and 337 at 1280x720, sharing the column evenly
+        # with grid_control below. Built with gui_tabbed_panel, never gui_info_panel:
+        # pending_info_panel is a singleton and the left column owns it.
         eng_grid_panel()
-        gui_row("row-height:200px;")
+        # FLEX, and it shares the column with the panel instead of taking a hard
+        # 200px. grid_control is the only surface on this console that DOES anything -
+        # it is the comms system in grid mode, drawing whatever buttons the
+        # //comms/grid routes offer for the selection, up to a header plus six. At
+        # 200px that was 33px a button at EVERY resolution - measured, at 720p AND at
+        # 1440p. It shares the column evenly with the read-out panel above.
+        gui_row()
         gui_layout_widget("grid_control")
-        gui_row("row-height:2em;")
-        gui_blank(1)
-        gui_row("row-height:200px;")
-        gui_layout_widget("grid_object_list")
 
 
     # The route ENDS here - no `yield idle`. A builder that parks on `yield idle` is
