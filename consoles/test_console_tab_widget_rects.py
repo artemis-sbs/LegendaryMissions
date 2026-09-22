@@ -66,6 +66,7 @@ def harness_story(console):
         "import eng_grid_panel.py",
         "import comms_chips.py",
         "import eng_crew_chips.py",
+        "import eng_grid_buttons.py",
         "import layout_widgets.mast",
         "jump harness_console",
         "",
@@ -436,14 +437,87 @@ class TestEngineeringFitsEveryScreen(_Base):
                                          f"{a} and {b} overlap "
                                          f"{ox:.0f}x{oy:.0f}px at {w}x{h}")
 
-    def test_the_grid_buttons_are_a_touch_target(self):
-        """grid_control is the only surface on this console that DOES anything. At a
-        hard 200px it was 33px a button at every resolution, including 2560x1440."""
+    def test_the_grid_orders_are_a_touch_target_and_cannot_be_cut_off(self):
+        """grid_control is gone; the orders are a listbox the console draws.
+
+        The old widget could only be handed a rectangle: it packed however many
+        buttons the selection offered into that box, which was 33px a button at EVERY
+        resolution, and a taller menu was simply clipped. A listbox scrolls, so the
+        guarantee moved from "the box is big enough" - which nothing could promise -
+        to "each ROW is big enough", which is a constant.
+        """
+        from eng_grid_buttons import LM_ENG_BUTTON_ROW_EM
+        row_px = LM_ENG_BUTTON_ROW_EM * self.EM_PX
+        self.assertGreaterEqual(row_px, self.TOUCH,
+                                f"an order row is {row_px:.0f}px")
+
+    def test_the_orders_box_SHOWS_the_rows_it_claims(self):
+        """The constant says how many orders are visible; this checks the console.
+
+        A listbox spends about one row of its box on its own chrome, so a box sized to
+        exactly N rows shows N-1 - which is how the first version claimed 5 and drew
+        4. Measured through the real console, not from the arithmetic that got it
+        wrong.
+
+        The count is per SCREEN now - three on a short one, five on a tall one - so
+        this asks the same function the layout asks rather than a constant.
+        """
+        from sbs_utils.pages.widgets.layout_listbox import LayoutListbox
+        from eng_grid_buttons import lm_eng_buttons_rows_shown
+
+        def walk(item, seen=None):
+            seen = seen if seen is not None else set()
+            if id(item) in seen:
+                return
+            seen.add(id(item))
+            yield item
+            for attr in ("rows", "columns", "layouts"):
+                for child in getattr(item, attr, []) or []:
+                    yield from walk(child, seen)
+
         for w, h in self.SIZES:
-            tall = self._rects(w, h)["grid_control"][3]
+            from sbs_utils.helpers import FrameContext
+            from sbs_utils.vec import Vec3
+            FrameContext.aspect_ratios[CID] = Vec3(w, h, 1)
+            self.enter("harness_console")
+            boxes = [i for s in self.page.layouts for i in walk(s)
+                     if isinstance(i, LayoutListbox) and not i.horizontal]
+            self.assertTrue(boxes, "the orders listbox is not on the console")
+            lb = boxes[0]
+            # More orders than fit, so extra_slot_count is meaningful.
+            lb.items = [{"index": i, "label": f"order {i}", "color": "white",
+                         "icon": None} for i in range(20)]
+            self.present()
+            visible = 20 - getattr(lb, "extra_slot_count", 0)
+            want = lm_eng_buttons_rows_shown(CID)
             with self.subTest(size=(w, h)):
-                self.assertGreaterEqual(tall / self.GRID_CONTROL_ROWS, self.TOUCH,
-                                        f"{tall / self.GRID_CONTROL_ROWS:.0f}px a button")
+                self.assertEqual(visible, want,
+                                 f"the box shows {visible}, not {want}")
+
+    def test_a_longer_menu_scrolls_rather_than_being_cut_off(self):
+        """The guarantee that replaced the engine widget. `grid_control` was handed a
+        rectangle and packed whatever it had into it; anything past the bottom was
+        simply gone, with nothing to say so."""
+        from sbs_utils.pages.widgets.layout_listbox import LayoutListbox
+
+        def walk(item, seen=None):
+            seen = seen if seen is not None else set()
+            if id(item) in seen:
+                return
+            seen.add(id(item))
+            yield item
+            for attr in ("rows", "columns", "layouts"):
+                for child in getattr(item, attr, []) or []:
+                    yield from walk(child, seen)
+
+        self.enter("harness_console")
+        lb = [i for s in self.page.layouts for i in walk(s)
+              if isinstance(i, LayoutListbox) and not i.horizontal][0]
+        lb.items = [{"index": i, "label": f"order {i}", "color": "white",
+                     "icon": None} for i in range(20)]
+        self.present()
+        self.assertGreater(getattr(lb, "extra_slot_count", 0), 0,
+                           "nothing knows there are more orders below")
 
     def test_the_presets_are_a_touch_target_clear_of_the_screen_edge(self):
         """Eleven buttons the engineer hits mid-fight. 35px on the bottom edge was
@@ -514,7 +588,7 @@ class TestEngineeringFitsEveryScreen(_Base):
             self.enter("harness_console")
             declared = {x for x in self.page.widgets.split("^") if x}
             sent = self.rects.latest()
-            for name in ("grid_face", "grid_object_list"):
+            for name in ("grid_face", "grid_object_list", "grid_control"):
                 with self.subTest(size=(w, h), widget=name):
                     self.assertNotIn(name, declared)
                     self.assertGreaterEqual(sent[name][0], 100, "not parked")

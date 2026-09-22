@@ -402,9 +402,10 @@
         # Same two steps either widget needs: gui_layout_widget alone is not enough,
         # because gui_console("engineering") declares both in the widget list and a
         # declared widget nothing places draws at its own default position.
-        gui_update_widgets("", "grid_face^grid_object_list")
+        gui_update_widgets("", "grid_face^grid_object_list^grid_control")
         gui_widget_offscreen("grid_face")
         gui_widget_offscreen("grid_object_list")
+        gui_widget_offscreen("grid_control")
         # A backing for the panel. The hull plating behind this column is a tiled
         # light-on-dark pattern, and text drawn straight onto it competes with the
         # tile edges wherever a line happens to cross one - which is most lines. A
@@ -416,14 +417,34 @@
         # with grid_control below. Built with gui_tabbed_panel, never gui_info_panel:
         # pending_info_panel is a singleton and the left column owns it.
         eng_grid_panel()
-        # FLEX, and it shares the column with the panel instead of taking a hard
-        # 200px. grid_control is the only surface on this console that DOES anything -
-        # it is the comms system in grid mode, drawing whatever buttons the
-        # //comms/grid routes offer for the selection, up to a header plus six. At
-        # 200px that was 33px a button at EVERY resolution - measured, at 720p AND at
-        # 1440p. It shares the column evenly with the read-out panel above.
-        gui_row()
-        gui_layout_widget("grid_control")
+        # The orders for the selection - the SAME //comms/grid buttons grid_control
+        # drew, rendered by the console instead (eng_grid_buttons.py). grid_control is
+        # an engine widget we could only hand a rectangle to: no scroll, no row
+        # height, no styling, and a menu taller than the box was cut off. At its old
+        # hard 200px it was 33px a button at EVERY resolution - measured at 720p and
+        # at 1440p.
+        #
+        # A listbox scrolls, so a selection offering nine orders no longer loses the
+        # last four, and the row is a real touch target. Grid comms itself is
+        # untouched: the routes, the expansion and the press path are exactly as they
+        # were, and the engine widget is parked on THIS console only, so any other
+        # console or mission still showing it is unaffected.
+        # FIXED, and last in the column, so the orders sit at the BOTTOM and the
+        # read-out panel above takes everything else. The height is exactly the rows
+        # it shows (eng_grid_buttons.lm_eng_buttons_box_height) and the list scrolls
+        # past them - which is what makes this column plannable at all. The engine
+        # widget could only be handed a rectangle and packed whatever it had into it.
+        gui_row(f"row-height: {lm_eng_buttons_box_height(client_id)};")
+        # Each ROW is its own gui_button carrying the order's index, so the listbox is
+        # only a scrolling container - no selection, and no press wiring here. A
+        # listbox built with select=False ignores clicks outright, and a selection is
+        # the wrong shape for a menu anyway: pressing an order is an action, not a
+        # choice that stays made.
+        eng_orders = gui_list_box(lm_eng_buttons_items(client_id), lm_eng_buttons_box_style(), item_template=lm_eng_buttons_template, select=False)
+        # Nothing in comms rebuilds on a tick, so this is the only thing that repaints
+        # the menu when a condition flips, a submenu is entered, or the selection moves.
+        on change lm_eng_buttons_revision(client_id):
+            eng_orders.items = lm_eng_buttons_items(client_id)
 
 
     # The route ENDS here - no `yield idle`. A builder that parks on `yield idle` is

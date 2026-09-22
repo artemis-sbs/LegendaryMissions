@@ -104,6 +104,18 @@ default CINEMATIC_CONSOLE_ENABLED = True
     on change hail_console_revision(client_id):
         jump common_console_show
 
+    # A RESIZE has to rebuild too. A console that decides anything from the screen -
+    # Engineering's orders box shows three rows on a short screen and five on a tall
+    # one - reads it while BUILDING, so the answer is baked into the page. The engine's
+    # `screen_size` event updates the aspect ratio and re-presents, which recomputes
+    # percentages but does not re-run this label, so those decisions stayed as they
+    # were: resizing to a tall window kept the three-row box.
+    #
+    # `gui_screen_revision` is banded to 100px so dragging a window rebuilds once per
+    # band crossed rather than once per reported size.
+    on change gui_screen_revision(client_id):
+        jump common_console_show
+
     await gui()
 
 @console/mainscreen !0 ^30 "Mainscreen" if MAINSCREEN_CONSOLE_ENABLED
