@@ -38,6 +38,7 @@ from sbs_utils.mast_sbs.maststorypage import StoryPage
 from sbs_utils.procedural.query import to_id
 from sbs_utils.procedural.roles import add_role
 from sbs_utils.procedural.links import link
+from sbs_utils.procedural.grid import grid_get_item_theme_data
 from sbs_utils.procedural.spawn import grid_spawn, player_spawn
 from sbs_utils.procedural.inventory import set_inventory_value
 from sbs_utils.procedural import work_orders as W
@@ -664,3 +665,76 @@ class TestEveryTabIconResolves(PanelBase):
         self.assertEqual(len(set(indexes)), len(indexes),
                          f"two tabs wear the same icon: {indexes}")
 
+class TestSystemGlyphsMatchTheGrid(PanelBase):
+    """The Systems tab's four glyphs must be the ones the INTERIOR VIEW draws.
+
+    A picture the grid never shows makes the engineer learn each system twice, and
+    the first set did that: a turbine for engines and a radar sweep for sensors,
+    neither of which is on any node. Each name is pinned to the cosmos theme's icon
+    for a room of that pool, so re-pointing a name in the sheet without moving the
+    theme (or the other way round) fails here rather than on a bridge.
+    """
+
+    #: pool -> the grid theme role whose icon it must wear. `weapon` covers beam and
+    #: torpedo rooms, which the theme draws differently; torpedo is the one chosen.
+    POOL_THEME_ROLE = {"weapon": "torpedo", "engine": "warp",
+                       "sensor": "sensor", "shield": "shield"}
+
+    def test_each_pool_wears_its_grid_icon(self):
+        from sbs_utils.procedural.gui.icon_sheet import icon_resolve
+        from sbs_utils.procedural.internal_damage import GRID_SYSTEM_ICONS
+        for pool, icon_name in GRID_SYSTEM_ICONS:
+            want = grid_get_item_theme_data(self.POOL_THEME_ROLE[pool]).icon
+            got = icon_resolve(icon_name)[0]
+            self.assertEqual(got, want,
+                             f"the {pool} indicator draws {icon_name!r} ({got}), but "
+                             f"the grid draws a {self.POOL_THEME_ROLE[pool]} room as "
+                             f"{want}")
+
+    def test_no_two_pools_share_a_glyph(self):
+        from sbs_utils.procedural.gui.icon_sheet import icon_resolve
+        from sbs_utils.procedural.internal_damage import GRID_SYSTEM_ICONS
+        indexes = [icon_resolve(n)[0] for _p, n in GRID_SYSTEM_ICONS]
+        self.assertEqual(len(set(indexes)), len(indexes),
+                         f"two system pools wear the same icon: {indexes}")
+
+
+class TestSelectedHeaderWearsTheNodeIcon(PanelBase):
+    """The Selected tab's header glyph is the node's OWN icon.
+
+    It used to be one `gear` for every room and system, which said nothing the title
+    had not already said and did not match the node just clicked on the view.
+    """
+
+    def _header_icons(self):
+        drawn = []
+        original = P.gui_icon
+        P.gui_icon = lambda props, style=None, **kw: drawn.append(props)
+        try:
+            P.eng_panel_selected_show(CID, 0, 0, 200, 227)
+        finally:
+            P.gui_icon = original
+        return drawn
+
+    def test_a_room_draws_the_icon_the_grid_gave_it(self):
+        room = self.node(0, "system", "weapon", "beam", "__undamaged__")
+        want = grid_get_item_theme_data("system,weapon,beam").icon
+        set_inventory_value(room, "icon_index", want)
+        self.select(room)
+        drawn = self._header_icons()
+        self.assertTrue(any(f"icon_index:{want};" in d for d in drawn),
+                        f"header icons were {drawn}, expected icon_index:{want}")
+
+    def test_a_damcon_draws_its_own_icon_too(self):
+        dc = self.damcon(1)
+        want = grid_get_item_theme_data("damcons").icon
+        set_inventory_value(dc, "icon_index", want)
+        self.select(dc)
+        drawn = self._header_icons()
+        self.assertTrue(any(f"icon_index:{want};" in d for d in drawn),
+                        f"header icons were {drawn}, expected icon_index:{want}")
+
+    def test_a_node_with_no_icon_anywhere_draws_nothing(self):
+        """None, not a stand-in glyph: a wrong icon looks deliberate."""
+        from sbs_utils.procedural.internal_damage import grid_node_icon_index
+        self.assertIsNone(grid_node_icon_index(0))

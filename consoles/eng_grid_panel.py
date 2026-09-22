@@ -27,7 +27,8 @@ from sbs_utils.helpers import FrameContext, gui_text_escape
 from sbs_utils.procedural.gui import (gui_row, gui_text, gui_text_area, gui_list_box,
                                       gui_sub_section)
 from sbs_utils.procedural.gui.tabbed_panel import gui_tabbed_panel
-from sbs_utils.procedural.gui.icon import gui_icon_name, gui_icon_name_button
+from sbs_utils.procedural.gui.icon import (gui_icon, gui_icon_name,
+                                           gui_icon_name_button)
 from sbs_utils.procedural.gui.icon_sheet import icon_resolve
 from sbs_utils.procedural.query import (to_object, to_object_list, to_id, to_blob,
                                         get_grid_selection)
@@ -40,7 +41,8 @@ from sbs_utils.procedural.work_orders import (work_order_rows, work_orders_for,
                                               KIND_REPAIR, KIND_MAINTAIN,
                                               PRIORITY_LOW, PRIORITY_NORMAL,
                                               PRIORITY_HIGH, PRIORITY_CRITICAL)
-from sbs_utils.procedural.internal_damage import (grid_node_state, grid_system_states,
+from sbs_utils.procedural.internal_damage import (grid_node_state, grid_node_icon_index,
+                                                  grid_system_states,
                                                   grid_system_signature,
                                                   GRID_WORN_COLOR_DEFAULT,
                                                   GRID_TUNED_COLOR_DEFAULT)
@@ -124,14 +126,23 @@ def _eng_node_color(node_id):
     return get_inventory_value(node_id, "color", "white")
 
 
-def _eng_header(title, icon_name=None, color=None, note=None):
+def _eng_header(title, icon_name=None, color=None, note=None, icon_index=None):
     """The small subtle glyph plus a name, as the first row of every tab.
 
     1.5em, not the 2.2em the sketch started at: at gui-2 that would be 53px, a fifth
     of the whole panel on a 720-tall screen, spent on a name.
+
+    `icon_index` wins over `icon_name` and is how the Selected tab draws a node's OWN
+    glyph - the one the interior view has it wearing. A sheet index rather than a name
+    because that is what the grid theme holds; a name here would mean maintaining a
+    second table that could disagree with the picture beside it.
     """
     gui_row("row-height: 1.5em;")
-    if icon_name:
+    if icon_index is not None:
+        with gui_sub_section("col-width: 1.4em;"):
+            gui_row()
+            gui_icon(f"icon_index:{int(icon_index)};color:{color or 'white'};")
+    elif icon_name:
         with gui_sub_section("col-width: 1.4em;"):
             gui_row()
             gui_icon_name(icon_name, color=color or "white")
@@ -160,8 +171,14 @@ def eng_panel_selected_show(cid, left, top, width, height):
         gui_text_area("$text:(pick a room or a team on the interior view);color:#888;")
         return
     is_crew = has_role(node_id, "damcons")
-    _eng_header(node.name, "person" if is_crew else "gear",
-                _eng_node_color(node_id), "crew" if is_crew else None)
+    # The node's own icon, not a stand-in. This header used to draw one `gear` for
+    # every room and system on the ship, so the glyph said nothing the title had not
+    # already said and did not match the node the engineer had just clicked.
+    # `grid_node_icon_index` answers with what the interior view is drawing, damcon
+    # teams included, and None (nothing drawn) for a node that has no icon at all.
+    _eng_header(node.name, None, _eng_node_color(node_id),
+                "crew" if is_crew else None,
+                icon_index=grid_node_icon_index(node_id))
     gui_row()
     # grid_selected_markdown lives in ai/grid_ai.py, next to the damcon status it
     # reads, and that is a DIFFERENT MASTLIB from this one.
