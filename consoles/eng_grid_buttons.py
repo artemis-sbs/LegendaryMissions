@@ -65,6 +65,12 @@ LM_ENG_BUTTON_TALL_SCREEN_PX = 1000
 #: it is half that and the panel above has the difference.
 _LISTBOX_CHROME_EM = 1.2
 
+#: Trimmed off the box on a SHORT screen only, and given to the panel above.
+#: A 720-tall console is the one place the split is actually tight - the whole tool
+#: column is ~619px there - so the last few pixels are worth more to the read-out than
+#: to the box, which already fits its three rows without them.
+LM_ENG_BUTTON_SHORT_TRIM_PX = 10
+
 
 def lm_eng_buttons_rows_shown(client_id=None):
     """How many order rows this console shows - 3 on a short screen, 5 on a tall one.
@@ -95,6 +101,10 @@ def lm_eng_buttons_box_height(client_id=None):
     rows = lm_eng_buttons_rows_shown(client_id)
     tall = (rows * LM_ENG_BUTTON_ROW_EM + (rows - 1) * LM_ENG_BUTTON_GAP_EM
             + _LISTBOX_CHROME_EM)
+    if rows == LM_ENG_BUTTON_ROWS_SHORT:
+        # `em-px` is a real length expression, the same form the console's own
+        # `area:0,50+8px,...` uses - not string concatenation.
+        return f"{tall:.2f}em-{LM_ENG_BUTTON_SHORT_TRIM_PX}px"
     return f"{tall:.2f}em"
 
 

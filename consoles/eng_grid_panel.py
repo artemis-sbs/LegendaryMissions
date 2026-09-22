@@ -343,7 +343,7 @@ ENG_COEFFICIENTS = (
 
 
 def eng_coefficient_values(ship_id):
-    """The derived effectiveness coefficients, as (label, percent) pairs.
+    """The derived efficiency coefficients, as (label, percent) pairs.
 
     The engine answers None for a blob field nothing has set, so every read is
     coalesced - an unguarded one raises `'NoneType' < int` on a real bridge while
@@ -410,7 +410,15 @@ def eng_panel_systems_show(cid, left, top, width, height):
     # bypasses the markdown pass for it - which is also why the dash is literal text
     # rather than a `-` bullet: a bullet is re-styled by the built-in `ul` style and
     # would come back the same blue as everything else.
-    lines = ["## Effectiveness"]
+    # `###`, not `##`: the tab's own title above it is gui-3 (`_eng_header`), so an h2
+    # sub-heading was a size LARGER than the title it sat under.
+    #
+    # It also has to FIT. This panel is 230px at 1280x720, its narrowest, and TextArea
+    # gives a line 20px less than that once the content scrolls (V_SCROLL_PX) - so a
+    # heading has 210px. "Effectiveness" at gui-4 measures 212px: over by two pixels,
+    # which the engine drew as "Effectivene" / "ss" on a bridge. "Efficiency" at gui-3
+    # is 133px. Pinned by TestHeadingsFitTheColumn.
+    lines = ["### Efficiency"]
     for label, pct in values:
         lines.append(f"$$color:{_eng_coefficient_color(pct)};font:gui-2;  - {label} {pct}%")
     gui_text_area("\n".join(lines))

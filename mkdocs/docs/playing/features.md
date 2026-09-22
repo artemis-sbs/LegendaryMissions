@@ -115,7 +115,7 @@ finish what they were sent to do rather than wandering onto whatever they pass.
 |---|---|
 | **Selected** | The room or team you picked on the interior view, in full. |
 | **Orders** | Every work order on the ship, most urgent first, with raise and cancel on each row. |
-| **Systems** | The four system pools, and the eight effectiveness numbers &mdash; beam, tube, impulse, warp, turn, sensor, and both shield facings &mdash; each colored by how healthy it is. |
+| **Systems** | The four system pools, and the eight efficiency numbers &mdash; beam, tube, impulse, warp, turn, sensor, and both shield facings &mdash; each colored by how healthy it is. |
 
 The cockpit's system lights show the same tiers.
 

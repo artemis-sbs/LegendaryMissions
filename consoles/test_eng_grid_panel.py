@@ -503,7 +503,7 @@ class TestOrderRowButtons(PanelBase):
 
 
 class TestCoefficientColors(PanelBase):
-    """The Effectiveness numbers are colored by tier so the pool that is hurting is
+    """The Efficiency numbers are colored by tier so the pool that is hurting is
     findable without reading eight of them. They must use the SAME four colors the
     glyph row and the grid use - a number that disagrees with the node it came from
     is worse than an uncolored one."""
@@ -541,10 +541,105 @@ class TestCoefficientColors(PanelBase):
             P.eng_panel_systems_show(CID, 0, 0, 200, 227)
         finally:
             P.gui_text_area = original
-        body = next((d for d in drawn if "Effectiveness" in d), None)
-        self.assertIsNotNone(body, "the Effectiveness block was not drawn")
+        body = next((d for d in drawn if "Efficiency" in d), None)
+        self.assertIsNotNone(body, "the Efficiency block was not drawn")
         styled = [ln for ln in body.split("\n") if ln.startswith("$$")]
         self.assertEqual(len(styled), len(P.eng_coefficient_values(self.ship)))
+
+
+class TestHeadingsFitTheColumn(PanelBase):
+    """A heading wider than the panel WRAPS MID-WORD.
+
+    `## Effectiveness` drew as "Effectivene" / "ss" on a bridge: gui-4 measures 212px
+    and this panel is 230px at 1280x720, its narrowest. The text area wraps by width
+    with no word awareness, so one character too many is a broken word, not a tidy
+    second line - and nothing in the layout says how wide the heading may be.
+
+    Pins the PROPERTY, not the word: whatever a heading says and whatever level it is
+    written at, it has to fit the narrowest column the console ever draws. A rename
+    keeps passing; a heading that outgrows the panel does not.
+    """
+
+    #: The narrowest this panel ever gets - measured off the real console layout at
+    #: 1280x720 (288/346/461px at 1600x900, 1920x1080, 2560x1440).
+    NARROWEST_PANEL_PX = 230
+
+    @property
+    def usable_px(self):
+        """What a LINE actually gets, which is not the panel width.
+
+        `TextArea` subtracts its vertical scrollbar from the wrap width whenever the
+        content scrolls (`pixel_width -= V_SCROLL_PX`), and both these tabs scroll at
+        1280x720. Taken from the library constant rather than written as 210, so this
+        follows the scrollbar if it is ever resized.
+
+        This margin is the whole bug: `Effectiveness` at gui-4 is 212px against 210px
+        usable - over by TWO PIXELS, which the engine drew as "Effectivene" / "ss".
+        A threshold of 230 would have called that passing.
+        """
+        from sbs_utils.pages.layout.text_area import TextArea
+        return self.NARROWEST_PANEL_PX - TextArea.V_SCROLL_PX
+
+    def _headings(self, show):
+        """Every markdown heading a tab emits, as raw lines."""
+        drawn = []
+        original = P.gui_text_area
+        P.gui_text_area = lambda props, style=None, **kw: drawn.append(props)
+        try:
+            show(CID, 0, 0, 200, 227)
+        finally:
+            P.gui_text_area = original
+        return [line for block in drawn for line in block.split("\n")
+                if line.startswith("#")]
+
+    def _measure(self, line):
+        """(font, text, width_px) for a heading line, read the way the text area
+        reads it - the level's font comes from TextArea.styles, not from a guess."""
+        from sbs_utils.pages.layout.text_area import TextArea
+        from sbs_utils.helpers import split_props
+        level = len(line) - len(line.lstrip("#"))
+        text = line.lstrip("#").strip()
+        style = TextArea.styles.get(f"h{level}")
+        self.assertIsNotNone(style, f"no style for a level-{level} heading: {line!r}")
+        font = split_props(style["style"], "font").get("font", "gui-3")
+        return font, text, mock_sbs.get_text_line_width(font, text)
+
+    def _assert_fits(self, show, what):
+        headings = self._headings(show)
+        self.assertTrue(headings, f"the {what} tab drew no heading at all")
+        for line in headings:
+            font, text, px = self._measure(line)
+            self.assertLess(
+                px, self.usable_px,
+                f"{what}: {text!r} at {font} measures {px}px against {self.usable_px}px "
+                f"usable - it wraps mid-word in the {self.NARROWEST_PANEL_PX}px panel")
+
+    def test_the_systems_headings_fit(self):
+        for i, r in enumerate(("weapon", "engine", "sensor", "shield")):
+            self.node(i, r, "__undamaged__")
+        self._assert_fits(P.eng_panel_systems_show, "Systems")
+
+    def test_the_selected_headings_fit(self):
+        """The same check next door, on the damcon branch - the only one that still
+        has a heading (`### Orders n`) now that the duplicated title is gone."""
+        room = self.node(0, "system", "weapon", "__damaged__")
+        dc = self.damcon(1)
+        link(dc, "work-order", room)
+        self.select(dc)
+        self._assert_fits(P.eng_panel_selected_show, "Selected")
+
+    def test_the_selected_tab_does_not_repeat_the_node_name(self):
+        """`_eng_header` draws the name above the body, with a glyph and an ellipsis.
+        The body drawing it again put it on screen twice, the second time a size
+        larger and unprotected - `Impulse Engine:3,4` measures 283px at gui-4 against
+        a 230px panel."""
+        room = self.node(0, "system", "weapon", "__damaged__")
+        self.select(room)
+        body = G.grid_selected_markdown(self.ship, room)
+        name = P.to_object(room).name
+        self.assertNotIn(name, body,
+                         f"the body repeats the node name {name!r} that the header "
+                         f"has already drawn")
 
 
 if __name__ == "__main__":

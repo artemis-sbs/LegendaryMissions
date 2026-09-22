@@ -285,7 +285,13 @@ def grid_selected_markdown(ship_id, node_id):
     if node is None:
         return "$text:(nothing selected);color:#888;"
 
-    lines = [f"## {_md_safe(node.name)}"]
+    # NO TITLE LINE. The only caller (`eng_panel_selected_show`) has already drawn the
+    # node's name through `_eng_header` - with its glyph, its condition color and
+    # `overflow:ellipsis` - immediately above this body. Repeating it here drew the name
+    # TWICE, the second time a size larger, and without the ellipsis: a node is named
+    # "roomname:x,y" by the engine, so `Impulse Engine:3,4` measured 283px at gui-4
+    # against the 210px a line actually gets in this panel, and wrapped mid-word.
+    lines = []
 
     if has_role(node_id, "damcons"):
         lines.append(_md_line(_md_safe(get_inventory_value(node_id, 'last_status', 'idle'))))
@@ -334,7 +340,7 @@ def grid_selected_markdown(ship_id, node_id):
         # panel used to include every one of those, forever.
         orders = to_object_list(work_orders_for(node_id))
         lines.append("")
-        lines.append(f"## Orders {len(orders)}")
+        lines.append(f"### Orders {len(orders)}")
         if not orders:
             lines.append(_md_line("none assigned", _MD_DIM))
         for target in sorted(orders, key=lambda t: -work_order_priority(t.id)):

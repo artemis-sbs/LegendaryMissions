@@ -60,6 +60,23 @@ class _FakeTask:
         return self.truths.get(code, True)
 
 
+def _em_of(style):
+    """The em part of a box height, which may carry a pixel trim.
+
+    `lm_eng_buttons_box_height` returns "13.00em" on a tall screen and
+    "8.20em-10px" on a short one - a real length expression, not concatenation. These
+    tests reason in ems, so the trim is split off rather than parsed by `[:-2]`.
+
+    Returns:
+        (em, trim_px)
+    """
+    trim = 0.0
+    if "-" in style:
+        style, _, px = style.partition("-")
+        trim = float(px.removesuffix("px"))
+    return float(style.removesuffix("em")), trim
+
+
 class _Base(unittest.TestCase):
     def setUp(self):
         mock_sbs.create_new_sim()
@@ -356,7 +373,7 @@ class TheRowCountFollowsTheScreen(_Base):
         short = self._at(1280, 720) and B.lm_eng_buttons_box_height(CID)
         tall_rows = self._at(1920, 1080)
         tall = B.lm_eng_buttons_box_height(CID)
-        self.assertLess(float(short[:-2]), float(tall[:-2]))
+        self.assertLess(_em_of(short)[0], _em_of(tall)[0])
         self.assertEqual(tall_rows, B.LM_ENG_BUTTON_ROWS_TALL)
 
 
@@ -376,8 +393,26 @@ class TheBoxIsNoTallerThanItNeeds(_Base):
         from sbs_utils.vec import Vec3
         FrameContext.aspect_ratios[CID] = Vec3(w, h, 1)
         want = B.lm_eng_buttons_rows_shown(CID)
-        tall_em = float(B.lm_eng_buttons_box_height(CID)[:-2])
+        tall_em, _trim = _em_of(B.lm_eng_buttons_box_height(CID))
         return want, tall_em
+
+    def test_a_short_screen_trims_the_box_and_the_panel_gets_it(self):
+        """10px off the box on a 720-tall console, and nowhere else.
+
+        That screen is the only one where the split is tight - the whole tool column
+        is ~619px - so the last pixels are worth more to the read-out panel than to a
+        box that already fits its three rows. Measured through the real layout: the
+        listbox resolves to 186.8px where 8.20em alone is 196.8px.
+        """
+        from sbs_utils.helpers import FrameContext
+        from sbs_utils.vec import Vec3
+        FrameContext.aspect_ratios[CID] = Vec3(1280, 720, 1)
+        _em, trim = _em_of(B.lm_eng_buttons_box_height(CID))
+        self.assertEqual(trim, B.LM_ENG_BUTTON_SHORT_TRIM_PX)
+
+        FrameContext.aspect_ratios[CID] = Vec3(1920, 1080, 1)
+        _em, trim = _em_of(B.lm_eng_buttons_box_height(CID))
+        self.assertEqual(trim, 0, "a tall screen has room and must not be trimmed")
 
     def test_the_box_is_not_a_whole_row_bigger_than_its_rows(self):
         """What "there is space" looked like: a full spare row of empty box."""
