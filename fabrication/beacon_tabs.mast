@@ -99,13 +99,12 @@ default CONSOLE_SELECT = ""
     else:
         """color:#aaa; justify:center; $text: No recipes."""
 
-    # RIGHT (middle): description + input cost
+    # RIGHT (middle): description, then what it NEEDS - one gauge per input, have / need,
+    # red when short - so "need materials" below always has its reason on screen.
     gui_section(style="area: 47, 25, 95, 55; background:#1571;")
     if fab_sel is not None:
-        fab_desc = fab_sel["desc"]
-        fab_cost = recipe_inputs_text(fab_sel)
-        gui_text_area("{fab_desc}")
-        """color:#8a8; $text: Cost: {fab_cost}"""
+        fab_text = recipe_detail_markdown(ship_id, fab_sel)
+        gui_text_area("{fab_text}")
 
     # RIGHT (program): a property grid built from the recipe's declared Properties -- the same
     # gui_property_list_box + gui_properties_set pattern a map's Properties panel uses. The grid
@@ -128,8 +127,15 @@ default CONSOLE_SELECT = ""
     # RIGHT (action band): Build / building countdown / need materials
     gui_section(style="area: 47, 82, 95, 92;")
     if fab_sel is not None and fab_building:
+        # A progress bar under the countdown. This band repaints once a second while
+        # a build runs (the self-tick below), so a plain gauge redrawn each time is
+        # enough. Clamped: the beacon timer is shared, so the recipe on screen may
+        # not be the one building.
         fab_t = format_time_remaining(ship_id, fab_timer)
-        """color:#ff0; justify:center; $text: building {fab_t}"""
+        fab_total = max(1, int(fab_sel.get("time", 30) or 30))
+        fab_done_s = max(0, fab_total - get_time_remaining(ship_id, fab_timer))
+        gui_row("row-height: content;")
+        gui_gauge(fab_done_s, fab_total, "building {fab_t}", show="none", color="#ff0")
     elif fab_sel is not None and fabrication_recipe_affordable(ship_id, fab_sel_key):
         fab_btn = gui_button("$text:Build;justify:center;", data={"rk": fab_sel_key, "rb": fab_is_beacon, "rnames": fab_pnames, "rdefs": fab_pdefs})
         on gui_message(fab_btn):

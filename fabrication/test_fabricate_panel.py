@@ -274,6 +274,35 @@ class TestBuildFeedback(_Base):
         self.assertFalse(self.emitted.button_named("Build"))
         self.assertTrue(self.emitted.text_with("need materials"))
 
+    def test_the_reason_is_on_screen_as_have_over_need(self):
+        """'need materials' used to have no reason next to it. Each input is now a
+        gauge reading have / need, so the shortfall is visible (Bio Beacon: bio_sample
+        x1, salvage x5)."""
+        self.stock(salvage=2, bio=1)
+        self.assertTrue(self.emitted.text_with("salvage"), "no salvage gauge drawn")
+        self.assertTrue(self.emitted.text_with("2 / 5"), "salvage should read 2 / 5")
+        self.assertTrue(self.emitted.text_with("1 / 1"), "bio sample should read 1 / 1")
+
+    def test_the_needs_are_colored_short_and_enough(self):
+        from sbs_utils.procedural.inventory import set_inventory_value as _set
+        recipe = recipes.fabrication_get_recipe("bio_beacon") or next(
+            r for r in recipes.fabrication_recipes() if r["inputs"])
+        for k in recipe["inputs"]:
+            _set(self.ship.id, k, 0)
+        text = recipes.recipe_cost_markdown(self.ship.id, recipe)
+        self.assertIn("color=Crimson", text)
+        self.assertNotIn("springgreen", text)
+        for k, need in recipe["inputs"].items():
+            _set(self.ship.id, k, need)
+        self.assertNotIn("Crimson", recipes.recipe_cost_markdown(self.ship.id, recipe))
+
+    def test_the_build_band_is_a_progress_bar(self):
+        self.stock()
+        self.press_build()
+        # The gauge draws its label as text; its bar is two images - the countdown
+        # label is what the harness can see.
+        self.assertTrue(self.emitted.text_with("building 0:"))
+
 
 if __name__ == "__main__":
     unittest.main()

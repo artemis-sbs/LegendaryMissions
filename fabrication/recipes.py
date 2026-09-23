@@ -265,6 +265,37 @@ def recipe_inputs_text(recipe):
     return ", ".join(f"{k} x{v}" for k, v in (recipe.get("inputs") or {}).items())
 
 
+def recipe_cost_markdown(ship_id, recipe):
+    """What a recipe needs, as text-area gauges: one per input, `have / need`.
+
+    The old line said only what it COSTS ("salvage x5"), which never answered the
+    question an engineer actually has - why can't I build this? A gauge per input
+    does: green when the ship carries enough, red when it is short, and the numbers
+    say by how much. Empty for a recipe with no inputs.
+    """
+    lines = []
+    for key, need in (recipe.get("inputs") or {}).items():
+        have = int(get_inventory_value(ship_id, key, 0) or 0)
+        need = int(need or 0)
+        if need <= 0:
+            continue
+        color = "springgreen" if have >= need else "Crimson"
+        label = str(key).replace("_", " ").replace("]", "").replace("[", "")
+        lines.append(f"[{label}](gauge://{have}?max={need}&show=frac&color={color})")
+    if not lines:
+        return ""
+    return chr(10).join(["### Needs"] + lines)
+
+
+def recipe_detail_markdown(ship_id, recipe):
+    """The Fabricate detail pane: the recipe's description, then what it needs."""
+    desc = str(recipe.get("desc") or "").strip()
+    needs = recipe_cost_markdown(ship_id, recipe)
+    # A BLANK line between them: a heading straight after a paragraph would inherit
+    # nothing, but the paragraph's style carries to the next line until a blank one.
+    return (chr(10) * 2).join(p for p in (desc, needs) if p)
+
+
 # --- list-box templates (item_gui.mast style: item_template=row, title_template=title) ---
 def recipe_row(item):
     """One recipe row in the Fabricate list box."""

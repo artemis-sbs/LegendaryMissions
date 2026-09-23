@@ -622,8 +622,16 @@ def hangar_pilot_template(item):
     gui_row("row-height: 1.2em;padding:6px;")
     # Escape the user-entered call sign so ':' / ';' in it can't inject style (#569).
     gui_text(f"$text:{gui_text_escape(item.get('call_sign'))};justify: left;")
+    # FIVE EQUAL COLUMNS, not one string with the stats spaced out by hand: every row
+    # has the same five, so they line up down the list like a table and a pilot's
+    # kills sit under the pilot above's kills.
     gui_row("row-height: 1.0em;padding:6px;")
-    gui_text(f"$text:Sorties {item.get('sorties')}   Kills {item.get('kills')}   Tonnage Destroyed {item.get('tonnage')}   Damage Dealt {item.get('damage')}   Objectives {item.get('objectives')};justify: left;font:gui-1")
+    for label, key in _HANGAR_PILOT_STATS:
+        gui_text(f"$text:{label} {item.get(key)};justify: left;font:gui-1;")
+
+
+_HANGAR_PILOT_STATS = (("Sorties", "sorties"), ("Kills", "kills"), ("Tonnage", "tonnage"),
+                       ("Damage", "damage"), ("Objectives", "objectives"))
 
 
 def hangar_pilot_title_template():
