@@ -39,20 +39,20 @@ def trust_label(rep):
 
 
 # ---- patron-facing (patron is a dict) --------------------------------------
-def patron_reputation(patron):
+def _patron_reputation(patron):
     r = patron.get("reputation")
     return r if r is not None else DEFAULT_REP
 
 def patron_rep_adjust(patron, delta):
-    patron["reputation"] = clamp01(patron_reputation(patron) + delta)
+    patron["reputation"] = clamp01(_patron_reputation(patron) + delta)
     return patron["reputation"]
 
 def patron_trust_label(patron):
-    return trust_label(patron_reputation(patron))
+    return trust_label(_patron_reputation(patron))
 
 def patron_rumor_is_true(patron, ou_standing=None, rng=None):
     """Roll a rumor's truth against the patron's (OU-blended) reliability."""
-    odds = blended_truth_odds(patron_reputation(patron), ou_standing)
+    odds = blended_truth_odds(_patron_reputation(patron), ou_standing)
     return (rng or _random).random() < odds
 
 def patron_seed_base_rep(patron, key):
@@ -72,7 +72,7 @@ def max_patron_reputation(patrons):
     grey-market access. 0.0 if none."""
     best = 0.0
     for p in patrons:
-        r = patron_reputation(p)
+        r = _patron_reputation(p)
         if r > best:
             best = r
     return best

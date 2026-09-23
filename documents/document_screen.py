@@ -58,24 +58,5 @@ def document_item(item):
                 icon.background_color = "#1576"
                 text.background_color = "#1576"
     return
-    
-
-
-def quest_create_test_data():
-    # signal_register("quest_activated", quest_activated)
-    doc = document_get_amd_file(fs.get_mission_dir_filename("documents/quest.amd"))
-
-    client_id = FrameContext.client_id
-    if client_id == 0:
-        return
-
-    ship_id = FrameContext.context.sbs.get_ship_of_client(client_id)
-    if ship_id == 0:
-        return
-    
-    set_inventory_value(Agent.SHARED_ID,"__quests__", doc)
-    set_inventory_value(client_id,"__quests__", doc)
-    set_inventory_value(ship_id, "__quests__",doc)
-    return doc
 
 

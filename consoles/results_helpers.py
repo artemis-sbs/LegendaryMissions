@@ -106,7 +106,7 @@ def _results_hull_pct(ship_id):
     return 100 if pct is None else pct
 
 
-def results_player_ships():
+def _results_player_ships():
     """Per surviving player bridge ship: name, kills, tonnage, damage, hull %.
     (Destroyed player ships are gone from the role, so they aren't listed.)"""
     ships = []
@@ -129,7 +129,7 @@ def _client_ids():
         return []
 
 
-def results_pilots():
+def _results_pilots():
     """Per pilot (client that flew at least one sortie): call sign, sorties, kills,
     tonnage, objectives, damage."""
     pilots = []
@@ -155,7 +155,7 @@ _QUEST_STATE_LABEL = {
 }
 
 
-def results_quests():
+def _results_quests():
     """Game (SHARED) + per-ship quests with a display state, for the read-only
     Quests tab and the save. SECRET (undiscovered) quests are hidden."""
     out = []
@@ -184,11 +184,11 @@ def results_summary():
     kills = 0
     tonnage = 0
     damage = 0
-    for s in results_player_ships():
+    for s in _results_player_ships():
         kills += s["kills"]
         tonnage += s["tonnage"]
         damage += s["damage"]
-    for p in results_pilots():
+    for p in _results_pilots():
         kills += p["kills"]
         tonnage += p["tonnage"]
         damage += p["damage"]
@@ -200,9 +200,9 @@ def results_record_extra():
     (more than the GUI shows, by design)."""
     return {
         "summary": results_summary(),
-        "ships": results_player_ships(),
-        "pilots": results_pilots(),
-        "quests": results_quests(),
+        "ships": _results_player_ships(),
+        "pilots": _results_pilots(),
+        "quests": _results_quests(),
     }
 
 
@@ -212,11 +212,11 @@ def _wrap(rows):
 
 
 def results_ship_items():
-    return _wrap(results_player_ships())
+    return _wrap(_results_player_ships())
 
 
 def results_pilot_items():
-    return _wrap(results_pilots())
+    return _wrap(_results_pilots())
 
 
 def results_quest_items():

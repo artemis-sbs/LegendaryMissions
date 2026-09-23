@@ -167,7 +167,7 @@ def _purchasable_index(key):
     return None
 
 
-def market_disposition(station_id, key):
+def _market_disposition(station_id, key):
     """Station's price disposition for an item (1.0 if not finite-seeded)."""
     seed_key = get_inventory_value(station_id, "market_seed_key", None)
     if seed_key is None:
@@ -183,7 +183,7 @@ def market_price(station_id, key, ship_id=None):
     undiscounted list price (e.g. sell payouts)."""
     lbl = item_get(key)
     base = (lbl.get_inventory_value("price", 0) or 0) if lbl is not None else 0
-    price = base * market_disposition(station_id, key)
+    price = base * _market_disposition(station_id, key)
     if ship_id is not None:
         ship = to_object(ship_id)
         if ship is not None and ship.side:

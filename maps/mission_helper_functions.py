@@ -164,7 +164,7 @@ def _pop_rand(lst, rng, fallback):
     return lst.pop(rng.randint(0, len(lst) - 1)) if lst else fallback
 
 
-def fb_make_name(pools, kind, rng):
+def _fb_make_name(pools, kind, rng):
     """A cargo-ship display name: '<letter><NN> <word>', word popped from the given pool."""
     return (rng.choice(pools["alpha"]) + str(rng.randint(1, 99)).zfill(2)
             + " " + _pop_rand(pools[kind], rng, "Freighter"))
@@ -178,7 +178,7 @@ def _fb_make_hold(pools, rng):
     return Hold(code, _pop_rand(pools["tradegoods"], rng, "Cargo"))
 
 
-def fb_make_cargo(name, captain, stops, pools, rng, dep_time=""):
+def _fb_make_cargo(name, captain, stops, pools, rng, dep_time=""):
     """Build a fresh FbCargo: four active holds + four reserve holds (spares a stop-transfer swaps
     in). Draw order (4 holds, then 4 reserve) matches the old flat build, so seeds are unchanged."""
     holds = [_fb_make_hold(pools, rng) for _ in range(4)]
@@ -186,7 +186,7 @@ def fb_make_cargo(name, captain, stops, pools, rng, dep_time=""):
     return FbCargo(name, captain, stops, holds, reserve, dep_time)
 
 
-def fb_transfer_hold(cargo, rng):
+def _fb_transfer_hold(cargo, rng):
     """Transfer ONE hold at a stop: swap a hold for a reserve hold (pulled off the end), so the
     manifest genuinely changes station to station. Never touches cargo.amb_hold (the hold hiding
     the ambassador). Mutates cargo; returns (unloaded, loaded) strings for the interview report."""
@@ -220,7 +220,7 @@ def fb_generate_case(pools, clue0, clues, templates, rng,
     for i in range(n_total):
         tracked = i < n_tracked
         is_kidnapper = tracked and i == kidnapper_index
-        orig_name = fb_make_name(pools, "peacetime" if tracked else "civilian", rng)
+        orig_name = _fb_make_name(pools, "peacetime" if tracked else "civilian", rng)
         captain = _pop_rand(pools["captain"], rng, "Unknown")
 
         # Three distinct DS stops from 2..5: stop1/stop2 are the visited stops (tagged A/B), stop3
@@ -230,7 +230,7 @@ def fb_generate_case(pools, clue0, clues, templates, rng,
 
         times = FB_TIMES_BY_SHIP[i] if tracked and i < len(FB_TIMES_BY_SHIP) else ("", "", "")
 
-        cargo1 = fb_make_cargo(orig_name, captain, stops, pools, rng, times[0])
+        cargo1 = _fb_make_cargo(orig_name, captain, stops, pools, rng, times[0])
         if is_kidnapper:
             cargo1.amb_hold = rng.randint(0, 3)                     # which hold hides the ambassador
             cargo1.holds[cargo1.amb_hold].goods = clue0            # ...riding as innocuous "goods"
@@ -243,15 +243,15 @@ def fb_generate_case(pools, clue0, clues, templates, rng,
             clueB = "clue" + str(i + 1) + "B"
             contact = FB_CONTACTS[i]
             my_clue = clues[0] if is_kidnapper else (decoy_clues.pop(0) if decoy_clues else "")
-            unl1, load1 = fb_transfer_hold(cargo2, rng)             # first stop (state = cargo2)
+            unl1, load1 = _fb_transfer_hold(cargo2, rng)             # first stop (state = cargo2)
             cargo3 = copy.deepcopy(cargo2)
             cargo3.dep_time = times[2]
-            unl2, load2 = fb_transfer_hold(cargo3, rng)             # second stop (state = cargo3)
+            unl2, load2 = _fb_transfer_hold(cargo3, rng)             # second stop (state = cargo3)
             c_part = amd_fill(templates.get("report_stop_clue"), {
                 "ship": orig_name, "unloaded": unl1, "loaded": load1,
                 "holds": fb_holds(cargo2), "clue": my_clue})
             if is_kidnapper and rng.random() < rename_chance:
-                cur_name = fb_make_name(pools, "civilian", rng)     # the "changed registry" twist
+                cur_name = _fb_make_name(pools, "civilian", rng)     # the "changed registry" twist
                 cargo3.ship = cur_name
                 d_part = amd_fill(templates.get("report_rename"), {
                     "ship": orig_name, "unloaded": unl2, "loaded": load2,
@@ -383,12 +383,7 @@ def pr_quest_claim(target, ship):
     set_inventory_value(to_id(target), "quest_owner", to_id(ship))
 
 
-def pr_is_quest_owner(ship, target):
-    from sbs_utils.procedural.query import to_id
-    return pr_quest_owner(target) == to_id(ship)
-
-
-def pr_claim_name(target):
+def _pr_claim_name(target):
     """A readable name for a claim target ('the salvage hulk' fallback)."""
     from sbs_utils.procedural.query import to_object
     o = to_object(target)
@@ -414,7 +409,7 @@ def pr_claim_notify(ship, target, kind):
         return
     set_timer(sid, key, seconds=6)
     consoles = linked_to(sid, "consoles") & all_roles("console, comms")
-    nm = pr_claim_name(tid)
+    nm = _pr_claim_name(tid)
     if kind == "stole":
         comms_info_card(consoles, "You claimed " + nm + ".", title="Claim", color="#0f0", notify=True)
     elif kind == "lost":
@@ -473,7 +468,7 @@ def pr_landmark_by_key(records, key):
     return None
 
 
-def pr_job_holder(key):
+def _pr_job_holder(key):
     """The first player ship holding the named job quest ACTIVE, or None.
 
     `pr_job_active` answers "has anyone taken this?"; spawn-on-accept also needs to know
@@ -501,7 +496,7 @@ def pr_job_spawn_center(key, ahead, fx, fy, fz):
     """
     from sbs_utils.vec import Vec3
     from sbs_utils.procedural.query import to_engine_object
-    holder = pr_job_holder(key)
+    holder = _pr_job_holder(key)
     if holder is None:
         return Vec3(fx, fy, fz)
     eo = to_engine_object(holder.id)
@@ -516,7 +511,7 @@ def pr_job_spawn_center(key, ahead, fx, fy, fz):
 def pr_job_holders(key):
     """EVERY player ship holding this job ACTIVE.
 
-    `pr_job_holder` is the first one, which is what spawn-on-accept wants. A watcher that
+    `_pr_job_holder` is the first one, which is what spawn-on-accept wants. A watcher that
     scores per ship wants all of them, and named for the flat-job case so a reader of
     pr_picket_watch is not sent looking for a multi-step arc that does not exist.
     """

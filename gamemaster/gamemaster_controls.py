@@ -10,39 +10,6 @@ from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_va
 from sbs_utils.procedural.signal import signal_emit
 import sbs
 
-
-def get_gm_label():
-    ret = []
-    page = FrameContext.page
-    if page is None:
-        return []
-    #
-    # Walk all labels looking for map Labels
-    #
-    init_label = None
-    all_labels = page.story.labels
-    for l in all_labels:
-        if not l.startswith("gamemaster_menu"):
-            continue
-        m = all_labels[l]
-        # comms_broadcast(0, f"Label path: {m.path}")
-        if m.path == "__overview__":
-            init_label = m
-        else:
-            ret.append(m)
-#                {"name": m.display_name, "description": text_sanitize(m.desc), "label": m},
-#            )
-    #
-    # If there is just the one i.e. the init return that
-    #
-    if len(ret)==0 and init_label is not None:
-        return [init_label]
-    elif len(ret)==0:
-        return  [
-            {"name": "No maps found", "description": "No maps were found when searching all mast/python labels."},
-        ]
-    return ret
-
 class GM_Gui_Tab(Button):
    def __init__(self, tag, name, icon):
       super().__init__(tag, f"$text:{gui_text_escape(name)}")
@@ -78,11 +45,6 @@ def gm_convert_listbox_items(items):
     return ret
 
 # def buildButton(parent)
-def get_ship_data_for_side(side):
-    ships = filter_ship_data_by_side(None, sides=side)
-    for ship in ships:
-        gui_button(ship["key"], data={"ship":ship})
-        gui_message(ship, "GM_Spawn")
 
 def buildButtons(parent_category, items):
     # with gui_list_box():
@@ -149,48 +111,6 @@ def gm_set_menu_contents(client_id, menu, contents):
 from sbs_utils.pages.widgets.layout_listbox import LayoutListBoxHeader
 def buildListboxHeader(label, collabsible=True):
     return LayoutListBoxHeader(label, collabsible)
-
-def spawn_with_side_common(client_id,required_roles = [], exclude_roles=[]):
-    sides = get_sides()
-    # side_dropdown = gui_drop_down(f"items:{','.join(sides)}")
-    race = get_inventory_value(client_id, "gm_spawn_menu_race")
-    # side_dropdown.value = race
-    prev_menu = get_inventory_value(client_id, "gm_menu")
-    if prev_menu is None:
-        prev_menu = ""
-    if prev_menu.find("spawn") != -1:
-        # `race` is not the best word for this use case, origin might be better?
-        race = get_inventory_value(client_id, "gm_spawn_menu_race")
-        if race is None:
-            race = "TSN"
-
-        ships = filter_ship_data_by_side(None, race)
-        roles = list()
-        for ship in ships:
-            ship_roles = ship["roles"].split(",")
-            has_required = True
-            for rr in required_roles:
-                if ship_roles.count(rr) == 0:
-                    has_required = False
-                    break
-            if has_required:
-                roles.extend(ship_roles)
-        # remove duplicates
-        roles = set(roles)
-        for ex in exclude_roles:
-            roles.discard(ex)
-        # roles.discard("ship")
-        # roles.discard("cockpit")
-        roles.discard(race.lower())
-        # sort alphabetically
-        roles = sorted(list(roles))
-        # menu.items = []
-        newItems = []
-        for r in roles:
-            data = {"name": r, "on_press": "GM_Side_Selection"}
-            newItems.append(data)
-            # print(f"Adding {r}")
-        gm_set_menu_contents(client_id, 1, newItems)
 
 
 def gm_get_ships_for_side(race, required_roles = [], exclude_roles=[]):

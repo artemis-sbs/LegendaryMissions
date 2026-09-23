@@ -20,31 +20,6 @@ anom_data = {
 }
 
 
-def transfer_upgrades_of_type(giver_id, reciever_id, upgrade):
-    """
-    Transfer all upgrades of the specified type from one object to another.
-    Args:
-        giver_id (int): The ID of the object that has up the upgrades.
-        reciever_id (int): The ID of the object that is recieving the upgrades
-        upgrade (str): The name of the upgrades, e.g. carapaction_coil
-    Return
-        boolean: True if an upgrade is successfully transfered, otherwise False
-    """
-    if to_object(giver_id) is None:
-        return False
-    if to_object(reciever_id) is None:
-        return False
-    craft_count = get_inventory_value(giver_id, upgrade, 0)
-    if not craft_count:
-        return False
-    if craft_count == 0:
-        return False
-    hangar_count = get_inventory_value(reciever_id, upgrade, 0)
-    set_inventory_value(reciever_id, upgrade, craft_count + hangar_count)
-    set_inventory_value(giver_id, upgrade, 0)
-    return True
-
-
 def get_anom_data():
     """
     Gets the anom_data dictionary contents (legacy). The discoverable registry

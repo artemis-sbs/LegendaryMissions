@@ -42,9 +42,3 @@ def casino_register_decks(force=False):
     gui_image_add_atlas("card_arv_back", CASINO_MEDIA + "/arvonian_back")
     gui_image_add_atlas("card_ter_back", CASINO_MEDIA + "/terran_back")
     _registered = True
-
-def card_arv_key(castle, value):
-    return "card_arv_%d_%d" % (castle, value)
-
-def card_ter_key(suit, rank):
-    return "card_ter_%s_%s" % (suit, rank)

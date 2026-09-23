@@ -16,7 +16,7 @@ def gm_panel_list(cid, left, top, width, height):
     task = gui_task_for_client(cid)
     if task is None:
         return
-    show_gm_panel_gui(cid)
+    _show_gm_panel_gui(cid)
 
 def gm_panel_list_tick(cid):
     sel = gui_get_variable("gm_selection")
@@ -24,9 +24,9 @@ def gm_panel_list_tick(cid):
     task = gui_task_for_client(cid)
     if task is None:
         return 1
-    show_gm_panel_gui(cid)
+    _show_gm_panel_gui(cid)
 
-def show_gm_panel_gui(cid):
+def _show_gm_panel_gui(cid):
     # Let user know how to fix the issue
     comms_broadcast(cid, "NOTE: Comms Message textbox has broken and will not work until you refresh the console. You can still use Paste from Clipboard and Send functionality without issue.")
     task = gui_task_for_client(cid)
@@ -80,21 +80,6 @@ def listbox_button(item, menu=1):
     gui_message(layout_item, "GM_Button_Pressed")
     # apply_control_styles(".button", "", layout_item, task)
     # gui_button()
-
-def simple_listbox_button(item):
-    gui_row("row-height: 1.5em;")
-    task = FrameContext.task
-    
-    layout_item = gui_text(f"{item}")
-    apply_control_styles(".button", "", layout_item, task)
-
-def simple_listbox_title():
-    gui_row("row-height: 1.2em;padding:13px;background:#1578;")
-    gui_text(f"$text:Ship;justify: left;")
-
-def listbox_item_pressed(button):
-    print("listbox item pressed")
-    signal_emit("gm_button_selected", {"button": button})
 
 def buildIcon(item):
     """Probably won't use, but it's a possible depiction of an alternative to the Info Panel implementation"""
@@ -198,9 +183,6 @@ def show_gm_stats(client_id, top, left, width, height):
     
 def hide_gm_stats(client_id, top, left, width, height):
     set_inventory_value(client_id, "gm_show_stats", False)
-
-def tick_gm_stats():
-    pass
 
 
 

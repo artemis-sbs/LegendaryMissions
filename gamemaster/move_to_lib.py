@@ -73,11 +73,3 @@ def map_mine_scatter(t_min, t_max, x,y,z, w,h, d):
             mine_obj.blob.set("damage_done", 5)
             mine_obj.blob.set("blast_radius", 1000)
             mine_obj.engine_object.blink_state = -5
-
-
-def save_map():
-    pass
-
-
-def load_map():
-    pass

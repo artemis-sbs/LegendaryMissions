@@ -217,7 +217,7 @@ def gates_play_round(hit_rule=True, rng=None):
 # BLACKJACK  (standard 52; Terran deck)
 # =========================================================================
 RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"]
-def bj_card_value(rank):
+def _bj_card_value(rank):
     if rank == "A": return 11
     if rank in ("10","J","Q","K"): return 10
     return int(rank)
@@ -227,7 +227,7 @@ def bj_deck(shoes=1):
 
 def bj_hand_value(cards):
     """Best total <=21 if possible; aces soften."""
-    total = sum(bj_card_value(r) for r, _ in cards)
+    total = sum(_bj_card_value(r) for r, _ in cards)
     aces = sum(1 for r, _ in cards if r == "A")
     while total > 21 and aces:
         total -= 10
@@ -242,7 +242,7 @@ def bj_play_dealer(cards, draw, hit_soft_17=False):
     while True:
         total = bj_hand_value(cards)
         soft = ("A" in [r for r, _ in cards]) and \
-               (sum(bj_card_value(r) for r, _ in cards) != total)  # an ace counts as 11
+               (sum(_bj_card_value(r) for r, _ in cards) != total)  # an ace counts as 11
         if total < 17 or (total == 17 and soft and hit_soft_17):
             cards.append(draw())
         else:

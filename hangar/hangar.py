@@ -712,23 +712,6 @@ def hangar_system_row_update(widgets, craft_id):
         gui_icon_recolor(item, state["color"])
     return True
 
-
-def get_dock_name(so):
-    """
-    Get the name of the home hangar of the specified craft.
-    Args:
-        so: the ID or object representing the craft
-    Returns:
-        str: The name of the craft's home ship or station.
-    """
-    dock = get_science_selection(so)
-    if not dock:
-        return ""
-    dock = to_space_object(dock)
-    if not dock:
-        return ""
-    return f"{dock.name}"
-
 def hangar_get_call_signs():
     ret = ["Aardvark","Badger","Chainsaw","Duckbill","Foxbat","Gargoyle","Hammerhead","Jellyfish","Kodiak","Lockjaw","Mongoose","Needlenose","Ostrich","Pancake","Rascal","Scarecrow","Tigershark","Vixen","Whiplash","Zealot"]
     random.shuffle(ret)
