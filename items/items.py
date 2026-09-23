@@ -13,7 +13,7 @@ from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_va
 from sbs_utils.procedural.query import to_object
 from sbs_utils.procedural.sides import to_side_id
 from sbs_utils.procedural.signal import signal_emit
-from sbs_utils.procedural.timers import is_timer_finished, format_time_remaining
+from sbs_utils.procedural.timers import is_timer_finished, format_time_remaining, get_time_remaining
 from sbs_utils.procedural.gui import gui_row, gui_text
 from sbs_utils.helpers import gui_text_escape
 
@@ -81,6 +81,10 @@ def items_upgrade_tab_list(ship_id, include_unowned=False):
             "consoles": lbl.get_inventory_value("consoles", "") or "",
             "ready": ready,
             "cd": "" if ready else format_time_remaining(ship_id, "item_cd_" + k),
+            # For the countdown BAR: seconds left, out of the effect's duration (the
+            # cooldown timer is set to exactly that - item_activate.mast).
+            "cd_left": 0 if ready else get_time_remaining(ship_id, "item_cd_" + k),
+            "cd_total": int(lbl.get_inventory_value("duration", 0) or 0),
         })
     # Held (or still counting down) first, then the catalog, each alphabetical.
     rows.sort(key=lambda r: (0 if (r["have"] > 0 or not r["ready"]) else 1, r["name"]))

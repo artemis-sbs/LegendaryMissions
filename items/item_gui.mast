@@ -97,7 +97,12 @@ gui_tab_add_top("upgrade")
     # Right (bottom): action band - Activate, live countdown, or console gate.
     gui_section(style="area: 47, 84, 95, 94;")
     if _sel is not None and not _ready:
-        """color:#ff0; justify:center; $text: active - {_cd}"""
+        # The countdown as a bar that DRAINS as the effect runs out, labelled with the
+        # time left. This band repaints once a second while anything counts down (the
+        # self-tick below), so a plain gauge redrawn each time is enough.
+        _cd_total = max(1, _sel["cd_total"], _sel["cd_left"])
+        gui_row("row-height: content;")
+        gui_gauge(_sel["cd_left"], _cd_total, "active - {_cd}", show="none", color="#ff0")
     elif _sel is not None and _have <= 0:
         # A catalog row: readable, not usable. Say why rather than showing a button
         # that would be refused server-side anyway (item_activate checks `have`).

@@ -104,6 +104,21 @@ class UpgradeTabCatalogTests(unittest.TestCase):
         rows = items_upgrade_tab_list(self.ship, include_unowned=True)
         self.assertNotIn("Escape Pod", self._names(rows))
 
+    def test_a_running_effect_carries_its_bar(self):
+        """The countdown bar needs seconds left out of the effect's duration."""
+        from sbs_utils.procedural.timers import set_timer
+        set_inventory_value(self.ship, "carapaction_coil", 1)
+        set_timer(self.ship, "item_cd_carapaction_coil", seconds=120)
+        row = [r for r in items_upgrade_tab_list(self.ship) if r["key"] == "carapaction_coil"][0]
+        self.assertFalse(row["ready"])
+        self.assertEqual(row["cd_total"], 300)
+        self.assertTrue(0 < row["cd_left"] <= 120)
+
+    def test_a_ready_item_has_no_countdown(self):
+        set_inventory_value(self.ship, "carapaction_coil", 1)
+        row = items_upgrade_tab_list(self.ship)[0]
+        self.assertEqual(row["cd_left"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
