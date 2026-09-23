@@ -147,6 +147,12 @@
 
 
 //gui/normal_sci
+    # SCIENCE_NEW_LAYOUT picks the prototype console instead of this one. A setting, not
+    # a replacement, because the whole point is to fly both and compare - and because the
+    # prototype owns the scan queue itself, which is a reimplementation of engine timing
+    # and not something to switch a mission onto silently. science_tabs.py.
+    if settings_get_defaults().get("SCIENCE_NEW_LAYOUT", False):
+        jump lm_sci_layout
     ss = gui_screen_size(client_id)
     # Ship Data overlap
     gui_section(style="area:0,45px,100,100;")

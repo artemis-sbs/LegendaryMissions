@@ -1,0 +1,264 @@
+# The prototype science console, reached from //gui/normal_sci when SCIENCE_NEW_LAYOUT
+# is set. Its own FILE, not an append to layout_widgets.mast: top-level labels fall
+# through, so the adjacency of two of them is an interface nothing in the file declares,
+# and inserting one between a pair that relied on it is a silent whole-console failure.
+#
+# What is different from the stock console, and why:
+#
+#   science_data_tabs  -> a scrolling button listbox (science_tabs.py)
+#   science_data       -> a console-drawn read-out (science_panel.py)
+#   science_data_freq  -> folded into that read-out's status tab
+#   science_sorted_list -> TRANSIENT. It cannot be filtered from script - there is no
+#                          send_science_* API - so the chip rail never reaches it. But a
+#                          list you cannot filter is still the fastest way to PICK, so it
+#                          is shown while nothing is selected and parked once something
+#                          is. science_tabs.lm_sci_object_list_show.
+#
+# The 2D view is untouched. A console cannot draw on an engine widget - the engine paints
+# it at its own size over whatever MAST put beside it - so the tab buttons are a column
+# here rather than a stack floating over the map. That difference is exactly what the
+# A/B cannot measure, and it is the thing the engine ask is for.
+
+== lm_sci_layout ==
+    ss = gui_screen_size(client_id)
+    # Ship Data overlap, same as the stock console.
+    gui_section(style=f"area:0,45px,100,100-{lm_sci_chip_row_px()}px;")
+
+    default tab = 1
+    gui_row("row-height: 400px-3em;col-width:280px;")
+    gui_info_panel(tab=tab)
+    gui_info_panel_add("message", 83, gui_panel_console_message, None, gui_panel_console_message_tick)
+    gui_info_panel_add("messages", 84, gui_panel_console_message_list, None)
+    gui_info_panel_add("log", 112, gui_panel_log, None, gui_panel_log_tick)
+    gui_info_panel_add("ship", 66, gui_panel_log_ship, None, gui_panel_log_tick)
+    gui_info_panel_add("mission", 85, gui_panel_log_mission, None, gui_panel_log_tick)
+
+    gui_row("row-height: 4em;col-width:280px;")
+    gui_log_tail()
+
+    gui_section(style=f"area:0,45px,100,100-{lm_sci_chip_row_px()}px;")
+    with gui_sub_section():
+        # Same band above the view as comms and the cockpit.
+        gui_row("row-height:45px;")
+        gui_blank(1,"col-width:280px")
+        gui_layout_widget("radar_zoom_ctrl")
+        gui_row()
+        gui_layout_widget("science_2d_view")
+
+
+    # Right column. The engine's own science widgets are parked off screen rather than
+    # merely left out: the console's widget list is what the engine draws from and it
+    # keeps what it has been given, so on a console that has already shown them, not
+    # asking again is not enough.
+    with gui_sub_section("col-width:30;"):
+        # REMOVED FROM THE WIDGET LIST, not merely parked, and staged on the PENDING list
+        # so it sticks.
+        #
+        # Three things that do not work, in the order they were tried:
+        #   gui_widget_offscreen - sends a rect at 100,100. Out of sight, still DECLARED,
+        #       and `gui_console("science")` declares all four of these before this route
+        #       runs - so the engine kept drawing the contact list on a real bridge.
+        #   not calling gui_layout_widget - the list is what the engine draws from and it
+        #       keeps what it was given; a console that has shown the list still has one.
+        #   gui_update_widget_list - rewrites and SENDS a list, but does not touch
+        #       `page.widgets`, and the page re-sends its own list at present
+        #       (maststorypage present), putting all four straight back.
+        #
+        # `gui_update_widgets` stages on `page.pending_widgets`, and the build does
+        # `self.widgets = self.pending_widgets` - so the change survives the present that
+        # follows it.
+        #
+        # THE CONSEQUENCE, stated plainly: selection is now the 2D view only. That is the
+        # trade this prototype is making - the list cannot be filtered, sorted or restyled
+        # from script (no send_science_* API exists), so the chip rail could never reach
+        # it, and a list the console's own filter cannot touch is worse than no list. If
+        # the engine ever offers a content hook, this is the line that comes back.
+        # All three go. `science_data_freq` was tried as a transient widget and could not
+        # be made to draw from script at all - see the note in science_tabs.py. The status
+        # tab draws the bands itself instead.
+        gui_update_widgets("", "science_data_tabs^science_data^science_data_freq")
+
+        # The read-out. The tabs are no longer in this column at all - they float over
+        # the view - so the whole of it above the controls is the readout.
+        #
+        # A REGION for the same reason the stack is one: this pane is refilled out of
+        # band whenever the contact's live numbers move, and only a region clears what
+        # it drew last time.
+        # ONE text area, UPDATED IN PLACE - not a region and not a refilled sub-section.
+        # A region has to be pinned to an absolute `area:`, which this pane is not: it is
+        # a flex row in a column, and a region with no area recurses in measurement. A
+        # plain sub-section refilled out of band allocates new tags and leaves every
+        # earlier fill painted underneath. A text area owns its own region, so assigning
+        # `.value` genuinely replaces what it drew - the way Engineering's Systems tab
+        # builds its efficiency block.
+        # THE TITLE and THE STATLINE are their own widgets, not lines of the body, because
+        # they move on different clocks. The title changes only when the selection does.
+        # The STATLINE - range, bearing, altitude - changes every tick a contact is under
+        # way, and folding it into the text area would mean rebuilding eight coefficients,
+        # four system lines and whatever prose the mission wrote, every frame, to keep one
+        # range figure honest. A gui_text updated in place is one string assignment.
+        # NAME and SIDE are two widgets on one row, because they carry different colours
+        # and a gui_text has one: the name is coloured by DIPLOMATIC RELATION (what this
+        # contact is to us) and the side by the SIDE's own icon colour (who it belongs
+        # to, matching its blip on the map). A neutral ship of a side we fight elsewhere
+        # must not read as hostile because of its flag.
+        gui_row("row-height: 1.8em;")
+        sci_title = gui_text(lm_sci_header_name_text(client_id))
+        # The side gets only what it needs, so the NAME has the rest. At 6em a small
+        # screen left "TSN Warramunga" too little room to shrink into and it wrapped -
+        # and a wrapped title is drawn OVER the statline, because the engine does not clip.
+        sci_side = gui_text(lm_sci_header_side_text(client_id), "col-width: 4em;")
+        on change lm_sci_header_revision(client_id):
+            sci_title.value = lm_sci_header_name_text(client_id)
+            sci_side.value = lm_sci_header_side_text(client_id)
+
+        gui_row("row-height: 1.3em;")
+        sci_stat = gui_text(lm_sci_statline_text(client_id))
+        # Watching the statline's own TEXT: it changes whenever any of the three numbers
+        # does, and not when they do not, so this repaints exactly as often as it must.
+        on change lm_sci_statline(client_id):
+            sci_stat.value = lm_sci_statline_text(client_id)
+
+        # THE READOUT and THE QUEUE share this space - one is shown at a time. A text
+        # area cannot hold a button, so the two controls that make a queue a queue need a
+        # listbox; and the queue belongs to the QUEUE TAB, not to every tab. Both rows are
+        # built and `Row.show()` picks between them, which marks the layout dirty and
+        # re-lays it out - so the one on screen takes the whole space.
+        panel_row = gui_row()
+        sci_panel = gui_text_area(lm_sci_panel_value(client_id))
+        on change lm_sci_panel_revision(client_id):
+            sci_panel.value = lm_sci_panel_value(client_id)
+
+        queue_row = gui_row()
+        # select=False: this is a menu, not a choice that stays made. The row CLICK TAG
+        # the template needs is passed on the real build either way - the listbox computes
+        # it unconditionally - so selection is not required to reach it.
+        sci_queue = gui_list_box(lm_sci_ql_items(client_id), lm_sci_ql_box_style(), item_template=lm_sci_ql_template, select=False)
+        on change lm_sci_ql_revision(client_id):
+            lm_sci_ql_refresh(client_id, sci_queue)
+
+        lm_sci_show_for_tab(client_id, panel_row, queue_row)
+        on change lm_sci_panel_effective_tab(client_id):
+            lm_sci_show_for_tab(client_id, panel_row, queue_row)
+
+        gui_row("row-height: 35px;")
+        default follow_tag = False
+        gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+        # "On screen" stays a console control rather than a tab button: it is a mode that
+        # outlives the selection, and the tab stack does not.
+        _sci_ship = viewscreen_home_ship(client_id)
+        _sci_owner = viewscreen_owner_token("science", client_id)
+        on_screen_dd = gui_drop_down(
+            viewscreen_shot_props(viewscreen_dial_label(_sci_ship, _sci_owner)))
+        on gui_message(on_screen_dd):
+            _ship = viewscreen_home_ship(client_id)
+            _owner = viewscreen_owner_token("science", client_id)
+            viewscreen_set(_ship, viewscreen_mode_for(on_screen_dd.value), get_science_selection(_ship), owner=_owner)
+        on change viewscreen_revision(client_id):
+            on_screen_dd.value = viewscreen_dial_label(
+                viewscreen_home_ship(client_id),
+                viewscreen_owner_token("science", client_id))
+
+
+        # THE CONTACT LIST, transient - up while nothing is selected, gone once a
+        # contact is picked.
+        #
+        # NO `gui_layout_widget` FOR IT. That is the whole trick. A layout placeholder
+        # re-sends its widget's rect on every build, which fights the rect an `on change`
+        # handler sends and wins - measured, and it is exactly what "the object list is
+        # always showing" was. Positioned purely by rect, there is nothing to fight.
+        #
+        # This is how the info panel hosts an engine widget in a tab: gui_panel_widget_show
+        # / _hide are rect sends and nothing more. The widget is still DECLARED by
+        # gui_console("science"), which is what makes the engine draw it at all.
+        lm_sci_object_list_place(client_id)
+        on change lm_sci_object_list_wanted(client_id):
+            lm_sci_object_list_place(client_id)
+
+        # THE BEAM FREQUENCY READOUT, the engine's own A-E widget, on the same terms:
+        # positioned by rect, never placed with gui_layout_widget. Up only on the status
+        # tab of a scanned hostile - the one place it means anything - which is also when
+        # the contact list is down, so they cannot collide.
+        # `cur_scan_ID` / `cur_scan_type` are still published: they are an honest
+        # statement of what science is looking at, which no other console has today, and
+        # they cost nothing. They did NOT make the engine's band readout appear.
+        lm_sci_publish_active_tab(client_id)
+        on change lm_sci_tabs_revision(client_id):
+            lm_sci_publish_active_tab(client_id)
+
+    on change follow_tag:
+        ship = viewscreen_home_ship(client_id)
+        _sel = get_science_selection(ship)
+        set_inventory_value(client_id, "2d_follow", follow_tag)
+        science_set_2dview_focus(client_id, _sel)
+
+    # THE FILTER CHIPS, full console width, in their own SECTION below both columns.
+    #
+    # Inside the view's column it was only 70% wide, because that column IS the view. A
+    # section of its own spans everything, and the two content sections above stop
+    # `lm_sci_chip_row_px()` short of the bottom to leave exactly this band - so nothing
+    # overlaps and the 2D view resizes with no arithmetic.
+    #
+    # It does not filter anything yet, and that is the point of having it: the contact
+    # list is gone precisely because script cannot reach it, and the 2D map has no
+    # science equivalent of `comms_map_filter_set`. The rail is here so the shape can be
+    # argued with before either is asked for. science_chips.py.
+    gui_section(style=f"area:0,100-{lm_sci_chip_row_px()}px,100,100;")
+    gui_row()
+    sci_chips = gui_list_box(lm_sci_chips_items(client_id), lm_sci_chips_style(), item_template=lm_sci_chips_template, section_style="padding:3px,4px,3px,4px;", select=True, multi=True)
+    sci_chips.horizontal = True
+    sci_chips.selected = lm_sci_chips_selected(client_id)
+    on change sci_chips.get_selected():
+        lm_sci_chips_normalize(client_id, sci_chips)
+    on change lm_sci_chips_revision(client_id):
+        lm_sci_chips_refresh(client_id, sci_chips)
+
+    # THE SCAN TABS - their own SECTION, declared after the columns are complete.
+    #
+    # An absolute region can draw over an engine view; Weapons ships the Manual Beams
+    # square over weapon_2d_view. But a region is still a CHILD of whatever section is
+    # open, and this console's layout section splits into two columns - the view and the
+    # 30%-wide right column. Declaring the region between them made it a THIRD sibling,
+    # so the column maths changed underneath and the right column's own controls (Follow,
+    # On screen) were laid out across the full width, on top of these buttons.
+    #
+    # manual_weapons.mast does not hit this because its label declares regions and nothing
+    # else - no section, no sub-section. So: give the region a section of its own, after
+    # the flow layout is finished with.
+    #
+    # A REGION, not a sub-section: a region brackets its own drawing area and sends
+    # send_gui_clear before redrawing, so a rebuild genuinely replaces it. Refilling a
+    # plain sub-section allocates new tags and leaves every earlier fill painted
+    # underneath - which is how the ePADD inbox once drew three messages on top of
+    # each other.
+    gui_section(style="area:0,0,100,100;")
+    sci_stack = gui_region(lm_sci_stack_style(client_id))
+    with gui_rebuild(sci_stack):
+        lm_sci_stack_show(client_id)
+    # Comes and goes with the selection, the way a comms menu does. The area itself is a
+    # function of the row count, so the region is re-declared as well as refilled.
+    on change lm_sci_tabs_revision(client_id):
+        sci_stack.style = lm_sci_stack_style(client_id)
+        with gui_rebuild(sci_stack):
+            lm_sci_stack_show(client_id)
+
+
+    # The label ENDS here - no `yield idle`. A builder that parks on `yield idle` is
+    # CANCELLED by the next GUI build, and a cancelled task cannot be revived, so its
+    # `on change` handlers could stop. One that ends is revived when a handler fires.
+    ->END
+
+
+# The queue is server-side and shared, so ONE task beats it for the whole mission - not
+# one per console, which would advance every scan once per science officer watching.
+//shared/signal/game_started
+    task_schedule(lm_sci_queue_watch)
+
+== lm_sci_queue_watch ==
+" Advance the side scan queues. Only runs when the prototype console is enabled, because
+" nothing else in the mission queues into them.
+    ->END if not settings_get_defaults().get("SCIENCE_NEW_LAYOUT", False)
+--- lm_sci_queue_beat
+    await delay_sim(0.5)
+    lm_sci_queue_tick()
+    jump lm_sci_queue_beat

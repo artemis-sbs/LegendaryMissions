@@ -22,7 +22,21 @@ import eng_crew_chips.py
 # Engineering's grid orders - the //comms/grid buttons, drawn by the console.
 import eng_grid_buttons.py
 
+# The prototype science console (SCIENCE_NEW_LAYOUT). Queue first - both of the others
+# import it - then the tab listbox, which the panel imports for the current tab.
+# The scan-time model - engine fields first. Before science_queue, which calls it.
+import science_scan_time.py
+import science_queue.py
+import science_tabs.py
+import science_panel.py
+# The filter chips under the science 2D view. Before science_layout, which draws them.
+import science_chips.py
+# The queue list with its Move up / Cancel buttons. Before science_layout draws it.
+import science_queue_list.py
+
 import layout_widgets.mast
+# The prototype science console's own layout label, jumped to from //gui/normal_sci.
+import science_layout.mast
 
 
 import debug.mast #want debug tabs left of upgrade
