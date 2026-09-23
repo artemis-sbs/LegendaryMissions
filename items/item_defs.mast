@@ -14,6 +14,8 @@
 #   key       stable id (matches the legacy inventory key / pickup role)
 #   art       pickup art_id
 #   mode      consumable | install | resource
+#   usable    false for a MATERIAL - carried and spent (a recipe input), never
+#             activated. Kept off the Upgrades tab; Cargo still lists it. Default true.
 #   targets   agent kinds it can apply to
 #   consoles  console(s) that may activate it (omit = any)
 #   duration  consumable effect length (seconds)

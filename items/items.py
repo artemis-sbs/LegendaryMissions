@@ -73,6 +73,11 @@ def items_upgrade_tab_list(ship_id, include_unowned=False):
         cats = (lbl.get_inventory_value("type", "") or "").split("/")
         if "trade" in cats or "quest" in cats:
             continue
+        # A MATERIAL (salvage, bio sample) is carried and spent, never activated - its
+        # label has no effect - so an Activate button beside it would do nothing. It is
+        # declared, not guessed: `usable: false` (items/item_defs.mast). Cargo lists it.
+        if not _item_usable(lbl):
+            continue
         rows.append({
             "key": k,
             "name": lbl.get_inventory_value("display_text", k),
@@ -89,6 +94,14 @@ def items_upgrade_tab_list(ship_id, include_unowned=False):
     # Held (or still counting down) first, then the catalog, each alphabetical.
     rows.sort(key=lambda r: (0 if (r["have"] > 0 or not r["ready"]) else 1, r["name"]))
     return rows
+
+
+def _item_usable(lbl):
+    """False for an item declared `usable: false` - see item_defs.mast."""
+    v = lbl.get_inventory_value("usable", True)
+    if isinstance(v, str):
+        return v.strip().lower() not in ("false", "no", "0", "off")
+    return v is not False
 
 
 def items_active_keys(ship_id):

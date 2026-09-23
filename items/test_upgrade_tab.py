@@ -52,6 +52,11 @@ CATALOG = [
     _Label(key="ore", display_text="Ore", type="item/trade/ore", desc="Raw ore."),
     _Label(key="escape-pod", display_text="Escape Pod", type="item/quest/rescue",
            desc="A life-support capsule."),
+    _Label(key="salvage", display_text="Salvage", type="item/resource/salvage",
+           mode="resource", usable=False, desc="The Fabricator's raw material."),
+    _Label(key="hidens_powercell", display_text="HiDens Power Cell",
+           type="item/resource/energy", mode="resource",
+           desc="Instantly restores 500 ship energy when used."),
 ]
 
 
@@ -103,6 +108,18 @@ class UpgradeTabCatalogTests(unittest.TestCase):
         set_inventory_value(self.ship, "escape-pod", 1)
         rows = items_upgrade_tab_list(self.ship, include_unowned=True)
         self.assertNotIn("Escape Pod", self._names(rows))
+
+    def test_a_material_is_not_an_upgrade_even_when_held(self):
+        """Salvage is spent by a recipe, never activated - an Activate button beside
+        it did nothing (engine-seen). Declared `usable: false`; Cargo still lists it."""
+        set_inventory_value(self.ship, "salvage", 15)
+        names = self._names(items_upgrade_tab_list(self.ship, include_unowned=True))
+        self.assertNotIn("Salvage", names)
+
+    def test_a_usable_resource_stays(self):
+        """`resource` is not the test - the power cell IS used, so it is listed."""
+        set_inventory_value(self.ship, "hidens_powercell", 1)
+        self.assertIn("HiDens Power Cell", self._names(items_upgrade_tab_list(self.ship)))
 
     def test_a_running_effect_carries_its_bar(self):
         """The countdown bar needs seconds left out of the effect's duration."""

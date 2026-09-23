@@ -31,6 +31,7 @@ key: salvage
 display_text: Salvage
 art: container_small_6c
 mode: resource
+usable: false
 targets: ship, cockpit
 price: 20
 tier: 1
@@ -55,6 +56,7 @@ key: bio_sample
 display_text: Bio Sample
 art: container_small_6b
 mode: resource
+usable: false
 targets: ship, cockpit
 price: 60
 tier: 1
