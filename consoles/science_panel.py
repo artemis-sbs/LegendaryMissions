@@ -175,6 +175,23 @@ def lm_sci_system_health(target_id):
 #: The five shield frequency bands, in the order the engine's own readout shows them.
 LM_SCI_FREQ_BANDS = ("A", "B", "C", "D", "E")
 
+#: `shield_freq_strength`'s scale is DETECTED, not assumed.
+#:
+#: It was read as a 0..1 coefficient first (every band came out at 100% or more), then
+#: hard-coded to 10000 - and that second guess is what silently LOST the readout: values
+#: smaller than the assumed scale all round to 0, and the all-zero guard then drops the
+#: whole block. A wrong constant here does not look wrong, it looks like missing data.
+#:
+#: So the scale comes from the values themselves. The bands are one reading on one ship,
+#: so the biggest of them says which scale they are on, and every band is divided by the
+#: same number - which is what keeps them comparable and the WEAK marker honest.
+LM_SCI_FREQ_SCALES = (1.0, 100.0, 10000.0)
+
+#: Tier edges as PERCENT of that scale, matching how the engine's own bars read.
+LM_SCI_FREQ_HIGH = 75
+LM_SCI_FREQ_MID = 50
+LM_SCI_FREQ_LOW = 25
+
 
 def lm_sci_shield_frequencies(target_id):
     """(band, percent) per shield frequency, or [] when the contact does not report them.
@@ -201,33 +218,56 @@ def lm_sci_shield_frequencies(target_id):
     blob = to_blob(target_id) if target_id else None
     if blob is None:
         return []
-    out = []
+    raw = []
     for i, band in enumerate(LM_SCI_FREQ_BANDS):
         value = blob.get("shield_freq_strength", i)
         if value is None:
             continue
-        out.append((band, int(round(float(value) * 100))))
-    # All zeroes means "never populated", not "shields down on every band" - the engine
-    # answers a typed default for a field nothing set.
-    if not any(pct for _band, pct in out):
+        raw.append((band, float(value)))
+    if not raw:
         return []
-    return out
+    scale = lm_sci_frequency_scale(max(v for _b, v in raw))
+    return [(band, int(round(value / scale * 100.0))) for band, value in raw]
+
+
+def lm_sci_frequency_scale(peak):
+    """The scale these readings are on, from the largest of them.
+
+    Smallest scale the peak fits in, so a 0..1 coefficient, a percentage and a 0..10000
+    level all read correctly and none of them is rounded away to nothing.
+    """
+    for scale in LM_SCI_FREQ_SCALES:
+        if peak <= scale:
+            return scale
+    return LM_SCI_FREQ_SCALES[-1]
+
+
+def lm_sci_has_band_readings(bands):
+    """True when the bands carry an actual reading.
+
+    All zeroes means "never populated", not "shields down on every band" - the engine
+    answers a typed default for a field nothing wrote. Kept SEPARATE from reading the
+    bands so the tab can tell the difference on screen: a block that silently vanishes
+    is indistinguishable from a block that was never coded, which is exactly how long
+    this took to notice.
+    """
+    return any(pct for _band, pct in bands)
 
 
 def lm_sci_frequency_color(pct):
-    """What tier a band's strength reads as, by RANGE - the same idea the engine's own
-    bars use, where a short bar is orange and a tall one green.
+    """What tier a band's strength reads as - quartered at 25 / 50 / 75 percent, which is
+    how the engine's own bars read.
 
     Coloured by MAGNITUDE, not by desirability, and deliberately: a low band is good news
     for the gunner but it is still a low reading, and flipping the colour scale over
     would put this tab at odds with every other readout on the bridge. Which band to
     shoot is said in words instead - see the WEAK marker.
     """
-    if pct >= 90:
+    if pct >= LM_SCI_FREQ_HIGH:
         return _GOOD
-    if pct >= 70:
+    if pct >= LM_SCI_FREQ_MID:
         return "#8A9A24"
-    if pct >= 40:
+    if pct >= LM_SCI_FREQ_LOW:
         return _WORN
     return "#B4711E"
 
@@ -353,13 +393,21 @@ def lm_sci_statline_text(client_id):
             f"font:gui-1;overflow:shrink;")
 
 
-def lm_sci_panel_scan_lines(ship_id, target_id):
-    """What the identity card adds BELOW the header and statline: how hard it would be
-    to hurt, and whatever the mission wrote."""
-    if target_id is None:
+def lm_sci_shield_lines(target_id):
+    """Front and rear shields, coloured by how much is left.
+
+    On BOTH tabs, deliberately. Shields are the fastest-moving thing a science officer
+    reports and the one a gunner asks for by name, so making somebody switch tabs to see
+    them during a fight is the wrong trade - and status is the tab they will be on, since
+    it is where the systems and the bands are.
+
+    The VALUE is absolute, matching the stock readout, and only the colour is a ratio:
+    "front shields 90" is what gets said out loud, not "front shields 75 percent".
+    """
+    blob = to_blob(target_id) if target_id else None
+    if blob is None:
         return []
     lines = []
-    blob = to_blob(target_id)
     for i, label in enumerate(("FRNT SHLD", "REAR SHLD")):
         value = _blob_get(blob, "shield_val", i, None)
         if value is None:
@@ -370,6 +418,15 @@ def lm_sci_panel_scan_lines(ship_id, target_id):
             ratio = float(value) / max_value
             color = _GOOD if ratio >= 0.75 else (_WORN if ratio >= 0.25 else _BAD)
         lines.append(_line(f"{label}  {int(value)}", color))
+    return lines
+
+
+def lm_sci_panel_scan_lines(ship_id, target_id):
+    """What the identity card adds BELOW the header and statline: how hard it would be
+    to hurt, and whatever the mission wrote."""
+    if target_id is None:
+        return []
+    lines = lm_sci_shield_lines(target_id)
     text = science_get_scan_data(ship_id, target_id, "scan")
     if text:
         lines += ["", _line(text, _DIM)]
@@ -380,7 +437,11 @@ def lm_sci_panel_status_lines(ship_id, target_id):
     """Engineering's readout, pointed at somebody else's ship."""
     if target_id is None:
         return []
-    lines = []
+    # SHIELDS FIRST, before the systems. They move fastest and they are what a gunner
+    # asks for by name, so they should not be below a block that rarely changes.
+    lines = lm_sci_shield_lines(target_id)
+    if lines:
+        lines.append("")
     health = lm_sci_system_health(target_id)
     if health:
         lines.append(_line("SYSTEMS", _LABEL))
@@ -397,9 +458,15 @@ def lm_sci_panel_status_lines(ship_id, target_id):
     # is better spent on what is left of a friendly.
     if side_are_enemies(ship_id, target_id):
         bands = lm_sci_shield_frequencies(target_id)
-        if bands:
+        lines += ["", _line("SHIELD FREQUENCY", _LABEL)]
+        if not lm_sci_has_band_readings(bands):
+            # SAY SO rather than draw nothing. Zeroes must not be shown as real - five
+            # of them read as "no shields at all", a lie in the dangerous direction -
+            # but a heading with a reason under it tells a science officer the console
+            # is working and the data is not there, which an empty tab does not.
+            lines.append(_line("  (no band readings from this contact)", _DIM))
+        else:
             weak = lm_sci_weakest_band(bands)
-            lines += ["", _line("SHIELD FREQUENCY", _LABEL)]
             for band, pct in bands:
                 color = lm_sci_frequency_color(pct)
                 if band == weak:
@@ -410,13 +477,20 @@ def lm_sci_panel_status_lines(ship_id, target_id):
                 else:
                     lines.append(_line(f"  {band}  {pct}%", color))
 
-    values = lm_sci_coefficients(target_id)
-    if values:
-        lines += ["", _line("EFFICIENCY", _LABEL)]
-        for label, pct in values:
-            lines.append(_line(f"  - {label} {pct}%", lm_sci_coefficient_color(pct)))
-    elif not health:
-        lines.append(_line("(no system readings from this contact)", _DIM))
+    # NO EFFICIENCY BLOCK ON A CONTACT.
+    #
+    # The eight `*_damage_coeff` values are DERIVED FROM A SHIP'S OWN DAMAGE GRID, and a
+    # console only has a grid for the ship it is flying. Read off somebody else's hull
+    # they are not a weaker signal, they are the wrong number - reported as inaccurate on
+    # NPCs from a real bridge, which is exactly where this would show first.
+    #
+    # SYSTEM HEALTH above is different and stays: `system_damage` / `system_max_damage`
+    # is the model the engine uses to kill an NPC, so it is true about any ship. The
+    # readings a science officer can legitimately have are what this tab shows.
+    #
+    # `lm_sci_coefficients` is kept - it is correct about the ship you are ON, which is
+    # what Engineering's own Systems tab uses it for.
+
     text = science_get_scan_data(ship_id, target_id, "status")
     if text:
         lines += ["", _line(text, _WORN)]
@@ -503,26 +577,18 @@ def lm_sci_panel_value(client_id):
 
 
 def lm_sci_panel_revision(client_id):
-    """What an `on change` watches so the readout keeps up with a live contact.
+    """What an `on change` watches: THE RENDERED VALUE ITSELF.
 
-    Deliberately includes the live numbers: that is what makes the status tab honest
-    without a ticker pushing corrections into a stored string.
+    It used to be a hand-picked tuple - tab, target, system health, frequencies,
+    coefficients - and that is a bug waiting to happen, because anything drawn but not
+    listed never triggers a repaint. It happened: the SHIELD numbers and the mission's
+    own scan TEXT were both drawn and neither was watched, so the scan tab sat on stale
+    figures while a contact took fire, and a status line pushed by `science_status.py`
+    never appeared.
+
+    Comparing the value cannot drift from what is on screen, because it IS what goes on
+    screen. It costs one build of the string per poll - a handful of blob reads, the same
+    order as the tuple it replaces, which was already reading system health, frequencies
+    and every coefficient.
     """
-    ship_id, target_id = lm_sci_tabs_pair(client_id)
-    if not ship_id:
-        return (None, None)
-    # The EFFECTIVE tab, not the selected one: a scan landing flips the readout from the
-    # queue to the contact without the selection changing, and watching the selected tab
-    # would leave the queue on screen until something else moved.
-    tab = lm_sci_panel_effective_tab(client_id)
-    if tab == LM_SCI_QUEUE_TAB:
-        side = lm_sci_queue_side(ship_id)
-        return (tab, tuple((e["target"], e["tab"], int(e["pct"]))
-                           for e in (lm_sci_queue_list(side) if side else [])))
-    # The FREQUENCIES are in here too. They move as a contact's shields take damage and
-    # regenerate, and a stale band is worse than no band: weapons tunes to whatever this
-    # says, so a readout that lags points the guns at the wrong frequency.
-    return (tab, target_id,
-            tuple(lm_sci_system_health(target_id)),
-            tuple(lm_sci_shield_frequencies(target_id)),
-            tuple(lm_sci_coefficients(target_id)))
+    return lm_sci_panel_value(client_id)

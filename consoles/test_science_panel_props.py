@@ -156,7 +156,7 @@ class PanelPropsTest(unittest.TestCase):
     def test_an_enemy_shows_its_shield_frequencies(self):
         """Drawn as text because the engine's own widget cannot be driven from a console
         that replaces science_data_tabs - see the note in science_tabs.py."""
-        self._arm_bands(self.target, [0.9, 0.35, 0.8, 0.95, 0.7])
+        self._arm_bands(self.target, [9000, 3500, 8000, 9500, 7000])
         body = self._status_of(self.target)
         self.assertIn("SHIELD FREQUENCY", body)
         for band in sp.LM_SCI_FREQ_BANDS:
@@ -165,7 +165,7 @@ class PanelPropsTest(unittest.TestCase):
     def test_the_weakest_band_is_called_out_in_words(self):
         """The tier colour says how strong a band is; the word says which to shoot. A
         gunner reads this aloud over comms, so both facts are wanted."""
-        self._arm_bands(self.target, [0.9, 0.35, 0.8, 0.95, 0.7])
+        self._arm_bands(self.target, [9000, 3500, 8000, 9500, 7000])
         self.assertEqual(sp.lm_sci_weakest_band(
             sp.lm_sci_shield_frequencies(self.target.id)), "B")
         self.assertIn("WEAK", self._status_of(self.target))
@@ -175,14 +175,18 @@ class PanelPropsTest(unittest.TestCase):
         from sbs_utils.procedural.spawn import npc_spawn as _spawn
         friend = to_object(_spawn(3000, 0, 0, "TSN Essex", "tsn",
                                   "tsn_light_cruiser", "behav_npcship"))
-        self._arm_bands(friend, [0.9, 0.35, 0.8, 0.95, 0.7])
+        self._arm_bands(friend, [9000, 3500, 8000, 9500, 7000])
         self.assertNotIn("SHIELD FREQUENCY", self._status_of(friend))
 
-    def test_unpopulated_bands_are_dropped_not_shown_as_zeroes(self):
+    def test_unpopulated_bands_say_so_instead_of_showing_zeroes(self):
         """Five zeroes would read as "no shields at all" - a lie in the dangerous
-        direction."""
-        self.assertEqual(sp.lm_sci_shield_frequencies(self.target.id), [])
-        self.assertNotIn("SHIELD FREQUENCY", self._status_of(self.target))
+        direction. But drawing NOTHING is indistinguishable from the block not existing,
+        which is how long this took to notice."""
+        body = self._status_of(self.target)
+        self.assertIn("SHIELD FREQUENCY", body, "the heading must still appear")
+        self.assertIn("no band readings", body)
+        self.assertFalse(sp.lm_sci_has_band_readings(
+            sp.lm_sci_shield_frequencies(self.target.id)))
 
     def test_the_readout_repaints_when_a_band_moves(self):
         """Weapons tunes to whatever this says, so a stale band points the guns at the
@@ -190,20 +194,121 @@ class PanelPropsTest(unittest.TestCase):
         from sbs_utils.procedural.query import set_science_selection
         set_science_selection(self.ship, self.target)
         science_set_scan_data(self.ship, self.target, {"scan": "seen", "status": "hurt"})
-        self._arm_bands(self.target, [0.9, 0.35, 0.8, 0.95, 0.7])
-        before = sp.lm_sci_panel_revision(CID)
+        # The STATUS lines directly: `lm_sci_tabs_set_current` needs a client agent to
+        # hold the tab and this harness has none, so going through the console's current
+        # tab would silently test the scan tab instead.
+        self._arm_bands(self.target, [9000, 3500, 8000, 9500, 7000])
+        before = sp.lm_sci_panel_status_lines(self.ship.id, self.target.id)
         # Band C takes a beating and becomes the weak one.
-        self.target.data_set.set("shield_freq_strength", 0.10, 2)
-        self.assertNotEqual(before, sp.lm_sci_panel_revision(CID),
+        self.target.data_set.set("shield_freq_strength", 1000, 2)
+        self.assertNotEqual(before,
+                            sp.lm_sci_panel_status_lines(self.ship.id, self.target.id),
                             "a band change must repaint the readout")
         self.assertEqual(sp.lm_sci_weakest_band(
             sp.lm_sci_shield_frequencies(self.target.id)), "C")
 
     def test_the_values_are_read_from_the_blob_not_invented(self):
-        """Exactly what was written, as percentages - no fabrication anywhere."""
+        """Exactly what was written, as a percentage of 10000 - no fabrication anywhere.
+
+        The scale matters: read as a 0..1 coefficient, every band came out at 100% or
+        more and the readout was meaningless."""
+        self._arm_bands(self.target, [2000, 4000, 6000, 8000, 10000])
+        self.assertEqual(sp.lm_sci_shield_frequencies(self.target.id),
+                         [("A", 20), ("B", 40), ("C", 60), ("D", 80), ("E", 100)])
         self._arm_bands(self.target, [0.2, 0.4, 0.6, 0.8, 1.0])
         self.assertEqual(sp.lm_sci_shield_frequencies(self.target.id),
                          [("A", 20), ("B", 40), ("C", 60), ("D", 80), ("E", 100)])
+
+    def test_the_scale_is_detected_not_assumed(self):
+        """A hard-coded 10000 silently LOST the readout when the real values were
+        smaller: everything rounded to 0 and the all-zero guard dropped the block. A
+        wrong constant here does not look wrong, it looks like missing data."""
+        self._arm_bands(self.target, [0.9, 0.35, 0.8, 0.95, 0.7])
+        pcts = dict(sp.lm_sci_shield_frequencies(self.target.id))
+        self.assertEqual(pcts["A"], 90, f"0..1 scale misread: {pcts}")
+        self.assertEqual(pcts["B"], 35)
+
+        self._arm_bands(self.target, [90, 35, 80, 95, 70])
+        self.assertEqual(dict(sp.lm_sci_shield_frequencies(self.target.id))["A"], 90,
+                         "percent scale misread")
+
+        self._arm_bands(self.target, [9000, 3500, 8000, 9500, 7000])
+        self.assertEqual(dict(sp.lm_sci_shield_frequencies(self.target.id))["A"], 90,
+                         "10000 scale misread")
+
+    def test_the_weak_band_is_the_same_whatever_the_scale(self):
+        """Every band divides by the SAME number, which is what keeps them comparable."""
+        for bands in ([0.9, 0.35, 0.8, 0.95, 0.7],
+                      [90, 35, 80, 95, 70],
+                      [9000, 3500, 8000, 9500, 7000]):
+            self._arm_bands(self.target, bands)
+            self.assertEqual(sp.lm_sci_weakest_band(
+                sp.lm_sci_shield_frequencies(self.target.id)), "B", f"scale {bands[0]}")
+
+    def test_the_tiers_are_quartered(self):
+        """25 / 50 / 75, the way the engine's own bars read."""
+        self.assertEqual(sp.lm_sci_frequency_color(80), sp.lm_sci_frequency_color(100))
+        self.assertNotEqual(sp.lm_sci_frequency_color(74), sp.lm_sci_frequency_color(76))
+        self.assertNotEqual(sp.lm_sci_frequency_color(49), sp.lm_sci_frequency_color(51))
+        self.assertNotEqual(sp.lm_sci_frequency_color(24), sp.lm_sci_frequency_color(26))
+
+    def test_the_lowest_band_is_the_weak_one(self):
+        """Whatever the scale, WEAK is simply the smallest reading."""
+        self._arm_bands(self.target, [9000, 3500, 8000, 9500, 7000])
+        self.assertEqual(sp.lm_sci_weakest_band(
+            sp.lm_sci_shield_frequencies(self.target.id)), "B")
+        self._arm_bands(self.target, [9000, 8000, 8000, 500, 7000])
+        self.assertEqual(sp.lm_sci_weakest_band(
+            sp.lm_sci_shield_frequencies(self.target.id)), "D")
+
+    def test_status_shows_the_shields_too(self):
+        """Shields move fastest and are what a gunner asks for by name - status is the
+        tab they will be on, so switching tabs to read them is the wrong trade."""
+        self.target.data_set.set("shield_val", 90.0, 0)
+        self.target.data_set.set("shield_val", 40.0, 1)
+        self.target.data_set.set("shield_max_val", 120.0, 0)
+        self.target.data_set.set("shield_max_val", 120.0, 1)
+        body = self._status_of(self.target)
+        self.assertIn("FRNT SHLD  90", body)
+        self.assertIn("REAR SHLD  40", body)
+
+    def test_the_shield_value_is_absolute_and_only_the_colour_is_a_ratio(self):
+        """"front shields 90" is what gets said out loud, not "75 percent"."""
+        self.target.data_set.set("shield_val", 90.0, 0)
+        self.target.data_set.set("shield_max_val", 120.0, 0)
+        line = sp.lm_sci_shield_lines(self.target.id)[0]
+        self.assertIn("90", line)
+        self.assertNotIn("75", line)
+
+    def test_both_tabs_draw_the_same_shield_lines(self):
+        """One helper, so they cannot drift apart."""
+        self.target.data_set.set("shield_val", 90.0, 0)
+        self.target.data_set.set("shield_max_val", 120.0, 0)
+        shields = sp.lm_sci_shield_lines(self.target.id)
+        scan = sp.lm_sci_panel_scan_lines(self.ship.id, self.target.id)
+        status = sp.lm_sci_panel_status_lines(self.ship.id, self.target.id)
+        for line in shields:
+            self.assertIn(line, scan)
+            self.assertIn(line, status)
+
+    def test_a_contact_never_shows_the_efficiency_block(self):
+        """The eight `*_damage_coeff` values are derived from a ship's OWN damage grid,
+        so read off somebody else's hull they are not a weaker signal - they are the
+        wrong number. Reported as inaccurate on NPCs from a real bridge."""
+        for key in ("all_beam_damage_coeff", "impulse_damage_coeff",
+                    "warp_damage_coeff", "sensor_damage_coeff"):
+            self.target.data_set.set(key, 0.5, 0)
+        self.assertNotIn("EFFICIENCY", self._status_of(self.target))
+
+    def test_system_health_still_shows_on_a_contact(self):
+        """`system_damage` / `system_max_damage` is the model the engine uses to kill an
+        NPC, so unlike the coefficients it is true about any ship."""
+        for i in range(4):
+            self.target.data_set.set("system_max_damage", 10.0, i)
+        self.target.data_set.set("system_damage", 5.0, 1)
+        body = self._status_of(self.target)
+        self.assertIn("SYSTEMS", body)
+        self.assertIn("ENGN", body)
 
     def test_unpopulated_coefficients_are_dropped_not_shown_as_zeroes(self):
         """Eight zeroes drew a healthy raider as a wreck - beam 0%, tube 0%, warp 0%.
