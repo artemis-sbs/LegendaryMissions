@@ -28,13 +28,6 @@ gui_tab_add_top("upgrade")
     # upgrade does before finding one - which the old upgrades screen did and this one
     # had lost. Held items sort first; the rest are dimmed and cannot be activated.
     _items = items_upgrade_tab_list(ship_id, include_unowned=True)
-    # True while any shown item is still counting down - drives a live 1s repaint
-    # so the timer visibly ticks (idle tabs only repaint on item signals).
-    any_active = False
-    for _it in _items:
-        if not _it["ready"]:
-            any_active = True
-
     # Track the selection by key so it survives repaints.
     default upgrade_sel_key = None
     if upgrade_sel_key is None and len(_items) > 0:
@@ -98,11 +91,14 @@ gui_tab_add_top("upgrade")
     gui_section(style="area: 47, 84, 95, 94;")
     if _sel is not None and not _ready:
         # The countdown as a bar that DRAINS as the effect runs out, labelled with the
-        # time left. This band repaints once a second while anything counts down (the
-        # self-tick below), so a plain gauge redrawn each time is enough.
+        # time left - and it updates ITSELF. The page used to rebuild every second
+        # (the list, the description, everything) to move this one number.
         _cd_total = max(1, _sel["cd_total"], _sel["cd_left"])
+        _cd_timer = "item_cd_" + upgrade_sel_key
         gui_row("row-height: content;")
-        gui_gauge(_sel["cd_left"], _cd_total, "active - {_cd}", show="none", color="#ff0")
+        cd_gauge = gui_gauge(_sel["cd_left"], _cd_total, "active - {_cd}", show="none", color="#ff0")
+        on change get_time_remaining(ship_id, _cd_timer):
+            cd_gauge.update(value=get_time_remaining(ship_id, _cd_timer), label="active - " + format_time_remaining(ship_id, _cd_timer))
     elif _sel is not None and _have <= 0:
         # A catalog row: readable, not usable. Say why rather than showing a button
         # that would be refused server-side anyway (item_activate checks `have`).
@@ -122,14 +118,15 @@ gui_tab_add_top("upgrade")
         upgrade_sel_hint = ubox.get_selection_hint()
         jump repaint
 
-    # While something is counting down, self-tick every second so the timer
-    # updates live; otherwise just wait for interaction / item signals.
-    if any_active:
-        await gui(timeout=delay_sim(1))
-    else:
-        await gui()
-    # The self-tick rebuild, and the reason this tab needed the hint most. Taken
-    # after await gui() returns, never before it: a listbox has no view until it
-    # has presented, so a hint captured at build time carries nothing.
+    # Rebuild only when an effect STARTS or ENDS - that is when a row's "(active)" and
+    # the action band (countdown <-> Activate) change. The countdown itself is the bar
+    # above updating in place; this used to be a whole-page rebuild once a second.
+    on change items_active_keys(ship_id):
+        upgrade_sel_hint = ubox.get_selection_hint()
+        jump repaint
+
+    await gui()
+    # Taken after await gui() returns, never before it: a listbox has no view until
+    # it has presented, so a hint captured at build time carries nothing.
     upgrade_sel_hint = ubox.get_selection_hint()
     jump repaint

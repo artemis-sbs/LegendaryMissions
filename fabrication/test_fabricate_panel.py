@@ -296,6 +296,18 @@ class TestBuildFeedback(_Base):
             _set(self.ship.id, k, need)
         self.assertNotIn("Crimson", recipes.recipe_cost_markdown(self.ship.id, recipe))
 
+    def test_the_countdown_moves_without_a_rebuild(self):
+        """The page no longer rebuilds every second; the bar's own `on change` moves
+        the label. Five seconds on, it must read five seconds less."""
+        self.stock()
+        self.press_build()
+        first = self.emitted.text_with("building 0:")[0]
+        self.emitted.clear()
+        self.present(5)
+        later = self.emitted.text_with("building 0:")
+        self.assertTrue(later, "the countdown label vanished")
+        self.assertNotEqual(first, later[-1], "the countdown did not move")
+
     def test_the_build_band_is_a_progress_bar(self):
         self.stock()
         self.press_build()

@@ -91,6 +91,21 @@ def items_upgrade_tab_list(ship_id, include_unowned=False):
     return rows
 
 
+def items_active_keys(ship_id):
+    """The items whose effect is still running on this ship, sorted - what the Upgrades
+    tab watches to know when a row stops saying "(active)".
+
+    One value that changes only when an effect STARTS or ENDS, so the tab rebuilds on
+    those and nothing else; the countdown in between is the bar updating itself.
+    """
+    out = []
+    for lbl in items_get_list():
+        k = lbl.get_inventory_value("key")
+        if k and not is_timer_finished(ship_id, "item_cd_" + k):
+            out.append(k)
+    return tuple(sorted(out))
+
+
 def item_upgrade_row(item):
     """List-box row template for the Upgrades tab: name x count, marked active
     while it is counting down.

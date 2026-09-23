@@ -127,15 +127,16 @@ default CONSOLE_SELECT = ""
     # RIGHT (action band): Build / building countdown / need materials
     gui_section(style="area: 47, 82, 95, 92;")
     if fab_sel is not None and fab_building:
-        # A progress bar under the countdown. This band repaints once a second while
-        # a build runs (the self-tick below), so a plain gauge redrawn each time is
-        # enough. Clamped: the beacon timer is shared, so the recipe on screen may
-        # not be the one building.
+        # A progress bar under the countdown, and it updates ITSELF - the page used to
+        # rebuild every second to move it. Clamped: the beacon timer is shared, so the
+        # recipe on screen may not be the one building.
         fab_t = format_time_remaining(ship_id, fab_timer)
         fab_total = max(1, int(fab_sel.get("time", 30) or 30))
         fab_done_s = max(0, fab_total - get_time_remaining(ship_id, fab_timer))
         gui_row("row-height: content;")
-        gui_gauge(fab_done_s, fab_total, "building {fab_t}", show="none", color="#ff0")
+        fab_gauge = gui_gauge(fab_done_s, fab_total, "building {fab_t}", show="none", color="#ff0")
+        on change get_time_remaining(ship_id, fab_timer):
+            fab_gauge.update(value=max(0, fab_total - get_time_remaining(ship_id, fab_timer)), label="building " + format_time_remaining(ship_id, fab_timer))
     elif fab_sel is not None and fabrication_recipe_affordable(ship_id, fab_sel_key):
         fab_btn = gui_button("$text:Build;justify:center;", data={"rk": fab_sel_key, "rb": fab_is_beacon, "rnames": fab_pnames, "rdefs": fab_pdefs})
         on gui_message(fab_btn):
@@ -174,13 +175,14 @@ default CONSOLE_SELECT = ""
     on signal item_changed:
         fab_sel_hint = fab_box.get_selection_hint()
         jump fab_repaint
-    if fab_building:
-        await gui(timeout=delay_sim(1))
-    else:
-        await gui()
+    # Rebuild when the build ENDS - the action band flips from the bar to Build, and the
+    # result line appears. The countdown in between is the bar updating itself.
+    on change is_timer_finished(ship_id, fab_timer):
+        fab_sel_hint = fab_box.get_selection_hint()
+        jump fab_repaint
+    await gui()
     # After await gui() returns, never before it: a listbox has no view until it has
-    # presented, so a hint taken at build time carries nothing. This is also the
-    # 1-second build tick, so it is the capture that matters most here.
+    # presented, so a hint taken at build time carries nothing.
     fab_sel_hint = fab_box.get_selection_hint()
     jump fab_repaint
 
