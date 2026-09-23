@@ -11,6 +11,30 @@ from sbs_utils import fs
 from sbs_utils.agent import Agent
 
 
+def document_link_to(obj_list, document):
+    """The `on_link` for a document's text area: a `[Text](ref://key)` link SELECTS
+    that topic in the list beside it.
+
+    So a link and a click on the list are the same thing - the list's own `on change`
+    swaps the page, the highlight follows, and Back-and-forth through the list still
+    works. The key is a record's key as written in its heading (`engineering`); a
+    nested record whose key carries a path matches on its last part too.
+
+    A key nothing matches does nothing, rather than guessing a topic.
+    """
+    def _go(key, _widget):
+        want = str(key or "").strip().lower()
+        for item in document:
+            data = item.data if gui_list_box_is_header(item) else item
+            if data is None:
+                continue
+            k = str(data.get("key") or "").strip().lower()
+            if k and (k == want or k.rsplit("/", 1)[-1] == want):
+                obj_list.value = data
+                return
+    return _go
+
+
 def document_item(item):
     
     if not gui_list_box_is_header(item):

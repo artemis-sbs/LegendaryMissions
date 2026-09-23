@@ -102,7 +102,7 @@ if QUEST_TAB_ENABLED:
 
     sel = qbox.get_value()
     if sel is not None and not gui_list_box_is_header(sel):
-        sel_desc = sel.get("desc")
+        sel_desc = quest_log_pane_text(sel)
     elif sel is not None:
         # A selected ARC is a quest too - it has its own description - but it renders as
         # a header, so the pane used to keep saying "Select a quest from the list".
@@ -125,7 +125,7 @@ if QUEST_TAB_ENABLED:
         sel = qbox.get_value()
         quest_sel_index = qbox.get_selected_index()
         if sel is not None and not gui_list_box_is_header(sel):
-            sel_desc = sel.get("desc")
+            sel_desc = quest_log_pane_text(sel)
             qdesc.value = sel_desc
         elif sel is not None:
             sel_desc = quest_log_parent_summary(sel)

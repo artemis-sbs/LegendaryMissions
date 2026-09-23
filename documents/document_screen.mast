@@ -60,7 +60,9 @@ $t {topic.get("display_text", "No display text")}
     #"col-width:62-25px;padding:10px,0, 0,0"):
     with gui_sub_section(): 
         gui_row("col-width:62-25px;padding:10px,0, 0,0")
-        text = gui_text_area(t) #"$h1 Hello\n\nTest\n\n\n\n")
+        # `[Text](ref://key)` in a topic selects that topic in the list, which repaints
+        # this text through the list's own on change below.
+        text = gui_text_area(t, on_link=document_link_to(obj_list, document))
 
 
     if root_topic is not None:

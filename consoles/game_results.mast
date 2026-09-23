@@ -266,7 +266,7 @@ shared game_stats = ~~{
             on change quest_box.get_value():
                 qsel = quest_box.get_value()
                 if qsel is not None and not gui_list_box_is_header(qsel):
-                    q_sel_desc = qsel.get("desc")
+                    q_sel_desc = quest_log_pane_text(qsel)
                     q_desc.value = q_sel_desc
                 elif qsel is not None:
                     # Selecting an ARC shows its description + step checklist here too -
