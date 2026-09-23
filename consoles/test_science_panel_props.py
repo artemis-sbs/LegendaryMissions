@@ -160,7 +160,8 @@ class PanelPropsTest(unittest.TestCase):
         body = self._status_of(self.target)
         self.assertIn("SHIELD FREQUENCY", body)
         for band in sp.LM_SCI_FREQ_BANDS:
-            self.assertIn(f"  {band}  ", body, f"band {band} missing")
+            # One gauge per band; the weak one's label also says WEAK.
+            self.assertRegex(body, rf"\[{band}( - WEAK)?\]\(gauge://", f"band {band} missing")
 
     def test_the_weakest_band_is_called_out_in_words(self):
         """The tier colour says how strong a band is; the word says which to shoot. A
@@ -269,8 +270,30 @@ class PanelPropsTest(unittest.TestCase):
         self.target.data_set.set("shield_max_val", 120.0, 0)
         self.target.data_set.set("shield_max_val", 120.0, 1)
         body = self._status_of(self.target)
-        self.assertIn("FRNT SHLD  90", body)
-        self.assertIn("REAR SHLD  40", body)
+        self.assertIn("[FRNT SHLD](gauge://90?max=120&show=value", body)
+        self.assertIn("[REAR SHLD](gauge://40?max=120&show=value", body)
+
+    def test_the_readout_parses_into_gauges_and_a_systems_grid(self):
+        """Parsed the way the widget parses it, so a malformed line cannot pass."""
+        from sbs_utils.pages.layout.text_area import TextArea, GaugeLine, TableLine
+        from sbs_utils.pages.layout.layout import Bounds
+        self.target.data_set.set("shield_val", 90.0, 0)
+        self.target.data_set.set("shield_max_val", 120.0, 0)
+        for i in range(4):
+            self.target.data_set.set("system_max_damage", 10.0, i)
+        self._arm_bands(self.target, [9000, 8000, 8000, 500, 7000])
+        area = TextArea("probe", self._status_of(self.target))
+        area.bounds = Bounds(0, 0, 25, 95)
+        area.calc_rich(CID)
+        gauges = [ln for ln in area.lines if isinstance(ln, GaugeLine)]
+        grids = [ln for ln in area.lines if isinstance(ln, TableLine)]
+        self.assertEqual(len(grids), 1, "SYSTEMS is one grid")
+        self.assertFalse(grids[0].has_header)
+        self.assertEqual(len(grids[0].gauges), 4)
+        labels = [g.spec["label"] for g in gauges]
+        self.assertIn("FRNT SHLD", labels)
+        self.assertIn("D - WEAK", labels)                 # the weakest band, in words
+        self.assertEqual(len([l for l in labels if l[:1] in "ABCDE" and len(l) <= 8]), 5)
 
     def test_the_shield_value_is_absolute_and_only_the_colour_is_a_ratio(self):
         """"front shields 90" is what gets said out loud, not "75 percent"."""

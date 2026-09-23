@@ -116,6 +116,19 @@ def _line(text, color=None, font="gui-1"):
     return f"$$color:{color};font:{font}; {_safe(text)}"
 
 
+def _gauge(label, value, max_value, color, show="pct"):
+    """A text-area GAUGE: `[label](gauge://value?max=..)` - label left, the number
+    right, a bar under both.
+
+    The color is passed explicitly: every readout here already has its own tier scale
+    (shields by what is left, systems like Engineering, bands by magnitude), and the bar
+    must agree with it rather than with the gauge's default green/yellow/red. The label
+    is a fixed word from this module, never mission text, so it cannot carry a `]`.
+    """
+    return (f"[{label}](gauge://{int(value)}?max={max_value:g}&show={show}"
+            f"&color={color})")
+
+
 def lm_sci_coefficients(target_id):
     """The derived efficiency coefficients for a contact, as (label, percent) pairs.
 
@@ -413,11 +426,14 @@ def lm_sci_shield_lines(target_id):
         if value is None:
             continue
         max_value = _blob_get(blob, "shield_max_val", i, 0.0) or 0.0
-        color = _GOOD
-        if max_value > 0:
-            ratio = float(value) / max_value
-            color = _GOOD if ratio >= 0.75 else (_WORN if ratio >= 0.25 else _BAD)
-        lines.append(_line(f"{label}  {int(value)}", color))
+        if max_value <= 0:
+            # No max, no bar: a gauge would have to invent one.
+            lines.append(_line(f"{label}  {int(value)}", _GOOD))
+            continue
+        ratio = float(value) / max_value
+        color = _GOOD if ratio >= 0.75 else (_WORN if ratio >= 0.25 else _BAD)
+        # show=value: the ABSOLUTE number on the right, the ratio is the bar.
+        lines.append(_gauge(label, value, float(max_value), color, show="value"))
     return lines
 
 
@@ -445,8 +461,14 @@ def lm_sci_panel_status_lines(ship_id, target_id):
     health = lm_sci_system_health(target_id)
     if health:
         lines.append(_line("SYSTEMS", _LABEL))
-        for label, pct in health:
-            lines.append(_line(f"  {label}  {pct}%", lm_sci_coefficient_color(pct)))
+        # A header-less GRID of gauges, two to a row - the engine's own
+        # ENGN / WEAP / SHLD / SENS block. The empty first row is what makes it
+        # header-less; the separator row is required for a table at all.
+        cells = [_gauge(label, pct, 100, lm_sci_coefficient_color(pct)) for label, pct in health]
+        lines += ["| | |", "|:--|:--|"]
+        for i in range(0, len(cells), 2):
+            pair = cells[i:i + 2] + [""] * (2 - len(cells[i:i + 2]))
+            lines.append("| " + " | ".join(pair) + " |")
     # SHIELD FREQUENCIES, drawn HERE rather than by the engine's own widget.
     #
     # `science_data_freq` could not be made to draw from a console that replaces
@@ -469,13 +491,12 @@ def lm_sci_panel_status_lines(ship_id, target_id):
             weak = lm_sci_weakest_band(bands)
             for band, pct in bands:
                 color = lm_sci_frequency_color(pct)
-                if band == weak:
-                    # Named in WORDS as well as tiered: the tier colour says how strong
-                    # the band is, the word says which one to shoot, and a gunner reads
-                    # this aloud over comms. Both facts are wanted.
-                    lines.append(_line(f"  {band}  {pct}%   WEAK", color))
-                else:
-                    lines.append(_line(f"  {band}  {pct}%", color))
+                # One gauge per band - five do not fit two to a row in this column.
+                # The weak one is named in WORDS as well as tiered: the tier colour says
+                # how strong the band is, the word says which one to shoot, and a gunner
+                # reads this aloud over comms. Both facts are wanted.
+                label = f"{band} - WEAK" if band == weak else band
+                lines.append(_gauge(label, pct, 100, color))
 
     # NO EFFICIENCY BLOCK ON A CONTACT.
     #

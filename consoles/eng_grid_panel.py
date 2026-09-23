@@ -422,11 +422,12 @@ def eng_panel_systems_show(cid, left, top, width, height):
     if not values:
         return
     gui_row()
-    # Colored PER LINE by tier, so the pool that is hurting is findable without
-    # reading eight numbers. `$$<style>; <text>` sets a one-off style for a line and
-    # bypasses the markdown pass for it - which is also why the dash is literal text
-    # rather than a `-` bullet: a bullet is re-styled by the built-in `ul` style and
-    # would come back the same blue as everything else.
+    # One GAUGE per coefficient - the number on the right, a bar under it - colored
+    # by tier, so the pool that is hurting is findable without reading eight numbers.
+    # The tier color is passed explicitly (`color=`) rather than left to the gauge's
+    # own green/yellow/red: the bands here (tuned / nominal / worn / gone) are the
+    # grid's, and a bar that disagreed with the node it came from would be worse than
+    # no color at all. Over 100 is the tuned cyan either way.
     # `###`, not `##`: the tab's own title above it is gui-3 (`_eng_header`), so an h2
     # sub-heading was a size LARGER than the title it sat under.
     #
@@ -437,7 +438,7 @@ def eng_panel_systems_show(cid, left, top, width, height):
     # is 133px. Pinned by TestHeadingsFitTheColumn.
     lines = ["### Efficiency"]
     for label, pct in values:
-        lines.append(f"$$color:{_eng_coefficient_color(pct)};font:gui-2;  - {label} {pct}%")
+        lines.append(f"[{label}](gauge://{pct}?max=100&show=pct&color={_eng_coefficient_color(pct)})")
     gui_text_area("\n".join(lines))
 
 

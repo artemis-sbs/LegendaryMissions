@@ -518,21 +518,7 @@ class TestCoefficientColors(PanelBase):
         self.assertEqual(P._eng_coefficient_color(67), "Crimson")
         self.assertEqual(P._eng_coefficient_color(0), "Crimson")
 
-    def test_each_line_carries_its_own_style(self):
-        """`$$<style>; <text>` is per-line and bypasses markdown. If the prefix is
-        ever malformed the whole area drops to plain text reading "Document syntax
-        issue" - a silent, total loss of the colors."""
-        from sbs_utils.pages.layout.text_area import TextArea
-        area = TextArea("probe", "x")
-        for pct in (110, 100, 83, 67):
-            line = f"$$color:{P._eng_coefficient_color(pct)};font:gui-2;  - beam {pct}%"
-            style, text = area.get_line_style(line, "_")
-            self.assertIsInstance(style, dict, f"{line!r} did not parse as a style")
-            self.assertIn(P._eng_coefficient_color(pct), style["style"])
-            self.assertIn(f"beam {pct}%", text)
-            self.assertIn("-", text, "the dash must survive as literal text")
-
-    def test_the_systems_tab_emits_one_styled_line_per_coefficient(self):
+    def _efficiency_body(self):
         for i, r in enumerate(("weapon", "engine", "sensor", "shield")):
             self.node(i, r, "__undamaged__")
         drawn = []
@@ -544,8 +530,32 @@ class TestCoefficientColors(PanelBase):
             P.gui_text_area = original
         body = next((d for d in drawn if "Efficiency" in d), None)
         self.assertIsNotNone(body, "the Efficiency block was not drawn")
-        styled = [ln for ln in body.split("\n") if ln.startswith("$$")]
-        self.assertEqual(len(styled), len(P.eng_coefficient_values(self.ship)))
+        return body
+
+    def test_one_gauge_per_coefficient_in_the_tier_color(self):
+        """Each coefficient is a GAUGE, and its bar is the tier color - parsed the way
+        the text area parses it, so a malformed line cannot pass as a gauge."""
+        from sbs_utils.pages.layout.text_area import TextArea, GaugeLine
+        from sbs_utils.pages.layout.gauge import gauge_color
+        from sbs_utils.pages.layout.layout import Bounds
+        body = self._efficiency_body()
+        area = TextArea("probe", body)
+        area.bounds = Bounds(0, 0, 20, 90)
+        area.calc_rich(CID)
+        gauges = [ln for ln in area.lines if isinstance(ln, GaugeLine)]
+        values = P.eng_coefficient_values(self.ship)
+        self.assertEqual(len(gauges), len(values))
+        for g, (label, pct) in zip(gauges, values):
+            self.assertEqual(g.spec["label"], label)
+            self.assertEqual(g.spec["value"], pct)
+            self.assertEqual(gauge_color(g.spec), P._eng_coefficient_color(pct))
+
+    def test_every_tier_color_survives_the_gauge_url(self):
+        """A color with `#` (the tuned cyan) must reach the bar intact."""
+        from sbs_utils.pages.layout.gauge import gauge_spec_from_url, gauge_color
+        for pct in (110, 100, 83, 67):
+            spec = gauge_spec_from_url(f"{pct}?max=100&show=pct&color={P._eng_coefficient_color(pct)}")
+            self.assertEqual(gauge_color(spec), P._eng_coefficient_color(pct))
 
 
 class TestHeadingsFitTheColumn(PanelBase):
