@@ -1,0 +1,14 @@
+# OSC control panels: TouchOSC tablets beside the consoles.
+# Launch with profile=osc (or `mission_runner --profile osc`).
+#
+# Point each tablet at THIS machine's address, send port 8000, receive port 9000.
+# Layouts: `sbs osc layout all -o <folder>`. See the OSC control panels docs page.
+#
+# It opens a UDP port on the network - anyone who can reach it can fly the ship.
+# Name your own network in `allow` to keep it there.
+OSC:
+    enable: true
+    port: 8000
+    feedback_port: 9000
+    # Address prefixes allowed to send, e.g. ["192.168.0."]. Empty allows anyone.
+    allow: []
