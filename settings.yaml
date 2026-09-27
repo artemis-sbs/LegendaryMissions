@@ -25,6 +25,15 @@ AUTO_PLAY:
     # Engineering overpower applied to drive + weapons (1.0 = 100%); eased off on low energy.
     overpower: 1.5
 
+# OSC control panels: TouchOSC tablets beside the consoles, sending to this machine.
+# Off by default - it opens a UDP port on the network. See the OSC docs page.
+OSC:
+    enable: false
+    port: 8000
+    feedback_port: 9000
+    # Address prefixes allowed to send, e.g. ["192.168.1."]. Empty allows anyone.
+    allow: []
+
 #
 # Operator mode is for operators
 # It allows the main screen to display and image

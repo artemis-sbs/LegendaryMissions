@@ -48,3 +48,5 @@ import epadd.py
 import epadd.mast
 import offer_digest.py
 import offers.mast
+# TouchOSC tablets beside the consoles - off unless OSC: enable: true.
+import osc_panels.mast

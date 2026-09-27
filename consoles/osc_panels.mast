@@ -1,0 +1,19 @@
+#
+# OSC control panels: TouchOSC tablets beside the consoles (throttle lever, red alert,
+# power faders, torpedo fire, gauges). The listener is sbs_utils' osc_listen; this only
+# decides WHEN it runs and with which settings.
+#
+#   enable        - off by default. A UDP port open to the LAN is an opt-in.
+#   port          - where tablets send.
+#   feedback_port - where the ship's state goes back to, on each tablet's own address.
+#   allow         - address prefixes allowed to send, e.g. ["192.168.1."]; [] is anyone.
+#
+settings_add_defaults({"OSC": {"enable": False, "port": 8000, "feedback_port": 9000, "allow": []}})
+
+# The SERVER, once per game - a //shared route, never a per-console //signal: five
+# consoles must not each try to bind the same port. osc_listen stops any earlier
+# listener first, so a restarted game rebinds cleanly.
+//shared/signal/game_started if SETTINGS.get("OSC", {}).get("enable")
+    _osc = SETTINGS.get("OSC", {})
+    osc_listen(_osc.get("port", 8000), feedback_port=_osc.get("feedback_port", 9000), allow=_osc.get("allow") or None)
+    ->END
