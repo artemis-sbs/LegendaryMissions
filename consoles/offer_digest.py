@@ -143,7 +143,14 @@ def lm_offer_digest_tick():
     # Each console asks its OWN question - its ship, its memory - so the client id is
     # passed explicitly rather than leaned on from the frame context, which during a
     # background pump belongs to whatever ticked last.
+    from sbs_utils.procedural.query import is_client_id
     for cid in to_id_list(any_role(lm_offer_digest_consoles())):
+        # CONSOLES ONLY. A job word is also a role: a boarding party's crew body is
+        # `comms` because its crew member is, so the role query returned a lifeform and
+        # its "home ship" lookup went to the engine with a non-client id (the engine
+        # guard refused it, in the log, every pump).
+        if not (is_client_id(cid) or cid == 0):
+            continue
         if lm_offer_digest_send(cid) is not None:
             told += 1
     return told

@@ -92,3 +92,17 @@ gui_tab_back_while_boarded("boarding_crew")
 # never a safe append.
 //gui/tab/boarding_crew
     jump boarding_crew_console
+
+
+# CLICK TO WALK. The crew console drew the map and nothing listened to it: no shipped
+# route called `boarding_click`, so a boarder could only watch. `boarding_click` is the
+# whole policy (walk, or fire when armed) and it already refuses a click on any interior
+# but the one this console is standing in.
+#
+# EVENT.client_id, NEVER the bare `client_id`: a route body runs on the SERVER task, so
+# the MAST global is 0 for every console. Gated on the site so an Engineering click on a
+# ship's own interior never reaches the boarding code; LM grid_comms steps aside for
+# boarding sites, so the two catch-alls never both act on one click.
+//point/grid if has_role(GRID_PARENT_ID, "boarding_site")
+    boarding_click(EVENT.client_id, GRID_PARENT_ID, int(EVENT.source_point.x), int(EVENT.source_point.y))
+    ->END
