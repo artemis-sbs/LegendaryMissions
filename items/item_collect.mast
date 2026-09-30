@@ -15,9 +15,16 @@
 # the pickup is left on the map untouched.
 default shared ITEM_PICKUP_TRIGGER = {}
 
-//collision/interactive if has_role(COLLISION_ORIGIN_ID, "item") and has_any_role(COLLISION_SELECTED_ID, "__player__, cockpit")
+//collision/interactive if has_role(COLLISION_ORIGIN_ID, "item") and has_any_role(COLLISION_SELECTED_ID, "__player__, cockpit, eva_suit")
     item_key = get_inventory_value(COLLISION_ORIGIN_ID, "item_key", "")
     ->END if item_key == ""
+    # A SUIT picks things up for its SHIP. A suit is a player hull with `__player__`
+    # removed on purpose, so it has no inventory of its own that anything reads: what a
+    # boarder reels in is credited to the ship that sent them out.
+    collector = COLLISION_SELECTED_ID
+    if has_role(COLLISION_SELECTED_ID, "eva_suit"):
+        collector = eva_suit_home(COLLISION_SELECTED_ID)
+        ->END if collector is None
     # Fetch the pickup first and bail if it's already gone: collision can fire
     # again for the same pickup after the first hit deleted it (the py-side role
     # lingers a tick while the engine object is gone). This also prevents a
@@ -30,6 +37,7 @@ default shared ITEM_PICKUP_TRIGGER = {}
     # comms_broadcast to a non-live ship raises "invalid space object" (SendMessageToPlayerShip)
     # in the engine, so bail if it's already gone.
     ->END if sim.get_space_object(COLLISION_SELECTED_ID) is None
+    ->END if sim.get_space_object(collector) is None
 
     # Resolve the pickup-trigger condition: instance flag > item metadata > mission map.
     trigger = get_inventory_value(COLLISION_ORIGIN_ID, "pickup_trigger", None)
@@ -37,7 +45,7 @@ default shared ITEM_PICKUP_TRIGGER = {}
         trigger = item_meta(item_key, "pickup_trigger", None)
     if trigger is None:
         trigger = ITEM_PICKUP_TRIGGER.get(item_key, None)
-    triggered = trigger is not None and role_matches(COLLISION_SELECTED_ID, trigger)
+    triggered = trigger is not None and role_matches(collector, trigger)
 
     # A collector that does NOT trigger it stores it, unless the item says non-triggers should
     # leave it on the map (pickup_store_if_no_trigger false) - e.g. a trap only its targets take.
@@ -54,18 +62,18 @@ default shared ITEM_PICKUP_TRIGGER = {}
     # salvage would scatter 24 collectibles across the map. Absent means 1, so every
     # pickup that predates this behaves exactly as before.
     item_qty = get_inventory_value(COLLISION_ORIGIN_ID, "item_qty", 1)
-    have = get_inventory_value(COLLISION_SELECTED_ID, item_key, 0)
-    set_inventory_value(COLLISION_SELECTED_ID, item_key, have + item_qty)
-    signal_emit("item_collected", {"holder_id": COLLISION_SELECTED_ID, "key": item_key, "qty": item_qty})
+    have = get_inventory_value(collector, item_key, 0)
+    set_inventory_value(collector, item_key, have + item_qty)
+    signal_emit("item_collected", {"holder_id": collector, "key": item_key, "qty": item_qty})
     item_name = item_meta(item_key, "display_text", item_key)
     if item_qty > 1:
-        overlay_toast(f"Pickup: {item_name} x{item_qty}", to=COLLISION_SELECTED_ID)
+        overlay_toast(f"Pickup: {item_name} x{item_qty}", to=collector)
     else:
-        overlay_toast(f"Pickup: {item_name}", to=COLLISION_SELECTED_ID)
+        overlay_toast(f"Pickup: {item_name}", to=collector)
     delete_object(COLLISION_ORIGIN_ID)
     sbs.particle_at(tpos, "color:#01F,#505; lifespan:30; image_cell:9; size:20;speed: 1; count:100,1000")
 
     # Trigger: run the effect on the collector + consume, through the normal activation path.
     if triggered:
-        signal_emit("item_activate", {"holder_id": COLLISION_SELECTED_ID, "key": item_key, "client_id": COLLISION_SELECTED_ID})
+        signal_emit("item_activate", {"holder_id": collector, "key": item_key, "client_id": collector})
     ->END
