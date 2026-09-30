@@ -33,3 +33,6 @@ soaks/runs/
 # The crew exosuit art set, rebuilt from the .blend by build_artset.py. The shipped
 # copy is media/ships/; this is the intermediate, and the _artset.blend beside it.
 _art/crew_exosuit/artset/
+
+# The standalone site from `sbs site --emit site` - build output, not source.
+__site__/
