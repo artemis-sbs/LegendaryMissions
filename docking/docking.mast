@@ -74,6 +74,12 @@ distance: 600
 
 +++ undocking
 # This is called when docking is released
+    # Only a ship that actually docked has something to report: releasing a dock that
+    # was still being drawn in is not an undocking.
+    if get_inventory_value(DOCKING_PLAYER_ID, "_docked_fired", False):
+        _dock_station = to_object(DOCKING_NPC_ID)
+        if _dock_station is not None:
+            comms_broadcast(DOCKING_PLAYER_ID, "Undocked from " + _dock_station.name + ".", category="ship")
     set_inventory_value(DOCKING_PLAYER_ID, "_docked_fired", False)
 
 
@@ -109,6 +115,11 @@ distance: 600
     # with an on_dock trigger fire once per dock; reset on undock above.
     if not get_inventory_value(DOCKING_PLAYER_ID, "_docked_fired", False):
         set_inventory_value(DOCKING_PLAYER_ID, "_docked_fired", True)
+        # The ship's log said nothing about docking, so a crew reading back had no
+        # record of when the ship was tied up. Once per dock, on the ship tab.
+        _dock_station = to_object(DOCKING_NPC_ID)
+        if _dock_station is not None:
+            comms_broadcast(DOCKING_PLAYER_ID, "Docked at " + _dock_station.name + ".", category="ship")
         signal_emit("ship_docked", {"DOCK_SHIP_ID": DOCKING_PLAYER_ID, "DOCK_STATION_ID": DOCKING_NPC_ID})
 
 +++ refit
