@@ -22,8 +22,21 @@ except ImportError:
     # it is a comma list either way - it just is not checked.
     named_hulls = csv
 
+try:
+    from sbs_utils.procedural.amd_vocab import amd_register_shared_folder
+except ImportError:
+    # An sbs_utils from before shared folders could be declared. Siege still reads the
+    # folder; the tools just do not know it is part of this mission.
+    def amd_register_shared_folder(name, beside=None):
+        pass
+
 
 def _declare_lm_vocabulary():
+    # An author's own Siege bosses live in <missions>/common_data/bosses, where an update
+    # to this mission cannot delete them (maps/siege_boss.py reads both folders). Saying
+    # so here is what makes `sbs lint` and the editor read those files with these words.
+    amd_register_shared_folder("bosses", beside="maps/bosses")
+
     # A BOSS record - the root of maps/bosses/*.amd. `Boss` resolves to the map archetype
     # (a file's root record names the whole document), so these hang off map.
     amd_register_fields("map", {

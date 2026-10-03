@@ -31,6 +31,8 @@ and no update touches it. The folder is made the first time Siege looks for it.
 | What goes there | the boss's `.amd` file only |
 | Bespoke MAST | not from this folder: a boss's own `.mast` has to live in a mission. `Hook:` can still name any label the mission already has |
 | A name already taken | your boss replaces the shipped one of that name in the list, and `mast.runtime.log` says so. Rename the heading to keep both |
+| Checking it | `sbs lint common_data\bosses` checks only your bosses, with the Siege's own fields and keys. `sbs lint LegendaryMissions` lists them too |
+| In the editor | a boss opened from this folder is read as part of LegendaryMissions: the boss fields are known and `siege_mission` resolves |
 
 The `.amd` is authored in the **shared AMD quest vocabulary** — the same grammar
 Open Universe uses — so learning to write a Siege boss is a stepping stone to
