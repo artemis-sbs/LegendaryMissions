@@ -5,11 +5,16 @@ to agree with that in two places, and it used to agree in neither: the identity 
 built from whatever name the player had saved on their own machine, and the Edit button
 offered to change it.
 
-    python -m unittest test_console_crew_locked
+    PYTHONPATH=../sbs_utils python -m unittest consoles.test_console_crew_locked
 """
 import os
 import re
+import sys
 import unittest
+
+# The picker's helpers are imported by bare name, the way MAST loads them. Put this
+# folder on the path so the test runs from the mission root like its neighbors.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from sbs_utils.fs import test_set_exe_dir
 test_set_exe_dir()
