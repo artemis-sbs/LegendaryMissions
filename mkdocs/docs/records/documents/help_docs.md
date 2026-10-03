@@ -17,6 +17,8 @@ Your warp drive (or jump drive) can go faster and farther than your enemies, but
     To make the ship turn faster, ask Engineering for more power to maneuvering.
     To make the ship move faster, ask Engineering for more power to the impulse or warp drive.
 
+[See Engineering](#consoles-engineering)
+
 ### Weapons {: #consoles-weapons}
 
 The Weapons console controls your beam weapons and your torpedoes.
@@ -31,6 +33,10 @@ In an emergency, Weapons can provide energy to your ship by draining a torpedo w
 
     To make your beam weapons hit harder, ask Engineering to increase power to beams.
     To make your torpedo tubes load faster, ask Engineering to increase power to torpedo tubes.
+
+[See Science - the weakest frequency](#consoles-science)
+
+[See Engineering](#consoles-engineering)
 
 ### Engineering {: #consoles-engineering}
 
@@ -60,6 +66,8 @@ The further away an object is the longer it takes to scan.
 
     To make your sensors scan faster, ask Engineering to increase power to sensors.
 
+[See Engineering](#consoles-engineering)
+
 ### Communications {: #consoles-comms}
 
 The Communications console is the voice of the ship. Incoming and outgoing traffic appears in the ship's log: the newest line always sits in the strip under the ship data panel, and the full history is on the Log tab of that panel, filtered into Ship and Mission.
@@ -71,6 +79,8 @@ Comms can order friendly ships to change course, attacking or evading enemies.
 Comms can request that friendly bases construct torpedo weapons and expedite refueling, rearming, and repairing your ship.
 
 The comms station has a 'RED ALERT' button which will keep your crew on their toes.
+
+[See Science - which taunt to use](#consoles-science)
 
 ### Flight Hangar {: #consoles-hangar}
 
@@ -93,6 +103,8 @@ Four steps, and each one happens at a different console - fabrication is a crew 
 1. DELIVER the finished item. A beacon goes to Weapons, which is what loads it into a tube.
 
 1. DEPLOY it. Weapons fires the beacon where it is wanted.
+
+[Where materials come from](#fabrication-fabrication-materials)
 
 !!! warning "The beacon tube holds ONE"
 
