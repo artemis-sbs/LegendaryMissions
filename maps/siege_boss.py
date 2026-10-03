@@ -9,6 +9,14 @@ siege.mast spawns the selected boss's forces on `siege_enemies_low` and grants i
 objectives onto the siege_mission tree.
 
 Drop a new .amd in maps/bosses/ and it appears in the dropdown with no code change.
+
+TWO FOLDERS. `maps/bosses/` is this mission's own, and it is replaced whenever the
+mission is updated - `sbs fetch` deletes and re-extracts a mission folder - so a boss an
+author dropped there was lost on the next update. The second folder is theirs:
+`<missions>/common_data/bosses/`, beside the saves, which no update touches. A boss in
+either appears in the list. An author's boss is a .amd file only: per-boss MAST lives in
+the mission and cannot be loaded from outside it, though `Hook:` can still name any
+label the mission has.
 """
 import os
 import random
@@ -18,6 +26,7 @@ from sbs_utils.procedural.amd_quest import amd_quest_facts
 from sbs_utils.procedural.quest import document_get_amd_file
 
 _BOSS_DIR = "maps/bosses"
+_SHARED_BOSS_DIR = "bosses"          # under common_data: the author's own, kept on update
 _bosses = None   # cache: Display -> boss node
 
 
@@ -57,24 +66,65 @@ def _boss_data(text):
     return amd_parse_facts(text, _boss_facts())
 
 
+def siege_boss_shared_folder():
+    """The author's own boss folder: `<missions>/common_data/bosses`. Made on demand, so
+    there is somewhere to put a file the first time anybody looks for it."""
+    from sbs_utils.fs import get_common_data_dir
+    folder = os.path.join(get_common_data_dir(), _SHARED_BOSS_DIR)
+    try:
+        os.makedirs(folder, exist_ok=True)
+    except OSError:
+        pass                     # a read-only install simply has no shared bosses
+    return folder
+
+
+def siege_boss_folders():
+    """Every folder bosses are read from, in order: the mission's own, then the author's."""
+    return [get_mission_dir_filename(_BOSS_DIR), siege_boss_shared_folder()]
+
+
+def _say(message):
+    """Where an author will see it: `mast.runtime.log`, the log everybody reads."""
+    import logging
+    logging.getLogger("mast.runtime").warning("Siege boss: " + message)
+
+
 def siege_boss_scan(force=False):
-    """Scan maps/bosses/*.amd -> {Display: boss node}. Cached (force=True to rescan)."""
+    """Scan the boss folders -> {Display: boss node}. Cached (force=True to rescan).
+
+    THE AUTHOR'S BOSS WINS A NAME. The shared folder is read second, so a boss there with
+    a name the mission already uses replaces it in the list - and says so. The other
+    rule would make an author's own file silently absent, which is the worse surprise:
+    the usual way to get here is copying a shipped boss and forgetting to rename the
+    heading, and "my boss is not in the list" gives nothing to go on.
+    """
     global _bosses
     if _bosses is not None and not force:
         return _bosses
     _bosses = {}
-    folder = get_mission_dir_filename(_BOSS_DIR)
-    try:
-        files = sorted(f for f in os.listdir(folder) if f.lower().endswith(".amd"))
-    except OSError:
-        files = []
-    for fn in files:
-        doc = document_get_amd_file(os.path.join(folder, fn), data_parser=_boss_data)
-        for node in doc.get("children", []):             # one boss per file (first heading)
-            d = node.get("data") or {}
-            display = d.get("display") or node.get("display_text") or node.get("key")
-            _bosses[str(display)] = node
-            break
+    shared = siege_boss_shared_folder()
+    for folder in siege_boss_folders():
+        try:
+            files = sorted(f for f in os.listdir(folder) if f.lower().endswith(".amd"))
+        except OSError:
+            files = []
+        for fn in files:
+            try:
+                doc = document_get_amd_file(os.path.join(folder, fn), data_parser=_boss_data)
+            except Exception as e:                       # noqa: BLE001
+                # One unreadable file must not take the whole boss list with it.
+                _say("%s could not be read (%s: %s) - it is left out of the list"
+                     % (fn, type(e).__name__, e))
+                continue
+            for node in doc.get("children", []):         # one boss per file (first heading)
+                d = node.get("data") or {}
+                display = str(d.get("display") or node.get("display_text") or node.get("key"))
+                if folder == shared and display in _bosses:
+                    _say("%s in common_data/bosses is named '%s', which this mission "
+                         "already has - yours is the one in the list. Rename the "
+                         "heading to keep both." % (fn, display))
+                _bosses[display] = node
+                break
     return _bosses
 
 

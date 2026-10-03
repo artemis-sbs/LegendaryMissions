@@ -12,6 +12,26 @@ A boss is up to two co-located files:
 | `maps/bosses/<key>.amd` | **yes** | the boss **config** (how it spawns) + its **objectives** |
 | `maps/bosses/<key>.mast` | optional | boss-specific **logic / comms** (only if the boss needs bespoke behavior) |
 
+## Where your own boss goes
+
+Not in `maps/bosses/`. That folder belongs to LegendaryMissions, and an update replaces
+the whole mission folder - a boss you added there is gone afterwards.
+
+Put your `.amd` in the shared folder beside the saves:
+
+```
+data\missions\common_data\bosses\
+```
+
+Siege reads both folders, so your boss is in the **Boss** list next to the shipped ones,
+and no update touches it. The folder is made the first time Siege looks for it.
+
+| | |
+|---|---|
+| What goes there | the boss's `.amd` file only |
+| Bespoke MAST | not from this folder: a boss's own `.mast` has to live in a mission. `Hook:` can still name any label the mission already has |
+| A name already taken | your boss replaces the shipped one of that name in the list, and `mast.runtime.log` says so. Rename the heading to keep both |
+
 The `.amd` is authored in the **shared AMD quest vocabulary** — the same grammar
 Open Universe uses — so learning to write a Siege boss is a stepping stone to
 authoring a full universe.
@@ -158,8 +178,9 @@ objective — this is how boss logic and boss objectives talk to each other.
 
 ## Add a boss in three steps
 
-1. **Write `maps/bosses/<key>.amd`** — a `# [Display](key)` heading with the config
-   fields, and one or more `##` objectives parented to `siege_mission`.
+1. **Write `<key>.amd`** — a `# [Display](key)` heading with the config fields, and one
+   or more `##` objectives parented to `siege_mission`. Your own boss goes in
+   `common_data\bosses\`; one that ships with LegendaryMissions goes in `maps/bosses/`.
 2. **(Optional) add `maps/bosses/<key>.mast`** for bespoke comms/logic, gated on your
    boss's role/flag, and `import bosses/<key>.mast` in `maps/__init__.mast`.
 3. **Playtest** — the boss is already in the **Boss** dropdown (folder scan). Verify
