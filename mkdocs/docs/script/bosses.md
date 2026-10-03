@@ -40,7 +40,9 @@ A raider warlord and their honor guard warp in to break the defenders.
 <!-- amd:end -->
 
 The heading text (`Warlord`) is what shows in the **Boss** dropdown; the key
-(`warlord`) matches the filename.
+(`warlord`) matches the filename. The dropdown offers bosses by that text, so it must be
+unique: two files that both say `[Warlord]` put one entry in the list. `sbs lint` flags
+the duplicate.
 
 ### Config fields
 
@@ -51,7 +53,7 @@ The heading text (`Warlord`) is what shows in the **Boss** dropdown; the key
 | `Flies:` | Race makeup for the boss's fleets — a single race or a weighted mix. | `50% Kralien, 50% Torgoth` |
 | `Fleets:` | How many fleets to spawn (wave size). | `2` |
 | `Difficulty:` | Boss difficulty relative to the game's, or absolute. `+2` / `-1` / `7`. | `+1` |
-| `Named:` | Named flagship hulls — `Name shipDataKey`, comma-separated. | `Warlord kralien_dreadnought` |
+| `Named:` | Named flagship hulls — `Name shipDataKey`, comma-separated. The name is **one word**: `Iron Duke kralien_dreadnought` is a ship called `Iron` on a hull called `Duke`. `sbs lint` flags it. | `Warlord kralien_dreadnought` |
 | `Wave:` | (continuous) Seconds between waves. | `45` |
 | `Hook:` | A MAST label to run for bespoke behavior beyond the config spawn (see [Hooks](#hooks)). | `biomech_infestation` |
 
@@ -91,8 +93,13 @@ Destroy the raider Warlord to break the siege for good.
 <!-- amd:end -->
 
 Parenting to `siege_mission` is what joins the objective to the siege's mission tree,
-so it counts toward the end-game. `Done when: destroy 1 warlord` counts kills of
-anything with the `warlord` role — which the `Named:` flagship carries automatically.
+so it counts toward the end-game. `Done when: signal siege_won` completes it when the
+Siege reports every raider gone — the boss's ships included, since they arrive as
+raiders. To finish on the flagship alone, write `Done when: destroy 1 warlord`: a
+`Named:` flagship carries its own name, lower-cased, as a role.
+
+The objective is `Scope: shared`, so its `Reward:` pays every side that has a player
+ship, once each.
 
 ---
 
@@ -133,19 +140,18 @@ defection is a `//comms` route gated on the `xorn` role (only present when Ragna
 spawns) and `SIEGE_ACTIVE`, so loading it for every game never mis-fires:
 
 ```
-//comms if SIEGE_ACTIVE and has_role(COMMS_SELECTED_ID, "xorn") and not has_role(COMMS_SELECTED_ID, "defected")
+//comms if SIEGE_ACTIVE and has_any_role(COMMS_ORIGIN_ID, "__player__") and has_role(COMMS_SELECTED_ID, "xorn") and not has_role(COMMS_SELECTED_ID, "defected")
     + "Appeal to Xorn: turn on Ragnarok":
         <<[cyan] "XORN"
-            % Ragnarok betrayed the fleet. I am yours.
-        remove_role(COMMS_SELECTED_ID, "raider")
+            % Ragnarok led us to ruin. I am done taking orders - point me at the flagship.
         add_role(COMMS_SELECTED_ID, "defected")
         COMMS_SELECTED.side = COMMS_ORIGIN.side
         brain_clear(COMMS_SELECTED_ID)
-        brain_add(COMMS_SELECTED_ID, "ai_chase_npc", {"force_shoot": True, "throttle": 2.2})
+        brain_add(COMMS_SELECTED_ID, "ai_chase_npc", {"force_shoot": True, "throttle": 2.2, "enemies_only": True})
         signal_emit("quest_signal", {"SIGNAL_NAME": "xorn_defected"})
 ```
 
-The `signal_emit("quest_signal", …)` completes the `When: signal xorn_defected`
+The `signal_emit("quest_signal", …)` completes the `Done when: signal xorn_defected`
 objective — this is how boss logic and boss objectives talk to each other.
 
 ---

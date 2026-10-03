@@ -15,6 +15,13 @@ instead of quietly changing what LM's files mean.
 from sbs_utils.procedural.amd_schema import (amd_register_fields, text, integer, pct,
                                              csv, makeup, multiline)
 
+try:
+    from sbs_utils.procedural.amd_schema import named_hulls
+except ImportError:
+    # An sbs_utils from before `named_hulls` existed. The field still reads the same -
+    # it is a comma list either way - it just is not checked.
+    named_hulls = csv
+
 
 def _declare_lm_vocabulary():
     # A BOSS record - the root of maps/bosses/*.amd. `Boss` resolves to the map archetype
@@ -25,8 +32,8 @@ def _declare_lm_vocabulary():
         "flies": makeup(hint="pirate, or 60% Kralien, 20% Torgoth, 20% Arvonian"),
         "fleets": integer(hint="how many escort fleets arrive with it"),
         "difficulty": text(hint="+2 - a modifier ON the map's difficulty, not a level"),
-        "named": csv(hint="Ragnarok tsn_juggernaut, XORN tsn_light_cruiser"),
-        "wave": integer(hint="which wave this boss belongs to"),
+        "named": named_hulls(hint="Ragnarok tsn_juggernaut, XORN tsn_light_cruiser"),
+        "wave": integer(hint="45 - seconds between waves, for a continuous boss"),
         "hook": text(hint="the label/signal that stages the encounter"),
     }, domain="LegendaryMissions")
 
