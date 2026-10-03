@@ -1,5 +1,12 @@
 gui_tab_add_top("help")
 
+# THIS ADDON'S OWN TILE. An app is registered by the addon that has its screen, so a
+# mission that does not load this addon never hears about it. They were all registered
+# by `consoles`, which made every mission without this addon log `no //gui/app route`
+# for it - and a logged error fails a headless test run.
+gui_app_register("help", title="Help", icon="epadd.help", group="Mission", sort=90,
+                 description="How this console works", boarding=True)
+
 
 //gui/app/help
     # This way the file in an addon will work

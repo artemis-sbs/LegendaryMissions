@@ -10,6 +10,13 @@ default CONSOLE_SELECT = "" # Make sure variable exist at startup
 # the RENDERER and the quest log does not inherit anybody's fiction - and gets no empty
 # Library either.
 
+# THIS ADDON'S OWN TILE. An app is registered by the addon that has its screen, so a
+# mission that does not load this addon never hears about it. They were all registered
+# by `consoles`, which made every mission without this addon log `no //gui/app route`
+# for it - and a logged error fails a headless test run.
+gui_app_register("library", title="Library", icon="epadd.library", group="Mission",
+                 sort=80, description="Codex, lore and ship records", boarding=True)
+
 //gui/app/library
     document_root = lore_document("Library")
     document = document_flatten(document_root)

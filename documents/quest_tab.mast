@@ -44,6 +44,13 @@ if QUEST_TAB_ENABLED:
         gui_image_add_atlas("test2", media_shared("operator"), 645, 570, 950, 820)
 
 
+# THIS ADDON'S OWN TILE. An app is registered by the addon that has its screen, so a
+# mission that does not load this addon never hears about it. They were all registered
+# by `consoles`, which made every mission without this addon log `no //gui/app route`
+# for it - and a logged error fails a headless test run.
+gui_app_register("quest", title="Quests", icon="epadd.quests", group="Mission", sort=10,
+                 description="Quests you have taken on", boarding=True)
+
 //gui/app/quest if QUEST_TAB_ENABLED and quest_is_console_enabled(CONSOLE_SELECT)
     # A fresh view: the selection belongs to whichever list was last on screen, and the
     # Offers list is a different list.

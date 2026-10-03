@@ -9,11 +9,19 @@ default CONSOLE_SELECT = ""   # ensure it exists at startup
 # Master switch: a mission/host can drop the whole casino by setting this False.
 default shared CASINO_ENABLED = True
 
+# THIS ADDON'S OWN TILE. An app is registered by the addon that has its screen, so a
+# mission that does not load this addon never hears about it. They were all registered
+# by `consoles`, which made every mission without this addon log `no //gui/app route`
+# for it - and a logged error fails a headless test run.
+gui_app_register("casino", title="Casino", icon="epadd.casino", group="Ship", sort=50,
+                 consoles="hangar", description="Table games and the bar tab")
+
 # The casino tab is CONTENT only here; it is scoped by being ENABLED per console, not
 # added globally. A mission enables it on the hangar with `gui_tab_enable("casino")`
 # from a `//gui/hangar` route (the hangar console's activation hook) - LegendaryMissions
 # does this in maps/hangar_tabs.mast. See GUI.md "Adding a console tab". (This replaces
 # the old gui_tab_add_top + `CONSOLE_SELECT == "hangar"` gate.)
+
 //gui/app/casino if CASINO_ENABLED
     jump show_casino
 

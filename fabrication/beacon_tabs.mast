@@ -10,12 +10,30 @@
 # ==========================================================================
 default CONSOLE_SELECT = ""
 
+# THIS ADDON'S OWN TILE. An app is registered by the addon that has its screen, so a
+# mission that does not load this addon never hears about it. They were all registered
+# by `consoles`, which made every mission without this addon log `no //gui/app route`
+# for it - and a logged error fails a headless test run.
+gui_app_register("cargo", title="Cargo", icon="epadd.cargo", group="Ship", sort=10,
+                 consoles="engineering", description="Hold manifest")
+gui_app_register("fabricate", title="Fabricate", icon="epadd.fabricate", group="Ship",
+                 sort=20, consoles="engineering",
+                 description="Beacons, parts, build queue")
+# NO SECOND FABRICATION TILE. `//gui/app/fabrication` is the older screen, and it read
+# item-def `craft_cost` metadata directly while Fabricate read the AMD recipe registry -
+# two tiles for one idea, and in LegendaryMissions and the TNG missions the second was
+# EMPTY, because nothing there declares craft_cost. StormsBeacon does, so the path could
+# not just be deleted: `fabrication_recipes()` folds those item craftables into the list
+# Fabricate already shows (`craft_cost: 8` is `Inputs: salvage x8`), and the route stays
+# reachable for a mission that jumps to it by name.
+
 # The Fabricate/Cargo tabs are CONTENT only (the //gui/tab/fabricate and //gui/tab/cargo
 # routes below); they are SCOPED by being ENABLED per console, not added globally. Do NOT
 # call gui_tab_add_top("fabricate"/"cargo") -- that adds them to EVERY console. Enabling
 # from the Engineering activation hook (//gui/normal_engi) is what limits them to
 # Engineering, exactly like the Casino scopes itself from //gui/hangar. See GUI.md
 # "Adding a console tab (the clean, per-console way)".
+
 //gui/normal_engi
     gui_tab_enable("fabricate")
     gui_tab_enable("cargo")

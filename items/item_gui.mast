@@ -12,6 +12,13 @@
 default CONSOLE_SELECT = ""   # exists at startup
 gui_tab_add_top("upgrade")
 
+# THIS ADDON'S OWN TILE. An app is registered by the addon that has its screen, so a
+# mission that does not load this addon never hears about it. They were all registered
+# by `consoles`, which made every mission without this addon log `no //gui/app route`
+# for it - and a logged error fails a headless test run.
+gui_app_register("upgrade", title="Upgrades", icon="epadd.upgrades", group="Ship",
+                 sort=30, description="Installed and available refits")
+
 //gui/app/upgrade
 --- repaint
     # ONE GUI TAB, and it is the way back to the console. The PADD adds nothing to

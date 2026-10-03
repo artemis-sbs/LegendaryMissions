@@ -150,11 +150,15 @@ class TestTheItemWalkItself(unittest.TestCase):
 
 class TestOnlyOneTileIsRegistered(unittest.TestCase):
     def test_the_padd_offers_one_fabrication_app(self):
+        # The tile is registered by THIS addon, beside its screen - not by `consoles`,
+        # which is where it was until a mission without fabrication logged an error
+        # for it on every console that connected.
         here = os.path.dirname(__file__)
-        mast = os.path.join(here, "..", "consoles", "epadd.mast")
-        with open(mast, encoding="utf-8") as f:
-            src = f.read()
-        self.assertIn('gui_app_register("fabricate"', src)
+        src = ""
+        for name in ("beacon_tabs.mast", os.path.join("..", "consoles", "epadd.mast")):
+            with open(os.path.join(here, name), encoding="utf-8") as f:
+                src += f.read()
+        self.assertEqual(src.count('gui_app_register("fabricate"'), 1)
         self.assertNotIn('gui_app_register("fabrication"', src,
                          "two Fabrication tiles again")
 

@@ -78,36 +78,19 @@ gui_app_register("messages", title="Messages", icon="epadd.messages",
 gui_app_register("survey", title="Survey", icon="epadd.status", group="Mission",
                  sort=12, description="Everything the party has scanned",
                  status=survey_badge, boarding=True)
-gui_app_register("help", title="Help", icon="epadd.help", group="Mission", sort=90,
-                 description="How this console works", boarding=True)
-gui_app_register("library", title="Library", icon="epadd.library", group="Mission",
-                 sort=80, description="Codex, lore and ship records", boarding=True)
-gui_app_register("quest", title="Quests", icon="epadd.quests", group="Mission", sort=10,
-                 description="Quests you have taken on", boarding=True)
+# EACH ADDON REGISTERS ITS OWN APP. Help, Library and Quests are `documents`; Upgrades
+# is `items`; Cargo and Fabricate are `fabrication`; Airwing is `hangar`; Casino is
+# `casino`. They were all registered here, beside tiles this addon does have screens
+# for - so a mission that loaded `consoles` without one of the others (anything made
+# from the starter template) logged "no //gui/app route" for each on every console
+# that connected, and a logged error fails a headless test. The ICONS stay claimed
+# above: the sheet is this addon's art, and a name nobody draws costs nothing.
 # Available Quests (app key "offers") sits directly ABOVE Quests (sort 9 vs 10): "what is there" is the
 # question you ask first, and the two read as a pair. Its route condition means the tile
 # is simply absent when nothing is on offer, so it costs a quiet bridge nothing.
 gui_app_register("offers", title="Available Quests", icon="epadd.quests", group="Mission", sort=9,
                  description="Quests you can take on",
                  status=lm_epadd_offers, boarding=True)
-gui_app_register("upgrade", title="Upgrades", icon="epadd.upgrades", group="Ship",
-                 sort=30, description="Installed and available refits")
-gui_app_register("cargo", title="Cargo", icon="epadd.cargo", group="Ship", sort=10,
-                 consoles="engineering", description="Hold manifest")
-gui_app_register("fabricate", title="Fabricate", icon="epadd.fabricate", group="Ship",
-                 sort=20, consoles="engineering",
-                 description="Beacons, parts, build queue")
-# NO SECOND FABRICATION TILE. `//gui/app/fabrication` is the older screen, and it read
-# item-def `craft_cost` metadata directly while Fabricate read the AMD recipe registry -
-# two tiles for one idea, and in LegendaryMissions and the TNG missions the second was
-# EMPTY, because nothing there declares craft_cost. StormsBeacon does, so the path could
-# not just be deleted: `fabrication_recipes()` folds those item craftables into the list
-# Fabricate already shows (`craft_cost: 8` is `Inputs: salvage x8`), and the route stays
-# reachable for a mission that jumps to it by name.
-gui_app_register("airwing", title="Airwing", icon="epadd.airwing", group="Ship", sort=40,
-                 consoles="hangar", description="Craft, pilots, sortie board")
-gui_app_register("casino", title="Casino", icon="epadd.casino", group="Ship", sort=50,
-                 consoles="hangar", description="Table games and the bar tab")
 # ONE TILE, AND IT KEEPS ITS DRILL-DOWN. `debug` is the app; `brain` and `mast`
 # stay TABS that the debug screen enables for itself (debug.mast), and their
 # `gui_tab_back("debug")` resolves because a back target may name an app. So the
