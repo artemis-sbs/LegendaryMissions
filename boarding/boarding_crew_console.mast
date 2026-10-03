@@ -27,12 +27,6 @@
 # behind it, which is no better than sending it to Helm.
 gui_tab_back_while_boarded("boarding_crew")
 
-# TELL THE PADD THIS ADDON IS HERE. `consoles` takes a returning console home itself when
-# nothing else will (a mission with no boarding addon); with this addon loaded that is
-# this file's job, and two reroutes of one console in one frame is how a tab strip gets
-# built by whichever wins.
-shared BOARDING_CREW_CONSOLE = True
-
 
 # One console, one character, one interior.
 #
@@ -48,15 +42,18 @@ shared BOARDING_CREW_CONSOLE = True
     ->END
 
 
-# Going down opens the map. `//shared/signal` because the signal is emitted once per
-# console that boards, and `gui_reroute_client` takes that one client - running this
-# per-console as well would reroute everybody every time anybody boarded.
+# Going down opens the crew console. `//shared/signal` because the signal is emitted
+# once per console that boards, and `gui_reroute_client` takes that one client - running
+# this per-console as well would reroute everybody every time anybody boarded.
 #
-# ONLY when there is somewhere to walk. A dialogue-only party (no `site=` on the
-# invitation) has no interior, and sending it to a map of nothing would replace a screen
-# that works with an empty one.
+# FOR EVERY PARTY, with a floor or without one. A party that only talks its way through
+# a place (no `site=`, no `area=`) used to be left out: a map of nothing beside the
+# device would have replaced a screen that worked with a mostly empty one. But the
+# screen it was left on was the ePADD's Boarding Party app, which by then says only who
+# went and BEAM UP - the room and its choices were in the crew's MAIL. The xESS is the
+# boarding party's surface; `gui_boarding_console` now draws it alone, across the whole
+# screen, when there is no interior to put beside it.
 //shared/signal/boarding_went_down
-    ->END if BOARDING_HOST is None or BOARDING_HOST == 0
     gui_reroute_client(BOARDING_CLIENT, boarding_crew_console)
     ->END
 
