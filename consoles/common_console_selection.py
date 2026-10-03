@@ -252,4 +252,8 @@ def console_crew_identity(client_id, slot, hull, console,
         "portrait": post.portrait or "",
         "markdown": crew_preview_markdown(post.face, post.portrait,
                                           height=_IDENTITY_FACE_PX, align="left"),
+        # A roster that says `Names: locked` filled this seat: the person shown is who the
+        # console will be, whatever the player saved, so the picker offers no Edit. `.get`
+        # with a default because a post from an older sbs_utils has no such field.
+        "locked": bool(post.get("locked", False)),
     })

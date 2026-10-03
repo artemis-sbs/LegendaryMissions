@@ -458,7 +458,11 @@ if CAN_CHANGE_CONSOLE:
     # CREW_EDIT.enable off leaves the line as a readout: a mission that wants its cast worn
     # rather than chosen gets exactly that, which is a better "off" than the empty name box
     # this screen used to fall back to.
-    if CREW_EDIT.get("enable", True):
+    #
+    # AND NOT WHEN THE CAST IS LOCKED. A roster that says `Names: locked` filled this seat,
+    # so nothing typed here would be applied - an Edit button that edits nothing is worse
+    # than none. Per seat, not per mission: a station that roster leaves empty still edits.
+    if CREW_EDIT.get("enable", True) and not crew_ident.locked:
         on gui_message(gui_button("Edit", style="col-width: 5em;")):
             jump crew_edit_identity
 
