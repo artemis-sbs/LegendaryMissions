@@ -109,7 +109,7 @@ Destroy the raider Warlord to break the siege for good.
 | `Part of:` | The quest this one belongs under, by key. | `Parent:` |
 | `Reward:` | What COMPLETING it gives - credits, an item key, or a reputation clause. | `Pays:` |
 | `Required:` | Whether the mission needs this one completed to succeed. |  |
-| `Fatal:` | Failing this ENDS the mission. | `Critical:` |
+| `Fatal:` | Failing this FAILS the quest it is `Part of:`. That loses the game only if the parent says `Lose:`. | `Critical:` |
 <!-- amd:end -->
 
 Parenting to `siege_mission` is what joins the objective to the siege's mission tree,
