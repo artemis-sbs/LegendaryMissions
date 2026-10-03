@@ -65,13 +65,22 @@ def lm_epadd_boarding():
 
     Says nothing on a bridge console with no party open, so the tile stays quiet.
     """
+    from sbs_utils.helpers import FrameContext
     from sbs_utils.procedural.boarding import (boarding_invitation, boarding_open_roster,
-                                           boarding_invite_title)
+                                           boarding_invite_title, boarding_reserved)
     from sbs_utils.procedural.gui.boarding_gui import boarding_who
     if boarding_who() is not None:
         return boarding_invite_title()
     if boarding_invitation() is None:
         return ""
+    # A PLACE HELD FOR THIS CONSOLE is the opposite of "full". A crew party reserves a
+    # body for everybody on the bridge, so the open roster is empty - and the tile told
+    # the very person it was waiting for that there was no room (seen in the engine,
+    # 2026-10-03). Say where the party is going; the app says who they go as.
+    page = FrameContext.page
+    client_id = getattr(page, "client_id", None) if page is not None else None
+    if client_id is not None and boarding_reserved(client_id) is not None:
+        return boarding_invite_title()
     free = len(boarding_open_roster())
     if not free:
         return "full"

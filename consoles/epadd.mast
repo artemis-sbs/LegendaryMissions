@@ -41,6 +41,10 @@ gui_icon_add_atlas_grid(media_shared("epadd/icons"), 4, 6, cell=128, names=[
 # server runs the top level first), but the statements around it run for EVERY
 # client - so the pump is guarded rather than merely placed here.
 default shared EPADD_MAIL_LOADED = False
+# Whether the `boarding` addon is loaded, and with it the crew console that takes a
+# returning console home. That addon sets this True at its own top level; this is the
+# other half of the pair, so it does not matter which top level runs first.
+default shared BOARDING_CREW_CONSOLE = False
 if not EPADD_MAIL_LOADED:
     shared EPADD_MAIL_LOADED = True
     message_load_amd(document_get_amd_file(None, "Messages", content=media_read_relative_file("messages.amd")))
@@ -264,3 +268,43 @@ if is_dev_build():
         gui_survey_screen_tick()
     await gui()
     ->END
+
+
+# A PARTY WITH NOWHERE TO WALK READS ITS SCENE IN MESSAGES.
+#
+# `boarding_go_down` changes what the console IS and sends the GUI task nowhere - a
+# reroute needs a label, and labels are MAST. With an interior, the `boarding` addon
+# opens the crew console. Without one there is no map to open, so nothing happened:
+# the console stayed on the Boarding Party app, which by then says only who went and
+# BEAM UP, while the room and its choices sat in Messages behind an unread count.
+# Seen in the engine, 2026-10-03 - a crew that pressed BEAM DOWN had no way to know
+# where the place they had just gone to was.
+#
+# `//shared/signal` because the signal is emitted once per console that goes, and
+# `gui_reroute_client` takes that one client.
+//shared/signal/boarding_went_down
+    ->END if BOARDING_HOST is not None and BOARDING_HOST != 0
+    gui_reroute_client(BOARDING_CLIENT, epadd_messages_screen)
+    ->END
+
+
+# AND HOME AGAIN, when nothing else does it. The `boarding` addon reroutes a returning
+# console itself (`boarding_crew_home`); a mission that does not load it - anything made
+# from the starter template - left the console on Messages, reading its mail, with the
+# visit over and nothing on screen saying so.
+//shared/signal/boarding_came_back if not BOARDING_CREW_CONSOLE
+    ->END if BOARDING_CONSOLE is None
+    gui_reroute_client(BOARDING_CLIENT, epadd_party_home)
+    ->END
+
+
+# Run ON the returning console, so `client_id` is that console. The same recipe as the
+# boarding addon's `boarding_crew_home`, and for the same reason: the main screen is
+# usually the server console, which has no ship, and `common_console_show` sends a
+# console with no ship to the console picker.
+=== epadd_party_home
+    epadd_back = get_inventory_value(client_id, "CONSOLE_TYPE", "helm")
+    jump show_main_game_screen if epadd_back == "mainscreen"
+    epadd_back_ship = sbs.get_ship_of_client(client_id)
+    jump show_main_game_screen if epadd_back_ship == 0 or not has_role(epadd_back_ship, "__player__")
+    jump common_console_show

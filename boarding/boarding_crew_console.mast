@@ -27,6 +27,12 @@
 # behind it, which is no better than sending it to Helm.
 gui_tab_back_while_boarded("boarding_crew")
 
+# TELL THE PADD THIS ADDON IS HERE. `consoles` takes a returning console home itself when
+# nothing else will (a mission with no boarding addon); with this addon loaded that is
+# this file's job, and two reroutes of one console in one frame is how a tab strip gets
+# built by whichever wins.
+shared BOARDING_CREW_CONSOLE = True
+
 
 # One console, one character, one interior.
 #
