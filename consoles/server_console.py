@@ -35,6 +35,22 @@ def main_mission_select_template(item):
     
     
 
+def server_start_text(overview):
+    """The text at the top of the server's start screen: the mission's name, then what it
+    says about itself.
+
+    For a MAST ASSIGNMENT (`START_TEXT = server_start_text(...)`), and shaped for one: an
+    assigned string is run through `{}` formatting, so every brace in the author's words is
+    doubled here and comes out of that pass as written. Built as a quoted string in the
+    `.mast`, a description with a `{` in it - `the {last} log` - was a FORMAT String error
+    on the first frame, and a start screen that never drew.
+    """
+    name = str(getattr(overview, "display_name", "") or "")
+    desc = str(getattr(overview, "desc", "") or "")
+    text = "$t %s:\n\n%s" % (name, desc)
+    return text.replace("{", "{{").replace("}", "}}")
+
+
 # def main_mission_select_title_template():
 #     gui_row("row-height: 1.2em;padding:13px;background:#1578;")
 #     gui_text(f"$text:{MISSIONS_TITLE};justify: left;")

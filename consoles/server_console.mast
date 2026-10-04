@@ -190,8 +190,10 @@ gui_reroute_clients("client_main")
     #
     # if there is a single mission or a map/__init__
     # Use it for the start text
+    # Built in Python, not as a quoted string here: a description is the author's own
+    # words, and a `{` in it made this line a FORMAT String error and a dead start screen.
     if mission_overview is not None:
-        START_TEXT = """$t {mission_overview.display_name}:\n\n{mission_overview.desc}"""
+        START_TEXT = server_start_text(mission_overview)
 
     gui_section( style="area: 0, 50px, 100, 95;padding:10px,0;background:#1578;")
     
