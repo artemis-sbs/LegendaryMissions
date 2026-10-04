@@ -144,6 +144,17 @@ Hook: biomech_infestation
 **reusable behavior belongs in an addon**, and the boss just points at it. Keep
 boss-*specific* logic in the boss's own `.mast`.
 
+**A hook that names a label the mission does not have is left out.** The boss still
+arrives, with her ships and her objectives, and `mast.runtime.log` says the hook was not
+found. (It used to stop the game on the runtime-error page as she arrived.)
+
+**A hook for a boss of your own** - one kept in `common_data/bosses` - cannot live beside
+it: that folder holds `.amd` files only. Without editing a shipped file, the hook can go in
+a folder of its own inside this mission, `LegendaryMissions/<your_boss>/__init__.mast`,
+which is found and compiled like any addon. That folder is inside the mission an update
+replaces, so keep a copy and put it back afterwards; until you do, the boss arrives
+without her hook.
+
 ---
 
 ## The logic file: `<key>.mast`

@@ -134,6 +134,34 @@ class BossValueTests(unittest.TestCase):
         self.assertIn("Corsair Queen", self.scan("Low: 40%", "Low: 40"))
         self.assertEqual(SB.siege_boss_low_pct("Corsair Queen"), 0.4)
 
+    def test_a_hook_that_names_no_label_is_left_out_and_said(self):
+        """`Hook: corsair_queen_hok` stopped the game on the runtime-error page as the
+        boss arrived. The label table is the story's own (`FrameContext.mast.labels`)."""
+        from sbs_utils.helpers import FrameContext
+
+        class _Story:
+            labels = {"corsair_queen_hook": object(), "biomech_infestation": object()}
+
+        self.addCleanup(setattr, FrameContext, "mast", FrameContext.mast)
+        FrameContext.mast = _Story()
+        self.scan("Named: Morrigan pirate_brigantine, Badb pirate_strongbow",
+                  "Named: Morrigan pirate_brigantine\nHook: corsair_queen_hok")
+        del self.heard.lines[:]
+        self.assertEqual(SB.siege_boss_hook_ready("Corsair Queen"), "")
+        said = [line for line in self.heard.lines if "corsair_queen_hok" in line]
+        self.assertEqual(len(said), 1, self.heard.lines)
+
+        self.scan("Named: Morrigan pirate_brigantine, Badb pirate_strongbow",
+                  "Named: Morrigan pirate_brigantine\nHook: corsair_queen_hook")
+        del self.heard.lines[:]
+        self.assertEqual(SB.siege_boss_hook_ready("Corsair Queen"), "corsair_queen_hook")
+        self.assertEqual(self.heard.lines, [])
+
+    def test_a_boss_with_no_hook_has_none(self):
+        self.scan()
+        self.assertEqual(SB.siege_boss_hook_ready("Corsair Queen"), "")
+        self.assertEqual(self.said(), [])
+
     def test_a_file_that_is_not_a_record_at_all_is_not_offered_as_a_boss(self):
         with open(os.path.join(self.shared, "broken.amd"), "w", encoding="utf-8") as f:
             f.write("# [Broken](broken\n---\nBoss\nTrigger enemies_low\n")

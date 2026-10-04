@@ -252,6 +252,32 @@ def siege_boss_named(sel):
     return list(_bdata(sel).get("named", []))
 
 
+def siege_boss_hook_ready(sel):
+    """The boss's `Hook:` label when the story HAS a label by that name, else ''.
+
+    A hook is MAST, and a boss file is not: the label lives in some addon, or in a folder
+    the author added to the mission. When it is not there - a typo, or the folder went
+    with an update - `prefab_spawn` of the name was "Calling undefined label" on the
+    runtime-error page at the moment the boss arrived, with her ships and objectives
+    already in the game. Now the boss arrives without her hook, and the log says why.
+    """
+    name = str(siege_boss_hook(sel) or "").strip()
+    if not name:
+        return ""
+    try:
+        from sbs_utils.helpers import FrameContext
+        mast = FrameContext.mast
+        labels = getattr(mast, "labels", None)
+        if labels is not None and name not in labels:
+            _say("the boss '%s' says `Hook: %s`, and no label in this mission has that "
+                 "name, so she arrives without it. A hook is a MAST label: check the "
+                 "spelling, and that its file is still in the mission" % (sel, name))
+            return ""
+    except Exception:                                    # noqa: BLE001
+        pass
+    return name
+
+
 def siege_boss_hook(sel):
     """A MAST label the boss runs (via prefab_spawn) for bespoke behavior beyond the
     config spawn - e.g. biomech_infestation (the LM biomech addon). '' if none."""

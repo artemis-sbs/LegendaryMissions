@@ -381,6 +381,10 @@ GameCode:
         if raider_count <= peak_raiders * siege_boss_low_pct(BOSS_SELECT):
             boss_triggered = True
             signal_emit("siege_enemies_low", None)
+            # LOOK AGAIN NEXT TIME, with her ships in the count. A small `Low:` (4% of 20
+            # raiders) is only met at ZERO raiders - and the win check below then fired
+            # in this same look, so the Siege was won at the moment the boss arrived.
+            jump loop
     # Lose: every friendly starbase is gone.
     if len(players_allied_members("station")) == 0:
         signal_emit("quest_signal", {"SIGNAL_NAME": "siege_bases_lost"})
@@ -421,8 +425,11 @@ GameCode:
         prefab_spawn(prefab_siege_boss_ship, {"START_X": npos.x, "START_Y": npos.y, "START_Z": npos.z, "NAME": boss_name, "BOSS_ART": boss_art, "BOSS_ROLES": boss_roles})
     quest_grant_amd(SHARED, boss_node)
     # A boss with a Hook runs a bespoke behavior label (e.g. the infestation loop).
-    if siege_boss_hook(BOSS_SELECT) != "":
-        prefab_spawn(siege_boss_hook(BOSS_SELECT), {"BOSS_SELECT": BOSS_SELECT})
+    # siege_boss_hook_ready: a hook that names a label the story does not have is left
+    # out and reported, rather than stopping the game as she arrives.
+    boss_hook = siege_boss_hook_ready(BOSS_SELECT)
+    if boss_hook != "":
+        prefab_spawn(boss_hook, {"BOSS_SELECT": BOSS_SELECT})
     ->END
 
 
