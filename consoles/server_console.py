@@ -1,4 +1,4 @@
-from sbs_utils.procedural.gui.text import gui_text_area
+from sbs_utils.procedural.gui.text import gui_text_area, gui_text_literal
 
 from sbs_utils.procedural.gui import gui_row, gui_text
 from sbs_utils.helpers import gui_text_escape
@@ -16,7 +16,7 @@ def main_mission_select_template(item):
     # NB not `row-height: content`: this is a listbox item template, and content
     # sizing inside a listbox still falls back to flex.
     gui_row("row-height: 1em+10px;padding:10px,10px,10px,0;font:gui-3;")
-    gui_text(f"$text:{gui_text_escape(item.display_name)};justify: left;font:gui-3;")
+    gui_text(f"$text:{gui_text_escape(gui_text_literal(item.display_name))};justify: left;font:gui-3;")
     # The description fills WHAT IS LEFT of the item (1fr, the default). It was
     # a fixed `15em`, which is 360px at every resolution: correct in a 768-tall
     # window, but at 1024x600 it put the text's box at 108% -- off the bottom of
@@ -30,8 +30,13 @@ def main_mission_select_template(item):
     #
     # gui_text_escape: a description containing ':' or ';' would otherwise be
     # read as further style props and lose its tail.
+    #
+    # gui_text_literal: a description is the AUTHOR's words, and the text area fills
+    # `{name}` in what it is given. `a {missing} lifeboat` in a map's description was a
+    # FORMAT String error against this screen's own `await gui()`, on every frame - the
+    # mission picker never drew, for a mistake no lint or compile reports.
     gui_row("padding:10px,0,10px,3px;font:gui-2;")
-    gui_text_area(f"$text:{gui_text_escape(item.desc)};justify: left;color:#999;font:gui-2;")
+    gui_text_area(f"$text:{gui_text_escape(gui_text_literal(item.desc))};justify: left;color:#999;font:gui-2;")
     
     
 

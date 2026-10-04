@@ -100,5 +100,96 @@ class StartTextTests(unittest.TestCase):
         self.assertNotIn("{mission_overview.desc}", text)
 
 
+class PickerRowTests(unittest.TestCase):
+    """The row the mission picker draws for a map: its name and its description.
+
+    This is the one the lesson hit. Both widgets fill `{name}` in the text they are given,
+    so `a {missing} lifeboat` in a map's description - or a brace in its name - was a
+    FORMAT String error against the picker's own `await gui()`, on every frame.
+    """
+
+    STORY = "\n".join([
+        "item = sst_map()",
+        "gui_section(style='area: 0, 0, 100, 100;')",
+        "main_mission_select_template(item)",
+        "await gui()",
+        ""])
+
+    def setUp(self):
+        from sbs_utils.gui import Gui
+        from sbs_utils.mast.maststory import MastStory
+        from sbs_utils.mast_sbs.maststorypage import StoryPage
+        from sbs_utils.spaceobject import SpaceObject
+        mock_sbs.create_new_sim()
+        clear_shared()
+        SpaceObject.clear()
+        Gui.clients = {}
+        FrameContext.context = Context(mock_sbs.sim, mock_sbs, FakeEvent(0, "test"))
+        MastGlobals.import_python_function(server_console.main_mission_select_template)
+        MastGlobals.import_python_function(sst_map)
+        story = MastStory()
+        self.assertEqual(story.compile(self.STORY, "pickerrow", story), [])
+
+        class _Page(StoryPage):
+            pass
+
+        _Page.story = story
+        FrameContext.mast = story
+        self.errors = []
+        orig = MastScheduler.on_runtime_error
+        MastScheduler.on_runtime_error = self.errors.append
+        self.addCleanup(setattr, MastScheduler, "on_runtime_error", orig)
+        self.sent = []
+        for name in ("send_gui_text", "send_gui_text_area"):
+            real = getattr(mock_sbs, name, None)
+            if real is None:
+                continue
+
+            def tap(client_id, parent, tag, props, *a, _real=real, **k):
+                self.sent.append(props)
+                return _real(client_id, parent, tag, props, *a, **k)
+
+            setattr(mock_sbs, name, tap)
+            self.addCleanup(setattr, mock_sbs, name, real)
+        self.page_class = _Page
+        self.addCleanup(self.reset)
+
+    def reset(self):
+        from sbs_utils.gui import Gui
+        Gui.clients = {}
+        FrameContext.task = FrameContext.page = FrameContext.mast = None
+        FrameContext.context = None
+
+    def draw(self, name, desc):
+        from sbs_utils.gui import Gui
+        MAP[0] = MastDataObject({"display_name": name, "desc": desc})
+        self.page = self.page_class()
+        Gui.push(0, self.page)
+        for _ in range(2):
+            mock_sbs.sim._time_tick_counter += 30
+            self.page.gui_state = "repaint"
+            self.page.present(FakeEvent(0, "gui_present"))
+        return " | ".join(str(s) for s in self.sent)
+
+    def test_braces_in_the_description_and_the_name_are_drawn_as_written(self):
+        drawn = self.draw("Salvage {Run}", "A dying hulk, a {missing} lifeboat.")
+        self.assertEqual(self.errors, [], self.errors)
+        self.assertIn("a {missing} lifeboat", drawn)
+        self.assertIn("Salvage {Run}", drawn)
+        self.assertNotIn("{{", drawn)
+
+    def test_a_plain_map_is_unchanged(self):
+        drawn = self.draw("Salvage Run", "A dying hulk and a log.")
+        self.assertEqual(self.errors, [])
+        self.assertIn("A dying hulk and a log.", drawn)
+
+
+MAP = [None]
+
+
+def sst_map():
+    return MAP[0]
+
+
 if __name__ == "__main__":
     unittest.main()
