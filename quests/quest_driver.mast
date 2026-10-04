@@ -68,6 +68,10 @@
 
 # Generic named trigger - on_signal / on_comms (mission/comms escape hatch).
 //shared/signal/quest_signal
+    # The name rides in as SIGNAL_NAME. With that key misspelled in a mission's story it
+    # is not there at all, and reading it was an error page from inside THIS file, with
+    # the mission's own line nowhere in it. quest_on_signal says what is wrong instead.
+    default SIGNAL_NAME = None
     quest_on_signal(SIGNAL_NAME)
     ->END
 
