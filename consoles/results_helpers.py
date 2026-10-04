@@ -306,6 +306,42 @@ def game_results_timestamp():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+def game_results_load(results_file):
+    """The games already on record, as a list - and a file that cannot be read is KEPT.
+
+    The label used to treat "could not parse it" the same as "there is no file yet": it
+    started an empty list and saved that over the top. A file caught half-written by a
+    second game finishing in the same second was therefore replaced by one record, and
+    two hundred games of history were gone with nothing in any log.
+
+    A file that is there, has something in it, and is not a list of games is moved aside
+    as ``game_results.unreadable-<time>.yaml`` beside it, and said so, before a new record
+    is started. Nothing is ever thrown away here.
+    """
+    import os
+    from sbs_utils.fs import load_yaml_data
+    results = load_yaml_data(results_file)
+    if isinstance(results, list):
+        return results
+    try:
+        if os.path.getsize(results_file) == 0:
+            return []
+    except OSError:
+        return []                                        # no file yet
+    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    aside = "%s.unreadable-%s.yaml" % (results_file[:-5] if results_file.endswith(".yaml")
+                                       else results_file, stamp)
+    try:
+        os.replace(results_file, aside)
+        print("game results: %s could not be read as a list of games. It was kept as %s "
+              "and a new record was started." % (results_file, aside))
+    except OSError as e:
+        print("game results: %s could not be read and could not be moved aside (%s). "
+              "Nothing was saved, so that it is not overwritten." % (results_file, e))
+        return None
+    return []
+
+
 def game_results_map(world_select):
     """Best-effort readable scenario/map name for a game-results record.
 
