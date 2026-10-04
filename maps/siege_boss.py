@@ -30,6 +30,33 @@ _SHARED_BOSS_DIR = "bosses"          # under common_data: the author's own, kept
 _bosses = None   # cache: Display -> boss node
 
 
+_TRIGGERS = ("enemies_low", "continuous")
+
+
+def _problem(data, label, value, why):
+    """Note a line the game cannot read. The boss is then LEFT OUT of the list and the
+    log says which line (`siege_boss_scan`).
+
+    Each of these used to do something else, and none of them said so: `Trigger:
+    enemy_low` was a boss that never arrived; `Low: forty percent` and `Difficulty: +two`
+    stopped the game on the runtime-error page seconds in; `Fleets: three` made the whole
+    file unreadable, and the Boss list offered an entry called "Could not read this
+    document" in its place. Defaulting instead would play a boss the author did not
+    write - so it is not offered at all, with one line that names the file and the value.
+    """
+    data.setdefault("problems", []).append(
+        "`%s: %s` %s" % (label.capitalize(), str(value).strip(), why))
+
+
+def _whole(data, key, label, value):
+    """A whole number from 0 up, else a problem."""
+    n = amd_num(value)
+    if isinstance(n, (int, float)) and float(n) == int(n) and n >= 0:
+        data[key] = int(n)
+    else:
+        _problem(data, label, value, "is not a whole number from 0 up")
+
+
 def _boss_facts():
     """The shared quest vocabulary + the siege boss spawn labels (Trigger / Low /
     Flies / Fleets / Difficulty / Named). Flies reuses OU's makeup convention."""
@@ -39,16 +66,31 @@ def _boss_facts():
             return True
         if label == "trigger":
             data["trigger"] = str(value).strip().lower()
+            if data["trigger"] not in _TRIGGERS:
+                _problem(data, label, value, "is not `enemies_low` or `continuous`")
         elif label == "low":
-            data["low"] = amd_pct(value)                 # "25%" -> 0.25
+            low = amd_pct(value)                         # "25%" -> 0.25
+            if not isinstance(low, float) or low < 0:
+                _problem(data, label, value, "is not a share of the raiders - write `Low: 40%`")
+            else:
+                # `Low: 40`, the sign left off, is 40% - not forty times the raiders,
+                # which meant "arrive at once".
+                if "%" not in str(value) and low > 1.0:
+                    low = low / 100.0
+                data["low"] = min(low, 1.0)
         elif label == "wave":
-            data["wave"] = int(amd_num(value))           # seconds between waves (continuous)
+            _whole(data, "wave", label, value)           # seconds between waves (continuous)
         elif label == "flies":
             data["makeup"] = amd_makeup(value)           # "50% Kralien, 50% Torgoth"
         elif label == "fleets":
-            data["fleets"] = int(amd_num(value))
+            _whole(data, "fleets", label, value)
         elif label == "difficulty":
-            data["difficulty"] = str(value).strip()      # "+2" | "-1" | "7"
+            text = str(value).strip()                    # "+2" | "-1" | "7"
+            data["difficulty"] = text
+            body = text[1:] if text[:1] in "+-" else text
+            if not body.isdigit() or (text[:1] not in "+-" and not 1 <= int(body) <= 11):
+                _problem(data, label, value,
+                         "is not a level from 1 to 11, or a step such as `+2` or `-1`")
         elif label == "named":
             named = []
             for item in str(value).split(","):           # "Name art, Name art"
@@ -118,6 +160,17 @@ def siege_boss_scan(force=False):
                 continue
             for node in doc.get("children", []):         # one boss per file (first heading)
                 d = node.get("data") or {}
+                if node.get("key") == "__amd_error__":
+                    # The reader does not raise on a file it cannot parse: it hands back
+                    # a stand-in record, which this list then OFFERED as a boss called
+                    # "Could not read this document".
+                    _say("%s could not be read (%s) - it is left out of the list"
+                         % (fn, str(node.get("description") or "").strip()[:160]))
+                    break
+                if d.get("problems"):
+                    _say("%s is left out of the Boss list: %s. Fix the line and start "
+                         "the mission again." % (fn, "; ".join(d["problems"])))
+                    break
                 display = str(d.get("display") or node.get("display_text") or node.get("key"))
                 if folder == shared and display in _bosses:
                     _say("%s in common_data/bosses is named '%s', which this mission "

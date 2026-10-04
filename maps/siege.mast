@@ -5,7 +5,10 @@ default shared SIEGE_ACTIVE = False
 default shared SIEGE_TIMEOUT = "Win"
 # Boss (map option): a boss from maps/bosses/*.amd (folder-scanned) that arrives when
 # the raiders thin out (siege_enemies_low), or None. BOSS_LIST feeds the dropdown.
-default shared BOSS_SELECT = "None"
+# Seeded from the SETTING (as SIEGE_JOBS below is), so a profile, a soak or a launch
+# argument can pick a boss. It was a bare "None": the only way to choose one was the
+# dropdown, and nothing scripted could test a boss at all.
+default shared BOSS_SELECT = settings_get_defaults().get("BOSS_SELECT", "None")
 default shared BOSS_LIST = siege_boss_list()
 # Quests Offered (map option): a random subset of Peacetime Remastered's job board, offered on
 # the Quests tab between waves. A seed picks the same set every time. Seeded from the

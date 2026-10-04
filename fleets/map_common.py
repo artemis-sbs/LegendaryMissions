@@ -248,8 +248,14 @@ def fleet_create(race, fleet_diff, posx, posy, posz, fleet_roles = "RaiderFleet"
         # silent alternative is a fleet that spawns nothing and a mission that quietly
         # has no enemies.
         known = ", ".join(fleet_table_races()) or "none"
-        print(f"fleet_create: no fleet table for race '{race}' "
-              f"(is it in the NPC_RACES setting? registered: {known})")
+        message = (f"fleet_create: no fleet table for race '{race}', so no fleet was made "
+                   f"(is it in the NPC_RACES setting? registered: {known})")
+        print(message)
+        # And where an author will see it. A boss that says `Flies: Pirates` arrived
+        # with its named ships and no fleets, and this line went to a console nobody
+        # was watching.
+        import logging
+        logging.getLogger("mast.runtime").warning(message)
         return None
 
 

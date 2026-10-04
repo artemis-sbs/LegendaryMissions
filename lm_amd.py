@@ -13,7 +13,7 @@ silently shadowing), so a future sbs_utils field called `Named` or `Hook` fails 
 instead of quietly changing what LM's files mean.
 """
 from sbs_utils.procedural.amd_schema import (amd_register_fields, text, integer, pct,
-                                             csv, makeup, multiline)
+                                             csv, makeup, multiline, enum)
 
 try:
     from sbs_utils.procedural.amd_schema import named_hulls
@@ -40,7 +40,8 @@ def _declare_lm_vocabulary():
     # A BOSS record - the root of maps/bosses/*.amd. `Boss` resolves to the map archetype
     # (a file's root record names the whole document), so these hang off map.
     amd_register_fields("map", {
-        "trigger": text(hint="what summons the boss, e.g. enemies_low"),
+        "trigger": enum("enemies_low", "continuous",
+                        hint="what summons the boss: enemies_low or continuous"),
         "low": pct(hint="30% - the enemy count that counts as thinned out"),
         "flies": makeup(hint="pirate, or 60% Kralien, 20% Torgoth, 20% Arvonian"),
         "fleets": integer(hint="how many escort fleets arrive with it"),
