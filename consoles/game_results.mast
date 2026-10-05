@@ -265,16 +265,10 @@ shared game_stats = ~~{
             q_desc = gui_text_area("{q_sel_desc}", style="padding:10px,15px,10px,15px;")
             on change quest_box.get_value():
                 qsel = quest_box.get_value()
-                if qsel is not None and not gui_list_box_is_header(qsel):
-                    q_sel_desc = quest_log_pane_text(qsel)
-                    q_desc.value = q_sel_desc
-                elif qsel is not None:
-                    # Selecting an ARC shows its description + step checklist here too -
-                    # same renderer as the in-game tab, so both logs read alike.
-                    q_sel_desc = quest_log_parent_summary(qsel)
-                    if q_sel_desc == "":
-                        q_sel_desc = "Select a quest to see its details."
-                    q_desc.value = q_sel_desc
+                # A quest's facts and description, or an ARC's description and step
+                # list - the same renderer as the in-game tab, so both logs read alike.
+                # One call, never an assignment: see quest_tab.mast.
+                quest_log_pane_show(q_desc, qsel, "Select a quest to see its details.")
 
     if RESULTS_TAB == "enemies":
         # Races with no kills are omitted rather than listed as zero - and a mod's own
