@@ -1,0 +1,65 @@
+# EVA WIRING - a built ruin is somewhere the crew can go, with nothing written per mission.
+#
+# What a mission used to copy out of Storm's Beacon, once: a ruin is offered to the crew
+# when their ship is at its door, the crew who go inside pick up that ruin's side stories,
+# and taking the piece is a quest beat. The work is the library's
+# (`procedural/eva_relics.py`, `amd_relics.py`); this file only ROUTES, because a signal
+# needs a route and routes are MAST.
+#
+# ROUTES ONLY, AND EVERY ONE `//shared/signal`. Each of these offers, grants or sends, and
+# a plain `//signal` runs once per connected console - five consoles would offer the ruin
+# five times and hand out five copies of every story.
+#
+# A MISSION THAT STILL DOES THIS ITSELF IS HARMLESS. Every call below is identity, not a
+# latch: a second `eva_relic_open` for the ruin already on offer changes nothing, a story
+# already granted is left where it went, and a quest signal a ruin sent is not sent again.
+#
+# TO WIRE BY HAND instead, put `eva_relics_auto(False)` at the top of the story and call
+# `eva_relic_open(key)` / `eva_relic_close(key)` where the story wants them.
+
+# THE RUNTIME TWIN of this file being loaded. A mission, or a test, that wants to know
+# whether ruins wire themselves declares `default shared BOARDING_EVA_WIRING = False` and
+# reads it - order-safe whichever top level runs first, because the other is a `default`.
+shared BOARDING_EVA_WIRING = True
+
+
+# A ruin was built. Nothing is offered HERE: the offer follows the ship, so this starts
+# the pass that makes it (once - asking twice watches once) and runs it now, for a ruin
+# built with the ship already at its door.
+//shared/signal/relic_built
+    ->END if not eva_relics_auto()
+    eva_relics_watch()
+    eva_relics_pass()
+    ->END
+
+
+# The crew who go inside pick up that ruin's side stories - each crew member the one for
+# their job. `relic_section` reads the relic's OWN file, so one ruin's stories go to the
+# crew in that ruin and nobody else. None when the file has no such section, which grants
+# nothing and is not an error.
+//shared/signal/eva_went_out
+    ->END if EVA_RELIC is None
+    boarding_quests_grant(relic_section(EVA_RELIC, "side_stories"))
+    ->END
+
+
+# Once the crew has reached the first place with something to say, the party is settled:
+# a story nobody aboard has the job for goes to all of them rather than to nobody.
+//shared/signal/eva_place_scene
+    ->END if EVA_RELIC is None
+    boarding_quests_open_unclaimed(relic_section(EVA_RELIC, "side_stories"))
+    ->END
+
+
+# TAKING THE PIECE IS A STORY BEAT: `<relic key>_taken`. Carried out on a tether it is
+# seen leaving the ruin by the library's own tick. REELED IN from a suit it is collected -
+# and deleted - while still inside, so it never leaves anything; this is that half.
+# Handed every pickup: one that is nobody's piece is a no-op.
+//shared/signal/item_collected
+    # `default`, because the pickup's id joined this signal later than its key did. An
+    # items addon from before that still emits without it, and reading a name the signal
+    # did not carry ends the handler without a word.
+    default key = None
+    default item_id = None
+    relic_piece_collected(key, item_id)
+    ->END

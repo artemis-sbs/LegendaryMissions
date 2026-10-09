@@ -15,3 +15,5 @@ import boarding_ui.py
 import boarding_console.mast
 import boarding_crew_console.mast
 import eva_console.mast
+# LAST, and routes only: a ruin offers itself to the crew, and taking its piece is a beat.
+import eva_wiring.mast
