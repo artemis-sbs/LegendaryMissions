@@ -9,7 +9,10 @@
   * `eva_relics_auto(False)` is the opt-out;
   * `item_collected` for the ruin's piece sends the quest signal `<relic>_taken` - the
     half that was missing, because a piece reeled in from a suit is deleted inside the
-    ruin and never leaves it - with or without the newer `item_id` on the signal.
+    ruin and never leaves it - with or without the newer `item_id` on the signal;
+  * a barrier DESTROYED - a ship's beams, not a suit's cutter - opens its way and sends
+    `<barrier>_opened` once (`relic_barrier_destroyed` had no caller anywhere), and a
+    `Repair:` job is not done by having its marker shot.
 
 Three harness rules, each of which fails silently (see `fabrication/test_fabricate_panel`):
 compile through `import` with `story.basedir` set, park LAST, and push a SERVER page -
@@ -35,6 +38,7 @@ from sbs_utils.delete_queue import DeleteQueue
 from sbs_utils.gui import Gui
 from sbs_utils.handlerhooks import reset_mission_state
 from sbs_utils.helpers import Context, FakeEvent, FrameContext
+from sbs_utils.lifetimedispatcher import LifetimeDispatcher
 from sbs_utils.mast.maststory import MastStory
 from sbs_utils.mast.mastscheduler import MastScheduler
 from sbs_utils.mast_sbs import story_nodes  # noqa: F401  (registers the route nodes)
@@ -84,6 +88,27 @@ Relic: hollow
 Point: 300, 0, 0
 Roles: relic_piece
 Item: beacon_core
+---
+
+### [The Nave](nave)
+---
+Relic: hollow
+Chamber: 3000, 0, 0, 1100
+Passage to: mouth 350
+---
+
+### [The Seized Hatch](nave_hatch)
+---
+Relic: hollow
+Barrier: 1500, 0, 0, 400
+Clear with: beam
+---
+
+### [The Split Conduit](nave_conduit)
+---
+Relic: hollow
+Repair: 3200, 0, 0, 150
+Clear with: beam
 ---
 """
 
@@ -174,9 +199,11 @@ class ARuinAtTheDoor(_Base):
     def test_every_route_is_server_only(self):
         with open(os.path.join(BOARDING, "eva_wiring.mast"), encoding="utf-8") as f:
             routes = [line for line in f.read().split("\n") if line.startswith("//")]
-        self.assertEqual(len(routes), 4, routes)
+        self.assertEqual(len(routes), 6, routes)
         for line in routes:
-            self.assertTrue(line.startswith("//shared/signal/"),
+            # A lifetime route (`//damage/destroy`) is registered once and runs on the
+            # server's task - `TwoConsoles` below is the proof, not this spelling.
+            self.assertTrue(line.startswith(("//shared/signal/", "//damage/destroy ")),
                             f"{line} would run once per console")
 
     def test_building_it_offers_it_and_opens_a_crew_party(self):
@@ -187,6 +214,16 @@ class ARuinAtTheDoor(_Base):
         self.assertIsNotNone(invite)
         self.assertEqual(invite["ship"], self.ship.id)
         self.assertEqual(invite["title"], "The Hollow")
+
+    def test_a_second_ship_at_the_same_door_is_offered_it_too(self):
+        # The offer is the SHIP's: it used to be one slot, first ship reached.
+        second = to_object(player_spawn(AT_THE_DOOR[0], 0, AT_THE_DOOR[2] + 400,
+                                        "Intrepid", "tsn", "tsn_light_cruiser"))
+        for _ in range(4):
+            self.present()                  # the pass the route started runs on the tick
+        self.assertEqual(E.eva_offered(ship=self.ship)["relic"], "hollow")
+        self.assertEqual(E.eva_offered(ship=second)["relic"], "hollow")
+        self.assertEqual(B.boarding_invite_ships(), [self.ship.id, second.id])
 
     def test_a_second_relic_built_is_the_same_offer_and_party(self):
         invite = B.boarding_invitation()
@@ -220,6 +257,115 @@ class ARuinAtTheDoor(_Base):
         self.emit("eva_place_scene", {"EVA_CLIENT": 0, "EVA_RELIC": "hollow",
                                       "EVA_POINT": "hollow_door", "EVA_SCENE": "x",
                                       "EVA_CHANNEL": "c"})
+
+
+class ShotFromTheShip(_Base):
+    """A ship's beams destroy a barrier's object, and the engine says so with a `damage`
+    event whose sub_tag is `destroyed`. `cosmos_event_handler` hands that to
+    `LifetimeDispatcher.dispatch_damage`, which is what runs every `//damage/destroy`
+    route - so that is the call made here, with the route coming from the REAL file."""
+
+    clients = ()
+
+    def setUp(self):
+        super().setUp()
+        self.pages = []
+        for cid in self.clients:
+            page = WiringPage()
+            Gui.push(cid, page)
+            self.pages.append((cid, page))
+        self.present(2)
+        self.heard = []
+        signal_observe(self._hear)
+        self.addCleanup(signal_unobserve, self._hear)
+
+    def _hear(self, name, data=None):
+        self.heard.append(name)
+
+    def present(self, n=1):
+        super().present(n)
+        for cid, page in getattr(self, "pages", ()):
+            FrameContext.context = Context(mock_sbs.sim, mock_sbs,
+                                           FakeEvent(cid, "gui_present"))
+            page.gui_state = "repaint"
+            page.present(FakeEvent(cid, "gui_present"))
+        self.assertEqual(self.rte, [], f"MAST runtime errors: {self.rte}")
+
+    def barrier_id(self, key="nave_hatch"):
+        from sbs_utils.procedural.rails import rail_barriers
+        for bkey, bar in rail_barriers("hollow", shut_only=True):
+            if bkey == key:
+                return bar.get("object")
+        return None
+
+    def destroy(self, obj_id):
+        event = FakeEvent(client_id=0, tag="damage", sub_tag="destroyed",
+                          origin_id=self.ship.id, selected_id=obj_id,
+                          parent_id=self.ship.id)
+        FrameContext.context = Context(mock_sbs.sim, mock_sbs, event)
+        LifetimeDispatcher.dispatch_damage(event)
+        self.present(2)
+
+    def way_through(self):
+        from sbs_utils.procedural.rails import rail_route
+        return rail_route("hollow", (0.0, 0.0, 20000.0), (3000.0, 0.0, 20000.0))
+
+    def test_the_barrier_is_a_thing_a_beam_can_hit(self):
+        oid = self.barrier_id()
+        self.assertIsNotNone(oid, "a shut barrier must have an object to shoot")
+        self.assertTrue(to_object(oid).has_role("relic_barrier"))
+        self.assertFalse(self.way_through(), "shut, the hatch must sever the hall")
+
+    def test_destroying_it_opens_the_way_and_says_so_once(self):
+        oid = self.barrier_id()
+        self.destroy(oid)
+        self.assertEqual(self.quest, ["nave_hatch_opened"])
+        self.assertEqual(self.heard.count("rail_opened"), 1)
+        self.assertIsNone(self.barrier_id(), "the barrier must be open")
+        self.assertTrue(self.way_through(), "the route through it must open")
+        # The engine can report one death more than once; the second changes nothing.
+        self.destroy(oid)
+        self.assertEqual(self.quest, ["nave_hatch_opened"])
+        self.assertEqual(self.heard.count("rail_opened"), 1)
+
+    def test_the_same_as_when_a_suit_cuts_it(self):
+        R.relic_open_barrier("hollow", "nave_hatch")
+        cut = (list(self.quest), self.heard.count("rail_opened"), bool(self.way_through()))
+        self.assertEqual(cut, (["nave_hatch_opened"], 1, True))
+        # And a barrier a suit already cut is not opened again by a late death notice.
+        self.destroy(999999)
+        self.assertEqual(self.quest, ["nave_hatch_opened"])
+
+    def test_anything_else_destroyed_is_nothing(self):
+        other = to_object(player_spawn(5000, 0, 5000, "Bystander", "tsn",
+                                       "tsn_light_cruiser"))
+        self.destroy(other.id)
+        self.assertEqual(self.quest, [])
+        self.assertNotIn("rail_opened", self.heard)
+        self.assertIsNotNone(self.barrier_id(), "the hatch is still shut")
+
+    def test_a_repair_job_is_not_done_by_being_shot(self):
+        jobs = dict(R.relic_repair_jobs("hollow"))
+        marker = jobs["nave_conduit"]["object"]
+        self.assertIsNotNone(marker)
+        self.destroy(marker)
+        self.assertFalse(R.relic_repair_fixed("hollow", "nave_conduit"))
+        self.assertEqual(self.quest, [])
+        self.assertNotIn("relic_repaired", self.heard)
+        # The job is still there to do, and its dead marker's id is forgotten - ids are
+        # recycled, and finishing the job puts the marker away BY ID.
+        jobs = dict(R.relic_repair_jobs("hollow", open_only=True))
+        self.assertIn("nave_conduit", jobs)
+        self.assertIsNone(jobs["nave_conduit"]["object"])
+        self.assertTrue(R.relic_repair_done("hollow", "nave_conduit"))
+        self.assertEqual(self.quest, ["nave_conduit_repaired"])
+
+
+class ShotFromTheShipWithConsoles(ShotFromTheShip):
+    """The same, with two consoles connected besides the server: the way opens once and
+    the quest signal is sent once, not once per console."""
+
+    clients = (0x8080000000000041, 0x8080000000000042)
 
 
 class ARuinAcrossTheMap(_Base):

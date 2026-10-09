@@ -6,9 +6,12 @@
 # (`procedural/eva_relics.py`, `amd_relics.py`); this file only ROUTES, because a signal
 # needs a route and routes are MAST.
 #
-# ROUTES ONLY, AND EVERY ONE `//shared/signal`. Each of these offers, grants or sends, and
-# a plain `//signal` runs once per connected console - five consoles would offer the ruin
-# five times and hand out five copies of every story.
+# ROUTES ONLY, AND EVERY ONE RUNS ONCE, ON THE SERVER. Each of these offers, grants, opens
+# or sends, and a plain `//signal` runs once per connected console - five consoles would
+# offer the ruin five times and hand out five copies of every story. So the signal routes
+# are `//shared/signal`, and the one `//damage/destroy` route is server-run by
+# construction: a lifetime route is registered once and runs on the server's task,
+# whatever the console count.
 #
 # A MISSION THAT STILL DOES THIS ITSELF IS HARMLESS. Every call below is identity, not a
 # latch: a second `eva_relic_open` for the ruin already on offer changes nothing, a story
@@ -62,4 +65,28 @@ shared BOARDING_EVA_WIRING = True
     default key = None
     default item_id = None
     relic_piece_collected(key, item_id)
+    ->END
+
+
+# A SHIP'S BEAMS OPEN A BARRIER TOO. A shut barrier is a real object (`relic_barrier`, 40
+# hull) so that a weapon has something to hit; a suit's cutting beam opens it through the
+# library, and this is the other way in - the ship outside shot it away. The library opens
+# the way through and sends `<barrier key>_opened`, once, exactly as when a suit cuts it.
+#
+# Conditioned on the role, so nothing else's destruction even starts a task here; and the
+# call is itself a no-op for an object that is nobody's barrier.
+#
+# A `Repair:` job is NOT done by being shot. Its marker wears `relic_repair`, never
+# `relic_barrier`, and the job is read from the ruin's record rather than from the marker -
+# so a marker somebody destroyed leaves a job that still has to be done.
+//damage/destroy if has_role(DESTROYED_ID, "relic_barrier")
+    relic_barrier_destroyed(DESTROYED_ID)
+    ->END
+
+
+# The marker of a `Repair:` job was destroyed. Nothing is repaired; the library only
+# forgets the marker's id, so finishing the job later cannot put away whatever object the
+# engine has since handed that id to.
+//damage/destroy if has_role(DESTROYED_ID, "relic_repair")
+    relic_barrier_destroyed(DESTROYED_ID)
     ->END

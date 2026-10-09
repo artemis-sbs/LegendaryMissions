@@ -333,6 +333,9 @@ GameCode:
     # until the clock runs out (convention play). A one-shot boss (Trigger:
     # enemies_low) instead arrives via siege_watch's siege_enemies_low.
     if siege_boss_trigger(BOSS_SELECT) == "continuous":
+        # A continuous boss is in the game from the start, so her people and scenes are
+        # too. Her file's quests are not granted (they never were); a hook can use them.
+        siege_boss_voice(BOSS_SELECT)
         task_schedule(siege_continuous)
 
     #------------------------------------------------------------------------------------------------------------
@@ -423,7 +426,15 @@ GameCode:
         npos = Vec3.rand_in_sphere(20000, 30000, False, True)
         boss_roles = "raider, boss, " + boss_name.lower()
         prefab_spawn(prefab_siege_boss_ship, {"START_X": npos.x, "START_Y": npos.y, "START_Z": npos.z, "NAME": boss_name, "BOSS_ART": boss_art, "BOSS_ROLES": boss_roles})
-    quest_grant_amd(SHARED, boss_node)
+    # HER OWN VOICE, before her quests: the boss file's Characters are spawned and its
+    # Dialogue scenes registered, the way a mission's own are - only the SELECTED boss's,
+    # and keyed, so a second arrival makes nobody twice. First, because a Beat among her
+    # quests may place her call (`Action: queen hails queen_calls`) the moment it starts.
+    # Nothing for a boss file with neither section, which is all three shipped ones.
+    siege_boss_voice(BOSS_SELECT)
+    # Her objectives - and NOT those two sections, which used to be handed out as quests
+    # named "Characters" and "Dialogue". The same node as ever for a boss with neither.
+    quest_grant_amd(SHARED, siege_boss_quests(BOSS_SELECT))
     # A boss with a Hook runs a bespoke behavior label (e.g. the infestation loop).
     # siege_boss_hook_ready: a hook that names a label the story does not have is left
     # out and reported, rather than stopping the game as she arrives.

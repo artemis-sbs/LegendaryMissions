@@ -28,7 +28,7 @@ and no update touches it. The folder is made the first time Siege looks for it.
 
 | | |
 |---|---|
-| What goes there | the boss's `.amd` file only |
+| What goes there | the boss's `.amd` file only. It may carry her own `Characters` and `Dialogue` sections, so a boss with a voice is still one file |
 | Bespoke MAST | not from this folder: a boss's own `.mast` has to live in a mission. `Hook:` can still name any label the mission already has |
 | A name already taken | your boss replaces the shipped one of that name in the list, and `mast.runtime.log` says so. Rename the heading to keep both |
 | Checking it | `sbs lint common_data\bosses` checks only your bosses, with the Siege's own fields and keys. `sbs lint LegendaryMissions` lists them too |
@@ -122,6 +122,53 @@ raiders. To finish on the flagship alone, write `Done when: destroy 1 warlord`: 
 
 The objective is `Scope: shared`, so its `Reward:` pays every side that has a player
 ship, once each.
+
+### A voice of her own: Characters and Dialogue
+
+A boss file can also hold the two sections a mission file has, written the same way, as
+`##` headings beside her objectives:
+
+```
+## [The Queen Calls](parley)
+---
+Beat
+Parent: siege_mission
+Action:
+  - queen hails queen_calls
+---
+The Corsair Queen is on the line. Comms should answer her.
+
+## [Characters](characters)
+
+### [The Corsair Queen](queen)
+---
+Face: terran_female
+---
+Flies the Morrigan.
+
+## [Dialogue](dialogue)
+
+### [The Queen Calls](queen_calls)
+---
+Speaker: queen
+When: hail
+Title: The Corsair Queen
+---
+@queen
+% You held longer than I was told you would.
+
+- [We do not stand down.]() ; completes parley
+```
+
+When the selected boss arrives, Siege brings her `Characters` into the game and makes her
+`Dialogue` scenes ready, exactly as a mission's `story.mast` does for its own, and then
+grants her objectives. So a Beat among her objectives can place her call, and an answer
+in her scene can finish (or offer, or fail) a quest in the same file. Only the boss that
+was chosen loads; the others' people and scenes stay out of the game.
+
+The two sections are not objectives. They used to be handed to the crew as quests named
+"Characters" and "Dialogue"; they no longer are. A boss file with neither section - all
+the shipped ones - is read exactly as before.
 
 ---
 

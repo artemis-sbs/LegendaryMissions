@@ -17,6 +17,12 @@ author dropped there was lost on the next update. The second folder is theirs:
 either appears in the list. An author's boss is a .amd file only: per-boss MAST lives in
 the mission and cannot be loaded from outside it, though `Hook:` can still name any
 label the mission has.
+
+A BOSS HAS A VOICE OF HER OWN. Beside her objectives the file may hold a
+`## [Characters](characters)` and a `## [Dialogue](dialogue)` section, written exactly as
+a mission file writes them. Siege spawns the selected boss's people and registers her
+scenes as she arrives (`siege_boss_voice`), and grants only her objectives as quests
+(`siege_boss_quests`) - see the end of this file.
 """
 import os
 import random
@@ -282,3 +288,100 @@ def siege_boss_hook(sel):
     """A MAST label the boss runs (via prefab_spawn) for bespoke behavior beyond the
     config spawn - e.g. biomech_infestation (the LM biomech addon). '' if none."""
     return _bdata(sel).get("hook", "")
+
+
+# --- a boss with a voice: her own Characters and Dialogue ------------------------------
+#
+# A boss file used to be read for two things only: the boss's own lines and QUESTS. Every
+# record under the boss was granted as a quest, whatever it said - so an author who typed
+# the two sections they already knew from a mission file,
+#
+#     ## [Characters](characters)        ## [Dialogue](dialogue)
+#
+# got no cast and no call, and six jobs on the board named "Characters", "The Corsair
+# Queen", "Dialogue" and so on. A boss could have objectives and a sentence for winning,
+# and no person and no scene; anything she said had to live in a second file inside the
+# mission, read by a hook the author wrote in MAST.
+#
+# Now the two sections are read as what they are, the way a mission's own are
+# (`lifeforms_spawn` / `dialogue_register_scenes`, the two lines the `amd` template's
+# story.mast has), and they are NOT granted as quests. The words are the ones a mission
+# file already uses - nothing here is new vocabulary.
+#
+# ONLY THE SELECTED BOSS, and only when she arrives: `siege_boss_voice(sel)` is called by
+# siege.mast as it loads her. KEYED, NOT LATCHED: a character is found by its key before
+# it is made, and a scene is registered under its key, so loading twice makes nothing
+# twice - and there is no module-level "already loaded" flag for a mission restart in a
+# reused interpreter to inherit.
+
+_VOICE_SECTIONS = ("characters", "dialogue")
+
+
+def _siege_boss_is_section(node, key):
+    """Whether a record under the boss is the `key` SECTION rather than a quest that
+    happens to be keyed the same. A section heading says nothing about what it is (no
+    fence), or says its own name; a quest says `Quest`, `Beat`, `Arc`..."""
+    if str(node.get("key") or "").strip().lower() != key:
+        return False
+    kind = str((node.get("data") or {}).get("__kind__") or "").strip().lower()
+    return kind in ("", key, key.rstrip("s"))
+
+
+def siege_boss_section(sel, key):
+    """The boss file's own `## [..](key)` section node - `characters` or `dialogue` - or
+    None when the selected boss has none (the three shipped ones have neither)."""
+    node = siege_boss_get(sel)
+    if node is None:
+        return None
+    key = str(key).strip().lower()
+    for child in node.get("children") or []:
+        if _siege_boss_is_section(child, key):
+            return child
+    return None
+
+
+def siege_boss_quests(sel):
+    """The boss node to hand `quest_grant_amd`: her objectives, WITHOUT her cast and her
+    scenes.
+
+    A boss with neither section gets the very node the scan read, untouched - so the
+    shipped bosses are granted exactly as they always were. None for 'None' / unknown.
+    """
+    node = siege_boss_get(sel)
+    if node is None:
+        return None
+    kids = node.get("children") or []
+    keep = [c for c in kids
+            if not any(_siege_boss_is_section(c, k) for k in _VOICE_SECTIONS)]
+    if len(keep) == len(kids):
+        return node
+    quests = dict(node)
+    quests["children"] = keep
+    return quests
+
+
+def siege_boss_voice(sel):
+    """Bring the selected boss's own people and scenes into the game.
+
+    Her `## [Characters](characters)` are spawned the way a mission's are, and her
+    `## [Dialogue](dialogue)` scenes are registered, so a hail or a comms scene written
+    in the boss file works - including one whose answer `; completes` a quest in the same
+    file, or a Beat there whose `Action:` places her call.
+
+    Call it BEFORE granting her quests: a Beat's `Action:` runs as it starts, and
+    `queen hails queen_calls` needs both the person and the scene to be there.
+
+    Safe to call again, and for a boss with no voice (it does nothing).
+
+    Returns:
+        tuple: ``(characters, scenes)`` - how many of each the file holds.
+    """
+    cast = siege_boss_section(sel, "characters")
+    scenes = siege_boss_section(sel, "dialogue")
+    if cast is None and scenes is None:
+        return (0, 0)
+    from sbs_utils.procedural.amd_lifeforms import lifeforms_spawn
+    from sbs_utils.procedural.amd_dialogue import dialogue_register_scenes
+    people = lifeforms_spawn(cast) if cast is not None else {}
+    said = dialogue_register_scenes(scenes) if scenes is not None else {}
+    return (len(people), len(said))
