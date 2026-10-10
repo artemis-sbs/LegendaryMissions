@@ -1,6 +1,11 @@
 
 shared _surrender_return = task_schedule(take_surrendered_home)
 
+# THE RUNTIME TWIN of `boarding/deck_wiring.mast` being loaded (it says
+# `shared BOARDING_DECK_WIRING = True`). This addon does not need the boarding addon:
+# without it "Take as prize" is exactly what it always was.
+default shared BOARDING_DECK_WIRING = False
+
 
 //comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and side_are_enemies(COMMS_ORIGIN_ID, COMMS_SELECTED_ID) and has_any_role(COMMS_SELECTED_ID, 'Station,ship')
 
@@ -28,10 +33,29 @@ shared _surrender_return = task_schedule(take_surrendered_home)
 # their enemies and taking orders like any friendly.
 //comms if has_any_role(COMMS_ORIGIN_ID, "__player__,admiral") and is_space_object_id(COMMS_SELECTED_ID) and has_role(COMMS_SELECTED_ID, "surrendered")
     + "Take as prize":
-        side_capture(COMMS_SELECTED_ID, COMMS_ORIGIN_ID)
-        add_role(COMMS_SELECTED_ID, "prefab_npc_defender")
-        set_inventory_value(COMMS_SELECTED_ID, "give_orders_type", "objective/orders/")
-        objective_add(COMMS_SELECTED_ID, objective_protect_area)
+        # THE SAME STORY BEAT as the answer aboard her (`; signal boarding_deck_take`),
+        # when she is, or could be, a boarding target - so a quest that waits with
+        # `Done when: signal boarding_deck_take` is finished whichever way the prize is
+        # taken. It used to be finished only by the answer in her brig, and a crew that
+        # pressed this button instead had the ship and an open quest for good.
+        #
+        # ONLY WITH THE DECK WIRING LOADED, and only for a ship a party could be sent
+        # aboard (her hull has a plan and the deck art is installed) or is aboard now.
+        # A mission without the boarding addon, and a hull nobody could board, send
+        # nothing: this button is then exactly what it always was.
+        surrender_prize_aboard = BOARDING_DECK_WIRING and boarding_deck_target() == COMMS_SELECTED_ID
+        surrender_prize_beat = BOARDING_DECK_WIRING and (surrender_prize_aboard or boarding_deck_ready(COMMS_SELECTED_ID))
+        if not surrender_prize_aboard:
+            side_capture(COMMS_SELECTED_ID, COMMS_ORIGIN_ID)
+            add_role(COMMS_SELECTED_ID, "prefab_npc_defender")
+            set_inventory_value(COMMS_SELECTED_ID, "give_orders_type", "objective/orders/")
+            objective_add(COMMS_SELECTED_ID, objective_protect_area)
+        if surrender_prize_beat:
+            # With a party aboard, `//shared/signal/boarding_deck_take` (deck_wiring.mast)
+            # brings them home and takes her - once, on the server - so it is not done
+            # here as well. With nobody aboard that route ends at once.
+            signal_emit("boarding_deck_take")
+            signal_emit("quest_signal", {"SIGNAL_NAME": "boarding_deck_take"})
         comms_receive("The crew stands down and joins your command.", title="Prize taken", title_color=surrender_color)
 
 
@@ -197,6 +221,8 @@ shared _surrender_return = task_schedule(take_surrendered_home)
 
     await delay_sim(5)
 
+    # How long a ship that struck AT her spawn point is left before she is removed.
+    default shared SURRENDER_HOME_GRACE = 180
     surrendered = role("surrendered")
     for ship in surrendered:
         ship_obj = to_object(ship)
@@ -212,8 +238,21 @@ shared _surrender_return = task_schedule(take_surrendered_home)
         _pos = ship_obj.pos
         target_pos(ship, spawn_pos.x, spawn_pos.y, spawn_pos.z, throttle=1.5, target_id=0)
         diff = _pos - spawn_pos
-        continue if diff.length() > 500
-        # if Close to 500, then delete
+        if diff.length() > 500:
+            # Under way home. Arriving is what removes her.
+            set_inventory_value(ship, "surrender_flew_home", True)
+            continue
+        # SHE IS HOME. A ship that flew here is removed on arriving, as always. One that
+        # struck within 500 of where she spawned has not been anywhere: removing her at
+        # once took her off the map in the 5 seconds after "OK we give up", before
+        # anybody could take her as a prize or send a party across. She gets the time a
+        # flight home would have given the crew - SURRENDER_HOME_GRACE seconds from the
+        # first time this task finds her here.
+        if not get_inventory_value(ship, "surrender_flew_home", False):
+            if not get_inventory_value(ship, "surrender_home_grace", False):
+                set_inventory_value(ship, "surrender_home_grace", True)
+                set_timer(ship, "surrender_home_grace", seconds=SURRENDER_HOME_GRACE)
+            continue if not is_timer_finished(ship, "surrender_home_grace")
         delete_object(ship)
 
 
