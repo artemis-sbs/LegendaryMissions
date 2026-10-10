@@ -204,6 +204,9 @@ shared _surrender_return = task_schedule(take_surrendered_home)
         # a2x: a duplicitous captain is only feigning -- leave it in place to re-engage
         # (a2x_duplicitous_reengage handles it), don't fly it home and delete it.
         continue if get_inventory_value(ship, "a2x_captain_trait", None) == "duplicitous"
+        # A boarding party is aboard (boarding/deck_wiring.mast): she stays where she is
+        # until they are home. The role comes off when the visit ends, however it ends.
+        continue if has_role(ship, "boarding_target")
 
         spawn_pos = Vec3(ship_obj.spawn_pos)
         _pos = ship_obj.pos

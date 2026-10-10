@@ -18,3 +18,6 @@ import boarding_crew_console.mast
 import eva_console.mast
 # LAST, and routes only: a ruin offers itself to the crew, and taking its piece is a beat.
 import eva_wiring.mast
+# Routes only: a surrendered ship with a deck plan can be boarded (when the `station`
+# tile art is installed), and three signals end it.
+import deck_wiring.mast
