@@ -466,117 +466,198 @@ type: gm_menu/sides
 icon_index: 23
 priority: 86
 ```
-    gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
-    side_ids = sides_set()
-    side_names = set()
-    for s in side_ids:
-        side_names.add(side_display_name(s))
-    sides = sorted(list(side_names))
-    relations = list(("Allies", "Neutral", "Enemies"))
-    relations_value = list((sbs.DIPLOMACY.ALLIED, sbs.DIPLOMACY.NEUTRAL, sbs.DIPLOMACY.HOSTILE, sbs.DIPLOMACY.UNKNOWN))
+    gui_row("row-height: 200;")
+    side_manager_gss = gui_sub_section()
+    with side_manager_gss:
+        gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+        side_ids = sides_set()
+        side_names = set()
+        for s in side_ids:
+            side_names.add(side_display_name(s))
+        sides = sorted(list(side_names))
+        relations = list(("Allies", "Neutral", "Enemies"))
+        relations_value = list((sbs.DIPLOMACY.ALLIED, sbs.DIPLOMACY.NEUTRAL, sbs.DIPLOMACY.HOSTILE, sbs.DIPLOMACY.UNKNOWN))
 
-    text_height = "row-height:1.3em;"
-    diplomacy = gui_row("row-height: 1.3em; click_text:;")
-    gui_text(" - Diplomacy")
-    gui_row()
-    dip_content = gui_sub_section()
-    with dip_content:
-        gui_text("Select a side:")
+        text_height = "row-height:1.3em;"
+        diplomacy = gui_row("row-height: 1.3em; click_text:;")
+        dip_text = gui_text(" - Diplomacy")
         gui_row()
-        side_lb = gui_list_box(sides,"",select=True)
-        side_lb.set_selected_index(0)
-        gui_row("row-height: 1.3em;")
-        gui_text("Select a side:")
+        dip_content = gui_sub_section()
+        with dip_content:
+            gui_text("Select a side:")
+
+            gui_row()
+            side_lb = gui_list_box(sides,"row-height: 1.3em;",select=True)
+            side_lb.set_selected_index(0)
+
+            gui_row("row-height: 1.3em;")
+            gui_text("Select a side:")
+
+            gui_row()
+            o_side_lb = gui_list_box(sides,"row-height: 1.3em;",select=True)
+            o_side_lb.set_selected_index(0)
+
+            gui_row("row-height: content;")
+            gui_text("Current diplomacy status:")
+            cur = gui_text("Allied")
+            gui_set_variable("current_diplo_status_text",cur)
+            data={"s1_glb":side_lb,"s2_glb":o_side_lb,"cur_dip":cur}
+
+            gui_row(text_height)
+            allies = gui_button("Set as Allies")
+            allies.data= data
+            gui_row(text_height)
+            neutral = gui_button("Set as Neutral")
+            neutral.data=data
+            gui_row(text_height)
+            hostile = gui_button("Set as Hostile")
+            hostile.data=data
+            gui_row(text_height)
+            unknown = gui_button("Set as Unknown")
+            unknown.data=data
+            on gui_message(allies):
+                s1 = __ITEM__.data["s1_glb"].value
+                s2 = __ITEM__.data["s2_glb"].value
+                cur = __ITEM__.data["cur_dip"]
+                if s1==s2:
+                    cur.value = "$text:Same Side"
+                    ->END
+                cur.update("$text:Allied")
+                side_set_relations(s1,s2,sbs.DIPLOMACY.ALLIED)
+            on gui_message(neutral):
+                s1 = __ITEM__.data["s1_glb"].value
+                s2 = __ITEM__.data["s2_glb"].value
+                cur = __ITEM__.data["cur_dip"]
+                if s1==s2:
+                    cur.value = "$text:Same Side"
+                    ->END
+                cur.update("$text:Neutral")
+                side_set_relations(s1,s2,sbs.DIPLOMACY.NEUTRAL)
+            on gui_message(hostile):
+                s1 = __ITEM__.data["s1_glb"].value
+                s2 = __ITEM__.data["s2_glb"].value
+                cur = __ITEM__.data["cur_dip"]
+                if s1==s2:
+                    cur.value = "$text:Same Side"
+                    ->END
+                cur.update("$text:Hostile")
+                side_set_relations(s1,s2,sbs.DIPLOMACY.HOSTILE)
+            on gui_message(unknown):
+                s1 = __ITEM__.data["s1_glb"].value
+                s2 = __ITEM__.data["s2_glb"].value
+                cur = __ITEM__.data["cur_dip"]
+                if s1==s2:
+                    cur.value = "$text:Same Side"
+                    ->END
+                cur.update("$text:Unknown")
+                side_set_relations(s1,s2,sbs.DIPLOMACY.UNKNOWN)
+            on change side_lb.value:
+                s1 = to_side_id(side_lb.value)
+                s2 = to_side_id(o_side_lb.value)
+                cur = gui_get_variable("current_diplo_status_text")
+                if s1 == s2:
+                    cur.value = "Same Side"
+                    ->END
+                rel = side_get_relations(s1,s2)
+                if rel == sbs.DIPLOMACY.ALLIED:
+                    cur.value = "Allied"
+                elif rel == sbs.DIPLOMACY.HOSTILE:
+                    cur.value = "Hostile"
+                elif rel == sbs.DIPLOMACY.NEUTRAL:
+                    cur.value = "Neutral"
+                else:
+                    cur.value = "Unknown"
+            on change o_side_lb.value:
+                s1 = to_side_id(side_lb.value)
+                s2 = to_side_id(o_side_lb.value)
+                cur = gui_get_variable("current_diplo_status_text")
+                if s1 == s2:
+                    cur.value = "Same Side"
+                    ->END
+                rel = side_get_relations(s1,s2)
+                if rel == sbs.DIPLOMACY.ALLIED:
+                    cur.value = "Allied"
+                elif rel == sbs.DIPLOMACY.HOSTILE:
+                    cur.value = "Hostile"
+                elif rel == sbs.DIPLOMACY.NEUTRAL:
+                    cur.value = "Neutral"
+                else:
+                    cur.value = "Unknown"
+
+            on change len(sides_set()):
+                side_ids = sides_set()
+                side_names = set()
+                for s in side_ids:
+                    side_names.add(side_display_name(s))
+                sides = sorted(list(side_names))
+                side_lb.items = sides
+                o_side_lb.items = sides
+                gui_represent(side_manager_gss)
+        dip_list = list()
+        dip_list.append(" - Diplomacy")
+        dip_list.append(" + Diplomacy")
+        diplomacy.data = {"content":dip_content,"txt":dip_text,"show_panel":True}
+        on gui_message(diplomacy):
+            content = __ITEM__.data["content"]
+            show = not __ITEM__.data["show_panel"]
+            content.show(show)
+            dt = __ITEM__.data["txt"]
+            if show:
+                dt.update(f"$text: - Diplomacy;")
+            else:
+                dt.update(f"$text: + Diplomacy;")
+            __ITEM__.data["show_panel"] = show
+            gui_represent(side_manager_gss)
+
+
+        new_side_row = gui_row(f"click_text:;{text_height}")
+        nst = gui_text(" - New Side")
         gui_row()
-        o_side_lb = gui_list_box(sides,"",select=True)
-        o_side_lb.set_selected_index(0)
-        gui_row("row-height: content;")
-        gui_text("Current diplomacy status:")
-        cur = gui_text("Allied")
-        gui_set_variable("current_diplo_status_text",cur)
+        input_height = "row-height: 1.3em;"
+        side_content = gui_sub_section()
+        with side_content:
+            gui_row("Name")
+            gui_row(input_height)
+            key = gui_input("desc:Key")
+            gui_spacer_row()
+            gui_row(input_height)
+            name = gui_input("desc:Name")
+            gui_spacer_row()
+            gui_row(input_height)
+            desc = gui_input("desc:Description;")
+            gui_spacer_row()
+            gui_row(input_height)
+            create = gui_button("Create Side")
+            create.data = {"key":key,"name":name,"desc":desc}
+            on gui_message(create):
+                # key_input = __ITEM__.data["key"]
+                # name_input = __ITEM__.data["name"]
+                # desc_input = __ITEM__.data["desc"]
+                key_val = key.value
+                name_val = key.value
+                desc_val = desc.value
+                if key_val is None or name_val is None or desc_val is None:
+                    sbs.send_message_to_client(client_id, "red", "Side Data Incomplete")
+                    ->END
 
-        data={"s1_glb":side_lb,"s2_glb":o_side_lb,"cur_dip":cur}
+                await prefab_spawn(prefab_side_generic,data={"key":key_val,"name":name_val,"desc":desc_val})
+                key.value = ""
+                key.value = ""
+                desc.value = ""
+                gui_represent(side_manager_gss)
+        new_side_row.data = {"content":side_content,"txt":nst,"show_panel":True}
+        on gui_message(new_side_row):
+            content = __ITEM__.data["content"]
+            show = not __ITEM__.data["show_panel"]
+            content.show(show)
+            dt = __ITEM__.data["txt"]
+            if show:
+                dt.update(f"$text: - New Side;")
+            else:
+                dt.update(f"$text: + New Side;")
+            __ITEM__.data["show_panel"] = show
+            gui_represent(side_manager_gss)
 
-        gui_row(text_height)
-        allies = gui_button("Set as Allies")
-        allies.data= data
-        gui_row(text_height)
-        neutral = gui_button("Set as Neutral")
-        neutral.data=data
-        gui_row(text_height)
-        hostile = gui_button("Set as Hostile")
-        hostile.data=data
-        gui_row(text_height)
-        unknown = gui_button("Set as Unknown")
-        unknown.data=data
-        on gui_message(allies):
-            s1 = __ITEM__.data["s1_glb"].value
-            s2 = __ITEM__.data["s2_glb"].value
-            cur = __ITEM__.data["cur_dip"]
-            if s1==s2:
-                cur.value = "$text:Same Side"
-                ->END
-            cur.update("$text:Allied")
-            side_set_relations(s1,s2,sbs.DIPLOMACY.ALLIED)
-        on gui_message(neutral):
-            s1 = __ITEM__.data["s1_glb"].value
-            s2 = __ITEM__.data["s2_glb"].value
-            cur = __ITEM__.data["cur_dip"]
-            if s1==s2:
-                cur.value = "$text:Same Side"
-                ->END
-            cur.update("$text:Neutral")
-            side_set_relations(s1,s2,sbs.DIPLOMACY.NEUTRAL)
-        on gui_message(hostile):
-            s1 = __ITEM__.data["s1_glb"].value
-            s2 = __ITEM__.data["s2_glb"].value
-            cur = __ITEM__.data["cur_dip"]
-            if s1==s2:
-                cur.value = "$text:Same Side"
-                ->END
-            cur.update("$text:Hostile")
-            side_set_relations(s1,s2,sbs.DIPLOMACY.HOSTILE)
-        on gui_message(unknown):
-            s1 = __ITEM__.data["s1_glb"].value
-            s2 = __ITEM__.data["s2_glb"].value
-            cur = __ITEM__.data["cur_dip"]
-            if s1==s2:
-                cur.value = "$text:Same Side"
-                ->END
-            cur.update("$text:Unknown")
-            side_set_relations(s1,s2,sbs.DIPLOMACY.UNKNOWN)
-        on change side_lb.value:
-            s1 = to_side_id(side_lb.value)
-            s2 = to_side_id(o_side_lb.value)
-            cur = gui_get_variable("current_diplo_status_text")
-            if s1 == s2:
-                cur.value = "Same Side"
-                ->END
-            rel = side_get_relations(s1,s2)
-            if rel == sbs.DIPLOMACY.ALLIED:
-                cur.value = "Allied"
-            elif rel == sbs.DIPLOMACY.HOSTILE:
-                cur.value = "Hostile"
-            elif rel == sbs.DIPLOMACY.NEUTRAL:
-                cur.value = "Neutral"
-            else:
-                cur.value = "Unknown"
-        on change o_side_lb.value:
-            s1 = to_side_id(side_lb.value)
-            s2 = to_side_id(o_side_lb.value)
-            cur = gui_get_variable("current_diplo_status_text")
-            if s1 == s2:
-                cur.value = "Same Side"
-                ->END
-            rel = side_get_relations(s1,s2)
-            if rel == sbs.DIPLOMACY.ALLIED:
-                cur.value = "Allied"
-            elif rel == sbs.DIPLOMACY.HOSTILE:
-                cur.value = "Hostile"
-            elif rel == sbs.DIPLOMACY.NEUTRAL:
-                cur.value = "Neutral"
-            else:
-                cur.value = "Unknown"
 
     yield success
 
