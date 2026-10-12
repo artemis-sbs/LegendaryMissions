@@ -538,6 +538,16 @@ variables:
         # Not `lb`: that name is shared with the ships panel, whose `on change` handlers still target it.
         gm_menu_reusable_spawn_logic_lb = gui_property_list_box_stacked(f"{type_name} Settings", listbox_tag)
         gui_properties_set(settings, listbox_tag)
+        gui_set_variable(f"{listbox_tag}_settings")
+        # on signal side_added:
+        on change len(sides_set()):
+            settings = gui_get_variable(f"{listbox_tag}_settings")
+            if settings is not None and settings["Main"] is not None and settings["Main"]["Side"] is not None:
+                side_list = list(side_keys_set())
+                side_str = ",".join(side_list)
+                # print(side_list)
+                settings["Main"]["Side"] = f"gui_drop_down('$text:{side_list[0]};list:{side_str};',var='FLEET_SIDE')"
+                gui_properties_set(settings, listbox_tag)
 
         gui_row("row-height: 1.5em;")
         gui_text("$text:Prefab:;","col-width: content;")

@@ -221,6 +221,9 @@ def gui_spacer_row(row_height="0.2em"):
     gui_text(" ")
     # gui_row()
 
+def gui_spacer_col(col_width="0.2em;"):
+    """Make a small spacer column between gui elements"""
+    gui_blank(1,f"col-width:{col_width}")
 
 # def spawn_sub_menu(button):
 #     bounds = button.bounds
