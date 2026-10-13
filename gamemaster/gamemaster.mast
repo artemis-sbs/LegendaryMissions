@@ -227,11 +227,11 @@ default GM_SIDEBAR_SELECTED_SUBMENU_INDEX = {}
 
         gui_represent(contents)
 
---- gm_test_restart_button
-    with gui_section("area:80,90,95,95;"):
-        b = gui_button("restart")
-        on gui_message(b):
-            sbs.run_next_mission("LegendaryMissionsDev")
+# --- gm_test_restart_button
+#     with gui_section("area:80,90,95,95;"):
+#         b = gui_button("restart")
+#         on gui_message(b):
+#             sbs.run_next_mission("LegendaryMissionsDev")
 
 --- gm_map_widget
     with gui_section(f"area: 0, 0, 95,95;"):
