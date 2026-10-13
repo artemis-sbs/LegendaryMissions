@@ -132,9 +132,9 @@ priority: 10 # Smaller number is higher priority
     
     # gui_sub_task_schedule(gm_selected_details_update)
     # set_interval(client_id, "gm_details_handler_update", "gm_details_handler_update_signal", 1)
-    on signal gui_update_interval_signal:
-        print("refresh signal triggered")
-        gui_get_variable("gm_details_handler").refresh_data()
+    # on signal gui_update_interval_signal:
+    #     print("refresh signal triggered")
+    #     gui_get_variable("gm_details_handler").refresh_data()
     
     yield success
 
@@ -156,17 +156,6 @@ priority: 10 # Smaller number is higher priority
                 gm_dh = task.get_inventory_value("gm_details_handler")
                 if gm_dh is not None:
                     gm_dh.refresh_data()
-
-    # print("delay complete")
-    # details_handler = gui_get_variable("gm_details_handler")
-    # print("Details handler gotten")
-    # if details_handler is None:
-    #     print("DETAILS HANDLER NONE")
-    # yield fail if details_handler is None
-    # print("refreshing initiatd....")
-    # details_handler.refresh_data()
-    
-    # jump gm_selected_details_update
     ->END
 
 === gm_toggle_detail_section
@@ -234,26 +223,28 @@ lb:
 #endregion
 
 #region Selected ship - Loadout
-=== gm_selected_loadout
-metadata: ```
-type: gm_menu/selected/loadout
-icon_index: Loadout 
-priority: 30
-```
-    sec = gui_sub_section()
-    gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
-    selected = get_inventory_value(gm, "gamemaster_prev_selection")
-    torps = gm_torp_get_data_for(selected)
-    with sec:
-        lb_gm_sel_loadout = gui_list_box(torps,"",item_template=gm_list_box_loadout_info)
+# TODO: This isn't quite working right, so we'll not use it for now.
+#endregion
+# === gm_selected_loadout
+# metadata: ```
+# type: gm_menu/selected/loadout
+# icon_index: Loadout 
+# priority: 30
+# ```
+#     sec = gui_sub_section()
+#     gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+#     selected = get_inventory_value(gm, "gamemaster_prev_selection")
+#     torps = gm_torp_get_data_for(selected)
+#     with sec:
+#         lb_gm_sel_loadout = gui_list_box(torps,"",item_template=gm_list_box_loadout_info)
 
-        on change get_inventory_value(gm, "gamemaster_prev_selection"):
-            # if not sec.is_hidden:
-            selected = get_inventory_value(gm, "gamemaster_prev_selection")
-            torps = gm_torp_get_data_for(selected)
-            lb_gm_sel_loadout.items = torps
-            gui_represent(lb_gm_sel_loadout)
-    yield success
+#         on change get_inventory_value(gm, "gamemaster_prev_selection"):
+#             # if not sec.is_hidden:
+#             selected = get_inventory_value(gm, "gamemaster_prev_selection")
+#             torps = gm_torp_get_data_for(selected)
+#             lb_gm_sel_loadout.items = torps
+#             gui_represent(lb_gm_sel_loadout)
+#     yield success
 
 
 === gm_show_all_torp_types
@@ -447,6 +438,7 @@ ship_id:
     # fleet = fleet_spawn(pos, role_list)
     # fleet.side = to_object(old_fleet).side
     fleet_add(fleet, ship_id)
+    ->END
 
 
 === gm_menu_upgrades_and_abilities
@@ -457,7 +449,7 @@ priority: 400
 ```
     gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
     selected = get_inventory_value(gm, "gamemaster_prev_selection", None)
-
+    yield success
 
 
 === gm_menu_side_manager
