@@ -64,7 +64,10 @@ default shared ITEM_PICKUP_TRIGGER = {}
     item_qty = get_inventory_value(COLLISION_ORIGIN_ID, "item_qty", 1)
     have = get_inventory_value(collector, item_key, 0)
     set_inventory_value(collector, item_key, have + item_qty)
-    signal_emit("item_collected", {"holder_id": collector, "key": item_key, "qty": item_qty})
+    # `item_id` is the PICKUP, which is about to be deleted - so anything that has to know
+    # WHICH thing was taken (a relic's piece, as against another item of the same kind)
+    # is told here, while there is still an id to tell it.
+    signal_emit("item_collected", {"holder_id": collector, "key": item_key, "qty": item_qty, "item_id": COLLISION_ORIGIN_ID})
     item_name = item_meta(item_key, "display_text", item_key)
     if item_qty > 1:
         overlay_toast(f"Pickup: {item_name} x{item_qty}", to=collector)

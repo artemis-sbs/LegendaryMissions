@@ -1,0 +1,104 @@
+# DECK WIRING - a ship that has struck her colors can be boarded, with nothing written
+# per mission.
+#
+# The deck is drawn from the ship's own interior plan, the crew goes aboard as a landing
+# party, and whatever a writer put aboard `Area: deck` is standing in a room of its kind.
+# The work is the library's (`procedural/boarding_deckplan.py`: `boarding_deck_visit`);
+# this file only ROUTES, because a comms button and a signal each need a route and routes
+# are MAST.
+#
+# WHAT A MISSION WRITES is content, in its .amd:
+#
+#     ### [Strongbox](strongbox)
+#     ---
+#     Area: deck               whatever ship we board
+#     Mark: brig               a KIND of room (brig, cargo, quarters, bridge...), or
+#     Scene: strongbox         `entry` / `hallway`
+#     ---
+#
+# and three ways to end it, sent from a scene with the ordinary `; signal`:
+#
+#     - [Take her as a prize]()  ; signal boarding_deck_take
+#     - [Open the sea cocks]()   ; signal boarding_deck_scuttle
+#     - [Back to the ship]()     ; signal boarding_deck_leave
+#
+# WHEN THE BUTTON SHOWS. On a ship with the role `surrendered`, whose hull has an
+# interior plan, when the `station` tile art is installed (`boarding_deck_ready`) - and
+# on nothing else. A mission where either is false gets no button and no other change:
+# the three signal routes below are never sent to, and a ship nobody boards is flown home
+# by `take_surrendered_home` exactly as before.
+#
+# EVERY ROUTE HERE ACTS ONCE. The button's handler runs for the one console that pressed
+# it. The three endings capture, destroy and bring people home, and a plain `//signal`
+# runs once per connected console - five consoles would take the prize five times - so
+# they are `//shared/signal`: the server, once.
+
+# THE RUNTIME TWIN of this file being loaded. A mission, or a test, that wants to know
+# whether a surrendered ship can be boarded declares
+# `default shared BOARDING_DECK_WIRING = False` and reads it - order-safe whichever top
+# level runs first, because the other is a `default`.
+shared BOARDING_DECK_WIRING = True
+
+
+# COMMS OPENS ON HER. A surrendered ship is on a neutral side, and the `comms` addon
+# opens comms on a ship only while she is an ENEMY (`enemy_taunt.mast`) - so in a mission
+# without `internal_comms`, whose own enable is unconditional, a ship that had struck
+# could not be hailed again once the console looked away, and the button below would
+# never be seen. Same condition as the button: nothing is enabled that it would not be
+# on.
+//enable/comms if has_role(COMMS_ORIGIN_ID, "__player__") and is_space_object_id(COMMS_SELECTED_ID) and has_role(COMMS_SELECTED_ID, "surrendered") and boarding_deck_ready(COMMS_SELECTED_ID)
+
+
+# "Send a boarding party", on a surrendered ship that has a deck to draw.
+#
+# A PLAYER SHIP only: the party leaves from the ship that asked, and an admiral's camera
+# has no crew to send. Not offered while a party is already aboard something - one deck
+# at a time.
+//comms if has_role(COMMS_ORIGIN_ID, "__player__") and is_space_object_id(COMMS_SELECTED_ID) and has_role(COMMS_SELECTED_ID, "surrendered") and boarding_deck_ready(COMMS_SELECTED_ID)
+    yield fail if boarding_deck_target() is not None
+    + "Send a boarding party":
+        deck_invite = boarding_deck_visit(COMMS_ORIGIN_ID, COMMS_SELECTED_ID, boarding_ground_scenes())
+        if deck_invite is None:
+            # A party is already out somewhere else (a ruin at the door, a landing).
+            comms_receive("We cannot take a party aboard while your people are elsewhere.", title="Boarding party", title_color="yellow")
+        else:
+            comms_receive("We are hove to. Send your party across: Boarding Party, on the ePADD.", title="Boarding party", title_color="yellow")
+
+
+# TAKE HER. The party comes home and the ship joins the side that boarded her - the same
+# prize "Take as prize" makes on the comms console, down to the orders she will take.
+#
+# The ids are read BEFORE the visit ends: ending it takes the deck down, and with it the
+# library's record of who was aboard what.
+//shared/signal/boarding_deck_take
+    deck_prize = boarding_deck_target()
+    deck_captor = boarding_deck_boarders()
+    ->END if deck_prize is None
+    boarding_visit_end()
+    ->END if to_object(deck_prize) is None
+    side_capture(deck_prize, deck_captor)
+    add_role(deck_prize, "prefab_npc_defender")
+    set_inventory_value(deck_prize, "give_orders_type", "objective/orders/")
+    # By NAME: the label is the `prefabs` addon's, and a mission without it gets a prize
+    # with no standing orders rather than an error here.
+    objective_add(deck_prize, "objective_protect_area")
+    ->END
+
+
+# SCUTTLE HER. The party comes home FIRST - nobody is aboard when she goes - and then
+# the ship is destroyed.
+//shared/signal/boarding_deck_scuttle
+    deck_prize = boarding_deck_target()
+    ->END if deck_prize is None
+    boarding_visit_end()
+    ->END if to_object(deck_prize) is None
+    delete_object(deck_prize)
+    ->END
+
+
+# LEAVE HER. The party comes home and nothing else changes: she is a surrendered ship
+# again, and `take_surrendered_home` flies her off as it would have.
+//shared/signal/boarding_deck_leave
+    ->END if boarding_deck_target() is None
+    boarding_visit_end()
+    ->END

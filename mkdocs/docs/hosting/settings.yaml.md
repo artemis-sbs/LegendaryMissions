@@ -117,10 +117,11 @@ none, few, some, max. The starting value of Peacetime Remastered's **Quests Offe
 which of its patrol quests are offered. Default `some`; `max` offers all of them.
 
 ### EXTRA_SHIP_DATA
-`false` by default. Turn it on (`true`) only on an engine that loads extra ship data. It
-switches on the deployable **turrets** and the Peacetime job built on them, and lets the
-smaller enemy base kinds draw as scaled copies of the race's starbase. Off, turrets stay
-off and every base kind uses the race's plain starbase - nothing breaks either way.
+`true` by default. It switches on the deployable **turrets** and the Peacetime job built on
+them, lets the smaller enemy base kinds draw as scaled copies of the race's starbase, and
+gives a boarding party its exosuit. Turn it off (`false`) on an engine that cannot load
+extra ship data (v1.3.4): turrets stay off, every base kind uses the race's plain starbase
+and suits are drawn as shuttles - nothing breaks either way.
 
 ### HANGAR_WING_SIZE, HANGAR_WING_COUNTS
 Fighters per starbase wing (default 4), and optionally how many wings a hull gets, e.g.
