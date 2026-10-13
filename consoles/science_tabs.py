@@ -486,7 +486,11 @@ def lm_sci_object_list_wanted(client_id):
 #: Given as numbers rather than taken from a layout placeholder on purpose - see
 #: lm_sci_object_list_place.
 LM_SCI_LIST_LEFT = 70.0
-LM_SCI_LIST_TOP = 56.0
+# TOP: just under the two-line "(no contact selected)" header. The list is only up while
+# nothing is selected, and that is exactly when the read-out below the header is empty,
+# so the list takes that space too. At 56 it kept to the bottom half of the column, and
+# on a 1024x768 screen the engine's own filter buttons left room for three contacts.
+LM_SCI_LIST_TOP = 16.0
 LM_SCI_LIST_WIDTH = 30.0
 
 #: What sits under the list, in pixels: the chip rail (science_chips, 56), the Follow /
