@@ -42,17 +42,11 @@ default GM_SIDEBAR_SELECTED_SUBMENU_INDEX = {}
     jump login_screen
 
 --- full_console
-    # for testing Side management screen
-    # side = "tsn"
-    # jump gamemaster_side_relations# {"side": "tsn"}
-    # ->END
+
     GAMEMASTER_SKIP_PIN = False
 
     # Need Sci in the name for science selection
     gui_activate_console("gamemaster_sci")
-
-    on signal side_management:
-        jump gamemaster_side_relations
 
     _ship_id = sbs.get_ship_of_client(client_id) 
     side_ship = to_object(_ship_id)
@@ -281,6 +275,7 @@ default GM_SIDEBAR_SELECTED_SUBMENU_INDEX = {}
 
 
 --- gui_setup
+    print("THIS SHOULD NEVER RUN!!!!!")
     #comms_navigate("//comms/gamemaster")
     # Whole screen
     # Putting the 2d view across the entire screen
@@ -554,152 +549,6 @@ default GM_SIDEBAR_SELECTED_SUBMENU_INDEX = {}
     await gui()
 
 
-
---- gamemaster_side_relations
-    # print("Getting mast labels")
-    # labels = role("__MAST_LABEL__") #should get all mast labels
-    # for l in labels:
-    #     l = to_object(l)
-    #     if l.name.startswith("__route__signal"):
-    #         print(l.name)
-    default_side = side
-    vec3(1)
-    print("--------------------gamemaster_side_relations------------------------")
-    print("{default_side}")
-    side_ids = sides_set()
-    side_names = set()
-    for s in side_ids:
-        side_names.add(side_display_name(s))
-    sides = sorted(list(side_names))
-    relations = list(("Allies", "Neutral", "Enemies"))
-    relations_value = list((sbs.DIPLOMACY.ALLIED, sbs.DIPLOMACY.NEUTRAL, sbs.DIPLOMACY.HOSTILE, sbs.DIPLOMACY.UNKNOWN))
-    # Left, Top, Right, Bottom
-    gui_region("area: 10,5,90,15")
-    gui_row()
-
-    #region Top Side Stuff
-    with gui_sub_section("row-height: 50px; col-width: 20;"):
-        # gui_row()
-        with gui_sub_section("col-width: 5em;"):
-            gui_text("Select Side: ")
-        with gui_sub_section("col-width: 8em;"):
-            side_list = ",".join(sides)
-            name = side_display_name(default_side)
-            selected_side = gui_drop_down("$text:{name};list:{side_list}")
-            selected_side.value = default_side
-        gui_blank()
-        with gui_sub_section("col-width: 5em;"):
-            gui_text("New Side: ")
-        with gui_sub_section("col-width: 8em;"):
-            new_side = gui_input("desc: Side Name")
-        with gui_sub_section("col-width: 5em;"):
-            create = gui_button("Create Side")
-            on gui_message(create):
-                print("New side created")
-                prefab_spawn(prefab_side_generic, data={"name":new_side.value, "key":new_side.value.lower()})
-                print(side_keys_set())
-                side = new_side.value
-                jump gamemaster_side_relations
-    gui_row("col-width: 1.5em;")
-    gui_text("  ")
-    # gui_row()
-    #endregion
-    region = gui_region("area: 5,20,20,90;")
-
-    #region Side Info, Left Panel
-    with gui_sub_section():
-        gui_row("row-height: 2em;")
-        gui_text("Side Info")
-        gui_spacer_row()
-        side = to_side_id(selected_side.value)
-        gui_row("row-height: 2em;")
-        SIDE_NAME = side_display_name(side)
-        side_name = gui_input("$text:{gui_text_escape(SIDE_NAME)}; desc: Name")
-        gui_spacer_row()
-        gui_row("row-height: 2em;")
-        SIDE_KEY = get_inventory_value(side, "side_key")
-        side_key = gui_input("$text:{gui_text_escape(SIDE_KEY)}; desc: Key")
-        gui_spacer_row()
-        gui_row("row-height: 4em;")
-        SIDE_DESC = get_inventory_value(side, "side_desc")
-        side_desc = gui_input("$text:{gui_text_escape(SIDE_DESC)}; desc: Description")
-        # TODO: Add functionality to add/remove races. Probably need a race prefab
-        gui_row("row-height: 0.8em;")
-        gui_text(" ")
-        gui_row("row-height: 2em;")
-        update = gui_button("Update Side")
-        on gui_message(update):
-            
-            if get_inventory_value(side, "side_name") != side_name.value:
-                set_inventory_value(side, "side_name", side_name.value)
-            if get_inventory_value(side, "side_key") != side_key.value:
-                old_key = get_inventory_value(side, "side_key")
-                # Update all members of the side
-                side_members = side_members_set(side)
-                add_role(side_members, side_key.value)
-                remove_role(side_members, old_key)
-                for m in side_members:
-                    mo = to_object(m)
-                    mo.side = side_key.value # Here we assume that the object is a spaceobject.
-                set_inventory_value(side, "side_key", side_key.value)
-            if get_inventory_value(side, "side_desc") != side_desc.value:
-                set_inventory_value(side, "side_desc", side_desc.value)
-            side = side_display_name(side)
-            jump gamemaster_side_relations
-    #endregion
-    region = gui_region("area: 25,20,90,90; ")
-    #region Build the Relations Central Section
-    with gui_sub_section():
-        buttons = list()
-        for s in range(len(sides)):
-            print(f"Side: {sides[s]}")
-            default_side = side_display_name(default_side)
-            print(f"Default: {default_side}")
-            if sides[s] == default_side:
-                continue
-            gui_row("row-height: 0.2em;")
-            gui_text(" ")
-            gui_row()
-            name = side_display_name(sides[s])
-            gui_text(f"{name}")
-            side1 = sides[s]
-            side2 = selected_side.value
-            actual_relations = side_get_relations(side1, side2)
-            # print("{actual_relations}")
-            for x in range(len(relations)):
-                
-                rel = relations_value[x]
-                relation = relations[x]
-                style = None
-                if rel == actual_relations:
-                    style = "color:#40ff00"
-                button = gui_button(f"{relation}", style, data={"side1": side1, "side2": side2, "rel": rel}, on_press="update_side")
-    #endregion
-
-    set_inventory_value(client_id, "gm_side_relations_button_list", buttons)
-    on change selected_side.value:
-        side = selected_side.value
-        jump gamemaster_side_relations
-    # Add back button
-    with gui_section("area: 90,95,100,100"):
-        back = gui_button("Back")
-        on gui_message(back):
-            print("Back buttom pressed")
-            jump full_console
-    await gui()
-    ->END
---- update_side
-    # __ITEM__ is the button object
-    side1 = __ITEM__.data["side1"]
-    side2 = __ITEM__.data["side2"]
-    rel = __ITEM__.data["rel"]
-    print(f"{side2}")
-    old = side_get_relations(side1, side2)
-    print(f"{old}")
-    side_set_relations(side1,side2,rel)
-    rel = side_get_relations(side1,side2)
-    print(f"{rel}")
-    jump gamemaster_side_relations
 
 
 ==== gamemaster_move_camera_sync
