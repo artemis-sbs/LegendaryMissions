@@ -167,6 +167,8 @@ class ScanQueueTest(unittest.TestCase):
         self.assertEqual(sq.lm_sci_queue_position("tsn", self.target, "status"), 1)
 
     def test_move_to_front_restarts_progress(self):
+        # Far enough that 2 seconds is progress, not completion (5.2s at 25,000).
+        self.target.pos = mock_sbs.vec3(25000.0, 0.0, 0.0)
         sq.lm_sci_queue_add(self.player, self.target, "scan")
         sq.lm_sci_queue_add(self.player, self.target, "status")
         self._advance(2.0)
@@ -223,50 +225,82 @@ class ScanQueueTest(unittest.TestCase):
         self.target.pos = mock_sbs.vec3(float(metres), 0.0, 0.0)
         return sq.lm_sci_scan_seconds(self.player.id, self.target.id)
 
-    def test_a_scan_costs_the_farthest_delay_at_sensor_range(self):
-        """The fallback curve runs from point-blank to the ship's OWN sensor range."""
-        self.assertAlmostEqual(self._seconds_at(25000), sq.LM_SCI_FARTHEST_SECONDS,
-                               places=2)
+    # The engine's times, measured on 1.3.15 with a real client pressing Start Scan
+    # (data/missions/_e1315_probe case=scantime). Range -> seconds the rule gives; the
+    # engine landed each one on the next half-second step, as the third column records.
+    ENGINE_TABLE = [
+        (1250, 0.546, 1.0),
+        (2500, 0.793, 1.0),
+        (3750, 1.039, 1.5),
+        (5000, 1.285, 1.5),
+        (6250, 1.531, 2.0),
+        (7500, 1.778, 2.0),
+        (10000, 2.270, 2.5),
+    ]
+
+    def test_the_curve_is_the_engines(self):
+        for metres, seconds, landed in self.ENGINE_TABLE:
+            with self.subTest(range=metres):
+                ours = self._seconds_at(metres)
+                self.assertAlmostEqual(ours, seconds, places=2)
+                # ...and it is inside the half-second step the engine finished on.
+                self.assertLessEqual(ours, landed)
+                self.assertGreater(ours, landed - 0.5)
+
+    def test_point_blank_costs_one_engine_step(self):
+        """The engine advances a scan in half-second steps: 400 away landed in one."""
+        self.assertEqual(self._seconds_at(400), sq.LM_SCI_SCAN_FASTEST)
+        self.assertEqual(sq.LM_SCI_SCAN_FASTEST, 0.5)
 
     def test_closing_on_a_contact_makes_the_scan_faster(self):
-        """The rate used to be capped, so every contact INSIDE sensor range took exactly
-        the same time and closing bought you nothing."""
         far, mid, near = (self._seconds_at(25000), self._seconds_at(12500),
                           self._seconds_at(2500))
         self.assertLess(mid, far)
         self.assertLess(near, mid)
-
-    def test_distance_keeps_costing_beyond_sensor_range(self):
-        """Not clamped at range: a contact twice as far is twice as far along the line,
-        so closing always buys time. The cap is on the RESULT, not the distance."""
-        self.assertGreater(self._seconds_at(50000), self._seconds_at(25000))
 
     def test_the_result_is_bounded_at_both_ends(self):
         self.assertGreaterEqual(self._seconds_at(1), sq.LM_SCI_SCAN_FASTEST)
         self.assertLessEqual(self._seconds_at(100_000_000), sq.LM_SCI_SCAN_SLOWEST)
 
     def test_the_engine_delays_win_over_our_constants(self):
-        """`closest_scan_delay` / `farthest_scan_delay` are the engine's own numbers. If a
-        bridge publishes them, ours must not be used at all."""
-        self.player.data_set.set("closest_scan_delay", 1.0, 0)
-        self.player.data_set.set("farthest_scan_delay", 4.0, 0)
-        self.assertAlmostEqual(self._seconds_at(25000), 4.0, places=2)
-        self.assertAlmostEqual(self._seconds_at(12500), 2.5, places=2)
+        """Measured: closest 2 / farthest 40 gave 2.15s at 400 and 5.8s at 10,000."""
+        self.player.data_set.set("closest_scan_delay", 2.0, 0)
+        self.player.data_set.set("farthest_scan_delay", 40.0, 0)
+        self.assertAlmostEqual(self._seconds_at(400), 2.152, places=2)
+        self.assertAlmostEqual(self._seconds_at(10000), 5.8, places=2)
 
-    # --- what Engineering and the hull contribute ---------------------------
+    # --- what does and does not change it ------------------------------------
 
-    def test_powering_sensors_up_makes_scans_faster(self):
-        """One number, two consoles: the same `sensor_damage_coeff` Engineering shows."""
-        base = self._seconds_at(12500)
-        self.player.data_set.set("sensor_damage_coeff", 2.0, 0)
-        self.assertLess(self._seconds_at(12500), base)
+    def test_base_scan_range_is_not_in_it(self):
+        """Measured: ship_base_scan_range 5000 and 20000 timed identically. Dividing by
+        it is what made this console several times slower than the stock one."""
+        base = self._seconds_at(5000)
+        self.player.data_set.set("ship_base_scan_range", 20000.0, 0)
+        self.assertEqual(self._seconds_at(5000), base)
+
+    def test_hull_scan_strength_is_not_in_it(self):
+        """Measured: a hull at scan_strength_coeff 2.0 timed the same as one at 1.0."""
+        base = self._seconds_at(5000)
+        self.player.data_set.set("scan_strength_coeff", 2.0, 0)
+        self.assertEqual(self._seconds_at(5000), base)
 
     def test_damaged_sensors_make_scans_slower_but_never_endless(self):
-        base = self._seconds_at(12500)
+        """Measured at sensor_damage_coeff 0.5: 1.62s at 5,000 and 2.93s at 10,000."""
         self.player.data_set.set("sensor_damage_coeff", 0.5, 0)
-        hurt = self._seconds_at(12500)
-        self.assertGreater(hurt, base)
-        self.assertLessEqual(hurt, sq.LM_SCI_SCAN_SLOWEST)
+        self.assertAlmostEqual(self._seconds_at(5000), 1.613, places=2)
+        self.assertAlmostEqual(self._seconds_at(10000), 2.927, places=2)
+        self.assertLessEqual(self._seconds_at(100_000_000), sq.LM_SCI_SCAN_SLOWEST)
+
+    def test_the_engines_own_science_range_wins(self):
+        """The engine publishes ship_science_scan_range with the sensors folded in."""
+        self.player.data_set.set("ship_science_scan_range", 75000.0, 0)
+        self.assertAlmostEqual(self._seconds_at(10000), 2.927, places=2)
+
+    def test_overpowered_sensors_scan_no_faster(self):
+        """The engine caps the range a scan is measured against at 100,000."""
+        base = self._seconds_at(5000)
+        self.player.data_set.set("sensor_damage_coeff", 2.0, 0)
+        self.assertEqual(self._seconds_at(5000), base)
 
     def test_wrecked_sensors_are_floored_not_fatal(self):
         """A scan that can never finish reads as a bug rather than as damage."""
@@ -277,25 +311,17 @@ class ScanQueueTest(unittest.TestCase):
     def test_an_unset_coefficient_means_one_not_zero(self):
         """The engine answers a typed default for a field nothing wrote, and the mock
         answers 0.0 - read literally that divides by zero and no scan ever finishes."""
-        from science_scan_time import lm_sci_sensor_coeff, lm_sci_hull_scan_coeff
+        from science_scan_time import lm_sci_sensor_coeff
         self.assertEqual(lm_sci_sensor_coeff(self.player.id), 1.0)
-        self.assertEqual(lm_sci_hull_scan_coeff(self.player.id), 1.0)
-
-    def test_a_stronger_hull_scans_faster(self):
-        """`scan_strength_coeff` is per HULL, from shipData - a science ship should
-        out-scan a freighter."""
-        base = self._seconds_at(12500)
-        self.player.data_set.set("scan_strength_coeff", 2.0, 0)
-        self.assertLess(self._seconds_at(12500), base)
 
     def test_a_closer_scan_really_does_finish_sooner(self):
         """The curve is only a number until the beat uses it."""
-        self.target.pos = mock_sbs.vec3(25000.0, 0.0, 0.0)
+        self.target.pos = mock_sbs.vec3(50000.0, 0.0, 0.0)
         sq.lm_sci_queue_add(self.player, self.target, "scan")
         self._advance(3.0)
         far_pct = sq.lm_sci_queue_percent("tsn", self.target, "scan")
         sq.lm_sci_queue_clear()
-        self.target.pos = mock_sbs.vec3(2500.0, 0.0, 0.0)
+        self.target.pos = mock_sbs.vec3(25000.0, 0.0, 0.0)
         sq.lm_sci_queue_add(self.player, self.target, "scan")
         self._advance(3.0)
         self.assertGreater(sq.lm_sci_queue_percent("tsn", self.target, "scan"), far_pct,

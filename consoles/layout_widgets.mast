@@ -147,11 +147,10 @@
 
 
 //gui/normal_sci
-    # SCIENCE_NEW_LAYOUT picks the prototype console instead of this one. A setting, not
-    # a replacement, because the whole point is to fly both and compare - and because the
-    # prototype owns the scan queue itself, which is a reimplementation of engine timing
-    # and not something to switch a mission onto silently. science_tabs.py.
-    if settings_get_defaults().get("SCIENCE_NEW_LAYOUT", False):
+    # SCIENCE_NEW_LAYOUT (on by default) picks LM's science console instead of this one,
+    # which is the stock engine console and stays as the opt-out - profile=sciclassic -
+    # so the two can still be flown side by side. science_layout.mast.
+    if settings_get_defaults().get("SCIENCE_NEW_LAYOUT", True):
         jump lm_sci_layout
     ss = gui_screen_size(client_id)
     # Ship Data overlap
@@ -499,7 +498,29 @@
         # the panel, and the zoom bar starting flush drew over its last letters.
         gui_blank(1,"col-width:300px")
         gui_layout_widget("radar_zoom_ctrl")
-        gui_blank(1,"col-width:25")
+        # The zoom control stops short of the right-hand stack instead of running
+        # under it, and the chip row below keeps the same two margins.
+        gui_blank(1,"col-width:366px")
+
+        # THE RADAR CHIPS, a slim row directly under the zoom control: All, three lenses
+        # (the ship's helm_map_filter) and two terrain switches (its
+        # helm_show_* flags), engine 1.3.15. All of it is the SHIP's, so the last
+        # two handlers keep this console in step with the others on it.
+        # terrain_chips.py.
+        gui_row(f"row-height:{lm_terrain_chip_row_px()}px;")
+        gui_blank(1,"col-width:300px")
+        helm_terrain = gui_list_box(lm_terrain_chips_items(), lm_terrain_chips_style(), item_template=lm_terrain_chips_template, section_style="padding:2px,2px,2px,2px;", select=True, multi=True)
+        helm_terrain.horizontal = True
+        helm_terrain.selected = lm_terrain_chips_selected(client_id, "helm")
+        # 334, not the stack's 366: at this height the camera dial is still curving in,
+        # and those 32px are what a sixth chip needs on a 1024-wide screen.
+        gui_blank(1,"col-width:334px")
+        on change helm_terrain.get_selected():
+            lm_terrain_chips_apply(client_id, "helm", helm_terrain)
+        on change lm_terrain_chips_selected(client_id, "helm"):
+            lm_terrain_chips_follow(client_id, "helm", helm_terrain)
+        on change lm_terrain_chips_revision(client_id, "helm"):
+            lm_terrain_chips_write(client_id, "helm")
         gui_row()
         gui_layout_widget("2dview")
 
@@ -544,16 +565,12 @@
     gui_blank(1,"col-width:127px")
     gui_layout_widget("request_dock")
 
-    # The two drive controls, bottom-left, anchored to the bottom edge.
+    # The throttle, bottom-left, anchored to the bottom edge.
     gui_section(style="area:0,max(100-366px,100-40) ,127px,100;")
     gui_layout_widget("throttle")
 
-    gui_section(style="area:127px,100-269px,509px,100;")
-    gui_layout_widget("helm_movement")
-
-    # Only when the ship HAS a jump drive: gui_console(CONSOLE_SELECT, is_jump) declares
-    # these two only then, and gui_layout_widget ADDS to the widget list - so placing
-    # them unconditionally would put a jump drive on a warp ship.
+    # THE JUMP DRIVE IS A HULL FACT, asked once here because it decides where the
+    # steering control below it goes.
     #
     # THE HULL, NOT THE BLOB. This used to read `jump_drive_active`, which
     # //shared/signal/grid_interior_built writes after the interior is BUILT - and an
@@ -563,20 +580,37 @@
     # appeared. Reported on a xim_dreadnought, whose hull plainly has one.
     # grid_hull_has_role reads the hull's own floor plan, which is true from the moment
     # the ship exists.
-    if grid_hull_has_role(sbs.get_ship_of_client(client_id), "jump"):
+    helm_has_jump = grid_hull_has_role(sbs.get_ship_of_client(client_id), "jump")
+
+    # THE STEERING CONTROL: bottom-RIGHT, and SQUARE.
+    #
+    # It used to sit beside the throttle in a 382x269 box, which drew its ring as a wide
+    # ellipse across the bottom of the radar. It is a compass, so it gets a square - 290px
+    # a side, in pixels and hung off the bottom-right corner like the stack above it, so
+    # it is the same size and in the same place on every screen. The space beside the
+    # throttle goes back to the radar.
+    #
+    # On a jump ship the jump bar owns the bottom 77px of that corner, so the square
+    # stands on top of the bar instead of in it.
+    if helm_has_jump:
+        gui_section(style="area:100-290px,100-367px,100,100-77px;")
+    else:
+        gui_section(style="area:100-290px,100-290px,100,100;")
+    gui_layout_widget("helm_movement")
+
+    # Only when the ship HAS a jump drive: gui_console(CONSOLE_SELECT, is_jump) declares
+    # these two only then, and gui_layout_widget ADDS to the widget list - so placing
+    # them unconditionally would put a jump drive on a warp ship.
+    if helm_has_jump:
         # The jump bar, along the bottom, anchored bottom-right.
         gui_section(style="area:100-840px,100-77px,100,100;")
         gui_layout_widget("helm_jump")
 
-        # The jump selector, moved over to the right edge with a 30px gap. It used to
-        # sit a third of the way in, adrift between the 2D view and the right-hand
-        # stack; it belongs with the other controls, not in the middle of the radar.
-        #
-        # Anchored to the BOTTOM, not the top, so it keeps station above the jump bar
-        # instead of descending onto it: 30px of clear air over an 77px bar. That lands
-        # it in exactly the place it occupies today on a 962-tall screen, and keeps it
-        # off the bar on a short one, where a fixed 606px from the top would overlap.
-        gui_section(style="area:100-94px,100-356px,100-30px,100-202px;")
+        # The jump selector, standing on the jump bar just LEFT of the steering square
+        # with a 30px gap - where it used to sit on the right edge, which the square now
+        # has. Anchored to the BOTTOM so it keeps station above the bar on a short
+        # screen instead of descending onto it.
+        gui_section(style="area:100-384px,100-231px,100-320px,100-77px;")
         gui_layout_widget("quick_jump")
 
 //gui/normal_weap
@@ -617,7 +651,27 @@
         # the panel, and the zoom bar starting flush drew over its last letters.
         gui_blank(1,"col-width:300px")
         gui_layout_widget("radar_zoom_ctrl")
-        gui_blank(1,"col-width:25")
+        # The zoom control stops short of the right-hand stack instead of running
+        # under it, and the chip row below keeps the same two margins.
+        gui_blank(1,"col-width:290px")
+
+        # THE RADAR CHIPS, a slim row directly under the zoom control: All, three lenses
+        # (the ship's weapon_map_filter) and two terrain switches (its
+        # weapon_show_* flags), engine 1.3.15. All of it is the SHIP's, so the last
+        # two handlers keep this console in step with the others on it.
+        # terrain_chips.py.
+        gui_row(f"row-height:{lm_terrain_chip_row_px()}px;")
+        gui_blank(1,"col-width:300px")
+        weap_terrain = gui_list_box(lm_terrain_chips_items(), lm_terrain_chips_style(), item_template=lm_terrain_chips_template, section_style="padding:2px,2px,2px,2px;", select=True, multi=True)
+        weap_terrain.horizontal = True
+        weap_terrain.selected = lm_terrain_chips_selected(client_id, "weapon")
+        gui_blank(1,"col-width:290px")
+        on change weap_terrain.get_selected():
+            lm_terrain_chips_apply(client_id, "weapon", weap_terrain)
+        on change lm_terrain_chips_selected(client_id, "weapon"):
+            lm_terrain_chips_follow(client_id, "weapon", weap_terrain)
+        on change lm_terrain_chips_revision(client_id, "weapon"):
+            lm_terrain_chips_write(client_id, "weapon")
         gui_row()
         gui_layout_widget("weapon_2d_view")
 

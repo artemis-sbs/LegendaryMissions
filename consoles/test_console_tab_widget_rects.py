@@ -37,6 +37,7 @@ from sbs_utils.mast.maststory import MastStory
 from sbs_utils.mast.mastscheduler import MastScheduler
 from sbs_utils.mast_sbs import story_nodes  # noqa: F401  (registers gui/route nodes)
 from sbs_utils.mast_sbs.maststorypage import StoryPage
+from sbs_utils.procedural import settings as settings_mod
 from sbs_utils.procedural.gui.navigation import gui_reroute_client
 from sbs_utils.procedural.query import to_object
 from sbs_utils.procedural.spawn import player_spawn
@@ -67,6 +68,7 @@ def harness_story(console):
         "import comms_chips.py",
         "import eng_crew_chips.py",
         "import eng_grid_buttons.py",
+        "import terrain_chips.py",
         "import layout_widgets.mast",
         "jump harness_console",
         "",
@@ -146,6 +148,12 @@ class _Base(unittest.TestCase):
         mock_sbs.create_new_sim()
         mock_sbs.resume_sim()
         FrameContext.context = Context(mock_sbs.sim, mock_sbs, FakeEvent(0, "test"))
+        # This file is about the STOCK consoles' engine widgets, so science is pinned to
+        # the stock one (profile=sciclassic). LM's own science console has its own file,
+        # test_science_console.py. The real lookup, pinned: settings_get_defaults caches
+        # into this global, so setting it is what a settings.yaml would have done.
+        self._orig_settings = settings_mod.setting_defaults
+        settings_mod.setting_defaults = {"SCIENCE_NEW_LAYOUT": False}
 
         self.rects = _Rects()
         self.rects.install()
@@ -172,6 +180,7 @@ class _Base(unittest.TestCase):
         self.present()
 
     def tearDown(self):
+        settings_mod.setting_defaults = getattr(self, "_orig_settings", None)
         self.rects.remove()
         MastScheduler.on_runtime_error = self._orig_rte
         Gui.clients = {}

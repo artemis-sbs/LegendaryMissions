@@ -1,17 +1,23 @@
 """Science's filter chips - one horizontal row UNDER the 2D view.
 
-THIS DOES NOT FILTER ANYTHING YET, and that is deliberate. It is here so the shape can be
-looked at and argued with on a real bridge before anyone asks the engine for the hook that
-would make it work. Two separate things are missing, and neither is script's to fix:
+A chip is a LENS on the 2D map: selecting one writes the ship's `sci_map_filter`, the
+engine's list of the ids `science_2d_view` draws (engine 1.3.15, `map_filter_set`). The
+filter lives on the SHIP, so the selection does too - every science console on a ship
+shows the same chips lit, because they are all looking at the same map.
 
-* the contact LIST is `science_sorted_list`, an engine widget with no content API at all -
-  `sbs` exposes `send_comms_*` and `send_grid_*` and nothing named `send_science_*`;
-* the 2D MAP has no science equivalent of `comms_map_filter_set`, which is a data_set key
-  on the player ship that the engine reads. One key, already proven on comms.
+The contact LIST is still out of reach: `science_sorted_list` is an engine widget with no
+content API, which is why this console shows it only while nothing is selected.
 
-So selecting a chip remembers the selection, redraws the rail, and stops. The counts are
-REAL - computed from the sim, not typed in - because a rail of invented numbers would
-prove nothing about whether the idea reads well.
+TERRAIN IS A SWITCH, NOT A LENS. It drives `sci_show_nebulas` / `sci_show_asteroids`,
+which the engine honors with or without a filter, so it sits beside All and the lenses
+rather than among them: All with Terrain off is the whole picture minus the rocks. While
+a lens is on the engine draws only what the lens lists, so terrain is hidden either way.
+
+KNOWN ENGINE LIMIT (1.3.15, measured): clearing `sci_map_filter` empties the blob but the
+view keeps the last list, so going back to All does not bring everything back. The clear
+is still what this sends - it is the right call, and it is what a fixed engine will honor.
+
+The counts are REAL - computed from the sim, not typed in.
 
 BELOW THE VIEW, NOT OVER IT. An absolute region could float it on the map the way the tab
 stack does, but a filter is a persistent control rather than a transient menu, and the row
@@ -28,7 +34,8 @@ mission-wide namespace. A leading underscore is private to this file.
 from sbs_utils.helpers import FrameContext, gui_text_escape
 from sbs_utils.procedural.gui import gui_row, gui_text
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
-from sbs_utils.procedural.query import to_object, to_id, to_object_list
+from sbs_utils.procedural.map_filter import map_filter_set, map_filter_clear, map_show_terrain
+from sbs_utils.procedural.query import to_object, to_id, to_object_list, object_exists
 from sbs_utils.procedural.roles import role
 from sbs_utils.procedural.science import science_is_unknown
 from sbs_utils.procedural.sides import side_are_enemies, side_are_allies
@@ -57,6 +64,9 @@ LM_SCI_CHIPS = (
     ("terrain", "Terrain"),
 )
 
+#: The chips that are lists of contacts. All and Terrain are not.
+LM_SCI_CHIP_LENSES = ("threats", "friends", "bases", "civilian", "unscanned")
+
 _SELECTED_KEY = "lm_sci_chips"
 
 
@@ -71,21 +81,25 @@ def _ship(client_id):
 
 
 def lm_sci_chips_sets(client_id):
-    """{chip: set of contact ids}, with unknowns already excluded.
+    """{chip: set of contact ids}.
 
-    Computed from the sim so the counts are true. `all` is absent by construction: it has
-    no count, so it needs no membership.
+    Computed from the sim so the counts are true. Every chip but `unscanned` holds only
+    contacts this side has identified; `unscanned` holds the rest, and never shows a
+    count. `all` and `terrain` are absent by construction: neither is a list of ids.
     """
     ship_id = _ship(client_id)
     if not ship_id:
         return {}
-    threats, friends, bases, civilian = set(), set(), set(), set()
-    for obj in to_object_list(role("__npc__")):
+    threats, friends, bases, civilian, unscanned = set(), set(), set(), set(), set()
+    for obj in to_object_list(role("__npc__") | role("__player__")):
         if obj is None:
             continue
         oid = obj.get_id()
+        if oid == ship_id:
+            continue
         # NEVER count a contact this side has not scanned.
         if science_is_unknown(ship_id, oid):
+            unscanned.add(oid)
             continue
         if obj.has_role("station"):
             bases.add(oid)
@@ -99,7 +113,7 @@ def lm_sci_chips_sets(client_id):
             # reads as the rail having lost it.
             civilian.add(oid)
     return {"threats": threats, "friends": friends, "bases": bases,
-            "civilian": civilian}
+            "civilian": civilian, "unscanned": unscanned}
 
 
 def lm_sci_chip_row_px():
@@ -137,30 +151,69 @@ def lm_sci_chips_style():
     return f"col-width:{LM_SCI_CHIP_WIDTH};background:{LM_SCI_CHIP_BG};"
 
 
+def _owner(client_id):
+    """Where the selection is kept: the SHIP, because the filter is the ship's. A console
+    with no ship yet keeps its own until it has one."""
+    return _ship(client_id) or client_id
+
+
 def lm_sci_chips_selected(client_id):
-    """The chips this console has selected. Defaults to All."""
-    sel = get_inventory_value(client_id, _SELECTED_KEY, None)
-    return list(sel) if sel else ["all"]
+    """The chips lit on this console's ship. Defaults to All, with terrain shown."""
+    sel = get_inventory_value(_owner(client_id), _SELECTED_KEY, None)
+    return list(sel) if sel else ["all", "terrain"]
 
 
 def lm_sci_chips_normalize(client_id, chips):
-    """All is exclusive: picking it clears the rest, picking anything else clears All.
+    """Keep the selection sensible after a tap, then apply it.
 
-    Remembered per client, because two science consoles on one bridge are looking for
-    different things.
+    All is exclusive with the lenses: tapping All clears them, tapping a lens clears All,
+    clearing every lens brings All back. Terrain is a switch of its own and rides along
+    with either.
     """
-    selected = list(chips.get_selected() or [])
-    previous = lm_sci_chips_selected(client_id)
-    if "all" in selected and "all" not in previous and len(selected) > 1:
-        selected = ["all"]
-    elif len(selected) > 1 and "all" in selected:
-        selected = [s for s in selected if s != "all"]
-    if not selected:
-        selected = ["all"]
-    set_inventory_value(client_id, _SELECTED_KEY, selected)
-    if list(chips.get_selected() or []) != selected:
-        chips.selected = selected
-    return selected
+    before = set(lm_sci_chips_selected(client_id))
+    picked = set(chips.get_selected() or [])
+    lenses = [k for k in LM_SCI_CHIP_LENSES if k in picked]
+    if "all" in picked and "all" not in before:
+        lenses = []                                   # All was just tapped
+    keep = lenses or ["all"]
+    if "terrain" in picked:
+        keep = keep + ["terrain"]
+    if set(keep) != picked:
+        chips.selected = list(keep)
+        chips.mark_visual_dirty()
+    set_inventory_value(_owner(client_id), _SELECTED_KEY, keep)
+    lm_sci_chips_apply(client_id)
+    return keep
+
+
+def lm_sci_chips_ids(client_id):
+    """(mode, ids) for this ship's selection: ("show", ids), or ("all", None) for no
+    filter."""
+    sets = lm_sci_chips_sets(client_id)
+    lenses = [k for k in lm_sci_chips_selected(client_id) if k in LM_SCI_CHIP_LENSES]
+    if not lenses:
+        return "all", None
+    ids = set()
+    for k in lenses:
+        ids |= sets.get(k, set())
+    return "show", ids
+
+
+def lm_sci_chips_apply(client_id):
+    """Write the selection to the ship: `sci_map_filter` cleared for All or set to the
+    lenses' ids, and the two terrain flags from the Terrain chip. Unchanged lists are not
+    re-sent (the library skips them)."""
+    ship_id = _ship(client_id)
+    if not ship_id or not object_exists(ship_id):
+        return False
+    mode, ids = lm_sci_chips_ids(client_id)
+    if mode == "all":
+        map_filter_clear(ship_id, "sci")
+    else:
+        map_filter_set(ship_id, ids, "sci")
+    terrain = "terrain" in lm_sci_chips_selected(client_id)
+    map_show_terrain(ship_id, "sci", nebulas=terrain, asteroids=terrain)
+    return True
 
 
 def lm_sci_chips_revision(client_id):
@@ -171,6 +224,16 @@ def lm_sci_chips_revision(client_id):
 
 
 def lm_sci_chips_refresh(client_id, chips):
-    """Re-label the rail in place. `.items = ...` from an `on change`, never a repaint -
-    a repaint would tear down the listbox and the handlers attached to it."""
+    """Counts moved: re-label the rail in place and re-apply the lens, since the ids
+    behind it moved with them. `.items = ...`, never a repaint - a repaint would tear
+    down the listbox and the handlers attached to it."""
     chips.items = lm_sci_chips_items(client_id)
+    lm_sci_chips_apply(client_id)
+
+
+def lm_sci_chips_follow(client_id, chips):
+    """Another console on this ship changed the selection: light the same chips here."""
+    want = lm_sci_chips_selected(client_id)
+    if set(chips.get_selected() or []) != set(want):
+        chips.selected = list(want)
+        chips.mark_visual_dirty()

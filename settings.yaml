@@ -59,22 +59,21 @@ CAN_CHANGE_CONSOLE: true
 # after further play testing
 NEW_DAMCONS: true
 
-# The prototype SCIENCE console, for A/B against the stock one. Off by default.
+# The SCIENCE console. On by default since engine 1.3.15.
 #
-# On: the scan tabs become a scrolling button listbox, the read-out is drawn by the
-# console (live, and speaking Engineering's efficiency numbers about the contact), and
-# the scan queue is owned by script and SHARED ACROSS A SIDE - so two science officers
-# on two ships see one queue instead of duplicating each other's work.
+# On: the scan tabs float over the 2D view, the read-out is drawn by the console (live,
+# and speaking Engineering's efficiency numbers about the contact), a rail of filter
+# chips under the view picks what the map shows (the engine's sci_map_filter), and the
+# scan queue is owned by script and SHARED ACROSS A SIDE - so two science officers on
+# two ships see one queue instead of duplicating each other's work.
 #
-# Off: the stock console, unchanged.
+# Off: the stock engine console, unchanged (profile=sciclassic).
 #
-# Why it is a setting and not a replacement: the engine has no script API to start,
-# read, cancel or reorder a scan, so with this on the mission owns scan TIMING itself.
-# That is modelled on the engine's rule rather than measured against it, and a mission
-# should opt into it deliberately. The object list and the 2D view are untouched either
-# way - a console cannot draw on an engine widget, which is the one part of the design
-# this prototype cannot test.
-SCIENCE_NEW_LAYOUT: false
+# The engine has no script API to start, read, cancel or reorder a scan, so with this on
+# the mission owns scan TIMING itself. It follows the engine's own rule and numbers,
+# measured on 1.3.15 (consoles/science_scan_time.py), so a scan costs what it costs on
+# the stock console.
+SCIENCE_NEW_LAYOUT: true
 
 GAMEMASTER: 
     enable: true

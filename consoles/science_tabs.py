@@ -488,7 +488,21 @@ def lm_sci_object_list_wanted(client_id):
 LM_SCI_LIST_LEFT = 70.0
 LM_SCI_LIST_TOP = 56.0
 LM_SCI_LIST_WIDTH = 30.0
-LM_SCI_LIST_HEIGHT = 36.5
+
+#: What sits under the list, in pixels: the chip rail (science_chips, 56), the Follow /
+#: On screen row (35), and a little air. The list's HEIGHT is whatever is left above
+#: them, because a percentage that clears them on one screen runs over them on another -
+#: measured on a 1024x768 client, where a flat 36.5 put the last contact rows on top of
+#: the Unscanned and Terrain chips.
+LM_SCI_LIST_CLEAR_PX = 56 + 35 + 8
+
+
+def lm_sci_object_list_height(client_id):
+    """The contact list's height in percent: from its top to the controls under it."""
+    from sbs_utils.procedural.gui import gui_screen_size
+    size = gui_screen_size(client_id)
+    screen_h = float(getattr(size, "y", 0) or 0) or 768.0
+    return max(10.0, 100.0 - LM_SCI_LIST_TOP - LM_SCI_LIST_CLEAR_PX * 100.0 / screen_h)
 
 
 def lm_sci_object_list_place(client_id, wanted=None):
@@ -510,7 +524,7 @@ def lm_sci_object_list_place(client_id, wanted=None):
     from sbs_utils.procedural.gui.tabbed_panel import (gui_panel_widget_show,
                                                        gui_panel_widget_hide)
     args = (client_id, LM_SCI_LIST_LEFT, LM_SCI_LIST_TOP,
-            LM_SCI_LIST_WIDTH, LM_SCI_LIST_HEIGHT, LM_SCI_OBJECT_LIST)
+            LM_SCI_LIST_WIDTH, lm_sci_object_list_height(client_id), LM_SCI_OBJECT_LIST)
     if wanted:
         gui_panel_widget_show(*args)
         return True

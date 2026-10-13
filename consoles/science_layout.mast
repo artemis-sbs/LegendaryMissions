@@ -1,5 +1,5 @@
-# The prototype science console, reached from //gui/normal_sci when SCIENCE_NEW_LAYOUT
-# is set. Its own FILE, not an append to layout_widgets.mast: top-level labels fall
+# The science console, reached from //gui/normal_sci unless SCIENCE_NEW_LAYOUT is turned
+# off (the stock engine console is the opt-out). Its own FILE, not an append to layout_widgets.mast: top-level labels fall
 # through, so the adjacency of two of them is an interface nothing in the file declares,
 # and inserting one between a pair that relied on it is a silent whole-console failure.
 #
@@ -14,10 +14,8 @@
 #                          is shown while nothing is selected and parked once something
 #                          is. science_tabs.lm_sci_object_list_show.
 #
-# The 2D view is untouched. A console cannot draw on an engine widget - the engine paints
-# it at its own size over whatever MAST put beside it - so the tab buttons are a column
-# here rather than a stack floating over the map. That difference is exactly what the
-# A/B cannot measure, and it is the thing the engine ask is for.
+# The 2D view is the engine's, filtered through the chip rail under it (science_chips.py)
+# and with the scan tabs floating over it in a region of their own.
 
 == lm_sci_layout ==
     ss = gui_screen_size(client_id)
@@ -81,9 +79,6 @@
         # The read-out. The tabs are no longer in this column at all - they float over
         # the view - so the whole of it above the controls is the readout.
         #
-        # A REGION for the same reason the stack is one: this pane is refilled out of
-        # band whenever the contact's live numbers move, and only a region clears what
-        # it drew last time.
         # ONE text area, UPDATED IN PLACE - not a region and not a refilled sub-section.
         # A region has to be pinned to an absolute `area:`, which this pane is not: it is
         # a flex row in a column, and a region with no area recurses in measurement. A
@@ -199,10 +194,10 @@
     # `lm_sci_chip_row_px()` short of the bottom to leave exactly this band - so nothing
     # overlaps and the 2D view resizes with no arithmetic.
     #
-    # It does not filter anything yet, and that is the point of having it: the contact
-    # list is gone precisely because script cannot reach it, and the 2D map has no
-    # science equivalent of `comms_map_filter_set`. The rail is here so the shape can be
-    # argued with before either is asked for. science_chips.py.
+    # A chip is a lens on the 2D map: it writes the ship's `sci_map_filter` (engine
+    # 1.3.15), and Terrain switches the ship's nebula/asteroid flags. Both live on the
+    # SHIP, so the selection does too - the last handler keeps this console's chips lit
+    # to match when another science console on the ship changes them. science_chips.py.
     gui_section(style=f"area:0,100-{lm_sci_chip_row_px()}px,100,100;")
     gui_row()
     sci_chips = gui_list_box(lm_sci_chips_items(client_id), lm_sci_chips_style(), item_template=lm_sci_chips_template, section_style="padding:3px,4px,3px,4px;", select=True, multi=True)
@@ -212,6 +207,11 @@
         lm_sci_chips_normalize(client_id, sci_chips)
     on change lm_sci_chips_revision(client_id):
         lm_sci_chips_refresh(client_id, sci_chips)
+    on change lm_sci_chips_selected(client_id):
+        lm_sci_chips_follow(client_id, sci_chips)
+    # The ship carries the filter, so a console that opens later must not leave a stale
+    # one behind it: state what this ship's chips say once, on the way in.
+    lm_sci_chips_apply(client_id)
 
     # THE SCAN TABS - their own SECTION, declared after the columns are complete.
     #
@@ -255,9 +255,9 @@
     task_schedule(lm_sci_queue_watch)
 
 == lm_sci_queue_watch ==
-" Advance the side scan queues. Only runs when the prototype console is enabled, because
+" Advance the side scan queues. Only runs when this console is enabled, because
 " nothing else in the mission queues into them.
-    ->END if not settings_get_defaults().get("SCIENCE_NEW_LAYOUT", False)
+    ->END if not settings_get_defaults().get("SCIENCE_NEW_LAYOUT", True)
 --- lm_sci_queue_beat
     await delay_sim(0.5)
     lm_sci_queue_tick()

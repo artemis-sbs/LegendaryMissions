@@ -30,7 +30,7 @@ from sbs_utils.mast.mastscheduler import MastScheduler             # noqa: E402
 from sbs_utils.mast_sbs import story_nodes                         # noqa: E402,F401
 from sbs_utils.mast_sbs.maststorypage import StoryPage             # noqa: E402
 from sbs_utils.procedural import settings as settings_mod          # noqa: E402
-from sbs_utils.procedural.query import to_object, set_science_selection  # noqa: E402
+from sbs_utils.procedural.query import to_object, to_id, set_science_selection  # noqa: E402
 from sbs_utils.procedural.science import science_set_scan_data     # noqa: E402
 from sbs_utils.procedural.sides import side_ensure, side_set_relations  # noqa: E402
 from sbs_utils.procedural.spawn import npc_spawn, player_spawn     # noqa: E402
@@ -59,6 +59,7 @@ HARNESS = "\n".join([
     "import science_panel.py",
     "import science_chips.py",
     "import science_queue_list.py",
+    "import terrain_chips.py",
     "import layout_widgets.mast",
     "import science_layout.mast",
     "jump harness_console",
@@ -503,27 +504,100 @@ class ScienceConsoleBuilds(_Base):
         for key in ("all", "unscanned", "terrain"):
             self.assertIn(key, sc.LM_SCI_CHIP_NO_COUNT)
 
+    class _Box:
+        """The listbox surface the chip code touches: get_selected, selected, and
+        mark_visual_dirty."""
+        def __init__(self, sel):
+            self._sel = list(sel)
+            self.dirtied = 0
+        def get_selected(self): return list(self._sel)
+        @property
+        def selected(self): return list(self._sel)
+        @selected.setter
+        def selected(self, v): self._sel = list(v)
+        def mark_visual_dirty(self): self.dirtied += 1
+
+    def _filter(self):
+        ds = mock_sbs.sim.get_space_object(to_id(self.ship)).data_set
+        return [ds.get("sci_map_filter", i) for i in range(ds.num_elements("sci_map_filter"))]
+
+    def _flags(self):
+        ds = mock_sbs.sim.get_space_object(to_id(self.ship)).data_set
+        return (ds.get("sci_show_nebulas", 0), ds.get("sci_show_asteroids", 0))
+
     def test_all_is_exclusive(self):
-        class _FakeBox:
-            def __init__(self, sel): self._sel = list(sel)
-            def get_selected(self): return list(self._sel)
-            @property
-            def selected(self): return list(self._sel)
-            @selected.setter
-            def selected(self, v): self._sel = list(v)
         # Picking a chip while All is selected drops All - All means "no filter", so
         # keeping it beside a filter would be a contradiction.
-        box = _FakeBox(["all", "threats"])
+        box = self._Box(["all", "threats"])
         self.assertEqual(sc.lm_sci_chips_normalize(CID, box), ["threats"])
+        self.assertEqual(box.get_selected(), ["threats"])
         # Two real chips coexist.
-        box = _FakeBox(["threats", "friends"])
+        box = self._Box(["threats", "friends"])
         self.assertEqual(sorted(sc.lm_sci_chips_normalize(CID, box)), ["friends", "threats"])
         # Picking All while others are selected clears them.
-        box = _FakeBox(["threats", "friends", "all"])
+        box = self._Box(["threats", "friends", "all"])
         self.assertEqual(sc.lm_sci_chips_normalize(CID, box), ["all"])
         # Deselecting everything falls back to All rather than showing nothing.
-        box = _FakeBox([])
+        box = self._Box([])
         self.assertEqual(sc.lm_sci_chips_normalize(CID, box), ["all"])
+        self.assertEqual(box.get_selected(), ["all"])
+
+    def test_terrain_rides_along_with_all_and_with_a_lens(self):
+        """Terrain is a switch, not a lens: it never knocks All or a lens out."""
+        box = self._Box(["all", "terrain"])
+        self.assertEqual(sc.lm_sci_chips_normalize(CID, box), ["all", "terrain"])
+        box = self._Box(["all", "terrain", "threats"])
+        self.assertEqual(sc.lm_sci_chips_normalize(CID, box), ["threats", "terrain"])
+
+    def test_the_default_is_everything_with_terrain(self):
+        self.assertEqual(sc.lm_sci_chips_selected(CID), ["all", "terrain"])
+
+    def test_a_lens_writes_the_ships_science_map_filter(self):
+        science_set_scan_data(self.ship, self.target, {"scan": "A kralien cruiser."})
+        sc.lm_sci_chips_normalize(CID, self._Box(["threats"]))
+        self.assertEqual(self._filter(), sorted([to_id(self.ship), to_id(self.target)]))
+        # ...and never touches the comms map, which has a lens of its own.
+        ds = mock_sbs.sim.get_space_object(to_id(self.ship)).data_set
+        self.assertEqual(ds.num_elements("comms_map_filter"), 0)
+
+    def test_an_empty_lens_shows_the_ship_alone_not_everything(self):
+        """An empty list means "no filter" to the engine, so a lens that matches nothing
+        must still write one - the ship."""
+        sc.lm_sci_chips_normalize(CID, self._Box(["threats"]))
+        self.assertEqual(self._filter(), [to_id(self.ship)])
+
+    def test_unscanned_is_a_lens_over_what_the_side_has_not_identified(self):
+        sc.lm_sci_chips_normalize(CID, self._Box(["unscanned"]))
+        self.assertIn(to_id(self.target), self._filter())
+        science_set_scan_data(self.ship, self.target, {"scan": "A kralien cruiser."})
+        sc.lm_sci_chips_refresh(CID, self._ItemsBox())
+        self.assertNotIn(to_id(self.target), self._filter())
+
+    class _ItemsBox:
+        items = ()
+
+    def test_all_clears_the_filter(self):
+        sc.lm_sci_chips_normalize(CID, self._Box(["threats"]))
+        sc.lm_sci_chips_normalize(CID, self._Box(["threats", "all"]))
+        self.assertEqual(self._filter(), [])
+
+    def test_the_terrain_chip_is_the_two_engine_flags(self):
+        sc.lm_sci_chips_normalize(CID, self._Box(["all"]))
+        self.assertEqual(self._flags(), (0, 0))
+        sc.lm_sci_chips_normalize(CID, self._Box(["all", "terrain"]))
+        self.assertEqual(self._flags(), (1, 1))
+
+    def test_the_selection_belongs_to_the_ship(self):
+        """The filter is on the ship's blob, so two science consoles on one ship share
+        one map - and must show the same chips lit."""
+        other = CID + 1
+        mock_sbs.assign_client_to_ship(other, to_id(self.ship))
+        sc.lm_sci_chips_normalize(CID, self._Box(["friends", "terrain"]))
+        self.assertEqual(sc.lm_sci_chips_selected(other), ["friends", "terrain"])
+        box = self._Box(["all", "terrain"])
+        sc.lm_sci_chips_follow(other, box)
+        self.assertEqual(box.get_selected(), ["friends", "terrain"])
+        self.assertEqual(box.dirtied, 1)
 
     # --- the beam frequency readout -----------------------------------------
 

@@ -1,25 +1,28 @@
-"""How long a scan takes - engine numbers first, constants only as a stand-in.
+"""How long a scan takes - the engine's own rule, measured.
 
-Split out of `science_queue` because it is the part most likely to be wrong, and the part
-worth reading on its own: everything here is either a field the engine owns or a
-deliberate fallback, and the difference is marked.
+Split out of `science_queue` because it is the part worth reading on its own.
 
-THE SHAPE IS THE ENGINE'S. The scanning ship's blob carries `closest_scan_delay` and
-`farthest_scan_delay` - scan times at zero range and at the ship's own sensor range - and
-this interpolates between them by distance. Nothing in the tree writes those fields, so on
-a bridge where the engine does not either, the constants in `science_queue` stand in. What
-does not change either way is that range drives the cost, which is the engine's documented
-rule.
+MEASURED ON ENGINE 1.3.15 (2026-10-13, `data/missions/_e1315_probe case=scantime`: a real
+client pressing Start Scan on stationary targets at eight ranges from 400 to 10,000, the
+scanning ship's `cur_scan_percent` sampled every tick):
 
-TWO COEFFICIENTS THEN DIVIDE IT, because both mean "sensors working better":
+    seconds = closest_scan_delay
+              + (farthest_scan_delay - closest_scan_delay) * distance / reach
+    reach   = min(ship_science_scan_range, 100000)
 
-* `scan_strength_coeff` - per HULL, from shipData. A science ship should out-scan a
-  freighter, and this is the field that says so.
-* `sensor_damage_coeff` - per SHIP and live, from Engineering's grid. The same number
-  Engineering's Systems tab shows, so powering sensors up speeds science's scans and
-  letting them burn slows them. It can exceed 1.0 when the pool is TUNED, which is what
-  makes overpowering sensors worth doing - one number, two consoles, and a reason for
-  those two officers to talk to each other.
+* The engine WRITES all three fields on a player ship: 0.3, 20.0, and a
+  `ship_science_scan_range` of 150000 that follows `sensor_damage_coeff` (75000 at 0.5).
+  Changing the two delays changed the times exactly as the line says.
+* `ship_base_scan_range` is NOT in it: 5000 and 20000 gave identical times. The first
+  version of this file divided by it, which is why a scan here took several times as
+  long as the stock console's - 20s at 5,000 against the engine's 1.3s.
+* `scan_strength_coeff` is NOT in it either: a hull at 2.0 timed the same as one at 1.0.
+* Sensors matter only through `reach`, and only once they are damaged below two thirds:
+  the 100000 cap means a healthy or overpowered array scans no faster.
+* The engine advances a scan in half-second steps, so nothing lands in under 0.5s.
+
+Measured to 10,000 only - beyond that the line is extrapolated, and LM_SCI_SCAN_SLOWEST
+is OUR cap, not the engine's.
 
 Prefixed `lm_sci_` because every top-level function here becomes a MAST global in one
 flat, mission-wide namespace. A leading underscore is private to this file.
@@ -27,19 +30,24 @@ flat, mission-wide namespace. A leading underscore is private to this file.
 from sbs_utils.helpers import FrameContext
 from sbs_utils.procedural.query import to_object, to_id
 
-#: Engineering's live sensor efficiency.
+#: Engineering's live sensor efficiency. Only read when the engine has not published
+#: `ship_science_scan_range`, which already has it folded in.
 LM_SCI_SENSOR_COEFF_KEY = "sensor_damage_coeff"
 
 #: Wrecked sensors should HURT, not stop the console dead: a scan that can never finish
 #: reads as a bug rather than as damage.
 LM_SCI_SENSOR_COEFF_MIN = 0.25
 
-#: The hull's own scanning strength, from shipData.
-LM_SCI_STRENGTH_COEFF_KEY = "scan_strength_coeff"
-
-#: The engine's own scan times, if it publishes them.
+#: The engine's own scan fields on the scanning ship.
 LM_SCI_CLOSEST_DELAY_KEY = "closest_scan_delay"
 LM_SCI_FARTHEST_DELAY_KEY = "farthest_scan_delay"
+LM_SCI_SCIENCE_RANGE_KEY = "ship_science_scan_range"
+
+#: `ship_science_scan_range` on a ship with undamaged sensors, as the engine wrote it.
+LM_SCI_SCIENCE_RANGE = 150000.0
+
+#: The engine's cap on the range a scan is measured against.
+LM_SCI_REACH_CAP = 100000.0
 
 
 def _written(obj, key):
@@ -70,23 +78,32 @@ def lm_sci_sensor_coeff(ship_id):
     return _coeff(to_object(ship_id), LM_SCI_SENSOR_COEFF_KEY, LM_SCI_SENSOR_COEFF_MIN)
 
 
-def lm_sci_hull_scan_coeff(ship_id):
-    """The hull's own scanning strength. 1.0 when unknown."""
-    return _coeff(to_object(ship_id), LM_SCI_STRENGTH_COEFF_KEY)
+def lm_sci_scan_reach(ship_id):
+    """The range a scan is measured against: the engine's science range, capped.
+
+    When the engine has not published `ship_science_scan_range` (the mock, an older
+    exe) it is rebuilt the way the engine was seen to build it: the undamaged range
+    times Engineering's sensor coefficient.
+    """
+    ship = to_object(ship_id)
+    if _written(ship, LM_SCI_SCIENCE_RANGE_KEY):
+        reach = float(ship.data_set.get(LM_SCI_SCIENCE_RANGE_KEY, 0))
+    else:
+        reach = LM_SCI_SCIENCE_RANGE * lm_sci_sensor_coeff(ship_id)
+    return min(reach, LM_SCI_REACH_CAP)
 
 
 def lm_sci_scan_time_compute(origin_id, target_id, closest_default, farthest_default,
-                        fastest, slowest, default_range):
+                        fastest, slowest):
     """Seconds for `origin` to scan `target`. None when it cannot be worked out.
 
     NOT named `lm_sci_scan_seconds`: every top-level function in an addon `.py` becomes a
     MAST global in ONE flat, mission-wide namespace, assigned unconditionally with no
     warning - so two files defining that name collide, last loaded wins, and the caller
-    gets whichever signature it did not expect. That is exactly what happened here
-    (`takes 2 positional arguments but 7 were given`). `science_queue` owns the short
-    name; this is the computation behind it.
+    gets whichever signature it did not expect. `science_queue` owns the short name; this
+    is the computation behind it.
 
-    The fallback numbers come from `science_queue`, which owns them; this module owns the
+    The stand-in numbers come from `science_queue`, which owns them; this module owns the
     SHAPE and the choice to prefer the engine's fields over them.
     """
     origin, target = to_object(origin_id), to_object(target_id)
@@ -100,21 +117,14 @@ def lm_sci_scan_time_compute(origin_id, target_id, closest_default, farthest_def
     except Exception:                                   # noqa: BLE001
         return None
 
-    rng = float(origin.data_set.get("ship_base_scan_range", 0) or 0.0) or default_range
     closest = (float(origin.data_set.get(LM_SCI_CLOSEST_DELAY_KEY, 0))
                if _written(origin, LM_SCI_CLOSEST_DELAY_KEY) else closest_default)
     farthest = (float(origin.data_set.get(LM_SCI_FARTHEST_DELAY_KEY, 0))
                 if _written(origin, LM_SCI_FARTHEST_DELAY_KEY) else farthest_default)
 
-    # Linear in distance, and NOT clamped at sensor range: a contact at twice the range
-    # is twice as far along the line, so closing on something always buys time. The cap
-    # is on the RESULT instead, which keeps a very distant contact slow rather than
-    # unscannable without making every far contact cost the same.
-    seconds = closest + (farthest - closest) * (dist / rng)
-    seconds /= lm_sci_hull_scan_coeff(origin_id)
-    seconds /= lm_sci_sensor_coeff(origin_id)
+    # Linear in distance and not clamped at any range, as measured out to 10,000.
+    seconds = closest + (farthest - closest) * (dist / lm_sci_scan_reach(origin_id))
 
-    # Never instant - an instant scan is not a decision, and the queue only reads as a
-    # resource if the head takes long enough to see. Never hung, for the same reason a
-    # distant contact is slow rather than unscannable.
+    # The floor is the engine's own step. The ceiling is ours: a very distant contact is
+    # slow rather than unscannable, because a scan that cannot finish reads as a bug.
     return max(fastest, min(slowest, seconds))
