@@ -540,11 +540,9 @@ variables:
         gui_properties_set(settings, listbox_tag)
         mast_task.set_inventory_value(f"{listbox_tag}_settings",settings)
         mast_task.set_inventory_value(f"{listbox_tag}_lb",gm_menu_reusable_spawn_logic_lb)
-        print(f"{listbox_tag}")
         # on signal side_added:
         on change len(sides_set()):
             listbox_tag = f"GM_GLB_SPAWN_{prefab_type}"
-            print(f"{listbox_tag}")
             settings = mast_task.get_inventory_value(f"{listbox_tag}_settings")
             lb = mast_task.get_inventory_value(f"{listbox_tag}_lb")
             if settings is not None and settings.get("Main") is not None and settings.get("Main").get("Side") is not None:
