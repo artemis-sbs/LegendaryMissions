@@ -606,11 +606,18 @@
         gui_section(style="area:100-840px,100-77px,100,100;")
         gui_layout_widget("helm_jump")
 
-        # The jump selector, standing on the jump bar just LEFT of the steering square
-        # with a 30px gap - where it used to sit on the right edge, which the square now
-        # has. Anchored to the BOTTOM so it keeps station above the bar on a short
-        # screen instead of descending onto it.
-        gui_section(style="area:100-384px,100-231px,100-320px,100-77px;")
+        # The jump selector, in the corner the jump bar leaves at its LEFT end, beside
+        # the bar's own Direction / Distance labels. It is part of the jump controls, so
+        # it is hung off the BAR's left edge (100-840px) rather than off the throttle:
+        # on a 1024-wide screen that is the 66px between the two, and on a wider one it
+        # stays with the bar instead of drifting away from it. It used to stand on the
+        # bar in the middle of the radar.
+        #
+        # 889..825 from the right, which is INSIDE the bar's own rect by 15px: the bar
+        # leaves its first ~40px empty before the Direction / Distance labels, and using
+        # some of it is what clears the throttle's bars on a 1024-wide screen, where the
+        # gap between the two is narrower than the selector (seen overlapping at 906).
+        gui_section(style="area:100-889px,100-154px,100-825px,100;")
         gui_layout_widget("quick_jump")
 
 //gui/normal_weap
