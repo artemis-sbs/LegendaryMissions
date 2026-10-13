@@ -91,10 +91,14 @@ class _Rects:
     def install(self):
         self.widget_rects = []
         self.widget_lists = []
+        # Both senders in ONE sequence, because which came first is the whole question
+        # for a widget the engine re-lays-out when it is handed a list.
+        self.order = []
         self._orig_wl = mock_sbs.send_client_widget_list
 
         def _wl(client_id, console, widgets):
             self.widget_lists.append((client_id, console, widgets))
+            self.order.append(("list", client_id, widgets))
             return self._orig_wl(client_id, console, widgets)
 
         mock_sbs.send_client_widget_list = _wl
@@ -102,6 +106,7 @@ class _Rects:
 
         def _wr(client_id, widget, *coords):
             self.widget_rects.append((client_id, widget, tuple(coords)))
+            self.order.append(("rect", client_id, widget))
             return self._orig_wr(client_id, widget, *coords)
 
         mock_sbs.send_client_widget_rects = _wr
@@ -129,6 +134,7 @@ class _Rects:
         self.tagged.clear()
         self.widget_rects.clear()
         self.widget_lists.clear()
+        self.order.clear()
 
     def emitted(self, name):
         """Every call to one emitter, as (tag, style)."""
@@ -409,6 +415,30 @@ class ScienceConsoleBuilds(_Base):
     def _list_rect(self):
         r = [x for c, w, x in self.rect_calls if c == CID and w == "science_sorted_list"]
         return r[-1] if r else None
+
+    def test_the_contact_list_is_placed_again_after_the_widget_list(self):
+        """The engine puts every widget back at ITS default rect when it is handed a
+        new widget list (data/guiboxdata.txt: 70,53,100,100 for this one), and the page
+        sends that list at present - after the build. A placement sent only by the build
+        is therefore overwritten, which is how the list came to sit on the chip rail on
+        a real client. The last word has to be ours, and after the list."""
+        self.present(2)
+        mine = [(i, e) for i, e in enumerate(self.rects.order) if e[1] == CID]
+        lists = [i for i, e in mine if e[0] == "list" and "science_sorted_list" in e[2]]
+        placed = [i for i, e in mine if e[0] == "rect" and e[2] == "science_sorted_list"]
+        self.assertTrue(lists, "the console's widget list was never sent")
+        self.assertTrue(placed, "the contact list was never placed")
+        self.assertGreater(placed[-1], lists[-1],
+                           "the contact list was last placed BEFORE the widget list")
+
+    def test_the_contact_list_stops_above_the_controls_under_it(self):
+        """Its bottom edge clears the Follow row and the chip rail on this screen."""
+        self.present(2)
+        rect = self._list_rect()
+        from sbs_utils.procedural.gui import gui_screen_size
+        screen_h = float(gui_screen_size(CID).y)
+        clear = 100.0 - (56 + 35) * 100.0 / screen_h
+        self.assertLessEqual(rect[3], clear, f"the list runs under its controls: {rect}")
 
     def test_the_contact_list_is_up_when_nothing_is_selected(self):
         self.present()

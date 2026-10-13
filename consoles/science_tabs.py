@@ -505,6 +505,20 @@ def lm_sci_object_list_height(client_id):
     return max(10.0, 100.0 - LM_SCI_LIST_TOP - LM_SCI_LIST_CLEAR_PX * 100.0 / screen_h)
 
 
+def lm_sci_widget_list_revision(client_id):
+    """The console widget list the engine was last sent for this client.
+
+    Watched so the contact list can be placed AGAIN once the page has presented. The
+    engine lays every widget out at its own default (data/guiboxdata.txt: 70,53,100,100
+    for this one) when it is handed a NEW widget list, and the page sends that list at
+    present - after the build, and so after any rect the build sent. Measured on a
+    client: the list sat at exactly the engine's default, top edge above ours and bottom
+    edge on the floor of the screen, over the chip rail, whatever height this asked for.
+    """
+    from sbs_utils.gui import Gui
+    return Gui.widget_list_sent.get(client_id)
+
+
 def lm_sci_object_list_place(client_id, wanted=None):
     """Show or hide the contact list. Returns True when it is on screen.
 

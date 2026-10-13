@@ -19,10 +19,8 @@ this side has identified, so a chip never puts an unscanned contact in a categor
 SLIM ON PURPOSE. These are set and forgotten, so they get a thin row that costs the radar
 30px rather than a band of their own.
 
-KNOWN ENGINE LIMITS (1.3.15, measured): while a lens is lit the engine draws only what it
-lists, so terrain is hidden whatever its switch says; and clearing a filter empties the
-blob but the view keeps the last list, so un-lighting the last lens does not bring
-everything back. The clear is still what this sends - it is what a fixed engine honors.
+While a lens is lit the engine draws only what it lists, so terrain is hidden whatever its
+switch says (measured on 1.3.15) - the switches show their effect under All.
 
 Prefixed `lm_terrain_` because every top-level function here becomes a MAST global in one
 flat, mission-wide namespace. A leading underscore is private to this file.

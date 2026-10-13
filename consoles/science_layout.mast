@@ -169,6 +169,11 @@
         lm_sci_object_list_place(client_id)
         on change lm_sci_object_list_wanted(client_id):
             lm_sci_object_list_place(client_id)
+        # ...and once more when the engine has been handed this console's widget list,
+        # because that is the moment it puts every widget back at its own default rect
+        # and the placement above was sent before it. science_tabs.py.
+        on change lm_sci_widget_list_revision(client_id):
+            lm_sci_object_list_place(client_id)
 
         # THE BEAM FREQUENCY READOUT, the engine's own A-E widget, on the same terms:
         # positioned by rect, never placed with gui_layout_widget. Up only on the status

@@ -13,10 +13,6 @@ which the engine honors with or without a filter, so it sits beside All and the 
 rather than among them: All with Terrain off is the whole picture minus the rocks. While
 a lens is on the engine draws only what the lens lists, so terrain is hidden either way.
 
-KNOWN ENGINE LIMIT (1.3.15, measured): clearing `sci_map_filter` empties the blob but the
-view keeps the last list, so going back to All does not bring everything back. The clear
-is still what this sends - it is the right call, and it is what a fixed engine will honor.
-
 The counts are REAL - computed from the sim, not typed in.
 
 BELOW THE VIEW, NOT OVER IT. An absolute region could float it on the map the way the tab
