@@ -651,33 +651,39 @@ priority: 86
         with side_content:
             gui_row("Name")
             gui_row(input_height)
-            key = gui_input("desc:Key")
+            key_in = gui_input("desc:Key")
             gui_spacer_row()
             gui_row(input_height)
-            name = gui_input("desc:Name")
+            name_in = gui_input("desc:Name")
             gui_spacer_row()
             gui_row(input_height)
-            desc = gui_input("desc:Description;")
+            desc_in = gui_input("desc:Description;")
             gui_spacer_row()
             gui_row(input_height)
             create = gui_button("Create Side")
             gui_spacer_row()
-            create.data = {"key":key,"name":name,"desc":desc}
+            create.data = {"key_in":key_in,"name_in":name_in,"desc_in":desc_in}
             on gui_message(create):
-                # key_input = __ITEM__.data["key"]
-                # name_input = __ITEM__.data["name"]
-                # desc_input = __ITEM__.data["desc"]
-                key_val = key.value
-                name_val = key.value
-                desc_val = desc.value
+                key_in = __ITEM__.data["key_in"]
+                name_in = __ITEM__.data["name_in"]
+                desc_in = __ITEM__.data["desc_in"]
+                key_val = key_in.value
+                name_val = name_in.value
+                desc_val = desc_in.value
                 if key_val is None:
                     sbs.send_message_to_client(client_id, "red", "Side Data Incomplete")
                     ->END
-                await prefab_spawn(prefab_side_generic,data={"key":key_val,"name":name_val,"desc":desc_val})
+                # TODO: modify create_side() to account for this, dunno why it doesn't - the prefab originally did.
+                if name_val is None or name_val == "":
+                    name_val = key_val
+                new_side = side_create(key_val,name_val,desc_val)
+                
+                # new_side = await prefab_spawn(prefab_side_generic,data={"key":key_val,"name":name_val,"desc":desc_val})
+                # print(f"{to_side_object(new_side).name}")
                 # signal_emit("side_added")
-                key.value = ""
-                key.value = ""
-                desc.value = ""
+                key_in.value = ""
+                key_in.value = ""
+                desc_in.value = ""
                 gui_represent(side_manager_gss)
         new_side_row.data = {"content":side_content_row,"txt":nst,"show_panel":True}
         on gui_message(new_side_row):

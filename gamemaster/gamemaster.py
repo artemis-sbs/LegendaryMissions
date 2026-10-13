@@ -1,3 +1,4 @@
+from sbs_utils.procedural.gui.property_listbox import _gui_properties_items
 from sbs_utils.procedural.roles import has_role, has_roles
 from sbs_utils.mast.mast_globals import debug_print, MastGlobals
 from sbs_utils.procedural.style import apply_control_styles
@@ -952,6 +953,12 @@ def gm_list_box_beam_info(item):
     ib = gui_button("X ","col-width: content;",data={"item":item})
     gui_message(ib, "gm_delete_beam_from_ship")
 
+def update_property_set(lb, props):
+    if lb is None or props is None:
+        return
+    # this function isn't a mast global, so instead we call it inside this helper function.
+    lb.items = _gui_properties_items(props)
+    lb.mark_layout_dirty()
 
 def gm_torp_get_data_for(id_or_obj):
     """

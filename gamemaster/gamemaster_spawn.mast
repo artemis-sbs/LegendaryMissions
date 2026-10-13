@@ -538,16 +538,21 @@ variables:
         # Not `lb`: that name is shared with the ships panel, whose `on change` handlers still target it.
         gm_menu_reusable_spawn_logic_lb = gui_property_list_box_stacked(f"{type_name} Settings", listbox_tag)
         gui_properties_set(settings, listbox_tag)
-        gui_set_variable(f"{listbox_tag}_settings")
+        mast_task.set_inventory_value(f"{listbox_tag}_settings",settings)
+        mast_task.set_inventory_value(f"{listbox_tag}_lb",gm_menu_reusable_spawn_logic_lb)
+        print(f"{listbox_tag}")
         # on signal side_added:
         on change len(sides_set()):
-            settings = gui_get_variable(f"{listbox_tag}_settings")
-            if settings is not None and settings["Main"] is not None and settings["Main"]["Side"] is not None:
+            listbox_tag = f"GM_GLB_SPAWN_{prefab_type}"
+            print(f"{listbox_tag}")
+            settings = mast_task.get_inventory_value(f"{listbox_tag}_settings")
+            lb = mast_task.get_inventory_value(f"{listbox_tag}_lb")
+            if settings is not None and settings.get("Main") is not None and settings.get("Main").get("Side") is not None:
                 side_list = list(side_keys_set())
                 side_str = ",".join(side_list)
-                # print(side_list)
                 settings["Main"]["Side"] = f"gui_drop_down('$text:{side_list[0]};list:{side_str};',var='FLEET_SIDE')"
-                gui_properties_set(settings, listbox_tag)
+                update_property_set(lb, settings)
+                
 
         gui_row("row-height: 1.5em;")
         gui_text("$text:Prefab:;","col-width: content;")
