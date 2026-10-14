@@ -8,10 +8,10 @@ shows the same chips lit, because they are all looking at the same map.
 The contact LIST is still out of reach: `science_sorted_list` is an engine widget with no
 content API, which is why this console shows it only while nothing is selected.
 
-TERRAIN IS A SWITCH, NOT A LENS. It drives `sci_show_nebulas` / `sci_show_asteroids`,
-which the engine honors with or without a filter, so it sits beside All and the lenses
-rather than among them: All with Terrain off is the whole picture minus the rocks. While
-a lens is on the engine draws only what the lens lists, so terrain is hidden either way.
+TERRAIN IS A SWITCH, NOT A LENS. It drives `sci_show_nebulas` / `sci_show_asteroids`, so
+it sits beside All and the lenses rather than among them: All with Terrain off is the whole
+picture minus the rocks. Terrain is never put in the filter - the filter is for contacts,
+and the switch alone decides whether terrain is drawn. (That is the intended rule; as of the 1.3.15 exe of 2026-10-14 the engine still hides all terrain while a filter is set, which is reported.)
 
 The counts are REAL - computed from the sim, not typed in.
 
