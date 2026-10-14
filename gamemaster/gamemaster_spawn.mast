@@ -160,6 +160,8 @@ icon_index: 160
         yield fail
     print("Spawning test")
     selection = lb.value
+    # Nothing picked in the ship list yet.
+    ->END if selection is None
     side_option = spawn_side_dropdown.value
     if side_option == "Origin":
         spawn_side = selection.get("origin","")
@@ -349,6 +351,8 @@ variables:
     # marker: AST_MARKER
     use_gm_size: true # only use this if you want to use the GM NavArea size as the SIZE_* arguments of the prefab. Most prefabs don't use it, so it's usually not necessary.
 ```
+    # A label with no body falls through into the next one, which made this the nebula menu.
+    jump gm_menu_reusable_spawn_logic
 
 === gm_menu_terrain_nebulae
 metadata: ``` yaml
@@ -548,7 +552,9 @@ variables:
             if settings is not None and settings.get("Main") is not None and settings.get("Main").get("Side") is not None:
                 side_list = list(side_keys_set())
                 side_str = ",".join(side_list)
-                settings["Main"]["Side"] = f"gui_drop_down('$text:{side_list[0]};list:{side_str};',var='FLEET_SIDE')"
+                # Keep the variable this menu's own drop down is bound to.
+                side_var = gm_property_var_name(settings["Main"]["Side"], "FLEET_SIDE")
+                settings["Main"]["Side"] = f"gui_drop_down('$text:{side_list[0]};list:{side_str};',var='{side_var}')"
                 update_property_set(lb, settings)
                 
 
@@ -592,11 +598,10 @@ variables:
             if button_variables.get("use_gm_size"):
                 data["SIZE_X"] = size
                 data["SIZE_Z"] = size
-            name = ""
             # Now we USE the variables saved on the button
             for prefab_var in button_variables.keys():
                 # use_gm_size is specifically excluded, since it's only used to set the size variables, which is already done at this point. 
-                if prefab_var in "use_gm_size":
+                if prefab_var == "use_gm_size":
                     continue
                 layout_item_var = button_variables.get(prefab_var)
 
@@ -610,10 +615,11 @@ variables:
 
                 # Add the variables to the data
                 liv = gui_get_variable(layout_item_var)
+                # No local named after a prefab variable here: the prefab task sees
+                # this task's variables, so a `name` of None beat the prefab's own
+                # default name and the turret prefab raised on it.
                 if liv is not None:
                     data[prefab_var] = liv
-                if prefab_var == "name":
-                    name = liv
                 
             # Finally, we actually spawn the prefab
             spawned = await prefab_spawn(lbl, data=data)

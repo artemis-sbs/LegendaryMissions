@@ -17,7 +17,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
 default GM_SIDEBAR_SUBMENU_PANELS = {}
 default GM_SIDEBAR_SELECTED_SUBMENU_INDEX = {}
 
-@console/gamemaster !0 ^1 "Game Master" if GAMEMASTER_CONSOLE_ENABLED
+@console/gamemaster !0 ^100 "Game Master" if GAMEMASTER_CONSOLE_ENABLED
 " Affect the overall battle
 
     # This is a bit of a work around s the operator doesn't need the pin twice
@@ -750,7 +750,9 @@ priority: 99
         test_gui_text_escape = format_counter_elapsed_seconds(0, "Mission_Elapsed_Time", elapsed_time_format)
         elapsed_time = gui_text("$text:Mission Elapsed Time:; justify: left;")
         t = gui_text(f"$text:{test_gui_text_escape};justify: right;")
-        on change int(get_counter_elapsed_seconds(0, "Mission_Elapsed_Time")):
+        # The counter only exists once game_started has been emitted; a console opened
+        # before that (or in a mission that never emits it) reads None.
+        on change int(get_counter_elapsed_seconds(0, "Mission_Elapsed_Time") or 0):
             timer = get_counter_elapsed_seconds(0, "Mission_Elapsed_Time")
             # test_gui_text_escape = gui_text_escape("{format_time(timer)}")
             test_gui_text_escape = format_counter_elapsed_seconds(0, "Mission_Elapsed_Time", elapsed_time_format)

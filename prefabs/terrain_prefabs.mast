@@ -66,11 +66,12 @@ display_text: Nebula Sphere
 metadata: ``` yaml
 type: prefab/terrain/planet/planetoid
 display_text: Planetoid
-planet_radius: 4000
+planet_radius: 200
 ```
     default name = ""
     co = terrain_spawn(START_X, START_Y, START_Z, name, "#,gasgiant", "planet", "behav_planet")
-    # co.engine_object.exclusion_radius = 400
+    # 200 keeps every planetoid already placed in a map the size it has always been
+    # (an exclusion radius of 400); the GM menu passes its own radius.
     co.engine_object.exclusion_radius = planet_radius * 2.0
 
 

@@ -1,3 +1,4 @@
+import re
 from sbs_utils.procedural.gui.property_listbox import _gui_properties_items
 from sbs_utils.procedural.roles import has_role, has_roles
 from sbs_utils.mast.mast_globals import debug_print, MastGlobals
@@ -952,6 +953,11 @@ def gm_list_box_beam_info(item):
     # ib = gui_icon_button("icon_index: 155; color:red;")
     ib = gui_button("X ","col-width: content;",data={"item":item})
     gui_message(ib, "gm_delete_beam_from_ship")
+
+def gm_property_var_name(prop, fallback=None):
+    """The `var=` a property-list control string is bound to, e.g. "STATION_SIDE"."""
+    found = re.search(r"var\s*=\s*['\"](\w+)['\"]", prop or "")
+    return found.group(1) if found else fallback
 
 def update_property_set(lb, props):
     if lb is None or props is None:
