@@ -271,6 +271,7 @@ default GM_SIDEBAR_SELECTED_SUBMENU_INDEX = {}
         if submenu_index >= 0 and submenu_index < len(panels):
             gui_show(panels[submenu_index])
             GM_SIDEBAR_SELECTED_SUBMENU_INDEX[menu_type] = submenu_index
+            set_inventory_value(client_id, "gm_current_menu",menu_type)
     ->END
 
 
