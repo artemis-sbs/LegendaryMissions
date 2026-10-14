@@ -286,7 +286,7 @@ GameCode:
             fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
             debug_print("FLEET POS out of points?")
 
-        prefab_spawn(prefab_fleet_raider, {"race": enemy, "fleet_difficulty": DIFFICULTY,"START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
+        prefab_spawn(theater_fleet_prefab(enemy) or prefab_fleet_raider, {"race": enemy, "fleet_difficulty": DIFFICULTY,"START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
         if a > 1 and DIFFICULTY > 2:
             if spawn_points is None:
                 fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
@@ -304,7 +304,7 @@ GameCode:
                 fleet_pos = Vec3.rand_in_sphere(39990, 40000, False, True)
                 debug_print("FLEET POS out of points?")
         
-            prefab_spawn(prefab_fleet_raider, {"race": "Skaraan", "fleet_difficulty": DIFFICULTY, "START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
+            prefab_spawn(theater_fleet_prefab("skaraan") or prefab_fleet_raider, {"race": "Skaraan", "fleet_difficulty": DIFFICULTY, "START_X": fleet_pos.x, "START_Y": fleet_pos.y, "START_Z": fleet_pos.z})
 
     #------------------------------------------------------------------------------------------------------------
 
@@ -421,7 +421,7 @@ GameCode:
     boss_diff = siege_boss_difficulty(BOSS_SELECT, DIFFICULTY)
     for boss_i in range(siege_boss_fleet_count(BOSS_SELECT)):
         fpos = Vec3.rand_in_sphere(25000, 45000, False, True)
-        prefab_spawn(prefab_fleet_raider, {"race": boss_race, "fleet_difficulty": boss_diff, "ship_roles": "raider, boss_fleet", "START_X": fpos.x, "START_Y": fpos.y, "START_Z": fpos.z})
+        prefab_spawn(theater_fleet_prefab(boss_race) or prefab_fleet_raider, {"race": boss_race, "fleet_difficulty": boss_diff, "ship_roles": "raider, boss_fleet", "START_X": fpos.x, "START_Y": fpos.y, "START_Z": fpos.z})
     for boss_name, boss_art in siege_boss_named(BOSS_SELECT):
         npos = Vec3.rand_in_sphere(20000, 30000, False, True)
         boss_roles = "raider, boss, " + boss_name.lower()

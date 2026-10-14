@@ -31,6 +31,11 @@ brain:
     - ai_fleet_calc_forward_vector
     - ai_fleet_scatter_formation
 ```
+    # `difficulty` is the plain word an AMD `Data:` block uses. Given, it sets
+    # fleet_difficulty; nothing passes it today, so every existing spawn is unchanged.
+    default difficulty = None
+    if difficulty is not None and difficulty != "":
+        fleet_difficulty = int(difficulty)
     _fleet_index = fleet_difficulty -1
     fleet = fleet_create(race, _fleet_index, START_X, START_Y, START_Z, fleet_roles, ship_roles, faction_side)
     # A race with no registered fleet ladder builds no fleet, and fleet_create has already

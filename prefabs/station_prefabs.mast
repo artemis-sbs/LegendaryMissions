@@ -8,6 +8,17 @@
     default SIZE_Z = SIZE_X
     default use_nav_proxy = True
     default nav_proxy_color = "#65653d"
+    # Arguments an AMD landmark (or any caller) may pass. Each defaults to what this
+    # prefab has always done, so every existing spawn is unchanged.
+    #   art         a hull key in place of the variant's station_type
+    #   behavior    in place of behav_station
+    #   START_EXACT place AT START rather than somewhere in the SIZE box - a landmark is
+    #               authored to a point (prefab_create's landmark data sets it)
+    default art = None
+    default behavior = "behav_station"
+    default START_EXACT = False
+    if art is not None and art != "":
+        station_type = art
     
     # ART ONLY. Stations pick their hull by explicit KEY rather than by faction, so they get
     # their own map (ART_KEYS, keyed by the stock key being replaced) instead of the
@@ -33,10 +44,13 @@
 
     st_x = START_X+w + ((random.random()*2)-1) * w/2
     st_z = START_Z+d + ((random.random()*2)-1) * d/2
+    if START_EXACT:
+        st_x = START_X
+        st_z = START_Z
 
     #remove_objects_sphere(st_x, START_Y, st_z, 600)
 
-    station_object = npc_spawn(st_x, START_Y, st_z, name, s_roles, station_type, "behav_station")
+    station_object = npc_spawn(st_x, START_Y, st_z, name, s_roles, station_type, behavior)
     ds = to_id(station_object)
     if (race_value is None or race_value == "terran") and side_value == "tsn":
         # Force TSN terran faces to have military uniforms
