@@ -26,7 +26,7 @@ or a conjugation of it. Do not vary it so far that it stops being the tagline.
 
 quotes, no em-dashes and no emoji, and a \`^\` is a line break to it.
 
-Do NOT add a \`Kind:\` field. It means something else in AMD and will quietly break the records under it.
+Do NOT add a \`Prefab:\` field. It means something else in AMD (what a landmark creates) and will quietly break the records under it.
 
 ## Mail {: #detocs-detocs-mail}
 

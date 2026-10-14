@@ -6,7 +6,7 @@
 
 | Fact | Value |
 |---|---|
-| Kind | npc |
+| Prefab | npc |
 | Side | civ |
 | Roles | civilian, poacher |
 | Art | cargo_ship |
@@ -16,7 +16,7 @@
 
 | Fact | Value |
 |---|---|
-| Kind | npc |
+| Prefab | npc |
 | Side | civ |
 | Roles | civilian, mercy_target |
 | Art | cargo_ship |
@@ -26,7 +26,7 @@
 
 | Fact | Value |
 |---|---|
-| Kind | point |
+| Prefab | point |
 
 The deep-space station the Florbin case runs out of.
 
@@ -34,7 +34,7 @@ The deep-space station the Florbin case runs out of.
 
 | Fact | Value |
 |---|---|
-| Kind | point |
+| Prefab | point |
 | Roles | picket_zone |
 | Loc | -2000, 0, 18000 |
 | Radius | 2500 |

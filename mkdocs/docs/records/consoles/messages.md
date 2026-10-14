@@ -25,7 +25,7 @@ waiting when they sit down. Spread them out; mail that all lands at once is a do
 
 quotes, no em-dashes and no emoji, and a \`^\` is a line break to it.
 
-Do NOT add a \`Kind:\` field. It means something else in AMD and will quietly break the records under it.
+Do NOT add a \`Prefab:\` field. It means something else in AMD (what a landmark creates) and will quietly break the records under it.
 
 ## Did you take the good pan {: #messages-mail-pan}
 
