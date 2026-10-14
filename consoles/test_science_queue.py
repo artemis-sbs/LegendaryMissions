@@ -252,6 +252,63 @@ class ScanQueueTest(unittest.TestCase):
         self.assertEqual(self._seconds_at(400), sq.LM_SCI_SCAN_FASTEST)
         self.assertEqual(sq.LM_SCI_SCAN_FASTEST, 0.5)
 
+    def test_a_far_off_enemy_takes_no_longer_than_the_engine_allows(self):
+        """Measured: 100,000 and 140,000 both took 19.8s - the engine stops the line at its
+        reach. Letting it run on made a distant enemy up to three times slower here."""
+        self.assertAlmostEqual(self._seconds_at(100000), 20.0, places=2)
+        self.assertAlmostEqual(self._seconds_at(140000), 20.0, places=2)
+        self.assertAlmostEqual(self._seconds_at(1000000), 20.0, places=2)
+
+    def test_the_far_ranges_are_the_engines(self):
+        """15,000 / 30,000 / 60,000 took 3.4 / 6.5 / 12.4s on the engine (each landing
+        on its next half-second step)."""
+        for metres, seconds in ((15000, 3.255), (30000, 6.21), (60000, 12.12)):
+            with self.subTest(range=metres):
+                self.assertAlmostEqual(self._seconds_at(metres), seconds, places=2)
+
+    def test_damaged_sensors_shorten_the_reach_and_cap_it_there(self):
+        """At sensor_damage_coeff 0.5 the reach is 75,000: farther is still 20s."""
+        self.player.data_set.set("sensor_damage_coeff", 0.5, 0)
+        self.assertAlmostEqual(self._seconds_at(75000), 20.0, places=2)
+        self.assertAlmostEqual(self._seconds_at(140000), 20.0, places=2)
+
+    # --- Engineering's sensor slider and the sensor upgrade (measured 2026-10-14) --------
+
+    def _slider(self, value):
+        ds = self.player.data_set
+        for i in range(16):
+            label = ds.get("eng_control_label", i)
+            if not label:
+                break
+            if "sens" in str(label).lower():
+                ds.set("eng_control_value", value, i)
+                return
+        self.fail("the player ship has no SENSORS slider")
+
+    def test_more_sensor_power_scans_no_faster(self):
+        """Slider 3.0 gave a 300000 science range and scanned exactly as fast as 1.0."""
+        base = self._seconds_at(60000)
+        self._slider(3.0)
+        self.assertEqual(self._seconds_at(60000), base)
+
+    def test_half_sensor_power_is_still_inside_the_cap(self):
+        """Slider 0.5 gave 112500 - still over the 100000 cap - and timed as 1.0."""
+        base = self._seconds_at(60000)
+        self._slider(0.5)
+        self.assertEqual(self._seconds_at(60000), base)
+
+    def test_starved_sensors_scan_slower(self):
+        """Below about a third the science range drops under the cap: 0.2 gives 90000."""
+        self._slider(0.2)
+        self.assertAlmostEqual(self._seconds_at(60000), 0.3 + 19.7 * 60000 / 90000, places=2)
+
+    def test_a_sensor_upgrade_below_one_scans_slower(self):
+        """Measured: sensor_upgrade_coeff 0.5 gave 75000, and 8.45s / 15.8s at 30,000 /
+        60,000 (each landing on the engine's next half-second step)."""
+        self.player.data_set.set("sensor_upgrade_coeff", 0.5, 0)
+        self.assertAlmostEqual(self._seconds_at(30000), 8.18, places=2)
+        self.assertAlmostEqual(self._seconds_at(60000), 16.06, places=2)
+
     def test_closing_on_a_contact_makes_the_scan_faster(self):
         far, mid, near = (self._seconds_at(25000), self._seconds_at(12500),
                           self._seconds_at(2500))
@@ -316,7 +373,7 @@ class ScanQueueTest(unittest.TestCase):
 
     def test_a_closer_scan_really_does_finish_sooner(self):
         """The curve is only a number until the beat uses it."""
-        self.target.pos = mock_sbs.vec3(50000.0, 0.0, 0.0)
+        self.target.pos = mock_sbs.vec3(60000.0, 0.0, 0.0)
         sq.lm_sci_queue_add(self.player, self.target, "scan")
         self._advance(3.0)
         far_pct = sq.lm_sci_queue_percent("tsn", self.target, "scan")
