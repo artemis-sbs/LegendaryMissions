@@ -132,20 +132,63 @@ def gm_panel_list_item(message_obj):
         elif message:
             gui_text(f"$text: {gui_text_escape(message)};font:gui-2;color:{message_color};")
 
-from sbs_utils.procedural.timers import is_timer_set, format_time_remaining
+from sbs_utils.procedural.timers import get_counter_elapsed_seconds, is_timer_set, format_time_remaining
 from sbs_utils.procedural.inventory import set_inventory_value, get_inventory_value
 from sbs_utils.procedural.sides import to_side_id, side_enemy_members_set, sides_set, side_display_name, side_members_set
 from sbs_utils.mast.mast_node import Scope # Enum, 1
 from sbs_utils.procedural.roles import role,any_role
-def show_gm_stats(client_id, top, left, width, height):
+def format_elapsed_mission_time():
+    """
+    Get the time elapsed since start of mission.
+    """
+    # TODO: Move to sbs_utils? timers.py
+    now = FrameContext.context.sim.time_tick_counter
+    time = now // 30 # 30 = TICK_PER_SECONDS
+    minutes = time // 60
+    seconds = str(time % 60).zfill(2)
+    return f"{minutes}:{seconds}"
+
+# from math import round, divmod
+def format_time(seconds):
+    """
+    Format seconds into hh:mm:ss format
+    """
+    if seconds is None:
+        return "00:00:00"
+    seconds = round(seconds)
+    minutes, sec = divmod(seconds, 60) # Get total minutes and remaining seconds
+    hours, minutes = divmod(minutes, 60) # Get total hours and remaining
+    return f"{round(hours)}:{round(minutes)}:{round(sec)}"
+game_stats = dict()
+def update_gm_stats(cid, top=0, left=0, width=0, height=0):
+    t = get_counter_elapsed_seconds(0, "Mission_Elapsed_Time")
+    time = format_time(t)
+    gui_update_shared("sh_game_time",f"$text:{t};")
+    rt = game_stats.get(cid)
+    if rt is not None:
+        gui_represent(rt)
+
+def show_gm_stats(client_id, top=0, left=0, width=0, height=0):
     print(f"show gm stats CID: {client_id}")
+    time = ""
     if is_timer_set(Scope.SHARED, "time_limit"):
         gui_row("row-height: 45px")
-        gui_text("$text: time left;justify: right;font:gui-3;")
+        gui_text("$text: time left;justify: center;font:gui-2;")
         gui_row()
-        t = format_time_remaining(Scope.SHARED, "time_limit")
-        gui_text(f"$text: {t};justify:left;font:gui-3;", style="tag: sh_game_time;padding:20px;")    
-        
+        if is_timer_set(Scope.SHARED, "time_limit"):
+            time = format_time_remaining(Scope.SHARED, "time_limit")
+        else:
+            time = format_elapsed_mission_time()
+        gui_text(f"$text: {t};justify:left;font:gui-2;", style="tag:sh_game_time;padding:20px;")    
+    else:
+        t = get_counter_elapsed_seconds(0, "Mission_Elapsed_Time")
+        time = format_time(t)
+        gui_row("row-height: 45px")
+        gui_text("$text: Elapsed Time:;justify: center;font:gui-2;")
+        gui_row()
+          
+    rt = gui_text(f"$text: {time};justify:left;font:gui-2;", style="tag:sh_game_time;padding:20px;")
+    game_stats[client_id] = rt
         # TODO: Add timer changes
         # gui_row("row-height: 0.5em;")
         # gui_text(" ")
@@ -183,6 +226,7 @@ def show_gm_stats(client_id, top, left, width, height):
     
 def hide_gm_stats(client_id, top, left, width, height):
     set_inventory_value(client_id, "gm_show_stats", False)
+    game_stats[client_id] = None
 
 
 

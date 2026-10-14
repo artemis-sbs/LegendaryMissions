@@ -8,7 +8,8 @@ default shared SIMPLE_INTERNAL = True
 #
 # Testing Lifeforms via prefab 
 #
-prefab_spawn(prefab_lifeform_generic, {"name": "TSNN", "path": "//comms/tsnn"})
+//shared/signal/game_started
+    prefab_spawn(prefab_lifeform_generic, {"name": "TSNN", "path": "//comms/tsnn"})
 
 
 //comms/tsnn  if has_role(COMMS_ORIGIN_ID, '__player__') and COMMS_SELECTED_ID in (0, COMMS_ORIGIN_ID)

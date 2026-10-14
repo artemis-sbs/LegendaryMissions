@@ -54,6 +54,7 @@
 
 === prefab_station_command
 metadata: ``` yaml
+type: prefab/npc/station/command
 display_text: Command Base
 station_type: starbase_command
 side_value: tsn
@@ -64,6 +65,7 @@ race_value: terran
 
 === prefab_station_civil
 metadata: ``` yaml
+type: prefab/npc/station/civil
 display_text: Civil Station
 station_type: starbase_civil
 side_value: civ
@@ -74,6 +76,7 @@ race_value: terran
 
 === prefab_station_industry
 metadata: ``` yaml
+type: prefab/npc/station/industry
 display_text: Industry station
 station_type: starbase_industry
 side_value: civ
@@ -84,6 +87,7 @@ race_value: terran
 
 === prefab_station_science
 metadata: ``` yaml
+type: prefab/npc/station/science
 display_text: Science station
 station_type: starbase_science
 side_value: civ
@@ -95,6 +99,7 @@ race_value: terran
 
 === prefab_station_arvonian
 metadata: ``` yaml
+type: prefab/npc/station/arvonian
 display_text: Arvonian Station
 station_type: starbase_arvonian
 side_value: raider
@@ -107,6 +112,7 @@ race_value: arvonian
 
 === prefab_station_torgoth
 metadata: ``` yaml
+type: prefab/npc/station/torgoth
 display_text: Torgoth Station
 station_type: starbase_torgoth
 side_value: raider
@@ -119,6 +125,7 @@ race_value: torgoth
 
 === prefab_station_kralien
 metadata: ``` yaml
+type: prefab/npc/station/kralien
 display_text: Kralien Station
 station_type: starbase_kralien
 side_value: raider

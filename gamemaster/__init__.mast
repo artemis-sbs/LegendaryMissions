@@ -1,6 +1,8 @@
 provides gamemaster
 
 import gamemaster.mast
+import gamemaster_spawn.mast
+import gamemaster_selection_details.mast
 import gamemaster_controls.py
 import gamemaster_info_panel.py
 import gamemaster.py

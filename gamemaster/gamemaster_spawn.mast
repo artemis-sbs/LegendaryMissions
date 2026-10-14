@@ -1,0 +1,799 @@
+
+# Here we just throw in default values for sliders, to avoid having them always start at 0. 
+# Better to give the user and idea of what the default value is. 
+MONSTER_SCALE = 1.0
+NEB_DENSITY = 1.0
+BH_RADIUS = 5000
+BH_GRAV_STR = 4.0
+BH_TURB_STR = 2.0
+BH_DAMAGE = 200
+//gui/normal_gamemaster
+    # This shoudn't actually do anything. It's mostly here to prevent `gm_menu_spawn` from running immediately on startup without being attached to a gui.
+    ->END
+
+
+#region GM Spawn Single Ships
+=== gm_menu_spawn_ships
+metadata: ``` yaml
+type: gm_menu/ships
+icon_index: 140
+icon_color: "blue"
+priority: 20 # Smaller number is higher priority
+```
+    
+    data = gm_get_origins_sides_roles()
+    origins = data.get("origins")
+    origins = sorted(origins, key=str.casefold)
+    roles = data.get("roles")
+    # NOTE: Sides that are defined in shipData may not be initialized in-game!!
+    sides = data.get("sides")
+    with gui_sub_section("row-height: content; background: #000444;"):
+        gui_row("row-height: 1em;")
+        # with gui_sub_section("click_background: #5555;click_text:; background: #1234566b;") as origins_text:
+        #     gui_row("row-height: 1em;")
+        #     gui_text("$text:Origins;justify:center;")
+        origins_text = gm_spawn_type_button("$text:Origins;justify:center;", "background: #012223;")
+        origins_row = gui_row("row-height: min-content;")
+        selected_style = "click_background: #190182;click_text:; background: #215487;border: 2px; border-color: #349c9c;"
+        unselected_style = "click_background: #190182;click_text:; background: #111555;border: 0px;"
+        selected_list = list()
+        with gui_sub_section("row-height: 1.5em;"):
+            with gui_grid(3):
+                for o in origins:
+                    spawn_filter = gui_text(f"$text:{o};",unselected_style)
+                    spawn_filter.data = {"origin":o}
+                    on gui_message(spawn_filter):
+                        data = __ITEM__.data
+                        origin = data.get("origin")
+                        print(origin)
+                        if __ITEM__ in selected_list:
+                            selected_list.remove(__ITEM__)
+                            layout_item_update_style(__ITEM__, unselected_style)
+                        else:
+                            selected_list.append(__ITEM__)
+                            layout_item_update_style(__ITEM__, selected_style)
+            gui_row()
+        # on gui_click(origins_text):
+        on gui_message(origins_text):
+            if origins_row.is_hidden_by_script:
+                gui_show(origins_row)
+            else:
+                gui_hide(origins_row)
+
+        # A hopefully temporary row to account for a bug in gui_grid.
+        # See https://github.com/artemis-sbs/LegendaryMissions/issues/724
+        gui_row("row-height: 1em;")
+        gui_blank()
+        gui_row("row-height: 2px; background: #000000")
+        gui_blank()
+        gui_row("row-height: max-content;")
+
+        items = filter_ship_data_generically("", required_roles=["ship"])
+        lb = gui_list_box(items, "", select=True, item_template=gm_ship_spawn_select_template)
+        gui_row("row-height: min-content;")
+        gui_text("$text:Spawn Side:;justify:center;")
+        # TODO: Spawn sides should always include ALL sides. So we not only need a way to update this list, we also need to dynamically generate it on startup.
+        # Current system is acceptable, assuming that all players are on the same side.
+        spawn_side_dropdown = gui_drop_down("$text:Hostile;list:Hostile,Allied,Neutral,Origin;")
+        gui_row("row-height: 1.5em;")
+        spawn_button = gui_button("$text:Spawn;justify:center;", data={"lb":lb, "spawn_side_dropdown": spawn_side_dropdown}, on_press=gm_spawn_button_pressed)
+
+
+        on change len(selected_list):
+            selected_origins = []
+            for selected_item in selected_list:
+                selected_origins.append(selected_item.data.get("origin"))
+            print(f"Selected list len: {len(selected_list)}")
+            print(f"{selected_origins}")
+            new_items = filter_ship_data_generically("", required_origin=selected_origins, required_roles=["ship"])
+            print(f"Len new items: {len(new_items)}")
+            lb.items = new_items
+
+
+        gui_row("row-height: 1em;")
+        details = gui_text("$text:Details;","justify: center; background: #123456; click_text:; click_background: #012345;")
+        details_row = gui_row("row-height: content;")
+        details_text = gui_text("$text: No item selected.")
+        on change lb.value:
+            item = lb.value
+            desc = item.get("long_desc","No description found.")
+            details_text.update(f"$text: {desc}")
+        
+        on gui_message(details):
+            if details_row.is_hidden_by_script:
+                gui_show(details_row)
+            else:
+                gui_hide(details_row)
+        
+    yield success
+
+
+=== gm_menu_spawn_ships_search
+metadata: ```
+type: gm_menu/ships/search
+icon_index: 160
+```
+    with gui_sub_section("row-height: content; background: #000444;"):
+        gui_row("row-height: 1.5em;")
+        filt = gui_input("$text:;")
+
+        ship_list = filter_ship_data_generically(filt.value, required_roles=["ship"])
+        print(f"Ship list length: {len(ship_list)}")
+
+        gui_row("row-height: max-content;")
+
+        items = filter_ship_data_generically("", required_roles=["ship"])
+        glb = gui_list_box(items, "", select=True, item_template=gm_ship_spawn_select_template)
+        
+        on change filt.value:
+            items = filter_ship_data_generically(filt.value, required_roles=["ship"])
+            glb.items = items
+        
+        gui_row("row-height: min-content;")
+        gui_text("$text:Spawn Side:;justify:center;")
+        spawn_side_dropdown = gui_drop_down("$text:Hostile;list:Hostile,Allied,Neutral,Origin;")
+        gui_row("row-height: 1.5em;")
+        spawn_button = gui_button("$text:Spawn;justify:center;", data={"lb":glb, "spawn_side_dropdown": spawn_side_dropdown}, on_press=gm_spawn_button_pressed)
+
+        gui_row("row-height: 1em;")
+        details_search = gui_text("$text:Details;","justify: center; background: #123456; click_text:; click_background: #012345;")
+        details_search_row = gui_row("row-height: content;")
+        details_search_text = gui_text("$text: No item selected.")
+        on change glb.value:
+            item = glb.value
+            desc = item.get("long_desc","No description found.")
+            details_search_text.update(f"$text: {desc}")
+        
+        on gui_message(details_search):
+            if details_search_row.is_hidden_by_script:
+                gui_show(details_search_row)
+            else:
+                gui_hide(details_search_row)
+
+
+    yield success
+
+=== gm_spawn_button_pressed
+    lb = __ITEM__.data.get("lb")
+    spawn_side_dropdown = __ITEM__.data.get("spawn_side_dropdown")
+    if lb is None or spawn_side_dropdown is None:
+        yield fail
+    print("Spawning test")
+    selection = lb.value
+    side_option = spawn_side_dropdown.value
+    if side_option == "Origin":
+        spawn_side = selection.get("origin","")
+    elif side_option == "Allied":
+        spawn_side = "tsn" # For now
+    elif side_option == "Hostile":
+        spawn_side = "raider" # For now
+    else:
+        spawn_side = "civ"
+    spawn_roles = selection.get("roles","")
+    # art = selection.get("artfileroot")
+    art = selection.get("key")
+    cambot = sbs.get_ship_of_client(client_id)
+    pos = gamemaster_get_pos(cambot, "lmb")
+
+    prefab_spawn(prefab_single_ship, data={"ship_role":spawn_roles,"ship_art": art, "side_value": spawn_side}, OFFSET_X=pos.x, OFFSET_Y=pos.y, OFFSET_Z=pos.z)
+    ->END
+
+#endregion
+
+# === lb_test
+# metadata: ``` yaml
+# type: gm_menu/spawn/test
+# icon_index: buttonTest
+# icon_color: "blue"
+# priority: 20 # Smaller number is higher priority
+# ```
+#     for text in ["New", "Continue", "Load", "Options"]:
+#         with gui_sub_section("click_background: #5555;click_text:;margin:0,0,0,15px;") as b1:
+#             gui_row("row-height: 30px")
+#             gui_image("button_header")
+#             gui_row()
+#             gui_blank()
+#             gui_row()
+#             gui_text("$text:{text};font:gui-5;justify:center")
+#             gui_row()
+#             gui_blank()
+#             gui_row("row-height: 25px")
+#             gui_image("button_footer")
+#         gui_row()
+#         gui_message(b1, text.lower())
+
+#     yield success
+
+
+#region GM Spawn Fleets
+
+=== gm_menu_spawn_fleets
+metadata: ``` yaml
+type: gm_menu/fleets
+icon_index: 105
+icon_color: "blue"
+priority: 30 # Smaller number is higher priority
+prefab_type: prefab/fleet/raider
+type_name: Fleet
+settings:
+    Main:
+        Name: 'gui_input("$text:;desc:Fleet Name",var="FLEET_NAME")'
+        Side:
+        Origin:
+        Fleet Difficulty: 'gui_drop_down("$text:4;list:1,2,3,4,5,6,7,8,9,10,11;",var="FLEET_DIFF")'
+variables:
+    name: FLEET_NAME
+    ship_roles: FLEET_SIDE
+    race: FLEET_ORIGIN
+    fleet_difficulty: FLEET_DIFF
+```
+    data = gm_get_origins_sides_roles()
+    origins = data.get("origins")
+    origins = sorted(origins, key=str.casefold)
+    origins_str = ",".join(origins)
+    settings["Main"]["Origin"] = f"gui_drop_down('$text:{origins[0]};list:{origins_str};',var='FLEET_ORIGIN')"
+
+    side_list = list(side_keys_set())
+    side_str = ",".join(side_list)
+    # print(side_list)
+    settings["Main"]["Side"] = f"gui_drop_down('$text:{side_list[0]};list:{side_str};',var='FLEET_SIDE')"
+    jump gm_menu_reusable_spawn_logic
+
+
+    data = gm_get_origins_sides_roles()
+    origins = data.get("origins")
+    origins = sorted(origins, key=str.casefold)
+
+    with gui_sub_section():
+        gui_row("row-height: 1.5em;")
+        gui_text("$text: Spawn Fleets")
+        gui_row("margin: 3px;")
+        fleet_lb = gui_list_box(origins, "", select=True)
+
+        gui_row("row-height: 1.5em;")
+        gui_text("$text:Fleet Difficulty:;")
+        default DIFFICULTY = 5
+        spawn_diff_dd = gui_drop_down("$text:{DIFFICULTY};list:1,2,3,4,5,6,7,8,9,10,11;")
+        
+        gui_row("row-height: min-content;")
+        gui_text("$text:Spawn Side:;justify:center;")
+        spawn_side_dropdown = gui_drop_down("$text:Hostile;list:Hostile,Allied,Neutral,Origin;")
+
+        gui_row("row-height: 2em;")
+        spawn_fleet_button = gui_button("Spawn Fleet")
+        on gui_message(spawn_fleet_button):
+            race = fleet_lb.value
+            side = spawn_side_dropdown.value
+            if side == "Hostile":
+                side = "raider"
+            elif side == "Allied":
+                side = "tsn"
+            elif side == "Origin":
+                side = race
+            else:
+                side = "civ"
+            diff = int(spawn_diff_dd.value)
+            cambot = sbs.get_ship_of_client(client_id)
+            pos = gamemaster_get_pos(cambot, "lmb")
+            # TODO: prefab_fleet_raider doesn't spawn Terran ships, possibly others as well.
+            # Need a generic prefab_fleet for any race/side
+            fleet = prefab_spawn(prefab_fleet_raider, data={"race": race, "ship_roles":side,"fleet_difficulty": diff}, OFFSET_X=pos.x, OFFSET_Y=pos.y, OFFSET_Z=pos.z)
+
+    yield success
+#endregion
+
+=== gm_menu_spawn_stations
+metadata: ``` yaml
+type: gm_menu/station
+icon_index: 114
+icon_color: white
+priority: 40
+prefab_type: prefab/npc/station
+type_name: Station
+settings:
+    Main:
+        Name: 'gui_input("$text:;desc:Station Name",var="STATION_NAME")'
+        Side:
+variables:
+    name: STATION_NAME
+    side_value: STATION_SIDE
+```
+    side_list = list(side_keys_set())
+    side_str = ",".join(side_list)
+    settings["Main"]["Side"] = f"gui_drop_down('$text:{side_list[0]};list:{side_str};',var='STATION_SIDE')"
+    jump gm_menu_reusable_spawn_logic
+
+#endregion
+
+=== gm_menu_spawn_turrets
+metadata: ``` yaml
+type: gm_menu/station/turret
+icon_index: 93
+icon_color: white
+priority: 200
+prefab_type: prefab/turret
+type_name: Turret
+settings:
+    Main:
+        Name: 'gui_input("$text:;desc:Turret Name",var="TURRET_NAME")'
+        Side:
+variables:
+    name: TURRET_NAME
+    side_value: TURRET_SIDE
+```
+    yield fail if not lm_turrets_enabled()
+    side_list = list(side_keys_set())
+    side_str = ",".join(side_list)
+    settings["Main"]["Side"] = f"gui_drop_down('$text:{side_list[0]};list:{side_str};',var='TURRET_SIDE')"
+    jump gm_menu_reusable_spawn_logic
+
+
+
+#region Terrain Spawning
+=== gm_menu_terrain
+metadata: ``` yaml
+type: gm_menu/terrain
+icon_index: 30
+icon_color: "#999872"
+priority: 80 # Smaller number is higher priority
+prefab_type: prefab/terrain/asteroid
+type_name: Asteroid
+settings:
+    Main:
+        # Name: 'gui_input("$text:;desc:Asteroid Field Name",var="AST_NAME")'
+        # Use Marker: 'gui_checkbox("$text:Use Marker;", var="AST_MARKER")'
+        Density: 'gui_int_slider("low:0.1;high:20;text:float;",var="AST_DENSITY")'
+variables:
+    # name: AST_NAME
+    density_scale: AST_DENSITY
+    # marker: AST_MARKER
+    use_gm_size: true # only use this if you want to use the GM NavArea size as the SIZE_* arguments of the prefab. Most prefabs don't use it, so it's usually not necessary.
+```
+
+=== gm_menu_terrain_nebulae
+metadata: ``` yaml
+type: gm_menu/terrain/nebula
+icon_index: 44
+icon_color: "#95357d"
+priority: 300 # Smaller number is higher priority
+prefab_type: prefab/terrain/nebula # you'll want to change this of course
+type_name: Nebula
+settings:
+    Main:
+        Name: 'gui_input("$text:;desc:Nebula Name",var="NEB_NAME")'
+        Use Marker: 'gui_checkbox("$text:Use Marker;", var="NEB_MARKER")'
+        Density: 'gui_int_slider("low:0.1;high:20;text:float;",var="NEB_DENSITY")'
+        Color:
+variables:
+    name: NEB_NAME
+    density_scale: NEB_DENSITY
+    cluster_color: NEB_COLOR
+    marker: NEB_MARKER
+    use_gm_size: true
+```
+
+    color_list = ["purple","red","blue","yellow","green","orange","white","custom"]
+    props = f"$text:purple;list:{','.join(color_list)};"
+
+    # We can manually add settings as is done here:
+    settings["Main"]["Color"] = f"gui_drop_down('{props}', var='NEB_COLOR')"
+    jump gm_menu_reusable_spawn_logic
+
+
+=== gm_menu_terrain_planets
+metadata: ``` yaml
+type: gm_menu/terrain/planets
+icon_index: 13
+icon_color: "#5c3b18"
+priority: 400 # Smaller number is higher priority
+prefab_type: prefab/terrain/planet # you'll want to change this of course
+type_name: Planet
+settings:
+    Main:
+        Name: 'gui_input("$text:;desc:Planet Name",var="PLANET_NAME")'
+        Radius: 'gui_int_slider("low:200;high:10000;text:int;",var="PLANET_RADIUS")'
+variables:
+    name: PLANET_NAME
+    planet_radius: PLANET_RADIUS
+```
+    jump gm_menu_reusable_spawn_logic
+
+=== gm_menu_terrain_bh
+metadata: ``` yaml
+type: gm_menu/terrain/black_hole
+icon_index: 7
+icon_color: "#000000"
+priority: 400
+prefab_type: prefab/terrain/black_hole
+type_name: Black Hole
+settings:
+    Main:
+        Name: 'gui_input("$text:;desc:Black Hole Name",var="BH_NAME")'
+        Gravity Radius: 'gui_int_slider("low:500;high:10000;text:int;",var="BH_RADIUS")'
+        Gravity Strength: 'gui_int_slider("low:0.1;high:10;text:float;",var="BH_GRAV_STR")'
+        Turbulence Strength: 'gui_int_slider("low:0.1;high:10;text:float;",var="BH_TURB_STR")'
+        Collision Damage: 'gui_int_slider("low:10;high:1000;text:int;",var="BH_DAMAGE")'
+variables:
+    name: BH_NAME
+    gravity_radius: BH_RADIUS
+    gravity_strength: BH_GRAV_STR
+    turbulence_strength: BH_TURB_STR
+    collision_damage: BH_DAMAGE
+```
+    jump gm_menu_reusable_spawn_logic
+
+#endregion
+
+# TODO: Adding another submenu to terrain causes the submenu icons to scrunch up incorrectly
+# But I don't know why and it's driving me nuts
+# But realistically it's not a big deal, there's probably not other terrain that needs to be used
+# === gm_menu_terrain_other
+# metadata: ``` yaml
+# type: gm_menu/terrain/other
+# icon_index: 7
+# icon_color: "#000000"
+# priority: 400
+# prefab_type: prefab/terrain/other
+# type_name: Other
+# settings:
+#     Main:
+#         Name: 'gui_input("$text:;desc:Other Name",var="OTHER_NAME")'
+# variables:
+#     name: OTHER_NAME
+# ```
+#     jump gm_menu_reusable_spawn_logic
+
+=== gm_menu_spawn_monsters
+metadata: ```
+type: gm_menu/monsters
+icon_index: 78
+icon_color: "#fb00ff" # Pink like monsters in-game
+priority: 85
+prefab_type: prefab/monster
+type_name: Monster
+settings:
+    Main:
+        Name: 'gui_input("$text:;desc:Monster Name",var="MONSTER_NAME")'
+        Scale: 'gui_int_slider("low:0.1;high:10;text:float;",var="MONSTER_SCALE")'
+variables:
+    name: MONSTER_NAME
+    scale: MONSTER_SCALE
+```
+    jump gm_menu_reusable_spawn_logic
+
+# TODO: Implement mine and deployable spawns
+# === gm_menu_spawn_mines
+# metadata: ```
+# type: gm_menu/deployable
+# icon_index: 29
+# icon_color: "#494948"
+# priority: 84
+# prefab_type: prefab/deployable/minefield
+# type_name: Minefield
+# settings:
+#     Main:
+#         Name: 'gui_input("$text:;desc:Minefield Name",var="MINEFIELD_NAME")'
+#         Density: 'gui_int_slider("low:0.1;high:10;text:float;",var="MF_DENSITY")'
+# variables:
+#     name: MINEFIELD_NAME
+#     density_scale: MF_DENSITY
+#     use_gm_size: true
+# ```
+#     jump gm_menu_reusable_spawn_logic
+
+# === gm_menu_spawn_deployables
+# metadata: ```
+# type: gm_menu/deployable/other
+# icon_index: 126
+# icon_color: "#494948"
+# priority: 84
+# prefab_type: prefab/deployable
+# type_name: Deployable
+# settings:
+#     Main:
+#         Name: 'gui_input("$text:;desc:Deployable Name",var="DEPLOYABLE_NAME")'
+# variables:
+#     name: DEPLOYABLE_NAME
+# ```
+#     jump gm_menu_reusable_spawn_logic
+
+#region Reusable Spawn Logic
+
+=== gm_menu_reusable_spawn_logic
+" Use this to set up spawn menus in an extensible manner. 
+" The `settings` and `variables` values are critical. 
+" `settings` defines a property_list_box that incorporates gui layout items into the UI. 
+" `variables` tells the spawn logic which layout item should be used for required metadata keys in the prefab (e.g. radius for planets)
+" `extra_roles` is a comma-separated list of roles that should be added to any object spawned using this logic. This can be used to do other, custom stuff when these objects are spawned. 
+" Position (START_X, etc) and size (SIZE_X, etc) are included by default, even if they are not used.
+" All other metadata keys must be specified in `variables`. It's up to the user to determine what keys are required for any given label type. 
+    # metadata: ```
+    # # prefab_type: prefab/terrain/asteroid # you'll want to change this of course
+    # # type_name: Asteroid
+    # # settings:
+    # #     Main:
+    # #         Name: 'gui_input("$text:;desc:Object Name",var="OBJ_NAME")'
+    # # variables:
+    # #     NAME: OBJ_NAME
+    # extra_roles:
+    # ```
+        # gui_set_variable(f"settings_{prefab_type}", settings)
+        # settings = gui_get_variable("settings_{prefab_type}")
+
+    default type_name = "Name Not Provided"
+
+    if mast_task.get_inventory_value("prefab_type") is None:
+        print("Could not find prefab type")
+        print(type_name)
+        yield fail
+    else:
+        # TODO: Not sure why, but `prefab_type` wasn't being converted to a variable as expected. This resolves that issue, though it really shouldn't be necessary. 
+        prefab_type = mast_task.get_inventory_value("prefab_type")
+
+    with gui_sub_section():
+
+        gui_row("row-height: content;")
+        listbox_tag = f"GM_GLB_SPAWN_{prefab_type}"
+        # print(listbox_tag)
+        # Not `lb`: that name is shared with the ships panel, whose `on change` handlers still target it.
+        gm_menu_reusable_spawn_logic_lb = gui_property_list_box_stacked(f"{type_name} Settings", listbox_tag)
+        gui_properties_set(settings, listbox_tag)
+        mast_task.set_inventory_value(f"{listbox_tag}_settings",settings)
+        mast_task.set_inventory_value(f"{listbox_tag}_lb",gm_menu_reusable_spawn_logic_lb)
+        # on signal side_added:
+        on change len(sides_set()):
+            listbox_tag = f"GM_GLB_SPAWN_{prefab_type}"
+            settings = mast_task.get_inventory_value(f"{listbox_tag}_settings")
+            lb = mast_task.get_inventory_value(f"{listbox_tag}_lb")
+            if settings is not None and settings.get("Main") is not None and settings.get("Main").get("Side") is not None:
+                side_list = list(side_keys_set())
+                side_str = ",".join(side_list)
+                settings["Main"]["Side"] = f"gui_drop_down('$text:{side_list[0]};list:{side_str};',var='FLEET_SIDE')"
+                update_property_set(lb, settings)
+                
+
+        gui_row("row-height: 1.5em;")
+        gui_text("$text:Prefab:;","col-width: content;")
+
+        generic_prefabs = labels_get_type(prefab_type)
+
+        gui_row()
+        prefab_list = gui_list(generic_prefabs, select=True)
+        with prefab_list as prefab:
+            display_text = prefab.get_inventory_value("display_text")
+            if display_text is None:
+                if prefab_type is None:
+                    print("Fail")
+                    yield fail
+                if f"{prefab_type}/" in prefab.get_inventory_value("type"):
+                    display_text = prefab.get_inventory_value("type","").replace(f"{prefab_type}/","")
+                if display_text is None:
+                    display_text = prefab.name
+            gui_text(f"$text:{display_text}")
+        prefab_list.set_selected_index(0)
+
+        # obj_name_input = gui_input(f"$text:;desc:{type_name} Name;")
+
+        gui_row("row-height: 1.5em;")
+
+        # We have to pass explicit "variables" values to the button, or it all gets messed up
+        # with other panels' spawn logic
+        # Same for the listbox and prefab type/name
+        spawn_obj_button = gui_button(f"$text:Spawn {type_name}", data={"variables": variables, "listbox":prefab_list.listbox, "prefab_type":prefab_type})
+
+        on gui_message(spawn_obj_button):
+            gm = sbs.get_ship_of_client(client_id)
+            pos = gamemaster_get_pos(gm)
+            size = int(gamemaster_get_size(gm))
+            # lbl = prefab_list.listbox.value
+            button_variables = __ITEM__.data.get("variables",dict())
+            lbl = __ITEM__.data.get("listbox").value
+            data={"START_X":pos.x,"START_Y":pos.y,"START_Z":pos.z}
+            if button_variables.get("use_gm_size"):
+                data["SIZE_X"] = size
+                data["SIZE_Z"] = size
+            name = ""
+            # Now we USE the variables saved on the button
+            for prefab_var in button_variables.keys():
+                # use_gm_size is specifically excluded, since it's only used to set the size variables, which is already done at this point. 
+                if prefab_var in "use_gm_size":
+                    continue
+                layout_item_var = button_variables.get(prefab_var)
+
+                # Give the writer a warning without a MAST crash if you set up variables wrong
+                if not isinstance(layout_item_var, str):
+                    prefab_type = __ITEM__.data.get("prefab_type","")
+                    print(f"\nERROR in GM Menu: values for `variables` must be a string\n    Trying to spawn {prefab_type}")
+                    print(f"Key: {prefab_var}")
+                    print(f"Value (should be a string!): {layout_item_var}")
+                    continue
+
+                # Add the variables to the data
+                liv = gui_get_variable(layout_item_var)
+                if liv is not None:
+                    data[prefab_var] = liv
+                if prefab_var == "name":
+                    name = liv
+                
+            # Finally, we actually spawn the prefab
+            spawned = await prefab_spawn(lbl, data=data)
+
+    yield success
+#endregion
+
+# Temp place for this system
+=== gm_menu_communications
+metadata: ``` yaml
+type: gm_menu/comms
+icon_index: 11
+icon_color: "#404ad8"
+priority: 40 # Smaller number is higher priority
+```
+    with gui_sub_section():
+
+        # From
+        gui_row("row-height: 1.5em;")
+        gui_text("$text: Send Message to Player Ship(s)")
+        gui_row("row-height: 1.2em;")
+        gui_text("$text:Specify Origin:;")
+        gui_row("row-height: 1.5em;")
+        from_search_bar = gui_input("")
+        from_list_box_row = gui_row()
+
+        from_options = to_object_list(any_role("lifeform,__npc__,station,fighter"))
+        from_list_box = gui_list(from_options,select=True)
+
+        gm = sbs.get_ship_of_client(client_id)
+
+        # print(from_options)
+        with from_list_box as id:
+            obj = to_object(id)
+            if obj is not None:
+                # gui_row("row-height: 1em;")
+                if has_role(obj, "station"):
+                    gui_icon("icon_index: 114;color: #555555")
+                elif has_role(obj, "lifeform"):
+                    gui_icon("icon_index: 83; color: green;")
+                else:
+                    gui_icon("icon_index: 140; color: blue;")
+                gui_text(f"{obj.name}")
+        
+        on change from_search_bar.value:
+            from_options = to_object_list(any_role("lifeform,__npc__,station,fighter"))
+            val = from_search_bar.value
+            # items = ~~[item for item in from_options if item.name in val]~~
+            # print(val)
+            # items = list(filter(lambda item: item.name in val, from_options))
+            items = list()
+            for item in from_options:
+                if val.lower().strip() in item.name.lower():
+                    items.append(item)
+            # print(len(items))
+            from_list_box.listbox.items = items
+            if len(items) == 1:
+                # auto-select the default option if there's only one
+                from_list_box.listbox.set_value(items[0])
+
+        on change gui_get_variable("gm_selection"):
+            new_id = gui_get_variable("gm_selection")
+            obj = to_object(new_id)
+            if obj is not None:
+                from_search_bar.value = obj.name
+            else:
+                from_search_bar.value = ""
+        
+
+        on change from_list_box.listbox.value:
+            sel = from_list_box.listbox.value
+            if sel is not None:
+                from_search_bar.value = sel.name
+                sel_id = to_id(sel)
+                follow_route_select_science(gm, sel_id)
+            else:
+                print("item is None\nOn Change from_list_box.get_selected()")
+
+        # Message
+
+        # Load
+        gui_row("row-height: 1.5em;background: #123456;")
+        gui_text("$text: Input message here:","col-width: content;")
+        gui_blank()
+        load_button = gui_icon_button("icon_index: 92;")
+        save_button = gui_icon_button("icon_index: 94;")
+        # save_button = gui_button("$text:Save For Later")
+        
+        # Message entry
+
+        message_input_section = gui_row("")
+        # message_input_section = gui_sub_section()
+        gm_in = None
+        # with message_input_section:
+        with gui_sub_section():
+            gm_in = gui_input("")
+        
+        
+        message_load_section = gui_row()
+        gm_load_messsage_lb = None
+        with gui_sub_section():
+            items = gui_get_variable("gm_saved_messages",list())
+            gm_load_message_lb = gui_list_box(items,"",select=True)
+            gui_row("row-height: 1.2em;")
+            cancel_msg_select_button = gui_button("Cancel")
+            on gui_message(cancel_msg_select_button):
+                gui_hide(message_load_section)
+                gui_show(message_input_section)
+
+        gui_hide(message_load_section)
+
+        on gui_message(load_button):
+            print("Load button pressed")
+            message_list = gui_get_variable("gm_saved_messages",list())
+            print(message_list)
+            gm_load_message_lb.items = message_list
+            gui_hide(message_input_section)
+            gui_show(message_load_section)
+
+        on gui_message(save_button):
+            print("Save button pressed")
+            msg = gm_in.value
+            print(msg)
+            message_list = gui_get_variable("gm_saved_messages",list())
+            print(message_list)
+            message_list.append(msg)
+            print(message_list)
+            gui_set_variable("gm_saved_messages", message_list)
+
+        on change gm_load_message_lb.value:
+            selection = gm_load_message_lb.value
+            if selection is None:
+                yield fail
+            gm_in.value = selection
+            gm_load_message_lb.value = None
+            gui_hide(message_load_section)
+            gui_show(message_input_section)
+
+        gui_row("row-height: 1.2em;background: #123456;")
+        gui_text("Select Target Ships")
+        gui_row()
+        player_ships = list(role("__player__"))
+        # player_ship_select = gui_list_box(player_ships,"",select=True,multi=True)
+
+        player_ship_select_ = gui_list(player_ships, select=True,multi=True)
+        with player_ship_select_ as id:
+            ship = to_object(id)
+            # gui_row("row-height: 1.5em;")
+            gui_text(f"$text:{to_object(ship).name}")
+
+        on change len(role("__player__")):
+            player_ships = list(role("__player__"))
+            player_ship_select_.items = player_ships
+        
+        gui_row("row-height: 1.2em;background: #123456;")
+        send_to_selected = gui_button("$text:Send to Selected;")
+        
+        gui_row("row-height: 1.2em;background: #123456;")
+        send_to_players = gui_button("$text: Send to All Ships")
+
+        on gui_message(send_to_selected):
+            # print(len(player_ship_select_.get_selected()))
+            _from = from_list_box.listbox.value
+            if _from is None:
+                yield fail
+            # send_comms_message_to_player_ship(player_ship_select_.value, _from, "",title,"blue",message,"blue") 
+            msg = gm_in.value
+            to = player_ship_select_.get_selected()
+            print(f"Sending msg to: {to}")
+            comms_message(msg, _from, to)
+
+        on gui_message(send_to_players):
+            print("Sending to all players")
+            _from = from_list_box.listbox.value
+            if _from is None:
+                yield fail
+            msg = gm_in.value
+            to = role("__player__")
+            comms_message(msg, _from, to)
+
+    yield success
+
+

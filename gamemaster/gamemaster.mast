@@ -5,7 +5,7 @@ dolly = 50
 orbit = 180.0
 do_move = 0
 property_pane = None
-info_panel_width = "200px"
+info_panel_width = "30"
 
 default SETTINGS = settings_get_defaults()
 default shared GAMEMASTER_CONSOLE = SETTINGS.get("GAMEMASTER", {"enable": True})
@@ -13,8 +13,11 @@ default shared GAMEMASTER_CONSOLE_ENABLED = GAMEMASTER_CONSOLE.get("enable", Tru
 default shared GAMEMASTER_CONSOLE_PIN = GAMEMASTER_CONSOLE.get("pin", None)
 default shared GAMEMASTER_CONSOLE_BETA = GAMEMASTER_CONSOLE.get("beta", False)
 default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_size", 45)
+# Remember the last open submenu per main menu so tab switches restore the same pane.
+default GM_SIDEBAR_SUBMENU_PANELS = {}
+default GM_SIDEBAR_SELECTED_SUBMENU_INDEX = {}
 
-@console/gamemaster !0 ^100 "Game Master" if GAMEMASTER_CONSOLE_ENABLED
+@console/gamemaster !0 ^1 "Game Master" if GAMEMASTER_CONSOLE_ENABLED
 " Affect the overall battle
 
     # This is a bit of a work around s the operator doesn't need the pin twice
@@ -39,23 +42,19 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     jump login_screen
 
 --- full_console
-    # for testing Side management screen
-    # side = "tsn"
-    # jump gamemaster_side_relations# {"side": "tsn"}
-    # ->END
+
     GAMEMASTER_SKIP_PIN = False
 
     # Need Sci in the name for science selection
     gui_activate_console("gamemaster_sci")
-
-    on signal side_management:
-        jump gamemaster_side_relations
 
     _ship_id = sbs.get_ship_of_client(client_id) 
     side_ship = to_object(_ship_id)
     cambot_id = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
     camera_id = cambot_id
     cambot = to_object(cambot_id)
+
+
     if cambot_id is None or cambot is None:
         #
         # has_science_scan enables friendly eyes processing
@@ -69,8 +68,11 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
 
         # Set up scan sources
         stations_friendly = any_role("__npc__,__player__")
+        #@link extra_scan_source: All the sources which provide scan information to this object
         link(cambot_id,"extra_scan_source" ,stations_friendly)
 
+    set_data_set_value(cambot,"selectable",0)
+    
     last_sci = cambot_id
     #
     # Should have a way to get all sides - now we do!
@@ -84,16 +86,196 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     cambot.side = side
     cambot.data_set.set("ship_base_scan_range", 15000,0)
     
-    await delay_sim(1)
+    await delay_sim(1)    
     #
     # Assign before setting comms up
     #
-    
+
     sbs.assign_client_to_ship(client_id, camera_id)
     science_set_scan_data(camera_id, camera_id, {"scan": "Game Master"})
     set_comms_selection(camera_id, camera_id)
     follow_route_select_comms(camera_id, camera_id)
-    
+
+    widget_list = "3dview^science_data^comms_waterfall^comms_control"
+    # if not GAMEMASTER_CONSOLE_BETA:
+    #     widget_list += "^comms_control"
+    gui_update_widgets(widget_list,"")
+
+# TODO: None of these work
+    # await task_all(gm_sidebar, gm_map_widget, gm_nav_area_slider, data={"gm_ship":cambot, "client_id": client_id}, sub_tasks=True)
+    # await sub_task_schedule(gm_sidebar)
+    # await sub_task_schedule(gm_map_widget)
+    # await sub_task_schedule(gm_nav_area_slider)
+    # jump gm_finalize_gui
+
+--- gm_sidebar
+
+    # Build the left bar
+    # This is for the menu buttons
+    parent = gui_section(f"area:0,40px,{info_panel_width},100; background-color: #11315018;")
+    main_menu_list_box = None
+    menu_labels = gm_get_menu_items_tree()
+    # Fail-safe for if no gm_menu labels are present...
+    if not len(menu_labels):
+        jump gm_test_restart_button
+    sorted_menu_labels = sorted(list(menu_labels.values()), key=lambda item: item.get_inventory_value("priority", 100))
+
+    # This is the actual list box section
+    with gui_sub_section():
+        gui_row()
+        with gui_sub_section(f"col-width: {GAMEMASTER_CONSOLE_ICON_SIZE}px"):
+        # with gui_sub_section():
+            main_menu_list_box = gui_list_box(sorted_menu_labels, "", item_template=gm_build_menu_icons, select=True)
+            main_menu_list_box.value = sorted_menu_labels[0]
+
+    # Now we set up the contents section.
+    # We need to build sub sections for each menu, but hide all but the current one.
+    contents = gui_section(f"area: {GAMEMASTER_CONSOLE_ICON_SIZE}px, 40px,{info_panel_width}, 100; background-color: #203d5a47;")
+
+    content_panels = list()
+
+    # This is a dictionary that lets us figure out which panel to present based on which button is pressed.
+    menu_panel = None
+
+    # gss = gui_sub_section(f"background-color: #3139af;")
+
+    for m in sorted_menu_labels:
+
+        m_type = m.get_inventory_value("type")
+        subs = gm_get_menu_items_tree(m_type)
+
+        if len(subs) == 1:
+            # No submenus, so run the current menu label.
+            gss_row = gui_row()
+            gss = gui_sub_section()
+            with gss:
+                data = m.inventory.collections
+                if m.get_inventory_value("display_text") is None:
+                    data["display_text"] = m.name
+                await gui_sub_task_schedule(m,data)
+            if menu_panel is not None:
+                gss_row.show(False)
+            else:
+                menu_panel = gss_row
+            content_panels.append(gss_row)
+            continue
+
+
+        # This is the whole menu area if there's submenus
+        gss_row = gui_row()
+        gss = gui_sub_section()
+        with gss:
+
+            # Now we handle submenus.
+            # First we will make a new sub section to handle the tabs.
+            tab_row = gui_row(f"row-height: {GAMEMASTER_CONSOLE_ICON_SIZE}px;")
+            # tab_section = gui_sub_section()
+            sorted_subs = sorted(list(subs.values()), key=lambda item: item.get_inventory_value("priority", 1000))
+
+            # Build the submenu buttons
+            buttons = list()
+            sub_menu_sections = list()
+            selected_submenu_index = GM_SIDEBAR_SELECTED_SUBMENU_INDEX.get(m_type, 0)
+            if selected_submenu_index < 0 or selected_submenu_index >= len(sorted_subs):
+                selected_submenu_index = 0
+
+            for sub_index, sub in enumerate(sorted_subs):
+                icon = sub.get_inventory_value("icon_index")
+                if icon is None:
+                    icon = 0
+                icon_color = sub.get_inventory_value("icon_color")
+                if icon_color is None:
+                    icon_color = "#404ad8"
+                if isinstance(icon, int) or icon.isdigit():
+                    button = gui_icon_button(f"icon_index: {icon};color: {icon_color};", "color: #01234567; col-width: square;", data={"menu_type": m_type, "submenu_index": sub_index}, on_press="gm_sidebar_select_submenu")
+                else:
+                    button = gui_button(f"$text: {icon}; color: {icon_color};", " col-width: content;", data={"menu_type": m_type, "submenu_index": sub_index}, on_press="gm_sidebar_select_submenu")
+                buttons.append(button)
+
+            for sub_index, sub in enumerate(sorted_subs):
+                # Now we build the section for the actual contents.
+                sub_section_row = gui_row()
+                content_section = gui_sub_section()
+                with content_section:
+                    # and we build the contents here by runnning the label.
+                    data = sub.inventory.collections
+                    await gui_sub_task_schedule(sub,data)
+
+                # Now we handle showing/hiding the applicable rows (the row contains the sub section, which contains the layout)
+                if sub_index == selected_submenu_index:
+                    gui_show(sub_section_row)
+                else:
+                    gui_hide(sub_section_row)
+                sub_menu_sections.append(sub_section_row)
+
+            GM_SIDEBAR_SUBMENU_PANELS[m_type] = sub_menu_sections
+            GM_SIDEBAR_SELECTED_SUBMENU_INDEX[m_type] = selected_submenu_index
+        if menu_panel is not None:
+            gss_row.show(False)
+        else:
+            menu_panel = gss_row
+        content_panels.append(gss_row)
+
+    # menu.cur is the NOT the index of the menu
+    on change main_menu_list_box.value:
+        index = sorted_menu_labels.index(main_menu_list_box.value)
+        p = content_panels[index]
+        if p is not None:
+            p.show(True)
+            menu_panel.show(False)
+            menu_panel = p
+
+        gui_represent(contents)
+
+# --- gm_test_restart_button
+#     with gui_section("area:80,90,95,95;"):
+#         b = gui_button("restart")
+#         on gui_message(b):
+#             sbs.run_next_mission("LegendaryMissionsDev")
+
+--- gm_map_widget
+    with gui_section(f"area: 0, 0, 95,95;"):
+        gui_layout_widget("science_2d_view")
+    with gui_section(f"area: 95, 0, 100, 95;"):
+        gui_layout_widget("radar_zoom_ctrl")
+
+--- gm_nav_area_slider
+    with gui_section(f"area:{info_panel_width},95,100,100;"):
+        cur = get_inventory_value(cambot, f"GAMEMASTER_lmb_SIZE", 5000)
+        s = gui_slider("low: 2000; high: 50000;", var="GM_NAV_AREA_SLIDER")
+        s.value = cur
+        on change s.value:
+            cambot = sbs.get_ship_of_client(client_id)
+            cur = get_inventory_value(cambot, f"GAMEMASTER_lmb_SIZE", 5000)
+            delta=1
+            set_inventory_value(cambot, "GAMEMASTER_lmb_SIZE", s.value)
+            pos = gamemaster_get_pos(cambot, "lmb")
+            gamemaster_show_nav_area(cambot, pos, delta, "Game Master", "lmb", "#040")
+
+--- gm_finalize_gui
+    # Can add temp code here for testing purposes
+    await gui()
+
+--- gm_sidebar_select_submenu
+    default menu_type = ""
+    default submenu_index = 0
+    if __ITEM__ is not None:
+        menu_type = __ITEM__.data.get("menu_type", "")
+        submenu_index = __ITEM__.data.get("submenu_index", 0)
+
+    panels = GM_SIDEBAR_SUBMENU_PANELS.get(menu_type)
+    if panels is not None and len(panels) > 0:
+        current_index = GM_SIDEBAR_SELECTED_SUBMENU_INDEX.get(menu_type, 0)
+        if current_index >= 0 and current_index < len(panels):
+            gui_hide(panels[current_index])
+        if submenu_index >= 0 and submenu_index < len(panels):
+            gui_show(panels[submenu_index])
+            GM_SIDEBAR_SELECTED_SUBMENU_INDEX[menu_type] = submenu_index
+    ->END
+
+
+--- gui_setup
+    print("THIS SHOULD NEVER RUN!!!!!")
     #comms_navigate("//comms/gamemaster")
     # Whole screen
     # Putting the 2d view across the entire screen
@@ -106,10 +288,7 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     section = gui_section(style="area:0,45px,100,100;")
     # Left
     
-    widget_list = "3dview^science_data^comms_waterfall^comms_control"
-    # if not GAMEMASTER_CONSOLE_BETA:
-    #     widget_list += "^comms_control"
-    gui_update_widgets(widget_list,"")
+
     #region Left Side
 
     # Just testing listboxe
@@ -257,7 +436,12 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
         ~~ gui_info_panel_add("gamemaster_camera", 13, 
             gamemaster_panel_camera_show, 
             gamemaster_panel_camera_hide, var=GM_RIGHT) ~~
-        gui_info_panel_add("game_stats", 15, show=show_gm_stats, hide=hide_gm_stats, var=GM_RIGHT)
+        ship_id = sbs.get_ship_of_client(client_id)
+        ~~ gui_info_panel_add("game_stats", 15, 
+            show_gm_stats, 
+            hide_gm_stats, 
+            update_gm_stats,#(ship_id,0,0,0,0),
+            var=GM_RIGHT) ~~
         ~~ gui_info_panel_add("comms_waterfall", 112, 
             lambda cid, left, top, width, height: gui_panel_widget_show(cid, left, top, width, height, "comms_waterfall"), 
             lambda cid, left, top, width, height: gui_panel_widget_hide(cid, left, top, width, height, "comms_waterfall"),
@@ -270,8 +454,8 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
         default follow_tag = False
         gui_checkbox("Follow","col-width:90px;", var="follow_tag")
         on change follow_tag:
-            ship = sbs.get_ship_of_client(client_id)
-            _sel = get_science_selection(ship)
+            cambot = sbs.get_ship_of_client(client_id)
+            _sel = get_science_selection(cambot)
             set_inventory_value(client_id, "2d_follow", follow_tag)
             science_set_2dview_focus(client_id, _sel)
         gui_row()
@@ -361,241 +545,11 @@ default shared GAMEMASTER_CONSOLE_ICON_SIZE = GAMEMASTER_CONSOLE.get("menu_icon_
     #endregion
 
 
-    task_schedule(update_gm_stats)
+    # task_schedule(update_gm_stats)
     await gui()
 
 
 
---- gamemaster_side_relations
-    # print("Getting mast labels")
-    # labels = role("__MAST_LABEL__") #should get all mast labels
-    # for l in labels:
-    #     l = to_object(l)
-    #     if l.name.startswith("__route__signal"):
-    #         print(l.name)
-    default_side = side
-
-    print("--------------------gamemaster_side_relations------------------------")
-    print("{default_side}")
-    side_ids = sides_set()
-    side_names = set()
-    for s in side_ids:
-        side_names.add(side_display_name(s))
-    sides = sorted(list(side_names))
-    relations = list(("Allies", "Neutral", "Enemies"))
-    relations_value = list((sbs.DIPLOMACY.ALLIED, sbs.DIPLOMACY.NEUTRAL, sbs.DIPLOMACY.HOSTILE, sbs.DIPLOMACY.UNKNOWN))
-    # Left, Top, Right, Bottom
-    gui_region("area: 10,5,90,15")
-    gui_row()
-
-    #region Top Side Stuff
-    with gui_sub_section("row-height: 50px; col-width: 20;"):
-        # gui_row()
-        with gui_sub_section("col-width: 5em;"):
-            gui_text("Select Side: ")
-        with gui_sub_section("col-width: 8em;"):
-            side_list = ",".join(sides)
-            name = side_display_name(default_side)
-            selected_side = gui_drop_down("$text:{name};list:{side_list}")
-            selected_side.value = default_side
-        gui_blank()
-        with gui_sub_section("col-width: 5em;"):
-            gui_text("New Side: ")
-        with gui_sub_section("col-width: 8em;"):
-            new_side = gui_input("desc: Side Name")
-        with gui_sub_section("col-width: 5em;"):
-            create = gui_button("Create Side")
-            on gui_message(create):
-                print("New side created")
-                prefab_spawn(prefab_side_generic, data={"name":new_side.value, "key":new_side.value.lower()})
-                print(side_keys_set())
-                side = new_side.value
-                jump gamemaster_side_relations
-    gui_row("col-width: 1.5em;")
-    gui_text("  ")
-    # gui_row()
-    #endregion
-    region = gui_region("area: 5,20,20,90;")
-
-    #region Side Info, Left Panel
-    with gui_sub_section():
-        gui_row("row-height: 2em;")
-        gui_text("Side Info")
-        gui_spacer_row()
-        side = to_side_id(selected_side.value)
-        gui_row("row-height: 2em;")
-        SIDE_NAME = side_display_name(side)
-        side_name = gui_input("$text:{gui_text_escape(SIDE_NAME)}; desc: Name")
-        gui_spacer_row()
-        gui_row("row-height: 2em;")
-        SIDE_KEY = get_inventory_value(side, "side_key")
-        side_key = gui_input("$text:{gui_text_escape(SIDE_KEY)}; desc: Key")
-        gui_spacer_row()
-        gui_row("row-height: 4em;")
-        SIDE_DESC = get_inventory_value(side, "side_desc")
-        side_desc = gui_input("$text:{gui_text_escape(SIDE_DESC)}; desc: Description")
-        # TODO: Add functionality to add/remove races. Probably need a race prefab
-        gui_row("row-height: 0.8em;")
-        gui_text(" ")
-        gui_row("row-height: 2em;")
-        update = gui_button("Update Side")
-        on gui_message(update):
-            
-            if get_inventory_value(side, "side_name") != side_name.value:
-                set_inventory_value(side, "side_name", side_name.value)
-            if get_inventory_value(side, "side_key") != side_key.value:
-                old_key = get_inventory_value(side, "side_key")
-                # Update all members of the side
-                side_members = side_members_set(side)
-                add_role(side_members, side_key.value)
-                remove_role(side_members, old_key)
-                for m in side_members:
-                    mo = to_object(m)
-                    mo.side = side_key.value # Here we assume that the object is a spaceobject.
-                set_inventory_value(side, "side_key", side_key.value)
-            if get_inventory_value(side, "side_desc") != side_desc.value:
-                set_inventory_value(side, "side_desc", side_desc.value)
-            side = side_display_name(side)
-            jump gamemaster_side_relations
-    #endregion
-    region = gui_region("area: 25,20,90,90; ")
-    #region Build the Relations Central Section
-    with gui_sub_section():
-        buttons = list()
-        for s in range(len(sides)):
-            print(f"Side: {sides[s]}")
-            default_side = side_display_name(default_side)
-            print(f"Default: {default_side}")
-            if sides[s] == default_side:
-                continue
-            gui_row("row-height: 0.2em;")
-            gui_text(" ")
-            gui_row()
-            name = side_display_name(sides[s])
-            gui_text(f"{name}")
-            side1 = sides[s]
-            side2 = selected_side.value
-            actual_relations = side_get_relations(side1, side2)
-            # print("{actual_relations}")
-            for x in range(len(relations)):
-                
-                rel = relations_value[x]
-                relation = relations[x]
-                style = None
-                if rel == actual_relations:
-                    style = "color:#40ff00"
-                button = gui_button(f"{relation}", style, data={"side1": side1, "side2": side2, "rel": rel}, on_press="update_side")
-    #endregion
-
-    set_inventory_value(client_id, "gm_side_relations_button_list", buttons)
-    on change selected_side.value:
-        side = selected_side.value
-        jump gamemaster_side_relations
-    # Add back button
-    with gui_section("area: 90,95,100,100"):
-        back = gui_button("Back")
-        on gui_message(back):
-            print("Back buttom pressed")
-            jump full_console
-    await gui()
-    ->END
---- update_side
-    # __ITEM__ is the button object
-    side1 = __ITEM__.data["side1"]
-    side2 = __ITEM__.data["side2"]
-    rel = __ITEM__.data["rel"]
-    print(f"{side2}")
-    old = side_get_relations(side1, side2)
-    print(f"{old}")
-    side_set_relations(side1,side2,rel)
-    rel = side_get_relations(side1,side2)
-    print(f"{rel}")
-    jump gamemaster_side_relations
-
-
-== gm_build_spawn_menu
-    items = []
-    gui_list_box(items)
-
-
-== gm_spawn_ship
-metadata: ```
-buttons: 
-```
-    print(f"Spawning Ship: Nothing yet")
-    # gui_button("Hello 1")
-    # gui_button("Hello 2")
-    if buttons is None:
-        print(f"Buttons is None")
-        yield fail
-    print(f"buttons: {buttons}")
-    signal_emit("update_glb",{"update_contents":["hi","this","is","amazingly","working"]})
-    # for b in buttons:
-    #     gui_button(b)
-    #     gui_row()
-    # buildButtons("Test", buttons)
-
-
-
-=== test_buttons
-    comms_broadcast(0, "BUTTON PRESSED!")
-    ->END
-
-==== update_gm_stats
-    jump END
-
-    # await delay_sim(seconds=10)
-
-    # gm_side = get_inventory_value(client_id, "gamemaster_cur_side",None)
-    # if gm_side is None:
-    #     player = role("__player__").pop()
-    #     side = to_side_id(player)
-    #     gm_side = get_inventory_value(side, "side_key", "tsn")
-    #     set_inventory_value(client_id, "gamemaster_cur_side", gm_side)
-    # # print(f"{gm_side}")
-    # r = side_enemy_members_set(gm_side)
-    # count=len(r)
-    # gui_update_shared("sh_raider_count", f"$text:{count};justify:left;font:gui-3;")
-
-    # if is_timer_set(SHARED, "time_limit") and get_inventory_value(client_id, "gm_show_stats", False):
-    #     t = format_time_remaining(SHARED, "time_limit")
-    #     gui_update_shared("sh_game_time",f"$text: {t};justify:left;font:gui-3;")
-
-
-    # jump update_gm_stats
-
-//spawn if has_role(SPAWNED_ID, "ship")
-    to_update = get_inventory_value(client_id, "gm_counts_list", None)
-    if to_update is not None:
-        # TODO: Finish this - need to change this to use a listbox I think
-        print("updating - to do")
-        
-
-#region GameMaster Ship Details Info Panel Stuff
-
-
-=== GM_Button_Pressed
-    # Should have these variables available:
-    # parent_category, item
-    # comms_broadcast(0, "GM Button Pressed")
-    print("GM BUtton pressed")
-    # comms_broadcast(0, f"{item}")
-    default menu = get_inventory_value(client_id, "gm_menu")
-    # comms_broadcast(0, f"{menu}")
-    ->END
-
-=== GM_Side_Selection
-    comms_broadcast(0, "GM Side Selection")
-    # comms_broadcast(0, f"{name}")
-    default menu = get_inventory_value(client_id, "gm_menu")
-    # comms_broadcast(0, f"{menu}")
-    ->END
-
-#endregion
-
-=== gm_time_setup
-    
-    ->END
 
 ==== gamemaster_move_camera_sync
     await delay_sim(3)
@@ -664,13 +618,25 @@ ship: None
         pos = Vec3(EVENT.source_point)
         if SCIENCE_SELECTED_ID!=0:
             pos = Vec3(SCIENCE_SELECTED.pos)
+        pos.y -= 1
+        # This is probably the cause of #403
         SCIENCE_ORIGIN.pos = pos
         comms_id = SCIENCE_SELECTED_ID
         if comms_id==0:
             comms_id = SCIENCE_ORIGIN_ID
-        gui_set_variable("gm_selection", SCIENCE_SELECTED_ID)
-        set_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
+
         gamemaster_show_nav_area(SCIENCE_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
+
+        # We use this here because "gm_selection" CAN be None, while "gamemaster_prev_selection" should be the last selected object.
+        gui_set_variable("gm_selection", SCIENCE_SELECTED_ID)
+
+        obj = to_object(SCIENCE_SELECTED_ID)
+        if obj is None:
+            jump END
+        if has_role(SCIENCE_SELECTED_ID, "gamemaster"):
+            ->END
+        
+        set_inventory_value(SCIENCE_ORIGIN_ID, "gamemaster_prev_selection", SCIENCE_SELECTED_ID)
         
         prev_comms = get_comms_selection(SCIENCE_ORIGIN_ID)
         set_comms_selection(SCIENCE_ORIGIN_ID, comms_id)
@@ -681,6 +647,7 @@ ship: None
     set_science_selection(COMMS_ORIGIN_ID, COMMS_SELECTED_ID)
     if COMMS_SELECTED_ID!=0:
         pos = Vec3(COMMS_SELECTED.pos)
+        pos.y -= 1
         gamemaster_show_nav_area(COMMS_ORIGIN_ID, pos, 0, "Game Master", "lmb", "#040")
         set_inventory_value(COMMS_ORIGIN_ID, "gamemaster_prev_selection", COMMS_SELECTED_ID)
 
@@ -701,4 +668,167 @@ ship: None
     gms = role("gamemaster")
     for g in gms:
         link(g,"extra_scan_source" ,to_set(SPAWNED_ID))
+
+
+    ->END
+
+#region Game Master Menus
+
+# NOTE: For gm menu priorities, main menu priority should be less than 100, sub menu priority should be 100 or greater.
+# This will prevent (admittedly minor) issues with the order of the main menu's default contents if it has submenus toos.
+
+
+
+
+
+
+
+
+=== gm_old_comms_menu
+metadata: ```
+type: gm_menu/old_comms_control
+icon_index: 57
+priority: 98
+```
+    gui_row("padding: 10px,0,0,0;")
+    gui_layout_widget("comms_control")
+    yield success
+
+=== gm_old_comms_selection
+metadata: ```
+type: gm_menu/old_comms_selection
+icon_index: 34
+priority: 97
+```
+    gui_row("padding: 10px,0,0,0;")
+    gui_layout_widget("comms_sorted_list")
+    yield success
+
+=== gm_science
+metadata: ```
+type: gm_menu/science
+icon_index: 88
+priority: 96
+# ```
+#     gui_row()
+#     gui_text("TODO - science stuff here")
+
+# === gm_old_science
+# metadata: ```
+# type: gm_menu/science/old_science_selection
+# icon_index: 0
+# priority: 500
+```
+    gui_row("row-height: 60px;")
+    gui_layout_widget("science_data_tabs")
+    gui_row()
+    gui_layout_widget("science_data")
+    gui_row()
+
+    # gui_layout_widget("science_data_freq")
+    # gui_row()
+    gui_layout_widget("science_sorted_list")
+    yield success
+
+=== gm_settings
+metadata: ```
+type: gm_menu/settings
+icon_index: 0
+priority: 99
+```
+    gui_row()
+    sec = gui_sub_section()
+    t = None
+    remaining = None
+    with sec:
+        gui_row("row-height: 2em; background: #1234566b;")
+        timer = get_counter_elapsed_seconds(0, "Mission_Elapsed_Time")
+        if timer is None:
+            print("Counter is NONE")
+        # test_gui_text_escape = gui_text_escape("{format_time(timer)}")
+        elapsed_time_format = "hh:mm:ss"
+        test_gui_text_escape = format_counter_elapsed_seconds(0, "Mission_Elapsed_Time", elapsed_time_format)
+        elapsed_time = gui_text("$text:Mission Elapsed Time:; justify: left;")
+        t = gui_text(f"$text:{test_gui_text_escape};justify: right;")
+        on change int(get_counter_elapsed_seconds(0, "Mission_Elapsed_Time")):
+            timer = get_counter_elapsed_seconds(0, "Mission_Elapsed_Time")
+            # test_gui_text_escape = gui_text_escape("{format_time(timer)}")
+            test_gui_text_escape = format_counter_elapsed_seconds(0, "Mission_Elapsed_Time", elapsed_time_format)
+            t.update(f"$text:{test_gui_text_escape};justify: right;")
+        gui_row("row-height: 2em;")
+        time_remaining_sub_section = gui_sub_section()
+        # if is_timer_set(SHARED, "time_limit"):
+        with time_remaining_sub_section:
+            time = format_time_remaining(SHARED, "time_limit")
+            gui_row("row-height: 2em; background: #1234566b;")
+            gui_text("$text: Time Remaining:; justify: left;")
+            remaining = gui_text(f"$text:{time};justify: right;")
+            on change get_time_remaining(SHARED, "time_limit"):
+                time = format_time_remaining(SHARED, "time_limit")
+                remaining.update(f"$text:{time};justify: right;")
+            gui_row("row-height: 2em;")
+            m1 = gui_button(f"$text:-1 min", data={"minutes":-1})
+            p1 = gui_button(f"$text:+1 min", data={"minutes":1})
+            gui_row("row-height: 2em;")
+            m5 = gui_button(f"$text:-5 min", data={"minutes":-5})
+            p5 = gui_button(f"$text:+5 min", data={"minutes":5})
+
+            gui_message(m1, gm_add_remaining_time)
+            gui_message(p1, gm_add_remaining_time)
+            gui_message(m5, gm_add_remaining_time)
+            gui_message(p5, gm_add_remaining_time)
+
+        # Spacer row
+        gui_row("row-height: 2em;")
+        gui_blank()
+
+        # Allow GM to enforce a time limit
+        gui_row("row-height: 1em;")
+        gui_text("$text:Set Time Limit: ;","col-width: content;")
+        time = gui_input("msg: Time Limit;", "", var="gm_set_time_limit")
+        gui_row("row-height: 1em;")
+        limit = gui_button("Time limit")
+        on gui_message(limit):
+            time_limit = gui_get_variable("gm_set_time_limit", 30)
+            if isinstance(time_limit, str):
+                time_limit = int(time_limit)
+            set_timer(SHARED, "time_limit", minutes=time_limit)
+            gui_show(time_remaining_sub_section)
+
+        gui_row("row-height: 1em;")
+        rtl = gui_button("Remove Time Limit")
+        on gui_message(rtl):
+            clear_timer(SHARED, "time_limit")
+            gui_hide(time_remaining_sub_section)
+        gui_row("row-height: 1em;")
+        eb = gui_button(" End Game","background-color:red;")
+        on gui_message(eb):
+            # clear_timer(SHARED, "time_limit")
+            # jump task_end_game
+            START_TEXT = "Mission time has run out!"
+            GAME_STARTED = False
+            GAME_ENDED = True
+            music_play_sting("victory")
+            signal_emit("show_game_results", None)
+
+
+        # task_schedule(gm_elapsed_time_update, data={"t": t, "sec": sec, "remaining":remaining})
+    yield success
+
+=== gm_add_remaining_time
+" Executes the gm add/remove remaining time functionality.
+    if __ITEM__ is None:
+        ->END
+    minutes = __ITEM__.data.get("minutes",0)
+    seconds = __ITEM__.data.get("seconds",0)
+    timer_add_time(SHARED, "time_limit", seconds, minutes)
+    ->END
+
+#endregion
+
+
+//shared/signal/game_started
+    start_counter(0, "Mission_Elapsed_Time")
+    set_interval(0, "gui_update_interval", "gui_update_interval_signal", 0.2) # One interval triggers all gm udpates
+    
 

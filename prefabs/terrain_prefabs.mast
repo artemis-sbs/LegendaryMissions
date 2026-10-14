@@ -1,6 +1,7 @@
 === prefab_terrain_asteroid_box
 metadata: ``` yaml
-display_text: Asteroid box
+type: prefab/terrain/asteroid/box
+display_text: Asteroid Box
 ```
     default density_scale = terrain_to_value(TERRAIN_SELECT)
     default selectable = False
@@ -10,7 +11,8 @@ display_text: Asteroid box
 
 === prefab_terrain_asteroid_polyline
 metadata: ``` yaml
-display_text: Asteroid sphere
+type: prefab/terrain/asteroid/polyline
+display_text: Asteroid Polyline
 density_scale: 1
 ```
     default points = [] # defines if it doesn't exist
@@ -24,7 +26,8 @@ density_scale: 1
 
 === prefab_terrain_asteroid_sphere
 metadata: ``` yaml
-display_text: Asteroid sphere
+type: prefab/terrain/asteroid/sphere
+display_text: Asteroid Sphere
 ```
     default density_scale =  terrain_to_value(TERRAIN_SELECT)
     terrain_spawn_asteroid_sphere(START_X, START_Y, START_Z, SIZE_X//2, density_scale=density_scale )
@@ -34,7 +37,8 @@ display_text: Asteroid sphere
 
 === prefab_terrain_nebula_box
 metadata: ``` yaml
-display_text: Nebula box
+type: prefab/terrain/nebula/box
+display_text: Nebula Box
 ```
     default cluster_color = None
     default density_scale = terrain_to_value(TERRAIN_SELECT)
@@ -46,7 +50,8 @@ display_text: Nebula box
 
 === prefab_terrain_nebula_sphere
 metadata: ``` yaml
-display_text: Nebula sphere
+type: prefab/terrain/nebula/sphere
+display_text: Nebula Sphere
 ```
     default cluster_color = None
     default density_scale  = terrain_to_value(TERRAIN_SELECT)
@@ -59,10 +64,14 @@ display_text: Nebula sphere
 
 === prefab_planetoid
 metadata: ``` yaml
-display_text: Nebula sphere
+type: prefab/terrain/planet/planetoid
+display_text: Planetoid
+planet_radius: 4000
 ```
-    co = terrain_spawn(START_X, START_Y, START_Z, None, "#,gasgiant", "planet", "behav_planet")
-    co.engine_object.exclusion_radius = 400
+    default name = ""
+    co = terrain_spawn(START_X, START_Y, START_Z, name, "#,gasgiant", "planet", "behav_planet")
+    # co.engine_object.exclusion_radius = 400
+    co.engine_object.exclusion_radius = planet_radius * 2.0
 
 
     cur_tick = sim.time_tick_counter
@@ -94,13 +103,14 @@ display_text: Nebula sphere
 
 === prefab_gas_giant
 metadata: ``` yaml
-display_text: Gas giant (dockable)
+type: prefab/terrain/planet/gas_giant
+display_text: Gas Giant (Dockable)
 planet_radius: 4000
 ```
     # A gas giant big enough to orbit, and marked as something a ship may dock with.
     # prefab_planetoid stays scenery: adding the role there would quietly make every
     # planetoid in every existing map dockable.
-    default name = None
+    default name = ""
     default SIZE_X = 0
     default planet_radius = 4000
     # The map editor hands a placed prefab its box size; a scripted spawn usually does not.
@@ -139,7 +149,7 @@ planet_radius: 4000
 
 ==== prefab_black_hole
 metadata: ```
-type: prefab/black_hole
+type: prefab/terrain/black_hole
 display_text: Black Hole
 ``` 
     default gravity_radius = 5000

@@ -1,0 +1,696 @@
+//gui/normal_gamemaster
+    # This shoudn't actually do anything. It's mostly here to prevent `gm_menu_spawn` from running immediately on startup without being attached to a gui.
+    ->END
+
+=== gm_menu_selected
+metadata: ``` yaml
+type: gm_menu/selected
+icon_index: 118
+icon_color: "#00ffd5"
+priority: 10 # Smaller number is higher priority
+```
+    # gui_row("row-height: 1.6em;")
+    # gui_text("$text:Selected Object Details;font:gui-2;justify:left;")
+    gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+
+    # Keeping this section as a reference for now, since it has the right data, it's just formatted terribly.
+    # deets = gm_selected_object_details(gm)
+    # gui_row()
+    # deets_area = gui_text_area(deets)
+    # on change get_inventory_value(gm, "gamemaster_prev_selection"):
+    #     deets = gm_selected_object_details(gm)
+    #     deets_area.update(deets)
+    # yield success
+    # The handler owns every details widget and fills them in refresh().
+    handler = gm_selection_details_build(gm)
+    section_row_height = "row-height: content;"
+    gauge_row_height = "row-height: 1.3em;"
+
+    gui_row("row-height: 200;") # Here we trick the layout to overflow to prevent it from squeezing. This is not as preferable as having a dedicated "scroll area", but it does the job I guess. For now.
+    with gui_sub_section() as selected_gss:
+        # --- General (always shown) ---
+        gui_row("row-height: 1.5em;")
+        gui_text("$text:Selected Object: ;","col-width: content; justify: left;")
+        gui_blank()
+        handler.add_text("name", gui_text("$text:Select an object in science or weapons to view details.;font:gui-2;","col-width: content; justify: right;"))
+        gen_hdr_row = gui_row("row-height: 1.3em;")
+        gen_header = gui_text("$text:General  ;font:gui-1;color:#0fc;", "click_background:#0fc2;click_text:;")
+        general_body = gui_row(section_row_height)
+        with gui_sub_section():
+            gui_row("row-height: 1.2em;")
+            handler.add_text("id", gui_text("$text:ID: -;"))
+            gui_row("row-height: 1.2em;")
+            handler.add_text("type", gui_text("$text:Type: -;"))
+            gui_row("row-height: 1.2em;")
+            handler.add_text("origin", gui_text("$text:Origin: -;"))
+            gui_row("row-height: 1.2em;")
+            handler.add_text("side", gui_text("$text:Side: -;"))
+            # gui_row("row-height: 3.2em;")
+            # handler.add_text("roles", gui_text("$text:Roles: -;"))
+            gui_row("row-height: 1.2em;")
+            gui_text(" ")
+        general = handler.add_section("general", gen_hdr_row, general_body)
+        gen_header.data = {"section": general, "parent": selected_gss}
+        gui_message(gen_header, "gm_toggle_detail_section")
+
+        # --- Defense: shields, armor, hull ---
+        def_hdr_row = gui_row("row-height: 1.3em;")
+        def_header = gui_text("$text:Defense  ;font:gui-1;color:#0fc;", "click_background:#0fc2;click_text:;")
+        defense_body = gui_row(section_row_height)
+        defense_body_ss = gui_sub_section()
+        with defense_body_ss:
+            for i in range(4):
+                gui_row(gauge_row_height)
+                shield_gauge = gui_gauge(0, 1, "", show="frac")
+                handler.add_gauge("shield", shield_gauge)
+
+            # gui_row(gauge_row_height)
+            # handler.add_gauge("hull", gui_gauge(0, 1, "Hull", show="frac"))
+            gui_row(gauge_row_height)
+            gui_text(" ")
+
+        defense = handler.add_section("defense", def_hdr_row, defense_body)
+        def_header.data = {"section": defense, "parent": selected_gss}
+        gui_message(def_header, "gm_toggle_detail_section")
+
+        # --- Systems (player ships): bar shows the health left in each system ---
+        sys_hdr_row = gui_row("row-height: 1.3em;")
+        sys_header = gui_text("$text:Hull and Systems  ;font:gui-1;color:#0fc;", "click_background:#0fc2; click_text:;")
+        systems_body = gui_row(section_row_height)
+        with gui_sub_section():
+            gui_row(f"border-color: #123456;border:1px,1px,1px,1px;background: #203d5aa0;{gauge_row_height};")
+            handler.add_gauge("hull", gui_gauge(0, 1, "Hull", show="frac"))
+            for i in range(8):
+                gui_row(gauge_row_height)
+                handler.add_gauge("system", gui_gauge(0, 1, "", show="frac"))
+
+
+            gui_row(gauge_row_height)
+            gui_text(" ")
+        
+        systems = handler.add_section("systems", sys_hdr_row, systems_body)
+        sys_header.data = {"section": systems, "parent": selected_gss}
+        gui_message(sys_header, "gm_toggle_detail_section")
+
+        # --- Fleet (NPC ships) ---
+        fleet_hdr_row = gui_row("row-height: 1.3em;")
+        fleet_header = gui_text("$text:Fleet  ;font:gui-1;color:#0fc;", "click_background:#0fc2;click_text:;")
+        fleet_body = gui_row(section_row_height)
+        with gui_sub_section():
+            gui_row("row-height: 1.2em;")
+            handler.add_text("fleet", gui_text("$text:Fleet: none;"))
+            gui_row("row-height: 1.2em;")
+            handler.add_text("flagship", gui_text("$text:Flagship: none;"))
+            gui_row("row-height: 1.2em;")
+            gui_text(" ")
+        fleet = handler.add_section("fleet", fleet_hdr_row, fleet_body)
+        fleet_header.data = {"section": fleet, "parent": selected_gss}
+        gui_message(fleet_header, "gm_toggle_detail_section")
+        gui_row("row-height:1px;")
+        # --- Abilities and upgrades ---
+        extras_hdr_row = gui_row("row-height: 1.3em;")
+        extras_header = gui_text("$text:Abilities and Upgrades  ;font:gui-1;color:#0fc;", "click_background:#0fc2;click_text:;")
+        extras_body = gui_row(section_row_height)
+        with gui_sub_section():
+            gui_row("row-height: 2.4em;")
+            handler.add_text("abilities", gui_text("$text:Abilities: n/a;"))
+            gui_row("row-height: 2.4em;")
+            handler.add_text("upgrades", gui_text("$text:Upgrades: n/a;"))
+            gui_row("row-height: 1.2em;")
+            gui_text(" ")
+        extras = handler.add_section("extras", extras_hdr_row, extras_body)
+        extras_header.data = {"section": extras, "parent": selected_gss}
+        gui_message(extras_header, "gm_toggle_detail_section")
+
+        handler.refresh_data()
+        gui_set_variable("gm_details_handler", handler)
+
+    # Refresh right away on a new selection; the sub task keeps values live every second.
+    on change get_inventory_value(gm, "gamemaster_prev_selection"):
+        # Handler locals can be shadowed by widgets, so re-fetch the handler.
+        gui_get_variable("gm_details_handler").refresh_data()
+    
+    # gui_sub_task_schedule(gm_selected_details_update)
+    # set_interval(client_id, "gm_details_handler_update", "gm_details_handler_update_signal", 1)
+    # on signal gui_update_interval_signal:
+    #     print("refresh signal triggered")
+    #     gui_get_variable("gm_details_handler").refresh_data()
+    
+    yield success
+
+# === gm_selected_details_update
+#     print("start delay")
+#     await delay_sim(1)
+
+//shared/signal/gui_update_interval_signal
+    gms = role("gamemaster")
+
+    clients = sbs.get_client_ID_list()
+
+    # We iterate over all the clients, find any who are on a ship with the "gamemaster" role, and get the gui task for that client. Once we have the gui task, we get the details handler and call refresh_data().
+    for c in clients:
+        if sbs.get_ship_of_client(c) in gms:
+            client_id = c
+            task = gui_task_for_client(client_id)
+            if task is not None:
+                gm_dh = task.get_inventory_value("gm_details_handler")
+                if gm_dh is not None:
+                    gm_dh.refresh_data()
+    ->END
+
+=== gm_toggle_detail_section
+" Collapse or expand a section of the selected-object details.
+    default __ITEM__ = None
+    yield fail if __ITEM__ is None
+    section = __ITEM__.data.get("section")
+    yield fail if section is None
+    section.toggle()
+    parent = __ITEM__.data.get("parent")
+    if parent is not None:
+        gui_represent(parent)
+    yield success
+
+#region Selected ship - Beams
+# TODO: Get beam management working
+# === gm_selected_beams
+# metadata: ``` yaml
+# type: gm_menu/selected/beams
+# icon_index: 117
+# priority: 120
+# ```
+#     print("Beams selected")
+#     gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+#     selected = get_inventory_value(gm, "gamemaster_prev_selection")
+#     beams = gm_get_beam_data_for(selected)
+#     print(f"Beams: {len(beams)}")
+
+#     beam_list_box = gui_list_box(beams, "", gm_list_box_beam_info)
+#     gui_sub_task_schedule(gm_selected_beams_update, data={"gm":gm, "lb_gm_sel_beams_update":beam_list_box})
+#     yield success
+
+=== gm_selected_beams_update
+metadata: ```
+gm:
+lb:
+```
+    yield fail if gm is None
+    yield fail if lb_gm_sel_beams_update is None
+    # gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+    selected = get_inventory_value(gm, "gamemaster_prev_selection")
+    beams = gm_get_beam_data_for(selected)
+    lb_gm_sel_beams_update.items = beams
+    on change get_inventory_value(gm, "gamemaster_prev_selection"):
+        selected = get_inventory_value(gm, "gamemaster_prev_selection")
+        beams = gm_get_beam_data_for(selected)
+        lb_gm_sel_beams_update.items = beams
+    yield success
+
+
+=== gm_delete_beam_from_ship
+" Deletes the specified beam from the specified ship.
+" NOTE: NOT YET FUNCTIONAL
+    if __ITEM__ is None:
+        yield fail
+    item = __ITEM__.data.get("item")
+    if item:
+        index = item.get("index",None)
+        if index:
+            keys = get_beam_blob_keys()
+            # TODO: Figure out how to make this work.
+            # for key in keys:
+            #     set_data_set_value()
+    ->END
+#endregion
+
+#region Selected ship - Loadout
+# TODO: This isn't quite working right, so we'll not use it for now.
+#endregion
+# === gm_selected_loadout
+# metadata: ```
+# type: gm_menu/selected/loadout
+# icon_index: Loadout 
+# priority: 30
+# ```
+#     sec = gui_sub_section()
+#     gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+#     selected = get_inventory_value(gm, "gamemaster_prev_selection")
+#     torps = gm_torp_get_data_for(selected)
+#     with sec:
+#         lb_gm_sel_loadout = gui_list_box(torps,"",item_template=gm_list_box_loadout_info)
+
+#         on change get_inventory_value(gm, "gamemaster_prev_selection"):
+#             # if not sec.is_hidden:
+#             selected = get_inventory_value(gm, "gamemaster_prev_selection")
+#             torps = gm_torp_get_data_for(selected)
+#             lb_gm_sel_loadout.items = torps
+#             gui_represent(lb_gm_sel_loadout)
+#     yield success
+
+
+=== gm_show_all_torp_types
+" Build a layout with all possible torpedo types.
+" Allows the user to modify the torpedo types available to the selected ship.
+" Must be a player ship, a cargo ship, or station. NPC ships do not currently support torpedoes.
+" Cargo ships and stations can have torpedoes in inventory but cannot use them, but player ships can take them to use.
+
+    sec = gui_sub_section()
+    gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+    selected = get_inventory_value(gm, "gamemaster_prev_selection")
+
+    all_torps_list = []
+    current_torps_list = []
+
+    current_torps = None
+    available_torps = None
+    with sec:
+        gui_row("row-height: 1em;")
+        gui_text("Current")
+        gui_row()
+        current_torps = gui_list_box([],"")
+    
+    sec2 = gui_sub_section()
+    with sec2:
+        gui_row("row-height: 1em;")
+        gui_text("Available")
+        gui_row()
+        available_torps = gui_list_box([],"")
+    
+    on change current_torps.value:
+        all_torps_list.append(current_torps.value)
+        current_torps_list.remove(current_torps.value)
+        available_torps.items = all_torps_list
+        current_torps.items = current_torps_list
+        # TODO: Remove the torp type from the ship
+    
+    on change available_torps.value:
+        current_torps_list.append(available_torps.value)
+        all_torps_list.remove(available_torps.value)
+        available_torps.items = all_torps_list
+        current_torps.items = current_torps_list
+        # TODO: Add the torp type to the ship
+
+    on change get_inventory_value(gm, "gamemaster_prev_selection"):
+        available_torps = []
+        # TODO: Finish this
+
+
+    yield success
+
+
+
+# === gm_selected_loadout_update
+#     yield fail if lb is None
+#     yield fail if gm is None
+#     selected = get_inventory_value(gm, "gamemaster_prev_selection")
+#     torps = gm_torp_get_data_for(selected)
+#     lb.items = torps
+#     # gui_represent(lb)
+#     if once:
+#         yield success
+#     await delay_sim(1)
+#     jump gm_selected_loadout_update
+
+=== gm_add_or_remove_torp
+    print("Adding or removing torp")
+    if __ITEM__ is not None:
+        torp = __ITEM__.data.get("torp_item")
+        yield fail if torp is None
+        key = torp.get("key",0)
+        ship = torp.get("ship",None)
+        add = __ITEM__.data.get("add", True)
+        if ship is None:
+            yield fail
+        print("Item not none")
+        cur = get_data_set_value(ship, "{key}_NUM",0)
+        if add:
+            cur += 1
+            _max = get_data_set_value(ship, "{key}_MAX",0)
+            if cur > _max:
+                cur = _max
+        else:
+            cur -= 1
+            if cur < 0:
+                cur = 0
+        set_data_set_value(ship, "{key}_NUM", cur)
+        yield success
+    yield fail
+
+=== gm_change_torp_capacity
+" Change the max capacity of the specified torpedo for the selected ship.
+" Uses a modifier to be compatible with other sources of capacity increases/decreases.
+    print("Changing torp cap")
+    if __ITEM__ is not None:
+        data = __ITEM__.data
+        key = data.get("key")
+        yield fail if key is None
+        ship = data.get("ship")
+        if ship is None:
+            yield fail
+        print("Item not none")
+        add = data.get("add",True)
+        count = 1 if add else -1
+        exists = modifier_exists(ship, "GM")
+        cur_mods = modifiers_get_for_object(ship, "{key}_MAX")
+        for c in cur_mods:
+            if c.source == "GM":
+                count = c.value + count
+        modifier_add(ship, "{key}_MAX", count, "GM", 0, replace_if_exists=True)
+        yield success
+    yield fail
+
+#endregion
+
+
+=== gm_selected_fleet
+metadata: ``` yaml
+type: gm_menu/selected/fleet
+icon_index: 105
+priority: 110
+```
+    gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+    selected = get_inventory_value(gm, "gamemaster_prev_selection", None)
+    default fleet_name = None
+    default fleet_ships = []
+    fleet_name, fleet_ships = gm_selected_fleet_data(selected)
+
+    gui_row("row-height: 1.5em;")
+    fleet_title = gui_text("$text:No fleet for the selected ship.;font:gui-2;")
+    gui_row("row-height: content;")
+    fleet_list = gui_list_box(fleet_ships, "background:#1572;", item_template=gm_selected_fleet_ship_template, select=True)
+    gui_set_variable("gm_selected_fleet_list", fleet_list)
+    on change get_inventory_value(gm, "gamemaster_prev_selection", None):
+        selected = get_inventory_value(gm, "gamemaster_prev_selection", None)
+        fleet_name, fleet_ships = gm_selected_fleet_data(selected)
+        fleet_list = gui_get_variable("gm_selected_fleet_list")
+        if fleet_name is None:
+            fleet_title.update("text:No fleet for the selected ship.;font:gui-2;")
+        else:
+            fleet_title.update("text:Fleet: " + gui_text_escape(fleet_name) + ";font:gui-2;")
+        if fleet_list is None:
+            print("WARNING: gm selection details - fleet_list is None")
+        else:
+            fleet_list.items = fleet_ships
+
+
+    yield success
+
+# TODO: Removing a ship from the fleet list doensn't remove the fleet from that ship
+=== gm_remove_selected_fleet_ship
+    default __ITEM__ = None
+    default fleet_name = None
+    default fleet_ships = []
+    item = __ITEM__
+    if item is None:
+        yield fail
+    ship_data = item.data
+    ship_id = ship_data.get("ship_id") if ship_data is not None else None
+    if ship_id is not None:
+        fleet_remove_ship(ship_id)
+        await task_schedule(build_new_fleet_for_ship,{"ship_id":ship_id})
+        fleet_list = gui_get_variable("gm_selected_fleet_list")
+        gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+        selected = get_inventory_value(gm, "gamemaster_prev_selection", None)
+        fleet_name, fleet_ships = gm_selected_fleet_data(selected)
+        if fleet_list is not None:
+            fleet_list.items = fleet_ships
+            gui_represent(fleet_list)
+    yield success
+
+
+
+=== build_new_fleet_for_ship
+metadata: ```yaml
+ship_id:
+```
+    yield fail if ship_id is None
+    old_fleet = get_inventory_value(ship_id, "my_fleet_id")
+    fleet_remove(old_fleet, ship_id)
+    
+
+    pos = get_pos(ship_id)
+    role_list = get_role_string(ship_id)
+    side = to_object(ship_id).side
+
+    f_roles = side + get_role_string(old_fleet)
+
+    fleet = await prefab_spawn(prefab_fleet_empty, data={"side_value": side, "fleet_roles": f_roles, "START_X": pos.x, "START_Y": pos.y, "START_Z":pos.z})
+    
+    # fleet = fleet_spawn(pos, role_list)
+    # fleet.side = to_object(old_fleet).side
+    fleet_add(fleet, ship_id)
+    ->END
+
+
+=== gm_menu_upgrades_and_abilities
+metadata: ```
+type: gm_menu/selected/upgrades
+icon_index: 74
+priority: 400
+```
+    gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+    selected = get_inventory_value(gm, "gamemaster_prev_selection", None)
+    yield success
+
+
+=== gm_menu_side_manager
+metadata: ```
+type: gm_menu/sides
+icon_index: 23
+priority: 86
+```
+    gui_row("row-height: 90;")
+    side_manager_gss = gui_sub_section()
+    with side_manager_gss:
+        gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+        side_ids = sides_set()
+        side_names = set()
+        for s in side_ids:
+            side_names.add(side_display_name(s))
+        sides = sorted(list(side_names))
+        relations = list(("Allies", "Neutral", "Enemies"))
+        relations_value = list((sbs.DIPLOMACY.ALLIED, sbs.DIPLOMACY.NEUTRAL, sbs.DIPLOMACY.HOSTILE, sbs.DIPLOMACY.UNKNOWN))
+        # TODO Add sbs_utils capability for GETTING diplomacy colors
+        neutral_color = "#077"
+        text_height = "row-height:1.3em;"
+        diplomacy = gui_row(f"click_text:;{text_height}")
+        dip_text = gui_text(" - Diplomacy","color:#0fc;")
+        dip_content_row = gui_row()
+        dip_content = gui_sub_section()
+        with dip_content:
+            gui_text("Select a side:")
+
+            gui_spacer_row()
+            gui_row()
+            gui_spacer_col()
+            side_lb = gui_list_box(sides,"row-height: 1.3em;",select=True)
+            side_lb.set_selected_index(0)
+            # gui_spacer_row()
+
+            # gui_row("row-height: 1.3em;")
+            # gui_text("Select a side:")
+
+            # gui_spacer_row()
+            # gui_row()
+            gui_spacer_col()
+            o_side_lb = gui_list_box(sides,"row-height: 1.3em;",select=True)
+            o_side_lb.set_selected_index(0)
+            gui_spacer_col()
+            gui_spacer_row()
+
+            gui_row("row-height: content;")
+            gui_text("Current diplomacy status:","col-width: content;")
+            gui_blank()
+            cur = gui_text("Allied","color:green;background-color: #131c26;col-width:content;")
+            gui_spacer_row()
+            gui_set_variable("current_diplo_status_text",cur)
+            data={"s1_glb":side_lb,"s2_glb":o_side_lb,"cur_dip":cur}
+
+            gui_row(text_height)
+            allies = gui_button("Set as Allies")
+            gui_spacer_row()
+            allies.data= data
+            gui_row(text_height)
+            neutral = gui_button("Set as Neutral")
+            gui_spacer_row()
+            neutral.data=data
+            gui_row(text_height)
+            hostile = gui_button("Set as Hostile")
+            gui_spacer_row()
+            hostile.data=data
+            gui_row(text_height)
+            unknown = gui_button("Set as Unknown")
+            gui_spacer_row()
+            unknown.data=data
+            on gui_message(allies):
+                s1 = __ITEM__.data["s1_glb"].value
+                s2 = __ITEM__.data["s2_glb"].value
+                cur = __ITEM__.data["cur_dip"]
+                if s1==s2:
+                    cur.value = "$text: N/A"
+                    cur.color="green"
+                    ->END
+                cur.update("$text:Allied;")
+                cur.color="blue"
+                side_set_relations(s1,s2,sbs.DIPLOMACY.ALLIED)
+            on gui_message(neutral):
+                s1 = __ITEM__.data["s1_glb"].value
+                s2 = __ITEM__.data["s2_glb"].value
+                cur = __ITEM__.data["cur_dip"]
+                if s1==s2:
+                    cur.value = "$text: N/A"
+                    cur.color="green"
+                    ->END
+                cur.update("$text:Neutral;")
+                cur.color=f"{neutral_color}"
+                side_set_relations(s1,s2,sbs.DIPLOMACY.NEUTRAL)
+            on gui_message(hostile):
+                s1 = __ITEM__.data["s1_glb"].value
+                s2 = __ITEM__.data["s2_glb"].value
+                cur = __ITEM__.data["cur_dip"]
+                if s1==s2:
+                    cur.value = "$text: N/A"
+                    cur.color="green"
+                    ->END
+                cur.update("$text:Hostile;")
+                cur.color="red"
+                side_set_relations(s1,s2,sbs.DIPLOMACY.HOSTILE)
+            on gui_message(unknown):
+                s1 = __ITEM__.data["s1_glb"].value
+                s2 = __ITEM__.data["s2_glb"].value
+                cur = __ITEM__.data["cur_dip"]
+                if s1==s2:
+                    cur.value = "$text: N/A"
+                    cur.color="green"
+                    ->END
+                cur.update("$text:Unknown;color:grey;")
+                cur.color="grey"
+                side_set_relations(s1,s2,sbs.DIPLOMACY.UNKNOWN)
+            on change side_lb.value:
+                s1 = to_side_id(side_lb.value)
+                s2 = to_side_id(o_side_lb.value)
+                cur = gui_get_variable("current_diplo_status_text")
+                if s1 == s2:
+                    cur.value = " N/A"
+                    cur.color="green"
+                    ->END
+                rel = side_get_relations(s1,s2)
+                if rel == sbs.DIPLOMACY.ALLIED:
+                    cur.value = "Allied"
+                    cur.color="green"
+                elif rel == sbs.DIPLOMACY.HOSTILE:
+                    cur.value = "Hostile"
+                    cur.color="red"
+                elif rel == sbs.DIPLOMACY.NEUTRAL:
+                    cur.value = "Neutral"
+                    cur.color=f"{neutral_color}"
+                else:
+                    cur.value = "Unknown"
+                    cur.color="grey"
+            on change o_side_lb.value:
+                s1 = to_side_id(side_lb.value)
+                s2 = to_side_id(o_side_lb.value)
+                cur = gui_get_variable("current_diplo_status_text")
+                if s1 == s2:
+                    cur.value = " N/A"
+                    cur.color="green"
+                    ->END
+                rel = side_get_relations(s1,s2)
+                if rel == sbs.DIPLOMACY.ALLIED:
+                    cur.value = "Allied"
+                    cur.color="green"
+                elif rel == sbs.DIPLOMACY.HOSTILE:
+                    cur.value = "Hostile"
+                    cur.color="red"
+                elif rel == sbs.DIPLOMACY.NEUTRAL:
+                    cur.value = "Neutral"
+                    cur.color=f"{neutral_color}"
+                else:
+                    cur.value = "Unknown"
+                    cur.color="grey"
+
+            on change len(sides_set()):
+            # on signal side_added:
+                side_ids = sides_set()
+                side_names = set()
+                for s in side_ids:
+                    side_names.add(side_display_name(s))
+                sides = sorted(list(side_names))
+                side_lb.items = sides
+                o_side_lb.items = sides
+                gui_represent(side_manager_gss)
+        dip_list = list()
+        dip_list.append(" - Diplomacy")
+        dip_list.append(" + Diplomacy")
+        diplomacy.data = {"content":dip_content_row,"txt":dip_text,"show_panel":True}
+        on gui_message(diplomacy):
+            content = __ITEM__.data["content"]
+            show = not __ITEM__.data["show_panel"]
+            content.show(show)
+            dt = __ITEM__.data["txt"]
+            if show:
+                dt.update(f"$text: - Diplomacy;")
+            else:
+                dt.update(f"$text: + Diplomacy;")
+            __ITEM__.data["show_panel"] = show
+            gui_represent(side_manager_gss)
+
+
+        new_side_row = gui_row(f"click_text:;{text_height}")
+        nst = gui_text(" - New Side", "color:#0fc;")
+        side_content_row = gui_row("row-height: content; background-color: #012345;")
+        input_height = "row-height: 1.3em;"
+        side_content = gui_sub_section()
+        with side_content:
+            gui_row("Name")
+            gui_row(input_height)
+            key_in = gui_input("desc:Key")
+            gui_spacer_row()
+            gui_row(input_height)
+            name_in = gui_input("desc:Name")
+            gui_spacer_row()
+            gui_row(input_height)
+            desc_in = gui_input("desc:Description;")
+            gui_spacer_row()
+            gui_row(input_height)
+            create = gui_button("Create Side")
+            gui_spacer_row()
+            create.data = {"key_in":key_in,"name_in":name_in,"desc_in":desc_in}
+            on gui_message(create):
+                key_in = __ITEM__.data["key_in"]
+                name_in = __ITEM__.data["name_in"]
+                desc_in = __ITEM__.data["desc_in"]
+                key_val = key_in.value
+                name_val = name_in.value
+                desc_val = desc_in.value
+                if key_val is None:
+                    sbs.send_message_to_client(client_id, "red", "Side Data Incomplete")
+                    ->END
+                # TODO: modify create_side() to account for this, dunno why it doesn't - the prefab originally did.
+                if name_val is None or name_val == "":
+                    name_val = key_val
+                new_side = side_create(key_val,name_val,desc_val)
+                
+                # new_side = await prefab_spawn(prefab_side_generic,data={"key":key_val,"name":name_val,"desc":desc_val})
+                # print(f"{to_side_object(new_side).name}")
+                # signal_emit("side_added")
+                key_in.value = ""
+                key_in.value = ""
+                desc_in.value = ""
+                gui_represent(side_manager_gss)
+        new_side_row.data = {"content":side_content_row,"txt":nst,"show_panel":True}
+        on gui_message(new_side_row):
+            content = __ITEM__.data["content"]
+            show = not __ITEM__.data["show_panel"]
+            content.show(show)
+            dt = __ITEM__.data["txt"]
+            if show:
+                dt.update(f"$text: - New Side;")
+            else:
+                dt.update(f"$text: + New Side;")
+            __ITEM__.data["show_panel"] = show
+            gui_represent(side_manager_gss)
+
+
+    yield success
+
+

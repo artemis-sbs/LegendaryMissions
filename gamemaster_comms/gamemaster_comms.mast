@@ -357,6 +357,7 @@ default gamemaster_face = random_terran()
 
 //popup/science if has_roles(SCIENCE_ORIGIN_ID, 'gamemaster') and SCIENCE_POPUP_ID != 0 and SCIENCE_POPUP_ID != SCIENCE_ORIGIN_ID
     + "Delete {SCIENCE_POPUP.name}":
+        print("Delete button pressed.")
         so = to_object(SCIENCE_POPUP_ID)
         if so is not None:
             if has_role(SCIENCE_POPUP_ID, "__player__"):
@@ -373,7 +374,10 @@ default gamemaster_face = random_terran()
                 if so is not None:
                     set_inventory_value(SCIENCE_POPUP_ID,"gm_confirm_delete",False)
             else:
+                print("Trying to delete {SCIENCE_POPUP_ID}")
                 delete_object(SCIENCE_POPUP_ID)
+        else:
+            print("Can't delete object - doesn't exist")
 
 //comms/gamemaster/confirm_delete if has_role(COMMS_ORIGIN_ID, "gamemaster")
     +^1[$gamemaster]"Cancel Delete" //comms
