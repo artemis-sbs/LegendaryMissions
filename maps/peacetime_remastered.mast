@@ -258,6 +258,11 @@ Defaults:
     # route - no //science route here. (target_drone is raider-side, so the standard enemy scan
     # covers it; the anomaly uses the quest reveal_scan path.)
     science_define_scan_amd(amd_section(PR_DOC, "scans"))
+    # The Florbin suspects (`suspect` / `discovered`) scan from the cargo_scans section. This
+    # used to be registered at the top of maps/peacetime.mast, which is no longer imported - and
+    # without it the cargo ships could not be scanned, so comms stayed "unknown" and the
+    # case could not be solved.
+    science_define_scan_amd(amd_section(PR_DOC, "cargo_scans"))
 
     # Targets are SPAWNED ON ACCEPT, not at shift start (see pr_job_dispatch): stash the scaled
     # counts + the landmark records so the spawner reads them when a job is taken on. This keeps
