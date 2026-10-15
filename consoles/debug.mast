@@ -327,7 +327,7 @@ if is_dev_build():
     all_helm_consoles =  role("__gui__") & has_inventory_value("CONSOLE_TYPE", "helm")
 
     """
-    My ships's Helm count {len(consoles)}
+    My ships's Helm count {len(consoles)}^
     All Helm count {len(all_helm_consoles)}
     """
 
