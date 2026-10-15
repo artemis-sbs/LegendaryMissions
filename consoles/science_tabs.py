@@ -179,13 +179,31 @@ def lm_sci_stack_visible(client_id):
     return len(lm_sci_tabs_items(client_id)) > 0
 
 
+def lm_sci_contact_name(ship_id, target_id):
+    """A contact's name AS THIS SHIP'S SIDE KNOWS IT: `unknown` until it is scanned.
+
+    The one place a science surface turns an id into a name. The read-out title already
+    withheld the name of an unscanned contact, but the tab stack's heading and the queue
+    rows read `target.name` straight off the object - so the heading directly above
+    `Queue Scan` printed 'Morrigan' while the title beside it said `unknown`. A name is
+    scan data; every surface asks here.
+    """
+    target = to_object(target_id) if target_id else None
+    if target is None:
+        return "unknown"
+    if not ship_id or not lm_sci_queue_is_scanned(ship_id, target_id, "scan"):
+        return "unknown"
+    return str(getattr(target, "name", None) or "unknown")
+
+
 def lm_sci_stack_header(client_id):
-    """What the header row says: the contact the tabs are about."""
-    _ship_id, target_id = lm_sci_tabs_pair(client_id)
+    """What the header row says: the contact the tabs are about - `unknown` until it is
+    scanned, matching the read-out title."""
+    ship_id, target_id = lm_sci_tabs_pair(client_id)
     target = to_object(target_id) if target_id else None
     if target is None:
         return "SCAN QUEUE"
-    return str(getattr(target, "name", None) or "unknown")
+    return lm_sci_contact_name(ship_id, target_id)
 
 
 def lm_sci_tabs_rows_shown(client_id=None):

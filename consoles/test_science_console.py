@@ -368,6 +368,35 @@ class ScienceConsoleBuilds(_Base):
         self.assertEqual([r["tab"] for r in rows], [st.LM_SCI_QUEUE_TAB],
                          "with nothing selected, only the queue is reachable")
 
+    # --- never leak an unscanned contact's name -----------------------------
+
+    def test_the_stack_heading_withholds_an_unscanned_name(self):
+        """Engine 1.3.15: the title said `unknown` while the heading right above
+        `Queue Scan` printed the contact's real name. Both must say `unknown`."""
+        self.select(self.target)
+        self.assertEqual(st.lm_sci_stack_header(CID), "unknown")
+        drawn = [s for _t, s in self.rects.emitted("send_gui_text")]
+        self.assertFalse([s for s in drawn if "K19" in s],
+                         f"the unscanned contact's name was drawn: {drawn}")
+
+    def test_the_stack_heading_names_a_scanned_contact(self):
+        science_set_scan_data(self.ship, self.target, {"scan": "A kralien cruiser."})
+        self.select(self.target)
+        self.assertEqual(st.lm_sci_stack_header(CID), "K19")
+
+    def test_the_queue_withholds_unscanned_names(self):
+        """A queued contact is usually unscanned - that is why it is queued."""
+        import science_queue_list as sql
+        import science_panel as sp
+        # The queue these two read is the one the compiled console loaded, which is not
+        # the module object this file imported before the compile.
+        queue = sys.modules["science_queue"]
+        self.addCleanup(queue.lm_sci_queue_clear)
+        self.assertTrue(queue.lm_sci_queue_add(self.ship, self.target, "scan"))
+        self.assertEqual([i["name"] for i in sql.lm_sci_ql_items(CID)], ["unknown"])
+        text = " ".join(str(x) for x in sp.lm_sci_panel_queue_lines(self.ship.id))
+        self.assertNotIn("K19", text)
+
     # --- the queue's bare icons ---------------------------------------------
 
     def _open_queue_with_entries(self):

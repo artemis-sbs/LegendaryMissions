@@ -38,7 +38,7 @@ from sbs_utils.procedural.execution import log
 
 from science_queue import (lm_sci_queue_list, lm_sci_queue_side, lm_sci_queue_remove,
                            lm_sci_queue_move_up, lm_sci_queue_revision)
-from science_tabs import lm_sci_tabs_ship
+from science_tabs import lm_sci_tabs_ship, lm_sci_contact_name
 
 #: One entry. A touch target, but the controls on it are icons rather than words, so it
 #: does not need the height two labelled buttons wanted.
@@ -110,7 +110,9 @@ def lm_sci_ql_items(client_id):
             "target": entry["target"],
             "tab": entry["tab"],
             "pct": int(entry["pct"]),
-            "name": getattr(target, "name", None) or "unknown",
+            # A queued contact is very often one nobody has scanned yet - that is why
+            # it is queued - so its name is withheld exactly as the title withholds it.
+            "name": lm_sci_contact_name(ship_id, entry["target"]),
             "asked": getattr(origin, "name", None) or "?",
         })
     return out

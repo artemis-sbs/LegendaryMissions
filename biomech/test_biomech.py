@@ -88,6 +88,43 @@ class BioMechTests(unittest.TestCase):
         self.assertEqual(BM.biomech_enrage(bid, 1, radius=1000), 1)
         self.assertEqual(BM.get_inventory_value(bid, "biomech:enraged", 0), 1)
 
+    def test_the_passive_side_is_declared(self):
+        """Engine log: `Side not found: [biomech]` on every Infestation boss. The hulls
+        spawn on side `biomech` and nothing declared it."""
+        from sbs_utils.procedural import sides as S
+        S._missing_side_warned.discard("biomech")
+        bid = BM.biomech_spawn(0, 0, 0, "biomech_a")
+        self.assertEqual(to_object(bid).side, BM.BIOMECH_PASSIVE_SIDE)
+        self.assertIsNotNone(S.to_side_id(BM.BIOMECH_PASSIVE_SIDE, warn=False))
+        with self.assertNoLogs("mast.runtime", level="WARNING"):
+            S.side_members_set(BM.BIOMECH_PASSIVE_SIDE)
+        # Declared, but at peace with everyone - the neutral disposition is the point.
+        S.side_ensure("tsn")
+        self.assertFalse(S.side_are_enemies(BM.BIOMECH_PASSIVE_SIDE, "tsn"))
+
+    def test_an_enraged_hull_is_still_a_biomech(self):
+        """A side is a role, so flipping a hull to the hostile side used to strip its
+        `biomech` role: it dropped out of the count, calm, evolve and the purge goal."""
+        from sbs_utils.procedural.sides import side_ensure
+        side_ensure(BM.BIOMECH_ENRAGED_SIDE)
+        bid = BM.biomech_spawn(0, 0, 0, "biomech_a", "biomech, colony")
+        BM.biomech_enrage(bid, 1, radius=1000)
+        self.assertEqual(to_object(bid).side, BM.BIOMECH_ENRAGED_SIDE)
+        self.assertIn(bid, role("biomech"))
+        self.assertIn(bid, role("colony"))
+        self.assertEqual(BM.biomech_count(), 1)
+
+    def test_calm_returns_a_hull_to_the_passive_side(self):
+        """The calm path's side flip used to be a silent no-op: its guard found no
+        `biomech` side to flip back to."""
+        from sbs_utils.procedural.sides import side_ensure
+        side_ensure(BM.BIOMECH_ENRAGED_SIDE)
+        bid = BM.biomech_spawn(0, 0, 0, "biomech_a")
+        BM.biomech_enrage(bid, 1, radius=1000)
+        self.assertEqual(to_object(bid).side, BM.BIOMECH_ENRAGED_SIDE)
+        BM.biomech_calm()
+        self.assertEqual(to_object(bid).side, BM.BIOMECH_PASSIVE_SIDE)
+
     def test_calm_clears_enraged(self):
         a = BM.biomech_spawn(0, 0, 0, "biomech_a")
         b = BM.biomech_spawn(1000, 0, 0, "biomech_a")

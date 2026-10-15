@@ -39,11 +39,11 @@ quest to react bridges these to quest_signal itself - the addon stays quest-agno
 """
 from sbs_utils.procedural.spawn import npc_spawn
 from sbs_utils.procedural.query import to_id, to_object, to_object_list
-from sbs_utils.procedural.roles import role
+from sbs_utils.procedural.roles import role, add_role
 from sbs_utils.procedural.brain import brain_add
 from sbs_utils.procedural.inventory import get_inventory_value, set_inventory_value
 from sbs_utils.procedural.space_objects import delete_object
-from sbs_utils.procedural.sides import side_set_object_side, side_keys_set
+from sbs_utils.procedural.sides import side_set_object_side, side_keys_set, side_ensure
 from sbs_utils.procedural.signal import signal_emit
 
 # The growth ladder: each key is a distinct shipData template (escalating stats).
@@ -64,6 +64,21 @@ BIOMECH_AGGRO_RADIUS = 9000.0
 BIOMECH_PASSIVE_SIDE = "biomech"
 BIOMECH_ENRAGED_SIDE = "raider"
 
+#: What the passive side is called where a side's NAME is shown.
+BIOMECH_PASSIVE_SIDE_NAME = "BioMech"
+
+
+def biomech_ensure_side():
+    """Register the passive side the hulls spawn on. Idempotent; returns its id.
+
+    The hulls spawn with `biomech` as their side, and nothing declared one: every Siege
+    with the Infestation boss logged `Side not found: [biomech]`, and the side flip back
+    in biomech_calm was a silent no-op because the guard found no such side. A side with
+    no relations is NEUTRAL to everyone, which is exactly the disposition this side
+    exists for - so declaring it changes nothing about who fights whom.
+    """
+    return side_ensure(BIOMECH_PASSIVE_SIDE, BIOMECH_PASSIVE_SIDE_NAME)
+
 
 def _biomech_side_registered(side_key):
     """True if `side_key` is a registered side. Quiet (side_keys_set doesn't warn, unlike
@@ -79,6 +94,13 @@ def _biomech_set_side(obj_id, side_key):
     a mission that hasn't set up the side just falls back to brain-driven aggression)."""
     if _biomech_side_registered(side_key):
         side_set_object_side(obj_id, side_key)
+        # A SIDE IS A ROLE: SpaceObject.set_side removes the old side's role. The passive
+        # side is `biomech`, so waking a hull stripped the very role every function here
+        # (count, calm, evolve, the hunt brain) and a `destroy N biomechs` goal find it
+        # by - an enraged hull stopped being a BioMech. Put its own roles back.
+        for r in str(get_inventory_value(obj_id, "biomech:roles", "biomech") or "biomech").split(","):
+            if r.strip():
+                add_role(obj_id, r.strip())
 
 
 def _biomech_any_enraged():
@@ -100,6 +122,8 @@ def biomech_spawn(x, y, z, art="biomech_a", roles="biomech", name="BioMech"):
     shared passive/hunt brain, so every BioMech gets the full shipData stats for its
     stage and starts PASSIVE. Remembers its `roles` so an evolve can respawn with the
     same roles. Returns the id."""
+    # Before the spawn: the first role of `roles` is the hull's SIDE.
+    biomech_ensure_side()
     obj = npc_spawn(x, y, z, name, roles, art, "behav_npcship")
     bid = to_id(obj)
     set_inventory_value(bid, "biomech:roles", roles)
