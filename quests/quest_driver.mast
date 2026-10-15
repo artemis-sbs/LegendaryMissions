@@ -29,7 +29,8 @@
     if DAMAGE_PARENT_ID and DAMAGE_PARENT_ID != DAMAGE_SOURCE_ID:
         quest_on_kill(DAMAGE_PARENT_ID, DAMAGE_SELECTED_ID)
     # Game-level (SHARED) kill objectives - once per kill.
-    quest_on_kill_shared(DAMAGE_SELECTED_ID)
+    # Who made the kill, so a `destroy X by players` goal skips a third party's.
+    quest_on_kill_shared(DAMAGE_SELECTED_ID, DAMAGE_SOURCE_ID, DAMAGE_PARENT_ID)
     # Fail trigger: this kill may have emptied a "protect these" role (the victim
     # is still registered here, so it is excluded from the remaining count).
     quest_fail_on_all_dead(DAMAGE_SELECTED_ID)
