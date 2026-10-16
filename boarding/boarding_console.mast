@@ -146,6 +146,12 @@
     # else happens to rebuild the page.
     on change boarding_seq():
         jump boarding_ui_screen
+    # AND WHO IS DOWN THERE, which the seq cannot see. A job nobody present holds is
+    # offered to one console as covering for it, and stops being that console's the
+    # moment its owner beams down - on the SAME beat, so without this the covering choice
+    # stayed until the party moved rooms.
+    on change len(boarding_team()):
+        jump boarding_ui_screen
 
     await gui()
 
