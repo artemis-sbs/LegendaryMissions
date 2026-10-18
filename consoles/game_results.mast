@@ -134,7 +134,11 @@ shared game_stats = ~~{
     # chips (consoles/comms_chips.py), with a count on each list tab. Changing tab changes
     # the panel's STRUCTURE, so a rebuild is the right response here - unlike the comms
     # chips, which only update their own rows.
-    gui_section(style="area: 28, 0, 99, 5;")
+    # BELOW THE ENGINE'S BAR, not in it. The server draws Mission Select (0-29%) and
+    # Options (29-59%) across the top 5.2% of its screen, and a strip at y 0 put Summary
+    # and Fleet under Options (engine-seen, author course 4's end screens). Five chips do
+    # not fit right of Options, so the strip moves down and the tab content with it.
+    gui_section(style="area: 28, 5.5, 99, 10.5;")
     gui_row("row-height:1fr;")
     _tab_items = results_tab_items()
     results_tab_chips = gui_list_box(_tab_items, "col-width:5.5em;background:#0E151D80;", item_template=results_tab_template, section_style="padding:3px,4px,3px,4px;", select=True)
@@ -216,7 +220,7 @@ shared game_stats = ~~{
             mp_top_name = _mp.name
 
     # Active tab content - right of the rail, and top-aligned under the tabs.
-    gui_section(style="area: 28, 6, 99, 94;")
+    gui_section(style="area: 28, 11, 99, 94;")
 
     # Shared by both stat tabs, so Summary and Enemies line up with each other.
     #
@@ -259,9 +263,9 @@ shared game_stats = ~~{
             # Match the in-game quest log: collapsible Game/ship sections on the
             # left, the selected quest's description on the right.
             q_sel_desc = "Select a quest to see its details."
-            gui_section(style="area: 28, 6, 62, 94;")
+            gui_section(style="area: 28, 11, 62, 94;")
             quest_box = gui_list_box(quest_items, "item-gap:0.1em;", item_template=quest_log_template, title_template=quest_log_title, select=True, collapsible=True)
-            gui_section(style="area: 64, 6, 99, 94; background:#1572;")
+            gui_section(style="area: 64, 11, 99, 94; background:#1572;")
             q_desc = gui_text_area("{q_sel_desc}", style="padding:10px,15px,10px,15px;")
             on change quest_box.get_value():
                 qsel = quest_box.get_value()
