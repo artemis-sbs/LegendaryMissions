@@ -74,6 +74,7 @@ from sbs_utils.tickdispatcher import TickDispatcher
 PRIZE_HELM = 0x8000000000000011
 PRIZE_BUTTON = "Take as prize"
 BOARD_BUTTON = "Send a boarding party"
+CAPTURED_BUTTON = "Give her orders"
 
 PRIZE_QUEST = """# [Mission](mission)
 
@@ -119,6 +120,7 @@ class _PrizeBase(unittest.TestCase):
     hull = "pirate_brigantine"
     art = True
     at_home = False
+    struck_at_start = True
 
     def setUp(self):
         reset_mission_state()
@@ -163,6 +165,11 @@ class _PrizeBase(unittest.TestCase):
         with open(os.path.join(self.tmp, "harness_enable.mast"), "w", encoding="utf-8",
                   newline="\n") as f:
             f.write('//enable/comms if has_role(COMMS_ORIGIN_ID, "__player__")\n')
+            # What a TAKEN ship is offered, standing in for the friendly menus the rest
+            # of LegendaryMissions gives her - so a refreshed menu has something to show.
+            f.write('\n//comms if has_role(COMMS_SELECTED_ID, "captured")\n'
+                    '    + "%s":\n'
+                    '        comms_receive("Aye.")\n' % CAPTURED_BUTTON)
         story = MastStory()
         story.basedir = self.tmp
         errors = story.compile(_prize_story(self.wiring), "takeasprize", story)
@@ -183,7 +190,8 @@ class _PrizeBase(unittest.TestCase):
         self.prize = to_object(npc_spawn(3000, 0, 0, "Black Gull", "pirate", self.hull,
                                          "behav_npcship"))
         self.prize.spawn_pos = mock_sbs.vec3(3000.0 if self.at_home else 20000.0, 0.0, 0.0)
-        side_surrender(self.prize)
+        if self.struck_at_start:
+            side_surrender(self.prize)
         science_set_scan_data(self.ship, self.prize, "identified")
 
         self.server = PrizePage()
@@ -304,6 +312,58 @@ class TakeAsPrizeFinishesTheQuest(_PrizeBase):
         self.assertEqual(self.count("boarding_deck_take"), 1)
         self.assertEqual(self.milestones(), ["boarding_deck_take"])
         self.assertEqual(self.quest(), QuestState.COMPLETE)
+
+
+class AnOpenMenuSeesHerStrike(_PrizeBase):
+    """Her menu was open when she struck - from a mission card, not from this menu
+    (engine-seen, author course 3 lesson 15: the Black Gull struck when `back` started,
+    and the open menu kept `Hail` / `Taunt` / `Surrender now` until reselected - and
+    reselecting is how the 1.3.15 Comms map was lost). The menu refreshes itself."""
+    struck_at_start = False
+
+    def test_the_prize_buttons_appear_without_a_reselect(self):
+        self.select()
+        self.assertNotIn(PRIZE_BUTTON, self.texts(), "fixture: she has not struck yet")
+        side_surrender(self.prize)          # what the mission's card does
+        self.present()
+        self.assertIn(PRIZE_BUTTON, self.texts(),
+                      "the open menu did not refresh when she struck")
+        self.assertIn(BOARD_BUTTON, self.texts())
+
+
+class AnOpenMenuSeesHerTaken(_PrizeBase):
+    """Her menu was open when she was TAKEN (engine-seen, author course 3 lesson 15,
+    sitting 4: after `Take her as a prize` in her strongbox scene the open Comms menu
+    stayed `Take as prize` / `Cancel` - a prize already taken, offered again). The strike
+    refreshed the menu (`AnOpenMenuSeesHerStrike`); the prize did not. `side_capture`
+    is what both ways of taking her end in, so it is where the menu is refreshed."""
+
+    def test_the_comms_button_leaves_no_prize_button_behind(self):
+        self.select()
+        self.press(PRIZE_BUTTON)
+        self.assertEqual(self.prize.side, "tsn", "fixture: she was not taken")
+        self.assertNotIn(PRIZE_BUTTON, self.texts(),
+                         "the open menu still offers a prize already taken")
+        self.assertNotIn(BOARD_BUTTON, self.texts())
+        self.assertIn(CAPTURED_BUTTON, self.texts(), "the menu was not re-run")
+
+    def test_taken_from_aboard_her_the_open_menu_refreshes(self):
+        """The strongbox's `; signal boarding_deck_take`, with her menu open."""
+        self.select()
+        self.press(BOARD_BUTTON)
+        self.assertEqual(D.boarding_deck_target(), self.prize.id, "fixture: nobody aboard")
+        self.select()
+        self.assertIn(PRIZE_BUTTON, self.texts(), "fixture: no prize button to go stale")
+        # What the answer in her brig sends - from the boarding scene, not from comms.
+        FrameContext.context = Context(mock_sbs.sim, mock_sbs, FakeEvent(0, "gui_message"))
+        FrameContext.task = None
+        from sbs_utils.procedural.signal import signal_emit
+        signal_emit("boarding_deck_take")
+        self.present()
+        self.assertEqual(self.prize.side, "tsn", "fixture: the route did not take her")
+        self.assertNotIn(PRIZE_BUTTON, self.texts(),
+                         "the open menu still offers a prize already taken")
+        self.assertIn(CAPTURED_BUTTON, self.texts(), "the menu was not re-run")
 
 
 class WithNoDeckWiring(_PrizeBase):

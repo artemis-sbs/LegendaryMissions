@@ -481,7 +481,7 @@ been carrying.
 
 ### [J19 Jenny](poacher_lm)
 ---
-Kind: npc
+Prefab: npc
 Side: civ
 Roles: civilian, poacher
 Art: cargo_ship
@@ -490,7 +490,7 @@ Loc: 0, 0, -16000
 
 ### [Stranded Shuttle](mercy_lm)
 ---
-Kind: npc
+Prefab: npc
 Side: civ
 Roles: civilian, mercy_target
 Art: cargo_ship
@@ -500,22 +500,22 @@ Loc: 16000, 0, -12000
 // DS 1 is spawned by the map's own station code, not from here - this record exists so
 // the DOCUMENT knows the name. `Speaker: ds1` on the briefing scene and `ds1 hails ...`
 // on the beat both point at it, and without a record to point at the linter can only
-// report a dangling speaker on a line that is perfectly correct. No `Art:`, so
-// landmark_spawn places nothing.
+// report a dangling speaker on a line that is perfectly correct. `Prefab: point`
+// creates nothing.
 ### [DS 1](ds1)
 ---
-Kind: point
+Prefab: point
 ---
 The deep-space station the Florbin case runs out of.
 
-// A ZONE, not an object: no Art:, so landmark_spawn places nothing and this record is a
-// pure position the mission reads with landmark_pos. A physical buoy at a chokepoint
+// A ZONE, not an object: `Prefab: point` creates nothing, so this record is a pure
+// position the mission reads with landmark_pos. A physical buoy at a chokepoint
 // would get shot, tethered, or mistaken for the thing you were sent to guard.
 // Radius 2500 is prefab_lm_turret_tower's own acquisition range, so a turret anywhere
 // inside the ring actually covers the junction it is standing in.
 ### [Picket Line](picket_lm)
 ---
-Kind: point
+Prefab: point
 Roles: picket_zone
 Radius: 2500
 Loc: -2000, 0, 18000

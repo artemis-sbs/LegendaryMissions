@@ -44,7 +44,8 @@ from sbs_utils.procedural.gui import viewscreen_relative_bearing
 
 from science_queue import (lm_sci_queue_list, lm_sci_queue_side,
                            lm_sci_queue_is_scanned)
-from science_tabs import lm_sci_tabs_current, lm_sci_tabs_pair, LM_SCI_QUEUE_TAB
+from science_tabs import (lm_sci_tabs_current, lm_sci_tabs_pair, LM_SCI_QUEUE_TAB,
+                          lm_sci_contact_name)
 
 _DIM = "#8B85A8"
 _LABEL = "#5B6D7F"
@@ -540,8 +541,8 @@ def lm_sci_panel_queue_lines(ship_id):
         lines.append(_line("(nothing queued)", _DIM))
         return lines
     for i, entry in enumerate(entries):
-        target = to_object(entry["target"])
-        name = getattr(target, "name", None) or "unknown"
+        # Withheld until scanned, like the title: a queued contact is usually unscanned.
+        name = lm_sci_contact_name(ship_id, entry["target"])
         origin = to_object(entry["origin"])
         asked = getattr(origin, "name", None) or "?"
         color = _TUNED if i == 0 else _DIM

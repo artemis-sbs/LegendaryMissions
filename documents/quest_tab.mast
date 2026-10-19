@@ -56,6 +56,7 @@ gui_app_register("quest", title="Quests", icon="epadd.quests", group="Mission", 
     # Offers list is a different list.
     quest_tab_mode = "taken"
     quest_sel_index = -1
+    quest_sel_key = None
     quest_sel_hint = None
     jump quest_tab_screen
 
@@ -94,6 +95,18 @@ gui_app_register("quest", title="Quests", icon="epadd.quests", group="Mission", 
     # state anywhere, Accept, Abandon), and three of those the player did not ask
     # for -- so the view moving is least expected exactly when it moved most.
     default quest_sel_hint = None
+    # The selection is carried by WHAT it is, not WHERE it was. Every repaint rebuilds
+    # the rows, re-sorted, with whatever has changed since - so the old index lands on a
+    # different quest the moment one above it completes or a new one appears. The
+    # selection then moved by itself, which is what was seen on a real bridge. The index
+    # is looked up again from the key each build; a quest that has left the list leaves
+    # nothing selected rather than its neighbor.
+    default quest_sel_key = None
+    if quest_sel_key is not None:
+        quest_sel_index = quest_log_index_of(items, quest_sel_key)
+        # The hint's own fallback selection is an index too - re-key it, or it selects
+        # the neighbor through the back door when the quest has gone.
+        quest_sel_hint = quest_log_hint_rekey(quest_sel_hint, quest_sel_index)
 
     # Quest list (left) + narrative (right) + accept/abandon controls.
     gui_section(style="area: 0,45px, 38,100; background:#1572;")
@@ -102,8 +115,8 @@ gui_app_register("quest", title="Quests", icon="epadd.quests", group="Mission", 
     # An explicit selection beats the hint's, which is what makes this order safe:
     # the hint restores the VIEW, this line restores the SELECTION.
     #
-    # `is not None` as well as >= 0: get_selected_index() returns None when nothing
-    # is selected (a list that lost its selected job), and `None >= 0` raises.
+    # `is not None` as well as >= 0: the key lookup returns None when the quest is no
+    # longer listed, and `None >= 0` raises.
     if quest_sel_index is not None and quest_sel_index >= 0:
         qbox.set_selected_index(quest_sel_index, False)
 
@@ -129,6 +142,7 @@ gui_app_register("quest", title="Quests", icon="epadd.quests", group="Mission", 
     on change qbox.get_value():
         sel = qbox.get_value()
         quest_sel_index = qbox.get_selected_index()
+        quest_sel_key = quest_log_row_key(sel)
         quest_log_pane_show(qdesc, sel, empty_desc)
         if quest_tab_controls_gate(CONSOLE_SELECT, sel, QUEST_ACCEPT_CONSOLES, QUEST_ENGAGE_ENABLED, QUEST_ENGAGE_CONSOLES).get("sig") != gate_sig:
             # Taken from THIS widget, before the jump. It holds the view and will

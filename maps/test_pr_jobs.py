@@ -203,13 +203,15 @@ class PicketAmdContractTests(unittest.TestCase):
         self.assertIsNotNone(rec.get("loc"), "the zone needs a Loc")
         self.assertEqual(MH.pr_landmark_field(recs, "picket_lm", "radius"), 2500)
 
-    def test_the_picket_zone_has_no_art(self):
-        # Deliberate: landmark_spawn places nothing without Art:, so the zone stays a pure
-        # position. A physical buoy would get shot or tethered.
+    def test_the_picket_zone_creates_nothing(self):
+        # Deliberate: `Prefab: point` creates nothing, so the zone stays a pure position.
+        # A physical buoy would get shot or tethered.
         from sbs_utils.procedural.amd_landmarks import landmarks_from_section
         doc, amd_section = self._doc()
         recs = landmarks_from_section(amd_section(doc, "landmarks"))
-        self.assertFalse(MH.pr_landmark_by_key(recs, "picket_lm").get("art"))
+        rec = MH.pr_landmark_by_key(recs, "picket_lm")
+        self.assertEqual(rec.get("prefab"), "point")
+        self.assertFalse(rec.get("art"))
 
 
 if __name__ == "__main__":

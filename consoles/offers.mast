@@ -58,6 +58,7 @@ if OFFER_DIGEST_ENABLED:
     # read alike and a fix to one is a fix to both (documents/quest_tab.mast).
     quest_tab_mode = "offers"
     quest_sel_index = -1
+    quest_sel_key = None
     quest_sel_hint = None
     jump quest_tab_screen
 

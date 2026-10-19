@@ -20,8 +20,8 @@ copy a message below, change the words. The rules are short:
 - Keep it under about 600 characters and keep it ASCII - the engine draws no curly
   quotes, no em-dashes and no emoji, and a `^` is a line break to it.
 
-Do NOT add a `Kind:` field. It means something else in AMD and will quietly break the
-records under it.
+Do NOT add a `Prefab:` field. It means something else in AMD (what a landmark
+creates) and will quietly break the records under it.
 
 
 ## [Did you take the good pan](mail_pan)

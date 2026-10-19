@@ -509,16 +509,29 @@
         # terrain_chips.py.
         gui_row(f"row-height:{lm_terrain_chip_row_px()}px;")
         gui_blank(1,"col-width:300px")
-        helm_terrain = gui_list_box(lm_terrain_chips_items(), lm_terrain_chips_style(), item_template=lm_terrain_chips_template, section_style="padding:2px,2px,2px,2px;", select=True, multi=True)
-        helm_terrain.horizontal = True
-        helm_terrain.selected = lm_terrain_chips_selected(client_id, "helm")
+        # Two groups, each in a column as wide as its own chips: the lenses at one
+        # pitch, the terrain switches at a wider one so "Asteroids" fits.
+        chip_console = "helm"
+        with gui_sub_section(f"col-width:{lm_terrain_chips_group_px('lens', client_id, chip_console)}px;"):
+            gui_row()
+            helm_terrain_lens = gui_list_box(lm_terrain_chips_items("lens"), lm_terrain_chips_style("lens", client_id, chip_console), item_template=lm_terrain_chips_template, section_style="padding:2px,2px,2px,2px;", select=True, multi=True)
+            helm_terrain_lens.horizontal = True
+            helm_terrain_lens.selected = lm_terrain_chips_selected(client_id, "helm", "lens")
+        with gui_sub_section(f"col-width:{lm_terrain_chips_group_px('terrain', client_id, chip_console)}px;"):
+            gui_row()
+            helm_terrain_switch = gui_list_box(lm_terrain_chips_items("terrain"), lm_terrain_chips_style("terrain", client_id, chip_console), item_template=lm_terrain_chips_template, section_style="padding:2px,2px,2px,2px;", select=True, multi=True)
+            helm_terrain_switch.horizontal = True
+            helm_terrain_switch.selected = lm_terrain_chips_selected(client_id, "helm", "terrain")
         # 334, not the stack's 366: at this height the camera dial is still curving in,
-        # and those 32px are what a sixth chip needs on a 1024-wide screen.
+        # and that is what the two chip groups need on a 1024-wide screen.
         gui_blank(1,"col-width:334px")
-        on change helm_terrain.get_selected():
-            lm_terrain_chips_apply(client_id, "helm", helm_terrain)
+        on change helm_terrain_lens.get_selected():
+            lm_terrain_chips_apply(client_id, "helm", helm_terrain_lens, "lens")
+        on change helm_terrain_switch.get_selected():
+            lm_terrain_chips_apply(client_id, "helm", helm_terrain_switch, "terrain")
         on change lm_terrain_chips_selected(client_id, "helm"):
-            lm_terrain_chips_follow(client_id, "helm", helm_terrain)
+            lm_terrain_chips_follow(client_id, "helm", helm_terrain_lens, "lens")
+            lm_terrain_chips_follow(client_id, "helm", helm_terrain_switch, "terrain")
         on change lm_terrain_chips_revision(client_id, "helm"):
             lm_terrain_chips_write(client_id, "helm")
         gui_row()
@@ -669,14 +682,27 @@
         # terrain_chips.py.
         gui_row(f"row-height:{lm_terrain_chip_row_px()}px;")
         gui_blank(1,"col-width:300px")
-        weap_terrain = gui_list_box(lm_terrain_chips_items(), lm_terrain_chips_style(), item_template=lm_terrain_chips_template, section_style="padding:2px,2px,2px,2px;", select=True, multi=True)
-        weap_terrain.horizontal = True
-        weap_terrain.selected = lm_terrain_chips_selected(client_id, "weapon")
+        # Two groups, each in a column as wide as its own chips: the lenses at one
+        # pitch, the terrain switches at a wider one so "Asteroids" fits.
+        chip_console = "weapon"
+        with gui_sub_section(f"col-width:{lm_terrain_chips_group_px('lens', client_id, chip_console)}px;"):
+            gui_row()
+            weap_terrain_lens = gui_list_box(lm_terrain_chips_items("lens"), lm_terrain_chips_style("lens", client_id, chip_console), item_template=lm_terrain_chips_template, section_style="padding:2px,2px,2px,2px;", select=True, multi=True)
+            weap_terrain_lens.horizontal = True
+            weap_terrain_lens.selected = lm_terrain_chips_selected(client_id, "weapon", "lens")
+        with gui_sub_section(f"col-width:{lm_terrain_chips_group_px('terrain', client_id, chip_console)}px;"):
+            gui_row()
+            weap_terrain_switch = gui_list_box(lm_terrain_chips_items("terrain"), lm_terrain_chips_style("terrain", client_id, chip_console), item_template=lm_terrain_chips_template, section_style="padding:2px,2px,2px,2px;", select=True, multi=True)
+            weap_terrain_switch.horizontal = True
+            weap_terrain_switch.selected = lm_terrain_chips_selected(client_id, "weapon", "terrain")
         gui_blank(1,"col-width:290px")
-        on change weap_terrain.get_selected():
-            lm_terrain_chips_apply(client_id, "weapon", weap_terrain)
+        on change weap_terrain_lens.get_selected():
+            lm_terrain_chips_apply(client_id, "weapon", weap_terrain_lens, "lens")
+        on change weap_terrain_switch.get_selected():
+            lm_terrain_chips_apply(client_id, "weapon", weap_terrain_switch, "terrain")
         on change lm_terrain_chips_selected(client_id, "weapon"):
-            lm_terrain_chips_follow(client_id, "weapon", weap_terrain)
+            lm_terrain_chips_follow(client_id, "weapon", weap_terrain_lens, "lens")
+            lm_terrain_chips_follow(client_id, "weapon", weap_terrain_switch, "terrain")
         on change lm_terrain_chips_revision(client_id, "weapon"):
             lm_terrain_chips_write(client_id, "weapon")
         gui_row()

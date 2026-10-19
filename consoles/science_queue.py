@@ -40,8 +40,8 @@ LM_SCI_CLOSEST_SECONDS = 0.3
 LM_SCI_FARTHEST_SECONDS = 20.0
 
 #: Bounds on the result. The floor is the engine's own half-second step. The ceiling is
-#: OURS - the engine was measured to 10,000 and no further - so a scan that cannot
-#: finish never reads as a bug rather than as distance.
+#: OURS: the engine's own longest scan is `farthest_scan_delay` (20s), so this only ever
+#: bites on a mission that writes absurd delays - a scan that cannot finish reads as a bug.
 LM_SCI_SCAN_FASTEST = 0.5
 LM_SCI_SCAN_SLOWEST = 60.0
 

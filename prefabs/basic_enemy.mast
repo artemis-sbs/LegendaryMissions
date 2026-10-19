@@ -40,6 +40,8 @@ brain:
     default crew = origin
     default face = None
     default max_hull_points = 10
+    # `art` (an AMD landmark's Art:) is a plain alias of ship_art; ship_art still wins.
+    default art = None
 
     #TODO: This seems like it will slow things down
     default ship_role = "ship"
@@ -61,6 +63,8 @@ brain:
         default ship_art = random.choice(ship_data_options)
     # Default is ony set if the variable is not set
     #default ship_art = None
+    if art is not None and art != "":
+        ship_art = art
     ->END if ship_art is None
 
     ship = to_object(npc_spawn(START_X, START_Y, START_Z, name, side_value+","+ship_role, ship_art, "behav_npcship"))

@@ -158,6 +158,100 @@ class RadarChipsTest(unittest.TestCase):
         self.assertEqual(T.lm_terrain_chips_selected(CID, "weapon"),
                          ["all", "nebulas", "asteroids"])
 
+    # --- the two groups, side by side --------------------------------------------
+
+    def test_the_groups_split_the_row(self):
+        self.assertEqual(T.lm_terrain_chips_items("lens"), ["all", "threats", "friends", "bases"])
+        self.assertEqual(T.lm_terrain_chips_items("terrain"), ["nebulas", "asteroids"])
+        self.assertEqual(dict(T.LM_TERRAIN_CHIPS)["asteroids"], "Asteroids")
+
+    def test_the_groups_fit_between_the_info_panel_and_helms_camera_dial(self):
+        """1024 - 300 (info panel) - 334 (dial) = 390px; the engine measured "Asteroids"
+        at 65.5px and "Threats" at 52.4px in gui-1, so each needs its pitch."""
+        self.assertGreater(T.LM_TERRAIN_CHIP_WIDTH["terrain"], 66)
+        self.assertGreater(T.LM_TERRAIN_CHIP_WIDTH["lens"], 53)
+        total = T.lm_terrain_chips_group_px("lens") + T.lm_terrain_chips_group_px("terrain")
+        self.assertLessEqual(total, 390)
+
+    def test_a_lens_tap_leaves_the_terrain_alone(self):
+        T.lm_terrain_chips_apply(CID, "helm", _Box(["nebulas"]), "terrain")
+        box = _Box(["all", "friends"])
+        T.lm_terrain_chips_apply(CID, "helm", box, "lens")
+        self.assertEqual(box.get_selected(), ["friends"])
+        self.assertEqual(self.flags("helm"), (1, 0))
+        self.assertEqual(self.written("helm"), sorted([self.ship, self.ally]))
+
+    def test_terrain_is_never_put_in_the_filter(self):
+        """The filter is for contacts; the switches alone decide terrain. Listing terrain
+        to dodge the engine hiding it under a filter is exactly what this must not do."""
+        from sbs_utils.procedural.spawn import terrain_spawn
+        rock = to_id(terrain_spawn(500, 0, 500, None, "#, asteroid", "plain_asteroid_9",
+                                   "behav_asteroid"))
+        neb = to_id(terrain_spawn(800, 0, 800, None, "#, nebula", "nebula", "behav_nebula"))
+        for lens in (["threats"], ["friends"], ["bases"], ["threats", "friends", "bases"]):
+            with self.subTest(lens=lens):
+                T.lm_terrain_chips_apply(CID, "helm", _Box(lens), "lens")
+                self.assertNotIn(rock, self.written("helm"))
+                self.assertNotIn(neb, self.written("helm"))
+        self.assertEqual(self.flags("helm"), (1, 1))
+
+    def test_a_terrain_tap_leaves_the_filter_alone(self):
+        T.lm_terrain_chips_apply(CID, "helm", _Box(["threats"]), "lens")
+        T.lm_terrain_chips_apply(CID, "helm", _Box([]), "terrain")
+        self.assertEqual(self.flags("helm"), (0, 0))
+        self.assertEqual(self.written("helm"), sorted([self.ship, self.foe]))
+        self.assertEqual(T.lm_terrain_chips_selected(CID, "helm", "lens"), ["threats"])
+        self.assertEqual(T.lm_terrain_chips_selected(CID, "helm", "terrain"), [])
+
+    def test_each_group_follows_the_ship(self):
+        T.lm_terrain_chips_apply(CID, "weapon", _Box(["bases"]), "lens")
+        lens, switch = _Box(["all"]), _Box(["nebulas", "asteroids"])
+        T.lm_terrain_chips_follow(CID2, "weapon", lens, "lens")
+        T.lm_terrain_chips_follow(CID2, "weapon", switch, "terrain")
+        self.assertEqual(lens.get_selected(), ["bases"])
+        self.assertEqual(switch.dirty, 0)
+
+    # --- wider on a wider screen --------------------------------------------------
+
+    def _screen(self, w, h, known=True):
+        from sbs_utils.vec import Vec3
+        FrameContext.aspect_ratios[CID] = Vec3(w, h, 0 if known else 99)
+        self.addCleanup(FrameContext.aspect_ratios.pop, CID, None)
+
+    def test_an_unreported_screen_gets_the_floor(self):
+        self.assertEqual(T.lm_terrain_chips_scale(CID, "helm"), 1.0)
+        self.assertEqual(T.lm_terrain_chips_style("terrain", CID, "helm").split(";")[0],
+                         "col-width:72px")
+
+    def test_a_1024_screen_gets_the_floor(self):
+        self._screen(1024, 768)
+        # 390px of room against 384px of chips: the floor, give or take a pixel a chip.
+        self.assertLess(T.lm_terrain_chips_scale(CID, "helm"), 1.05)
+        self.assertEqual(T.lm_terrain_chips_font(CID), "gui-1")
+
+    def test_a_wide_screen_grows_the_chips_up_to_the_cap(self):
+        self._screen(1920, 1080)
+        self.assertEqual(T.lm_terrain_chips_scale(CID, "helm"), T.LM_TERRAIN_SCALE_MAX)
+        self.assertEqual(T.lm_terrain_chips_style("terrain", CID, "helm").split(";")[0],
+                         "col-width:115px")
+        self.assertEqual(T.lm_terrain_chips_font(CID), "gui-2")
+
+    def test_the_chips_never_outgrow_the_room(self):
+        """Whatever the width, both groups fit between the info panel and the dial."""
+        for w in (1024, 1100, 1180, 1280, 1600, 1920, 2560):
+            self._screen(w, 1080)
+            for console in ("helm", "weapon"):
+                total = (T.lm_terrain_chips_group_px("lens", CID, console)
+                         + T.lm_terrain_chips_group_px("terrain", CID, console))
+                room = w - T.LM_TERRAIN_LEFT_PX - T.LM_TERRAIN_RIGHT_PX[console]
+                with self.subTest(width=w, console=console):
+                    self.assertLessEqual(total, room)
+
+    def test_the_bigger_font_waits_for_room_for_it(self):
+        """gui-2 "Asteroids" is 71.5px: not before the terrain pitch is past it."""
+        self._screen(1100, 768)
+        self.assertEqual(T.lm_terrain_chips_font(CID), "gui-1")
+
     def test_a_second_console_on_the_ship_follows(self):
         T.lm_terrain_chips_apply(CID, "weapon", _Box(["friends", "nebulas"]))
         other = _Box(["all", "nebulas", "asteroids"])

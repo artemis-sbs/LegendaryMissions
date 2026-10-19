@@ -271,7 +271,8 @@ shared FB_TEXT = {}
 # Science Section - Adds "Hold 1", "Hold 2", "Hold 3" and "Hold 4" scans to the suspect ships.
 
 # The suspect ship's flavor scan (scan/status/intel/bio) is DECLARATIVE now - registered
-# via science_define_scan("suspect", ...) at the top of this file and rendered by the
+# from the cargo_scans section of peacetime_remastered.amd (registered in the @map body of
+# peacetime_remastered.mast) and rendered by the
 # generic science route (which also supplies the //enable/science). Only the dynamic
 # proximity "Hold 1-4" bio-scan - the actual kidnapper detection - stays hand-authored.
 //science if has_roles(SCIENCE_SELECTED_ID, "suspect") and FB_STATUS >= 1
@@ -411,8 +412,8 @@ shared FB_TEXT = {}
     else:
         + "Surrender now"  fb_handle_kidnapper_surrender
 
-# The discovered kidnapper's scan is DECLARATIVE too - science_define_scan("discovered", ...)
-# at the top of this file. When fb_kidnapper_discovered swaps the ship's role suspect->discovered,
+# The discovered kidnapper's scan is DECLARATIVE too - `Scan of: discovered` in the same
+# cargo_scans section. When fb_kidnapper_discovered swaps the ship's role suspect->discovered,
 # the generic route just renders the "discovered" flavor instead (captain still via {captain}).
 
 ===== fb_handle_kidnapper_surrender ====

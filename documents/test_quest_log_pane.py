@@ -216,8 +216,13 @@ class QuestLogPane(unittest.TestCase):
         self.assertIn("-Find her.", self.body("-Find her."))
 
     def test_a_list_and_the_plain_line_under_it(self):
+        # Markdown: a plain line straight under an item continues that item; it never
+        # takes a mark of its own. A blank line ends the list.
         lines = self.body("- Find her.\n- Scan her.\nThen come home.")
-        self.assertEqual(lines[-3:], ["- Find her.", "- Scan her.", "Then come home."])
+        self.assertEqual(lines[-2:], ["- Find her.", "- Scan her. Then come home."])
+        lines = self.body("- Find her.\n- Scan her.\n\nThen come home.")
+        self.assertEqual(lines[-1], "Then come home.")
+        self.assertNotIn("- Then come home.", lines)
 
 
 if __name__ == "__main__":
