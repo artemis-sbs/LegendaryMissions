@@ -4,12 +4,10 @@ Sprite sheets for the casino card games. Register sub-rects with
 `gui_image_add_atlas` once at setup; draw cards anywhere with `gui_image` /
 text-area `image://` using the keys below.
 
-**Location:** the PNGs live in the LM media source at
-`LegendaryMissions/media/LegendaryMissions/casino/` (not this folder), so they
-resolve the same way as the hangar's media - the atlas path is
-`media/LegendaryMissions/casino/<file>`, resolved against the running mission's
-folder. `casino_media.py` (`CASINO_MEDIA`) centralizes this path. This file is
-just the reference doc.
+**Location:** the PNGs live in the **sbs_utils** media pack (`sbs_utils/media/casino/`,
+moved from LM 2026-10-19), not this folder. `casino_media.py` asks for the logical
+path `media_shared("casino")` (`CASINO_MEDIA`), which finds them wherever they are
+unpacked. This file is just the reference doc.
 
 ## arvonian_deck.png  (4096 x 1024)
 

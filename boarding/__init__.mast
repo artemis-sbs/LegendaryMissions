@@ -4,8 +4,9 @@ provides boarding
 #
 # `ship_data_add_extra` searches the mission folder and then each pinned media pack, and
 # prefers the unpacked `__lib__/media` copy - the only one the engine can open. An addon
-# cannot hand the engine a file itself (a mastlib is a zip), so the hull rides in the media
-# pack and is merely NAMED here.
+# cannot hand the engine a file itself (a mastlib is a zip), so the hull rides in a media
+# pack and is merely NAMED here. Since 2026-10-19 that is the sbs_utils pack
+# (`lm_eva_ships.json` and the suit art), because the library's EVA code needs the hull.
 #
 # `EXTRA_SHIP_DATA` is on by default (sbs_utils, 2026-10-09), so this needs no setting. A
 # mission that turns it off - one that has to run on a v1.3.4 engine - gets one log line

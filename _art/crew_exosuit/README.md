@@ -3,7 +3,9 @@
 A heavy EVA / exo suit crew figure, posed **seated with the arms bent forward**, for use
 as a bridge or cockpit prop.
 
-Ships as `media/ships/LM_CrewExosuitSeated.{obj,_diffuse,_emissive,_normal,_specular}`.
+Ships as `media/ships/LM_CrewExosuitSeated.{obj,_diffuse,_emissive,_normal,_specular}`
+in the **sbs_utils** media pack (moved from LM 2026-10-19 - the library's EVA code owns
+the hull, `sbs_utils/media/lm_eva_ships.json`).
 
 | | |
 |---|---|
@@ -37,7 +39,7 @@ $B --background crew_exosuit_seated.blend --python add_visor.py -- --out .
 $B --background crew_exosuit_seated.blend --python build_artset.py -- --out ./artset
 ```
 
-Then copy `artset/LM_CrewExosuitSeated.*` into `media/ships/`.
+Then copy `artset/LM_CrewExosuitSeated.*` into `sbs_utils/media/ships/`.
 
 To look at any stage: `render_suit.py` (orbit of five views), `headshot.py` (head
 close-ups), `verify_artset.py` (renders the **shipped** `.obj` + `_diffuse.png` rather

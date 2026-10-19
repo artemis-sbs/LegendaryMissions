@@ -13,8 +13,8 @@ import turret_gm.mast
 # pointed at inside create_new_sim(), so the registration has to happen before the
 # first one; declaring inside a label would be too late.
 #
-# The hulls are a FILE that exists - media/turrets/extraShipData_turrets.yaml, which
-# rides the LM media pack - not a file this addon writes. A mastlib is a zip and the
+# The hulls are a FILE that exists - turrets/extraShipData_turrets.json, which rides
+# the sbs_utils media pack (moved from LM's, 2026-10-19) - not a file this addon writes. A mastlib is a zip and the
 # engine cannot read inside one; a media pack is unpacked to disk once, so the engine
 # can simply be handed the folder. Before this, the library accumulated the entries
 # and flushed them into the mission's shared extraShipData.json just before

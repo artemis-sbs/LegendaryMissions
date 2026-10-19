@@ -28,7 +28,7 @@ from sbs_utils.procedural.turret import turret_make
 
 # --- Turrets are live exactly where their hulls reached the engine ----------
 # Turrets are inseparable from extra ship data: every hull below
-# (lm_turret_beam/heavy/mount/crate) exists ONLY in extraShipData_turrets.yaml, and
+# (lm_turret_beam/heavy/mount/crate) exists ONLY in extraShipData_turrets.json, and
 # engine-measurement is why - a behav_station on a STOCK hull never fires. So with the
 # loader off there is no such thing as a working turret, and a spawned one is not a
 # harmless dud: it asks the engine for a ship type it was never given, which dies inside
@@ -69,7 +69,7 @@ def lm_turrets_enabled():
 
 
 #: Hull every tower uses unless told otherwise. MUST be one of ours - engine-measured, a
-#: behav_station on a STOCK hull never fires (see extraShipData_turrets.yaml).
+#: behav_station on a STOCK hull never fires (see extraShipData_turrets.json).
 LM_TURRET_DEFAULT_HULL = "lm_turret_beam"
 
 #: Brain label a deployed tower runs.
@@ -158,7 +158,7 @@ def lm_turret_deploy_tower(x, y, z, side="tsn", hull=None, acquire_range=2500, t
         side (str): Side key. Also decides who it shoots, via diplomacy.
         hull (str, optional): shipData key. Defaults to
             :data:`LM_TURRET_DEFAULT_HULL`. Must be an entry from
-            extraShipData_turrets.yaml or the turret will never fire.
+            extraShipData_turrets.json or the turret will never fire.
         acquire_range (float): Acquisition range. Keep in step with the hull's beam range -
             beam stats are not readable from a live object, so nothing can check this
             for you.
