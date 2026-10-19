@@ -65,6 +65,28 @@ default shared DEFAULT_SCIENCE_AUTO_SCAN = True
             % Reading a mild flu circulating on this station. Shore leave is not recommended.
             % There is no sign of pathogens on this station.
 
+# A station of a side that is NEITHER allied NOR an enemy. Every station route was one of
+# the two, so such a station (Open Universe's authored sides: no relation to the crew's
+# side at all - `side_are_neutral` is False too, measured) could be queued and never
+# scanned, and Comms, which waits on the scan, offered it nothing.
+//enable/science if not side_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and not side_are_enemies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
+
+//science if not side_are_allies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and not side_are_enemies(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID) and has_roles(SCIENCE_SELECTED_ID, "Station")
+    st_name = to_object(SCIENCE_SELECTED_ID).name if to_object(SCIENCE_SELECTED_ID) is not None else "This station"
+    + "scan" {"st_name": st_name}:
+        <scan>
+            " {st_name}: a station of an unaligned side. Not hostile, not ours.
+
+    + "status":
+        <scan>
+            " Space station system status cannot be scanned in this version of the software.
+
+    + "intel":
+        <scan>
+            % They trade with anyone who pays, and remember who did not.
+            % Their traffic control is polite and slow.
+            % They keep their own counsel, and their own guns.
+
 //enable/science if has_role(SCIENCE_SELECTED_ID, "friendly") and side_are_friendly(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
 //science if has_role(SCIENCE_SELECTED_ID, "friendly") and side_are_friendly(SCIENCE_ORIGIN_ID, SCIENCE_SELECTED_ID)
 
