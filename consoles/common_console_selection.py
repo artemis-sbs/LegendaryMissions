@@ -1,4 +1,4 @@
-from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship, gui_sub_section, gui_button, gui_task_for_client, gui_icon, gui_blank, gui_message_callback, gui_text_escape
+from sbs_utils.procedural.gui import gui_row, gui_text, gui_ship_portrait, gui_sub_section, gui_button, gui_task_for_client, gui_icon, gui_blank, gui_message_callback, gui_text_escape
 from sbs_utils.procedural.gui import gui_tab_is_top, gui_tab_add_top, gui_tab_remove_top
 from sbs_utils import fs
 from sbs_utils.procedural import ship_data
@@ -142,7 +142,10 @@ def console_ship_select_template(item):
     hull = row["hull"]
 
     gui_row("row-height:2em;padding:13px;")
-    gui_ship(f"{hull}", style="col-width:50px;padding:0,0,5px,0;")
+    # A PORTRAIT, not a live 3D ship: this template runs per row, per console, per
+    # rebuild, and a 50px thumbnail never needed a spinning model. A hull with no
+    # portrait (a mod with no set) still falls back to the 3D ship.
+    gui_ship_portrait(f"{hull}", style="col-width:50px;padding:0,0,5px,0;")
     dat = ship_data.get_ship_data_for(hull)
     desc = "A fine ship"
     if dat is not None:
