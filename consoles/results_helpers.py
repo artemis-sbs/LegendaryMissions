@@ -303,7 +303,7 @@ def game_results_timestamp():
     now()/strftime() trigger an internal import that fails there. A normal module
     function runs with real builtins, so calling it from MAST is safe.
     """
-    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def game_results_load(results_file):
@@ -328,7 +328,7 @@ def game_results_load(results_file):
             return []
     except OSError:
         return []                                        # no file yet
-    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     aside = "%s.unreadable-%s.yaml" % (results_file[:-5] if results_file.endswith(".yaml")
                                        else results_file, stamp)
     try:
