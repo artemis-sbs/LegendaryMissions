@@ -246,7 +246,8 @@ def lm_comms_chips_refresh(client_id, lb):
 # contact, every comms console on that ship sees it in the Favorites chip.
 _FAV_KEY = "lm_comms_favorites"
 
-#: The star is LM's own art (media/epadd/icons.png, registered in epadd.mast): the
+#: The star is on the epadd icon sheet (sbs_utils media pack, epadd/icons.png; registered
+#: in epadd.mast and by the library on first use): the
 #: built-in sheet has only a rank badge. Filled = a favorite, outline = not.
 _STAR_ON = "lm.star"
 _STAR_OFF = "lm.star_outline"

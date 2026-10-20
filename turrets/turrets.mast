@@ -19,7 +19,8 @@ owner: 0
 ```
     # `type: prefab/turret` makes this discoverable via labels_get_type("prefab/turret"),
     # so a GM menu can enumerate turret kinds with no hardcoded list: add a hull to
-    # extraShipData_turrets.yaml plus a prefab like this one, and it appears on its own.
+    # extraShipData_turrets.json (sbs_utils media) plus a prefab like this one, and it
+    # appears on its own.
     # Turrets may be off this mission (lm_turrets_enabled() in turrets.py).
     # Yields 0, never ->END or None - `yield result None` never satisfies
     # Promise.done() and would hang an awaiting GM/mission task forever.

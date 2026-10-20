@@ -25,6 +25,11 @@
 # convention the registry already uses for meanings (`quest.job`, `list.expand`).
 # The last two are the comms Favorites star (filled = a favorite, outline = not):
 # the built-in sheet has no plain star, only a rank badge.
+#
+# The SHEET lives in the sbs_utils media pack (since 2026-10-19), because the library's
+# own xESS asks for these names too; media_shared finds it there. The library also
+# registers this same list on first use (icon_sheet.LIBRARY_ICON_SHEETS) - keep the two
+# in step. Whichever runs first claims a name; neither overwrites the other.
 gui_icon_add_atlas_grid(media_shared("epadd/icons"), 4, 6, cell=128, names=[
     "epadd.cargo", "epadd.fabricate", "epadd.upgrades", "epadd.quests",
     "epadd.library", "epadd.help", "epadd.airwing", "epadd.casino",
