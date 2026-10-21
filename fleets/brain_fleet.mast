@@ -77,6 +77,11 @@ distance: 6000
             lead_ship_id = s
     yield fail if lead_ship_id is None
     BRAIN_AGENT.set_inventory_value("blackboard:lead_ship_id", lead_ship_id)
+    # STAND DOWN. A ceasefire makes the chase brains below pick no new target, but each
+    # ship still holds the weapons target it had, and the engine keeps firing at it - a
+    # ceasefired Gleaner fleet shot the crew dead (engine, 2026-10-21). Clear any target
+    # on a side this fleet is now NEUTRAL or ALLIED to. Every fleet tree runs this first.
+    side_stand_down(linked_to(BRAIN_AGENT_ID, "ship_list"))
 
     around = broad_test_around(lead_ship_id, distance, distance, 0xF0)
     BRAIN_AGENT.set_inventory_value("blackboard:local_arena", around)
