@@ -191,8 +191,19 @@ shared game_stats = ~~{
     #
     # START_TEXT is passed as a VARIABLE, not interpolated into a literal: a `{` in it
     # would otherwise be re-run as an f-string, and this is mission-authored text.
+    #
+    # A game-ending goal's `Citation:` (END_CITATION, set by the game_over route) is a
+    # second paragraph of the same area: it used to be the line of a VICTORY hail sent
+    # in the frame this screen came up, and no crew ever read it.
+    default shared END_CITATION = ""
+    # Two paragraphs make it a RICH text area, which draws every line in its body style
+    # (white) and ignores the area's own color - so the body style is redefined cyan
+    # (`=$_`) at the top. One paragraph stays the plain area it always was.
+    results_outcome = START_TEXT
+    if END_CITATION:
+        results_outcome = "=$_ font:gui-2;color:cyan;\n" + START_TEXT + "\n\n" + END_CITATION
     gui_row("row-height: 1fr;")
-    gui_text_area(START_TEXT, style="color:cyan;padding:0,8px,0,0;")
+    gui_text_area(results_outcome, style="color:cyan;padding:0,8px,0,0;")
 
     # Credits earned this mission (opt-in): a mission captures CREDITS_START + CREDIT_SIDE_IDS
     # at start; missions that don't leave CREDITS_START None and the row stays hidden. Credits

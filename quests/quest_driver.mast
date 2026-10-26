@@ -81,8 +81,11 @@
 # terminal quest wins the race because GAME_ENDED guards a second teardown.
 //shared/signal/game_over
     default GAME_ENDED = False
+    default CITATION = ""
     ->END if GAME_ENDED
     START_TEXT = TEXT
+    # The goal's `Citation:` - the results screen prints it under TEXT.
+    shared END_CITATION = CITATION
     GAME_STARTED = False
     GAME_ENDED = True
     if WIN:
