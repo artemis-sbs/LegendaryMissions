@@ -408,7 +408,7 @@ def lm_sci_statline(client_id):
 
 
 def lm_sci_origin(client_id):
-    """Where the contact's ship comes from (Terran, Kralien...), once it is scanned.
+    """Where the contact's ship comes from and what it is (Skaraan Enforcer), once it is scanned.
 
     Origin identifies a contact as surely as its name, so it is withheld until the scan
     lands - the same gate as the name and side."""
@@ -425,8 +425,10 @@ def lm_sci_origin(client_id):
                                  or target.art_id)
     except Exception:                                   # noqa: BLE001
         return ""
-    origin = data.get("origin") if data else None
-    return str(origin) if origin else ""
+    if not data:
+        return ""
+    origin, kind = data.get("origin"), data.get("name")
+    return " ".join(str(x) for x in (origin, kind) if x)    # "Skaraan Enforcer"
 
 
 def lm_sci_origin_text(client_id):

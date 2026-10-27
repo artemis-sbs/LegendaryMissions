@@ -139,7 +139,7 @@ class PanelPropsTest(unittest.TestCase):
     def test_a_scanned_contact_shows_its_origin(self):
         self._select(self.target)
         science_set_scan_data(self.ship, self.target, {"scan": "A cruiser."})
-        self.assertIn("Terran", sp.lm_sci_origin_text(CID))
+        self.assertIn("Terran Light Cruiser", sp.lm_sci_origin_text(CID))
 
     def test_the_statline_bearing_is_a_map_heading(self):
         """East of us is 090 on the map whichever way the ship faces."""
