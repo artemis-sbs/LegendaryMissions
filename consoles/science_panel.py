@@ -41,7 +41,7 @@ from sbs_utils.helpers import FrameContext, gui_text_escape
 from sbs_utils.procedural.query import to_object, to_blob
 from sbs_utils.procedural.science import science_get_scan_data
 from sbs_utils.procedural.sides import (side_are_enemies, side_are_allies,
-                                        side_get_side_color)
+                                        side_get_side_color, side_get_display_name)
 from sbs_utils.procedural.ship_data import get_ship_data_for
 
 from science_queue import (lm_sci_queue_list, lm_sci_queue_side,
@@ -358,7 +358,8 @@ def lm_sci_header_side_text(client_id):
     if not side:
         return "$text:;"
     color = side_get_side_color(side, _DIM)
-    return (f"$text:{gui_text_escape(str(side))};color:{color};font:gui-3;"
+    shown = side_get_display_name(side) or str(side)    # the key may differ ("raider" -> Threat)
+    return (f"$text:{gui_text_escape(shown)};color:{color};font:gui-3;"
             f"justify:right;overflow:shrink;")
 
 

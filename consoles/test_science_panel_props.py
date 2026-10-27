@@ -155,6 +155,15 @@ class PanelPropsTest(unittest.TestCase):
         self.target.pos = mock_sbs.vec3(-1000.0, 0.0, 0.0)
         self.assertIn("hdg: 270", sp.lm_sci_statline(CID))
 
+    def test_the_side_is_shown_by_its_display_name_not_its_key(self):
+        from sbs_utils.procedural.sides import side_set_display_name
+        side_set_display_name("raider", "Threat")
+        self._select(self.target)
+        science_set_scan_data(self.ship, self.target, {"scan": "A cruiser."})
+        text = sp.lm_sci_header_side_text(CID)
+        self.assertIn("Threat", text)
+        self.assertNotIn("raider", text)
+
     def test_the_overflow_policy_is_shrink_not_wrap(self):
         """A wrapped title is drawn over the statline - the engine does not clip."""
         self._select(self.target)
