@@ -742,6 +742,7 @@ class GmSelectionDetails:
         self.shields = []
         self.systems = []
         self.hull = None
+        self.auto_gauges = []
 
     # --- registration (called while the layout is built) ---
     def add_section(self, key, header_row, body_row):
@@ -760,6 +761,33 @@ class GmSelectionDetails:
             self.systems.append(gauge)
         else:
             setattr(self, key, gauge)
+
+    def add_auto_gauge(self, key, max_key_or_val, gauge, is_blob=False, index=0):
+        self.auto_gauges.append({"key":key, "max": max_key_or_val, "gauge":gauge, "is_blob": is_blob, "index": index})
+        
+
+    def update_auto_gauges(self, obj):
+        for g in self.auto_gauges:
+            key = g["key"]
+            max_val = g["max"]
+            if isinstance(max_val, str): # if it's not a string we assume it's a number
+                if g["is_blob"]:
+                    index = g["index"]
+                    max_val = get_data_set_value(obj, max_val, index)
+                else:
+                    max_val = get_inventory_value(obj, max_val)
+            if g["is_blob"]:
+                index = g["index"]
+                res = get_data_set_value(obj, key, index)
+            else:
+                res = get_inventory_value(obj, key)
+            gauge = g["gauge"]
+            if res is None:
+                gauge.show(False)
+                continue
+            gauge.show(True)
+            gauge.update(value=res, max=max_val)
+        
 
     # --- data gathering ---
     @staticmethod
@@ -861,6 +889,7 @@ class GmSelectionDetails:
         self._set_text("origin", "Origin", origin)
         self._set_text("side", "Side", side)
         # self._set_text("roles", "Roles", _gm_format_roles(obj))
+        self.update_auto_gauges(obj_id)
 
         shield_rows = [] if is_terrain else self._shield_values(obj_id)
         self._set_gauges(self.shields, shield_rows)
