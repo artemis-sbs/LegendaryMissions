@@ -210,6 +210,7 @@ default GM_SIDEBAR_SELECTED_SUBMENU_INDEX = {}
 
             GM_SIDEBAR_SUBMENU_PANELS[m_type] = sub_menu_sections
             GM_SIDEBAR_SELECTED_SUBMENU_INDEX[m_type] = selected_submenu_index
+            set_inventory_value(client_id, "gm_current_menu",m_type)
         if menu_panel is not None:
             gss_row.show(False)
         else:

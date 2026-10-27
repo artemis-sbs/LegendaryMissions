@@ -775,7 +775,7 @@ class GmSelectionDetails:
                     index = g["index"]
                     max_val = get_data_set_value(obj, max_val, index)
                 else:
-                    max_val = get_inventory_value(obj, key)
+                    max_val = get_inventory_value(obj, max_val)
             if g["is_blob"]:
                 index = g["index"]
                 res = get_data_set_value(obj, key, index)
@@ -784,7 +784,7 @@ class GmSelectionDetails:
             gauge = g["gauge"]
             if res is None:
                 gauge.show(False)
-                return
+                continue
             gauge.show(True)
             gauge.update(value=res, max=max_val)
         
