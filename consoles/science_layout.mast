@@ -108,6 +108,11 @@
             sci_side.value = lm_sci_header_side_text(client_id)
 
         gui_row("row-height: 1.3em;")
+        sci_origin = gui_text(lm_sci_origin_text(client_id))
+        on change lm_sci_origin(client_id):
+            sci_origin.value = lm_sci_origin_text(client_id)
+
+        gui_row("row-height: 1.3em;")
         sci_stat = gui_text(lm_sci_statline_text(client_id))
         # Watching the statline's own TEXT: it changes whenever any of the three numbers
         # does, and not when they do not, so this repaints exactly as often as it must.

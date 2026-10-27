@@ -35,12 +35,14 @@ system lines rather than drawing zeros that look like damage.
 Prefixed `lm_sci_` because every top-level function here becomes a MAST global in one flat,
 mission-wide namespace. A leading underscore is private to this file.
 """
+import math
+
 from sbs_utils.helpers import FrameContext, gui_text_escape
 from sbs_utils.procedural.query import to_object, to_blob
 from sbs_utils.procedural.science import science_get_scan_data
 from sbs_utils.procedural.sides import (side_are_enemies, side_are_allies,
                                         side_get_side_color)
-from sbs_utils.procedural.gui import viewscreen_relative_bearing
+from sbs_utils.procedural.ship_data import get_ship_data_for
 
 from science_queue import (lm_sci_queue_list, lm_sci_queue_side,
                            lm_sci_queue_is_scanned)
@@ -367,13 +369,11 @@ def lm_sci_header_revision(client_id):
 
 
 def lm_sci_statline(client_id):
-    """`rng:  nnnnnn  ber: nnn alt: nnn` - the numbers that move.
+    """`rng:  nnnnnn  hdg: nnn alt: nnn` - the numbers that move.
 
-    BEARING is RELATIVE to the ship's heading, 0 dead ahead, clockwise:
-    `viewscreen_relative_bearing` takes it from the engine's own forward/right vectors
-    rather than assuming an axis, which is the documented way to avoid a bearing that is
-    quietly 90 degrees out. ALTITUDE is signed - above is positive - so the sign carries
-    the information the stock readout spends the words "Above You" on.
+    HEADING is the direction to the contact on the MAP (0 = +Z, clockwise), not relative
+    to the ship's bow, so it reads the same as the radar. ALTITUDE is signed - above is
+    positive - so the sign carries the information the stock readout spends the words "Above You" on.
 
     A part that cannot be computed is left out rather than shown as zero: a missing
     reading and a reading of zero mean very different things to a science officer.
@@ -391,14 +391,50 @@ def lm_sci_statline(client_id):
             parts.append("rng: " + str(int(ctx.sbs.distance_id(ship_id, target_id))))
         except Exception:                               # noqa: BLE001
             pass
-    bearing = viewscreen_relative_bearing(target_id, ship_id)
-    if bearing is not None:
-        parts.append("ber: " + str(int(bearing)))
+    try:
+        # A HEADING on the map, not a bearing off our bow: 0 is +Z (north on the radar),
+        # clockwise, whichever way this ship happens to face.
+        heading = math.degrees(math.atan2(target.pos.x - origin.pos.x,
+                                          target.pos.z - origin.pos.z)) % 360
+        parts.append("hdg: " + str(int(round(heading)) % 360))
+    except Exception:                                   # noqa: BLE001
+        pass
     try:
         parts.append("alt: " + str(int(round(target.pos.y - origin.pos.y))))
     except Exception:                                   # noqa: BLE001
         pass
     return "  ".join(parts)
+
+
+def lm_sci_origin(client_id):
+    """Where the contact's ship comes from (Terran, Kralien...), once it is scanned.
+
+    Origin identifies a contact as surely as its name, so it is withheld until the scan
+    lands - the same gate as the name and side."""
+    ship_id, target_id = lm_sci_tabs_pair(client_id)
+    if not ship_id or not target_id:
+        return ""
+    if not lm_sci_queue_is_scanned(ship_id, target_id, "scan"):
+        return ""
+    target = to_object(target_id)
+    if target is None:
+        return ""
+    try:
+        data = get_ship_data_for(target.get_inventory_value("ship_data_key", None)
+                                 or target.art_id)
+    except Exception:                                   # noqa: BLE001
+        return ""
+    origin = data.get("origin") if data else None
+    return str(origin) if origin else ""
+
+
+def lm_sci_origin_text(client_id):
+    """The origin as props for its own `gui_text`."""
+    origin = lm_sci_origin(client_id)
+    if not origin:
+        return "$text:;"
+    return (f"$text:{gui_text_escape(origin)};color:{_LABEL};"
+            f"font:gui-1;overflow:shrink;")
 
 
 def lm_sci_statline_text(client_id):

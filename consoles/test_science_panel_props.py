@@ -131,6 +131,30 @@ class PanelPropsTest(unittest.TestCase):
         self.assertTrue(sq.lm_sci_queue_is_scanned(self.ship, self.target, "scan"))
         self.assertFalse(sq.lm_sci_queue_is_scanned(self.ship, self.target, "status"))
 
+    def test_an_unscanned_contact_shows_no_origin(self):
+        """Where a ship comes from is scan data, like its name and side."""
+        self._select(self.target)
+        self.assertEqual(sp.lm_sci_origin_text(CID), "$text:;")
+
+    def test_a_scanned_contact_shows_its_origin(self):
+        self._select(self.target)
+        science_set_scan_data(self.ship, self.target, {"scan": "A cruiser."})
+        self.assertIn("Terran", sp.lm_sci_origin_text(CID))
+
+    def test_the_statline_bearing_is_a_map_heading(self):
+        """East of us is 090 on the map whichever way the ship faces."""
+        self._select(self.target)
+        line = sp.lm_sci_statline(CID)
+        self.assertIn("hdg: 90", line)
+        self.assertNotIn("ber:", line)
+
+    def test_the_heading_runs_clockwise_from_plus_z(self):
+        self.target.pos = mock_sbs.vec3(0.0, 0.0, 1000.0)
+        self._select(self.target)
+        self.assertIn("hdg: 0", sp.lm_sci_statline(CID))
+        self.target.pos = mock_sbs.vec3(-1000.0, 0.0, 0.0)
+        self.assertIn("hdg: 270", sp.lm_sci_statline(CID))
+
     def test_the_overflow_policy_is_shrink_not_wrap(self):
         """A wrapped title is drawn over the statline - the engine does not clip."""
         self._select(self.target)
@@ -373,11 +397,11 @@ class PanelPropsTest(unittest.TestCase):
         self.assertIn("font:gui-3;", sp.lm_sci_header_name_text(CID))
         self.assertIn("font:gui-3;", sp.lm_sci_header_side_text(CID))
 
-    def test_the_statline_reads_rng_ber_alt(self):
+    def test_the_statline_reads_rng_hdg_alt(self):
         from sbs_utils.procedural.query import set_science_selection
         set_science_selection(self.ship, self.target)
         stat = sp.lm_sci_statline(CID)
-        for key in ("rng:", "ber:", "alt:"):
+        for key in ("rng:", "hdg:", "alt:"):
             self.assertIn(key, stat, f"{key} missing from {stat!r}")
         self.assertIn("font:gui-1;", sp.lm_sci_statline_text(CID))
 
