@@ -53,6 +53,12 @@ priority: 10 # Smaller number is higher priority
         gen_header.data = {"section": general, "parent": selected_gss}
         gui_message(gen_header, "gm_toggle_detail_section")
 
+        # --- Energy status - player ships only
+        energy_row = gui_row(gauge_row_height)
+        energy_gauge = gui_gauge(0,1, "Energy", show="frac")
+        handler.add_auto_gauge("energy",1000,energy_gauge,is_blob=True)
+        gui_spacer_row()
+
         # --- Defense: shields, armor, hull ---
         def_hdr_row = gui_row("row-height: 1.3em;")
         def_header = gui_text("$text:Defense  ;font:gui-1;color:#0fc;", "click_background:#0fc2;click_text:;")
@@ -151,11 +157,14 @@ priority: 10 # Smaller number is higher priority
     for c in clients:
         if sbs.get_ship_of_client(c) in gms:
             client_id = c
-            task = gui_task_for_client(client_id)
-            if task is not None:
-                gm_dh = task.get_inventory_value("gm_details_handler")
-                if gm_dh is not None:
-                    gm_dh.refresh_data()
+            # If it's not the right menu, don't do the updates
+            # It'll still update if the selection changes.
+            if "selected" in get_inventory_value(client_id, "gm_current_menu",""):
+                task = gui_task_for_client(client_id)
+                if task is not None:
+                    gm_dh = task.get_inventory_value("gm_details_handler")
+                    if gm_dh is not None:
+                        gm_dh.refresh_data()
     ->END
 
 === gm_toggle_detail_section
@@ -441,15 +450,36 @@ ship_id:
     ->END
 
 
-=== gm_menu_upgrades_and_abilities
-metadata: ```
-type: gm_menu/selected/upgrades
-icon_index: 74
-priority: 400
-```
-    gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
-    selected = get_inventory_value(gm, "gamemaster_prev_selection", None)
-    yield success
+# === gm_menu_upgrades_and_abilities
+# metadata: ```
+# type: gm_menu/selected/upgrades
+# icon_index: 74
+# priority: 400
+# ```
+#     gm = get_inventory_value(client_id, "GAMEMASTER_COMBOT", None)
+#     selected = get_inventory_value(gm, "gamemaster_prev_selection", None)
+#     upgrades = linked_to(selected, "__UPGRADE__")
+#     names = dict()
+#     for upgrade in upgrades:
+#         names[upgrade.label.name] = upgrade
+#     gui_row("row-height: 1.3em;")
+#     gui_text("Upgrades")
+#     upgrade_row = gui_row()
+#     with gui_sub_section():
+#         gui_row()
+#         gui_text("Some info")
+#         gui_row()
+#         gui_text("more")
+#         upgrade_list = gui_list(names.keys())
+#         with upgrade_list as u:
+#             gui_row("row-height: 1.3em;")
+#             gui_text(u)
+#         gui_spacer_row()
+
+#     gui_row("row-height: 1.3em;")
+#     gui_text("Elites")
+        
+#     yield success
 
 
 === gm_menu_side_manager
