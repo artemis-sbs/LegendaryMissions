@@ -38,7 +38,6 @@ shared FB_TEXT = {}
 ====== fb_investigation ======
 
     FB_STATUS = 1
-
     ds_list = []
     # Tag the first five stations ds1..ds5 and give each a random records_status (1 = manifest on
     # file, 2 = manifest down, 3 = manifest missing) that fb_preview reads. DRY'd from five near-
@@ -99,8 +98,13 @@ shared FB_TEXT = {}
     for spec, p in zip(fb_specs, spawn_points):
         c_ship = to_id(npc_spawn(p.x, p.y, p.z, spec["orig_name"], "civ, civilian, suspect", "cargo_ship", "behav_npcship"))
         s_obj = to_object(c_ship)
+        # Every suspect travels its itinerary (fb_cargo_route). The kidnapper's registry change
+        # happens on the road - as it leaves its second stop - never at spawn, so the ship the
+        # briefing names is findable under that name first.
+        fb_new_name = None
         if spec["cur_name"] != spec["orig_name"]:
-            s_obj.name = spec["cur_name"]
+            fb_new_name = spec["cur_name"]
+        task_schedule(fb_cargo_route, {"fb_r_ship": c_ship, "fb_r_stops": spec["stops"], "fb_r_rename": fb_new_name})
         set_inventory_value(c_ship, "cargo1", spec["cargo1"])
         set_inventory_value(c_ship, "cargo2", spec["cargo2"])
         set_inventory_value(c_ship, "cargo3", spec["cargo3"])
@@ -309,6 +313,41 @@ shared FB_TEXT = {}
 
     #-----------------------------------------------------------------------------------------------------------------------------
     # Miscellanous notification and upkeep tasks.
+
+# A suspect's itinerary: the cargo ships really run station to station, as the interviews
+# and the manifests say. Leg 1 and 2 are the visited stops (the clue{N}A / clue{N}B
+# stations), leg 3 is "heading to". It lingers at each stop, then moves on.
+#
+# The kidnapper "changed the ship registry" at its SECOND stop (the report says so): when
+# the case rolled that twist, the rename happens as it leaves that stop. Once the kidnapper
+# is discovered (FB_STATUS >= 2) the route ends - the surrender / flee logic owns the ship.
+===== fb_cargo_route =====
+    fb_r_leg = 0
+    for fb_r_n in fb_r_stops:
+        fb_r_leg = fb_r_leg + 1
+        fb_r_list = to_list(role("ds" + str(fb_r_n)))
+        if len(fb_r_list) > 0:
+            fb_r_st = fb_r_list[0]
+            fb_r_so = to_object(fb_r_st)
+            target_pos(fb_r_ship, fb_r_so.pos.x, fb_r_so.pos.y, fb_r_so.pos.z, throttle=1.5, target_id=0, stop_dist=1500)
+            fb_r_d = fb_dist(fb_r_ship, fb_r_st)
+            # Bounded (about 25 minutes a leg) so a ship that can never arrive does not poll forever.
+            for fb_r_tick in range(300):
+                if fb_r_d is None or fb_r_d <= 2500:
+                    break
+                await delay_sim(5)
+                ->END if has_role(fb_r_ship, "kidnapper") and FB_STATUS >= 2
+                fb_r_d = fb_dist(fb_r_ship, fb_r_st)
+            ->END if fb_r_d is None
+            # Linger at the station before moving on (not on the last leg: it stays put).
+            if fb_r_leg < 3:
+                await delay_sim(random.randint(45, 90))
+                ->END if has_role(fb_r_ship, "kidnapper") and FB_STATUS >= 2
+                ->END if not object_exists(fb_r_ship)
+                if fb_r_leg == 2 and fb_r_rename is not None:
+                    fb_r_obj = to_object(fb_r_ship)
+                    fb_r_obj.name = fb_r_rename
+    ->END
 
 ===== fb_kidnap_message =====
     await delay_sim(15)

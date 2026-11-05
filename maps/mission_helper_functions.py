@@ -624,3 +624,13 @@ def fb_is_briefed(ship):
     from sbs_utils.agent import Agent
     from sbs_utils.procedural.quest import quest_get_state, QuestState
     return quest_get_state(Agent.SHARED_ID, "florbin/brief") == QuestState.COMPLETE
+
+
+def fb_dist(a, b):
+    """Distance between two objects/ids, or None when either is gone (a destroyed ship ends its route)."""
+    from sbs_utils.procedural.query import to_object
+    oa = to_object(a)
+    ob = to_object(b)
+    if oa is None or ob is None:
+        return None
+    return ((oa.pos.x - ob.pos.x) ** 2 + (oa.pos.y - ob.pos.y) ** 2 + (oa.pos.z - ob.pos.z) ** 2) ** 0.5
