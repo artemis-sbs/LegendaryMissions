@@ -56,12 +56,16 @@
         # Set back in case of default
         set_inventory_value(client_id, "2d_follow", follow_tag)
         gui_layout_widget("red_alert")
-        gui_checkbox("Follow", var="follow_tag")
-        
-        on change follow_tag:
+        follow_cb = gui_checkbox("Follow", var="follow_tag")
+
+        # NOT `on change follow_tag`: this route ENDS after the build, the task that owns
+        # follow_tag goes with it, and the checkbox's var write then lands nowhere - the
+        # box flipped, the inventory flag never did, and Follow was stuck on. The checkbox
+        # itself still holds the state, so read it from there.
+        on gui_message(follow_cb):
             ship = viewscreen_home_ship(client_id)
             _sel = get_comms_selection(ship)
-            set_inventory_value(client_id, "2d_follow", follow_tag)
+            set_inventory_value(client_id, "2d_follow", follow_cb.value)
             comms_set_2dview_focus(client_id, _sel)
 
 
@@ -203,7 +207,14 @@
         gui_layout_widget("science_data")
         gui_row("row-height: 35px;")
         default follow_tag = False
-        gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+        follow_cb = gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+        # Not `on change follow_tag`: this route ends, taking the task that owns follow_tag
+        # with it, so the checkbox's var write landed nowhere. Read the box itself.
+        on gui_message(follow_cb):
+            ship = viewscreen_home_ship(client_id)
+            _sel = get_science_selection(ship)
+            set_inventory_value(client_id, "2d_follow", follow_cb.value)
+            science_set_2dview_focus(client_id, _sel)
         # "On screen" - science hands the MAIN SCREEN a shot of whatever it has
         # selected, which is the console that already has the thing selected. Same
         # grammar as Follow, one row over. The item list comes from the library so the
@@ -258,12 +269,6 @@
         gui_row()
         gui_layout_widget("science_sorted_list")
 
-    on change follow_tag:
-        ship = viewscreen_home_ship(client_id)
-        _sel = get_science_selection(ship)
-        set_inventory_value(client_id, "2d_follow", follow_tag)
-        science_set_2dview_focus(client_id, _sel)
-        
     # The route ENDS here - no `yield idle`. A builder that parks on `yield idle` is
     # CANCELLED by the next GUI build, and a cancelled task cannot be revived, so its
     # `on change` handlers could stop. One that ends is revived when a handler fires,

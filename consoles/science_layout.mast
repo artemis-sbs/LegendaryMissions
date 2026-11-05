@@ -143,7 +143,14 @@
 
         gui_row("row-height: 35px;")
         default follow_tag = False
-        gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+        follow_cb = gui_checkbox("Follow","col-width:90px;", var="follow_tag")
+        # Not `on change follow_tag`: this route ends, taking the task that owns follow_tag
+        # with it, so the checkbox's var write landed nowhere. Read the box itself.
+        on gui_message(follow_cb):
+            ship = viewscreen_home_ship(client_id)
+            _sel = get_science_selection(ship)
+            set_inventory_value(client_id, "2d_follow", follow_cb.value)
+            science_set_2dview_focus(client_id, _sel)
         # "On screen" stays a console control rather than a tab button: it is a mode that
         # outlives the selection, and the tab stack does not.
         _sci_ship = viewscreen_home_ship(client_id)
@@ -190,12 +197,6 @@
         lm_sci_publish_active_tab(client_id)
         on change lm_sci_tabs_revision(client_id):
             lm_sci_publish_active_tab(client_id)
-
-    on change follow_tag:
-        ship = viewscreen_home_ship(client_id)
-        _sel = get_science_selection(ship)
-        set_inventory_value(client_id, "2d_follow", follow_tag)
-        science_set_2dview_focus(client_id, _sel)
 
     # THE FILTER CHIPS, full console width, in their own SECTION below both columns.
     #
